@@ -1,0 +1,69 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/****************************************************************************
+
+
+ootree.rc
+
+produced by IBM Object REXX Resource Workshop
+
+
+*****************************************************************************/
+
+
+#define DIALOG_1	1
+#define IDC_PB_NEW	10
+#define IDC_PB_DELETE	11
+#define IDC_PB_EXP_ALL	12
+#define IDC_PB_COL_ALL	13
+#define IDC_PB_INFO	14
+#define IDC_TREE	1
+DIALOG_1 DIALOG 40, -60, 266, 302
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
+CAPTION "Contents"
+FONT 8, "MS Sans Serif"
+{
+ PUSHBUTTON "New", IDC_PB_NEW, 10, 249, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Delete", IDC_PB_DELETE, 72, 249, 50, 14
+ PUSHBUTTON "Cancel", IDCANCEL, 141, 249, 50, 14
+ PUSHBUTTON "Help", IDHELP, 203, 249, 50, 14
+ PUSHBUTTON "Expand All", IDC_PB_EXP_ALL, 11, 276, 50, 14
+ PUSHBUTTON "Collapse All", IDC_PB_COL_ALL, 72, 276, 50, 14
+ PUSHBUTTON "Info", IDC_PB_INFO, 141, 276, 50, 14
+ CONTROL "Tree", IDC_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER, 4, 8, 253, 231
+}

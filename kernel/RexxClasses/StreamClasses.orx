@@ -1,0 +1,443 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/*****************************************************************/
+/* this is where the stream and queue classes are set up         */
+/*****************************************************************/
+
+/*****************************************************************/
+/* This section sets up the directorys for the stream methods    */
+/*****************************************************************/
+
+                                       /* make seek a synonym of position   */
+  .Stream~define('SEEK', .Stream~method('POSITION'))
+
+.Stream~!REXXDefined
+.Stream_Supplier~!REXXDefined
+.rx_queue~!REXXDefined
+                                       /* add these classes to global, saved*/
+                                       /*environment                        */
+.environment~setentry('STREAM', .Stream)
+.environment~setentry('STREAM_SUPPLIER', .Stream_Supplier)
+.environment~setentry('RX_QUEUE', .rx_queue)
+
+/***************************************************/
+/* Create the stream class                         */
+/***************************************************/
+
+::CLASS 'Stream'
+
+/******************************************************/
+/* init method for setup on stream instance           */
+/******************************************************/
+
+::METHOD !c_stream_init          EXTERNAL 'REXX stream_init'
+::METHOD chars                   EXTERNAL 'REXX stream_chars'
+::METHOD lines                   EXTERNAL 'REXX stream_lines'
+::METHOD position                EXTERNAL 'REXX stream_position'
+::METHOD state                   EXTERNAL 'REXX stream_state'
+::METHOD description             EXTERNAL 'REXX stream_description'
+::METHOD !query_position         EXTERNAL 'REXX stream_query_position'
+::METHOD charout                 EXTERNAL 'REXX stream_charout'
+::METHOD charin                  EXTERNAL 'REXX stream_charin'
+::METHOD linein                  EXTERNAL 'REXX stream_linein'
+::METHOD lineout                 EXTERNAL 'REXX stream_lineout'
+::METHOD qualify                 EXTERNAL 'REXX qualify'
+::METHOD !query_exists           EXTERNAL 'REXX query_exists'
+::METHOD !query_size             EXTERNAL 'REXX query_size'
+::METHOD !query_time             EXTERNAL 'REXX query_time'
+::METHOD !handle_set             EXTERNAL 'REXX handle_set'
+::METHOD !std_set                EXTERNAL 'REXX std_set'
+::METHOD flush                   EXTERNAL 'REXX stream_flush'
+::METHOD !query_handle           EXTERNAL 'REXX query_handle'
+::METHOD !query_streamtype       EXTERNAL 'REXX query_streamtype'
+
+::METHOD string                        /* string method                     */
+  expose stream_name                   /* get the stream name               */
+  return stream_name                   /* use it as the string value        */
+
+::METHOD  init                         /* standard init method              */
+                                       /* access general stream state       */
+  expose stream_name
+  signal on syntax /*@CHM004A*/
+  use arg stream_name                  /* get the stream name               */
+  if arg() = 1 then do                 /* only a name given                 */
+                                       /* get as a string                   */
+    stream_name = stream_name~request('STRING')
+    if .nil == stream_name then        /* not a real string value?          */
+      raise syntax 93.938 array (1)    /* this is an error                  */
+    self~!c_stream_init(stream_name)   /* initialize the stream block       */
+                                       /* upper case the name               */
+    parse upper var stream_name upper_stream_name
+                                       /* one of the standard names?        */
+    /* @CHM002M - also check for standard stream names with colons */
+    if upper_stream_name = 'STDIN' | upper_stream_name = 'STDIN:' |,
+       upper_stream_name = 'STDOUT' | upper_stream_name = 'STDOUT:' |,
+       upper_stream_name = 'STDERR' | upper_stream_name = 'STDERR:' then
+      self~!std_set                    /* have a standard stream            */
+                                       /* and handle open?                  */
+    else if substr(upper_stream_name,1,7) = 'HANDLE:' then
+                                       /* set this as a handle type         */
+      self~!handle_set(substr(stream_name,8))
+  end
+  else
+    raise syntax 93.903 array (1)      /* raise an error                    */
+
+  return /*@CHM004A*/
+
+syntax: raise propagate /*@CHM004A*/
+
+                                       /* close and uninit are actually the */
+                                       /* same method                       */
+::METHOD close        EXTERNAL 'REXX stream_close'
+::METHOD uninit       EXTERNAL 'REXX stream_close'
+
+::METHOD  arrayout                     /* write out lines as an array       */
+  use arg array                        /* access the array                  */
+
+  /* the count must be defined in case a SYNTAX or NOTREADY                 */
+  /* condition is raised                                                    */
+  count = 0                            /* set initial counter               */
+  signal on syntax                     /* enable the syntax handler and     */
+  signal on notready                   /* the notready handler              */
+  signal on halt                       /* catch Ctrl-Break                  */
+
+  if arg() > 2 then                    /* too many arguments?               */
+    raise syntax 93.902 array (2)      /* this is an error                  */
+
+  if arg(2,'E') then do                /* have a second argument?           */
+    type = arg(2)                      /* get the type                      */
+    if abbrev('LINES', type) then      /* line type operation?              */
+      lineout = 1                      /* set the line flag                 */
+    else if abbrev('CHARS', type) then /* character operation?              */
+      lineout = 0                      /* not a line operation              */
+    else
+      raise syntax 93                  /* raise an error                    */
+  end
+  else
+    lineout = 1                        /* set the default lookup            */
+
+  count = 0                            /* set initial counter               */
+  do item over array                   /* loop over the array               */
+    if lineout then                    /* line operation?                   */
+      self~lineout(item)               /* write out the line                */
+    else
+      self~charout(item)               /* write out as characters           */
+    count = count + 1                  /* bump the counter                  */
+  end
+  return 0
+
+notready:                              /* standard notready handler         */
+syntax:                                /* standard syntax handler (shared)  */
+  raise propagate return (array~items - count)
+
+halt:                                  /* forward HALT condition            */
+  raise propagate
+
+::METHOD  arrayin                      /* arrayin method                    */
+  forward message 'MAKEARRAY'
+
+::METHOD  makearray                    /* stream makearray method           */
+  signal on syntax                     /* enable the syntax handler and     */
+  signal on notready                   /* the notready handler              */
+  signal on halt                       /* catch Ctrl-Break                  */
+
+  if arg() > 1 then                    /* too many arguments?               */
+    raise syntax 93.902 array (1)      /* this is an error                  */
+
+  if arg(1,'E') then do                /* have a second argument?           */
+    parse upper arg type               /* get the type                      */
+    if abbrev('LINES', type) then      /* line type operation?              */
+      linein = 1                       /* set the line flag                 */
+    else if abbrev('CHARS', type) then /* character operation?              */
+      linein = 0                       /* not a line operation              */
+    else
+      raise syntax 93                  /* raise an error                    */
+  end
+  else
+    linein = 1                         /* set the default lookup            */
+
+  queue = .queue~new                   /* create a queue item               */
+  /* Begin - change loop logic */
+  if linein then
+    do while self~lines > 0            /* while lines are available         */
+      queue~queue(self~linein)         /* read a line                       */
+    end
+  else
+    do while self~chars > 0            /* while characters are available    */
+      queue~queue(self~charin)         /* read a character                  */
+    end
+
+  return (queue~makearray)             /* return result                     */
+
+notready:                              /* notready handler                  */
+                                       /* return the array we've got so far */
+  raise propagate return (queue~makearray)
+
+syntax:                                /* standard syntax handerl (shared)  */
+  raise propagate return ('')
+
+halt:                                  /* forward HALT condition            */
+  raise propagate
+
+::METHOD command                       /* process a stream command          */
+  expose stream_name                   /* access the stream name            */
+  /*@CHM004M - moved to the beginning */
+  signal on syntax                     /* enable syntax handler             */
+  signal on notready                   /* enable notready handler           */
+  signal on halt                       /* catch Ctrl-Break                  */
+  if (arg() < 1)                       /* no command given?                 */
+                                       /* raise an error                    */
+    then raise syntax 93.901 array (1)
+  if (arg() > 1)                       /* too many arguments?               */
+                                       /* raise an error                    */
+    then raise syntax 93.902 array (1)
+
+  parse upper arg command_word parms   /* get the command name              */
+  command_word = ' 'command_word       /* add a leading blank               */
+                                       /* expand any abbreviations          */
+  parse value ' CLOSE FLUSH OPEN POSITION QUERY SEEK' with (command_word) +1 command_word .
+
+  select                               /* process each command              */
+    when command_word = 'CLOSE' then
+      return self~close
+
+    when command_word = 'FLUSH' then
+      return self~flush
+
+    when command_word = 'OPEN' then
+      return self~open(parms)
+
+    when command_word = 'POSITION' then
+      return self~position(parms)
+
+    when command_word = 'QUERY' then
+      return self~query(parms)
+
+    when command_word = 'SEEK' then
+      return self~position(parms)
+
+  otherwise                            /* unknown command                   */
+    parse arg command_word .           /* get the original command          */
+    raise syntax 93.914 array (1, 'CLOSE FLUSH OPEN POSITION QUERY SEEK', command_word)
+  end
+
+notready:                              /* standard notready handler         */
+syntax:                                /* standard syntax handler (shared)  */
+halt:                                  /* forward HALT condition            */
+  raise propagate
+
+::METHOD open        EXTERNAL 'REXX stream_open'
+
+::METHOD query                         /* standard query routine            */
+  arg subcommand parms                 /* get the parms                     */
+  signal on syntax                     /* enable the standard handlers      */
+  signal on notready
+  signal on halt                       /* catch Ctrl-Break                  */
+  subcommand = ' 'subcommand           /* add a leading blank               */
+                                       /* resolve abbreviations             */
+  parse value ' DATETIME EXISTS HANDLE POSITION SEEK SIZE STREAMTYPE TIMESTAMP' with (subcommand) +1 subcommand .
+  select
+                                       /* need the date and time?           */
+    when subcommand = 'DATETIME' then do
+                                       /* transient style stream?           */
+      if self~!query_streamtype = 'TRANSIENT' then
+        return ''                      /* this doesn't have a date          */
+      c_time = self~!query_time        /* query the time                    */
+      if c_time \= '' then do          /* have one?                         */
+                                       /* get the pieces                    */
+        parse var c_time . month day time year
+        year = year~left(4)            /* make the year 4 characters        */
+                                       /* convert for redisplay             */
+        parse value date('O', day+0 month year) with year '/' month '/' day
+        return month'-'day'-'year time /* return the final time stamp       */
+      end
+      return ''                        /* no time, just return a null string*/
+    end
+                                       /* query the existence               */
+    when subcommand = 'EXISTS' then
+      return self~!query_exists        /* just check to see                 */
+                                       /* get the file handle               */
+    when subcommand = 'HANDLE' then do
+      return self~!query_handle        /* return the file handle            */
+    end
+                                       /* position or seek?                 */
+    when subcommand = 'POSITION' | subcommand = 'SEEK' then do
+                                       /* ask for the position              */
+      return self~!query_position(parms)
+    end
+                                       /* get the size                      */
+    when subcommand = 'SIZE' then
+      return self~!query_size          /* go ask for it                     */
+                                       /* asking for the stream type?       */
+    when subcommand = 'STREAMTYPE' then
+      return self~!query_streamtype    /* just return the type              */
+
+                                       /* asking for a timestamp?           */
+    when subcommand = 'TIMESTAMP' then do
+                                       /* have a transient stream?          */
+      if self~!query_streamtype = 'TRANSIENT' then
+        return ''                      /* no time stamp possible            */
+      c_time = self~!query_time        /* query the time                    */
+      if c_time \= '' then do          /* have one?                         */
+                                       /* get the pieces                    */
+        parse var c_time . month day time year
+        year = year~left(4)            /* make the year 4 characters        */
+                                       /* convert for redisplay             */
+        parse value date('S', day+0 month year) with year +4 month +2 day
+        return year'-'month'-'day time /* return the time stamp             */
+      end
+      return ''                        /* no time, just return a null string*/
+    end
+
+    otherwise
+      raise syntax 93                  /* this is an error                  */
+  end
+
+notready:                              /* standard notready handler         */
+syntax:                                /* standard syntax handler (shared)  */
+  raise propagate return (self~description)
+
+halt:                                  /* forward HALT condition            */
+  raise propagate
+
+::METHOD say UNGUARDED                 /* the SAY method                    */
+  signal on halt                       /* catch Ctrl-Break                  */
+  return self~lineout(arg(1))          /* write the target line out         */
+
+halt:                                  /* forward HALT condition            */
+  raise propagate
+
+::METHOD supplier                      /* create a supplier object          */
+signal on syntax /*@CHM004A*/
+if (arg() > 0) then                    /* too many arguments?               */
+  raise syntax 93.902 array (0)        /* raise an error                    */
+return .stream_supplier~new(self)      /* return a stream supplier          */
+
+syntax: raise propagate /*@CHM004A*/
+
+::CLASS 'Stream_Supplier'              /* stream supplier class             */
+::METHOD init                          /* initialization method             */
+                                       /* access the state information      */
+expose stream position line available transient
+use arg stream                         /* get the stream                    */
+position = 0                           /* set initial position              */
+available = 1                          /* assume this is available          */
+                                       /* a transient stream?               */
+if stream~!query_streamtype == 'TRANSIENT' then
+  transient = .true                    /* remember this                     */
+else
+  transient = .false                   /* we can read by position           */
+line = ''                              /* set a default line                */
+self~next                              /* get the first line                */
+
+::METHOD next                          /* step to next element              */
+                                       /* access the state information      */
+expose stream position line available transient
+
+signal on syntax /*@CHM004A*/
+if (arg() > 0) then                    /* too many arguments?               */
+  raise syntax 93.902 array (0)        /* raise an error                    */
+
+if \available then                     /* already reached the end?          */
+  raise syntax 93.937                  /* this is an error                  */
+position = position + 1                /* bump the index                    */
+signal on notready                     /* enable the notready trap          */
+if transient then                      /* transient stream?                 */
+  line = stream~linein                 /* don't try to position             */
+else
+  line = stream~linein(position)       /* read the proper line              */
+return                                 /* all finished                      */
+notready:                              /* notready condition occurred       */
+available = 0                          /* nothing available now             */
+return                                 /* all finished                      */
+syntax: raise propagate /*@CHM004A*/
+
+::METHOD available                     /* is an item available?             */
+expose available                       /* access the flag item              */
+signal on syntax /*@CHM004A*/
+if (arg() > 0) then                    /* too many arguments?               */
+  raise syntax 93.902 array (0)        /* raise an error                    */
+return available                       /* return the access flag            */
+syntax: raise propagate /*@CHM004A*/
+
+::METHOD item                          /* get the current supplier value    */
+expose line available                  /* access needed object variables    */
+signal on syntax /*@CHM004A*/
+if (arg() > 0) then                    /* too many arguments?               */
+  raise syntax 93.902 array (0)        /* raise an error                    */
+
+if \available then                     /* already reached the end?          */
+  raise syntax 93.937                  /* this is an error                  */
+return line                            /* return the file line              */
+syntax: raise propagate /*@CHM004A*/
+
+::METHOD index                         /* get the current supplier index    */
+expose position available              /* access needed object variables    */
+signal on syntax /*@CHM004A*/
+if (arg() > 0) then                    /* too many arguments?               */
+  raise syntax 93.902 array (0)        /* raise an error                    */
+
+if \available then                     /* already reached the end?          */
+  raise syntax 93.937                  /* this is an error                  */
+return position                        /* return the line number            */
+syntax: raise propagate /*@CHM004A*/
+
+/*****************************************************************/
+/* Create the rx_queue class and define its associated methods */
+/*****************************************************************/
+::CLASS rx_queue
+
+::METHOD get                           /* get the queue name                */
+  expose named_queue                   /* just expose and return            */
+  return named_queue
+
+::METHOD set                           /* set a new queue                   */
+  expose named_queue                   /* get the old queue name            */
+  arg new_queue                        /* the new queue name                */
+  old_queue = named_queue              /* save the old name                 */
+  named_queue = new_queue              /* set the new current name          */
+  self~objectname = new_queue          /* and also set as an object name    */
+  return old_queue                     /* and return the old one            */
+
+::METHOD push            EXTERNAL 'REXX rexx_push_queue'
+::METHOD queue           EXTERNAL 'REXX rexx_queue_queue'
+::METHOD create          EXTERNAL 'REXX rexx_create_queue'
+::METHOD delete          EXTERNAL 'REXX rexx_delete_queue'
+::METHOD pull            EXTERNAL 'REXX rexx_pull_queue'
+::METHOD linein          EXTERNAL 'REXX rexx_linein_queue'
+::METHOD query           EXTERNAL 'REXX rexx_query_queue'

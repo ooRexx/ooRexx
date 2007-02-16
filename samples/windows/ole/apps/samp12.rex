@@ -1,0 +1,98 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/**********************************************************************/
+/*                                                                    */
+/* SAMP12.REX: OLE Automation with Object REXX - Sample 12            */
+/*                                                                    */
+/* Using events with the Internet Explorer:                           */
+/* Navigate to the IBM homepage and disallow changing the URL to a    */
+/* page not in that "address space".                                  */
+/*                                                                    */
+/**********************************************************************/
+
+/* instantiate an instance of the Internet Explorer */
+myIE = .watchedIE~new("InternetExplorer.Application","WITHEVENTS")
+
+myIE~visible = .true
+myIE~navigate("http://www.ibm.com/")
+
+/* wait for the OnQuit event of the browser to change */
+/* the !active attribute of the REXX object to false  */
+myIE~!active = .true
+do while myIE~!active = .true
+  call syssleep(2)
+end
+
+exit
+
+::requires "orexxole.cls"
+
+/* this class is derived from OLEObject and contains several   */
+/* methods that will be called when certain events take place. */
+::CLASS watchedIE SUBCLASS OLEObject
+
+/* this is an event of the Internet Explorer */
+::METHOD BeforeNavigate2
+  /* these are the arguments of this event. Cancel is an out parameter and */
+  /* will be set to the return value of the method when it was processed.  */
+  /* have a look at the documentation for a detailed description of events.*/
+  use arg pDisp, URL, Flags, TargetFrameName, PostData, Headers, Cancel
+
+  /* default: do not stop loading of this URL */
+  stopLoading = .false
+
+  /* if the target URL does not begin with "http://www.ibm.com/", don't    */
+  /* load it...  try this by typing a different URL into the address field */
+  /* when this sample is running.                                          */
+  if URL~substr(1,19) \= "http://www.ibm.com/" then do
+    stopLoading = .true
+    say "Refusing to load" URL
+  end
+
+  return stopLoading
+
+/* this is an event of the Internet Explorer */
+::METHOD TitleChange
+  use arg Text
+  say "The title has changed to:" text
+
+/* this is an event of the Internet Explorer */
+::METHOD OnQuit
+  self~!active = .false    -- terminates the waiting loop in main code
+
+::METHOD !active ATTRIBUTE -- store the active attribute

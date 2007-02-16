@@ -1,0 +1,234 @@
+<?xml version="1.0"?>
+<?component error="true" debug="true" ?>
+
+<package id="ObjectRexxCOMScriptTest">
+
+
+<!--
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+ !-->
+
+
+<comment><![CDATA[
+<!---    This small file tests many of the features of *.wsc files.  It has multiple
+  ---  components, OLE objects defined external to the code, typelibs defined external to
+  ---  the code,functions, external source code, multiple languages.  This is all very
+  ---  to the test for *.ws files.  Note, however, there is no use of the built-in
+  ---  object WScript.  It is not being provided.  I assume this is because we go
+  ---  straight into the interpreter, and do not go through (C/W)script.exe.
+  ---
+  ---    In addition to the tests above, this does test the features provided by the
+  ---  COM structure.  Register our own typelib, create methods, create events, create
+  ---  properties (with and without methods for setting/getting), and we reference
+  ---  a second component.
+  -->
+ ]]></comment>
+
+
+<!---
+  ---    This section is what registers the script as a COM
+  ---  object when Register is choosen from the list of commands
+  ---  when this file is "right-clicked" in the File Explorer.
+  ---
+  ---    The value of progid= is how the world will find us.
+  ---  Two GUID's are needed.  One for the COM object,and one
+  ---  for the Typelib that will be generated.  The routine's
+  ---  Register and Unregister mimick those required in a COM
+  ---  *.dll.  Even withing these routines, there is full
+  ---  Open Object Rexx capability.
+ !-->
+<component id="ORexxCOM">
+  <registration
+      progid="FULLObjectRexx.Com"
+      description="Test of the COM scriptlet interface as seen by Open Object Rexx."
+      version="1.0"
+      clsid="{6550bad0-b31d-11d4-9306-b9d506515f14}">
+    <script language="Object Rexx"><![CDATA[
+::Routine Register Public
+  Shell = .OLEObject~New("WScript.Shell")
+  Typelib = .OLEObject~New("Scriptlet.TypeLib")
+  Shell~Popup("We are registering, n o w . . . .")
+  /*
+   *  Please note that the name that follows must match
+   * our file name, exactly, or this fails when registering
+   * with an "OLE exception", Code 800C0005 or Code 800C0009.
+   */
+  Typelib~AddURL("FullCOMFeatures.wsc")
+  Typelib~Path= "FullCOMFeatures.tlb"
+  Typelib~Doc = "Test component typelib for Simple Object Rexx.Com"
+  Typelib~Name = "Test component typelib for Simple Object Rexx.Com"
+  Typelib~MajorVersion = 1
+  Typelib~MinorVersion = 0
+  Typelib~GUID = "{6550bad1-b31d-11d4-9306-b9d506515f14}"
+  Typelib~Write()
+  Typelib~Reset()
+  Shell~Popup("We've really done it n o w . . . .")
+
+::Routine Unregister Public
+  Shell = .OLEObject~New("WScript.Shell")
+  Shell~Popup("We are outa here!")
+
+    ]]></script>
+  </registration>
+
+
+
+<!---
+  ---    This section is what describes this COM object to the outside
+  ---  world.  There is one property, and there are two methods named.
+  ---  One of the methods is the default, since its dispid is 0.
+  ---  Open Object Rexx does not support calling the default in a shorthand
+  ---  manner.  All calls are as follows:
+  ---
+  ---  Obj = .OLEObject~New("FULLObjectRexx.Com")
+  ---  Obj~DefaultMethod("Some Parm")
+  ---
+ !-->
+<public>
+  <property name="FunctionPublicProperty" dispid="1">
+    <get internalName="LookAt_PP" dispid="6"/>
+    <put internalName="Replace_PP" dispid="5"/>
+    </property>
+  <property name="SimplePublicProperty" internalName="SPP" dispid="3">
+    </property>
+  <method name="ToInitiateEvent" dispid="2">
+    <parameter name="Parm1" />
+    <parameter name="Parm2" />
+    </method>
+  <event name="COMEvent" dispid="4">
+    <parameter name="Parm" dispid="7"/>
+    </event>
+  <method name="DefaultMethod" dispid="0">
+    <parameter name="Ignored" />
+    </method>
+  </public>
+
+
+<!---
+  ---    This section tests some obscure parts of the *.wsc's ability.  Independent
+  ---  of the script's mechanisms Objects, Typelibs, and "Resources" are declared.  The
+  ---  script is required to recognize these objects as if they were declared during
+  ---  script execution.
+ !-->
+  <object id="WShell" progid="WScript.Shell" />
+  <reference object="ADODB.Recordset"/>
+  <!--  Note that the resource string is within a CDATA, and there is no line break.
+    Whatever is put here will go into the code, as is, including linebreaks.       !-->
+  <resource id="MadHatter" ><![CDATA[The duck is Daffy]]></resource>
+
+
+<!---
+  ---    This is the actual script code.  Note that the property
+  ---  is declared at the highest scope.  If this is not done,
+  ---  then the property will not be found, and the script
+  ---  will not abend when the property is referenced.
+ !-->
+  <script language="Object Rexx" ><![CDATA[
+--    The following variables are "Global" by virtue of being higher in scope than
+--  the functions in this code.  In Rexx, this level must "persist" between calls.
+SPP = "Sample simple variable Property"
+HiddenRexxProperty = "Can only be set and retrieved by the functions."
+
+::Routine DefaultMethod Public
+  say "There are "Arg()" args."
+  do I = 1 to Arg()
+    Say "Arg" i" is '"Arg(i)"'"
+    end
+  --  This should print the text HIDDENREXXPROPERTY, since it was not
+  -- retrieved with a Value().
+  Say "Because of the scoping this gets a REXX default value:" HiddenRexxProperty
+
+  Return  "a value"
+
+  ]]></script>
+
+  <!--  Note: the use of the src= to include another file.
+    If the source of that file is examined, then it will be
+    seen that the source is "vanilla";  it has no XML wrapper.  !-->
+  <script language="Object Rexx" src="Print.rex"><![CDATA[
+
+CSN=0     -- We have not been here before.
+--  Test the globally declared Type Library.
+adOpenStatic = Value("adOpenStatic",,"WSHTYPELIB")
+a = MyPrint("The cursor adOpenStatic is "adOpenStatic)
+
+::Routine ToInitiateEvent Public
+  Use Arg LocalParm1, LocalParm2
+
+  --  Can still get at WScript.Shell, even though WScript is unavailable? Yes.
+  Shell = .OLEObject~new("WScript.Shell")
+
+  --  Test the globally defined resource string.
+  WhooWho = getResource("MadHatter")
+  Shell~Popup("The resource is '"WhooWho"'.")
+  a = fireEvent("COMEvent",WhooWho,"Second Parm")
+  Say "The event returned '"a"'"
+
+  -- Can we change the parameter, or does scope protect us?
+  LocalParm1 = "Not really changed."
+
+
+
+
+
+
+::Routine LookAt_PP Public
+  if Value("CSN",,"WSHPROPERTY") == 0 Then Do
+    Call RxMessageBox "In the GET of the UNSET FunctionPublicProperty","LookAt_PP","OK"
+    return .false
+    End
+  --  Test the globally declared COM object.
+  a = WShell~Popup("In the GET after a SET FunctionPublicProperty")
+  return Value("HiddenRexxProperty",,"WSHPROPERTY")
+
+
+::Routine Replace_PP Public
+  Use Arg NewValue
+  If Value("CSN",1,"WSHPROPERTY") == 0 Then Previous = 0
+  Else Previous = Value("HiddenRexxProperty",,"WSHPROPERTY")
+  a = Value("HiddenRexxProperty",NewValue,"WSHPROPERTY")
+  return Previous
+
+
+
+  ]]></script>
+</component>
+
+
+</package>

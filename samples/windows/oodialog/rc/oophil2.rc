@@ -1,0 +1,73 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/* OODialog\Samples\rc\oophil2.rc      Philosophers' Forks Animation  */
+/*--------------------------------------------------------------------*/
+
+100 DIALOG 0, 0, 282, 236
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Philosophers' Forks Animation"
+FONT 10, "MS Sans Serif"
+{
+ AUTO3STATE "Button", 101, 108, 4, 65, 65, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 102, 216, 33, 65, 65, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 103, 193, 145, 65, 65, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 104, 26, 145, 65, 65, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 105, 1, 33, 65, 65, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 106, 186, 31, 15, 38, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 107, 262, 145, 15, 38, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 108, 134, 192, 15, 38, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 109, 6, 145, 15, 38, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 110, 79, 31, 15, 38, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 111, 130, 71, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 112, 238, 99, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 113, 215, 211, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 114, 48, 211, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 115, 23, 99, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 120, 91, 94, 102, 70, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 121, 108, 71, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 122, 153, 71, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 131, 216, 99, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 132, 261, 99, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 141, 193, 211, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 142, 238, 211, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 151, 26, 211, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 152, 71, 211, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 161, 1, 99, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 162, 46, 99, 20, 19, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ PUSHBUTTON "&Stop", 1, 126, 170, 31, 14
+}

@@ -1,0 +1,105 @@
+"Products",0,1,"BOLD EXPANDED"
+,"Computers",0,1,"BOLD"
+,,"Motherboards",0,1
+,,,"SCSI Motherboards",0,1
+,,,,"Motherboard A",2,3
+,,,,"Motherboard B",2,3
+,,,,"...",2,3
+,,,"IDE Motherboards",0,1
+,,,,"Motherboard A",2,3
+,,,,"Motherboard B",2,3
+,,,,"...",2,3
+,,"PC Drives",0,1
+,,,"IDE Drives",0,1
+,,,,"Drive A",2,3
+,,,,"Drive B",2,3
+,,,,"...",2,3
+,,,"SCSI Drives",0,1
+,,,,"Drive A",2,3
+,,,,"Drive B",2,3
+,,,,"...",2,3
+,,,"CD ROM Drives",0,1
+,,,,"Internal CD ROM Drives",0,1
+,,,,,"Drive A",2,3
+,,,,,"Drive B",2,3
+,,,,,"...",2,3
+,,,,"External CD ROM Drives",0,1
+,,,,,"Drive A",2,3
+,,,,,"Drive B",2,3
+,,,,,"...",2,3
+,,,,,"Housings for External CD ROM Drives",0,1
+,,,,,,"Housing A",2,3
+,,,,,,"Housings B",2,3
+,,,,,,"...",2,3
+,,,"CD Recorders",0,1
+,,,,"CD Recorder A",2,3
+,,,,"CD Recorder B",2,3
+,,,,"...",2,3
+,,"Graphic Cards, Monitors",0,1
+,,,"Graphic Cards",0,1
+,,,"Monitors",0,1
+,,,,"17 inch Monitors",0,1
+,,,,,"Monitor A",2,3
+,,,,,"Monitor B",2,3
+,,,,,"...",2,3
+,,,,"19 inch Monitors",0,1
+,,,,,"Monitor A",2,3
+,,,,,"Monitor B",2,3
+,,,,,"...",2,3
+,,"Modems, Fax",0,1
+,,"Software",0,1
+,,,"Office Software",0,1
+,,,"Graphic Software",0,1
+,,,"Games",0,1
+,,"Printers",0,1
+,,,"Ink Jet Printers",0,1
+,,,"Laser Printers",0,1
+,"Audio Video and Home Entertainment",0,1,"BOLD"
+,,"Hi-Fi Components",0,1
+,,"Loudspeakers",0,1
+,,"Microphones",0,1
+,,"Video and Accessories",0,1
+,"Home Electronics",0,1,"BOLD"
+,,"Alarm Systems",0,1
+,,,"Alarm Sensors",0,1
+,,,"Security Lights",0,1
+,,"Weather Monitoring",0,1
+,,"Analogue and Digital Clocks",0,1
+,,"Ventilation Equipment",0,1
+,,"Halogen Lighting",0,1
+,"Communications",0,1,"BOLD"
+,"Car Audio and Car Products",0,1,"BOLD"
+,"Books",0,1,"BOLD"
+,,"Software",0,1
+,,,"Book A",2,3
+,,,"Book B",2,3
+,,,"...",2,3
+,,"Hardware",0,1
+,,,"Book A",2,3
+,,,"Book B",2,3
+,,,"...",2,3
+,,"Introduction to Electronic",0,1
+,,,"Book A",2,3
+,,,"Book B",2,3
+,,,"...",2,3
+,,"Solar and Alternative Energy",0,1
+,,,"Book A",2,3
+,,,"Book B",2,3
+,,,"...",2,3
+,,"Batteries/Chargers and Power Supplies",0,1
+,,,"Book A",2,3
+,,,"Book B",2,3
+,,,"...",2,3
+,,"Car Mechanics",0,1
+,,,"Book A",2,3
+,,,"Book B",2,3
+,,,"...",2,3
+,,"Audio, Video & Home Entertainment",0,1
+,,,"Book A",2,3
+,,,"Book B",2,3
+,,,"...",2,3
+,,"Satellite Technology",0,1
+,,,"Book A",2,3
+,,,"Book B",2,3
+,,,"...",2,3
+,"Special Offers",0,1,"BOLD","1"

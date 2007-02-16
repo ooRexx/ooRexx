@@ -1,0 +1,77 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/****************************************************************************
+
+
+oodpbar.rc
+
+produced by IBM Object REXX Resource Workshop
+
+
+*****************************************************************************/
+
+#define DIALOG_1	1
+#define ID_A	10
+#define ID_B	11
+#define ID_C	12
+#define ID_E	14
+#define ID_D	13
+DIALOG_1 DIALOG 13, 25, 280, 180
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Progress Bars"
+FONT 8, "MS Sans Serif"
+{
+ CONTROL "", ID_A, "msctls_progress32", PBS_VERTICAL | WS_CHILD | WS_VISIBLE | WS_BORDER, 19, 22, 13, 130
+ CONTROL "", ID_B, "msctls_progress32", PBS_SMOOTH | PBS_VERTICAL | WS_CHILD | WS_VISIBLE, 59, 22, 13, 130
+ CONTROL "", ID_C, "msctls_progress32", PBS_VERTICAL | WS_CHILD | WS_VISIBLE | WS_BORDER, 99, 22, 13, 130
+ CONTROL "", ID_D, "msctls_progress32", PBS_SMOOTH | PBS_VERTICAL | WS_CHILD | WS_VISIBLE, 139, 22, 13, 130
+ CONTROL "", ID_E, "msctls_progress32", PBS_VERTICAL | WS_CHILD | WS_VISIBLE | WS_BORDER, 179, 22, 13, 130
+ DEFPUSHBUTTON "Step", IDOK, 223, 13, 50, 14
+ PUSHBUTTON "Cancel", IDCANCEL, 223, 31, 50, 14
+ PUSHBUTTON "Help", IDHELP, 223, 53, 50, 14
+ LTEXT "0", 11, 14, 160, 18, 8
+ LTEXT "0", 21, 54, 160, 18, 8
+ LTEXT "0", 31, 94, 160, 18, 8
+ LTEXT "0", 41, 136, 160, 18, 8
+ LTEXT "0", 51, 175, 160, 18, 8
+ LTEXT "100", -1, 14, 10, 22, 8
+ LTEXT "100", -1, 54, 10, 26, 8
+ LTEXT "100", -1, 94, 10, 26, 8
+ LTEXT "100", -1, 135, 10, 26, 8
+ LTEXT "100", -1, 175, 10, 26, 8
+}

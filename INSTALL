@@ -1,0 +1,166 @@
+               Installation Notes for Open Object Rexx
+               =======================================
+
+Please read ALL of these notes before building ooRexx!
+
+To install ooRexx, you first need to configure it.  This is done by
+executing the configure script provided in this archive.
+
+Generally all you need to run is "configure", but there are some
+options that can be passed to the configure script; use
+"configure --help" to view them. If the configure script does not
+exist then run "bootstrap" script to create it.
+
+Once the configure script has been run, you can then type "make".
+This will create the following objects:
+
+ rexx            the ooRexx interpreter
+ rexxc           the ooRexx "compiler"; it is really a tokenizer
+ rxqueue         interface from command line to Rexx queue
+ rxsubcom        enables subcommand environments to be manipulated
+ rxdelipc        utility to remove IPC objects
+ librexx.so      shared library containing majority of interpreter
+ librexxapi.so   shared library containing API functionality
+ librxmath.so    maths extension library
+ librexxutil.so  RexxUtil extension library; system functions
+ librxregexp.so  Regular Expression extension library
+ librxsock.so    Low-level socket extension library
+
+Once you have ooRexx compiled, it can then be installed.  By default, the
+ooRexx executables will be installed into /opt/ooRexx/bin and the libraries
+and external function packages (*.so) will be installed into
+/opt/ooRexx/lib/ooRexx.  The base path "/opt" can be changed by adding the
+--prefix=path (where path is the base path) to the configure command.
+eg. to install ooRexx into your home directory: $HOME/bin and $HOME/lib/ooRexx,
+configure --prefix=$HOME ...
+This is paticularly useful if you do not have root access on the machine
+on which you are building ooRexx.
+
+On most platforms, it is necessary to include the directory where shared
+libraries (including *.so) reside, to the LD_LIBRARY_PATH
+environment variable.  Under AIX this environment variable is LIBPATH.
+Under HP-UX this environment variable is SHLIB_PATH.
+Under SGI seems to be LD_LIBRARYN32_PATH.
+
+
+Platform Specifc Notes
+======================
+
+This version of ooRexx is NOT safe for 64-bit compilation!
+
+Linux:
+-----
+ooRexx should build on all 32-bit Linux platforms.
+
+AIX:
+---
+ooRexx can only be built on AIX using IBM's VAC compiler.
+Before running the configure script, set the following
+environment variables:
+% export CC=xlc_r
+% export CXX=xlC_r
+% export LDFLAGS=-Wl,-brtl
+
+DEC/HP Alpha:
+------------
+ooRexx currently cannot be built on this platform. ooRexx assumes pointers and
+longs are 32bit, and as the Alpha has never had a 32bit mode, it is not possible
+to force pointers and longs to 32 bits.
+
+AMD Opteron:
+-----------
+This is also a 64bit architecture, but it is possible to build and run ooRexx as
+a 32bit process. Before running configure set the following:
+% export CC="gcc -m32"
+% export CXX="g++ -m32"
+The configure script will then use the -m32 switch to force pointers and longs to
+32bit.
+
+*BSD Platforms:
+--------------
+ooRexx builds on FreeBSD 5.4 and 6.1, NetBSD 2.0.2 and OpenBSD 3.4.
+May be a bug due to ooRexx using members of internal C structs which are not portable
+across platforms.
+
+Mac OSX Platforms (Darwin):
+--------------------------
+This release of ooRexx should build out-of-the box on OSX 10.3 and above.
+To build on OSX 10.2, you must have the libdl.dylib shared library and dlfcn.h
+installed. If these have not been installed in /usr/lib and /usr/include respectively,
+you will need to do the following before running configure:
+% export CPPFLAGS=-I/sw/include
+% export LDFLAGS=-L/sw/lib
+(Assuming the library and header file have been installed in /sw/lib and /sw/include
+respectively).
+OSX 10.2 does not support the NLS message catalog functions such as catopen() etc.
+This means that you will NOT get meaningful error messages from the interpreter and
+utility programs.
+ooRexx may or may not build on OSX 10.1 or below. You're on your own here.
+
+Notes for developers
+====================
+For full details of making changes to the ooRexx source, consult the
+Developer's Guide (when it is written). In the interim, some actions will
+need to be carried out if any changes are made to the build targets,
+particularly when porting to other platforms. If any changes are made
+to Makefile.am or configure.ac, then the generation of the configure
+script will need to be re-executed. The safest way to do this to ensure
+all steps are carried is to execute the
+"bootstrap" script.
+
+% bootstrap
+
+You will require recent versions of autoconf, automake and libtool to get
+the best out of the "auto" tools. At least the following versions should
+be used:
+- automake 1.9.5
+- autoconf 2.59
+- libtool  1.5.14
+
+Packaging
+=========
+A "package" target exists in the Makefile. It will create ooRexx-x.y.tar.gz
+containing the same files and directory structure as you would get when
+doing a "make install".
+
+By default libtool creates static libraries, which on some platforms are not
+stripped and can be HUGE. Distribution of the static libraries is not
+required for the base packages, so to ensure that only those files that are
+required are distributed you will need to build ooRexx without static
+libraries.
+
+To do this (must be done in an empty directory, or after a "make clean":
+
+% ./configure --disable-static
+% make
+
+Then the packaging steps...
+
+% make DESTDIR=`pwd`/tmp install
+% make DESTDIR=`pwd`/tmp package
+Creates ./ooRexx-x.y.z-TARGET.tar.gz where TARGET is the canonical platform
+name.
+
+Specific platform packaging notes...
+
+RPM - Linux RedHat/Fedora
+-------------------------
+% make dist
+as root:
+% cp ooRexx-x.y.z.tar.gz /usr/src/redhat/SOURCES
+% rpmbuild -ba platform/unix/oorexx.spec
+
+Solaris - PKG
+-------------
+When building ooRexx for packaging, configure the build as follows:
+% ./configure --disable-static --prefix=/opt/sfw
+
+The "make DESTDIR=`pwd`/tmp package" above will also create:
+a gzipped ./ooRexx-x.y.z.pkg suitable for Solaris' "pkgadd"
+
+Later versions of g++ build in a dependency between ooRexx and g++
+shared libraries; libstdc++.so.x and libgcc_s.so.x.
+These shared libraries may be required to be installed on machines that
+do not have the version of g++ installed that ooRexx was built with.
+
+The ooRexx package will include these dependencies in the base ooRexx package.

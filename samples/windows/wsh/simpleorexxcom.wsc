@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<?component error="true" debug="true" ?>
+
+<package id="SimpleObjectRexxCOMScriptTest">
+
+
+<!--
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+ !-->
+
+
+<!---
+  ---    An example script to demonstrate the features provided by the
+  ---  COM structure.  Register our own typelib, create methods,
+  ---  and create a property.
+ !-->
+
+
+<!---
+  ---    This section is what registers the script as a COM
+  ---  object when Register is choosen from the list of commands
+  ---  when this file is "right-clicked" in the File Explorer.
+  ---
+  ---    The value of progid= is how the world will find us.
+  ---  Two GUID's are needed.  One for the COM object,and one
+  ---  for the Typelib that will be generated.  The routine's
+  ---  Register and Unregister mimick those required in a COM
+  ---  *.dll.  Even withing these routines, there is full
+  ---  Object Rexx capability.
+ !-->
+<component id="SimpleORexxCOM">
+  <registration
+      progid="SimpleObjectRexx.Com"
+      description="Test of the COM scriptlet interface as seen by Object Rexx."
+      version="1.0"
+      clsid="{6550bac9-b31d-11d4-9306-b9d506515f14}">
+    <script language="Object Rexx"><![CDATA[
+::Routine Register Public
+  Shell = .OLEObject~New("WScript.Shell")
+  Typelib = .OLEObject~New("Scriptlet.TypeLib")
+  Shell~Popup("We are registering, n o w . . . .")
+  /*
+   *  Please note that the name that follows must match
+   * our file name, exactly, or this fails when registering
+   * with an "OLE exception", Code 800C0005 or Code 800C0009.
+   */
+  Typelib~AddURL("SimpleORexxCOM.wsc")
+  Typelib~Path= "SimpleORexxCOM.tlb"
+  Typelib~Doc = "Test component typelib for Simple Object Rexx.Com"
+  Typelib~Name = "Test component typelib for Simple Object Rexx.Com"
+  Typelib~MajorVersion = 1
+  Typelib~MinorVersion = 0
+  Typelib~GUID = "{6550bac5-b31d-11d4-9306-b9d506515f14}"
+  Typelib~Write()
+  Typelib~Reset()
+  Shell~Popup("We've really done it n o w . . . .")
+
+::Routine Unregister Public
+  Shell = .OLEObject~New("WScript.Shell")
+  Shell~Popup("We are outa here!")
+
+    ]]></script>
+  </registration>
+
+
+<!---
+  ---    This section is what describes this COM object to the outside
+  ---  world.  There is one property, and there are two methods named.
+  ---  One of the methods is the default, since its dispid is 0.
+  ---
+ !-->
+<public>
+  <property name="ExternalPropertyName" internalName="InternalPropertyName" dispid="3">
+    </property>
+  <property name="EPN" dispid="4">
+    </property>
+  <method name="NamedRoutine">
+    <parameter name="NamedParameter"/>
+    </method>
+  <property name="RexxProperty" dispid="10">
+    <get internalName="RexxGet" />
+    <put internalName="RexxPut" />
+    </property>
+  <method name="DefaultMethod" dispid="0">
+    <parameter name="ReallyForTheOutsideWorld" />
+    </method>
+  </public>
+
+  <object id="WShell" progid="WScript.Shell" />
+  <reference object="ADODB.Recordset"/>
+  <resource id="MadHatter" ><![CDATA[The duck is Daffy]]></resource>
+
+<!---
+  ---    This is the actual script code.  Note that the property
+  ---  is declared at the highest scope.  If this is not done,
+  ---  then the property will not be found, and the script
+  ---  will not abend when the property is referenced.
+ !-->
+  <script language="Object Rexx" ><![CDATA[
+InternalPropertyName = "Sample Property"
+EPN = "short name does it Sample Property"
+Say "Doo whah"
+
+::Routine NamedRoutine Public
+say "There are "Arg()" args."
+a = RxMessageBox("Is executing, now.","NamedRoutine","OK",)
+  Return
+
+::Routine DefaultMethod Public
+say "There are "Arg()" args."
+Say  "The EPN property is '"Value("EPN",,"WSHPROPERTY")"'"
+a = RxMessageBox("Is executing, now.","DefaultMethod","OK",)
+WShell = .OLEObject~new("WScript.Shell")
+a = WShell~Popup("A message via an implicit COM object.");
+  Return  "a value"
+
+
+::Routine RexxGet Public
+a = RxMessageBox("in RexxGet","Title","OK",)
+  return "REXXProperty"
+
+::Routine RexxPut Public
+  return
+
+
+  ]]></script>
+
+</component>
+
+</package>

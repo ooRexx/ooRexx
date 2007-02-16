@@ -1,0 +1,94 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/******************************************************************************/
+/* REXX Macros                                                  rexxsomm.cmd  */
+/*                                                                            */
+/* Create the REXX SOM Interface Objects                                      */
+/*                                                                            */
+/******************************************************************************/
+/* this is a method installed on the server class. */
+expose somClassMgrObj somInit
+use arg fullInit
+
+if \var('FULLINIT') then fullinit = 1
+
+if \fullInit
+ then Do
+   /* set up a public entry for the SOM class manager object */
+   .localserver~setsom
+   .localserver~setid(.nil,0)
+   .local~setentry('!SOM',.localserver)
+   .local~setentry('SOM',.localserver)
+ end
+else do
+ if \sominit then Do
+  somInit = .true
+  somClassMgrObj = self~!C_somInitialize
+  .local~setentry('SOMClassMgrObject',.!SOM~make_proxy(somClassMgrObj))
+  if \.environment~hasentry('sclass') then do
+                                       /* create the class for classes      */
+                                       /*shadowed from or to SOM            */
+    sclass = .!M_SOMProxy~subclass('sclass')
+    sclass~define('NEW', .!somMethods~sclass_new)
+    sclass~define('!IMPORT', .!somMethods~sclass_!import)
+    sclass~define('SOMPROXY', .!somMethods~sclass_somproxy)
+    .environment['SCLASS'] = sclass
+  End
+  if \.environment~hasentry('dsclass') then do
+                                       /* create the class for classes      */
+                                       /*shadowed from or to DSOM           */
+    dsclass = .sclass~subclass('dsclass')
+    dsclass~define('NEW', .!somMethods~dsclass_new)
+    .environment['DSCLASS'] = dsclass
+  End
+
+  /* create shadows for SOMObject and SOMClass classes */
+  .local~setentry('SOMObject',.!somproxy~subclass('SOMObject',.sclass)~~!import)
+  .localserver~addclass(.SOMObject,.SOMObject~!somclass)
+  .local~setentry('SOMClass',.!SOM~import('SOMClass'))
+
+                                       /* Initializing SOM under the Shell  */
+                                       /*  or in the MVS operating system?  */
+  if (self \= .wps) & ('MVS' \= .system~intname~translate) then
+                                       /* Nope, so start message Wait loop, */
+                                       /*  The Shell will do this on its own*/
+                                       /*  it needs this delayed....        */
+    self~!startMessageWait
+ End
+
+end

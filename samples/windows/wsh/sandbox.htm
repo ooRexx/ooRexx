@@ -1,0 +1,79 @@
+<HTML>
+<!--
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+ !-->
+<BODY BGCOLOR="#ffffff">
+<FONT FACE="Arial, Helvetica" COLOR="#f00000">
+<H1>Open Object Rexx in sandbox mode</H1>
+<FONT COLOR="#000000">
+<P>When the Open Object Rexx scripting engine is run in the so-called
+<I>sandbox mode</I>, access to some system and REXX resources is
+not allowed. You can find some examples here (click on the script
+text (colored in blue) to run it):</P>
+<P>Accessing the filesystem:<BR>
+<FONT COLOR="#0000ff" SIZE="4">
+<TT onclick="call lineout 'c:\temp\illegal.tmp', 'File I/O is not allowed!'"
+    LANGUAGE="Object REXX">
+call lineout 'c:\temp\illegal.tmp', 'File I/O is not allowed!'</TT></P>
+</FONT>
+
+<P>Issuing host commands:<BR>
+<FONT COLOR="#0000ff" SIZE="4">
+<TT onclick="'date /t'"
+    LANGUAGE="Object REXX">
+'date /t'</TT></P>
+</FONT>
+
+<P>Creating STREAM objects:<BR>
+<FONT COLOR="#0000ff" SIZE="4">
+<TT onclick="test = .stream~new('c:\temp\illegal.tmp')"
+    LANGUAGE="Object REXX">
+test = .stream~new('c:\temp\illegal.tmp')</TT></P>
+</FONT>
+
+<P>Accessing certain entries in .LOCAL:<BR>
+<FONT COLOR="#0000ff" SIZE="4">
+<TT onclick="say .local['OUTPUT']"
+    LANGUAGE="Object REXX">
+say .local['OUTPUT']</TT></P>
+</FONT>
+
+</FONT>
+</BODY>
+</HTML>

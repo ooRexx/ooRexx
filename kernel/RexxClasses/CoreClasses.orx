@@ -1,0 +1,1036 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/******************************************************************************/
+/* REXX Macros                                                  oryxb.orx     */
+/*                                                                            */
+/* Create the Rexx base (Object/Class) classes.                               */
+/*                                                                            */
+/******************************************************************************/
+
+use arg kernel_methods
+
+say ('creating the system specific methods ...')
+                                       /* name the common objects           */
+.environment~objectname = "The environment"
+.kernel~objectname = "The kernel directory"
+.nil~objectname = "The NIL object"
+
+say ('Adding setlike methods to table, relation, and directory')
+set_methods = .table~new               /* get a table directory             */
+                                       /* add the single item methods       */
+set_methods~put(.methods~single_union,        'UNION')
+set_methods~put(.methods~single_subset,       'SUBSET')
+set_methods~put(.methods~single_intersection, 'INTERSECTION')
+set_methods~put(.methods~single_difference,   'DIFFERENCE')
+set_methods~put(.methods~single_xor,          'XOR')
+.table~!define_methods(set_methods)    /* add to both table and directory   */
+.directory~!define_methods(set_methods)
+
+                                       /* now repeat with the many item ones*/
+set_methods~put(.methods~many_union,        'UNION')
+set_methods~put(.methods~many_subset,       'SUBSET')
+set_methods~put(.methods~many_intersection, 'INTERSECTION')
+set_methods~put(.methods~many_difference,   'DIFFERENCE')
+set_methods~put(.methods~many_xor,          'XOR')
+.relation~!define_methods(set_methods) /* add to relation                   */
+
+                                       /* make sure the classes don't       */
+.table~!rexxdefined                    /* get changed by users              */
+.directory~!rexxdefined
+.relation~!rexxdefined
+
+/* Call the system dependant routine to define addition methods */
+systemMethods = 'SystemMethods.orx'()           /* case sensitive           */
+
+/********************************************************steve do these need to be moved to class ?
+.class~!addmeth('!SOMDEFINE', systemMethods~!somdefine)
+.class~!addmeth('!CEXPORT', systemMethods~!cexport)
+********************************************************************************/
+
+say ('creating .!sender and defining its instance methods')
+sender = .object~subclass('sender')
+sender_mdict = .table~new
+sender_mdict~put(.methods~sender_init, 'INIT')
+sender_mdict~put(.methods~sender_send, 'SEND')
+sender_mdict~put(kernel_methods["SENDER_GETPID"], '!GETPID')
+sender_mdict~put(kernel_methods["SENDER_SENDMESSAGE"], '!SEND_MESSAGE')
+sender~!define_methods(sender_mdict)
+sender~!rexxdefined                     /* Mark as unchangeable          */
+.environment~setentry('!sender',sender)
+
+
+say ('creating .!server and defining its instance methods')
+server = .object~subclass('server')
+server_mdict = .table~new
+
+server_mdict~put(.methods~server_add_method, 'ADDMETHOD')
+server_mdict~put(.methods~server_addclass, 'ADDCLASS')
+server_mdict~put(.methods~server_addproxy, 'ADDPROXY')
+server_mdict~put(.methods~server_dispatch, 'DISPATCH')
+/*
+server_mdict~put(.methods~server_dump, '!DUMP')
+*/
+server_mdict~put(.methods~server_exit, 'EXIT')
+server_mdict~put(.methods~server_free, 'FREE')
+server_mdict~put(.methods~server_import, 'IMPORT')
+server_mdict~put(.methods~server_!import_lineage, '!IMPORT_LINEAGE')
+server_mdict~put(.methods~server_init, 'INIT')
+server_mdict~put(kernel_methods['!SOMSERVER_INITDSOM'], '!INITDSOM')
+server_mdict~put(kernel_methods['!SOMSERVER_INITDSOMWPS'], '!INITDSOMWPS')
+server_mdict~put(kernel_methods['!SERVER_WAIT'], '!MESSAGEWAIT')
+server_mdict~put(kernel_methods['RUN_PROGRAM'], 'RUN_PROGRAM')
+server_mdict~put(kernel_methods['CALL_PROGRAM'], 'CALL_PROGRAM')
+server_mdict~put(kernel_methods['CALL_STRING'], 'CALL_STRING')
+server_mdict~put(.methods~server_local, 'LOCAL')
+server_mdict~put(.methods~server_make_proxy, 'MAKE_PROXY')
+server_mdict~put(.methods~server_new_class, 'NEW_CLASS')
+server_mdict~put(.methods~server_oclass, 'OCLASS')
+server_mdict~put(.methods~server_remove_oref, 'REMOVE_OREF')
+server_mdict~put(.methods~server_!startMessageWait, '!STARTMESSAGEWAIT')
+server_mdict~put(.methods~server_save_result, 'SAVE_RESULT')
+server_mdict~put(.methods~server_!send_init, '!SEND_INIT')
+server_mdict~put(.methods~server_send, 'SEND')
+server_mdict~put(.methods~server_setid, 'SETID')
+server_mdict~put(.methods~server_setsom, 'SETSOM')
+server_mdict~put(.methods~server_somD_init, 'SOMD_INIT')
+server_mdict~put(.methods~server_somlook, 'SOMLOOK')
+server_mdict~put(.methods~server_somobj, 'SOMOBJ')
+server_mdict~put(.methods~server_!setMethod, '!SETMETHOD')
+
+
+   /* Now install the system specific methods for SERVER */
+server_mdict~put(systemMethods~server_findsomclass       , 'FINDSOMCLASS')
+server_mdict~put(systemMethods~server_init_local         , 'INIT_LOCAL')
+server_mdict~put(systemMethods~server_somclass           , '!SOMCLASS')
+server_mdict~put(systemMethods~server_sominitialize      , 'SOMINITIALIZE')
+server_mdict~put(systemMethods~server_somname            , 'SOMNAME')
+server_mdict~put(systemMethods~server_somparent          , 'SOMPARENT')
+server_mdict~put(systemMethods~server_somproxy           , 'SOMPROXY')
+server_mdict~put(systemMethods~server_somtrace           , 'SOMTRACE')
+server_mdict~put(systemMethods~server_c_sominit          , '!C_SOMINITIALIZE')
+
+server~!define_methods(server_mdict)
+server~!rexxdefined                     /* Mark as unchangeable          */
+.environment~setentry('!server',server)
+
+say ('creating .!DSOMServerProxy and defining its instance methods')
+dserver = .object~subclass('DSOMServerProxy')
+dserver_mdict = .table~new
+dserver_mdict~put(.methods~dserver_unknown          , 'UNKNOWN'      )
+dserver_mdict~put(.methods~dserver_import           , 'IMPORT'       )
+dserver_mdict~put(.methods~dserver_hasmethod        , 'HASMETHOD'    )
+dserver_mdict~put(.methods~dserver_init             , 'INIT'         )
+
+dserver~!define_methods(dserver_mdict)
+dserver~!rexxdefined                     /* Mark as unchangeable          */
+.environment~setentry('!DSOMServerProxy',dserver)
+
+say ('creating .!SOMDServer Methods')
+sdserver_mdict = .directory~new
+sdserver_mdict~put(kernel_methods['SOMDSERVER_GETCLASSOBJ'], 'SOMDGETCLASSOBJ')
+sdserver_mdict~put(kernel_methods['SOMDSERVER_CREATEOBJ']  , 'SOMDCREATEOBJ'  )
+sdserver_mdict~put(kernel_methods['SOMDSERVER_DELETEOBJ']  , 'SOMDDELETEOBJ'  )
+
+.environment~setentry('!SOMDServerMethods', sdserver_mdict)
+
+say ('creating .!SOMD_ObjectMgr Methods')
+objMgr_mdict = .directory~new
+objMgr_mdict~put(kernel_methods['SOMDOBJECTMGR_ENHANCESERVER'],'ENHANCESERVER')
+objMgr_mdict~put(.methods~objMgr_findServer       , 'SOMDFINDANYSERVERBYCLASS')
+objMgr_mdict~put(.methods~objMgr_findServer       , 'SOMDFINDSERVER'          )
+objMgr_mdict~put(.methods~objMgr_findServer       , 'SOMDFINDSERVERSBYCLASS'  )
+objMgr_mdict~put(.methods~objMgr_findServer       , 'SOMDFINDSERVERBYNAME'    )
+objMgr_mdict~put(.methods~objMgr_findServer       , '!SOMDMETHODSINSTALLED'   )
+
+.environment~setentry('!SOMDObjectMgrMethods', objMgr_mdict)
+
+/* make references to .local return the local environment */
+.environment~setmethod('LOCAL',kernel_methods['LOCAL'])
+
+/* install Standalone SOM methods into environment */
+call 'SOMMethods.orx'                        /* case sensitive for Unix           */
+
+/* load the system objects */
+call 'SystemObjects.orx'                           /* all lower case for Unix  @MAE002M */
+
+call 'PlatformObjects.orx'                   -- now load platform-specific builtin classes
+
+say ('Base objects created')
+
+exit
+
+/* ********************************************************************************************* */
+/* ********************************************************************************************* */
+/* *** Start of unattached METHOD definitions for the various enhanced objects created above *** */
+/* ********************************************************************************************* */
+/* ********************************************************************************************* */
+
+/*============================================================================*/
+/*    S I N G L E I T E M   M E T H O D S      (for Directory, and Table)     */
+/*============================================================================*/
+
+/*****************************************/
+/* DIFFERENCE method                     */
+/*****************************************/
+::METHOD single_difference             /* take the difference of collections*/
+use arg other                          /* get the companion object          */
+
+signal on syntax /*@CHM004M*/          /* trap unknown method calls         */
+if (arg() < 1)                         /* no index given?                   */
+  then raise syntax 93.901 array (1)   /* raise an error                    */
+if (arg() > 1)                         /* too many arguments?               */
+  then raise syntax 93.902 array (1)   /* raise an error                    */
+
+if \other~hasmethod("hasindex")        /* is other a collection?            */
+  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+
+new = self~copy                        /* make a new collection             */
+do index over other                    /* loop over the other collection    */
+  new~remove(index)                    /* "subtract" this item              */
+end
+
+return new                             /* return the difference collection  */
+
+syntax:                                /* unknown method sent               */
+  raise propagate                      /* just send on to the caller        */
+
+/*****************************************/
+/* XOR        method                     */
+/*****************************************/
+::METHOD single_xor                    /* take the exclusive or of a set    */
+use arg other                          /* get the companion object          */
+
+signal on syntax /*@CHM004M*/          /* trap unknown method calls         */
+if (arg() < 1)                         /* no index given?                   */
+  then raise syntax 93.901 array (1)   /* raise an error                    */
+if (arg() > 1)                         /* too many arguments?               */
+  then raise syntax 93.902 array (1)   /* raise an error                    */
+if \other~hasmethod("hasindex")        /* is other a collection?            */
+  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+
+new = self~copy
+if other~hasmethod("union") then       /* is other non-primitive collection?*/
+do index over other                    /* do for directory, table, relation */
+  if self~hasindex(index) then         /* in this collection?               */
+    new~remove(index)                  /* remove from the reference set     */
+  else
+    new~put(other[index], index)       /* add non-located                   */
+end
+else do index over other               /* do it for array, queue, and list  */
+  if self~hasindex(index) then         /* in this collection?               */
+    new~remove(index)                  /* remove from the reference set     */
+  else
+    new~put(index, index)              /* add non-located                   */
+end
+
+return new                             /* return the XOR collection         */
+
+syntax:                                /* unknown method sent               */
+  raise propagate                      /* just send on to the caller        */
+
+/*****************************************/
+/* INTERSECTION  method                  */
+/*****************************************/
+::METHOD single_intersection           /* take the intersection of sets     */
+use arg other                          /* get the other collection          */
+
+signal on syntax /*@CHM004M*/          /* trap unknown method calls         */
+if (arg() < 1)                         /* no index given?                   */
+  then raise syntax 93.901 array (1)   /* raise an error                    */
+if (arg() > 1)                         /* too many arguments?               */
+  then raise syntax 93.902 array (1)   /* raise an error                    */
+
+if \other~hasmethod("hasindex")        /* is other a collection?            */
+  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+
+new = self~class~new                   /* create a new collection           */
+do index over other                    /* loop over the other collection    */
+  if self~hasindex(index) then         /* in this collection?               */
+    new~put(self[index], index)        /* add to the intersection collection*/
+end
+
+return new                             /* return the result collection      */
+
+syntax:                                /* unknown method sent               */
+  raise propagate                      /* just send on to the caller        */
+
+/*****************************************/
+/* UNION         method                  */
+/*****************************************/
+::METHOD single_union                  /* take the union of sets            */
+use arg other                          /* get the other collection          */
+
+signal on syntax /*@CHM004M*/          /* trap unknown method calls         */
+if (arg() < 1)                         /* no index given?                   */
+  then raise syntax 93.901 array (1)   /* raise an error                    */
+if (arg() > 1)                         /* too many arguments?               */
+  then raise syntax 93.902 array (1)   /* raise an error                    */
+
+if \other~hasmethod("hasindex")        /* is other a collection?            */
+  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+
+new = self~copy                        /* copy the collection               */
+if other~hasmethod("union") then       /* is other non-primitive collection?*/
+do index over other                    /* do for directory, table, relation */
+  if \new~hasindex(index) then         /* not already there?                */
+    new~put(other[index], index)       /* add to the target collection      */
+end
+else do index over other               /* do it for array, queue, and list  */
+  if \new~hasindex(index) then         /* not already there?                */
+    new~put(index, index)              /* add to the target collection      */
+end
+
+return new                             /* return the target collection      */
+
+syntax:                                /* unknown method sent               */
+  raise propagate                      /* just send on to the caller        */
+
+/*****************************************/
+/* SUBSET        method                  */
+/*****************************************/
+::METHOD single_subset                 /* do we have a subset?              */
+use arg other                          /* get the other collection          */
+
+signal on syntax /*@CHM004M*/          /* trap unknown method calls         */
+if (arg() < 1)                         /* no index given?                   */
+  then raise syntax 93.901 array (1)   /* raise an error                    */
+if (arg() > 1)                         /* too many arguments?               */
+  then raise syntax 93.902 array (1)   /* raise an error                    */
+
+if \other~hasmethod("hasindex")        /* is other a collection?            */
+  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+
+if other~hasmethod("union") then       /* is other non-primitive collection?*/
+do index over self                     /* do for directory, table, relation */
+  if \other~hasindex(index) then       /* not in the other collection?      */
+    return 0                           /* return FALSE (no subset)          */
+end
+else do                                /* do it for array, queue, and list  */
+  object = self~copy                   /* make a copy of this object        */
+  do index over other                  /* loop over the other collection    */
+    object~remove(index)               /* remove from the target collection */
+  end
+  return 0=object~items                /* if nothing left -> proper subset  */
+end
+
+return 1                               /* collection is a proper subset     */
+
+syntax:                                /* unknown method sent               */
+  raise propagate                      /* just send on to the caller        */
+
+/*============================================================================*/
+/*    M A N Y I T E M       M I X I N         (for Relation)                  */
+/*============================================================================*/
+
+/*****************************************/
+/* UNION         method                  */
+/*****************************************/
+::METHOD many_union
+use arg other                          /* get the other collection          */
+
+signal on syntax /*@CHM004M*/          /* trap unknown method requests      */
+if (arg() < 1)                         /* no index given?                   */
+  then raise syntax 93.901 array (1)   /* raise an error                    */
+if (arg() > 1)                         /* too many arguments?               */
+  then raise syntax 93.902 array (1)   /* raise an error                    */
+
+if \other~hasmethod("hasindex")        /* is other a collection?            */
+  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+
+new = self~copy                        /* copy ourself                      */
+if other~hasmethod("union") then       /* is other non-primitive collection?*/
+do                                     /* do for directory, table, relation */
+  supplier = other~supplier            /* get a supplier                    */
+  do while supplier~available          /* loop over the other collection    */
+                                       /* add to the target collection      */
+    new~put(supplier~item, supplier~index)
+    supplier~next                      /* step to the next item             */
+  end
+end
+else do index over other               /* do it for array, queue, and list  */
+  new~put(index, index)                /* add to the target collection      */
+end
+return new                             /* return the union collection       */
+
+syntax:                                /* unknown method sent               */
+  raise propagate                      /* just send on to the caller        */
+
+/*****************************************/
+/* DIFFERENCE    method                  */
+/*****************************************/
+::METHOD many_difference               /* take the difference of collections*/
+use arg other                          /* get the companion object          */
+
+signal on syntax /*@CHM004M*/          /* trap unknown method requests      */
+if (arg() < 1)                         /* no index given?                   */
+  then raise syntax 93.901 array (1)   /* raise an error                    */
+if (arg() > 1)                         /* too many arguments?               */
+  then raise syntax 93.902 array (1)   /* raise an error                    */
+
+if \other~hasmethod("hasindex")        /* is other a collection?            */
+  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+
+new = self~copy                        /* make a new set                    */
+if other~hasmethod("union") then       /* is other non-primitive collection?*/
+do                                     /* do for directory, table, relation */
+  supplier = other~supplier            /* get an object supplier            */
+  do while supplier~available          /* loop over the other collection    */
+                                       /* remove from the target collection */
+    new~removeitem(supplier~item, supplier~index)
+    supplier~next                      /* step to the next item             */
+  end
+end
+else do index over other               /* do it for array, queue, and list  */
+  new~removeitem(index, index)         /* remove from the target collection */
+end
+return new                             /* return the difference collection  */
+
+syntax:                                /* unknown method sent               */
+  raise propagate                      /* just send on to the caller        */
+
+/*****************************************/
+/* XOR           method                  */
+/*****************************************/
+::METHOD many_xor                      /* take the exclusive or of a set    */
+use arg other                          /* get the companion object          */
+
+signal on syntax /*@CHM004M*/          /* trap unknown method calls         */
+if (arg() < 1)                         /* no index given?                   */
+  then raise syntax 93.901 array (1)   /* raise an error                    */
+if (arg() > 1)                         /* too many arguments?               */
+  then raise syntax 93.902 array (1)   /* raise an error                    */
+
+if \other~hasmethod("hasindex")        /* is other a collection?            */
+  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+
+new = self~copy
+catcher = self~class~new               /* create a new empty one            */
+if other~hasmethod("union") then       /* is other non-primitive collection?*/
+do                                     /* do for directory, table, relation */
+  supplier = other~supplier            /* get an object supplier            */
+  do while supplier~available          /* loop over the other collection    */
+    index = supplier~index             /* get the index                     */
+    value = supplier~item              /* and the value                     */
+    if new~hasitem(value, index) then  /* in the reference collection?      */
+      new~removeitem(value, index)     /* remove from the reference set     */
+    else
+      catcher~put(value, index)        /* add non-located to the catcher    */
+    supplier~next                      /* step to the next item             */
+  end
+end
+else do index over other               /* do it for array, queue, and list  */
+  if new~hasitem(index, index) then    /* in the other collection?          */
+    new~removeitem(index, index)       /* remove from the reference set     */
+  else
+    catcher~put(index, index)          /* add non-located to the catcher    */
+end
+return new~union(catcher)              /* now remerge these collections     */
+
+syntax:                                /* unknown method sent               */
+  raise propagate                      /* just send on to the caller        */
+
+/*****************************************/
+/* INTERSECTION  method                  */
+/*****************************************/
+::METHOD many_intersection             /* take the intersection of sets     */
+use arg other                          /* get the other collection          */
+
+signal on syntax /*@CHM004M*/          /* trap unknown method calls         */
+if (arg() < 1)                         /* no index given?                   */
+  then raise syntax 93.901 array (1)   /* raise an error                    */
+if (arg() > 1)                         /* too many arguments?               */
+  then raise syntax 93.902 array (1)   /* raise an error                    */
+
+if \other~hasmethod("hasindex")        /* is other a collection?            */
+  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+
+new = self~class~new                   /* start with a new collection       */
+object = self~copy                     /* copy the target collection        */
+if other~hasmethod("union") then       /* is other non-primitive collection?*/
+do                                     /* do for directory, table, relation */
+  supplier = other~supplier            /* get an other supplier             */
+  do while supplier~available          /* loop over the other collection    */
+    index = supplier~index             /* get the index                     */
+    value = supplier~item              /* and the value                     */
+                                       /* in the reference collection?      */
+    if object~hasitem(value, index) then do
+      new~put(value, index)            /* add to the new collection         */
+      object~removeitem(value, index)  /* remove from the reference set     */
+    end
+    supplier~next                      /* step to the next item             */
+  end
+end
+else do index over other               /* do it for array, queue, and list  */
+                                       /* in the reference collection?      */
+  if object~hasitem(index, index) then do
+    new~put(index, index)              /* add to the new collection         */
+    object~removeitem(index, index)    /* remove from the reference set     */
+  end
+end
+return new                             /* return the new collection         */
+
+syntax:                                /* unknown method sent               */
+  raise propagate                      /* just send on to the caller        */
+
+/*****************************************/
+/* SUBSET        method                  */
+/*****************************************/
+::METHOD many_subset                   /* do we have a subset?              */
+use arg other                          /* get the other collection          */
+
+signal on syntax /*@CHM004M*/          /* trap unknown method calls         */
+if (arg() < 1)                         /* no index given?                   */
+  then raise syntax 93.901 array (1)   /* raise an error                    */
+if (arg() > 1)                         /* too many arguments?               */
+  then raise syntax 93.902 array (1)   /* raise an error                    */
+if \other~hasmethod("hasindex")        /* is other a collection?            */
+  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+
+object = self~copy                     /* make a copy of this object        */
+if other~hasmethod("union") then       /* is other non-primitive collection?*/
+do                                     /* do for directory, table, relation */
+  supplier = other~supplier            /* get an other supplier             */
+  do while supplier~available          /* loop over the other collection    */
+                                       /* remove from target collection     */
+    object~removeitem(supplier~item, supplier~index)
+    supplier~next                      /* step to the next item             */
+  end
+end
+else do index over other               /* do it for array, queue, and list  */
+  object~removeitem(index, index)      /* remove from the target collection */
+end
+return 0=object~items                  /* if nothing left -> proper subset  */
+
+syntax:                                /* unknown method sent               */
+  raise propagate                      /* just send on to the caller        */
+
+
+/* ******************************** */
+/*  S E R V E R     M E T H O D S   */
+/* ******************************** */
+/*
+/* Keep for future Debugging !!!!!!!!!!! */
+::method server_dump
+  /* dump the server tables */
+  expose classdir signature_to_object object_to_signature
+
+  say 'classdir ***********************'
+  do i over classdir
+    say left(i, 10) classdir[i]
+  end /* do */
+
+  say 's2o ****************************'
+  do i over signature_to_object
+    say left(i, 10) signature_to_object[i]
+  end /* do */
+
+  say 'o2s ****************************'
+  do i over object_to_signature
+    say left(i, 60) object_to_signature[i]
+  end /* do */
+*/
+
+::METHOD server_add_method
+ /* add a method to a proxy class */
+  use arg class, mname, ename, lname
+  class~define(mname,.nmethod~new(ename,lname))
+
+::METHOD server_addclass
+ /* add a class to the class table */
+  /*** will not be needed when we have the phase III metaclass ***/
+  expose classdir
+  use arg oryxclass, somclass
+  classdir~setentry(somclass,oryxclass)
+
+::METHOD server_dispatch unguarded
+ /* add a proxy to the proxy table */
+  use arg messageObj
+  messageObj~send
+  return
+
+::METHOD server_exit unguarded
+ /* end the domain server */
+  use arg option
+
+::METHOD server_free                   /* free an object by signature       */
+  expose classdir object_to_signature signature_to_object
+  use arg objectProxy
+                                       /* if in the table,                  */
+  if object_to_signature~hasindex(objectProxy) Then do
+                                       /* remove both aspects of this       */
+    signature_to_object~remove(object_to_signature[objectProxy])
+    object_to_signature~remove(objectProxy)
+  end
+  if classdir~hasentry(objectProxy~somobj) then
+     classdir~remove(objectProxy~somobj) /* and also from the class directory */
+
+::METHOD server_make_proxy             /* find or create a SOM proxy object */
+                                       /* called whenever an address to a   */
+                                       /* SOM object needs to be changed    */
+                                       /* into a SOM proxy object.  This    */
+                                       /* may have already happened for an  */
+                                       /* object, so we first check our     */
+                                       /* table of proxied objects          */
+                                       /* The object to locate is given to  */
+                                       /* as an integer object that         */
+                                       /* represents the address of the     */
+                                       /* SOM object                        */
+  expose som classdir signature_to_object object_to_signature somInit sender
+  use arg signature
+
+  if \somInit then
+    self~somInitialize(.true)
+                                       /* not in the server table?          */
+  if \signature_to_object~hasentry(signature) & som then do
+   if .localserver \= self then Do
+    guard off
+                                       /* nope, do process switch and       */
+                                       /*  resend the message.              */
+    return sender~send(self, self, 'MAKE_PROXY', .array~of(signature))
+   end
+   else Do
+                                       /* all set, lets make a proxy.       */
+    /* There's no entry in servertab for this SOM object, so we need to     */
+    /* make one.  It can be a dumb somproxy unless its class hierarchy      */
+    /* contains any Oryx classes that have been exported to SOM, in which   */
+    /* case the SOM class hierarchy needs to be imported and a class-       */
+    /* specific proxy used.  The classes are imported in a top-down order   */
+    /* via the IMPORT method of the class class.  I have no idea how this   */
+    /* will be generalized to handle multiple inheritance in SOM, but       */
+    /* that's not today's problem.                                          */
+
+    classid = self~!somclass(signature)/* get the object's class            */
+                                       /* no entry there?                   */
+    if \classdir~hasentry(classid) then do
+      sclass = classid                 /* copy the SOM class id             */
+      do forever                       /* loop until success/failure        */
+        sclass = self~somparent(sclass)/* get this classes parent           */
+        if sclass = 0 then             /* reached the top?                  */
+          leave                        /* nothing more to do                */
+                                       /* do we know about this one?        */
+        if classdir~hasentry(sclass) then
+                                       /* and is it imported?               */
+          if \classdir~entry(sclass)~!imported then
+            leave                      /* we're done                        */
+      end
+      if sclass \= 0 then do           /* found a target                    */
+        guard off         /* allow import/inherit/!export to do an addclass */
+                                       /* import this class also            */
+        self~import(self~somname(classid))
+        guard on
+      end
+    end
+                                       /* now have a class?                 */
+    if classdir~hasentry(classid) then
+                                       /* got a class to work with?         */
+      proxy = classdir~entry(classid)~!newopart(signature)
+    else                               /* just just bare bones proxy        */
+      proxy = .!somproxy~!newopart(signature)
+    self~setid(proxy, signature)       /* update the tables                 */
+   end
+  end
+                                       /* return the proxy object           */
+  return signature_to_object~entry(signature)
+
+::METHOD server_import unguarded
+                                       /* create a new shadowed class       */
+  expose sender somInit
+  use arg id, metaclass, classMethods
+
+  signal on syntax /*@CHM004A*/
+  if \somInit then
+    self~somInitialize(.true)
+                                       /* Running on correct process ?      */
+  if .localserver \= self then Do
+                                       /* no, switch to correct process.    */
+    guard off
+    return sender~send(self, self, 'IMPORT', arg(1,'A'))
+  End
+  else Do
+    if \var('METACLASS') Then          /* no metaclass given?               */
+      metaclass = .nil                 /* just .nil for the metaclass       */
+    if \var('CLASSMETHODS') Then       /* no metaclass given?               */
+      classMethods = .nil              /* just .nil for the metaclass       */
+                                       /* go get the som class              */
+    somclass = self~findSomClass(id, 0, 0)
+    if .nil = somclass then            /* nothing back?                     */
+      raise syntax 98.912 array (id)   /* need to raise an error            */
+                                       /* Now import the class and its      */
+                                       /*hierarchy.                         */
+    return self~!import_lineage(somclass, metaclass, classMethods)
+  End
+
+  return /*@CHM004A*/
+
+syntax: raise propagate /*@CHM004A*/
+
+::METHOD server_!import_lineage unguarded
+ /* recursive import of som classes */
+  use arg somclass, metaclass, classMethods
+                                       /* Lookup, class in server classtable*/
+  outclass = self~oclass(somclass~somobj)
+  if  .nil = outclass then             /* If not already imported/known     */
+    do                                 /* Do actual Import                  */
+      parent = somclass~somGetParent   /* Get the parent class for somclass */
+                                       /* At root of hierarchy?             */
+      if .nil = parent | parent = somclass then Do
+        if .nil = metaclass then       /* Explicit MetaClass given?         */
+           metaclass = .sclass         /* SCLASS is the meta class.         */
+                                       /* Additional Class methods given?   */
+                                       /* Nope, create new OREX class,      */
+                                       /*Add SOM Methods, via class_import  */
+        outclass = .!somproxy~subclass(somclass~somGetName, metaclass, classMethods)~~!import
+      End
+      else
+        do
+                                       /* not at root, and this class not   */
+                                       /*imported yet. o now import it.     */
+          rexxparent = self~!import_lineage(parent, metaclass, .nil)
+                                       /* Meta Class given?                 */
+          if .nil = metaclass then
+                                       /* Nope, will have same as superclass*/
+            outclass = rexxparent~subclass(somclass~somGetName,,classMethods)~~!import
+          else                         /* no metaclass provided             */
+            outclass = rexxparent~subclass(somclass~somGetName, metaclass, classMethods)~~!import
+
+                                       /* store in server's tables          */
+          self~setid(outclass, somclass~somobj)
+          self~addclass(outclass, outclass~!somclass)
+        end
+    end
+  return outclass                      /* return the imported Class         */
+
+
+::METHOD server_init
+ /* initialize a server */
+  expose classdir signature_to_object object_to_signature som localenv somInit savedResults somdInit
+
+  classdir = .directory~new
+  signature_to_object = .directory~new
+  object_to_signature = .table~new
+  savedResults = .table~new
+  som      = .false
+  somInit  = .false
+  somdInit = .false
+  self~init_local
+  .local~setentry('LOCALSERVER',self)
+  self~!send_init
+
+ /* set system objects in the local environment */
+  .local~setentry('STDIN',.stream~new('STDIN')~~command('open nobuffer'))
+  .local~setentry('INPUT',.monitor~new(.stdin))
+  .local~setentry('STDOUT',.stream~new('STDOUT')~~command('open nobuffer'))
+  .local~setentry('OUTPUT',.monitor~new(.stdout))
+  .local~setentry('STDERR',.stream~new('STDERR')~~command('open nobuffer'))
+  .local~setentry('ERROR', .monitor~new(.stderr))
+
+  .local~setentry('STDQUE',.rx_queue~new~~set('SESSION'))
+
+::METHOD server_!send_init
+ /* initialize the Oryx client (SEND method) interface */
+  expose sender
+  sender = .!sender~new
+
+::METHOD server_save_result
+ /* anchor a passed out result */
+  expose savedResults
+  use arg resultObj
+  savedResults[resultObj] = resultObj
+
+::method server_!startMessageWait unguarded
+                                       /* return to caller.                 */
+  reply
+                                       /* Now go and wait for messages      */
+                                       /*  to arrive, this method NEVER     */
+                                       /*  returns.                         */
+  self~!messageWait
+
+::METHOD server_send unguarded
+                                       /* send a message through sender to  */
+                                       /*Mak sure we run on correct process */
+  expose sender
+  use arg target, message, args
+                                       /* Were args omitted?                */
+  if arg(3,'o') then
+    args = .array~new(0)
+
+  sender~send(self, target, message, args)
+  if var('RESULT') then
+    return result
+
+::METHOD server_local unguarded
+ /* return the local environment */
+  expose localenv
+  return localenv
+
+
+::METHOD server_new_class
+ /* create a new proxy class */
+  use arg name, superclass
+  class = .class~new(name)
+  if .environment~hasentry(superclass) then
+    class~inherit(.environment~entry(superclass))
+  else
+    class~inherit(.object)
+  .environment~setentry(name,class)
+  return class
+
+::METHOD server_oclass
+ /* find an Oryx class in the class table */
+  expose classdir
+  use arg somclass
+  return classdir~entry(somclass)      /* just return the class entry       */
+
+::METHOD server_remove_object          /* remove an object from our tables  */
+  expose object_to_signature
+  use arg object
+  object_to_signature~remove(object)
+  if object~hasmethod('FREESOMOBJ') then
+    object~freesomobj
+
+::METHOD server_setid unguarded
+ /* set up a client id for an object */
+  expose signature_to_object object_to_signature
+  use arg object, signature
+                                       /* already have know about this  */
+                                       /*  signature.                   */
+  if \signature_to_object~hasentry(signature)  then
+                                       /* no add this to directory.     */
+    signature_to_object[signature] = object
+                                       /* always add to object_to_sig   */
+  object_to_signature[object] = signature
+
+
+::METHOD server_setsom
+ /* make the server work according to SOM rules */
+  expose som
+  som = .true
+
+::METHOD server_somd_init
+  expose somInit somdInit
+
+                                       /* Allow for multiple invocations    */
+                                       /* of SOMD_Init, return is done      */
+  if \somdInit then Do
+
+   if \somInit then                    /* See if SOM initialized.           */
+    self~somInitialize(.true)          /* initialize if not.                */
+                                       /* Initialize the DSOM env, and      */
+                                       /* set up SOMD_ObjectMgr in local    */
+                                       /* environment                       */
+   .local['SOMD_OBJECTMGR'] = self~!initDSOM
+   .local['DSOM'] = .!DSOMServerProxy~new
+   somdInit = .true                    /* indicate DSOM initialized.        */
+  end
+                                       /* Return the dsom serverProxy       */
+  return .dsom
+
+
+::METHOD server_somlook unguarded
+ /* look to see if OREF has SOM object reference */
+  expose object_to_signature
+  use arg object
+  if object_to_signature~hasindex(object) then do
+    return object_to_signature[object]
+    end
+  else
+    return .nil  /* special value meaning no SOM object */
+
+
+::METHOD server_somobj
+ /* convert OREF to SOM object reference */
+  expose object_to_signature
+  use arg object
+
+  /* look up in servertab for now, but we could send a SOMOBJ message */
+  /* to proxy objects - if we could identify them....                 */
+                                       /* no proxy created for this?        */
+  if \object_to_signature~hasindex(object) then do
+    somclass = .nil                    /* no somclass so far                */
+    class = object~class               /* get the object's class            */
+    if class~hasmethod('SOMCLASS') then/* potentially have a SOM class?     */
+      somclass = class~!somclass       /* get the som class                 */
+    if .nil = somclass then            /* if it didn't work, use default    */
+      return .nil                      /* no SOMObject/SOMClass, doesn't    */
+                                       /* exist.                            */
+    guard off                          /* allow somInit to run              */
+                                       /* get a som object signature        */
+                                       /* (which also updates the lookup    */
+                                       /* tables for us                     */
+    somobj = self~somproxy(object,somclass)
+    end
+  else
+                                       /* just return this directly         */
+    somobj = object_to_signature[object]
+  return somobj
+
+
+::METHOD server_!setMethod
+ /* add a new method to server object    */
+  use arg name, method
+  self~setMethod(name, method)
+
+/* ********************************  */
+/*  S E N D E R     M E T H O D S   */
+/* ******************************** */
+
+
+::METHOD sender_init
+ /* initialize the Oryx client (SEND method) interface */
+  expose pid
+
+  exit = 0
+  terminated = 0
+  ready = 0
+  pid = self~!getPid
+  return
+
+::METHOD sender_send unguarded
+ /* send a message on this process                         */
+  expose pid
+  use arg server, target, message, args
+
+  signal on syntax name exception      /*** trap termination events ***/
+
+  messageObj = .message~new(target, message, 'a', args)
+                                       /* This ensures the message is sent  */
+                                       /*on correct process                 */
+  self~!send_message(pid, messageObj)
+
+  messageObj~result
+  if var('RESULT') then
+   return result
+  else
+   return
+
+exception:
+  exit
+
+/* **************************************************  */
+/*  D S O M C l i e n t P r o x y      M E T H O D S   */
+/* *************************************************** */
+
+::METHOD dserver_init
+  expose server
+  self~init:super                      /* Forward to superClass             */
+  server = .localServer                /* Remember local server, Actual svr */
+
+::METHOD dserver_import
+  expose server
+  use arg id, metaclass, classMethods
+                                       /* Lookup class through DSOM_ObjectMg*/
+                                       /* And then do OREXX class creation  */
+                                       /* Stuff.  If not found in DSOM do   */
+                                       /* Local .SOM import                 */
+                                       /* create a new shadowed class       */
+
+  signal on syntax /*@CHM004A*/
+                                       /* Running on correct process ?      */
+  if .localserver \= server then Do
+                                       /* no, switch to correct process.    */
+    guard off
+    return server~send(self, 'IMPORT', arg(1,'A'))
+  End
+  else Do
+    if \var('METACLASS') Then          /* no metaclass given?               */
+      metaclass = .dsclass             /* use default DSOM metaClass        */
+    if \var('CLASSMETHODS') Then       /* no classMethods Given?            */
+      classMethods = .nil              /* just .nil for the metaclass       */
+                                       /* Force load of local class         */
+    somclass = server~findSomClass(id, 0, 0)
+    if .nil = somclass then            /* nothing back?                     */
+      raise syntax 98.912 array (id)   /* need to raise an error            */
+                                       /* go get the DSOM class             */
+                                       /* Lookup a DSOM Server for class.   */
+    dsomServer = .somd_objectMgr~somdFindAnyServerByClass(id);
+
+    if .nil = dsomServer then          /*Did we find a server?              */
+                                       /* No,                               */
+                                       /* Let base server(SOM) try to import*/
+      return server~import(id, metaclass, classMethods)
+    else Do
+                                       /* Now ask DSOM Server for class obj */
+      somclass = dsomServer~somdGetClassObj(id)
+    End
+
+    if .nil = somclass then            /* nothing back?                     */
+      raise syntax 98.912 array (id)   /* need to raise an error            */
+                                       /* Now import the class and its      */
+                                       /*hierarchy.                         */
+    return server~!import_lineage(somclass, metaclass, classMethods)
+  End
+
+  return /*@CHM004A*/
+
+syntax: raise propagate /*@CHM004A*/
+
+::METHOD dserver_hasmethod
+  expose server
+  use arg method
+                                       /* Do I know about method?           */
+  if \self~hasmethod:super(method) then
+    return server~hasmethod(method)    /* Nope, see if real Server does.    */
+  else
+    return .true                       /* I know so let use know it.        */
+
+::METHOD dserver_unknown
+  expose server
+  use arg msgname, arglist
+                                       /* Forward all messages to Actual    */
+                                       /*Server                             */
+  forward to (server) message (msgname) arguments (arglist)
+
+/* **************************************************  */
+/*  S O M D O b j e c t M g r          M E T H O D S   */
+/* *************************************************** */
+
+::method objMgr_FindServer
+                                       /* FOrward message to super class    */
+  forward class (super) continue
+  somdServer = result
+                                       /* Now add the Kernel level          */
+                                       /*SOMDServer methods, certain ones   */
+                                       /*cannot go through dsom_send        */
+                                       /* See if already installed methods? */
+  if \somdServer~hasmethod('!SOMDMETHODSINSTALLED')  then Do
+                                       /* Make sure Server gets enhanced.   */
+                                       /* also installs the !SOMDMETHODSINS */
+                                       /* Methodsso it isn't done again.    */
+    self~enhanceServer(somdServer, .!somdServerMethods)
+  End
+  return somdServer

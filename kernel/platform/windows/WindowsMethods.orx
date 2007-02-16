@@ -1,0 +1,131 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+                                       /* copy .methods, to begin with    */
+                                       /*  This is our starting point for */
+                                       /* The return directory of methods */
+meths = .methods~copy
+                                       /* add the SOM Initializationroutne*/
+meths[server_SomInitialize] = .method~newfile("SOMInterfaceObjects.orx")
+
+functions = .kernel~functions          /* get the function table            */
+  /**************************************************************/
+  /* Define the OS/2 system specific functions                  */
+  /**************************************************************/
+functions['BEEP']         = meths~function_beep
+functions['SETLOCAL']     = meths~function_setlocal
+functions['ENDLOCAL']     = meths~function_endlocal
+functions['FILESPEC']     = meths~function_filespec
+functions['DIRECTORY']    = meths~function_directory
+functions['RXQUEUE']      = meths~function_rxqueue
+functions['RXFUNCADD']    = meths~function_rxfuncadd
+functions['RXFUNCDROP']   = meths~function_rxfuncdrop
+functions['RXFUNCQUERY']  = meths~function_rxfuncquery
+functions['RXMESSAGEBOX'] = meths~function_rxmessagebox
+functions['!QUEUEEXIT']   = meths~function_queueexit
+
+                                       /* Return system specific methods  */
+return meths
+
+/* **************************************** */
+/*    F U N C T I O N    M E T H O D S      */
+/* **************************************** */
+
+::method function_rxqueue
+  use arg keyword, queue_name
+  parse upper var keyword keyword
+  signal on syntax
+  if arg() > 2 then
+     raise syntax 40.004 array ('RXQUEUE', 2)
+
+  if substr(keyword,1,1) = 'G' then
+    if arg() > 1 then
+      raise syntax 40.004 array ('RXQUEUE', 1)
+    else
+      return .stdque~get
+
+  if substr(keyword,1,1) = 'S' then do
+    queue_name = !queueexit(queue_name)/* give the exit a pass     */
+    if symbol(queue_name) = 'BAD' then
+      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
+    return .stdque~set(queue_name)
+  end
+
+  if substr(keyword,1,1) = 'C' then do
+    if symbol(queue_name) = 'BAD' then
+      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
+    if (Arg(2,'o') = 1) then
+      queue_name = 'S00001Q0000000001'
+    return .stdque~create(queue_name)
+  end
+
+  if substr(keyword,1,1) = 'D' then do
+    if symbol(queue_name) = 'BAD' then
+      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
+    return .stdque~delete(queue_name)
+  end
+  raise syntax 40.904 array ('RXQUEUE', 1, 'CDGS', keyword)
+  return
+
+syntax: raise propagate
+
+::method function_queueexit     EXTERNAL 'REXX function_queueExit'
+::method function_rxfuncadd     EXTERNAL 'REXX sysRxfuncadd'
+::method function_rxfuncdrop    EXTERNAL 'REXX sysRxfuncdrop'
+::method function_rxfuncquery   EXTERNAL 'REXX sysRxfuncquery'
+
+::method function_beep          EXTERNAL 'REXX sysBeep'
+::method function_setlocal      EXTERNAL 'REXX sysSetLocal'
+::method function_endlocal      EXTERNAL 'REXX sysEndLocal'
+::method function_directory     EXTERNAL 'REXX sysDirectory'
+::method function_filespec      EXTERNAL 'REXX sysFilespec'
+::method function_rxmessagebox  EXTERNAL 'REXX sysMessageBox'
+
+
+/* ******************************** */
+/*  S E R V E R     M E T H O D S   */
+/* ******************************** */
+
+::METHOD server_init_local EXTERNAL 'REXX server_init_local'
+::METHOD server_C_sominit    EXTERNAL 'REXX server_c_sominit'
+::METHOD server_findSomClass EXTERNAL 'REXX server_findsomclass'
+::METHOD server_somclass EXTERNAL 'REXX server_somclass'
+::METHOD server_somname EXTERNAL 'REXX server_somname'
+::METHOD server_somparent EXTERNAL 'REXX server_somparent'
+::METHOD server_somproxy EXTERNAL 'REXX server_somproxy'
+::METHOD server_somtrace EXTERNAL 'REXX server_somtrace'
+

@@ -1,0 +1,5612 @@
+$----------------------------------------------------------------------------
+$
+$ Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
+$ Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.
+$
+$ This program and the accompanying materials are made available under
+$ the terms of the Common Public License v1.0 which accompanies this
+$ distribution. A copy is also available at the following address:
+$ http://www.oorexx.org/license.html
+$
+$ Redistribution and use in source and binary forms, with or
+$ without modification, are permitted provided that the following
+$ conditions are met:
+$
+$ Redistributions of source code must retain the above copyright
+$ notice, this list of conditions and the following disclaimer.
+$ Redistributions in binary form must reproduce the above copyright
+$ notice, this list of conditions and the following disclaimer in
+$ the documentation and/or other materials provided with the distribution.
+$
+$ Neither the name of Rexx Language Association nor the names
+$ of its contributors may be used to endorse or promote products
+$ derived from this software without specific prior written permission.
+$
+$ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+$ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+$ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+$ FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+$ OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+$ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+$ TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+$ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+$ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+$ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+$ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+$
+$----------------------------------------------------------------------------
+$-----------------------------------------------------------------------------*/
+$  FILE NAME...: rexxmsg.src                                                   |
+$  DESCRIPTION.: Error messages for Object REXX for OS2/WIN/LINUX/AIX          |
+$  MODULE TYPE : Message catalogue                                             |
+$                                                                              |
+$                                                                              |
+$                       - IBM OBJECT REXX FOR AIX -                            |
+$                                                                              |
+$  STATUS......: Version 1, Release 2, Modification level 0, Fix level 0       |
+$                                                                              |
+$  NOTES.......: msgp: KREX     for Kernel REXx message                        |
+$                msgp: AREX     for Api    REXx message                        |
+$                msgp: XREX     for NO     REXx message in Messages and Codes  |
+$                msgp: SREX     for SOM    REXx message                        |
+$                msgp: OREX     for OSA    REXx message                        |
+$                                                                              |
+$                                                                              |
+$  Revision....: 1.0  Workfile: /CMVC/kernel.rexxmsg.src                       |
+$                                                                              |
+$  Date........: 98/02/23  13:22:00                                            |
+$-----------------------------------------------------------------------------*/
+$
+$/* Reserved for ansi, not used by OREXX.             0001 */ /* @MAE007D */
+$/* Reserved for ansi, not used by OREXX.             0002 */
+$/* Reserved for ansi, not used by OREXX.             0003 */
+$ MSG OWNER: MIC
+msg#  0003  3000
+msgp: KREX
+msgc: Warning
+snam: Error_Program_unreadable
+txt: Failure during initialization%0
+exp: The REXX program could not be read from the disk.
+sys: None
+usr: Verify file's existence and make sure no other process
+     has it locked.
+$
+$ MSG OWNER: MIC  (not in win)
+msg#  0004  4000
+msgp: KREX
+msgc: Warning
+snam: Error_Program_interrupted
+txt: Program interrupted%0
+exp: The system interrupted the execution of your program
+     because of an error or a user request.
+sys: None
+usr: Trap interrupts via CALL ON HALT or SIGNAL ON HALT.
+$
+$/* Reserved for ansi, not used by OREXX.             5001 */
+$
+$ MSG OWNER: MIC
+msg#  0005  5000
+msgp: KREX
+msgc: Warning
+snam: Error_System_resources
+txt: System resources exhausted%0
+exp: While trying to execute a program, the language
+     processor was unable to get the resources it needed
+     to continue. For example, it could not get the space
+     needed for its work areas or variables. The program
+     that called the language processor might itself have
+     already used up most of the available storage.  Or a
+     request for storage might have been for more than the
+     implementation maximum.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0006  6000
+msgp: KREX
+msgc: Warning
+snam: Error_Unmatched_quote
+txt: Unmatched "/*" or quote%0
+exp: A comment or literal string was started but never finished.
+     This could be because the language processor detected:
+.    - The end of the program (or the end of the string in an
+.      INTERPRET instruction) without finding the ending "*/" for
+.      a comment or the ending quotation mark for a literal string
+.    - The end of the line for a literal string.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0007  7000
+msgp: KREX
+msgc: Warning
+snam: Error_When_expected
+txt: WHEN or OTHERWISE expected%0
+exp: At least one WHEN construct (and possibly an OTHERWISE clause)
+     is expected within a SELECT instruction.  This message is
+     issued if any other instruction is found or there is no WHEN
+     construct before the OTHERWISE or all WHEN expressions are
+     false and an OTHERWISE is not present. A common cause of
+     this error is if you forget the DO and END around the list
+     of instructions following a WHEN.
+     For example:
+.    WRONG                  RIGHT
+.    Select                 Select
+.      When a=c then          When a=c then DO
+.    Say 'A equals C'       Say 'A equals C'
+.    exit                   exit
+.    Otherwise nop            end
+.    end                    Otherwise nop
+.    end
+sys: None
+usr: Look for any instruction other than WHEN (or for any
+     missing WHEN construct before the OTHERWISE) in the
+     SELECT construct.
+$
+$ MSG OWNER: MIC
+msg#  0008  8000
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_then
+txt: Unexpected THEN or ELSE%0
+exp: A THEN or an ELSE clause was found that does not match
+     a corresponding IF or WHEN clause. This often occurs
+     because of a missing END or DO...END in the THEN part
+     of a complex IF...THEN...ELSE construction. For example:
+.    WRONG                     RIGHT
+.    If a=c then do;           If a=c then do;
+.    Say EQUALS                Say EQUALS
+.    exit                      exit
+.    else                        end
+.    Say NOT EQUALS            else
+.    Say NOT EQUALS
+sys: None
+usr: Look for a missing END or DO...END in the THEN part
+     of a complex IF...THEN...ELSE construction.
+$
+$ MSG OWNER: MIC
+msg#  0009  9000
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_when
+txt: Unexpected WHEN or OTHERWISE%0
+exp: A WHEN or OTHERWISE was found outside of a SELECT
+     construction.  You might have accidentally enclosed
+     the instruction in a DO...END construction by
+     leaving out an END, or you might have tried to branch
+     to it with a SIGNAL instruction (which does not work
+     because the SELECT is then ended).
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0010  10000
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_end
+txt: Unexpected or unmatched END%0
+exp: More ENDs were found in your program than DO or SELECT
+     instructions, or the ENDs did not match the DO or
+     SELECT instructions.
+     This message also occurs if you try to transfer control
+     into the middle of a loop using SIGNAL. In this case,
+     the language processor does not expect the END because
+     it did not process the previous DO instruction. Remember
+     also that SIGNAL deactivates any current loops, so it
+     cannot transfer control from one place inside a loop to
+     another.
+     Another cause for this message is placing an END
+     immediately after a THEN or ELSE subkeyword or specifying
+     a name on the END keyword that does not match the name
+     following DO. Putting the name of the control variable on
+     ENDs that close repetitive loops can also help locate this
+     kind of error.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0011  11000
+msgp: KREX
+msgc: Warning
+snam: Error_Control_stack
+txt: Control stack full%0
+exp: Your program exceeds the nesting level limit for control
+     structures (for example, DO...END and IF...THEN...ELSE).
+     This could be because of a looping INTERPRET instruction,
+     such as:
+.    line='INTERPRET line'
+.    INTERPRET line
+     These lines loop until they exceed the nesting level
+     limit and the language processor issues this message.
+     Similarly, a recursive subroutine or internal function
+     that does not end correctly can loop until it causes
+     this message.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+$msg#  0012  0
+$msgp: KREX
+$msgc: Warning
+$snam: Error_Clause_too_long
+$txt: Clause too long%0
+$exp: The length of the internal or external representation of
+$     a clause has exceeded the interpreter's limit.
+$sys: None
+$usr: None
+$
+$ MSG OWNER: MIC
+msg#  0013  13000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_character
+txt: Invalid character in program%0
+exp: A character was found outside a literal (quoted)
+     string that is not a blank or one of the valid
+     alphanumeric and special characters.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0014  14000
+msgp: KREX
+msgc: Warning
+snam: Error_Incomplete_do
+txt: Incomplete DO/SELECT/IF%0
+exp: At the end of the program or the string for an INTERPRET
+     instruction, a DO or SELECT instruction was found
+     without a matching END or an IF clause that is not
+     followed by a THEN clause.  Putting the name of the
+     control variable on each END closing a controlled loop
+     can help locate this kind of error.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0015  15000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_hex
+txt: Invalid hexadecimal or binary string%0
+exp: Hexadecimal strings must not have leading or trailing
+     blanks and blanks can only be embedded at byte
+     boundaries.  Only the digits 0-9 and the letters a-f
+     and A-F are allowed.  The following are valid
+     hexadecimal strings:
+.    '13'x
+.    'A3C2 1c34'x
+.    '1de8'x
+     Binary strings can have blanks only at the boundaries of
+     groups of four binary digits.  Only the digits 0 and 1
+     are allowed.  These are valid binary strings:
+.    '1011'b
+.    '110 1101'b
+.    '101101 11010011'b
+     You might have mistyped one of the digits, for example,
+     typing a letter O instead of the number 0. Or you might
+     have used the one-character symbol X or B (the name of
+     the variable X or B, respectively) after a literal string
+     when the string is not intended as a hexadecimal or binary
+     specification. In this case, use the explicit concatenation
+     operator (||) to concatenate the string to the value of the symbol.
+sys: None
+usr: Use the explicit concatenation operator || in situations where
+     X or B is intended to represent a variable.
+$
+$ MSG OWNER: MIC
+msg#  0016  16000
+msgp: KREX
+msgc: Warning
+snam: Error_Label_not_found
+txt: Label not found%0
+exp: A SIGNAL instruction has been executed or an event for
+     which a trap was set with SIGNAL ON has occurred, and the
+     language processor could not find the label specified.
+     You might have mistyped the label or forgotten to include
+     it.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0017  17000
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_procedure
+txt: Unexpected PROCEDURE%0
+exp: A PROCEDURE instruction was encountered at an
+     incorrect position.  This could occur because no
+     internal routines are active or because the
+     PROCEDURE instruction was not the first instruction
+     processed after the CALL instruction or function call.
+     One cause for this error is dropping through to an
+     internal routine, rather than calling it with a CALL
+     instruction or a function call.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0018  18000
+msgp: KREX
+msgc: Warning
+snam: Error_Then_expected
+txt: THEN expected%0
+exp: A THEN clause must follow each REXX IF or WHEN clause.
+     The language processor found another clause before it
+     found a THEN clause.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0019  19000
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string
+txt: String or symbol expected%0
+exp: A symbol or string was expected after the CALL or
+     SIGNAL keywords but none was found. You might have
+     omitted the string or symbol or inserted a special
+     character (such as a parenthesis).
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0020  20000
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected
+txt: Symbol expected%0
+exp: A symbol is expected after CALL ON, CALL OFF, END,
+     ITERATE, LEAVE, NUMERIC, PARSE, SIGNAL ON, or SIGNAL OFF.
+     Also, a list of symbols or variable references is
+     expected after DROP, EXPOSE, and PROCEDURE EXPOSE. Either
+     there was no symbol when one was required or the language
+     processor found another token.
+sys: None
+usr: None
+$/* Reserved for ansi, not used by OREXX.            20001 */
+$/* Reserved for ansi, not used by OREXX.            20002 */
+$
+$ MSG OWNER: MIC
+msg#  0021  21000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data
+txt: Invalid data on end of clause%0
+exp: A clause such as SELECT or NOP is followed by a
+     token other than a comment.
+sys: None
+usr: None
+$/* Reserved for ansi, not used by OREXX.            21001 */
+$
+$ MSG OWNER: MIC
+msg#  0022  22000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_character_string
+txt: Invalid character string%0
+exp: A literal string contains character codes that are not
+     valid.  This might be because some characters are not
+     possible, or because the character set is extended and
+     certain character combinations are not allowed.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0023  23000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_string
+txt: Invalid data string%0
+exp: A data string (that is, the result of an expression)
+     contains character codes that are not valid.
+     This might be because some characters are not possible,
+     or because the character set is extended and certain
+     character combinations are not allowed.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0024  24000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_trace
+txt: Invalid TRACE request%0
+exp: This message is issued when:
+.    - The option on a TRACE instruction or the argument
+.      to the built-in function does not start with
+.      A, C, E, F, I, L, N, O, or R.
+.    - In interactive debugging, you entered a number
+.      that is not a whole number.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0025  25000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword
+txt: Invalid subkeyword found%0
+exp: An unexpected token was found at his position of
+     an instruction where a particular subkeyword was
+     expected. For example, in a NUMERIC instruction,
+     the second token must be DIGITS, FUZZ, or FORM.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0026  26000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_whole_number
+txt: Invalid whole number%0
+exp: An expression was found that did not evaluate to a whole
+     number or is greater than the limit (the default is
+     999 999 999):
+.    - The positional patterns in parsing templates (including
+.      variable positional patterns)
+.    - The operand to the right of the power operator
+.    - The values of exprr and exprf in the DO instruction
+.    - The values given for DIGITS or FUZZ in the NUMERIC
+.      instruction
+.    - The number used in the option of the TRACE setting
+     This error is also raised if the value is not permitted (for
+     example, a negative repetition count in a DO instruction), or
+     the division performed during an integer divide or
+     remainder operation does not result in a whole number.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0027  27000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_do
+txt: Invalid DO syntax%0
+exp: A syntax error was found in the DO instruction.  You
+     probably used BY, TO, FOR, WHILE, or UNTIL twice,
+     used a WHILE and an UNTIL, or used BY, TO, or FOR when
+     there is no control variable specified.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0028  28000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_leave
+txt: Invalid LEAVE or ITERATE%0
+exp: A LEAVE or ITERATE instruction was found at an incorrect
+     position.  Either no loop was active, or the name
+     specified on the instruction did not match the control
+     variable of any active loop.
+     Note that internal routine calls and the INTERPRET
+     instruction protect DO loops by making them inactive.
+     Therefore, for example, a LEAVE instruction in a subroutine
+     cannot affect a DO loop in the calling routine.
+     You probably tried to use the SIGNAL instruction to
+     transfer control within or into a loop. Because a SIGNAL
+     instruction ends all active loops, any ITERATE or LEAVE
+     instruction causes this message.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0029  29000
+msgp: KREX
+msgc: Warning
+snam: Error_Environment_name
+txt: Environment name too long%0
+exp: The environment name specified on the ADDRESS instruction
+     is longer than permitted for the system under which the
+     interpreter is running.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0030  30000
+msgp: KREX
+msgc: Warning
+snam: Error_Name_too_long
+txt: Name or string too long%0
+exp: A variable name, label name, literal (quoted) string
+     has exceeded the allowed limit of 250 characters.
+     The limit for names includes any substitutions. A
+     possible cause of this error is if you use a period (.)
+     in a name, causing an unexpected substitution.
+     Leaving off an ending quotation mark for a literal
+     string, or putting a single quotation mark in a string,
+     can cause this error because several clauses can be
+     included in the string. For example, write the string
+     'don't' as 'don't' or "don't".
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0031  31000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_variable
+txt: Name starts with number or "."%0
+exp: A variable was found whose name begins with a numeric
+     digit or a period.  You cannot assign a value to such
+     a variable because you could then redefine numeric
+     constants.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0033  33000
+msgp: KREX
+msgc: Warning
+snam: Error_Expression_result
+txt: Invalid expression result%0
+exp: The result of an expression was found not to be
+     valid in the context in which it was used.
+sys: None
+usr: Check for an illegal FUZZ or DIGITS value in a NUMERIC
+     instruction. FUZZ must not become larger than DIGITS.
+$
+$ MSG OWNER: MIC
+msg#  0034  34000
+msgp: KREX
+msgc: Warning
+snam: Error_Logical_value
+txt: Logical value not 0 or 1%0
+exp: An expression was found in an IF, WHEN, DO WHILE,
+     or DO UNTIL phrase that did not result in a 0 or 1.
+     Any value operated on by a logical operator must
+     result in a 0 or 1. For example, the phrase
+       If result then exit rc
+     fails if result has a value other than 0 or 1.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0035   35000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression
+txt: Invalid expression%0
+exp: An expression contains a grammatical error. Possible causes:
+.    - An expression is missing when one is required
+.    - You ended an expression with an operator
+.    - You specified, in an expression, two operators next to
+.      one another with nothing in between them
+.    - You did not specify a right parenthesis when one was
+.      required
+.    - You used special characters (such as operators) in an
+.      intended character expression without enclosing them
+.      in quotation marks
+sys: None
+usr: Check for special characters (such as operators) in an
+     intended character expression that are not enclosed
+     in quotes.
+$
+$ MSG OWNER: MIC
+msg#  0036  36000
+msgp: KREX
+msgc: Warning
+snam: Error_Unmatched_parenthesis
+txt: Unmatched "(" or "[" in expression%0
+exp: A matched parenthesis or bracket was found within
+     an expression. There are more left parentheses
+     than right parentheses or more left brackets
+     than right brackets. To include a single parenthesis
+     in a command, enclose it in quotation marks.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0037  37000
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_comma
+txt: Unexpected ",", ")", or "]"%0
+exp: Either a comma was found outside a function
+     invocation, or there are too many right parentheses
+     or right square brackets in an expression. To include
+     a comma in a character expression, enclose it in
+     quotation marks.  For example, write the instruction:
+       Say Enter A, B, or C
+     as follows:
+       Say 'Enter A, B, or C'
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0038  38000
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_template
+txt: Invalid template or pattern%0
+exp: A special character that is not allowed within
+     a parsing template (for example, "%") has been
+     found, or the syntax of a variable pattern is incorrect
+     (that is, no symbol was found after a left parenthesis).
+     This message is also issued if you omit the WITH
+     subkeyword in a PARSE VALUE instruction.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  (not in win)
+msg#  0039  0000
+msgp: OREX
+msgc: Warning
+snam: Error_Evaluation_stack_overflow
+txt: Evaluation stack overflow%0
+exp: The expression is too complex to be evaluated by the
+     language processor.
+ACTION: Check for too many nested parentheses, functions, etc.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0040  40000
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call
+txt: Incorrect call to routine%0
+exp: An incorrect call to a routine was found. Possible causes:
+.    - You passed incorrect data (arguments) to the built-in
+.      or external routine.
+.    - You passed too many arguments to the built-in, external,
+.      or internal routine.
+.    - The external routine called was not compatible with the
+.      language processor.
+     If you did not try to call a routine, you might have a
+     symbol or a string adjacent to a "(" when you meant it to
+     be separated by a blank or other operator. The language
+     processor would treat this as a function call.  For example,
+     write TIME(4+5) as follows: TIME*(4+5)
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0041  41000
+msgp: KREX
+msgc: Warning
+snam: Error_Conversion
+txt: Bad arithmetic conversion%0
+exp: A term in an arithmetic expression is not a valid
+     number or has an exponent outside the allowed range
+     of -999 999 999 to +999 999 999.
+     You might have mistyped a variable name, or included
+     an arithmetic operator in a character expression
+     without putting it in quotation marks.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0042  42000
+msgp: KREX
+msgc: Warning
+snam: Error_Overflow
+txt: Arithmetic overflow/underflow%0
+exp: The result of an arithmetic operation requires
+     an exponent that is greater than the limit of
+     nine digits (more than 999 999 999 or less than
+     -999 999 999).
+     This error can occur during the evaluation of an
+     expression (often as a result of trying to divide
+     a number by 0) or while stepping a DO loop control
+     variable.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0043  43000
+msgp: KREX
+msgc: Warning
+snam: Error_Routine_not_found
+txt: Routine not found%0
+exp: A function has been invoked within an expression
+     or a subroutine has been invoked by a CALL, but
+     it cannot be found. Possible reasons:
+.    - The specified label is not in the program
+.    - It is not the name of a built-in function
+.    - The language processor could not locate it externally
+     Check if you mistyped the name.
+     If you did not try to call a routine, you might have
+     put a symbol or string adjacent to a "(" when you meant
+     it to be separated by a blank or another operator.
+     The language processor then treats it as a function call.
+     For example, write the string 3(4+5) as 3*(4+5).
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0044  44000
+msgp: KREX
+msgc: Warning
+snam: Error_Function_no_data
+txt: Function or message did not return data%0
+exp: The language processor called an external
+     routine within an expression.  The routine seemed
+     to end without error, but it did not return data
+     for use in the expression.
+     You might have specified the name of a program that
+     is not intended for use as a REXX function. Call
+     it as a command or subroutine instead.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0045  45000
+msgp: KREX
+msgc: Warning
+snam: Error_No_data_on_return
+txt: No data specified on function RETURN%0
+exp: A REXX program has been called as a function, but
+     returned without passing back any data.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0046  46000
+msgp: KREX
+msgc: Warning
+snam: Error_Variable_reference
+txt: Invalid variable reference%0
+exp: Within an ARG, DROP, EXPOSE, PARSE, PULL, or PROCEDURE
+     instruction, the syntax of a variable reference (a
+     variable whose value is to be used, indicated by its
+     name being enclosed in parentheses) is incorrect. The
+     right parenthesis that must immediately follow
+     the variable name might be missing or the variable
+     name might be misspelled.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0047  47000
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_label
+txt: Unexpected label%0
+exp: A label was used in the expression being
+     evaluated for an INTERPRET instruction or
+     in an expression entered during interactive
+     debugging.
+sys: None
+usr: Remove the label from the interpreted data.
+$
+$ MSG OWNER: MIC
+msg#  0048  48000
+msgp: KREX
+msgc: Warning
+snam: Error_System_service
+txt: Failure in system service%0
+exp: The language processor stopped processing the
+     program because a system service, such as stream
+     input or output or the manipulation of the
+     external data queue, has failed to work correctly.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0049  49000
+msgp: KREX
+msgc: Warning
+snam: Error_Interpretation
+txt: Interpretation error%0
+exp: A severe error was detected in the
+     language processor or execution process
+     during internal self-consistency checks.
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            50000 */
+$/* Reserved for ansi, not used by OREXX.            50001 */
+$/* Reserved for ansi, not used by OREXX.            51000 */
+$/* Reserved for ansi, not used by OREXX.            51001 */
+$/* Reserved for ansi, not used by OREXX.            52000 */
+$/* Reserved for ansi, not used by OREXX.            53000 */
+$/* Reserved for ansi, not used by OREXX.            53001 */
+$/* Reserved for ansi, not used by OREXX.            53002 */
+$/* Reserved for ansi, not used by OREXX.            53003 */
+$/* Reserved for ansi, not used by OREXX.            54000 */
+$/* Reserved for ansi, not used by OREXX.            54001 */
+$/* ----------------- End of ANSI Rexx defined error codes -------------------*/
+$/* ----------------- Begin of Object Rexx defined error codes ---------------*/
+$ MSG OWNER: MIC
+msg#  0090  90000
+msgp: KREX
+msgc: Warning
+snam: Error_External_name_not_found
+txt: External name not found%0
+exp: An external class, method, or routine (specified
+     with the EXTERNAL option on a ::CLASS, ::METHOD,
+     or ::ROUTINE directive, or as a second argument
+     on a NEW message to the Method class) cannot be found.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0091  91000
+msgp: KREX
+msgc: Warning
+snam: Error_No_result_object
+txt: No result object%0
+exp: A message term requires a result object, but the
+     method did not return one.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0093  93000
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method
+txt: Incorrect call to method%0
+exp: The specified method or built-in or external routine
+     exists, but you used it incorrectly.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0097  97000
+msgp: KREX
+msgc: Warning
+snam: Error_No_method
+txt: Object method not found%0
+exp: The object does not have a method with the given
+     name.  A frequent cause of this error is an
+     uninitialized variable.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0098  98000
+msgp: KREX
+msgc: Warning
+snam: Error_Execution
+txt: Execution error%0
+exp: The language processor detected a specific error
+     during execution.  The associated error gives the
+     reason for the error.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0099  99000
+msgp: KREX
+msgc: Warning
+snam: Error_Translation
+txt: Translation error%0
+exp: An error was detected in the language syntax. The
+     associated error subcode identifies the syntax error.
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC   (not in win, ANSI message! will substitute 524-526 @MAE007M)
+msg#  0100   0
+msgp: OREX
+msgc: Warning
+snam: Error_at_line
+parm: value source linenumber
+txt: Error &1 running &2, line &3:%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0101  101000
+msgp: KREX
+msgc: Warning
+snam: Message_Translations
+txt: General message text%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0102  101006
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_January
+txt: January%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0103  101007
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_February
+txt: February%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0104  101008
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_March
+txt: March%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0105  101009
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_April
+txt: April%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0106  101010
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_May
+txt: May%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0107  101011
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_June
+txt: June%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0108   101012
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_July
+txt: July%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0109  101013
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_August
+txt: August%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0110  101014
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_September
+txt: September%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0111  101015
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_October
+txt: October%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0112  101016
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_November
+txt: November%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0113  101017
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_December
+txt: December%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0114  101005
+msgp: KREX
+msgc: Info
+snam: Message_Translations_debug_prompt
+txt: +++ Interactive trace. "Trace Off" to end debug, ENTER to Continue. +++%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0115  999020
+msgp: KREX
+msgc: Error
+snam: Error_RXSUBC_general
+txt: The RXSUBCOM parameters are incorrect.
+exp: RXSUBCOM accepts the following parameters:
+.    - To register a subcommand handler:
+.      RXSUBCOM REGISTER Environment_Name Dll_Name Procedure_Name
+
+.    - To query the existence of a specific subcommand handler:
+.      RXSUBCOM QUERY [Environment_Name [Dll_Name]]
+
+.    - To drop a subcommand handler:
+.      RXSUBCOM DROP Environment_Name [Dll_Name]
+
+.    - To load a subcommand handler from disk:
+.      RXSUBCOM LOAD Environment_Name [Dll_Name]
+
+sys: None
+usr: Check the RXSUBCOM parameters and retry the command.
+$
+$ MSG OWNER: MIC
+msg#  0116  0
+msgp: KREX
+msgc: Error
+snam: Error_RXSUBC_register
+txt: The RXSUBCOM parameter REGISTER is incorrect.
+exp: RXSUBCOM REGISTER requires the following parameters:
+
+. RXSUBCOM REGISTER Environment_Name Dll_Name Procedure_Name
+
+.   Environment_Name   is the name of the subcommand handler.
+.   Dll_Name           is the name of the file containing
+.                      the subcommand handler routine.
+.   Procedure_Name     is the name of the procedure that REXX
+.                      calls as a subcommand handler.
+
+sys: None
+usr: Check the RXSUBCOM parameters and retry the command.
+$
+$ MSG OWNER: MIC
+msg#  0117  0
+msgp: KREX
+msgc: Error
+snam: Error_RXSUBC_drop
+txt: The RXSUBCOM parameter DROP is incorrect.
+exp: RXSUBCOM DROP requires that the subcommand handler name be specified.
+
+. RXSUBCOM DROP Environment_Name [Dll_Name]
+
+.   Environment_Name   is the name of the subcommand handler.
+.   Dll_Name           is the name of the file containing the
+.                      subcommand handler routine (optional).
+
+sys: None
+usr: Check the RXSUBCOM parameters and retry the command.
+$
+$ MSG OWNER: MIC
+msg#  0118  0
+msgp: KREX
+msgc: Error
+snam: Error_RXSUBC_load
+txt: The RXSUBCOM parameter LOAD is incorrect.
+exp: RXSUBCOM LOAD requires thatn the subcommand handler name be specified.
+
+. RXSUBCOM LOAD Environment_Name [Dll_Name]
+
+.   Environment_Name   is the name of the subcommand handler.
+.   Dll_Name           is the name of the file containing the
+.                      subcommand handler routine (optional).
+
+sys: None
+usr: Check the RXSUBCOM parameters and retry the command.
+$
+$ MSG OWNER: MIC
+msg#  0119  0
+msgp: KREX
+msgc: Error
+snam: Error_RXQUE_notinit
+txt: The REXX queuing system is not initialized.
+exp: The queuing system requires a housekeeping program to run.
+     This program usually runs under the Presentation Manager
+     shell.  The program is not running.
+sys: None
+usr: Report this message to your IBM service representative.
+$
+$ MSG OWNER: MIC
+msg#  0120  0
+msgp: KREX
+msgc: Error
+snam: Error_RXQUE_size
+txt: The size of the data is incorrect.
+exp: The data supplied to the RXQUEUE command is too long.
+     The RXQUEUE program accepts data records containing
+     0 - 65472 bytes.  A record exceeded the allowable limits.
+sys: None
+usr: Use shorter data records.
+$
+$ MSG OWNER: MIC
+msg#  0121  0
+msgp: KREX
+msgc: Error
+snam: Error_RXQUE_nomem
+txt: Storage for data queues is exhausted.
+exp: The queuing system is out of memory.  No more storage
+     is available to store queued data.
+sys: None
+usr: Delete some queues or remove queued data from the system.
+     Then retry your request.
+$
+$ MSG OWNER: MIC
+msg#  0122  0
+msgp: KREX
+msgc: Error
+snam: Error_RXQUE_name
+parm: ofQUEUE
+txt: The name %1 is not a valid queue name.
+exp: The queue name contains an invalid character.  Only the
+     following characters can appear in queue names:
+
+     'A' .. 'Z', '0' .. '9', '.', '!', '?', '_'
+
+sys: None
+usr: Change the queue name and retry the command.
+$
+$ MSG OWNER: MIC
+msg#  0123  0
+msgp: KREX
+msgc: Error
+snam: Error_RXQUE_access
+txt: The queue access mode is not correct.
+exp: An internal error occurred in RXQUEUE.
+     The RXQUEUE program tried to access a queue with an
+     incorrect access mode. Correct access modes are
+     LIFO and FIFO.
+sys: None
+usr: Report this message to your IBM service representative.
+$
+$ MSG OWNER: MIC
+msg#  0124  0
+msgp: KREX
+msgc: Error
+snam: Error_RXQUE_exist
+parm: QUEUE
+txt: The queue %1 does not exist.
+exp: The command attempted to access a nonexistent queue.
+sys: None
+usr: Create the queue and try again, or use a queue that has been
+     created.
+$
+$ MSG OWNER: MIC
+msg#  0125  0
+msgp: KREX
+msgc: Error
+snam: Error_RXSUBC_query
+txt: The RXSUBCOM parameter QUERY is incorrect.
+exp: RXSUBCOM QUERY requires the environment name be specified.
+
+. RXSUBCOM QUERY Environment_Name [Dll_Name]
+
+.   Environment_Name   is the name of the subcommand handler.
+.   Dll_Name           is the name of the file containing
+.                      the subcommand handler routine (optional).
+
+sys: None
+usr: Check the RXSUBCOM parameters and retry the command.
+$
+$ MSG OWNER: MIC                       /* @MAE007M */
+msg#  0126  101004
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_debug_error
+parm:
+txt: +++ Interactive trace.  Error%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0127  0
+msgp: KREX
+msgc: Error
+snam: Error_REXXC_cmd_parm_incorrect
+txt: The REXXC command parameters are incorrect.
+exp: The REXXC utility was invoked with zero or more than
+     three parameters.  REXXC accepts the following parameters:
+
+.    - To check the syntax of a REXX program:
+.      REXXC Program_name [/s]
+
+.    - To convert a REXX program into a sourceless executable file:
+.      REXXC Program_name Output_file_name [/s]
+
+sys: None
+usr: Check the REXXC parameters and retry the command.
+$
+$ MSG OWNER: MIC
+msg#  0128  0
+msgp: KREX
+msgc: Error
+snam: Error_REXXC_outDifferent
+txt: Output file name must be different from input file name.
+exp: None
+sys: None
+usr: None
+$
+$-----------------------------------------------------------
+$ MSG OWNER: MAE
+msg#  0129  0
+msgp: KREX
+msgc: Error
+snam: Error_REXXC_wrongNrArg
+txt: SYNTAX: REXXC InProgramName [OutProgramName] [/S]
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MAE
+msg#  0130  0
+msgp: KREX
+msgc: Error
+snam: Error_REXXC_SynCheckInfo
+txt: Without OutProgramName REXXC only performs a syntax check
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: CHM
+msg#  0131  0
+msgp: KREX
+msgc: Error
+snam: Error_RXQUE_syntax
+txt: The syntax of the command is incorrect
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: CHM
+msg#  0132  0
+msgp: KREX
+msgc: Error
+snam: Error_RXQUE_memfail
+txt: System error occurred while processing the command
+exp: None
+sys: None
+usr: None
+$-----------------------------------------------------------
+$
+$ MSG OWNER: MIC
+msg#  0200  3001
+msgp: KREX
+msgc: Warning
+snam: Error_Program_unreadable_name
+parm: filename
+txt: Failure during initialization: File "&1" is unreadable%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0201  4001
+msgp: KREX
+msgc: Warning
+snam: Error_Program_interrupted_condition
+parm: condition
+txt: Program interrupted with &1 condition%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0202  6001
+msgp: KREX
+msgc: Warning
+snam: Error_Unmatched_quote_comment
+parm: line_number
+txt: Unmatched comment delimiter ("/*") on line &1%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0203  6002
+msgp: KREX
+msgc: Warning
+snam: Error_Unmatched_quote_single
+txt: Unmatched single quote (')%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0204  6003
+msgp: KREX
+msgc: Warning
+snam: Error_Unmatched_quote_double
+txt: Unmatched double quote (")%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0205  7001
+msgp: KREX
+msgc: Warning
+snam: Error_When_expected_when
+parm: line_number
+txt: SELECT on line &1 requires WHEN%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0206  7002
+msgp: KREX
+msgc: Warning
+snam: Error_When_expected_whenotherwise
+parm: line_number
+txt: SELECT on line &1 requires WHEN, OTHERWISE, or END%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0207  7003
+msgp: KREX
+msgc: Warning
+snam: Error_When_expected_nootherwise
+txt: All WHEN expressions of SELECT are false; OTHERWISE expected%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0208  8001
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_then_then
+txt: THEN has no corresponding IF or WHEN clause%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0209  8002
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_then_else
+txt: ELSE has no corresponding THEN clause%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0210  9001
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_when_when
+txt: WHEN has no corresponding SELECT%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0211  9002
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_when_otherwise
+txt: OTHERWISE has no corresponding SELECT%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0212  10001
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_end_nodo
+txt: END has no corresponding DO or SELECT%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0213  10002
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_end_control
+parm: symbol control_variable line_number
+txt: Symbol following END ("&1") must either match control variable of DO specification ("&2" on line &3) or be omitted%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0214  10003
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_end_nocontrol
+parm: line_number symbol
+txt: END corresponding to DO on line &2 must not have a symbol following it because there is no control variable; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0215  10005
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_end_then
+txt: END must not immediately follow THEN%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0216  10006
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_end_else
+txt: END must not immediately follow ELSE%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0217  10004
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_end_select
+parm: line_number symbol
+txt: END corresponding to SELECT on line &2 must not have a symbol following; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0218  11001
+msgp: KREX
+msgc: Warning
+snam: Error_Control_stack_full
+txt: Insufficient control stack space; cannot continue execution%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0219  13001
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_character_char
+parm: character hex_character
+txt: Incorrect character in program "&1" ('&2'X)%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0220  14001
+msgp: KREX
+msgc: Warning
+snam: Error_Incomplete_do_do
+parm: line_number
+txt: DO instruction on line &1 requires matching END%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0221  14002
+msgp: KREX
+msgc: Warning
+snam: Error_Incomplete_do_select
+parm: line_number
+txt: SELECT instruction on line &1 requires matching END%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0222  14003
+msgp: KREX
+msgc: Warning
+snam: Error_Incomplete_do_then
+parm: line_number
+txt: THEN on line &1 must be followed by an instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0223  14004
+msgp: KREX
+msgc: Warning
+snam: Error_Incomplete_do_else
+parm: line_number
+txt: ELSE on line &1 must be followed by an instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0224  14901
+msgp: KREX
+msgc: Warning
+snam: Error_Incomplete_do_otherwise
+parm: line_number
+txt: OTHERWISE on line &1 requires matching END%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0225  15001
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_hex_hexblank
+parm: position
+txt: Incorrect location of blank in position &1 in hexadecimal string%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0226  15002
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_hex_binblank
+parm: position
+txt: Incorrect location of blank in position &1 in binary string%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0227  15003
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_hex_invhex
+parm: character
+txt: Only 0-9, a-f, A-F, and blank are valid in a hexadecimal string; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0228  15004
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_hex_invbin
+parm: character
+txt: Only 0, 1, and blank are valid in a binary string; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0229  16001
+msgp: KREX
+msgc: Warning
+snam: Error_Label_not_found_name
+parm: label_name
+txt: Label "&1" not found%0
+exp: None
+sys: None
+usr: None
+$/* Reserved for ansi, not used by OREXX.            16002 */
+$/* Reserved for ansi, not used by OREXX.            16003 */
+$
+$ MSG OWNER: MIC
+msg#  0230  17001
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_procedure_call
+txt: PROCEDURE is valid only when it is the first instruction executed after an internal CALL or function invocation%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0231  17901
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_procedure_interpret
+txt: INTERPRET data must not contain PROCEDURE%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0232  18001
+msgp: KREX
+msgc: Warning
+snam: Error_Then_expected_if
+parm: line_number
+txt: IF instruction on line &1 requires matching THEN clause%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0233  18002
+msgp: KREX
+msgc: Warning
+snam: Error_Then_expected_when
+parm: line_number
+txt: WHEN instruction on line &1 requires matching THEN clause%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0234  19001
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_address
+txt: String or symbol expected after ADDRESS keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0235  19002
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_call
+txt: String or symbol expected after CALL keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0236  19003
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_name
+txt: String or symbol expected after NAME keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0237  19004
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_signal
+txt: String or symbol expected after SIGNAL keyword%0
+exp: None
+sys: None
+usr: None
+$
+/* Reserved for ansi, not used by OREXX.            19005 */
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0238  19912
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_stream
+txt: String or symbol expected after STREAM keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0239  19006
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_trace
+txt: String or symbol expected after TRACE keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0240  19007
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_parse
+txt: String or symbol expected after PARSE keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0241  19901
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_class
+txt: String or symbol expected after ::CLASS keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0242  19902
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_method
+txt: String or symbol expected after ::METHOD keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0243  19903
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_routine
+txt: String or symbol expected after ::ROUTINE keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0244  19904
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_requires
+txt: String or symbol expected after ::REQUIRES keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0245  19905
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_external
+txt: String or symbol expected after EXTERNAL keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0246  19906
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_metaclass
+txt: String or symbol expected after METACLASS keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0247  19907
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_subclass
+txt: String or symbol expected after SUBCLASS keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0248  19908
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_inherit
+txt: String or symbol expected after INHERIT keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0249  19909
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_tilde
+txt: String or symbol expected after tilde (~)%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0250  19911
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_colon
+txt: String or symbol expected after superclass colon (:)%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0251  20901
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_drop
+txt: Symbol expected after DROP keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0252  20902
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_expose
+txt: Symbol expected after EXPOSE keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0253  20903
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_parse
+txt: Symbol expected after PARSE keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0254  20904
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_var
+txt: Symbol expected after PARSE VAR%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0255  20905
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_numeric
+parm: symbol
+txt: NUMERIC must be followed by one of the keywords DIGITS, FORM, or FUZZ; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0256  20906
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_varref
+txt: Symbol expected after "(" of a variable reference%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0257  20907
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_leave
+txt: Symbol expected after LEAVE keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0258  20908
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_iterate
+txt: Symbol expected after ITERATE keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0259  20909
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_end
+txt: Symbol expected after END keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0260  20911
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_on
+txt: Symbol expected after ON keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0261  20912
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_off
+txt: Symbol expected after OFF keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0262  20913
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_use
+txt: Symbol expected after USE ARG%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0263  20914
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_raise
+txt: Symbol expected after RAISE keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0264  20915
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_user
+txt: Symbol expected after USER keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0265  20916
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_directive
+txt: Symbol expected after ::%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0266  20917
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_expected_colon
+txt: Symbol expected after superclass colon (:)%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0267  21901
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_nop
+parm: data
+txt: Data must not follow the NOP keyword; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0268  21902
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_select
+parm: data
+txt: Data must not follow the SELECT keyword; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0269  21903
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_name
+parm: data
+txt: Data must not follow the NAME keyword; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0270  21904
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_condition
+parm: data
+txt: Data must not follow the condition name; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0271  21905
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_signal
+parm: data
+txt: Data must not follow the SIGNAL label name; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0272  21906
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_trace
+parm: data
+txt: Data must not follow the TRACE setting; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0273  21907
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_leave
+parm: data
+txt: Data must not follow the LEAVE control variable name; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0274  21908
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_iterate
+parm: data
+txt: Data must not follow the ITERATE control variable name; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0275  21909
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_end
+parm: data
+txt: Data must not follow the END control variable name; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0276  21911
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_form
+parm: data
+txt: Data must not follow the NUMERIC FORM specification; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0277  21912
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_guard_off
+parm: data
+txt: Data must not follow the GUARD OFF specification; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0278  22001
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_character_string_char
+parm: character_string hex_string
+txt: Incorrect character string "&1" ('&2'X)%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0279  22901
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_character_string_DBCS
+txt: Incorrect double-byte character%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0280  23001
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_data_string_char
+parm: string hex_string
+txt: Incorrect data string "&1" ('&2'X)%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0281  24001
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_trace_trace
+parm: value
+txt: TRACE request letter must be one of "ACEFILNOR"; found  "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0282  24901
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_trace_debug
+txt: Numeric TRACE requests are valid only from interactive debugging%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0283  25001
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_callon
+parm: word
+txt: CALL ON must be followed by one of the keywords ERROR, FAILURE, HALT, NOTREADY, USER, or ANY; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0284  25002
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_calloff
+parm: word
+txt: CALL OFF must be followed by one of the keywords ERROR, FAILURE, HALT, NOTREADY, USER, or ANY; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0285  25003
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_signalon
+parm: word
+txt: SIGNAL ON must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOTREADY, NOMETHOD, NOSTRING, NOVALUE, SYNTAX, USER, or ANY; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0286  25004
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_signaloff
+parm: word
+txt: SIGNAL OFF must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOTREADY, NOMETHOD, NOSTRING, NOVALUE, SYNTAX, USER, or ANY; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            25005 */
+$/* Reserved for ansi, not used by OREXX.            25006 */
+$/* Reserved for ansi, not used by OREXX.            25007 */
+$/* Reserved for ansi, not used by OREXX.            25008 */
+$/* Reserved for ansi, not used by OREXX.            25009 */
+$/* Reserved for ansi, not used by OREXX.            25013 */
+$/* Reserved for ansi, not used by OREXX.            25014 */
+$ MSG OWNER: MIC
+msg#  0287  25015
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_numeric
+parm: word
+txt: NUMERIC must be followed by one of the keywords DIGITS, FORM, or FUZZ; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            25016 */
+$
+$ MSG OWNER: MIC
+msg#  0288  25011
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_form
+parm: word
+txt: NUMERIC FORM must be followed by one of the keywords SCIENTIFIC or ENGINEERING; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0289  25901
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_class
+parm: word
+txt: Unknown keyword on ::CLASS directive; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0290  25902
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_method
+parm: word
+txt: Unknown keyword on ::METHOD directive; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0291  25903
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_routine
+parm: word
+txt: Unknown keyword on ::ROUTINE directive; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0292  25904
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_requires
+parm: word
+txt: Unknown keyword on ::REQUIRES directive; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0293  25017
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_procedure
+parm: word
+txt: PROCEDURE must be followed by the keyword EXPOSE or nothing; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0294  25914
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_callonname
+parm: word
+txt: CALL ON condition must be followed by the keyword NAME; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0295  25915
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_signalonname
+parm: word
+txt: SIGNAL ON condition must be followed by the keyword NAME; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0296  25012
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_parse
+parm: word
+txt: PARSE must be followed by one of the keywords ARG, LINEIN, PULL, SOURCE, VALUE, VAR, or VERSION; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0297  25905
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_use
+parm: word
+txt: USE must be followed by the keyword ARG; found "&1"%0
+exp: None
+sys: None
+usr: None
+$  Message for 25.906
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0298  25906
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_raise
+parm: word
+txt: RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, or SYNTAX; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0299  25907
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_raiseoption
+parm: word
+txt: Unknown keyword on RAISE instruction; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0300  25908
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_description
+txt: Duplicate DESCRIPTION keyword found%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0301  25909
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_additional
+txt: Duplicate ADDITIONAL or ARRAY keyword found%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0302  25911
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_result
+txt: Duplicate RETURN or EXIT keyword found%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0303  25912
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_guard_on
+parm: word
+txt: GUARD ON or GUARD OFF must be followed by the keyword WHEN; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0304  26008
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_whole_number_power
+parm: value
+txt: Operand to the right of the power operator (**) must be a whole number; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0305  26002
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_whole_number_repeat
+parm: value
+txt: Value of repetition count expression in DO instruction must be zero or a positive whole number; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0306  26003
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_whole_number_for
+parm: value
+txt: Value of FOR expression in DO instruction must be zero or a positive whole number; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0307  26004
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_whole_number_parse
+parm: value
+txt: Positional pattern of PARSE template must be a whole number; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0308  26005
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_whole_number_digits
+parm: value
+txt: NUMERIC DIGITS value must be a positive whole number; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0309  26006
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_whole_number_fuzz
+parm: value
+txt: NUMERIC FUZZ value must be zero or a positive whole number; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0310  26007
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_whole_number_trace
+parm: value
+txt: Number used in TRACE setting must be a whole number; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0311  26011
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_whole_number_intdiv
+txt: Result of % operation did not result in a whole number%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0312  26012
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_whole_number_rem
+txt: Result of // operation did not result in a whole number%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0313  27001
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_do_whileuntil
+txt: WHILE and UNTIL keywords cannot be used on the same DO loop%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0314  27901
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_do_forever
+parm: data
+txt: Incorrect data following FOREVER keyword on the DO loop; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0315  28001
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_leave_leave
+txt: LEAVE is valid only within a repetitive DO loop%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0316  28002
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_leave_iterate
+txt: ITERATE is valid only within a repetitive DO loop%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0317  28003
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_leave_leavevar
+parm: symbol
+txt: Symbol following LEAVE ("&1") must either match the control variable of a current DO loop or be omitted%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0318  28004
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_leave_iteratevar
+parm: symbol
+txt: Symbol following ITERATE ("&1") must either match the control variable of a current DO loop or be omitted%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0319  29001
+msgp: KREX
+msgc: Warning
+snam: Error_Environment_name_name
+parm: limit environment_name
+txt: Environment name exceeds &1 characters; found "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0320  30001
+msgp: KREX
+msgc: Warning
+snam: Error_Name_too_long_name
+parm: name
+txt: Name exceeds 250 characters:  "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0321  30002
+msgp: KREX
+msgc: Warning
+snam: Error_Name_too_long_string
+parm: string
+txt: Literal string exceeds 250 characters:  "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0322  30901
+msgp: KREX
+msgc: Warning
+snam: Error_Name_too_long_hex
+parm: string
+txt: Hexadecimal literal string exceeds 250 characters "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0323  30902
+msgp: KREX
+msgc: Warning
+snam: Error_Name_too_long_bin
+parm: string
+txt: Binary literal string exceeds 250 characters "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0324  31001
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_variable_assign
+parm: number
+txt: A value cannot be assigned to a number; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0325  31002
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_variable_number
+parm: symbol
+txt: Variable symbol must not start with a number; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0326  31003
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_variable_period
+parm: symbol
+txt: Variable symbol must not start with a "."; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0327  33001
+msgp: KREX
+msgc: Warning
+snam: Error_Expression_result_digits
+parm: value value
+txt: Value of NUMERIC DIGITS ("&1") must exceed value of NUMERIC FUZZ ("&2")%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0328  33002
+msgp: KREX
+msgc: Warning
+snam: Error_Expression_result_maxdigits
+parm: value value
+txt: Value of NUMERIC DIGITS ("&1") must not exceed &2%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            33003 */
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0329  33901
+msgp: KREX
+msgc: Warning
+snam: Error_Expression_result_address
+txt: Incorrect expression result following VALUE keyword of ADDRESS instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0330  33902
+msgp: KREX
+msgc: Warning
+snam: Error_Expression_result_signal
+txt: Incorrect expression result following VALUE keyword of SIGNAL instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0331  33903
+msgp: KREX
+msgc: Warning
+snam: Error_Expression_result_trace
+txt: Incorrect expression result following VALUE keyword of TRACE instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0332  33904
+msgp: KREX
+msgc: Warning
+snam: Error_Expression_result_raise
+txt: Incorrect expression result following SYNTAX keyword of RAISE instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0333  34001
+msgp: KREX
+msgc: Warning
+snam: Error_Logical_value_if
+parm: value
+txt: Value of expression following IF keyword must be exactly "0" or "1"; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0334  34002
+msgp: KREX
+msgc: Warning
+snam: Error_Logical_value_when
+parm: value
+txt: Value of expression following WHEN keyword must be exactly "0" or "1"; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0335  34003
+msgp: KREX
+msgc: Warning
+snam: Error_Logical_value_while
+parm: value
+txt: Value of expression following WHILE keyword must be exactly "0" or "1"; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0336  34004
+msgp: KREX
+msgc: Warning
+snam: Error_Logical_value_until
+parm: value
+txt: Value of expression following UNTIL keyword must be exactly "0" or "1"; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0337  34005
+msgp: KREX
+msgc: Warning
+snam: Error_Logical_value_logical
+parm: operator value
+txt: Value of expression to the left of the logical operator "&1" must be exactly "0" or "1"; found "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            34006 */
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0338  34901
+msgp: KREX
+msgc: Warning
+snam: Error_Logical_value_method
+parm: value
+txt: Logical value must be exactly "0" or "1"; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0339  34902
+msgp: KREX
+msgc: Warning
+snam: Error_Logical_value_guard
+parm: value
+txt: Value of expression following GUARD keyword must be exactly "0" or "1"; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0340  35001
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_general
+parm: token
+txt: Incorrect expression detected at "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0341  35901
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_prefix
+parm: operator
+txt: Prefix operator "&1" is not followed by an expression term%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0342  35902
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_if
+txt: Missing conditional expression following IF keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0343  35903
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_when
+txt: Missing conditional expression following WHEN keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0344  35904
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_control
+txt: Missing initial expression for DO control variable%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0345  35905
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_by
+txt: Missing expression following BY keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0346  35906
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_to
+txt: Missing expression following TO keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0347  35907
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_for
+txt: Missing expression following FOR keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0348  35908
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_while
+txt: Missing expression following WHILE keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0349  35909
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_until
+txt: Missing expression following UNTIL keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0350  35911
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_over
+txt: Missing expression following OVER keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0351  35912
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_interpret
+txt: Missing expression following INTERPRET keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0352  35913
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_options
+txt: Missing expression following OPTIONS keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0353  35914
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_address
+txt: Missing expression following VALUE keyword of an ADDRESS instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0354  35915
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_signal
+txt: Missing expression following VALUE keyword of a SIGNAL instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0355  35916
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_trace
+txt: Missing expression following VALUE keyword of a TRACE instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0356  35917
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_form
+txt: Missing expression following VALUE keyword of a NUMERIC FORM instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0357  35918
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_assign
+txt: Missing expression following assignment instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0358  35919
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_operator
+parm: operator
+txt: Operator "&1" is not followed by an expression term%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0359  35921
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_guard
+txt: Missing expression following GUARD keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0360  35922
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_raise_description
+txt: Missing expression following DESCRIPTION keyword of a RAISE instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0361  35923
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_raise_additional
+txt: Missing expression following ADDITIONAL keyword of a RAISE instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0362  35924
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_raise_list
+txt: Missing "(" on expression list of the ARRAY keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0363  36901
+msgp: KREX
+msgc: Warning
+snam: Error_Unmatched_parenthesis_paren
+parm: position line_number
+txt: Left parenthesis "(" in position &1 on line &2 requires a corresponding right parenthesis ")"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0364  36902
+msgp: KREX
+msgc: Warning
+snam: Error_Unmatched_parenthesis_square
+parm: position line_number
+txt: Square bracket "[" in position &1 on line &2 requires a corresponding right square bracket "]"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0365  37001
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_comma_comma
+txt: Unexpected ","%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0366  37002
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_comma_paren
+txt: Unmatched ")" in expression%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0367  37901
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_comma_bracket
+txt: Unexpected "]"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0368  38001
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_template_trigger
+parm: column_position
+txt: Incorrect PARSE template detected at "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0369  38002
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_template_position
+parm: column_position
+txt: Incorrect PARSE position detected at "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0370  38003
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_template_with
+txt: PARSE VALUE instruction requires WITH keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0371  38901
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_template_missing
+txt: Missing PARSE relative position%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0372  40001
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_external
+parm: routine
+txt: External routine "&1" failed%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            40002 */
+$
+$ MSG OWNER: MIC
+msg#  0373  40901
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_result
+parm: routine length value
+txt: Result returned by &1 is longer than &2:  "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0374  40003
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_minarg
+parm: routine number
+txt: Not enough arguments in invocation of &1; minimum expected is &2%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0375  40004
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_maxarg
+parm: routine number
+txt: Too many arguments in invocation of &1; maximum expected is &2%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0376  40005
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_noarg
+parm: routine argument_number
+txt: Missing argument in invocation of &1; argument &2 is required%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            40006 */
+$/* Reserved for ansi, not used by OREXX.            40007 */
+$/* Reserved for ansi, not used by OREXX.            40008 */
+$/* Reserved for ansi, not used by OREXX.            40009 */
+$ MSG OWNER: MIC
+msg#  0377  40011
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_number
+parm: function_name argument_number value
+txt: &1 argument &2 must be a number; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0378  40012
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_whole
+parm: function_name argument_number value
+txt: &1 argument &2 must be a whole number; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0379  40013
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_nonnegative
+parm: function_name argument_number value
+txt: &1 argument &2 must be zero or positive; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0380  40014
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_positive
+parm: function_name argument_number value
+txt: &1 argument &2 must be positive; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            40015 */
+$
+$ MSG OWNER: MIC
+msg#  0381  40902
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_toobig
+parm: function_name argument_number
+txt: &1 argument &2 must not exceed 999,999,999%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            40016 */
+$
+$ MSG OWNER: MIC
+msg#  0382  40903
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_range
+parm: function_name argument_number value
+txt: &1 argument &2 must be in the range 0-99; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0383  40021
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_null
+parm: function_name argument_number
+txt: &1 argument &2 must not be null%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0384  40022
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_option
+parm: function_name argument_number value
+txt: &1 argument &2 must be a single character or null; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0385  40023
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_pad
+parm: function_name argument_number value
+txt: &1 argument &2 must be a single character; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0386  40024
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_binary
+parm: function_name argument_number value
+txt: &1 argument &2 must be a binary string; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0387  40025
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_hex
+parm: function_name argument_number value
+txt: &1 argument &2 must be a hexadecimal string; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0388  40026
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_symbol
+parm: function_name argument_number value
+txt: &1 argument &2 must be a valid symbol; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            40017 */
+$
+$ MSG OWNER: MIC
+msg#  0389  40904
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_list
+parm: function_name argument_number values value
+txt: &1 argument &2 must be one of &3; found "&4"%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            40018 */
+$
+$ MSG OWNER: MIC
+msg#  0390  40905
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_trace
+parm: value
+txt: TRACE setting letter must be one of "ACEFILNOR"; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0391  40033
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_random
+parm: argument argument
+txt: RANDOM argument 1 ("&1") must be less than or equal to argument 2 ("&2")%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0392  40034
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_sourceline
+parm: argument argument
+txt: SOURCELINE argument 1 ("&1") must be less than or equal to the number of lines in the program (&2)%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0393  40035
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_x2d
+parm: value
+txt: X2D argument 1 cannot be expressed as a whole number; found "&1"%0
+exp: None
+sys: None
+usr: None
+$ Messages for 40.19 and 40.29.
+$
+$/* Reserved for ansi, not used by OREXX.            40036 */
+$/* Reserved for ansi, not used by OREXX.            40037 */
+$/* Reserved for ansi, not used by OREXX.            40038 */
+$/* Reserved for ansi, not used by OREXX.            40039 */
+$/* Reserved for ansi, not used by OREXX.            40041 */
+$/* Reserved for ansi, not used by OREXX.            40042 */
+$ MSG OWNER: MAE
+msg#  0394  40019
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_format_invalid
+parm: function_name value value
+txt: &1 argument 2, "&2", is not in the format described by argument 3, "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            40027 */
+$/* Reserved for ansi, not used by OREXX.            40028 */
+$ MSG OWNER: MAE
+msg#  0395  40029
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_invalid_conversion
+parm: function_name value
+txt: &1 conversion to format "&2" is not allowed%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            40031 */
+$ MSG OWNER: MIC
+msg#  0396  40032
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_random_range
+parm: value value
+txt: RANDOM difference between argument 1 ("&1") and argument 2 ("&2") must not exceed 100000%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MAE
+msg#  0397  40027
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_stream_name
+parm: function_name value
+txt: &1 argument 1 must be a valid stream name; found "&2"%0
+exp: None
+sys: None
+usr: None
+$                                               /* @MAE006M */
+$
+$ MSG OWNER: MIC
+msg#  0398  93958
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_stream_type
+txt: Positioning of transient streams is not valid%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  (not in win, not used so far)
+msg#  0399   0
+msgp: OREX
+msgc: Warning
+snam: Error_incorrect_superclass_name
+parm: value
+txt: SEND argument 2 ("&1") contains an incorrect superclass name%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0400  40912
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_array
+parm: function_name argument_number value
+txt: &1 argument &2 must be a single-dimensional array; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0401  40913
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_nostring
+parm: function_name argument_number value
+txt: &1 argument &2 must have a string value; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0402  40914
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_call_selector
+parm: value
+txt: Unknown VALUE function variable environment selector; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC                       /* may be reused @MAE007D */
+$msg#  0403  0
+$msgp: KREX
+$msgc: Warning
+$snam: XXX
+$parm: PARM1
+$txt: &1 may be issued only in an object method invocation%0
+$exp: None
+$sys: None
+$usr: None
+$
+$ MSG OWNER: MIC
+msg#  0404  41001
+msgp: KREX
+msgc: Warning
+snam: Error_Conversion_operator
+parm: value
+txt: Nonnumeric value ("&1") used in arithmetic operation%0
+exp: None
+sys: None
+usr: None
+$
+$/* Reserved for ansi, not used by OREXX.            41002 */
+$
+$ MSG OWNER: MIC
+msg#  0405  41003
+msgp: KREX
+msgc: Warning
+snam: Error_Conversion_prefix
+parm: value
+txt: Nonnumeric value ("&1") used with prefix operator%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0406  41007
+msgp: KREX
+msgc: Warning
+snam: Error_Conversion_exponent
+parm: number value
+txt: Exponent exceeds &1 digits; found "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0407  41004
+msgp: KREX
+msgc: Warning
+snam: Error_Conversion_to
+parm: value
+txt: Value of TO expression of DO instruction must be numeric; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0408  41005
+msgp: KREX
+msgc: Warning
+snam: Error_Conversion_by
+parm: value
+txt: Value of BY expression of DO instruction must be numeric; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0409  41006
+msgp: KREX
+msgc: Warning
+snam: Error_Conversion_control
+parm: value
+txt: Value of control variable expression of DO instruction must be numeric; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC /* OREXX extensions */
+msg#  0410  41901
+msgp: KREX
+msgc: Warning
+snam: Error_Conversion_raise
+parm: value
+txt: Value of RAISE SYNTAX expression of DO instruction must be numeric; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0411  42001
+msgp: KREX
+msgc: Warning
+snam: Error_Overflow_overflow
+parm: value operator value
+txt: Arithmetic overflow detected at:  "&1&2&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0412  42002
+msgp: KREX
+msgc: Warning
+snam: Error_Overflow_underflow
+parm: value operator value
+txt: Arithmetic underflow detected at:  "&1&2&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0413  42003
+msgp: KREX
+msgc: Warning
+snam: Error_Overflow_zero
+txt: Arithmetic overflow; divisor must not be zero%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0414  42901
+msgp: KREX
+msgc: Warning
+snam: Error_Overflow_expoverflow
+parm: exponent number
+txt: Arithmetic overflow; exponent ("&1") exceeds &2 digits%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0415  42902
+msgp: KREX
+msgc: Warning
+snam: Error_Overflow_expunderflow
+parm: exponent number
+txt: Arithmetic underflow; exponent ("&1") exceeds &2 digits%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0416  42903
+msgp: KREX
+msgc: Warning
+snam: Error_Overflow_power
+txt: Arithmetic underflow; zero raised to a negative power%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0417  43001
+msgp: KREX
+msgc: Warning
+snam: Error_Routine_not_found_name
+parm: routine
+txt: Could not find routine "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0418  43901
+msgp: KREX
+msgc: Warning
+snam: Error_Routine_not_found_requires
+parm: routine
+txt: Could not find routine "&1" for ::REQUIRES%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0419  44001
+msgp: KREX
+msgc: Warning
+snam: Error_Function_no_data_function
+parm: function
+txt: No data returned from function "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0420  45001
+msgp: KREX
+msgc: Warning
+snam: Error_No_data_on_return_name
+parm: routine
+txt: Data expected on RETURN instruction because routine "&1" was called as a function%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0421  46001
+msgp: KREX
+msgc: Warning
+snam: Error_Variable_reference_extra
+parm: token
+txt: Extra token ("&1") found in variable reference list; ")" expected%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0422  46901
+msgp: KREX
+msgc: Warning
+snam: Error_Variable_reference_missing
+txt: Missing ")" in variable reference%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0423  46902
+msgp: KREX
+msgc: Warning
+snam: Error_Variable_reference_use
+parm: token
+txt: Extra token ("&1") found in USE ARG variable reference; "," or end of instruction expected%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0424  47001
+msgp: KREX
+msgc: Warning
+snam: Error_Unexpected_label_interpret
+parm: label
+txt: INTERPRET data must not contain labels; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0425  48001
+msgp: KREX
+msgc: Warning
+snam: Error_System_service_service
+parm: service
+txt: Failure in system service: &1%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0426  90997
+msgp: KREX
+msgc: Warning
+snam: Error_External_name_not_found_class
+parm: class
+txt: Unable to find external class "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0427  90998
+msgp: KREX
+msgc: Warning
+snam: Error_External_name_not_found_method
+parm: method
+txt: Unable to find external method "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0428  90999
+msgp: KREX
+msgc: Warning
+snam: Error_External_name_not_found_routine
+parm: routine
+txt: Unable to find external routine "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0429  91999
+msgp: KREX
+msgc: Warning
+snam: Error_No_result_object_message
+parm: message
+txt: Message "&1" did not return a result object%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC                       /* may be reused @MAE007D */
+$msg#  0430   0
+$msgp: KREX
+$msgc: Warning
+$snam: XXX
+$parm: PARM1 PARM2
+$txt: Non-string object "&1" was compared to string object "&2"%0
+$exp: None
+$sys: None
+$usr: None
+$
+$ MSG OWNER: MIC
+msg#  0431  93901
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_minarg
+parm: number
+txt: Not enough arguments in method; &1 expected%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0432  93902
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_maxarg
+parm: number
+txt: Too many arguments in invocation of method; &1 expected%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0433  93903
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_noarg
+parm: argument
+txt: Missing argument in method; argument &1 is required%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0434  93904
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_number
+parm: argument value
+txt: Method argument &1 must be a number; found "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0435  93905
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_whole
+parm: argument value
+txt: Method argument &1 must be a whole number; found "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0436  93906
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_nonnegative
+parm: argument value
+txt: Method argument &1 must be zero or a positive whole number; found "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0437  93907
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_positive
+parm: argument value
+txt: Method argument &1 must be a positive whole number; found "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0438  93908
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_toobig
+parm: argument limit value
+txt: Method argument &1 must not exceed &2; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0439  93909
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_range
+parm: argument value
+txt: Method argument &1 must be in the range 0-99; found "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0440  93911
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_null
+parm: argument
+txt: Method argument &1 must not be null%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0441  93912
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_hex
+parm: argument value
+txt: Method argument &1 must be a hexadecimal string; found "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0442  93913
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_symbol
+parm: argument value
+txt: Method argument &1 must be a valid symbol; found "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0443  93914
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_list
+parm: argument arguments value
+txt: Method argument &1 must be one of &2; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0444  93915
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_option
+parm: arguments value
+txt: Method option must be one of &1; found "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0445  93916
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_string
+parm: argument
+txt: Method argument &1 must have a string value%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0446  93917
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_methodname
+parm: method
+txt: Method &1 does not exist%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0447  93918
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_index
+parm: index
+txt: Incorrect list index "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0448  93919
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_array
+parm: position
+txt: Incorrect array position "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0449  93921
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_binary
+txt: Argument missing on binary operator%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0450  93922
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_pad
+parm: value
+txt: Incorrect pad or character argument specified; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0451  93923
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_length
+parm: value
+txt: Incorrect length argument specified; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0452  93924
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_position
+parm: value
+txt: Incorrect position argument specified; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0453  93925
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_minsub
+parm: number
+txt: Not enough subscripts for array; &1 expected%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0454  93926
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_maxsub
+parm: number
+txt: Too many subscripts for array; &1 expected%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0455  93927
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_d2xd2c
+txt: Length must be specified to convert a negative value%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0456  93928
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_d2x
+parm: value
+txt: D2X value must be a valid whole number; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0457  93929
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_d2c
+parm: value
+txt: D2C value must be a valid whole number; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0458  93931
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_hexblank
+parm: position
+txt: Incorrect location of blank in position &1 in hexadecimal string%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0459  93932
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_binblank
+parm: position
+txt: Incorrect location of blank in position &1 in binary string%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0460  93933
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_invhex
+parm: character
+txt: Only 0-9, a-f, A-F, and blank are valid in a hexadecimal string; character found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0461  93934
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_invbin
+parm: character
+txt: Only 0, 1, and blank are valid in a binary string; character found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0462  93935
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_x2dbig
+parm: digits
+txt: X2D result is not a valid whole number with NUMERIC DIGITS &1%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0463  93936
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_c2dbig
+parm: digits
+txt: C2D result is not a valid whole number with NUMERIC DIGITS &1%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0464  93937
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_supplier
+txt: No more supplier items available%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0465  93938
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_nostring
+parm: argument
+txt: Method argument &1 must have a string value%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0466  93939
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_noarray
+parm: argument
+txt: Method argument &1 must have a single-dimensional array value%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0467  93941
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_exponent_oversize
+parm: exponent number
+txt: Exponent "&1" is too large for &2 spaces%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0468  93942
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_before_oversize
+parm: integer number
+txt: Integer part "&1" is too large for &2 spaces%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0469  93943
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_string_nonumber
+parm: method value
+txt: &1 method target must be a number; found "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0470  93944
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_nomessage
+parm: argument
+txt: Method argument &1 must be a message object%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0471  93945
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_message_noarg
+parm: argument
+txt: Missing argument in message array; argument &1 is required%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0472  93946
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_message
+txt: A message array must be a single-dimensional array with 2 elements%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0473  93947
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_section
+txt: Method SECTION can be used only on single-dimensional arrays%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0474  93948
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_noclass
+parm: argument class
+txt: Method argument &1 must be of the &2 class%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0475  93949
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_nomatch
+txt: The index and value objects must be the same for PUT to an index-only collection%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0476  97001
+msgp: KREX
+msgc: Warning
+snam: Error_No_method_name
+parm: object message
+txt: Object "&1" does not understand message "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0477  98901
+msgp: SREX
+msgc: Warning
+snam: Error_Execution_nosomobj
+parm: object
+txt: SOM object "&1" is no longer available%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0478  98902
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_nodouble
+parm: object
+txt: Unable to convert object "&1" to a double-float value%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0479  98903
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_library
+parm: name
+txt: Unable to load library "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0480  98904
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_terminate
+txt: Abnormal termination occurred%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0481  98905
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_deadlock
+$WINparm: object message message
+$WINtxt: Object "&1" cannot accept message "&2" because of a deadlock with "&3"
+txt: Deadlock detected on a guarded method%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0482  98906
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_badobject
+txt: Incorrect object reference detected%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0483  98907
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_wrongobject
+parm: type
+txt: Object of type "&1" was required%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0484  98908
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_nometaclass
+parm: metaclass
+txt: Metaclass "&1" not found%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0485  98909
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_noclass
+parm: class
+txt: Class "&1" not found%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0486  98911
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_cyclic
+parm: program
+txt: Cyclic inheritance in program "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0487  98912
+msgp: SREX
+msgc: Warning
+snam: Error_Execution_noSomclass
+parm: class
+txt: SOM class "&1" not found%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0488  98913
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_noarray
+parm: object
+txt: Unable to convert object "&1" to a single-dimensional array value%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0489  98914
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_nostring
+parm: object
+txt: Unable to convert object "&1" to a string value%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0490  98915
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_message_reuse
+txt: A message object cannot be sent more than one SEND or START message%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0491  98916
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_message_error
+parm: object message
+txt: Message object "&1" received an error from message "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0492  98917
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_raise_object
+parm: value
+txt: Incorrect condition object received for RAISE OBJECT; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0493  98918
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_propagate
+txt: No active condition available for PROPAGATE%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0494  98919
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_nomethod
+parm: object
+txt: Unable to convert object "&1" to a method%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0495  98921
+msgp: SREX
+msgc: Warning
+snam: Error_Execution_SOM_general
+parm: value method
+txt: Could not retrieve "&1" information for method "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0496  98931
+msgp: SREX
+msgc: Warning
+snam: Error_Execution_SOM_noMethodDescriptor
+parm: method class
+txt: No method descriptor information for method "&1" on class "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0497  98932
+msgp: SREX
+msgc: Warning
+snam: Error_Execution_SOM_unsupportedType
+parm: type argument
+txt: The SOM interface does not currently support parameter type "&1", specified for argument &2%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0498  98933
+msgp: SREX
+msgc: Warning
+snam: Error_Execution_SOM_unsupportedReturnType
+parm: type
+txt: The SOM interface does not currently support parameter type "&1", specified for return value%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0499  98934
+msgp: SREX
+msgc: Warning
+snam: Error_Execution_SOM_maxOutArgs
+parm: number
+txt: The number of OUT or INOUT type arguments cannot exceed &1%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0500  98935
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_reply
+txt: REPLY can be issued only once per method invocation%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0501  98936
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_reply_return
+txt: RETURN cannot return a value after a REPLY%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0502  98937
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_reply_exit
+txt: EXIT cannot return a value after a REPLY%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0503  98938
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_super
+txt: Message search overrides can be used only from methods of the target object%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0504  98939
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_syntax_additional
+txt: Additional information for SYNTAX errors must be a single-dimensional array of values%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0505  98941
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_error_condition
+parm: number
+txt: Unknown error number specified on RAISE SYNTAX; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0506  99901
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_duplicate_class
+txt: Duplicate ::CLASS directive instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0507  99902
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_duplicate_method
+txt: Duplicate ::METHOD directive instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0508  99903
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_duplicate_routine
+txt: Duplicate ::ROUTINE directive instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0509  99904
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_duplicate_requires
+txt: Duplicate ::REQUIRES directive instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0510  99905
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_missing_class
+txt: CLASS keyword on ::METHOD directive requires a matching ::CLASS directive%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: @MAE002A
+msg#  0511  99927
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_bad_metaclass
+parm: classname
+txt: "&1" is not a valid metaclass%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0512  99907
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_expose
+txt: EXPOSE must be the first instruction executed after a method invocation%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0513  99908
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_expose_interpret
+txt: INTERPRET data must not contain EXPOSE%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0514  99909
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_guard
+txt: GUARD must be the first instruction executed after EXPOSE or USE%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0515  99911
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_guard_guard
+txt: GUARD can only be issued in an object method invocation%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0516  99912
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_guard_interpret
+txt: INTERPRET data must not contain GUARD%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0517  99913
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_guard_expose
+txt: GUARD instruction did not include references to exposed variables%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0518  99914
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_directive_interpret
+txt: INTERPRET data must not contain directive instructions%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0519  99915
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_use_interpret
+txt: INTERPRET data must not contain USE%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0520  99916
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_bad_directive
+txt: Unrecognized directive instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0521  99917
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_bad_external
+parm: method
+txt: Incorrect external directive name "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0522  99918
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_use_comma
+parm: token
+txt: USE ARG requires a "," between variable names; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0523  99919
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_reply
+txt: REPLY can only be issued in an object method invocation%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0524  101001
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_error
+txt: Error%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0525  101002
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_running
+txt: running%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0526  101003
+msgp: KREX
+msgc: Warning
+snam: Message_Translations_line
+txt: line%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0529  49001
+msgp: KREX
+msgc: Warning
+snam: Error_Interpretation_initialization
+txt: Interpretation error: unexpected failure initializing the interpreter%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0530  25913
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_guard
+parm: word
+txt: GUARD must be followed by the keyword ON or OFF; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0531  93951
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_time
+parm: time
+txt: Incorrect alarm time; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0532  98942
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_mixinclass
+parm: class
+txt: Class "&1" must be a MIXINCLASS for INHERIT%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0533  98943
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_baseclass
+parm: class class class
+txt: Class "&1" is not a subclass of "&2" base class "&3"%0
+exp: None
+sys: None
+usr: None
+$  Message for 3.901
+$
+$ MSG OWNER: MIC
+msg#  0534  3901
+msgp: KREX
+msgc: Warning
+snam: Error_Program_unreadable_notfound
+parm: program
+txt: Failure during initialization: Program "&1" was not found%0
+$  Message for 98.944
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0535  98944
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_recursive_inherit
+parm: class class
+txt: Class "&1" cannot inherit from itself, a superclass, or a subclass ("&2")%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0536  98945
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_uninherit
+parm: class class
+txt: Class "&1" has not inherited class "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0537  99921
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_invalid_line
+txt: Incorrect program line in method source array%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0538  99922
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_requires
+txt: ::REQUIRES directives must appear before other directive instructions%0
+exp: None
+sys: None
+usr: None
+$  Message for 93.952
+$
+$ MSG OWNER: MIC
+msg#  0539  93961
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_no_method
+parm: argument
+txt: Method argument &1 must have a string value or an array value%0
+exp: None
+sys: None
+usr: None
+$
+$  Message for 93.953
+$ MSG OWNER: MIC
+msg#  0540  93953
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_argType
+parm: argument type
+txt: Method argument &1 could not be converted to type &2%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0541  93954
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_array_dimension
+parm: method
+txt: Method "&1" can be used only on a single-dimensional array%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0542  93952
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_nostring_inarray
+parm: argument
+txt: Method argument &1 is an array and does not contain all string values%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0543  93956
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_array_nostring
+parm: element
+txt: Element &1 of the array must be a string%0
+exp: None
+sys: None
+usr: None
+$  Message for 93.957
+$
+$ MSG OWNER: MIC
+msg#  0544  93957
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_array_noclass
+parm: element
+txt: Element &1 of the array must be a subclass of the target object%0
+exp: None
+sys: None
+usr: None
+$  Message for 27.902
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0545  27902
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_do_duplicate
+parm: keyword
+txt: DO keyword &1 can be specified only once%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0546  93959
+msgp: KREX
+msgc: Warning
+snam: Error_Incorrect_method_array_too_big
+txt: An array cannot contain more than 99,999,999 elements%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0547  3902
+msgp: KREX
+msgc: Warning
+snam: Error_Program_unreadable_output_error
+parm: file
+txt: Error writing output file "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0548  98946
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_forward_arguments
+txt: FORWARD arguments must be a single-dimensional array of values%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0549  25916
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_forward_option
+parm: keyword
+txt: Unknown keyword on FORWARD instruction; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0550  25917
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_to
+txt: Duplicate TO keyword found%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0551  25918
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_arguments
+txt: Duplicate ARGUMENTS or ARRAY keyword found%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0552  25919
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_continue
+txt: Duplicate RETURN or CONTINUE keyword found%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0553  25921
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_forward_class
+txt: Duplicate CLASS keyword found%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0554  25922
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_subkeyword_message
+txt: Duplicate MESSAGE keyword found%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0555  35925
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_forward_to
+txt: Missing expression following TO keyword of a FORWARD instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0556  35926
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_forward_arguments
+txt: Missing expression following ARGUMENTS keyword of a FORWARD instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0557  35927
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_forward_message
+txt: Missing expression following MESSAGE keyword of a FORWARD instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0558  35928
+msgp: KREX
+msgc: Warning
+snam: Error_Invalid_expression_forward_class
+txt: Missing expression following CLASS keyword of a FORWARD instruction%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0559  98947
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_forward
+txt: FORWARD can only be issued in an object method invocation%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC                                       /* @MAE014M */
+msg#  0560  3903
+msgp: KREX
+msgc: Warning
+snam: Error_Program_unreadable_version
+parm: program_name
+txt: Program "&1" cannot be run by this version of the REXX interpreter%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0561  99924
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_reply_interpret
+txt: INTERPRET data must not contain REPLY%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0562  99923
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_forward_interpret
+txt: INTERPRET data must not contain FORWARD%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC                        /* @MAE005M */
+msg#  0563  34903
+msgp: KREX
+msgc: Warning
+snam: Error_Logical_value_authorization
+parm: value
+txt: Authorization return value must be exactly "0" or "1"; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC                        /* @MAE006M */
+msg#  0564  98948
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_authorization
+parm: value
+txt: Authorization failure:  &1%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0565  99925
+msgp: KREX
+msgc: Warning
+snam: Error_Translation_invalid_attribute
+parm: name
+txt: An ATTRIBUTE method name must be a valid variable name; found "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC  /* OREXX extensions */
+msg#  0566  19913
+msgp: KREX
+msgc: Warning
+snam: Error_Symbol_or_string_mixinclass
+txt: String or symbol expected after MIXINCLASS keyword%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC (not used at all it seems - CHM)
+msg#  0567  98949
+msgp: OREX
+msgc: Warning
+snam: Error_Execution_dsom_noserver
+parm: class
+txt: The DSOM Server for class &1, could not be resolved.%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: @MAE001M
+msg#  0568  98961
+msgp: OREX
+msgc: Warning
+snam: Error_Too_many_event_parms
+parm: event
+txt: Too many parameters for event "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0569  98962
+msgp: OREX
+msgc: Warning
+snam: Error_Creating_event
+parm: event
+txt: Error creating OSA event "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0570  98963
+msgp: OREX
+msgc: Warning
+snam: Error_Creating_event_direct_parm
+parm: event
+txt: Error creating direct parameter for OSA event "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0571  98964
+msgp: OREX
+msgc: Warning
+snam: Error_Accessing_aete
+txt: Error accessing event information in AETE%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: @MAE001M
+msg#  0572  98965
+msgp: OREX
+msgc: Warning
+snam: Error_Launching_app
+parm: application
+txt: Error launching application "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: /* @MAE001M */
+msg#  0573  98966
+msgp: OREX
+msgc: Warning
+snam: Error_Invalid_event_additional_parm
+parm: parameter event
+txt: Invalid additional parameter "&1" for OSA event "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0574  98967
+msgp: OREX
+msgc: Warning
+snam: Error_Creating_event_additional_parm
+parm: event
+txt: Error creating additional parameter for OSA event "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: @MAE001M
+msg#  0575  98968
+msgp: OREX
+msgc: Warning
+snam: Error_Sending_event
+parm: event
+txt: Error sending OSA event "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MAE
+msg#  0576  98969
+msgp: OREX
+msgc: Warning
+snam: Error_Handling_event_result
+parm: event
+txt: Error handling result for OSA event "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0577  98971
+msgp: OREX
+msgc: Warning
+snam: Error_Converting_event_result_to_rexx_obj
+txt: Error converting OSA event result to a REXX object%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: @MAE001M
+msg#  0578  98972
+msgp: OREX
+msgc: Warning
+snam: Error_Invalid_event_direct_parm
+parm: parameter event
+txt: Invalid direct parameter "&1" for OSA event "&2"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: @MAE001M
+msg#  0579  98973
+msgp: OREX
+msgc: Warning
+snam: Error_Invalid_object_specifier_type
+txt: Invalid key form for object specifier%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: @MAE003A
+msg#  0580  99926
+msgp: KREX
+msgc: Error
+snam: Error_Translation_class_external_bad_parameters
+txt: Incorrect class external; too many parameters%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0581  98951
+msgp: KREX
+msgc: Warning
+snam: Error_Execution_no_concurrency
+txt: Concurrency not supported%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: /* @MAE001A */
+msg#  0582  98974
+msgp: OREX
+msgc: Warning
+snam: Error_Invalid_data_type_for_objspec
+parm: keyform
+txt: Invalid parameter type for key form "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: @MAE003A
+msg#  0583  99928
+msgp: KREX
+msgc: Error
+snam: Error_Translation_class_external_bad_class_name
+txt: Incorrect class external; class name missing or invalid%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: @MAE003A
+msg#  0584  99929
+msgp: KREX
+msgc: Error
+snam: Error_Translation_class_external_bad_class_server
+parm: servername
+txt: Incorrect class external; invalid class server "&1"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MIC
+msg#  0585  98952
+msgp: KREX
+msgc: Error
+snam: Error_Execution_class_server_not_installed
+parm: servername
+txt: &1 class server not installed%0
+exp: None
+sys: None
+usr: None
+$ Messages for 40.43 and 40.44.
+$
+$ MSG OWNER: MAE
+msg#  0586  40043
+msgp: KREX
+msgc: Error
+snam: Error_Incorrect_call_parm_wrong_sep
+parm: function_name number value
+txt: &1 argument &2 must be a single non-alphanumeric character or the null string; found "&3"%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MAE
+msg#  0587  40044
+msgp: KREX
+msgc: Error
+snam: Error_Incorrect_call_format_incomp_sep
+parm: function_name number value number
+txt: &1 argument &2, "&3", is a format incompatible with the separator specified in argument &4%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: MAE                                           /* @MAE006A */
+msg#  0588  40915
+msgp: KREX
+msgc: Error
+snam: Error_Incorrect_call_queue_no_char
+parm: funtion_name
+txt: &1 cannot be used with QUEUE:%0
+exp: None
+sys: None
+usr: None
+$ /******************************************************************************************************/
+$ MSG OWNER: ENG  /* OLE error msgs */
+msg#  0589  92000
+msgp: AREX
+msgc: Error
+snam: Error_OLE_Error
+txt: OLE error%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG  /* unknown OLE error */
+msg#  0590  92901
+msgp: AREX
+msgc: Error
+snam: Error_Unknown_OLE_Error
+parm: hresult
+txt: An unknown OLE error occured (HRESULT=&1).%0
+exp: The HRESULT contains the original error code provided by OLE.
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG  /* VARIANT -> REXX failure */
+msg#  0591  92902
+msgp: AREX
+msgc: Error
+snam: Error_Variant2Rexx
+parm: varianttype
+txt: Cannot convert VARIANT to REXX object: The conversion of the VARIANT type &1 into a REXX object failed.%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG  /* REXX -> VARIANT failure */
+msg#  0592  92903
+msgp: AREX
+msgc: Warning
+snam: Error_Rexx2Variant
+parm: rexx_object
+txt: Cannot convert REXX object to VARIANT: The conversion of &1 into a VARIANT failed.%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG  /* argument count mismatch */
+msg#  0593  92904
+msgp: AREX
+msgc: Error
+snam: Error_Argument_Count_Mismatch
+txt: The number of elements provided to the method or property is different from the number of parameters accepted by it.%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG  /* invalid VARIANT */
+msg#  0594  92905
+msgp: AREX
+msgc: Error
+snam: Error_Invalid_Variant
+txt: One of the parameters is not a valid VARIANT type.%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG  /* OLE exception */
+msg#  0595  92906
+msgp: AREX
+msgc: Error
+snam: Error_OLE_Exception
+parm: exc_name
+txt: OLE exception: &1%0
+exp: The OLE object reported an exception. It provides a code number, the source of the exception and a description of the exception.
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG  /* "unknown method" */
+msg#  0596  92907
+msgp: AREX
+msgc: Error
+snam: Error_Unknown_OLE_Method
+txt: The requested method does not exist, or you tried to set the value of a read-only property.%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG  /* coercion failed (OVERFLOW) */
+msg#  0597  92908
+msgp: AREX
+msgc: Error
+snam: Error_Coercion_Failed_Overflow
+txt: One of the parameters could not be coerced to the desired type.%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG  /* coercion failed (TYPE MISMATCH)*/
+msg#  0598  92909
+msgp: AREX
+msgc: Error
+snam: Error_Coercion_Failed_Type_Mismatch
+parm: index
+txt: One or more of the parameters could not be coerced to the desired type. The first parameter with incorrect type is argument &1.%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG  /* parameter omitted */
+msg#  0599  92910
+msgp: AREX
+msgc: Error
+snam: Error_Parameter_Omitted
+txt: A required parameter was omitted.%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG  /* couldn't create OLE instance */
+msg#  0600  92911
+msgp: AREX
+msgc: Error
+snam: Error_No_OLE_instance
+txt: Could not create OLE instance.%0
+exp: The creation of the OLE object failed, possible causes: OLE object does not support automation interface or its initialization failed.
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG  /* couldn't create OLE instance */
+msg#  0601  92912
+msgp: AREX
+msgc: Error
+snam: Error_Client_Disconnected_From_Server
+txt: The object invoked has disconnected from its clients.%0
+exp: None
+sys: None
+usr: None
+$  Message for 3.904
+$
+$ MSG OWNER: ENG
+msg#  0602  3904
+msgp: KREX
+msgc: Warning
+snam: Error_Program_not_tokenized
+parm: program
+txt: Failure during initialization: Program "&1" needs to be tokenized. To run untokenized scripts you need a full version of Object REXX!%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG /* a possible WSH error */
+msg#  0603  40916
+msgp: KREX
+msgc: Error
+snam: Error_Incorrect_call_read_from_writeonly
+txt: Cannot read from a write-only property.%0
+exp: None
+sys: None
+usr: None
+$
+$ MSG OWNER: ENG /* a possible WSH error */
+msg#  0604  40917
+msgp: KREX
+msgc: Error
+snam: Error_Incorrect_call_write_to_readonly
+txt: Cannot write to a read-only property or typelib element.%0
+exp: None
+sys: None
+usr: None
+$
+$
+$
+$

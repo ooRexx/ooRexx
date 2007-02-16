@@ -1,0 +1,85 @@
+<HTML>
+<!--
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+ !-->
+<HEAD>
+  <TITLE>A simple event</TITLE>
+  <SCRIPT LANGUAGE="Object REXX" >
+::ROUTINE Display PUBLIC
+  use arg THIS
+  Info. = THIS~GetKnownMethods
+  /* open a new window to display information */
+  NewWin = Window~Open("Blank.htm","TagInfo","directories=no,fullscreen=no,location=no,",
+                       "menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=480,width=480")
+  /* get the document object of the new window */
+  Doc = NewWin~Document
+  /* change font */
+  Doc~WriteLN('<FONT FACE="Arial, Helvetica"><H1>Tag Info</H1>')
+  Doc~WriteLN("The &lt;"THIS~tagName"&gt; has "info.0" methods and properties. They are:")
+  Doc~WriteLN('<TABLE BORDER="0">')
+  do I = 1 To Info.0
+    if Info.I.!INVKIND = 4 then symbol='='
+    else symbol=""
+    Doc~WriteLN('<TR><TD BGCOLOR="#000000" ALIGN="RIGHT"><FONT COLOR="#ffffff"><B>'I'</B>',
+                '</FONT></TD><TD>'Info.I.!NAME||symbol'</TD></TR>')
+  end
+  Doc~WriteLN('</TABLE></FONT>')
+  Window~event~returnValue = .false
+  /* the next line of code disallows the event to be propagated any further; otherwise a */
+  /* BODY event would take place, overwriting the output just made...                    */
+  Window~event~cancelBubble = .true
+  </SCRIPT>
+</HEAD>
+
+<!--  A word to the wise.  Putting a call to Display on the BODY will result in the body being displayed
+  -- for evey click.   -->
+<BODY BGCOLOR="#ffffff"  onclick="call Display This" LANGUAGE="Object REXX">
+  <FONT FACE="Arial, Helvetica" COLOR="#f00000">
+  <H1 onclick="call Display This" LANGUAGE="Object REXX" >Displaying tag properties through events</H1>
+
+  <FONT COLOR="#0000ff">
+  <P onclick="call Display This" LANGUAGE="Object REXX">Click me for information on &lt;P&gt;</P>
+  <P><FONT COLOR="#000000">
+  <A onclick="call Display This"  HREF="TagProperties.htm"
+     LANGUAGE="Object REXX">Click me for information on &lt;A&gt;</A><BR>
+  (The link will be canceled by the script!)</P>
+  </FONT>
+</BODY>
+
+</HTML>

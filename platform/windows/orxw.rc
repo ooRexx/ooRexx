@@ -1,0 +1,151 @@
+//----------------------------------------------------------------------------
+//
+// Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
+// Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.
+//
+// This program and the accompanying materials are made available under
+// the terms of the Common Public License v1.0 which accompanies this
+// distribution. A copy is also available at the following address:
+// http://www.oorexx.org/license.html
+//
+// Redistribution and use in source and binary forms, with or
+// without modification, are permitted provided that the following
+// conditions are met:
+//
+// Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+// Redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in
+// the documentation and/or other materials provided with the distribution.
+//
+// Neither the name of Rexx Language Association nor the names
+// of its contributors may be used to endorse or promote products
+// derived from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+// OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//----------------------------------------------------------------------------
+//Microsoft Visual C++ generated resource script.
+//
+#include "orxwres.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+ORXICO                  ICON    DISCARDABLE     "orxw.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_ORXMENU MENU DISCARDABLE
+BEGIN
+    MENUITEM "&Select",                     IDM_OPEN
+    MENUITEM "E&nter/Run",                  IDM_ORXMENU
+    MENUITEM "&Run",                        IDM_ORXRUN
+    MENUITEM "H&alt",                       IDM_ORXHALT
+    MENUITEM "&Clear",                      IDM_ORXCLR
+    MENUITEM "&Edit",                       IDM_ORXEDIT
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "Editor",                      IDM_OPTEDIT
+    END
+    MENUITEM "E&xit",                       IDM_ORXEXIT
+    MENUITEM "&Help",                       IDM_ORXHELP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ORXINPUT DIALOG DISCARDABLE  0, 0, 185, 92
+STYLE DS_LOCALEDIT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           "Program name",IDC_STATICORXPARMS,5,58,65,11
+    EDITTEXT        IDC_EDITORXPARMS,77,58,103,13,ES_AUTOHSCROLL
+    ICON            "ORYXICON",IDC_STATICORXPIC,7,5,18,20
+    DEFPUSHBUTTON   "OK",IDC_OK,117,5,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDC_CANCEL,117,26,50,14,WS_GROUP
+END
+
+IDD_OPTEDITORDLG DIALOG DISCARDABLE  0, 0, 185, 74
+STYLE DS_LOCALEDIT | DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Editor identification"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_OPTEDITORFN,65,19,111,14,ES_AUTOHSCROLL
+    LTEXT           "Editor filename",IDC_OPTEDITFNSTATICTXT,7,24,50,8
+    DEFPUSHBUTTON   "Close and Save",IDC_OPTEDITORFNSAVE,66,49,56,14
+    PUSHBUTTON      "Cancel",IDC_OPTEDITORCANCEL,131,49,41,15
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "orxwres.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

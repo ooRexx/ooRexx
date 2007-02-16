@@ -1,0 +1,149 @@
+;*******************************************************************************
+;
+; Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
+; Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.
+;
+; This program and the accompanying materials are made available under
+; the terms of the Common Public License v1.0 which accompanies this
+; distribution. A copy is also available at the following address:
+; http://www.oorexx.org/license.html
+;
+; Redistribution and use in source and binary forms, with or
+; without modification, are permitted provided that the following
+; conditions are met:
+;
+; Redistributions of source code must retain the above copyright
+; notice, this list of conditions and the following disclaimer.
+; Redistributions in binary form must reproduce the above copyright
+; notice, this list of conditions and the following disclaimer in
+; the documentation and/or other materials provided with the distribution.
+;
+; Neither the name of Rexx Language Association nor the names
+; of its contributors may be used to endorse or promote products
+; derived from this software without specific prior written permission.
+;
+; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+; LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+; FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+; OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+; SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+; TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+; OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+; OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+; NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+;
+;******************************************************************************/
+LIBRARY   REXX
+DESCRIPTION  'Copyright (c) 1995, 2004 IBM Corporation All rights reserved. This program and the accompanying materials are made available under the terms of the Common Public License v1.0.'
+;
+;
+CODE      READ EXECUTE
+DATA      READ WRITE SHARED
+;
+;
+;* Documented API's into REXX
+EXPORTS
+RexxStart                      @1
+RexxVariablePool               @2
+RexxSetHalt                    @3
+RexxSetTrace                   @4
+RexxResetTrace                 @5
+;
+RexxInitialize                 @10
+RexxSendMessage                @11
+RexxDispatch                   @12
+;RexxCallProgram                @13
+;RexxCallString                 @14
+RexxQuery                      @15
+RexxTerminate                  @16
+;
+;RexxSomFreeObject              @17
+;RexxSomInitialize              @18
+;RexxSomSendA                   @19
+;RexxSomSendD                   @20
+;RexxSomSendL                   @21
+;RexxSomSendV                   @22
+;
+;RexxMain                       @23
+RexxTranslateProgram           @24
+;
+REXX_ARRAY_AT                @30
+REXX_ARRAY_HASINDEX          @31
+REXX_ARRAY_PUT               @32
+REXX_ARRAY_SIZE              @33
+REXX_ARRAY_NEW               @34
+REXX_ARRAY_NEW1              @35
+REXX_ARRAY_NEW2              @36
+REXX_BUFFER_ADDRESS          @37
+REXX_BUFFER_LENGTH           @38
+REXX_BUFFER_NEW              @39
+REXX_INTEGER_VALUE           @42
+REXX_INTEGER_NEW             @43
+REXX_DOUBLE                  @44
+REXX_ISDOUBLE                @45
+REXX_EXCEPT                  @46
+REXX_CONDITION               @47
+REXX_RAISE                   @48
+REXX_INTEGER                 @49
+REXX_ISINTEGER               @50
+REXX_STRING                  @51
+REXX_MSGNAME                 @52
+REXX_RECEIVER                @53
+REXX_ISASTRING               @54
+REXX_SEND                    @55
+REXX_SUPER                   @56
+REXX_SETVAR                  @57
+REXX_GETVAR                  @58
+REXX_VARIABLEPOOL            @59
+REXX_ENABLE_VARIABLEPOOL     @60
+REXX_DISABLE_VARIABLEPOOL    @61
+REXX_OBJECT_NEW              @63
+REXX_STRING_GET              @64
+REXX_STRING_DATA             @65
+REXX_STRING_LENGTH           @67
+REXX_STRING_NEW              @68
+REXX_STRING_NEW_UPPER        @69
+REXX_STRING_NEWD             @70
+REXX_TABLE_ADD               @71
+REXX_TABLE_GET               @72
+REXX_TABLE_REMOVE            @73
+REXX_NIL                     @74
+REXX_TRUE                    @75
+REXX_FALSE                   @76
+REXX_ENVIRONMENT             @77
+REXX_LOCAL                   @78
+;
+;SysResetEventSem               @90
+;_DLL_InitTerm                  @91
+;
+RexxCreateMethod               @92
+RexxRunMethod                  @93
+RexxStoreMethod                @94
+RexxLoadMethod                 @95
+RexxCreateDirectory            @96
+RexxRemoveDirectory            @97
+RexxDispose                    @98
+RexxSetOSAInfo                 @99
+RexxGetOSAInfo                 @100
+RexxResultString               @101
+RexxGetSource                  @102
+RexxCopyMethod                 @103
+RexxValidObject                @104
+;
+; Windows Specific
+;
+ProcessRestoreImage           @105
+ProcessSaveImage              @106
+RexxTerminated                @107
+
+; for feature 249
+
+RexxExecutionLineInfo         @111     ; for feature 249
+REXX_EXECUTIONINFO            @112     ; for feature 249
+
+REXX_SETVAR2                  @113     ; CHM for feature 595
+RexxGetVersionInformation     @114     ; MAE for feature 594
+REXX_SETFUNC                  @115     ; ENG for feature 855
+RexxStemSort                  @116

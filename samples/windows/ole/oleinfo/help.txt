@@ -1,0 +1,175 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+                          *** OLEINFO Help File ***
+
+                        Contents:
+
+                        1. What is OLEINFO?
+
+                        2. Using OLEINFO
+                           2.1 ProgID
+                           2.2 Look up
+                           2.3 Selecting a method
+                           2.4 Invoking a method
+
+                        3. Disclaimer
+
+
+1. What is OLEINFO?
+
+This REXX script helps you to gather information about the methods of an OLE
+object. This is done through the use of the GetKnownMethods method of the
+REXX OLE object. A comprehensive introduction to OLE can be found in the
+Object REXX online documentation.
+
+GetKnownMethods retrieves information from the so-called "Type Library" of the
+OLE object, which should be - but is not always - installed together with the
+OLE object.
+
+To execute this sample the OODialog extension of Object REXX is needed.
+OODialog is part of IBM Object REXX for Windows Development Edition.
+
+2. Using OLEINFO
+
+First you have to specify the ProgID of the OLE object you want to
+instantiate. If necessary, consult the documentation to find out what the
+ProgID is. To specify the ProgID, either enter it into the ProgID text field
+and press Enter, or look it up from the registry by using the Look Up button.
+Instructions follow on how to do this. After the object has been created
+successfully, a list with all its methods, properties, and events is displayed
+in the main list window.  The icons that are shown to the left of the item
+names signify the following:
+
+Green down arrow: 	This is a method.
+Yellow right arrow:	This is a 'property get.'
+Red left arrow:	This is a 'property put.'
+Blue waves:		This is an event.
+
+For more information see your documentation of the OLE object.
+
+
+2.1 ProgID
+
+If you already know the ProgID of the object you want to instantiate, simply
+type it into the ProgID text field, and press Enter.
+
+Example: Enter "InternetExplorer.Application" and press Enter to start
+         Microsoft Internet Explorer, if it is installed on your system.
+
+
+2.2 Look Up
+
+To search the registry for OLE objects, click the Look Up button. All entries
+in HKEY_CLASSES_ROOT\CLSID with a VersionIndependentProgID (or ProgID) will be
+put into the objects list. To instantiate an object, select it and click OK.
+You can use the Search button to look for a specific entry; it searches the
+list for entries beginning with the string you specify. The search is not
+case-sensitive.
+
+Note: Not all entries in this list are useful. You can only instantiate OLE
+      objects that support the automation interface.
+
+
+2.3 Selecting a method
+
+All the methods that are returned will be displayed in alphabetical order in
+the "List of methods". Click a selected item to get detailed information.
+This information is shown in the "Details" section, as follows:
+
+* Method signature
+ This displays the name of the method and the argument that it takes. What is
+ displayed depends on the options chosen in the check boxes in the "Show" line.
+ In the default setting, only the method name and the names of the parameters
+ are displayed.
+ The check boxes have the following functionality:
+
+  - Types
+    Shows the OLE types of the method, its return type and argument types.
+    Conversion to and from these types is normally done automatically by the
+    REXX OLEObject. The types may give you an indication of what kind of object
+    to expect.
+
+    Examples:
+      VT_BOOL     <=> .TRUE or .FALSE in REXX
+      VT_BSTR     <=> A REXX string.
+      VT_Ix       <=> A whole number (x=1, x=2, x=4, or x=8).
+      VT_Rx       <=> A real number (x=1, x=2, x=4, or x=8).
+      VT_VARIANT  <=> This can be any REXX object representable as a VARIANT.
+      VT_DISPATCH <=> Another OLE object.
+
+  - Flags
+    Shows the flags for the method arguments. These can be:
+
+      in: 	This argument is the input to the method.
+      out: This argument creates output. See the documentation on 'out'
+           parameters.
+      opt: This argument is optional.
+
+    Any combination of these flags can be used.
+
+  - Member ID
+    Displays the so-called MemID of a method. It is used internally only.
+
+* Documentation
+  If a textual description of what the method does is available, it will be
+  displayed in this line. (Use the cursor to scroll to parts of the text that
+  do not fit into the visible area.)
+
+
+2.4 Invoking a method
+
+To invoke a method of the OLE object, double-click the desired method in the
+list of methods. An invocation window will appear, and here you can enter data.
+If there are 'out' parameters you will not be able to change these fields.
+Note that if you try to invoke a method by using wrong data, the entire
+program may stop and give you an error message. The results of an invocation
+will be displayed in another window. This will include one line showing the
+result object, and also a list giving the output of possible 'out' parameters.
+If an OLE object is returned, you can use this as the new object that the
+viewer displays for you.
+
+3. Disclaimer
+
+The following supplied code is sample code created by the IBM Corporation.
+This sample code is not part of any standard or IBM product and is provided to
+you solely for the purpose of assisting you in the development of your
+applications.  The code is provided "AS IS", without warranty of any kind.
+IBM shall not be liable for any damages arising out of your use of the sample
+code, even if they have been advised of the possibility of such liability.
+
+

@@ -1,0 +1,85 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/* OODialog\Samples\rc\oopet.rc        Animal Riddle                  */
+/*--------------------------------------------------------------------*/
+#include "windows.h"
+
+103 DIALOG 1, 0, 365, 243
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "What animals are these?"
+FONT 9, "Arial"
+{
+ CONTROL "animal1", 1001, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 6, 98, 84, 13
+ CONTROL "animal2", 1002, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 96, 98, 84, 13
+ CONTROL "animal3", 1003, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 186, 98, 84, 13
+ CONTROL "animal4", 1004, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 276, 98, 84, 13
+ CONTROL "animal5", 1005, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 6, 211, 84, 13
+ CONTROL "animal6", 1006, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 96, 211, 84, 13
+ CONTROL "animal7", 1007, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 186, 211, 84, 13
+ CONTROL "animal8", 1008, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 276, 211, 84, 13
+/*
+ AUTO3STATE "Button", 2001, 5, 3, 86, 94, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 2002, 95, 3, 86, 94, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 2003, 185, 3, 86, 94, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 2004, 275, 3, 86, 94, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 2005, 5, 115, 86, 94, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 2006, 95, 115, 86, 94, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 2007, 185, 115, 86, 94, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+ AUTO3STATE "Button", 2008, 275, 115, 86, 94, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+*/
+ CONTROL         "Button1",2001,"Button",BS_OWNERDRAW | WS_TABSTOP,5,3,86,94
+ CONTROL         "Button1",2002,"Button",BS_OWNERDRAW | WS_TABSTOP,95,3,86,94
+ CONTROL         "Button1",2003,"Button",BS_OWNERDRAW | WS_TABSTOP,185,3,86,94
+ CONTROL         "Button1",2004,"Button",BS_OWNERDRAW | WS_TABSTOP,275,3,86,94
+ CONTROL         "Button1",2005,"Button",BS_OWNERDRAW | WS_TABSTOP,5,115,86,94
+ CONTROL         "Button1",2006,"Button",BS_OWNERDRAW | WS_TABSTOP,95,115,86,94
+ CONTROL         "Button1",2007,"Button",BS_OWNERDRAW | WS_TABSTOP,185,115,86,94
+ CONTROL         "Button1",2008,"Button",BS_OWNERDRAW | WS_TABSTOP,275,115,86,94
+ DEFPUSHBUTTON "OK", 1, 247, 227, 50, 14
+ PUSHBUTTON "Cancel", 2, 310, 227, 50, 14
+ PUSHBUTTON "Help", 9, 6, 227, 50, 14
+}
+201 BITMAP "..\\bmp\\rhinoce.bmp"
+202 BITMAP "..\\bmp\\tiger.bmp"
+203 BITMAP "..\\bmp\\eleph2.bmp"
+204 BITMAP "..\\bmp\\moose.bmp"
+205 BITMAP "..\\bmp\\goat.bmp"
+206 BITMAP "..\\bmp\\chihuahu.bmp"
+207 BITMAP "..\\bmp\\sealion.bmp"
+208 BITMAP "..\\bmp\\horse.bmp"
+209 BITMAP "..\\bmp\\kanguru.bmp"

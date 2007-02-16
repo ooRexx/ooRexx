@@ -1,0 +1,123 @@
+;*******************************************************************************
+; Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.
+;
+; This program and the accompanying materials are made available under
+; the terms of the Common Public License v1.0 which accompanies this
+; distribution. A copy is also available at the following address:
+; http://www.oorexx.org/license.html
+;
+; Redistribution and use in source and binary forms, with or
+; without modification, are permitted provided that the following
+; conditions are met:
+;
+; Redistributions of source code must retain the above copyright
+; notice, this list of conditions and the following disclaimer.
+; Redistributions in binary form must reproduce the above copyright
+; notice, this list of conditions and the following disclaimer in
+; the documentation and/or other materials provided with the distribution.
+;
+; Neither the name of Rexx Language Association nor the names
+; of its contributors may be used to endorse or promote products
+; derived from this software without specific prior written permission.
+;
+; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+; LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+; FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+; OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+; SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+; TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+; OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+; OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+; NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+;******************************************************************************/
+LIBRARY REXXAPI
+DESCRIPTION  'REXX APIs - Copyright (c) Rexx Language Association 2005-2006. All rights reserved. This program and the accompanying materials are made available under the terms of the Common Public License v1.0.'
+PROTMODE
+DATA SHARED SINGLE LOADONCALL
+CODE MOVEABLE
+
+EXPORTS
+     INITQUEUES                     = InitQueues
+     RXSUBCOMREGISTER               = RxSubcomRegister
+     RXSUBCOMQUERY                  = RxSubcomQuery
+     RXSUBCOMDROP                   = RxSubcomDrop
+     RXSUBCOMLOAD                   = RxSubcomLoad
+     RXEXITREGISTER                 = RxExitRegister
+     RXEXITDROP                     = RxExitDrop
+     RXEXITQUERY                    = RxExitQuery
+     RXSUBCOMEXECUTE                = RxSubcomExecute
+     RXFUNCTIONREGISTER             = RxFunctionRegister
+     RXFUNCTIONDEREGISTER           = RxFunctionDeregister
+     RXFUNCTIONQUERY                = RxFunctionQuery
+     RXFUNCTIONCALL                 = RxFunctionCall
+     RXMACROCHANGE                  = RxMacroChange
+     RXMACRODROP                    = RxMacroDrop
+     RXMACROERASE                   = RxMacroErase
+     RXMACROLOAD                    = RxMacroLoad
+     RXMACROQUERY                   = RxMacroQuery
+     RXMACROREORDER                 = RxMacroReOrder
+     RXMACROSAVE                    = RxMacroSave
+     RexxCreateQueue                @1
+     RexxDeleteQueue                @2
+     RexxAddQueue                   @3
+     RexxPullQueue                  @4
+     RexxQueryQueue                 @5
+     RexxRegisterSubcomDll          @6
+     RexxRegisterSubcomExe          @7
+     RexxQuerySubcom                @8
+     RexxDeregisterSubcom           @9
+     RexxLoadSubcom                 @10
+     RexxRegisterExitDll            @11
+     RexxRegisterExitExe            @12
+     RexxDeregisterExit             @13
+     RexxQueryExit                  @14
+     RexxCallExit                   @15
+     RexxCallSubcom                 @16
+     RexxRegisterFunctionDll        @17
+     RexxRegisterFunctionExe        @18
+     RexxDeregisterFunction         @19
+     RexxQueryFunction              @20
+     RexxCallFunction               @21
+     RexxAddMacro                   @22
+     RexxDropMacro                  @23
+     RexxClearMacroSpace            @24
+     RexxLoadMacroSpace             @25
+     RexxQueryMacro                 @26
+     RexxReorderMacro               @27
+     RexxSaveMacroSpace             @28
+     RexxExecuteMacroFunction       @29
+     RexxAllocateMemory             @30
+     RexxFreeMemory                 @31
+     REXXCREATEQUEUE                @1
+     REXXDELETEQUEUE                @2
+     REXXADDQUEUE                   @3
+     REXXPULLQUEUE                  @4
+     REXXQUERYQUEUE                 @5
+     REXXREGISTERSUBCOMDLL          @6
+     REXXREGISTERSUBCOMEXE          @7
+     REXXQUERYSUBCOM                @8
+     REXXDEREGISTERSUBCOM           @9
+     REXXLOADSUBCOM                 @10
+     REXXREGISTEREXITDLL            @11
+     REXXREGISTEREXITEXE            @12
+     REXXDEREGISTEREXIT             @13
+     REXXQUERYEXIT                  @14
+     REXXCALLEXIT                   @15
+     REXXCALLSUBCOM                 @16
+     REXXREGISTERFUNCTIONDLL        @17
+     REXXREGISTERFUNCTIONEXE        @18
+     REXXDEREGISTERFUNCTION         @19
+     REXXQUERYFUNCTION              @20
+     REXXCALLFUNCTION               @21
+     REXXADDMACRO                   @22
+     REXXDROPMACRO                  @23
+     REXXCLEARMACROSPACE            @24
+     REXXLOADMACROSPACE             @25
+     REXXQUERYMACRO                 @26
+     REXXREORDERMACRO               @27
+     REXXSAVEMACROSPACE             @28
+     REXXEXECUTEMACROFUNCTION       @29
+     REXXALLCOATEMEMORY             @30
+     REXXFREEMEMORY                 @31

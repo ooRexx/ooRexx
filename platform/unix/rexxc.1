@@ -1,0 +1,60 @@
+.TH REXXC l "31 December 2004" "Version 3.0"
+.SH NAME
+\fBrexxc\fP \- Open Object Rexx Compiler
+.SH SYNTAX
+.B rexxc
+.RI inputfile
+.RI [outputfile]
+.RI [-s]
+.SH DESCRIPTION
+You can use this utility to produce versions of your programs that do not include the original program source.
+You can use these programs to replace any Rexx program file that includes the source,
+with the following restrictions:
+
+.TP
+1.
+The SOURCELINE built-in function returns 0 for the number of lines in the program and raises an error
+for all attempts to retrieve a line.
+.TP
+2.
+A sourceless program may not be traced. The TRACE instruction runs without error, but no tracing of
+instruction lines, expression results, or intermediate expression values occurs.
+
+.PP
+If you specify the
+.B outputfile
+, the language processor processes the
+.B inputfile
+and writes the executable
+version of the program to the
+.B outputfile.
+If the
+.B outputfile
+already exists, it is replaced.
+
+If the language processor detects a syntax error while processing the program, it reports
+the error and stops processing without creating a new
+.B outputfile.
+If you omit the
+.B outputfile,
+the language processor performs a syntax check on the program without writing the executable version to a file.
+
+.B Note:
+You can use the in-storage capabilities of the RexxStart programming interface to process the file
+image of the
+.B outputfile.
+.PP
+For further information, read the README and the other
+documentation files included in the Open Object Rexx distribution.
+.SH OPTIONS
+.TP
+.B -s
+suppress the display of the information about the interpreter used.
+
+.SH "SEE ALSO"
+.BR rexx (1)
+
+.SH LICENSE
+Open Object Rexx is distributed under the terms of
+the Common Public License v1.0 which accompanies this distribution.
+http://www.oorexx.org/license.html

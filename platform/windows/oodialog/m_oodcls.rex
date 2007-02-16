@@ -1,0 +1,144 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+use arg outdir
+if arg() = 0 then outdir = value("OR_OUTDIR","","ENVIRONMENT")
+parse source . . progname
+inpdir = left(progname, progname~lastpos("\"))
+p = time('R')
+say '----------------------------------------------------------------'
+say 'OOdialog build started                  ' time() 'on' date()
+say '----------------------------------------------------------------'
+outname = .array~new(3)
+outname[1] = "OODPLAIN"
+outname[2] = "OODIALOG"
+outname[3] = "OODWIN32"
+UtilName = "OODUTILS.CLS"
+.Local["UtilName"] = UtilName
+Arrax = .Array~new(3)
+ArrClasses = .Array~new(3)
+Arrax[1] = .CheckArray~of("PLBDLG.CLS","DYNDLG.CLS","PLUDLG.CLS","STDDLG.CLS")
+Arrax[2] = .CheckArray~of("DLGEXT.CLS","BASEDLG.CLS","RESDLG.CLS","USERDLG.CLS","CATDLG.CLS", "ANIBUTTN.CLS")
+Arrax[3] = .CheckArray~of("ADVCTRL.CLS","STDEXT.CLS","MSGEXT.CLS", "PROPSHT.CLS")
+
+ArrClasses[1] = .Array~of("PLAINBASEDIALOG","PLAINUSERDIALOG","DYNAMICDIALOG","TIMEDMESSAGE", "INPUTBOX",,
+                               "PASSWORDBOX", "INTEGERBOX","MULTIINPUTBOX", "LISTCHOICE",,
+                               "MULTILISTCHOICE", "CHECKLIST","SINGLESELECTION","WINDOWBASE")
+
+ArrClasses[2] = .Array~of("BASEDIALOG","DIALOGEXTENSIONS","WINDOWEXTENSIONS","RESDIALOG","USERDIALOG","CATEGORYDIALOG","ANIMATEDBUTTON")
+ArrClasses[3] = .Array~of("ADVANCEDCONTROLS","DIALOGCONTROL","TREECONTROL","LISTCONTROL","PROGRESSBAR","SLIDERCONTROL",,
+                          "TABCONTROL", "STATICCONTROL", "EDITCONTROL", "BUTTONCONTROL", "RADIOBUTTON", "CHECKBOX", "LISTBOX",,
+                          "COMBOBOX", "SCROLLBAR", "MESSAGEEXTENSIONS", "PROPERTYSHEET", "STATEINDICATOR","PROGRESSINDICATOR")
+
+
+i = 0
+do j over Arrax
+    i = i + 1
+    NewFile = .stream~new(outname[i] || ".CLS")
+    if NewFile~open("WRITE REPLACE") \= "READY:" then leave
+    NewFile~lineout("/"||"*"~copies(78)||"/")
+    NewFile~lineout("/*"||" "~copies(76)||"*/")
+    NewFile~lineout("/*"||center(outname[i]||".CLS - OODialog Class Definition File",76)||"*/")
+    NewFile~lineout("/*"||center("Windows Dialog Interface for Object REXX",76)||"*/")
+    NewFile~lineout("/*"||" "~copies(76)||"*/")
+    NewFile~lineout("/"||"*"~copies(78)||"/")
+    NewFile~lineout("")
+    NewFile~lineout('PARSE UPPER SOURCE . . REQ_FILE')    /* must be put in uppercased */
+    do jj over ArrClasses[i]
+        NewFile~lineout(".Environment~put(."jj",'"jj"')")
+    end
+    NewFile~lineout('.STATIC_REQUIRES~put(time("C"), REQ_FILE)')
+    if i = 1 then call ProcessUtils
+    else NewFile~lineout('::requires "'outname[i-1]'.CLS"')
+    do file over j
+       say inpdir || file
+       ReadFile = .stream~new(inpdir || File)
+       ReadFile~open("READ")
+       do while ReadFile~lines() > 0
+           s = ReadFile~linein
+           if s~pos('::requires') > 0 then do
+              parse upper value s with . '"' filename '"' .
+              isincl = 0
+              do jj over Arrax
+                  if jj~HasEntry(filename) = 1 then isincl = 1
+              end
+              if isincl = 0 then NewFile~lineout(s)
+          end
+          else NewFile~lineout(s)
+       end
+       ReadFile~close
+    end
+    NewFile~close
+end
+
+
+say '----------------------------------------------------------------'
+say 'Build ended after: ' time('E') 'sec  ' ' at:' time() 'on' date()
+say '----------------------------------------------------------------'
+say
+
+exit
+
+
+ProcessUtils:
+    UtilFile = .stream~new(inpdir || UtilName)
+    if UtilFile~open("READ") \= "READY:" then do
+        say "Couldn't process" inpdir || UtilName
+        exit
+    end
+    NewFile~Lineout("do PUB_RTN over .METHODS")
+    NewFile~Lineout("   .PUBLIC_ROUTINES~put(.METHODS[PUB_RTN], PUB_RTN)");
+    NewFile~Lineout("end")
+    do while UtilFile~lines > 0
+        s = UtilFile~Linein
+        s = s~changestr("::routine", "::METHOD")~changestr("::ROUTINE", "::METHOD")~changestr("public", "")~changestr("PUBLIC", "")
+        NewFile~lineout(s)
+    end
+    return
+
+
+::class CheckArray subclass array
+
+::method HasEntry
+  use arg srch
+  do x over self
+     if x = srch then return 1
+  end
+  if (srch = .Local["UtilName"]) then return 1
+  return 0
+
+

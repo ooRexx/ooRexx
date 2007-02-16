@@ -1,0 +1,75 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/* OODialog\Samples\rc\ldvideo.rc      Video archive                  */
+/*--------------------------------------------------------------------*/
+
+101 DIALOG 67, 32, 288, 251
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Video Archive"
+FONT 8, "MS Sans Serif"
+{
+ CONTROL "number", 1001, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 64, 17, 42, 13
+ PUSHBUTTON "&Search", 3001, 110, 16, 37, 15
+ CONTROL "tapename", 1002, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 64, 37, 85, 13
+ CONTROL "film1", 1003, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 80, 72, 175, 13
+ CONTROL "film2", 1004, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 80, 92, 175, 13
+ CONTROL "film3", 1005, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 80, 111, 175, 13
+ CONTROL "film4", 1006, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 80, 130, 175, 13
+ CONTROL "location", 1007, "COMBOBOX", CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP, 80, 168, 119, 43
+ CONTROL "lentto", 1008, "LISTBOX", LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_TABSTOP, 80, 189, 119, 49
+ AUTOCHECKBOX "Long&play", 1009, 172, 15, 45, 10
+ AUTOCHECKBOX "&Hifi - quality", 1010, 172, 28, 53, 10
+ AUTOCHECKBOX "&Writeprotect", 1011, 172, 41, 55, 10
+ AUTORADIOBUTTON "C120", 1012, 232, 15, 31, 10, BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "C180", 1013, 232, 27, 31, 10
+ AUTORADIOBUTTON "C240", 1014, 232, 40, 31, 10
+ DEFPUSHBUTTON "OK", 1, 217, 166, 50, 14
+ PUSHBUTTON "Cancel", 2, 217, 188, 50, 14
+ LTEXT "Tape&number", 2008, 18, 18, 43, 11
+ LTEXT "Tape label", 2006, 18, 38, 38, 11
+ LTEXT "Film &1", 2001, 36, 74, 23, 11
+ LTEXT "Film 2", 2002, 36, 93, 22, 11
+ LTEXT "Film 3", 2003, 36, 112, 23, 11
+ LTEXT "Film 4", 2004, 36, 131, 24, 11
+ LTEXT "&Location", 2005, 36, 169, 32, 11
+ LTEXT "Lent to", 2007, 36, 188, 26, 11
+ GROUPBOX "Specification", -1, 12, 4, 145, 51, BS_GROUPBOX | WS_CHILD | WS_VISIBLE
+ GROUPBOX "Titles", -1, 12, 61, 261, 89, BS_GROUPBOX | WS_CHILD | WS_VISIBLE
+ GROUPBOX "", -1, 12, 156, 261, 86, BS_GROUPBOX | WS_CHILD | WS_VISIBLE
+ GROUPBOX "Tape&information", -1, 165, 3, 105, 51, BS_GROUPBOX | WS_CHILD | WS_VISIBLE | WS_GROUP
+}

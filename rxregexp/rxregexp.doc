@@ -1,0 +1,299 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+Object REXX Online Reference
+Other Classes\The RegularExpression Class
+
+This class provides support for regular expressions. A regular
+expression is a pattern you can use to match strings against.
+
+Here is a description of the syntax:
+
+|    OR operator between the left and right expression
+?    Matches any single character
+*    Matches the previous expression zero or more times
++    Matches the previous expression one or more times
+\    "Escape" symbol: use the next character literally
+()   Expression in parenthesis (use where needed)
+{n}  Matches previous expression n times (n>1)
+[]   Set definition: matches any single character out of the defined
+     set.
+     A '^' right after the opening bracket means that none of the
+     following characters should be matched.
+     A '-' (if not used with '\') defines a range between the last
+     specified character and the one following '-'. If it is the
+     first character in the set definition, it is used literally.
+
+The following symbolic names (all starting and ending with ':') can
+be used to abbreviate common sets:
+
+:ALPHA:        Characters in the range A-Z and a-z
+:LOWER:        Characters in the range a-z
+:UPPER:        Characters in the range A-Z
+:DIGIT:        Characters in the range 0-9
+:ALNUM:        Characters in :DIGIT: and :ALPHA:
+:XDIGIT:       Characters in :DIGIT:, A-F and a-f
+:BLANK:        Space and tab characters
+:SPACE:        Characters '09'x to '0D'x and space
+:CNTRL:        Characters '00'x to '1F'x and '7F'x
+:PRINT:        Characters in the range '20'x to '7E'x
+:GRAPH:        Characters in :PRINT: without space
+:PUNCT:        All :PRINT: characters without space and not
+               in :ALNUM:
+
+
+Examples:
+
+     "(Hi|Hello) World"      Matches "Hi World" and
+                             "Hello World".
+     "file.???"              Matches any file with three
+                             characters after '.'
+     "file.?{3}"             Same as above.
+     "a *b"                  Matches all strings that begin with
+                             'a' and end with 'b' and have an
+                             arbitrary number of spaces in between
+                             both.
+     "a +b"                  Same as above, but at least one space
+                             must be present.
+     "file.[bd]at"           Matches "file.bat" and "file.dat".
+     "[A-Za-z]+"             Matches any string containing only
+                             letters.
+     "[:ALPHA:]+"            Same as above, using symbolic names.
+     "[^0-9]*"               Matches any string containing no
+                             numbers, including the empty string.
+     "[:DIGIT::LOWER:]"      A single character, either a digit or
+                             a lower case character.
+     "This is (very )+nice." Matches all strings with one or more
+                             occurrences of "very " between
+                             "This is " and "nice.".
+
+The RegularExpression class is not a built-in class. It is defined
+in the RXREGEXP.CLS file. This means, you must use a
+::requires statement to activate its functionality, as follows:
+
+::requires "RXREGEXP.CLS"
+
+
+Methods available to the RegularExpression class:
+
+Init
+Match
+Parse
+Pos
+Position
+
+
+Init
+
+                     +-,-"MAXIMAL"--+
+>>-Init(-+---------+-+--------------+-)--------------------><
+         '-Pattern-' +-,-"MINIMAL"--+
+
+Instantiates a RegularExpression object. The optional parameter
+'Pattern' lets you define a pattern that will be used to match
+strings. See the introductory text below for a description of the
+syntax. If the strings match, you can decide wether you want
+"greedy" matching (a maximum-length match) or "non-greedy"
+matching (a minimum-length match).
+
+Examples:
+
+     myRE1 = .RegularExpression~new
+     myRE2 = .RegularExpression~new("Hello?*")
+
+
+Match
+
+>>-Match(-String-)-><
+
+This method tries to match the given string to the regular
+expression that was defined on the "new" invocation or on the
+"parse" invocation. It returns 0 on an unsuccessful match and 1
+on a successful match. For an example see "Parse".
+
+
+
+Parse
+
+                  +-,-"CURRENT"--+
+>>-Parse(-Pattern-+--------------+-------------------------><
+                  +-,-"MAXIMAL"--+
+                  +-,-"MINIMAL"--+
+
+This method creates the automation used to match a string from the
+regular expression specified with 'Pattern'. The RegularExpression
+object uses this regular expression until a new invocation of Parse
+takes place. The second (optional) parameter specifies whether to
+use minimal or maximal matching. The default is to use the current
+matching behaviour.
+
+Return values:
+
+0    Regular expression was parsed successfully.
+1    An unexpected symbol was met during parsing.
+2    A missing ')' was found.
+3    An illegal set was defined.
+4    The regular expression ended unexpectedly.
+5    An illegal number was specified.
+
+
+Example 1:
+
+     a.0 = "does not match regular expression"
+     a.1 = "matches regular expression"
+     b = .array~of("This is a nice flower.",
+                   "This is a yellow flower.",,
+                   "This is a blue flower.",
+                   "Hi there!")
+
+     myRE = .RegularExpression~new
+     e = myRE~parse("This is a ???? flower.")
+     if e == 0 then do
+       do i over b
+         j = myRE~match(i)
+         say i~left(24) ">>" a.j
+       end
+     end
+     else
+       say "Error" e "occured!"
+     exit
+
+     ::requires "rxregexp.cls"
+
+Output:
+
+This is a nice flower.   >> Does match regular expression
+This is a yellow flower. >> Does not match regular expression
+This is a blue flower.   >> Does match regular expression
+Hi there!                >> Does not match regular expression
+
+Example 2:
+
+     a.0 = "an invalid number!"
+     a.1 = "a valid number."
+     b = .array~of("1","42","0","5436412","1a","f43g")
+     myRE = .RegularExpression~new("[1-9][0-9]*")
+     do i over b
+       j = myRE~match(i)
+       say i "is" a.j
+     end
+     say
+
+     /* Now allow "hex" numbers and a single 0 */
+     if myRE~parse("0|([1-9a-f][0-9a-f]*)") == 0 then do
+       do i over b
+         j = myRE~match(i)
+         say i "is" a.j
+       end
+     end
+     else
+       say "invalid regular expression!"
+
+     exit
+
+     ::requires "rxregexp.cls"
+
+Example 3:
+
+     str = "<p>Paragraph 1</p><p>Paragraph 2</p>"
+     myRE1 = .RegularExpression~new("<p>?*</p>","MINIMAL")
+     myRE1~match(str)
+     myRE2 = .RegularExpression~new("<p>?*</p>","MAXIMAL")
+     myRE2~match(str)
+
+     say "myRE1 (minimal) matched" str~substr(1,myRE1~position)
+     say "myRE2 (maximal) matched" str~substr(1,myRE2~position)
+
+     ::requires "rxregexp.cls"
+
+Output:
+
+myRE1 (minimal) matched <p>Paragraph 1</p>
+myRE2 (maximal) matched <p>Paragraph 1</p><p>Paragraph 2</p>
+
+
+
+Pos
+
+>>-Pos-(-Haystack-)-><
+
+This method tries to locate a string defined by the regular
+expression on the "new" invocation or on the "parse" invocation
+in the given haystack string.
+It returns 0 on an unsuccessful match or the starting position
+on a successful match. The end position of the match can be
+retrieved with the POSITION method.
+
+Example:
+
+     str = "It is the year 2002!"
+     myRE = .RegularExpression~new("[1-9][0-9]*")
+     begin = myRE~pos(str)
+     if begin > 0 then do
+       year = str~substr(begin, myRE~position - begin + 1)
+       say "Found the number" year "in this sentence."
+     end
+
+     ::requires "rxregexp.cls"
+
+Output:
+
+Found the number 2002 in this sentence.
+
+
+
+Position
+
+>>-Position------------------------------------------------><
+
+Returns the character position at which either Parse, Pos or Match
+ended, depending on what was invoked last.
+
+Example:
+
+     myRE = .RegularExpression~new
+     myRE~Parse("[abc")                    -- illegal set definition
+     say myRE~Position                     -- will be 4
+
+     myRE = .RegularExpression~new("[abc]12")
+     myRE~Match("c12")
+     say myRE~Position                     -- will be 3
+
+     myRE~Match("a13")
+     say myRE~Position                     -- will be 2 (failure to match)
+
+     ::requires "rxregexp.cls"

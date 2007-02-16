@@ -1,0 +1,66 @@
+Building Open Object Rexx on Windows
+------------------------------------
+Requires Microsoft Visual C++ V 6.0 plus service packs
+Requires kill.exe
+
+From the current directory (where this file is):
+
+set SRC_DIR=<this directory> eg \oorexx\oorexx
+set SRC_DRV=<this drive>     eg d:
+makeorx NODEBUG
+
+All files will be built in win32rel
+
+Packaging with NSIS
+-------------------
+
+Requires NSIS 2.0.3 or grater
+
+cd <this directory>\platform\windows
+Look at the top of oorexx.nsi and run makensis.exe as explained
+
+####################################################################
+The following is old; will be deleted in future
+####################################################################
+
+How to setup and start the Build Process for Object REXX on Windows
+-------------------------------------------------------------------
+
+Install Microsoft Visual Studio 6.0 with the actual service pack.
+
+Unpack all Object REXX source file to the build directory usually "orxdev"
+
+Set the Windows environment variable SRC_DRV to the drive where the "orxdev"
+directory is located : SET SRC_DRV=G:
+
+Set the Windows environment variable CPU to IX86 : SET CPU=IX86
+
+Extend the Windows PATH so that the KILL.EXE will be found in orxdev.
+KILL.EXE is used to destroy the RXAPI.EXE from memory during the build process
+
+Edit "MAKEORX.BAT" and change SRC_DIR to the build directory
+e.g. SET SRC_DIR=\orxdev
+
+Edit "ORXDB.BAT" and change SRC_DIR to the build directory
+e.g. SET SRC_DIR=\orxdev
+
+Install Object REXX REXX Interpreter, it will be used during the build process
+
+Open a Windows Command Prompt and change to the build directory
+
+The batch file "MAKEORX.BAT" starts the build process in dependency of the passed parameters.
+
+"makeorx DEBUG"         : Build Object REXX Debug Version of Development and Interpreter Edition.
+"makeorx NODEBUG"       : Build Object REXX Release Version of Development and Interpreter Edition.
+"makeorx BOTH"          : Build die Object REXX Debug ande Release Version of Development and Interpreter Edition.
+
+Note: The code for the Object REXX workbench is not included. In this case the Development Edition means,
+that OODialog is to be build.
+
+After the build is completed the target files (obj, exe, dll,..) are placed with in the directories
+
+Win32Rel     : Object REXX Release version
+Win32Dbg     : Object REXX Debug version
+
+In each directory corresponding output file *.log is crated which contains the
+output of the build process.
