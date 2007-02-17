@@ -123,7 +123,10 @@
 ::method GetListControl unguarded
    arr = Arg(1,"A")
    arr[3] = "LC"
-   forward message "GetControl" Arguments (arr)
+   forward message "GetControl" Arguments (arr) continue
+   listControl = result
+   listControl~lastItem = listControl~items - 1
+   return listControl
 
 ::method GetProgressBar unguarded
    arr = Arg(1,"A")
@@ -676,7 +679,7 @@
 
 ::method Init
    forward class (super) continue
-   self~LastItem = 0
+   self~LastItem = -1
 
 ::method ReplaceStyle
    use arg oldstyle, newstyle
@@ -898,7 +901,6 @@
    -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
    -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
    -- a -1 value to mark the iteration end.
-   -- As the internal attribute LastItem is not reliable use the items method
    if self~Items < 2 then return -1
    if Arg(1,'o') = 1 then startItem = -1
    return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "BELOW TORIGHT")
@@ -908,7 +910,6 @@
    -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
    -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
    -- a -1 value to mark the iteration end.
-   -- As the internal attribute LastItem is not reliable use the items method
    if self~Items < 2 then return -1
    if Arg(1,'o') = 1 then startItem = -1
    return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "ABOVE TOLEFT")
@@ -918,7 +919,6 @@
    -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
    -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
    -- a -1 value to mark the iteration end.
-   -- As the internal attribute LastItem is not reliable use the items method
    if self~Items < 2 then return -1
    if Arg(1,'o') = 1 then startItem = -1
    return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "TOLEFT")
@@ -928,7 +928,6 @@
    -- The Windows API appears to have a bug when the list contains a single item, insisting on returning
    -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
    -- a -1 value to mark the iteration end.
-   -- As the internal attribute LastItem is not reliable use the items method
    if self~Items < 2 then return -1
    if Arg(1,'o') = 1 then startItem = -1
    return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "TORIGHT")
