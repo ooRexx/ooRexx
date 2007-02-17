@@ -74,6 +74,10 @@ extern LONG HandleError(PRXSTRING r, CHAR * text);
       return HandleError(retstr, "Too few arguments"); }
 
 
+#define CHECKARGLH(argexpctl, argexpcth) { \
+   if (argc < argexpctl) return HandleError(retstr, "Too few arguments"); \
+   if (argc > argexpcth) return HandleError(retstr, "Too many arguments"); }
+
 
 /* macros for a easier return code */
 #define RETC(retcode) { \

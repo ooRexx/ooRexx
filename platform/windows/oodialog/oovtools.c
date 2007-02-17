@@ -65,6 +65,11 @@ BOOL IsYes(CHAR * s)
    return ((s[0]=='j') || (s[0]=='J') || (s[0]=='y') || (s[0]=='Y') || atoi(s));
 }
 
+/* Slightly stricter than IsYes and not currently exported. */
+BOOL IsNo(CHAR * s)
+{
+   return ( s && (*s == 'N' || *s == 'n') );
+}
 
 ULONG APIENTRY InfoMessage(
   PUCHAR funcname,
@@ -101,23 +106,42 @@ ULONG APIENTRY ErrorMessage(
    RETC(0)
 }
 
-
 ULONG APIENTRY YesNoMessage(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
   PUCHAR qname,
   PRXSTRING retstr )
-
 {
    HWND hW;
+   UINT uType = MB_YESNO | MB_ICONQUESTION | MB_SETFOREGROUND | MB_TASKMODAL;
 
-   CHECKARG(1);
+   CHECKARGLH(1, 2);
+
+   if ( argc == 2 )
+   {
+      if ( IsNo(argv[1].strptr) )
+         uType |= MB_DEFBUTTON2;
+      else if ( ! IsYes(argv[1].strptr) )
+      {
+         PSZ  pszMsg;
+         CHAR szText[] = "YesNoMessage argument 2 must be one of [Yes, No]; "
+                         "found \"%s\"";
+
+         pszMsg = LocalAlloc(LPTR, sizeof(szText) + 1 + argv[1].strlength);
+         if ( ! pszMsg )
+            RETERR;
+         sprintf(pszMsg, szText, argv[1].strptr);
+         HandleError(retstr, pszMsg);
+         LocalFree(pszMsg);
+         return 40;
+      }
+   }
 
    retstr->strlength = 1;
    if ((topDlg) && (topDlg->OnTheTop)) hW = topDlg->TheDlg; else hW = NULL;
 
-   if (MessageBox(hW,argv[0].strptr,"Question", MB_YESNO | MB_ICONQUESTION | MB_SETFOREGROUND | MB_TASKMODAL) == IDYES)
+   if (MessageBox(hW,argv[0].strptr,"Question", uType) == IDYES)
       retstr->strptr[0] = '1';
    else
       retstr->strptr[0] = '0';

@@ -102,13 +102,20 @@
    return ret
 
 ::routine AskDialog public
-   use arg info
+   use arg info, defaultButton
+   if Arg(2,'e') then do
+       defaultButton = defaultButton~left(1)~translate
+       if defaultButton <> 'N' & defaultButton <> 'Y' then
+           raise syntax 40.904 array('AskDialog', '2', '[Yes, No]', arg(2))
+   end
    installed = 0
    if RxFuncQuery("YesNoMessage") \= 0 then do
        call Rxfuncadd "YesNoMessage", "oodialog", "YesNoMessage"
        installed = 1
    end
-   ret = YesNoMessage(info)
+   if Arg(2,'o') then ret = YesNoMessage(info)
+   else ret = YesNoMessage(info, defaultButton)
+
    if installed = 1 then call RxfuncDrop "YesNoMessage"
    return ret
 
