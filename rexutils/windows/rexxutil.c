@@ -3460,7 +3460,7 @@ LONG APIENTRY SysTextScreenSize(
 *                         SW_MINIMIZE etc...      6                      *
 *                         numeric values...                              *
 *                                                                        *
-* Return:    Error code                                                  *
+* Return:    Process ID or Error code                                    *
 *************************************************************************/
 
 LONG APIENTRY RxWinExec(
@@ -3471,13 +3471,15 @@ LONG APIENTRY RxWinExec(
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
 
-  ULONG       CmdShow;                 /* show style flags to winexec*/
+  ULONG       CmdShow;                 /* show window style flags    */
   INT         index;                   /* table index                */
-  ULONG       rc;                      /* WinExec return code        */
+  ULONG       pid;                     /* PID or error return code   */
   ULONG       length;                  /* length of option           */
+  STARTUPINFO si;
+  PROCESS_INFORMATION procInfo;
 
 
-PSZ    show_styles[] =                 /* winexec show types         */
+PSZ    show_styles[] =                 /* show window types          */
     {"SHOWNORMAL",
      "SHOWNOACTIVATE",
      "SHOWMINNOACTIVE",
@@ -3487,7 +3489,7 @@ PSZ    show_styles[] =                 /* winexec show types         */
      "MINIMIZE"
      };
 
-ULONG  show_flags[] =                  /* winexec show styles        */
+ULONG  show_flags[] =                  /* show window styles        */
     {SW_SHOWNORMAL,
      SW_SHOWNOACTIVATE,
      SW_SHOWMINNOACTIVE,
@@ -3509,10 +3511,10 @@ ULONG  show_flags[] =                  /* winexec show styles        */
 
   CmdShow=0;                           /* initialize show flags      */
                                        /* validate arguments         */
-  if (numargs < 2 ||                   /* no valid button style?     */
+  if (numargs < 2 ||                   /* no show window style?      */
       args[1].strptr == NULL)
     CmdShow += SW_SHOWNORMAL;          /* set default show style     */
-  else {                               /* check various button styles*/
+  else {                               /* check various show styles  */
     length = args[1].strlength;        /* get length of option       */
                                        /* search style table         */
     for (index = 0;
@@ -3530,11 +3532,28 @@ ULONG  show_flags[] =                  /* winexec show styles        */
       return INVALID_ROUTINE;          /* raise an error             */
   }/* else */
 
-  rc = WinExec((LPSTR)args[0].strptr,CmdShow);
+  ZeroMemory(&procInfo, sizeof(procInfo));
+  ZeroMemory(&si, sizeof(si));
+  si.cb = sizeof(si);
+  si.dwFlags = STARTF_USESHOWWINDOW;
+  si.wShowWindow = CmdShow;
 
+  if ( CreateProcess(NULL, (LPSTR)args[0].strptr, NULL, NULL, FALSE, 0, NULL,
+                     NULL, &si, &procInfo ) ) {
+    pid = procInfo.dwProcessId;
+  }
+  else {
+    pid = GetLastError();
+    if ( pid > 31 )                    /* maintain compatibility to  */
+      pid = -pid;                      /* versions < ooRexx 3.1.2    */
+  }
                                        /* return value as string     */
-  sprintf(retstr->strptr, "%d", rc);
+  sprintf(retstr->strptr, "%d", pid);
   retstr->strlength = strlen(retstr->strptr);
+
+  /* Close process / thread handles as they are not used / needed.   */
+  CloseHandle(procInfo.hProcess);
+  CloseHandle(procInfo.hThread);
 
   return VALID_ROUTINE;                /* good completion            */
 }
