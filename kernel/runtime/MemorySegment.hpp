@@ -90,7 +90,7 @@
 /* we need a place to put them. */
 #define FirstDeadPool (LengthToDeadPool(MinimumObjectSize) - 1)
 /* The largest size element we'll keep in a subpool */
-#define LargestSubpool 72
+#define LargestSubpool 400
 /* The index of the last subpool dead chain */
 #define LastDeadPool LengthToDeadPool(LargestSubpool)
 /* number of free chains (we index zero based, so we need to */
@@ -417,20 +417,20 @@ class NormalSegmentSet : public MemorySegmentSet
                     /* given size. */
                     return (RexxObject *)newObject;
                 }
-                /* if this subpool is still directed at itself */
-                if (lastUsedSubpool[currentDead] == currentDead) {
-                    int temp = currentDead + 1;
-                    /* have it skip a level.  Eventually we'll end up */
-                    /* pointing where we need. */
-                    lastUsedSubpool[currentDead] = temp;
-                    /* the new one we're pointing at may also be */
-                    /* redirected, so let's try skipping over it. */
-                    currentDead = lastUsedSubpool[temp];
-                }
-                else {
-                    /* this one has been visited before and found */
-                    /* empty.  Skip to it's preferred location. */
-                    currentDead = lastUsedSubpool[currentDead];
+
+                currentDead++;
+
+                while (currentDead < DeadPools)
+                {
+                    if (lastUsedSubpool[currentDead] < DeadPools)
+                    {
+                        // this pool might be redirected already, so
+                        // pick up the index of where it's redirected to.
+                        currentDead = lastUsedSubpool[currentDead];
+                        lastUsedSubpool[targetPool] = currentDead;
+                        break;
+                    }
+                    currentDead++;
                 }
             }
             /* we've gone all the way to the end without finding */

@@ -151,6 +151,10 @@ class DeadObjectPool
 #endif
     }
 
+    // the threshold for deciding the large object chain is getting fragmented.
+    // this tells us we need to move larger blocks to the front of the chain.
+    static const size_t ReorderThreshold = 100;
+
     inline void  setID(const char *poolID) { this->id = poolID; }
     inline void  empty() { anchor.reset(); }
     inline BOOL  isEmpty() { return anchor.next->isReal(); }
@@ -199,14 +203,12 @@ class DeadObjectPool
     {
         DeadObject *newObject = anchor.next;
         size_t newLength;
-        size_t probes = 1;
         for (newLength = newObject->size(); newLength != 0; newLength = newObject->size()) {
             if (newLength >= length) {
                 newObject->remove();
                 logHit();
                 return newObject;
             }
-            probes++;
             newObject = newObject->next;
         }
         logMiss();
@@ -222,13 +224,36 @@ class DeadObjectPool
     {
         DeadObject *newObject = anchor.next;
         size_t newLength;
+        int probes = 1;
         for (newLength = newObject->size(); newLength != 0; newLength = newObject->size()) {
             if (newLength >= length) {
+                if (probes > ReorderThreshold)
+                {
+                    // we had to examine a lot of objects to get a match.
+                    // it's worthwhile percolating the larger objects on the rest of the
+                    // chain toward the front.  We only do this when we're starting to have problems
+                    // allocating objects because of fragmentation.
+                    DeadObject *tailObject = newObject->next;
+                    for (size_t tailLength = tailObject->size(); tailLength != 0; tailLength = tailObject->size())
+                    {
+                        // the size we just had problems with is a good marker for
+                        // selecting candidates to move toward the front.  The will guarantee
+                        // that a similar request for the same size will succeed faster in the future.
+                        DeadObject *nextObject = tailObject->next;
+                        if (tailLength > length)
+                        {
+                            tailObject->remove();
+                            addSingle(tailObject);
+                        }
+                        tailObject = nextObject;
+                    }
+                }
                 newObject->remove();
                 logHit();
                 *realLength = newLength;
                 return newObject;
             }
+            probes++;
             newObject = newObject->next;
         }
         logMiss();

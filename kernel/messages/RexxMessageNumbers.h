@@ -575,6 +575,7 @@
 #define Error_No_method_user_defined_msg                             646
 #define Error_Execution_user_defined_msg                             647
 #define Error_Translation_user_defined_msg                           648
+#define Error_Unmatched_quote_user_defined_msg                       649
 
 
 #endif

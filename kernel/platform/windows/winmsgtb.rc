@@ -523,8 +523,8 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Incorrect_call_queue_no_char    "&1 cannot be used with QUEUE:"
    Error_OLE_Error    "OLE error"
    Error_Unknown_OLE_Error    "An unknown OLE error occured (HRESULT=&1)."
-   Error_Variant2Rexx    "Cannot convert VARIANT to REXX object: The conversion of the VARIANT type &1 into a REXX object failed."
-   Error_Rexx2Variant    "Cannot convert REXX object to VARIANT: The conversion of &1 into a VARIANT failed."
+   Error_Variant2Rexx    "Cannot convert OLE VARIANT to REXX object: The conversion of the VARIANT type &1 into a REXX object failed."
+   Error_Rexx2Variant    "Cannot convert REXX object to OLE VARIANT: The conversion of &1 into a VARIANT failed."
    Error_Argument_Count_Mismatch    "The number of elements provided to the method or property is different from the number of parameters accepted by it."
    Error_Invalid_Variant    "One of the parameters is not a valid VARIANT type."
    Error_OLE_Exception    "OLE exception: &1"
@@ -575,6 +575,7 @@ Error_Program_unreadable    "Failure during initialization"
    Error_No_method_user_defined    "&1"
    Error_Execution_user_defined    "&1"
    Error_Translation_user_defined    "&1"
+   Error_Unmatched_quote_user_defined    "&1"
    
 END
 

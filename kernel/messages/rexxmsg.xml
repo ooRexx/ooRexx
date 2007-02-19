@@ -160,6 +160,15 @@
         <SymbolicName>Error_Unmatched_quote_double</SymbolicName>
         <Text>Unmatched double quote (<dq/>)</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>6</Code>
+        <Subcode>900</Subcode>
+        <MessageNumber>649</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unmatched_quote_user_defined</SymbolicName>
+        <Text><Sub position="1" name="message"/></Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -3234,7 +3243,7 @@ special character (such as a parenthesis).
         <Severity>Error</Severity>
         <SymbolicName>Error_Unknown_OLE_Error</SymbolicName>
         <Text>An unknown OLE error occured (HRESULT=<Sub position="1" name="hresult"/>).</Text>
-        <Explanation><para>The HRESULT contains the original error code provided by OLE.</para></Explanation>
+        <Explanation><para>An unexpected OLE error occurred.  HRESULT contains the original error code provided by OLE.</para></Explanation>
       </SubMessage>
       <SubMessage>
         <Code>92</Code>
@@ -3243,7 +3252,7 @@ special character (such as a parenthesis).
         <Component>OLE</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_Variant2Rexx</SymbolicName>
-        <Text>Cannot convert VARIANT to REXX object: The conversion of the VARIANT type <Sub position="1" name="varianttype"/> into a REXX object failed.</Text>
+        <Text>Cannot convert OLE VARIANT to REXX object: The conversion of the VARIANT type <Sub position="1" name="varianttype"/> into a REXX object failed.</Text>
       </SubMessage>
       <SubMessage>
         <Code>92</Code>
@@ -3252,7 +3261,7 @@ special character (such as a parenthesis).
         <Component>OLE</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Rexx2Variant</SymbolicName>
-        <Text>Cannot convert REXX object to VARIANT: The conversion of <Sub position="1" name="rexx_object"/> into a VARIANT failed.</Text>
+        <Text>Cannot convert REXX object to OLE VARIANT: The conversion of <Sub position="1" name="rexx_object"/> into a VARIANT failed.</Text>
       </SubMessage>
       <SubMessage>
         <Code>92</Code>

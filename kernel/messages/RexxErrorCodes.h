@@ -71,6 +71,7 @@
 #define Error_Unmatched_quote_comment                      6001
 #define Error_Unmatched_quote_single                       6002
 #define Error_Unmatched_quote_double                       6003
+#define Error_Unmatched_quote_user_defined                 6900
 #define Error_When_expected                                7000
 #define Error_When_expected_when                           7001
 #define Error_When_expected_whenotherwise                  7002

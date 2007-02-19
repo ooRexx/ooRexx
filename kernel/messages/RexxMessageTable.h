@@ -73,6 +73,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Unmatched_quote_comment)
       MINOR(Error_Unmatched_quote_single)
       MINOR(Error_Unmatched_quote_double)
+      MINOR(Error_Unmatched_quote_user_defined)
   MAJOR(Error_When_expected)
       MINOR(Error_When_expected_when)
       MINOR(Error_When_expected_whenotherwise)
