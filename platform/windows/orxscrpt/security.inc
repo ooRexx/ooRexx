@@ -1,5 +1,5 @@
 // warning! this file is generated!
-// modify the source C:\OrexxDev\oorexx-svn\platform\windows\orxscrpt\security.rex ONLY!
+// modify the source C:\OrexxDev\oorexx\platform\windows\orxscrpt\security.rex ONLY!
 OLECHAR szSecurityCode []=
 L"/*----------------------------------------------------------------------------*/\n"
 L"/*                                                                            */\n"

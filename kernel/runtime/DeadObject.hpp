@@ -153,7 +153,7 @@ class DeadObjectPool
 
     // the threshold for deciding the large object chain is getting fragmented.
     // this tells us we need to move larger blocks to the front of the chain.
-    static const size_t ReorderThreshold = 100;
+    #define ReorderThreshold 100
 
     inline void  setID(const char *poolID) { this->id = poolID; }
     inline void  empty() { anchor.reset(); }
