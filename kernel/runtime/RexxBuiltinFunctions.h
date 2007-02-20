@@ -82,6 +82,7 @@ RexxString *PackHex(PCHAR String, size_t StringLength);
 #define  DATATYPE_WHOLE_NUMBER     'W'
 #define  DATATYPE_HEX              'X'
 #define  DATATYPE_9DIGITS          '9'
+#define  DATATYPE_LOGICAL          'O' // lOgical.
                                        /* Verify function options    */
 #define  VERIFY_MATCH              'M'
 #define  VERIFY_NOMATCH            'N'

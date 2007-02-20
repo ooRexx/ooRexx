@@ -364,8 +364,20 @@ RexxObject *DataType(
         Answer = (RexxObject *)TheTrueObject;
       break;
 
+      case DATATYPE_LOGICAL:           // Test for a valid logical.
+          if (Len != 1 || (*Scanp != '1' && *Scanp != '0'))
+          {
+              Answer = TheFalseObject;
+          }
+          else
+          {
+              Answer = TheTrueObject;
+          }
+
+          break;
+
     default  :                         /* unsupported option                */
-      report_exception2(Error_Incorrect_method_option, new_cstring("ABCDLMNSUVWX9"), new_string((PCHAR)&Option,1));
+      report_exception2(Error_Incorrect_method_option, new_cstring("ABCDLMNOSUVWX9"), new_string((PCHAR)&Option,1));
   }
   return Answer;                       /* return validation answer          */
 }
