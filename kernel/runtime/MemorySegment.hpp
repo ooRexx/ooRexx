@@ -90,7 +90,7 @@
 /* we need a place to put them. */
 #define FirstDeadPool (LengthToDeadPool(MinimumObjectSize) - 1)
 /* The largest size element we'll keep in a subpool */
-#define LargestSubpool 400
+#define LargestSubpool 512
 /* The index of the last subpool dead chain */
 #define LastDeadPool LengthToDeadPool(LargestSubpool)
 /* number of free chains (we index zero based, so we need to */

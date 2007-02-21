@@ -227,13 +227,17 @@ class DeadObjectPool
         int probes = 1;
         for (newLength = newObject->size(); newLength != 0; newLength = newObject->size()) {
             if (newLength >= length) {
+                // we had to examine a lot of objects to get a match.
+                // it's worthwhile percolating the larger objects on the rest of the
+                // chain toward the front.  We only do this when we're starting to have problems
+                // allocating objects because of fragmentation.
+                DeadObject *tailObject = newObject->next;
+
+                newObject->remove();
+                logHit();
+                *realLength = newLength;
                 if (probes > ReorderThreshold)
                 {
-                    // we had to examine a lot of objects to get a match.
-                    // it's worthwhile percolating the larger objects on the rest of the
-                    // chain toward the front.  We only do this when we're starting to have problems
-                    // allocating objects because of fragmentation.
-                    DeadObject *tailObject = newObject->next;
                     for (size_t tailLength = tailObject->size(); tailLength != 0; tailLength = tailObject->size())
                     {
                         // the size we just had problems with is a good marker for
@@ -243,14 +247,11 @@ class DeadObjectPool
                         if (tailLength > length)
                         {
                             tailObject->remove();
-                            addSingle(tailObject);
+                            add(tailObject);
                         }
                         tailObject = nextObject;
                     }
                 }
-                newObject->remove();
-                logHit();
-                *realLength = newLength;
                 return newObject;
             }
             probes++;
