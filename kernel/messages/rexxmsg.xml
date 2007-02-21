@@ -1378,7 +1378,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_raise</SymbolicName>
-        <Text>RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, or SYNTAX; found <q><Sub position="1" name="word"/></q></Text>
+        <Text>RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, SYNTAX, or USER; found <q><Sub position="1" name="word"/></q></Text>
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
