@@ -57,9 +57,14 @@
 #define MAX_STDOUT_LENGTH     32767    /* max. amount of data to push to STDOUT @THU007A */ /* @HOL007M */
 #include "StreamNative.h"              /* include the stream information    */
 
+#define COMPILE_NEWAPIS_STUBS          /* Allows GetLongPathName to run on  */
+#define WANT_GETLONGPATHNAME_WRAPPER   /* NT and Windows 95                 */
+#include <NewAPIs.h>
+
 PCHAR SysFileExtension(PCHAR);
 RexxString * LocateProgram(RexxString *, PCHAR[], LONG);
 BOOL  SearchFileName(PCHAR, PCHAR);
+void GetLongName(PCHAR, DWORD);
 BOOL FindFirstFile(PCHAR Name);
 FILE * SysBinaryFilemode(FILE *, BOOL);
 INT SysFFlush(FILE *);
@@ -227,7 +232,8 @@ BOOL SearchFileName(
      if (-1 != (dwFileAttrib=GetFileAttributes((LPTSTR)FullName))
     && (dwFileAttrib != FILE_ATTRIBUTE_DIRECTORY))
      {
-                       /* got it!                           */
+                       /* got it! get its case-preserved long file name */
+       GetLongName(FullName, CCHMAXPATH);
        SetErrorMode(errorMode);
        return TRUE;
      }
@@ -243,7 +249,8 @@ BOOL SearchFileName(
      if (-1 != (dwFileAttrib=GetFileAttributes((LPTSTR)FullName))
     && (dwFileAttrib != FILE_ATTRIBUTE_DIRECTORY))
      {
-                       /* got it!                           */
+                       /* got it! get its case-preserved long file name */
+       GetLongName(FullName, CCHMAXPATH);
        SetErrorMode(errorMode);
        return TRUE;
      }
@@ -252,6 +259,40 @@ BOOL SearchFileName(
   return FALSE;                    /* not found                         */
 }
 
+/****************************************************************************/
+/* Function:  GetLongName()                                                 */
+/*                                                                          */
+/* Convert FullName to the original, case-preserved, long file name stored  */
+/* by the file system.                                                      */
+/*                                                                          */
+/* Note:  The converted name is returned in the FullName buffer.  If any    */
+/*        error occurs, the buffer remains unchanged.                       */
+/****************************************************************************/
+void GetLongName(
+  PCHAR      FullName,    /* buffer containing a fully resolved path name   */
+  DWORD      nSize )      /* size of FullName buffer must be >= CCHMAXPATH  */
+{
+  DWORD           length;
+  WIN32_FIND_DATA findData;
+  HANDLE          hFind;
+  PCHAR           p;
+
+  if ( nSize >= CCHMAXPATH ) {
+    length = GetLongPathName(FullName, FullName, nSize);
+
+    if ( 0 < length && length <= nSize )  {
+      hFind = FindFirstFile(FullName, &findData);
+      if ( hFind != INVALID_HANDLE_VALUE )  {
+        p = strrchr(FullName, '\\');
+
+        if ( p )
+          strcpy(++p, findData.cFileName);
+        FindClose(hFind);
+      }
+    }
+  }
+  return;
+}
 
 // retrofit by IH
 void SysLoadImage(
