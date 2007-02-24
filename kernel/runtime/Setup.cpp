@@ -344,6 +344,7 @@ CPPMSTR(RexxString::reverse),
 CPPMSTR(RexxString::right),
 CPPMSTR(RexxString::strip),
 CPPMSTR(RexxString::substr),
+CPPMSTR(RexxString::subchar),
 
                                           /* following methods are in OKBWORD  */
 CPPMSTR(RexxString::delWord),
@@ -401,6 +402,7 @@ CPPMMUTB(RexxMutableBuffer::insert),
 CPPMMUTB(RexxMutableBuffer::overlay),
 CPPMMUTB(RexxMutableBuffer::mydelete),
 CPPMMUTB(RexxMutableBuffer::substr),
+CPPMMUTB(RexxMutableBuffer::subchar),
 CPPMMUTB(RexxMutableBuffer::getBufferSize),
 CPPMMUTB(RexxMutableBuffer::setBufferSize),
 CPPMMUTB(RexxMutableBuffer::uninitMB),
@@ -1109,6 +1111,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_RIGHT                        ,TheStringBehaviour, CPPMSTR(RexxString::right), 2);
   defineKernelMethod(CHAR_STRIP                        ,TheStringBehaviour, CPPMSTR(RexxString::strip), 2);
   defineKernelMethod(CHAR_SUBSTR                       ,TheStringBehaviour, CPPMSTR(RexxString::substr), 3);
+  defineKernelMethod(CHAR_SUBCHAR                      ,TheStringBehaviour, CPPMSTR(RexxString::subchar), 1);
   defineKernelMethod(CHAR_DELWORD                      ,TheStringBehaviour, CPPMSTR(RexxString::delWord), 2);
   defineKernelMethod(CHAR_SPACE                        ,TheStringBehaviour, CPPMSTR(RexxString::space), 2);
   defineKernelMethod(CHAR_SUBWORD                      ,TheStringBehaviour, CPPMSTR(RexxString::subWord), 2);
@@ -1203,6 +1206,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_OVERLAY                      ,TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::overlay), 4);
   defineKernelMethod(CHAR_DELETE                       ,TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::mydelete), 2);
   defineKernelMethod(CHAR_SUBSTR                       ,TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::substr), 3);
+  defineKernelMethod(CHAR_SUBCHAR                      ,TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::subchar), 1);
   defineKernelMethod(CHAR_GETBUFFERSIZE                , TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::getBufferSize), 0);
   defineKernelMethod(CHAR_SETBUFFERSIZE                , TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::setBufferSize), 1);
 

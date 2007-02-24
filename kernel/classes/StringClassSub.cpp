@@ -646,3 +646,32 @@ RexxString *RexxString::substr(RexxInteger *position,
   return Retval;                       /* return extracted string           */
 }
 
+
+/**
+ * Extract a single character from a string object.
+ * Returns a null string if the specified position is
+ * beyond the bounds of the string.
+ *
+ * @param positionArg
+ *               The position of the target  character.  Must be a positive
+ *               whole number.
+ *
+ * @return Returns the single character at the target position.
+ *         Returns a null string if the position is beyond the end
+ *         of the string.
+ */
+RexxString *RexxString::subchar(RexxInteger *positionArg)
+{
+    // the starting position isn't optional
+    size_t position = get_position(positionArg, ARG_ONE) - 1;
+    size_t stringLength = this->length;
+
+    // beyond the bounds, this is a null string
+    if (position >= stringLength)
+    {
+        return OREF_NULLSTRING;
+    }
+    // return the single character
+    return this->extract(position, 1);
+}
+
