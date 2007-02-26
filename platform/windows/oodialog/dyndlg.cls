@@ -420,6 +420,7 @@
          parse var s type '"'name'"' "," id "," class "," style "," x "," y "," w "," h
          opts = ""
          class = class~strip~translate
+         style = style~translate(" ", "|")
          select
             when class = '"BUTTON"' then do
                if style~wordpos("BS_AUTORADIOBUTTON") > 0 | style~wordpos("BS_RADIOBUTTON") > 0 then
@@ -499,6 +500,7 @@
          parse var s type '"'name'"' "," id "," x "," y "," w "," h "," style
          if id~space(0) = "" then parse var s type id "," x "," y "," w "," h "," style
          type = type~strip~translate
+         style = style~translate(" ", "|")
 
          select
             when type = "DEFPUSHBUTTON" | type = "PUSHBUTTON" then
@@ -541,7 +543,7 @@
                if style~pos("BS_OWNERDRAW") > 0 then   /* sometimes AUTO3STATE is used for an owner draw button */
                    self~InternAddRCButton(id, x, y, w, h, name, style, loadOptions, "C")  /* if so, treat as normal button */
                else  /* otherwise (not owner drawn) treat as 3state */
-                   self~InternAddRC_RBCB(id, x, y, w, h, name, style || "| BS_AUTO3STATE", loadOptions, "C")
+                   self~InternAddRC_RBCB(id, x, y, w, h, name, style || " | BS_AUTO3STATE", loadOptions, "C")
 
             otherwise do
                self~errorFile(f, s)
