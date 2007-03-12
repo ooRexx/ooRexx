@@ -42,6 +42,9 @@
 %undefine _prefix
 %define _prefix /opt/ooRexx
 
+# Specify a top dir so we can build the RPM as a non-root user
+$_define _topdir @TOP_SRCDIR@/rpm
+
 # Specify the package version
 %define orx_major 3
 %define orx_minor 1

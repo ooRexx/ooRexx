@@ -811,5 +811,14 @@ install-exec-local:
 package:
 	./rexx $(top_srcdir)/platform/unix/makepkg.rex @PACKAGETYPE@ $(ORX_MAJOR).$(ORX_MINOR).$(ORX_MOD_LVL) $(target) $(prefix) $(DESTDIR)
 
-rpm:
-	rpmbuild -ba $(platform_unix_dir)/oorexx.spec
+rpm: dist
+	rm -fr $(top_srcdir)/rpm
+	mkdir rpm
+	mkdir rpm/BUILD
+	mkdir rpm/RPMS
+	mkdir rpm/SOURCES
+	mkdir rpm/SPECS
+	mkdir rpm/SRPMS
+	cp ooRexx*.tar.gz rpm/SOURCES
+	rpmbuild -ba oorexx.spec
+

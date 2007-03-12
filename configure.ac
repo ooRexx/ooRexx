@@ -365,8 +365,11 @@ GENERAL_CFLAGS="\
 CXXFLAGS="$CXXFLAGS $CFLAGS $CXX_WARNINGS $GENERAL_CXXFLAGS"
 CFLAGS="$CFLAGS $CC_WARNINGS $GENERAL_CFLAGS"
 
+AC_SUBST(TOP_SRCDIR,$top_srcdir)
+
 AC_CONFIG_FILES([
         Makefile
+	platform/unix/oorexx.spec
         samples/Makefile
         samples/unix/Makefile
         samples/unix/api/Makefile
