@@ -450,6 +450,42 @@ RexxObject *RexxMessage::errorCondition()
 }
 
 
+/**
+ * Retrieve the target of the message object.  This will be either
+ * the target object specified when the message object is created
+ * or a target override object specified on SEND or START.
+ *
+ * @return The current message target.
+ */
+RexxObject *RexxMessage::messageTarget()
+{
+    return receiver;
+
+}
+
+
+/**
+ * Return the name of the message.
+ *
+ * @return The string name of the message.
+ */
+RexxString *RexxMessage::messageName()
+{
+    return message;
+}
+
+
+/**
+ * Return a copy of the message argument array.
+ *
+ * @return A copy of the message arguments array.
+ */
+RexxArray *RexxMessage::arguments()
+{
+    return (RexxArray *)args->copy();
+}
+
+
 void *RexxMessage::operator new(size_t size)
 /******************************************************************************/
 /* Function:  Construct a new message object                                  */
@@ -462,6 +498,7 @@ void *RexxMessage::operator new(size_t size)
   BehaviourSet(newMessage, TheMessageBehaviour);
   return newMessage;                   /* return the new message object     */
 }
+
 
 RexxObject *RexxMessage::newRexx(
     RexxObject **arguments,            /* message argument array            */

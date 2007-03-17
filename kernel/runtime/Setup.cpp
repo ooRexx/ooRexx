@@ -230,6 +230,9 @@ CPPMSG(RexxMessage::start),
 CPPMSG(RexxMessage::completed),
 CPPMSG(RexxMessage::hasError),
 CPPMSG(RexxMessage::errorCondition),
+CPPMSG(RexxMessage::messageTarget),
+CPPMSG(RexxMessage::messageName),
+CPPMSG(RexxMessage::arguments),
 
 CPPMSG(RexxMessage::newRexx),
 
@@ -929,6 +932,9 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_HASERROR,  TheMessageBehaviour, CPPMSG(RexxMessage::hasError), 0);
   defineKernelMethod(CHAR_NOTIFY   , TheMessageBehaviour, CPPMSG(RexxMessage::notify), 1);
   defineKernelMethod(CHAR_RESULT   , TheMessageBehaviour, CPPMSG(RexxMessage::result), 0);
+  defineKernelMethod(CHAR_TARGET   , TheMessageBehaviour, CPPMSG(RexxMessage::messageTarget), 0);
+  defineKernelMethod(CHAR_MESSAGENAME  , TheMessageBehaviour, CPPMSG(RexxMessage::messageName), 0);
+  defineKernelMethod(CHAR_ARGUMENTS  , TheMessageBehaviour, CPPMSG(RexxMessage::arguments), 0);
   defineKernelMethod(CHAR_ERRORCONDITION , TheMessageBehaviour, CPPMSG(RexxMessage::errorCondition), 0);
   defineKernelMethod(CHAR_SEND     , TheMessageBehaviour, CPPMSG(RexxMessage::send), 1);
   defineKernelMethod(CHAR_START    , TheMessageBehaviour, CPPMSG(RexxMessage::start), 1);
