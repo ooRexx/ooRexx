@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2007 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -37,7 +37,9 @@
 /*----------------------------------------------------------------------------*/
 /* */
 .OLEObject~!REXXDefined
+.OLEVariant~!REXXDefined
 .environment~setentry("OLEOBJECT", .OLEObject)
+.environment~setentry("OLEVARIANT", .OLEVariant)
 If Arg(1) = "REXX" Then
   Say "OLEObject class setup"
 
@@ -72,3 +74,65 @@ Syntax:
 ::METHOD DISPATCH
 use arg name
 return self~unknown(name, arg(2,'A'))
+
+::CLASS OLEVariant
+::METHOD new class
+  signal on syntax
+
+  if arg(1, 'O') then
+    raise syntax 93.903 array(1) description "A variant value is required to create an OLEVariant."
+  if arg() > 3 then
+    raise syntax 93.902 array(3) description "The only arguments allowed to create an OLEVariant are: value, type, param flags."
+  forward class(super)
+
+syntax:
+  raise propagate
+
+::METHOD INIT EXTERNAL "LIBRARY OREXXOLE OLEVariant_Init"
+
+::METHOD "!VARVALUE_=" EXTERNAL "LIBRARY OREXXOLE OLEVariant_VarValueEquals"
+::METHOD "!VARVALUE_"
+  expose !_VAR_VALUE_
+  return !_VAR_VALUE_
+
+::METHOD "!VARTYPE_=" EXTERNAL "LIBRARY OREXXOLE OLEVariant_VarTypeEquals"
+::METHOD "!VARTYPE_"
+  expose !_VAR_TYPE_STR_
+  return !_VAR_TYPE_STR_
+
+::METHOD "!_VT_"
+  expose !_VAR_TYPE_
+  return !_VAR_TYPE_
+
+::METHOD "!PARAMFLAGS_=" EXTERNAL "LIBRARY OREXXOLE OLEVariant_ParamFlagsEquals"
+::METHOD "!PARAMFLAGS_"
+  expose !_PARAM_FLAGS_STR_
+  return !_PARAM_FLAGS_STR_
+
+::METHOD "!_PFLAGS_"
+  expose !_PARAM_FLAGS_
+  return !_PARAM_FLAGS_
+
+::METHOD "!OLEVARIANT_" ATTRIBUTE
+
+-- !clearVariant_ is an undocumented method for internal use only.
+::METHOD "!CLEARVARIANT_"
+  expose !_CLEAR_VARIANT_
+  return !_CLEAR_VARIANT_
+
+::METHOD "!CLEARVARIANT_="
+  expose !_CLEAR_VARIANT_
+  use arg bool
+  signal on syntax
+
+  if arg(1, 'O') then
+    raise syntax 93.903 array(1) description "!CLEARVARIANT_ must be set to .true or .false."
+  if bool <> .true & bool <> .false then
+    raise syntax 93.914 array(1, "[.true,.false]", bool~string) description "!CLEARVARIANT_ must be set to .true or .false."
+
+  !_CLEAR_VARIANT_ = (bool == .true)
+  return
+
+syntax:
+  raise propagate
+

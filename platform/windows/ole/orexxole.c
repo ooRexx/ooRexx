@@ -99,10 +99,15 @@ RexxObject *Variant2Rexx(VARIANT *pVariant);
 VOID Rexx2Variant(RexxObject *RxObject, VARIANT *pVariant, VARTYPE DestVt, INT iArgPos);
 BOOL fIsRexxArray(RexxObject *TestObject);
 BOOL fIsOLEObject(RexxObject *TestObject);
+BOOL fIsOleVariant(RexxObject *TestObject);
 BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, INT iArgPos);
 BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO pClsInfo );
 VARTYPE getUserDefinedVT( ITypeInfo *pTypeInfo, HREFTYPE hrt );
 BOOL fExploreTypeInfo( ITypeInfo *pTypeInfo, POLECLASSINFO pClsInfo );
+BOOL checkForOverride( VARIANT *, RexxObject *, VARTYPE, RexxObject **, VARTYPE * );
+BOOL isOutParam( RexxObject *, POLEFUNCINFO, INT );
+VOID handleVariantClear( VARIANT *, RexxObject * );
+__inline BOOL okayToClear( RexxObject * );
 
 int (__stdcall *creationCallback)(CLSID, IUnknown*) = NULL;
 void setCreationCallback(int (__stdcall *f)(CLSID, IUnknown*))
@@ -1290,6 +1295,9 @@ RexxObject *Variant2Rexx(VARIANT *pVariant)
 
       case VT_UNKNOWN:
         /* try to get a dispatch pointer and then create an OLE Object */
+        /* DFX TODO: IUnknown can also be passed by reference.  This should be
+         * handled in the same manner as VT_DISPATCH.
+         */
         pUnknown = V_UNKNOWN(pVariant);
         if (pUnknown)
         {
@@ -1364,14 +1372,14 @@ RexxObject *Variant2Rexx(VARIANT *pVariant)
   *
   * Notes:
   *   VT_BOOL
-  *     Microsoft uses a non-intuitive value for this variant,
-  *     and documents it this way: A value of 0xFFFF (all bits
-  *     1) indicates True; a value of 0 (all bits 0) indicates
-  *     False. No other values are valid.
+  *     Microsoft uses a non-intuitive value for this variant, and documents it
+  *     this way: A value of 0xFFFF (all bits 1) indicates True; a value of 0
+  *     (all bits 0) indicates False. No other values are valid.
   *
-  *     Setting a VT_BOOL's value to 1 for true, is not correct.
- */
-VOID Rexx2Variant(RexxObject *RxObject, VARIANT *pVariant, VARTYPE DestVt, INT iArgPos)
+  *     Setting a VT_BOOL's value to 1 for true does not produce the correct
+  *     result.
+  */
+VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT iArgPos)
 {
   BOOL         fDone = FALSE;
   BOOL         fByRef = FALSE;
@@ -1379,6 +1387,11 @@ VOID Rexx2Variant(RexxObject *RxObject, VARIANT *pVariant, VARTYPE DestVt, INT i
   RexxString  *RxString;
   VARIANT      sVariant;
   HRESULT      hResult;
+  RexxObject  *RxObject;
+  VARTYPE      DestVt;
+
+  if ( checkForOverride(pVariant, _RxObject, _DestVt, &RxObject, &DestVt) )
+    return;
 
   if (DestVt & VT_BYREF) {
     DestVt ^= VT_BYREF;
@@ -1574,8 +1587,9 @@ VOID Rexx2Variant(RexxObject *RxObject, VARIANT *pVariant, VARTYPE DestVt, INT i
 
 BOOL fIsRexxArray(RexxObject *TestObject)
 {
-  if ((RexxSend1(TestObject, "HASMETHOD", RexxString("DIMENSION")) == RexxTrue) &&
-      (RexxSend1(TestObject, "HASMETHOD", RexxString("HASINDEX")) == RexxTrue))
+  if ( TestObject &&
+       (RexxSend1(TestObject, "HASMETHOD", RexxString("DIMENSION")) == RexxTrue) &&
+       (RexxSend1(TestObject, "HASMETHOD", RexxString("HASINDEX")) == RexxTrue))
     return TRUE;
   else
     return FALSE;
@@ -1584,7 +1598,17 @@ BOOL fIsRexxArray(RexxObject *TestObject)
 
 BOOL fIsOLEObject(RexxObject *TestObject)
 {
-  if (RexxSend1(TestObject, "HASMETHOD", RexxString("!OLEOBJECT")) == RexxTrue)
+  if (TestObject &&
+      RexxSend1(TestObject, "HASMETHOD", RexxString("!OLEOBJECT")) == RexxTrue)
+    return TRUE;
+  else
+    return FALSE;
+}
+
+BOOL fIsOleVariant(RexxObject *TestObject)
+{
+  if ( TestObject &&
+       RexxSend1(TestObject, "HASMETHOD", RexxString("!OLEVARIANT_")) == RexxTrue)
     return TRUE;
   else
     return FALSE;
@@ -2942,27 +2966,21 @@ RexxMethod3(REXXOBJECT,                // Return type
 
     Rexx2Variant(arrItem, &(pVarArgs[iArgCount - i - 1]), DestVt, i + 1);
 
-    /* if this is an out parameter, we need to pass the variant as a reference */
-    /* retval is return value and does not have to be modified */
-    if (pFuncInfo) {
-      if (i < pFuncInfo->iParmCount) { // do not read into non-existing memory!
-        int j=pFuncInfo->pusOptFlags[i];
-        if (pFuncInfo->pusOptFlags[i] & PARAMFLAG_FOUT &&
-          !(pFuncInfo->pusOptFlags[i] & PARAMFLAG_FRETVAL) ) {
-          referenceVariant(&pVarArgs[iArgCount - i - 1]);
-          // store the original input VARIANT
-          // if it is getting changed, free the original!!!
-          memcpy(&pInputParameters[iArgCount - i - 1],&pVarArgs[iArgCount - i - 1],sizeof(VARIANT));
-        }
-
-
-      }
+    /* If an out parameter, the variant must be passed as a reference.  The
+     * original input variant is saved so that, if a new value is returned, the
+     * original can be freed.
+     */
+    if ( isOutParam(arrItem, pFuncInfo, i) )
+    {
+      referenceVariant(&pVarArgs[iArgCount - i - 1]);
+      memcpy(&pInputParameters[iArgCount - i - 1],&pVarArgs[iArgCount - i- 1],
+             sizeof(VARIANT));
     }
   } /* endfor */
 
-  /* if we have a property put then the new property value needs */
-  /* to be a named argument */
-
+  /* if we have a property put then the new property value needs to be a named
+   * argument
+   */
   if (wFlags == DISPATCH_PROPERTYPUT)
   {
     dp.cNamedArgs = 1;
@@ -3019,45 +3037,50 @@ RexxMethod3(REXXOBJECT,                // Return type
                                 wFlags, &dp, NULL, &sExc, &uArgErr);
   } /* endif */
 
-
-
   for (i=0; i < (INT) dp.cArgs; i++)
   {
+    arrItem = array_at(msgArgs, i + 1);
 
-        /* was this an out parameter? */
-    if (pFuncInfo)
-      if (i < pFuncInfo->iParmCount) {  // do not read into non-existing memory!
-        if (pFuncInfo->pusOptFlags[i] & PARAMFLAG_FOUT) {
-          /* yes, then change the REXX object to a new state */
+    /* was this an out parameter? */
+    if ( isOutParam(arrItem, pFuncInfo, i) )
+    {
+      /* yes, then change the REXX object to a new state */
+      RexxObject  *outObject;
+      RexxObject  *outArray=(RexxObject*) REXX_GETVAR("!OUTARRAY");
+      int         index=1;
+      char        indexBuffer[32];
 
-          RexxObject *outArray=(RexxObject*) REXX_GETVAR("!OUTARRAY");
-          int index=1;
-          char indexBuffer[32];
-
-          if (outArray == RexxNil) {
-            outArray = RexxArray(1);
-            REXX_SETVAR("!OUTARRAY",outArray);
-          }
-          else {
-            arrItem = RexxSend0(outArray, "LAST");
-            pszRxString = string_data((RexxString*) RexxSend0(arrItem,"STRING"));
-            sscanf(pszRxString, "%d", &index);
-            index++; // next entry
-          }
-          sprintf(indexBuffer,"%d",index);
-          RexxSend2(outArray,"PUT",Variant2Rexx(&(dp.rgvarg[dp.cArgs-i-1])),RexxString(indexBuffer));
-          // if the call changed an out parameter, we have to clear the original variant that
-          // was overwritten
-          if (memcmp(&pInputParameters[iArgCount - i - 1],&pVarArgs[iArgCount - i - 1],sizeof(VARIANT))) {
-            dereferenceVariant(&pInputParameters[iArgCount - i - 1]);
-            VariantClear(&pInputParameters[iArgCount - i - 1]);
-          } else
-            dereferenceVariant(&dp.rgvarg[iArgCount - i - 1]);
-        }
+      if (outArray == RexxNil) {
+        outArray = RexxArray(1);
+        REXX_SETVAR("!OUTARRAY",outArray);
       }
+      else {
+        arrItem = RexxSend0(outArray, "LAST");
+        pszRxString = string_data((RexxString*) RexxSend0(arrItem,"STRING"));
+        sscanf(pszRxString, "%d", &index);
+        index++; // next entry
+      }
+      outObject = Variant2Rexx(&(dp.rgvarg[dp.cArgs-i-1]));
+      sprintf(indexBuffer,"%d",index);
+      RexxSend2(outArray,"PUT",outObject,RexxString(indexBuffer));
 
-    /* clear the argument */
-    VariantClear(&(dp.rgvarg[dp.cArgs-i-1]));
+      if ( fIsOleVariant(arrItem) )
+        RexxSend1(arrItem, "!VARVALUE_=", outObject);
+
+      // if the call changed an out parameter, we have to clear the original variant that
+      // was overwritten
+      if (memcmp(&pInputParameters[iArgCount - i - 1],&pVarArgs[iArgCount - i - 1],sizeof(VARIANT))) {
+        dereferenceVariant(&pInputParameters[iArgCount - i - 1]);
+        handleVariantClear(&pInputParameters[iArgCount - i - 1], arrItem);
+      } else
+        dereferenceVariant(&dp.rgvarg[iArgCount - i - 1]);
+    }
+
+    /* Clear the argument and, if an OLEVariant, reset the clear variant flag.
+     */
+    handleVariantClear(&(dp.rgvarg[dp.cArgs-i-1]), arrItem);
+    if ( fIsOleVariant(arrItem) )
+      RexxSend1(arrItem, "!CLEARVARIANT_=", RexxTrue);
   } /* endfor */
 
   /* free the argument array */
@@ -3139,6 +3162,230 @@ RexxMethod3(REXXOBJECT,                // Return type
   return ResultObj;
 }
 
+/**
+ * Determine if the user wants to override OLEObject's automatic conversion of
+ * ooRexx objects to variants.
+ *
+ * The use of an OLEVariant object for a parameter signals that the ooRexx
+ * programmer may want to override the default type conversion.  Often simply
+ * specifying what the ooRexx object is to be converted to is sufficient.  Cases
+ * where the default conversion is known to be wrong are handled here and then
+ * the caller is informed that the conversion has already taken place.
+ *
+ * @param pVariant   The variant receiving the converted ooRexx object.
+ *
+ * @param RxObject   The ooRexx object to be converted.  If this is an
+ *                   OLEVariant object, the actual object to convert is
+ *                   contained withing the OLEVariant object.
+ *
+ * @param DestVt     The VT type that the automatic conversion believes the
+ *                   ooRexx object should be coerced to.
+ *
+ * @param pRxObject  [Returned] The real ooRexx object to convert.
+ *
+ * @param pDestVt    [Returned] The real VT type to coerce the ooRexx object to.
+ *
+ * @return           True, the conversion is complete, or false, the conversion
+ *                   is not complete - continue with the automatic conversion.
+ */
+BOOL checkForOverride( VARIANT *pVariant, RexxObject *RxObject, VARTYPE DestVt,
+                       RexxObject **pRxObject, VARTYPE *pDestVt )
+{
+  BOOL converted = FALSE;
+
+  if ( ! fIsOleVariant(RxObject) )
+  {
+    *pRxObject = RxObject;
+    *pDestVt   = DestVt;
+  }
+  else
+  {
+    RexxObject *tmpRxObj = RexxSend0(RxObject, "!_VT_");
+
+    *pRxObject = RexxSend0(RxObject, "!VARVALUE_");
+    if ( tmpRxObj == RexxNil )
+    {
+      /* Do not override default conversion. */
+      *pDestVt = DestVt;
+    }
+    else
+    {
+      *pDestVt = (VARTYPE)_integer(tmpRxObj);
+
+      switch ( *pDestVt & VT_TYPEMASK )
+      {
+        case VT_NULL :
+          V_VT(pVariant) = VT_NULL;
+          converted = TRUE;
+          break;
+
+        case VT_EMPTY :
+          V_VT(pVariant) = VT_EMPTY;
+          converted = TRUE;
+          break;
+
+        case VT_DISPATCH :
+          if ( *pRxObject == RexxNil || *pRxObject == NULL )
+          {
+            if ( *pDestVt & VT_BYREF )
+            {
+              IDispatch **ppDisp;
+
+              ppDisp = (IDispatch **)ORexxOleAlloc(sizeof(IDispatch **));
+              if ( ! ppDisp )
+                send_exception(Error_System_resources);
+
+              *ppDisp = (IDispatch *)NULL;
+
+              V_VT(pVariant) = VT_DISPATCH | VT_BYREF;
+              V_DISPATCHREF(pVariant) = ppDisp;
+            }
+            else
+            {
+              V_VT(pVariant) = VT_DISPATCH;
+              V_DISPATCH(pVariant) = NULL;
+            }
+            /* ooRexx, not VariantClear, must clear this variant. */
+            RexxSend1(RxObject, "!CLEARVARIANT_=", RexxFalse);
+            converted = TRUE;
+            break;
+          }
+          /* Let default conversion handle non-nil. */
+          break;
+
+        case VT_UNKNOWN :
+          if ( *pRxObject == RexxNil || *pRxObject == NULL )
+          {
+            if ( *pDestVt & VT_BYREF )
+            {
+              IUnknown **ppU;
+
+              ppU = (IUnknown **)ORexxOleAlloc(sizeof(IUnknown **));
+              if ( ! ppU )
+                send_exception(Error_System_resources);
+
+              *ppU = (IUnknown *)NULL;
+              V_VT(pVariant) = VT_UNKNOWN | VT_BYREF;
+              V_UNKNOWNREF(pVariant) = ppU;
+            }
+            else
+            {
+              V_VT(pVariant) = VT_UNKNOWN;
+              V_UNKNOWN(pVariant) = NULL;
+            }
+            /* ooRexx, not VariantClear, must clear this variant. */
+            RexxSend1(RxObject, "!CLEARVARIANT_=", RexxFalse);
+
+            converted = TRUE;
+            break;
+          }
+          /* Let default conversion handle non-nil. */
+          break;
+
+        default :
+          /* Let default conversion handle all other cases. */
+          break;
+      }
+    }
+  }
+  return converted;
+}
+
+/**
+ * Determine, based on the information OLEObject has, if the ooRexx object used
+ * as a parameter in an IDispatch invocation should be an out parameter.
+ *
+ * @param param      The parameter to be inspected.  If this is an OLEVariant
+ *                   object, the ooRexx programmer may be overriding what
+ *                   OLEObject thinks it knows.
+ *
+ * @param pFuncInfo  A, possible, pointer to a function information block with
+ *                   details concerning this parameter.
+ *
+ * @param i          The position (index) of the parameter in the method
+ *                   invocation.  This will also be the index of the parameter
+ *                   in the function information block.  Note howerver that it
+ *                   is possible that the index is not valid for the function
+ *                   information block.
+ *
+ * @return           True if there is enough information to be certain the
+ *                   paramter is an out parameter, otherwise false.
+ */
+BOOL isOutParam( RexxObject *param, POLEFUNCINFO pFuncInfo, INT i )
+{
+  USHORT  paramFlags = PARAMFLAG_NONE;
+  BOOL    overridden = FALSE;
+
+  if ( fIsOleVariant(param) )
+  {
+    RexxObject *tmpRxObj = RexxSend0(param, "!_PFLAGS_");
+    if ( tmpRxObj != RexxNil )
+    {
+      paramFlags = (USHORT)_integer(tmpRxObj);
+      overridden = TRUE;
+    }
+  }
+
+  if ( !overridden && pFuncInfo && i < pFuncInfo->iParmCount )
+    paramFlags = pFuncInfo->pusOptFlags[i];
+
+  return ((paramFlags & PARAMFLAG_FOUT) && !(paramFlags & PARAMFLAG_FRETVAL));
+}
+
+/**
+ * Helper function to clear a variant when it may not be safe to pass the
+ * variant to VariantClear.
+ *
+ * Assumes: Pass by reference variants have already been dereferenced and
+ * therefore V_ISBYREF(pVariant) == FALSE.
+ *
+ * @param pVariant  The variant to clear.
+ *
+ * @param RxObject  If this is an ooRexx OLEVariant object, it contains the flag
+ *                  signaling whether it is okay to pass the variant to
+ *                  VariantClear.
+ *
+ * @return          VOID
+ */
+VOID handleVariantClear( VARIANT *pVariant, RexxObject *RxObject )
+{
+  if ( ! okayToClear(RxObject) )
+  {
+    /* This reverses work done in Rexx2Variant when the parameter is an
+     * OLEVariant object.
+     */
+
+    switch ( V_VT(pVariant) & VT_TYPEMASK )
+    {
+      case VT_DISPATCH :
+        if ( V_DISPATCH(pVariant) != NULL)
+          ORexxOleFree(V_DISPATCH(pVariant));
+        break;
+
+      case VT_UNKNOWN :
+        if ( V_UNKNOWN(pVariant) != NULL)
+          ORexxOleFree(V_UNKNOWN(pVariant));
+        break;
+
+      default :
+        break;
+    }
+  }
+  else
+    VariantClear(pVariant);
+}
+
+/**
+ * Check if it is okay to use VariantClear.
+ */
+__inline BOOL okayToClear( RexxObject *RxObject )
+{
+  if ( fIsOleVariant(RxObject) )
+  {
+    return (RexxSend0(RxObject, "!CLEARVARIANT_") == RexxTrue);
+  }
+  return TRUE;
+}
 
 //******************************************************************************
 // Method:  OLEObject_Request

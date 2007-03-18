@@ -49,6 +49,10 @@ EXPORTS
   OLEObject_GetKnownMethods
   OLEObject_GetKnownEvents
   OLEObject_GetObject_Class
+  OLEVariant_Init
+  OLEVariant_VarValueEquals
+  OLEVariant_VarTypeEquals
+  OLEVariant_ParamFlagsEquals
   Rexx2Variant
   Variant2Rexx
   setCreationCallback
