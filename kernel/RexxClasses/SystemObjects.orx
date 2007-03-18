@@ -55,11 +55,13 @@ say 'System is' .system["NAME"] 'version' .system~version
 .Bag~!REXXDefined
 .Alarm~!REXXDefined
 .CircularQueue~!REXXDEfined
+.Properties~!REXXDEfined
 
 .environment~setentry('MONITOR', .Monitor)
 .environment~setentry('SET', .Set)
 .environment~setentry('BAG', .Bag)
 .environment~setentry('CIRCULARQUEUE', .CircularQueue)
+.environment~setentry('PROPERTIES', .Properties)
 
 parse version a b c                    /* if no thread support, no alarm class */
 if '6.00' <= b then
@@ -1100,4 +1102,189 @@ syntax: raise propagate
   return mb~string            -- now turn MutableBuffer object into a plain string
 
 syntax: raise propagate
+
+
+::CLASS Properties subclass Directory public
+::METHOD load class
+  use arg input
+  properties = .properties~new
+  forward to (properties) continue
+  return properties
+
+
+::METHOD load
+  use arg input
+
+  if (arg() > 1) then               -- too many arguments given?
+     raise syntax 93.902 array (1)  -- raise an error
+
+  if arg(1, 'o') then
+     raise syntax 93.903 array (1)  -- raise an error
+
+  signal on notready
+
+  do forever
+     line = input~linein~strip('L')
+     -- ignore comment lines
+     if line == "" | line~substr(1, 2) == "--" then
+         iterate
+     parse var line name '=' value
+     name = name~strip
+
+     self~put(value, name)
+
+  end
+  -- hit EOF, just return
+  notready:
+  return
+
+::METHOD save
+  use arg output
+
+  if (arg() > 1) then               -- too many arguments given?
+     raise syntax 93.902 array (1)  -- raise an error
+
+  if arg(1, 'o') then
+     raise syntax 93.903 array (1)  -- raise an error
+
+  supplier = self~supplier
+
+  do while supplier~available
+      name = supplier~index
+      value = supplier~item
+
+      output~lineout(name||"="||value)
+
+      supplier~next
+  end
+
+
+::METHOD setProperty
+  use arg name, value
+
+  if (arg() > 2) then               -- too many arguments given?
+     raise syntax 93.902 array (2)  -- raise an error
+
+  if arg(1, 'o') then
+     raise syntax 93.903 array (1)  -- raise an error
+
+  if arg(2, 'o') then
+     raise syntax 93.903 array (2)  -- raise an error
+
+  value = value~request('STRING')
+
+  if .nil == value then do
+     raise syntax 93.938 array (2)  -- raise an error
+  end
+
+  self~put:super(value, name)
+
+
+::METHOD getProperty
+  use arg name, default
+
+  if (arg() > 2) then               -- too many arguments given?
+     raise syntax 93.902 array (2)  -- raise an error
+
+  if arg(1, 'o') then
+     raise syntax 93.903 array (1)  -- raise an error
+
+  value = self~at(name)
+  if .nil == value then do
+      if arg(2, 'e') then
+          value = default
+  end
+
+  return value
+
+::METHOD setWhole
+  args = arg(1, 'A')
+
+  if \args~hasIndex(2) then
+     raise syntax 93.903 array (2)  -- raise an error
+
+  if \datatype(args[2], 'W') then
+     raise syntax 93.905 array (2, args[2])  -- raise an error
+
+  forward message 'SETPROPERTY'
+
+
+::METHOD getWhole
+  forward message 'GETPROPERTY' continue
+
+  value = result
+  if \datatype(value, 'W') then
+     raise syntax 26.901 array (value)  -- raise an error
+
+  return value
+
+
+::METHOD setLogical
+  args = arg(1, 'A')
+
+  if \args~hasIndex(2) then
+     raise syntax 93.903 array (2)  -- raise an error
+
+  if \datatype(args[2], 'O') then
+     raise syntax 34.901 array (2, args[2])  -- raise an error
+
+  if args[2] then
+     args[2] = "true"
+  else
+     args[2] = "false"
+
+  forward message 'SETPROPERTY' arguments (args)
+
+
+::METHOD getLogical
+  forward message 'GETPROPERTY' continue
+
+  value = result
+  if value == '1' | value == 'true' then
+      return .true
+  else if value == '0' | value == 'false' then
+      return .false
+  raise syntax 26.901 array (value)  -- raise an error
+
+
+::METHOD "[]="
+  use arg value, name
+
+  if (arg() > 2) then               -- too many arguments given?
+     raise syntax 93.902 array (2)  -- raise an error
+
+  if arg(1, 'o') then
+     raise syntax 93.903 array (1)  -- raise an error
+
+  if arg(2, 'o') then
+     raise syntax 93.903 array (2)  -- raise an error
+
+  value = value~request('STRING')
+
+  if .nil == value then do
+     raise syntax 93.938 array (1)  -- raise an error
+  end
+
+  forward class (super) array (value, name)
+
+
+::METHOD put
+  use arg value, name
+
+  if (arg() > 2) then               -- too many arguments given?
+     raise syntax 93.902 array (2)  -- raise an error
+
+  if arg(1, 'o') then
+     raise syntax 93.903 array (1)  -- raise an error
+
+  if arg(2, 'o') then
+     raise syntax 93.903 array (2)  -- raise an error
+
+  value = value~request('STRING')
+
+  if .nil == value then do
+     raise syntax 93.938 array (1)  -- raise an error
+  end
+
+  forward class (super) array (value, name)
 

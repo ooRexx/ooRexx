@@ -67,7 +67,7 @@ RexxMemory *pMemoryObject = &memoryObject;
 #define SaveStackSize 20             /* newly created objects to save */
 #define SaveStackAllocSize 500       /* pre-allocation for save stack  */
 
-#define MaxImageSize 500000          /* maximum startup image size */
+#define MaxImageSize 600000          /* maximum startup image size */
 
                                        /* Local and global memory Pools     */
                                        /*  last one accessed.               */
@@ -1243,6 +1243,12 @@ void RexxMemory::saveImageMark(RexxObject *markObject, RexxObject **pMarkObject)
 
         /* address the copy in the image */
         bufferReference = (RexxObject *)(image_buffer + image_offset);
+        // we allocated a hard coded buffer, so we need to make sure we don't blow
+        // the buffer size.
+        if (image_offset + size> MaxImageSize)
+        {
+            logic_error("Rexx saved image exceeds expected maximum");
+        }
         /* Copy object to image buffer. */
         memcpy(bufferReference, markObject, size);
         /* clear the mark in the copy        */
@@ -1441,7 +1447,7 @@ void RexxMemory::saveImage(void)
   saveArray->put(primitive_behaviours, saveArray_PBEHAV);
 
   image_buffer = (char *)malloc(MaxImageSize);
-  image_offset = sizeof(long);
+  image_offset = sizeof(size_t);
   saveimage = TRUE;
   disableOrefChecks();                 /* Don't try to check OrefSets now.  */
   bumpMarkWord();

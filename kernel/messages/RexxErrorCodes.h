@@ -215,6 +215,7 @@
 #define Error_Invalid_whole_number_trace                   26007
 #define Error_Invalid_whole_number_intdiv                  26011
 #define Error_Invalid_whole_number_rem                     26012
+#define Error_Invalid_whole_number_method                  26901
 #define Error_Invalid_whole_number_user_defined            26900
 #define Error_Invalid_do                                   27000
 #define Error_Invalid_do_whileuntil                        27001
@@ -256,6 +257,7 @@
 #define Error_Logical_value_method                         34901
 #define Error_Logical_value_guard                          34902
 #define Error_Logical_value_authorization                  34903
+#define Error_Logical_value_property                       34904
 #define Error_Invalid_expression                           35000
 #define Error_Invalid_expression_general                   35001
 #define Error_Invalid_expression_user_defined              35900

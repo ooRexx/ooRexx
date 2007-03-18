@@ -576,6 +576,8 @@
 #define Error_Execution_user_defined_msg                             647
 #define Error_Translation_user_defined_msg                           648
 #define Error_Unmatched_quote_user_defined_msg                       649
+#define Error_Invalid_whole_number_method_msg                        650
+#define Error_Logical_value_property_msg                             651
 
 
 #endif
