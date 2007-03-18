@@ -406,6 +406,8 @@ CPPMMUTB(RexxMutableBuffer::overlay),
 CPPMMUTB(RexxMutableBuffer::mydelete),
 CPPMMUTB(RexxMutableBuffer::substr),
 CPPMMUTB(RexxMutableBuffer::subchar),
+CPPMMUTB(RexxMutableBuffer::posRexx),
+CPPMMUTB(RexxMutableBuffer::lastPos),
 CPPMMUTB(RexxMutableBuffer::getBufferSize),
 CPPMMUTB(RexxMutableBuffer::setBufferSize),
 CPPMMUTB(RexxMutableBuffer::uninitMB),
@@ -1212,6 +1214,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_OVERLAY                      ,TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::overlay), 4);
   defineKernelMethod(CHAR_DELETE                       ,TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::mydelete), 2);
   defineKernelMethod(CHAR_SUBSTR                       ,TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::substr), 3);
+  defineKernelMethod(CHAR_POS                          ,TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::posRexx), 2);
+  defineKernelMethod(CHAR_LASTPOS                      ,TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::lastPos), 2);
   defineKernelMethod(CHAR_SUBCHAR                      ,TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::subchar), 1);
   defineKernelMethod(CHAR_GETBUFFERSIZE                , TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::getBufferSize), 0);
   defineKernelMethod(CHAR_SETBUFFERSIZE                , TheMutableBufferBehaviour, CPPMMUTB(RexxMutableBuffer::setBufferSize), 1);
