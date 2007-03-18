@@ -112,6 +112,7 @@
      virtual double       doubleValueNoNOSTRING() { return this->doubleValue();};
 
      virtual BOOL         isEqual(RexxObject *);
+     virtual bool         isInstanceOf(RexxClass *);
 
              RexxObject  *hasUninit();
              void         removedUninit();
@@ -215,6 +216,8 @@ class RexxObject : public RexxInternalObject {
      LONG         requiredNonNegative(LONG, size_t precision=DEFAULT_DIGITS);
 
      BOOL         isEqual(RexxObject *);
+     bool         isInstanceOf(RexxClass *);
+     RexxObject  *isInstanceOfRexx(RexxClass *);
      RexxString  *objectName();
      RexxObject  *objectNameEquals(RexxObject *);
      RexxClass   *classObject();

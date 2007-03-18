@@ -148,6 +148,7 @@ long number_create_integer(UCHAR *, long, int, int);
     RexxObject *trunc(RexxObject *);
     RexxObject *truncInternal(size_t);
     RexxObject *unknown(RexxString *, RexxArray *);
+    bool        isInstanceOf(RexxClass *);
     inline RexxNumberString *checkNumber(size_t digits, BOOL rounding)
     {
      if (this->length > digits)            /* is the length larger than digits()*/

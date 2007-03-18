@@ -1510,6 +1510,21 @@ RexxObject *RexxNumberString::unknown(RexxString *msgname, RexxArray *arguments)
   return send_message((RexxObject *)this->stringValue(), msgname, arguments);
 }
 
+
+/**
+ * Override for the normal isinstanceof method.  This version
+ * allows the NumberStringClass to "lie" about being a string.
+ *
+ * @param other  The comparison class
+ *
+ * @return True if the string value is an instance of the target class.
+ */
+bool RexxNumberString::isInstanceOf(RexxClass *other)
+{
+    return stringValue()->isInstanceOf(other);
+}
+
+
 RexxString *RexxNumberString::concatBlank(RexxObject *other)
 /******************************************************************************/
 /* Function:  Blank concatenation operator                                    */

@@ -145,6 +145,49 @@ BOOL RexxObject::isEqual(
     return this->sendMessage(OREF_STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
 }
 
+
+/**
+ * Test if an internal object is an instance of another class.
+ *
+ * @param other  The test class.
+ *
+ * @return Always returns false.
+ */
+bool RexxInternalObject::isInstanceOf(RexxClass *other)
+{
+    // internal classes always fail this
+    return false;
+}
+
+
+/**
+ * Test if a Rexx object is an instance of a given class.
+ *
+ * @param other  The other test class.
+ *
+ * @return True if this object is an instance of the target class, false otherwise.
+ */
+bool RexxObject::isInstanceOf(RexxClass *other)
+{
+    return classObject()->isCompatibleWith(other);
+}
+
+
+/**
+ * The Rexx external version of the instance of.
+ *
+ * @param other  The other test class.
+ *
+ * @return .true if this class is an instance of the target class. .false
+ *         otherwise.
+ */
+RexxObject *RexxObject::isInstanceOfRexx(RexxClass *other)
+{
+    required_arg(other, ONE);
+    return isInstanceOf(other) ? TheTrueObject : TheFalseObject;
+}
+
+
 RexxObject * RexxObject::strictEqual(
     RexxObject * other)                /* other object for comparison       */
 /******************************************************************************/

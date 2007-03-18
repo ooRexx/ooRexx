@@ -1734,6 +1734,42 @@ void RexxClass::setMetaClass(
     this->metaClassScopes->add(this->metaClassScopes->allAt(TheNilObject), metaClass);
 }
 
+
+/**
+ * Test if the target class is a "compatible" with the argument
+ * class.  To be compatible, the target class must either A)
+ * be the same class, B) be a direct subclass of the argument
+ * class, or C) inherit the argument class as a mixin.  This
+ * rule gets applied recursively down the hierarchy.
+ *
+ * @param other  The comparison class.
+ *
+ * @return True if the two classes are compatible, false otherwise.
+ */
+bool RexxClass::isCompatibleWith(RexxClass *other)
+{
+    // if asking for a match here, this is true
+    if (other == this)
+    {
+        return true;
+    }
+
+    // if this is .object, there are no superclasses.  Otherwise, ask each of the superclasses
+    // the same question.
+    if (instanceSuperClasses != OREF_NULL)
+    {
+        for (size_t i = 1; i <= instanceSuperClasses->size(); i++)
+        {
+            if (((RexxClass *)instanceSuperClasses->get(i))->isCompatibleWith(other))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
 void  *RexxClass::operator new(size_t size,
     long size1,                        /* additional size                   */
     RexxBehaviour *class_behaviour,    /* new class behaviour               */

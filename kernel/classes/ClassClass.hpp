@@ -112,6 +112,7 @@ void class_create (void);
    RexxClass  *newRexx(RexxObject **args, size_t argCount);
    void        setMetaClass(RexxClass *);
    RexxClass  *external(RexxString *, RexxClass *, RexxTable *);
+   bool        isCompatibleWith(RexxClass *other);
 
    inline BOOL         rexxDefined() { return this->class_info & REXX_DEFINED; };
    inline BOOL         imported()    { return this->class_info & IMPORTED; }
