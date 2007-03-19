@@ -261,7 +261,7 @@ static RexxString * stringToVT( RexxString * rxStr )
             if ( v1 != VT_ILLEGAL && v1 != VT_VARIANT && v1 != VT_BYREF &&
                  v1 != VT_ARRAY )
             {
-                sprintf_s(szBuffer, sizeof(szBuffer), "%d", v1);
+                sprintf(szBuffer, "%d", v1);
                 rxResult = (RexxString *)RexxString(szBuffer);
             }
             break;
@@ -275,7 +275,7 @@ static RexxString * stringToVT( RexxString * rxStr )
 
             if ( v1 != VT_ILLEGAL && v2 != VT_ILLEGAL && areValidVTs(v1, v2) )
             {
-                sprintf_s(szBuffer, sizeof(szBuffer), "%d", v1 | v2);
+                sprintf(szBuffer, "%d", v1 | v2);
                 rxResult = (RexxString *)RexxString(szBuffer);
             }
             break;
@@ -337,7 +337,7 @@ static RexxString * stringToFlags( RexxString * rxStr )
         tmp = findFlag(stripNonCSyms(pszRxStr));
         if ( tmp != PARAMFLAG_ILLEGAL )
         {
-            sprintf_s(szBuffer, sizeof(szBuffer), "%d", val | tmp);
+            sprintf(szBuffer, "%d", val | tmp);
             rxResult = (RexxString *)RexxString(szBuffer);
         }
     }
