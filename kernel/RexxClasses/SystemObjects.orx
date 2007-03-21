@@ -1121,6 +1121,14 @@ syntax: raise propagate
   if arg(1, 'o') then
      raise syntax 93.903 array (1)  -- raise an error
 
+  if input~isInstanceOf(.string) then  -- if a string use it as a filename
+  do
+     stream=.stream~new(input)      -- create stream object
+     self~load(stream)              -- load its properties
+     stream~close                   -- close stream
+     return
+  end
+
   signal on notready
 
   do forever
@@ -1146,6 +1154,14 @@ syntax: raise propagate
 
   if arg(1, 'o') then
      raise syntax 93.903 array (1)  -- raise an error
+
+  if output~isInstanceOf(.string) then  -- if a string use it as a filename
+  do
+     stream=.stream~new(output)     -- create stream object
+     self~save(stream)              -- load its properties
+     stream~close                   -- close stream
+     return
+  end
 
   supplier = self~supplier
 
@@ -1244,7 +1260,7 @@ syntax: raise propagate
       return .true
   else if value == '0' | value == 'false' then
       return .false
-  raise syntax 26.901 array (value)  -- raise an error
+  raise syntax 34.904 array (value)  -- raise an error
 
 
 ::METHOD "[]="
