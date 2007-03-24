@@ -148,6 +148,24 @@ PCHAR SysFileExtension(
   return --Scan;                       /* return extension position         */
 }
 
+/**
+ * Portable implementation of an ascii-z string to uppercase (in place).
+ *
+ * @param str    String argument
+ *
+ * @return The address of the str unput argument.
+ */
+void strlower(char *str)
+{
+    while (*str)
+    {
+        *str = tolower(*str);
+        str++;
+    }
+
+    return;
+}
+
 
 /*********************************************************************/
 /*                                                                   */
@@ -179,23 +197,44 @@ RexxString *  LocateProgram(
   if (Extension)                       /* have an extension?                */
     ExtensionCount = 0;                /* no further extension processing   */
   Result = SearchFileName(Name, 'P');  /* check on the "raw" name first     */
-  if (Result == OREF_NULL) {           /* not found?  try adding extensions */
-                                       /* get space left for an extension   */
-    ExtensionSpace = sizeof(TempName) - strlen(Name);
-                                       /* loop through the extensions list  */
-    for (i = 0; Result == OREF_NULL && i < ExtensionCount; i++) {
+  if (Result != NULL)                  /* not found?  try adding extensions */
+  {
+      return new_cstring(Result);
+  }
+  // try again, in lower case
+  strncpy((PCHAR)TempName, Name, sizeof(TempName));
+  strlower((char *)TempName);
+
+  Result = SearchFileName((char *)TempName, 'P'); /* check on the "raw" name first     */
+  if (Result != NULL)                      /* not found?  try adding extensions */
+  {
+      return new_cstring(Result);
+  }
+
+                                     /* get space left for an extension   */
+  ExtensionSpace = sizeof(TempName) - strlen(Name);
+                                     /* loop through the extensions list  */
+  for (i = 0; i < ExtensionCount; i++) {
                                        /* copy over the name                */
       strncpy((PCHAR)TempName, Name, sizeof(TempName));
                                        /* copy over the extension           */
       strncat((PCHAR)TempName, (PCHAR)Extensions[i], ExtensionSpace);
                                        /* check on the "raw" name first     */
       Result = SearchFileName((PCHAR)TempName, 'P'); /* PATH search         */
-    }
+      if (Result != NULL)                      /* not found?  try adding extensions */
+      {
+          return new_cstring(Result);
+      }
+      // try again in lower case
+      strlower((char *)TempName);
+                                       /* check on the "raw" name first     */
+      Result = SearchFileName((PCHAR)TempName, 'P'); /* PATH search         */
+      if (Result != NULL)                      /* not found?  try adding extensions */
+      {
+          return new_cstring(Result);
+      }
   }
-  if ( Result == OREF_NULL )
-     return (RexxString *)Result;      /* return     name  not found        */
-  else
-     return new_cstring(Result);       /* return the name                   */
+  return OREF_NULL;
 }
 
 /****************************************************************************/
