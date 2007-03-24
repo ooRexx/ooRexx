@@ -187,7 +187,7 @@ BOOL AddTheMessage(DIALOGADMIN * aDlg, ULONG message, ULONG filt1, ULONG param, 
    }
    if (!aDlg->MsgTab)
    {
-      aDlg->MsgTab = LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAXTABLEENTRIES);
+      aDlg->MsgTab = LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAX_MT_ENTRIES);
       if (!aDlg->MsgTab)
       {
           MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
@@ -197,7 +197,7 @@ BOOL AddTheMessage(DIALOGADMIN * aDlg, ULONG message, ULONG filt1, ULONG param, 
       aDlg->MT_size = 0;
    }
 
-   if (aDlg->MT_size < MAXTABLEENTRIES)
+   if (aDlg->MT_size < MAX_MT_ENTRIES)
    {
       aDlg->MsgTab[aDlg->MT_size].msg = message;
       aDlg->MsgTab[aDlg->MT_size].filterM = filt1;
@@ -209,6 +209,12 @@ BOOL AddTheMessage(DIALOGADMIN * aDlg, ULONG message, ULONG filt1, ULONG param, 
       if (aDlg->MsgTab[aDlg->MT_size].rexxProgram) rxstrlcpy(aDlg->MsgTab[aDlg->MT_size].rexxProgram, prog);
       aDlg->MT_size ++;
       return 1;
+   }
+   else
+   {
+      MessageBox(0, "Messages have exceeded the maximum number of allocated\n"
+                    "table entries. No message can be added.\n",
+                 "Error",MB_OK | MB_ICONHAND);
    }
    return 0;
 }

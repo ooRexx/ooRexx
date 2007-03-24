@@ -614,7 +614,7 @@ ULONG APIENTRY BmpButton(
        CHECKARGL(4);
        if (!dlgAdm->BmpTab)
        {
-          dlgAdm->BmpTab = LocalAlloc(LMEM_FIXED, sizeof(BITMAPTABLEENTRY) * MAXTABLEENTRIES);
+          dlgAdm->BmpTab = LocalAlloc(LMEM_FIXED, sizeof(BITMAPTABLEENTRY) * MAX_BT_ENTRIES);
           if (!dlgAdm->BmpTab)
           {
              MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
@@ -642,7 +642,7 @@ ULONG APIENTRY BmpButton(
           if (strstr(argv[8].strptr, "STRETCH")) strch = TRUE; else strch = FALSE;
        }
 
-       if (dlgAdm->BT_size < MAXTABLEENTRIES)
+       if (dlgAdm->BT_size < MAX_BT_ENTRIES)
        {
           dlgAdm->BmpTab[dlgAdm->BT_size].Loaded  = 0;
           dlgAdm->BmpTab[dlgAdm->BT_size].buttonID  = atoi(buffer[0]);
@@ -674,6 +674,13 @@ ULONG APIENTRY BmpButton(
              dlgAdm->BT_size ++;
              RETC(0)
           }
+       }
+       else
+       {
+          MessageBox(0, "Bitmap buttons have exceeded the maximum number of\n"
+                        "allocated table entries. No bitmap button can be\n"
+                        "added.",
+                     "Error",MB_OK | MB_ICONHAND);
        }
    }
    else

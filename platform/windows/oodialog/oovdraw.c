@@ -550,7 +550,7 @@ ULONG APIENTRY SetBackground(
    {
        if (!dlgAdm->ColorTab)
        {
-           dlgAdm->ColorTab = LocalAlloc(LMEM_FIXED, sizeof(COLORTABLEENTRY) * MAXTABLEENTRIES);
+           dlgAdm->ColorTab = LocalAlloc(LMEM_FIXED, sizeof(COLORTABLEENTRY) * MAX_CT_ENTRIES);
            if (!dlgAdm->ColorTab)
            {
                MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
@@ -558,23 +558,35 @@ ULONG APIENTRY SetBackground(
            }
            dlgAdm->CT_size = 0;
        }
-       id = atol(argv[2].strptr);
-       SEARCHBRUSH(dlgAdm, i, id, hbrush);
-       if (hbrush)
+
+       if ( dlgAdm->CT_size < MAX_CT_ENTRIES )
        {
-           DeleteObject(hbrush);
-           dlgAdm->ColorTab[i].ColorBk = atoi(argv[3].strptr);
-           if (argc == 5) dlgAdm->ColorTab[i].ColorFG = atoi(argv[4].strptr); else dlgAdm->ColorTab[i].ColorFG = -1;
-           dlgAdm->ColorTab[i].ColorBrush = (HBRUSH)CreateSolidBrush(PALETTEINDEX(dlgAdm->ColorTab[i].ColorBk));
-           RETC(1)
+           id = atol(argv[2].strptr);
+           SEARCHBRUSH(dlgAdm, i, id, hbrush);
+           if (hbrush)
+           {
+               DeleteObject(hbrush);
+               dlgAdm->ColorTab[i].ColorBk = atoi(argv[3].strptr);
+               if (argc == 5) dlgAdm->ColorTab[i].ColorFG = atoi(argv[4].strptr); else dlgAdm->ColorTab[i].ColorFG = -1;
+               dlgAdm->ColorTab[i].ColorBrush = (HBRUSH)CreateSolidBrush(PALETTEINDEX(dlgAdm->ColorTab[i].ColorBk));
+               RETC(1)
+           }
+           else
+           {
+               dlgAdm->ColorTab[dlgAdm->CT_size].itemID = id;
+               dlgAdm->ColorTab[dlgAdm->CT_size].ColorBk = atoi(argv[3].strptr);
+               if (argc == 5) dlgAdm->ColorTab[i].ColorFG = atoi(argv[4].strptr); else dlgAdm->ColorTab[i].ColorFG = -1;
+               dlgAdm->ColorTab[dlgAdm->CT_size].ColorBrush = (HBRUSH)CreateSolidBrush(PALETTEINDEX(dlgAdm->ColorTab[dlgAdm->CT_size].ColorBk));
+               dlgAdm->CT_size++;
+           }
        }
        else
        {
-           dlgAdm->ColorTab[dlgAdm->CT_size].itemID = id;
-           dlgAdm->ColorTab[dlgAdm->CT_size].ColorBk = atoi(argv[3].strptr);
-           if (argc == 5) dlgAdm->ColorTab[i].ColorFG = atoi(argv[4].strptr); else dlgAdm->ColorTab[i].ColorFG = -1;
-           dlgAdm->ColorTab[dlgAdm->CT_size].ColorBrush = (HBRUSH)CreateSolidBrush(PALETTEINDEX(dlgAdm->ColorTab[dlgAdm->CT_size].ColorBk));
-           dlgAdm->CT_size++;
+           MessageBox(0, "Dialog control elements have exceeded the maximum\n"
+                         "number of allocated color table entries. The color\n"
+                         "for the dialog control can not be added.",
+                      "Error" ,MB_OK | MB_ICONHAND);
+           RETERR
        }
    }
    RETC(0)

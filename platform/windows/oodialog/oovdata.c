@@ -765,7 +765,7 @@ ULONG APIENTRY DataTable(
        CHECKARGL(4);
        if (!dlgAdm->DataTab)
        {
-          dlgAdm->DataTab = LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * MAXTABLEENTRIES);
+          dlgAdm->DataTab = LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * MAX_DT_ENTRIES);
           if (!dlgAdm->DataTab)
           {
              MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
@@ -773,7 +773,7 @@ ULONG APIENTRY DataTable(
           }
           dlgAdm->DT_size = 0;
        }
-       if (dlgAdm->DT_size < MAXTABLEENTRIES)
+       if (dlgAdm->DT_size < MAX_DT_ENTRIES)
        {
           dlgAdm->DataTab[dlgAdm->DT_size].id = atoi(argv[2].strptr);
           dlgAdm->DataTab[dlgAdm->DT_size].typ = atoi(argv[3].strptr);
@@ -784,6 +784,9 @@ ULONG APIENTRY DataTable(
           dlgAdm->DT_size ++;
           RETC(0);
        }
+       MessageBox(0, "Dialog data items have exceeded the maximum number of\n"
+                     "allocated table entries. No data item can be added.",
+                  "Error",MB_OK | MB_ICONHAND);
        RETC(1);
    }
    else
@@ -892,7 +895,7 @@ BOOL DataAutodetection(DIALOGADMIN * aDlg)
        {
           if (!aDlg->DataTab)
           {
-              aDlg->DataTab = LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * MAXTABLEENTRIES);
+              aDlg->DataTab = LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * MAX_DT_ENTRIES);
               if (!aDlg->DataTab)
               {
                    MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
@@ -900,13 +903,21 @@ BOOL DataAutodetection(DIALOGADMIN * aDlg)
               }
               aDlg->DT_size = 0;
           }
-          if (aDlg->DT_size < MAXTABLEENTRIES)
+          if (aDlg->DT_size < MAX_DT_ENTRIES)
           {
               aDlg->DataTab[aDlg->DT_size].id = GetWindowLong(current, GWL_ID);
               aDlg->DataTab[aDlg->DT_size].typ = itemtoadd;
               aDlg->DataTab[aDlg->DT_size].category = 0;
               aDlg->DT_size ++;
-          } else return FALSE;
+          }
+          else
+          {
+              MessageBox(0, "Dialog data items have exceeded the maximum\n"
+                            "number of allocated table entries. Data\n"
+                            "autodetection has failed.",
+                         "Error",MB_OK | MB_ICONHAND);
+              return FALSE;
+          }
        }
        next = GetNextWindow(current, GW_HWNDNEXT);
     }
