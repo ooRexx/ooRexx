@@ -180,8 +180,9 @@ any:
       -- update some records randomly
    sql="update myTable set id=id*3 where id >" random(1,.tmp.nrRecs)
    say "   executing" pp(sql) "..."
-   conn~execute(sql, anOutParameter)
-   say "  " pp(conn~getOutParameters[1]) "record(s) affected."
+   param = .OLEVariant~new(count)
+   conn~execute(sql, param)
+   say "  " pp(param~!varValue_) "record(s) affected."
    say
 
    call showTable   conn            -- show presently stored records
