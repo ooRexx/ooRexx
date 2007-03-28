@@ -3522,7 +3522,7 @@ RexxMethod1(REXXOBJECT, stream_description,
      BUFFER, StreamBuffer )            /* stream information block          */
 {
   STREAM_INFO *stream_info;            /* stream information                */
-  CHAR         work[50];               /* temp buffer                       */
+  CHAR         work[200];              /* temp buffer                       */
   PCHAR        result;                 /* result string                     */
 
   stream_info = get_stream_info();     /* get the stream block              */
@@ -3537,16 +3537,54 @@ RexxMethod1(REXXOBJECT, stream_description,
       break;
 
     case stream_notready_state:        /* had some sort of notready         */
-      result = (PCHAR)work;            /* use the work buffer               */
-                                       /* format the result string          */
-      sprintf(work, "NOTREADY:%d", stream_info->error);
-      break;
+    {
+        result = (PCHAR)work;            /* use the work buffer               */
+        char *error = NULL;
+
+        if (stream_info->error != 0)
+        {
+            error = strerror(stream_info->error);
+        }
+
+        if (error != NULL)
+        {
+                                             /* format the result string          */
+            sprintf(work, "NOTREADY:%d %s", stream_info->error, error);
+        }
+        else
+        {
+                                             /* format the result string          */
+            sprintf(work, "NOTREADY:%d", stream_info->error);
+
+        }
+        result = work;
+        break;
+    }
 
     case stream_error_state:           /* had a stream error                */
-      result = (PCHAR)work;            /* use the work buffer               */
-                                       /* format the result string          */
-      sprintf(work, "ERROR:%d", stream_info->error);
-      break;
+    {
+        char *error = NULL;
+
+        if (stream_info->error != 0)
+        {
+            error = strerror(stream_info->error);
+        }
+
+        if (error != NULL)
+        {
+                                             /* format the result string          */
+            sprintf(work, "ERROR:%d %s", stream_info->error, error);
+        }
+        else
+        {
+                                             /* format the result string          */
+            sprintf(work, "ERROR:%d", stream_info->error);
+
+        }
+        result = work;
+        break;
+
+    }
 
     case stream_ready_state:           /* stream is ready to roll           */
       result = "READY:";
