@@ -253,6 +253,9 @@ static RexxString * stringToVT( RexxString * rxStr )
     if ( !pszRxStr )
         send_exception(Error_System_resources);
 
+    // Allow case insensitive.
+    pszRxStr = strupr(pszRxStr);
+
     // There must be either 1 or 2 VT_xx symbols, anything else is not valid.
     switch ( countSymbols(pszRxStr, FLAG_SEPARATOR_CHAR) )
     {
@@ -313,6 +316,9 @@ static RexxString * stringToFlags( RexxString * rxStr )
     pszRxStr = pszStringDupe(string_data(rxStr));
     if ( !pszRxStr )
         send_exception(Error_System_resources);
+
+    // Allow case insensitive.
+    pszRxStr = strupr(pszRxStr);
 
     count = countSymbols(pszRxStr, FLAG_SEPARATOR_CHAR);
 
