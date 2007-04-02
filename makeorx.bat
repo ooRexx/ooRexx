@@ -69,7 +69,11 @@ SET MKDEBUG=1
 IF %SRC_DRV%x == x GOTO HELP_SRC_DRV
 REM regedit /s %SRC_DRV%%SRC_DIR%\fullprev_ver.reg
 rem ECHO Generating message files with GENRXMSG
-kill rxapi.exe
+rem On W2K there is no taskkill.exe. On W2K one would need to switch back to
+rem use kill, and locate a kill.exe.  It is distrubuted in the Windows 2000
+rem Resource kit.
+rem kill rxapi.exe
+taskkill /F /IM rxapi.exe
 
 IF %MKNODEBUG% == 0 GOTO :BLDDEBUG
 
@@ -83,7 +87,9 @@ SET MKASM=0
 SET BLDRELEASE=0
 
 :STARTBUILD
-kill rxapi.exe
+rem See note 18 lines above.
+rem kill rxapi.exe
+taskkill /F /IM rxapi.exe
 CALL ORXDB %BLDRELEASE%
 
 GOTO END
