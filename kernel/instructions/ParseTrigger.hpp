@@ -50,6 +50,8 @@
 #define TRIGGER_ABSOLUTE 4
 #define TRIGGER_STRING   5
 #define TRIGGER_MIXED    6
+#define TRIGGER_PLUS_LENGTH 7
+#define TRIGGER_MINUS_LENGTH 8
 
 class RexxTrigger : public RexxInternalObject {
  public:
@@ -57,7 +59,8 @@ class RexxTrigger : public RexxInternalObject {
   inline void       *operator new(size_t size, void *ptr) {return ptr;};
   RexxTrigger(INT, RexxObject *, LONG, RexxQueue *);
   inline RexxTrigger(RESTORETYPE restoreType) { ; };
-  long        integer(RexxObject *);
+  long        integerTrigger(RexxObject *, RexxActivation *, RexxExpressionStack *);
+  RexxString *stringTrigger(RexxObject *, RexxActivation *, RexxExpressionStack *);
   void        parse(RexxActivation *, RexxExpressionStack *, RexxTarget *);
   void        live();
   void        liveGeneral();

@@ -150,6 +150,7 @@ class RexxSource : public RexxInternalObject {
   void        addBlock(void);
   RexxVariableBase *getRetriever(RexxString *);
   RexxObject *constantExpression();
+  RexxObject *parenExpression();
   RexxObject *expression(int);
   RexxObject *subExpression(int);
   size_t      argList(RexxToken *, int);

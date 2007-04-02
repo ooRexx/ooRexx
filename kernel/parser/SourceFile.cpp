@@ -3060,6 +3060,29 @@ RexxObject *RexxSource::constantExpression()
   return expression;                   /* and return it                     */
 }
 
+RexxObject *RexxSource::parenExpression()
+/******************************************************************************/
+/* Function:  Evaluate a "parenthetical" expression for REXX instruction      */
+/*            values.  A parenthetical expression is an expression enclosed   */
+/*            in parentheses.                                                 */
+/******************************************************************************/
+{
+  RexxToken  *token;                   /* current token                     */
+  RexxToken  *second;                  /* second token                      */
+  RexxObject *expression;              /* parse expression                  */
+
+  // NB, the opening paren has already been parsed off
+
+  expression = this->subExpression(TERM_EOC | TERM_RIGHT);
+  second = nextToken();              /* get the terminator token          */
+                                     /* not terminated by a right paren?  */
+  if (second->classId != TOKEN_RIGHT)
+                                     /* this is an error                  */
+    report_error_position(Error_Unmatched_parenthesis_paren, token);
+  this->holdObject(expression);        /* protect the expression            */
+  return expression;                   /* and return it                     */
+}
+
 RexxObject *RexxSource::expression(
   int   terminators )                  /* expression termination context    */
 /******************************************************************************/
