@@ -50,6 +50,23 @@ say ('creating the system specific methods ...')
 .kernel~objectname = "The kernel directory"
 .nil~objectname = "The NIL object"
 
+say 'Adding appendAll method to ARRAY, LIST and QUEUE'
+appendMethods = .table~new
+appendMethods~put(.methods~ordered_appendall, 'APPENDALL')
+
+.array~!define_methods(appendMethods)
+.list~!define_methods(appendMethods)
+.queue~!define_methods(appendMethods)
+
+say 'Adding putAll methods to TABLE, DIRECTORY, and RELATION'
+putMethods = .table~new
+putMethods~put(.methods~collection_putall, 'PUTALL')
+
+.table~!define_methods(putMethods)
+.directory~!define_methods(putMethods)
+.relation~!define_methods(putMethods)
+
+
 say ('Adding setlike methods to table, relation, and directory')
 set_methods = .table~new               /* get a table directory             */
                                        /* add the single item methods       */
@@ -73,6 +90,9 @@ set_methods~put(.methods~many_xor,          'XOR')
 .table~!rexxdefined                    /* get changed by users              */
 .directory~!rexxdefined
 .relation~!rexxdefined
+.array~!rexxdefined
+.list~!rexxdefined
+.queue~!rexxdefined
 
 /* Call the system dependant routine to define addition methods */
 systemMethods = 'SystemMethods.orx'()           /* case sensitive           */
@@ -538,6 +558,41 @@ return 0=object~items                  /* if nothing left -> proper subset  */
 
 syntax:                                /* unknown method sent               */
   raise propagate                      /* just send on to the caller        */
+
+
+
+/*****************************************/
+/* APPENDALL     method                  */
+/*****************************************/
+::method ordered_appendall
+  use arg other
+  if (arg() < 1)                         /* no index given?                   */
+    then raise syntax 93.901 array (1)   /* raise an error                    */
+  if (arg() > 1)                         /* too many arguments?               */
+    then raise syntax 93.902 array (1)   /* raise an error                    */
+  supplier = other~supplier              /* get an other supplier             */
+  do while supplier~available            /* loop over the other collection    */
+    self~append(supplier~item)           -- appending the item
+    supplier~next
+  end
+
+
+
+/*****************************************/
+/* PUTALL        method                  */
+/*****************************************/
+::method collection_putall
+  use arg other
+  if (arg() < 1)                         /* no index given?                   */
+    then raise syntax 93.901 array (1)   /* raise an error                    */
+  if (arg() > 1)                         /* too many arguments?               */
+    then raise syntax 93.902 array (1)   /* raise an error                    */
+  supplier = other~supplier              /* get an other supplier             */
+  do while supplier~available            /* loop over the other collection    */
+    self~put(supplier~item, supplier~index)   -- putting the item using the same index
+    supplier~next
+  end
+
 
 
 /* ******************************** */

@@ -104,6 +104,7 @@
    void          addLast(RexxObject *value);
    void          addFirst(RexxObject *value);
    inline long   getSize() {return this->count;}
+   RexxObject   *append(RexxObject *);
 
    RexxListTable *table;               /* list table  item                  */
    long first;                         /* first real element index          */

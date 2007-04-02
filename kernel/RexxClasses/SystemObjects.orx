@@ -334,6 +334,23 @@ return 0=object~items                  /* if nothing left -> proper subset  */
 syntax:                                /* unknown method sent               */
   raise propagate                      /* just send on to the caller        */
 
+
+/*****************************************/
+/* PUTALL        method                  */
+/*****************************************/
+::method putall
+  use arg other
+  if (arg() < 1)                         /* no index given?                   */
+    then raise syntax 93.901 array (1)   /* raise an error                    */
+  if (arg() > 1)                         /* too many arguments?               */
+    then raise syntax 93.902 array (1)   /* raise an error                    */
+  supplier = other~supplier              /* get an other supplier             */
+  do while supplier~available            /* loop over the other collection    */
+    self~put(supplier~item)              -- set and bag only use the item, ignoring the index.
+    supplier~next
+  end
+
+
 /* *************************************** */
 /*    B A G                   C L A S S    */
 /* *************************************** */
@@ -481,6 +498,22 @@ return 0=object~items                  /* if nothing left -> proper subset  */
 
 syntax:                                /* unknown method sent               */
   raise propagate                      /* just send on to the caller        */
+
+
+/*****************************************/
+/* PUTALL        method                  */
+/*****************************************/
+::method putall
+  use arg other
+  if (arg() < 1)                         /* no index given?                   */
+    then raise syntax 93.901 array (1)   /* raise an error                    */
+  if (arg() > 1)                         /* too many arguments?               */
+    then raise syntax 93.902 array (1)   /* raise an error                    */
+  supplier = other~supplier              /* get an other supplier             */
+  do while supplier~available            /* loop over the other collection    */
+    self~put(supplier~item)              -- set and bag only use the item, ignoring the index.
+    supplier~next
+  end
 
 /* ******************************** */
 /*    A L A R M        C L A S S    */

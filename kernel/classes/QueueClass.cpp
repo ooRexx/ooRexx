@@ -59,6 +59,7 @@ RexxObject *RexxQueue::pullRexx()
     item = TheNilObject;               /* use .nil instead                  */
   return item;                         /* return the pulled item            */
 }
+
 RexxObject *RexxQueue::pushRexx(RexxObject *item)
                                                                                                            /* item to push onto the queue       */
 /******************************************************************************/
@@ -70,6 +71,25 @@ RexxObject *RexxQueue::pushRexx(RexxObject *item)
   this->push(item);                    /* push onto the queue               */
   return OREF_NULL;                    /* return nothing                    */
 }
+
+
+
+/**
+ * Append an item after the last item in the list.
+ *
+ * @param value  The value to append.
+ *
+ * @return The index of the appended item.
+ */
+RexxObject *RexxQueue::append(RexxObject *item)
+{
+
+  required_arg(item, ONE);             /* make sure we have an argument     */
+  this->push(item);                    /* push onto the queue               */
+  // the insertion index is the position.
+  return new_integer(this->count);
+}
+
 
 RexxObject *RexxQueue::queueRexx(RexxObject *item)
 /******************************************************************************/

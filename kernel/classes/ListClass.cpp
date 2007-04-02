@@ -453,6 +453,22 @@ RexxObject *RexxList::insertRexx(
   return this->insert(value, index);
 }
 
+
+/**
+ * Append an item after the last item in the list.
+ *
+ * @param value  The value to append.
+ *
+ * @return The index of the appended item.
+ */
+RexxObject *RexxList::append(RexxObject *value)
+{
+    required_arg(value, ONE);
+    // this is just an insertion operation with an ommitted index.
+    return insert(value, OREF_NULL);
+}
+
+
 RexxObject *RexxList::insert(
      RexxObject *value,                /* new value to add                  */
      RexxObject *index)                /* addition insertion index          */
