@@ -59,8 +59,8 @@ class RexxTrigger : public RexxInternalObject {
   inline void       *operator new(size_t size, void *ptr) {return ptr;};
   RexxTrigger(INT, RexxObject *, LONG, RexxQueue *);
   inline RexxTrigger(RESTORETYPE restoreType) { ; };
-  long        integerTrigger(RexxObject *, RexxActivation *, RexxExpressionStack *);
-  RexxString *stringTrigger(RexxObject *, RexxActivation *, RexxExpressionStack *);
+  long        integerTrigger(RexxObject *);
+  RexxString *stringTrigger(RexxObject *);
   void        parse(RexxActivation *, RexxExpressionStack *, RexxTarget *);
   void        live();
   void        liveGeneral();

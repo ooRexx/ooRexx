@@ -69,9 +69,7 @@ RexxTrigger::RexxTrigger(
 
 
 long RexxTrigger::integerTrigger(
-    RexxObject *value,                 /* value to be converted             */
-    RexxActivation      *context,      /* current execution context         */
-    RexxExpressionStack *stack)        /* current expression stack          */
+    RexxObject *value)                 /* value to be converted             */
 /******************************************************************************/
 /* Function:  Convert a trigger value to an integer, with appopriate error    */
 /*            reporting.                                                      */
@@ -88,9 +86,7 @@ long RexxTrigger::integerTrigger(
 
 
 RexxString *RexxTrigger::stringTrigger(
-    RexxObject *value,                 /* value to be converted             */
-    RexxActivation      *context,      /* current execution context         */
-    RexxExpressionStack *stack)        /* current expression stack          */
+    RexxObject *value)                 /* value to be converted             */
 /******************************************************************************/
 /* Function:  Convert a trigger expression to a String, with appopriate error */
 /*            reporting.                                                      */
@@ -129,39 +125,39 @@ void RexxTrigger::parse(
       break;
 
     case TRIGGER_PLUS:                 /* positive relative target          */
-      integer = this->integerTrigger(value, context, stack);  /* get binary version of trigger     */
+      integer = this->integerTrigger(value);  /* get binary version of trigger     */
       target->forward(integer);        /* move the position                 */
       break;
 
     case TRIGGER_MINUS:                /* negative relative target          */
-      integer = this->integerTrigger(value, context, stack);  /* get binary version of trigger     */
+      integer = this->integerTrigger(value);  /* get binary version of trigger     */
       target->backward(integer);       /* move the position                 */
       break;
 
     case TRIGGER_PLUS_LENGTH:          /* positive length                   */
-      integer = this->integerTrigger(value, context, stack);  /* get binary version of trigger     */
+      integer = this->integerTrigger(value);  /* get binary version of trigger     */
       target->forwardLength(integer);  /* move the position                 */
       break;
 
     case TRIGGER_MINUS_LENGTH:         /* negative relative target          */
-      integer = this->integerTrigger(value, context, stack);  /* get binary version of trigger     */
+      integer = this->integerTrigger(value);  /* get binary version of trigger     */
       target->backwardLength(integer); /* move the position                 */
       break;
 
     case TRIGGER_ABSOLUTE:             /* absolute column position          */
-      integer = this->integerTrigger(value, context, stack);  /* get binary version of trigger     */
+      integer = this->integerTrigger(value);  /* get binary version of trigger     */
       target->absolute(integer);       /* move the position                 */
       break;
 
     case TRIGGER_STRING:               /* string search                     */
                                        /* force to string form              */
-      stringvalue = this->stringTrigger(value, context, stack);
+      stringvalue = this->stringTrigger(value);
       target->search(stringvalue);     /* perform the search                */
       break;
 
     case TRIGGER_MIXED:                /* string search                     */
                                        /* force to string form              */
-      stringvalue = this->stringTrigger(value, context, stack);
+      stringvalue = this->stringTrigger(value);
                                        /* and go search                     */
       target->caselessSearch(stringvalue);
       break;

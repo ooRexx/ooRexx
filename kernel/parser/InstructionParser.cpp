@@ -1333,7 +1333,6 @@ RexxInstruction *RexxSource::parseNew(
         break;
 
       case SUBKEY_VALUE:               /* need to process an expression     */
-//RI0001 TERM_EOC removed        expression = (RexxObject *)this->expression(TERM_EOC | TERM_WITH | TERM_KEYWORD);
         expression = (RexxObject *)this->expression(TERM_WITH | TERM_KEYWORD);
 		if ( expression == OREF_NULL )       /* If script not complete, report error RI0001 */
           //report_error(Error_Invalid_template_with);
@@ -1413,7 +1412,7 @@ RexxInstruction *RexxSource::parseNew(
                                        /* have a variable trigger?          */
       if (token->classId == TOKEN_LEFT) {
         // parse off an expression in the parens.
-        RexxObject *subExpr = this->parenExpression();
+        RexxObject *subExpr = this->parenExpression(token);
                                        /* create the appropriate trigger    */
         trigger = new (variableCount) RexxTrigger(trigger_type, subExpr, variableCount, variables);
         variableCount = 0;             /* have a new set of variables       */
@@ -1446,7 +1445,7 @@ RexxInstruction *RexxSource::parseNew(
                                        /* variable string trigger?          */
     else if (token->classId == TOKEN_LEFT) {
       // parse off an expression in the parens.
-      RexxObject *subExpr = this->parenExpression();
+      RexxObject *subExpr = this->parenExpression(token);
                                        /* create the appropriate trigger    */
       trigger = new (variableCount) RexxTrigger(flags&parse_caseless ? TRIGGER_MIXED : TRIGGER_STRING, subExpr, variableCount, variables);
       variableCount = 0;               /* have a new set of variables       */
