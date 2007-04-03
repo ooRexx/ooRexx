@@ -673,10 +673,22 @@ void RexxActivity::raiseException(
     description = OREF_NULLSTRING;     /* use a null string                 */
 
                                        /* fill in the arguments             */
-  exobj->put(description, OREF_DESCRIPTION);
-  exobj->put(additional, OREF_ADDITIONAL);
-  exobj->put((RexxObject *)source, OREF_SOURCENAME);
-  exobj->put(result, OREF_RESULT);
+  if (description != OREF_NULL)
+  {
+      exobj->put(description, OREF_DESCRIPTION);
+  }
+  if (additional != OREF_NULL)
+  {
+      exobj->put(additional, OREF_ADDITIONAL);
+  }
+  if (source != OREF_NULL)
+  {
+      exobj->put((RexxObject *)source, OREF_SOURCENAME);
+  }
+  if (result != OREF_NULL)
+  {
+      exobj->put(result, OREF_RESULT);
+  }
 
   traceback = OREF_NULL;               /* no traceback info                 */
 
