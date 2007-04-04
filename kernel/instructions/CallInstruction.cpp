@@ -144,10 +144,13 @@ void RexxInstructionCall::resolve(
 {
   if (this->name == OREF_NULL)         /* not a name target form?           */
     return;                            /* just return                       */
+  if (i_flags&call_dynamic)   {        // can't resolve now
+      return;                          //
+  }
   if (!(i_flags&call_nointernal)) {    /* internal routines allowed?        */
     if (labels != OREF_NULL)           /* have a labels table?              */
                                        /* check the label table             */
-      OrefSet(this, this->target, (RexxInstruction *)labels->at(this->name));
+      OrefSet(this, this->target, (RexxInstruction *)labels->at((RexxString *)this->name));
     i_flags |= call_internal;          /* this is an internal call          */
   }
   if (this->target == OREF_NULL) {     /* not found yet?                    */
@@ -213,7 +216,7 @@ void RexxInstructionCall::execute(
     }
     else {                             /* set up for a normal call          */
       target = this->target;           /* copy the target                   */
-      name = this->name;               /* the name value                    */
+      name = (RexxString *)this->name; /* the name value                    */
                                        /* and the builtin index             */
       builtin_index = call_builtin_index;
       type = i_flags&call_type_mask;   /* just copy the type info           */
@@ -289,7 +292,7 @@ void RexxInstructionCall::trap(
 
     case call_external:                /* need to call externally           */
                                        /* go process the externnl call      */
-      result = context->externalCall(this->name, 0, &context->stack, OREF_ROUTINENAME);
+      result = context->externalCall((RexxString *)this->name, 0, &context->stack, OREF_ROUTINENAME);
       if (result != OREF_NULL) discard(result);
       break;
   }

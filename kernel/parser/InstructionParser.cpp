@@ -184,7 +184,7 @@ RexxInstruction *RexxSource::callNew()
   RexxObject *newObject;               /* newly created object              */
   LONG        argCount;                /* call arguments                    */
   RexxToken  *token;                   /* current working token             */
-  RexxString *name;                    /* call name                         */
+  RexxObject *name;                    /* call name                         */
   INT         keyword;                 /* call subkeyword                   */
   RexxString *condition;               /* created USER condition            */
   CHAR        flags;                   /* final CALL flags                  */
@@ -242,10 +242,10 @@ RexxInstruction *RexxSource::callNew()
       }
       else {                           /* language defined condition        */
         name = token->value;           /* set the default target            */
+        condition = token->value;      /* condition is the same as target   */
                                        /* set the builtin index for later   */
                                        /* resolution step                   */
         builtin_index = this->builtin(token);
-        condition = name;              /* condition is the same as target   */
       }
       token = nextReal();              /* get the next token                */
                                        /* anything real here?               */
@@ -336,18 +336,7 @@ RexxInstruction *RexxSource::callNew()
                                        /* indirect call case?               */
   else if (token->classId == TOKEN_LEFT) {
     flags |= call_dynamic;             /* going to be indirect              */
-    token = nextReal();                /* step to the next token            */
-    if (token->classId != TOKEN_SYMBOL)/* not a symbol?                     */
-                                       /* error                             */
-      report_error(Error_Symbol_expected_varref);
-    this->needVariable(token);         /* need a variable token here        */
-                                       /* get a variable retriever          */
-    name = (RexxString *)this->addText(token);
-    token = nextReal();                /* step to next real token           */
-                                       /* must be a right paren here        */
-    if (token->classId != TOKEN_RIGHT)
-                                       /* this is an error                  */
-      report_error_token(Error_Variable_reference_extra, token);
+    name = this->parenExpression(token); // this is a full expression
                                        /* process the argument list         */
     argCount = this->argList(OREF_NULL, TERM_EOC);
                                        /* NOTE:  this call is not added to  */

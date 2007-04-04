@@ -68,7 +68,7 @@ class RexxInstructionCallBase : public RexxInstruction {
   virtual void resolve(RexxDirectory *) { ; };
   virtual void trap(RexxActivation *, RexxDirectory *) { ; };
 
-  RexxString      * name;              /* name to call                      */
+  RexxObject      * name;              /* name to call                      */
   RexxInstruction * target;            /* routine to call                   */
   RexxString      * condition;         /* condition trap name               */
 };
