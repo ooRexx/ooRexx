@@ -338,6 +338,8 @@ CPPMSTR(RexxString::xorOp),
 CPPMSTR(RexxString::Max),
 CPPMSTR(RexxString::Min),
 CPPMSTR(RexxString::isInteger),
+CPPMSTR(RexxString::upperRexx),
+CPPMSTR(RexxString::lowerRexx),
 
                                           /* All BIF methods start here.  They */
                                           /*  will be arranged according to the*/
@@ -1198,6 +1200,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_OR                           ,TheStringBehaviour, CPPMSTR(RexxString::orOp), 1);
   defineKernelMethod(CHAR_XOR                          ,TheStringBehaviour, CPPMSTR(RexxString::xorOp), 1);
   defineKernelMethod(CHAR_MAKEARRAY                    ,TheStringBehaviour, CPPMSTR(RexxString::makeArray), 1);
+  defineKernelMethod(CHAR_LOWER                        ,TheStringBehaviour, CPPMSTR(RexxString::lowerRexx), 2);
+  defineKernelMethod(CHAR_UPPER                        ,TheStringBehaviour, CPPMSTR(RexxString::upperRexx), 2);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheStringBehaviour->setMethodDictionaryScope(TheStringClass);

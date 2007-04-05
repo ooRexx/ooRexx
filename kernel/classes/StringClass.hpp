@@ -126,8 +126,12 @@ class RexxStringClass : public RexxClass {
    RexxString *concatBlank(RexxObject *);
    BOOL        checkLower();
    RexxString *upper();
-   RexxString *stringTrace();
+   RexxString *upper(size_t, size_t);
+   RexxString *upperRexx(RexxInteger *, RexxInteger *);
    RexxString *lower();
+   RexxString *lower(size_t, size_t);
+   RexxString *lowerRexx(RexxInteger *, RexxInteger *);
+   RexxString *stringTrace();
    void        setNumberString(RexxObject *);
    RexxString *concatWith(RexxString *, char);
 

@@ -56,6 +56,7 @@ extern INT  lookup[];
 extern ACTIVATION_SETTINGS *current_settings;
 
 #include "ASCIIDBCSStrings.hpp"
+#include "RexxBuiltinFunctions.h"                          /* Gneral purpose BIF Header file       */
 
 ULONG RexxString::hash()
 /******************************************************************************/
@@ -1130,59 +1131,181 @@ RexxString *RexxString::stringTrace()
   return newCopy;                      /* return the converted string       */
 }
 
+
 RexxString *RexxString::lower()
 /******************************************************************************/
 /* Function:  Translate a string to lower case                                */
 /******************************************************************************/
 {
   RexxString *newstring;               /* newly created string              */
-  PUCHAR data;                         /* current data pointer              */
-  PUCHAR outdata;                      /* output data                       */
+  PUCHAR         data;                 /* current data pointer              */
+  PUCHAR         outdata;              /* output data                       */
   size_t i;                            /* loop counter                      */
-  BOOL   translate;                    /* translation required              */
+  bool   translate;                    /* translation required              */
 
   if (DBCS_SELF) {                     /* need to use DBCS?                 */
     ValidDBCS(this);                   /* validate the string               */
     if (!NoDBCS(this)) {               /* actually have DBCS characters?    */
                                        /* create a new string               */
-      newstring = (RexxString *)raw_string(this->length);
+      newstring = (RexxString *)raw_string(this->getLength());
                                        /* copy the data                     */
       memcpy(STRPTR(newstring), STRPTR(this), STRLEN(this));
                                        /* do DBCS lowercasing               */
       DBCS_MemLower(STRPTR(newstring), STRLEN(newstring));
                                        /* rebuild the hash value            */
-      newstring->generateHash();
       return newstring;                /* return the new string             */
     }                                  /* (single byte only falls through)  */
   }
 
-  data = (PUCHAR)this->stringData;     /* point to the string               */
-  translate = FALSE;                   /* no translation required           */
+  data = (PUCHAR)this->getStringData();  /* point to the string               */
+  translate = false;                   /* no translation required           */
 
-  for (i = 0; i < this->length; i++) { /* loop through entire string        */
+  for (i = 0; i < this->getLength(); i++) { /* loop through entire string        */
     if (*data != tolower(*data)) {     /* have something to lowercase?      */
-      translate = TRUE;                /* flag it                           */
+      translate = true;                /* flag it                           */
       break;                           /* stop at the first one             */
     }
     data++;                            /* step the position                 */
   }
   if (translate) {                     /* something to uppercase?           */
                                        /* create a new string               */
-    newstring = (RexxString *)raw_string(this->length);
-    data = (PUCHAR)this->stringData;   /* point to the data start           */
+    newstring = (RexxString *)raw_string(this->getLength());
+    data = (PUCHAR)this->getStringData();   /* point to the data start           */
                                        /* point to output data              */
-    outdata = (PUCHAR)newstring->stringData;
+    outdata = (PUCHAR)newstring->getStringData();
                                        /* loop through entire string        */
-    for (i = 0; i < this->length; i++) {
+    for (i = 0; i < this->getLength(); i++) {
       *outdata = tolower(*data);       /* copy the lowercase character      */
       data++;                          /* step the position                 */
       outdata++;                       /* and the output position           */
     }
-    newstring->generateHash();         /* rebuild the hash value            */
   }
   else
     newstring = this;                  /* return untranslated string        */
   return newstring;                    /* return the new copy               */
+}
+
+
+/**
+ * Rexx exported method stub for the lower() method.
+ *
+ * @param start  The optional starting location.  Defaults to the first character
+ *               if not specified.
+ * @param length The length to convert.  Defaults to the segment from the start
+ *               position to the end of the string.
+ *
+ * @return A new string object with the case conversion applied.
+ */
+RexxString *RexxString::lowerRexx(RexxInteger *start, RexxInteger *length)
+{
+    size_t startPos = optional_position(start, 1, ARG_ONE) - 1;
+    size_t rangeLength = optional_length(length, getLength(), ARG_TWO);
+
+    // if we're starting beyond the end bounds, return unchanged
+    if (startPos >= getLength())
+    {
+        return this;
+    }
+
+    rangeLength = min(rangeLength, getLength() - startPos);
+
+    // a zero length value is also a non-change.
+    if (rangeLength == 0)
+    {
+        return this;
+    }
+
+    return lower(startPos, rangeLength);
+}
+
+
+/**
+ * Rexx exported method stub for the upper() method.
+ *
+ * @param start  The optional starting location.  Defaults to the first character
+ *               if not specified.
+ * @param length The length to convert.  Defaults to the segment from the start
+ *               position to the end of the string.
+ *
+ * @return A new string object with the case conversion applied.
+ */
+RexxString *RexxString::upperRexx(RexxInteger *start, RexxInteger *length)
+{
+    size_t startPos = optional_position(start, 1, ARG_ONE) - 1;
+    size_t rangeLength = optional_length(length, getLength(), ARG_TWO);
+
+    // if we're starting beyond the end bounds, return unchanged
+    if (startPos >= getLength())
+    {
+        return this;
+    }
+
+    rangeLength = min(rangeLength, getLength() - startPos);
+
+    // a zero length value is also a non-change.
+    if (rangeLength == 0)
+    {
+        return this;
+    }
+
+    return upper(startPos, rangeLength);
+}
+
+
+
+/**
+ * Lowercase a portion of a Rexx string, returning a new string object.  This
+ * method assumes the offset and length are already valid
+ * for this string object.
+ *
+ * @param start  The starting offset of the segment to lowercase (origin 0).
+ *
+ * @param length The length to lowercase.
+ *
+ * @return A new string object with the case conversion applied.
+ */
+RexxString *RexxString::lower(size_t offset, size_t length)
+{
+    // get a copy of the string
+    RexxString *newstring = extract(0, getLength());
+
+    PUCHAR data = (PUCHAR)newstring->getStringData() + offset;
+    // now uppercase in place
+    for (size_t i = 0; i < length; i++) {
+        *data = tolower(*data);
+        data++;
+    }
+    newstring->generateHash();              /* done building the string          */
+    return newstring;
+}
+
+
+
+/**
+ * Uppercase a portion of a Rexx string, returning a new string
+ * object.  This method assumes the offset and length are
+ * already valid for this string object.
+ *
+ * @param start  The starting offset of the segment to uppercase
+ *               (origin 0).
+ *
+ * @param length The length to lowercase.
+ *
+ * @return A new string object with the case conversion applied.
+ */
+RexxString *RexxString::upper(size_t offset, size_t length)
+{
+    // get a copy of the string
+    RexxString *newstring = extract(0, getLength());
+
+    PUCHAR data = (PUCHAR)newstring->getStringData() + offset;
+    // now uppercase in place
+    for (size_t i = 0; i < length; i++) {
+        *data = toupper(*data);
+        data++;
+    }
+    newstring->generateHash();              /* done building the string          */
+    return newstring;
 }
 
 RexxInteger *RexxString::integerValue(
