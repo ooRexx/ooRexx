@@ -1051,13 +1051,10 @@ RexxInstruction *RexxSource::messageAssignmentNew(
 /* Function:  Create a new MESSAGE assignment translator object             */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly create object               */
-  RexxString *name;                    /* message name used                 */
-
   hold(message);                       /* lock this temporarily             */
   message->makeAssignment(this);       // convert into an assignment message
   // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
-  newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (message->argumentCount) * sizeof(OREF));
+  RexxObject *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (message->argumentCount) * sizeof(OREF));
                                        /* Initialize this new method        */
   new ((void *)newObject) RexxInstructionMessage(message, expression);
   return (RexxInstruction *)newObject; /* done, return this                 */
@@ -1456,10 +1453,22 @@ RexxInstruction *RexxSource::parseNew(
                                        /* place holder period?              */
       else {
         if (token->subclass == SYMBOL_DUMMY)
-          variables->push(OREF_NULL);  /* just add an empty item            */
+        {
+            variables->push(OREF_NULL);  /* just add an empty item            */
+            variableCount++;               /* step the variable counter         */
+        }
         else                           /* have a variable, add to list      */
-          variables->push(this->addText(token));
-        variableCount++;               /* step the variable counter         */
+        {
+            // this is potentially a message term
+            previousToken();
+            RexxObject *term = variableOrMessageTerm();
+            if (term == OREF_NULL)
+            {
+                report_error_token(Error_Variable_expected_PARSE, token);
+            }
+            variables->push(term);
+            variableCount++;               /* step the variable counter         */
+        }
       }
     }
     else
@@ -2038,48 +2047,56 @@ RexxInstruction *RexxSource::useNew()
 /* Function:  Create a USE instruction object                               */
 /****************************************************************************/
 {
-  RexxObject       *newObject;         /* newly created object              */
-  RexxToken        *token;             /* current working token             */
-  RexxObject       *retriever;         /* retriever for a variable          */
-  LONG              variableCount;     /* count of variables                */
-  RexxQueue        *variable_list;     /* list of variables                 */
-
-  token = nextReal();                  /* get the next token                */
-                                       /* next token ARG?                   */
-  if (this->subKeyword(token) != SUBKEY_ARG)
-                                       /* invalid keyword                   */
-    report_error_token(Error_Invalid_subkeyword_use, token);
-  variableCount = 0;                   /* no variables yet                  */
-  variable_list = this->subTerms;      /* use the sub terms queue           */
-  token = nextReal();                  /* get the next token                */
-  while (token->classId != TOKEN_EOC) {/* while more tokens                 */
-                                       /* not a symbol token?               */
-    if (token->classId == TOKEN_COMMA) {
-      variable_list->push(OREF_NULL);  /* add a NIL entry to the list       */
-      variableCount++;                 /* and step the count                */
+    RexxToken *token = nextReal();
+    // the only subkeyword supported is ARG
+    if (this->subKeyword(token) != SUBKEY_ARG)
+    {
+        report_error_token(Error_Invalid_subkeyword_use, token);
     }
-    else {
-                                       /* not a symbol character?           */
-      if (token->classId != TOKEN_SYMBOL)
-                                       /* we have an error                  */
-        report_exception(Error_Symbol_expected_use);
-      this->needVariable(token);       /* non-variable symbol?              */
-      retriever = this->addText(token);/* get a retriever for this          */
-      variable_list->push(retriever);  /* add to the variable list          */
-      variableCount++;                 /* and step the count                */
-      token = nextReal();              /* get the next token                */
-      if (token->classId == TOKEN_EOC) /* end of clause?                    */
-        break;                         /* finished                          */
-                                       /* not a comma?                      */
-      else if (token->classId != TOKEN_COMMA)
-                                       /* this is an error                  */
-        report_error_token(Error_Translation_use_comma, token);
+    size_t variableCount = 0;                   /* no variables yet                  */
+    RexxQueue *variable_list = new_queue();         // we might be parsing message terms, so we can't use the subterms list.
+    saveObject(variable_list);
+    token = nextReal();                  /* get the next token                */
+    // keep processing tokens to the end
+    while (token->classId != TOKEN_EOC)
+    {
+        // this could be a token to skip a variable
+        if (token->classId == TOKEN_COMMA)
+        {
+            // this goes on as a variable, but an empty entry to process
+            variable_list->push(OREF_NULL);
+            variableCount++;
+        }
+        else   // something real.  This could be a single symbol or a message term
+        {
+            previousToken();       // push the current token back for term processing
+            // see if we can get a variable or a message term from this
+            RexxObject *retriever = variableOrMessageTerm();
+            if (retriever != OREF_NULL)
+            {
+                variable_list->push(retriever);
+                variableCount++;
+                token = nextReal();
+                if (token->classId == TOKEN_EOC)
+                {
+                    break;
+                }
+                else if (token->classId != TOKEN_COMMA)
+                {
+                    report_error_token(Error_Translation_use_comma, token);
+                }
+            }
+            else   // invalid assignment type
+            {
+                report_error_token(Error_Variable_expected_USE, token);
+            }
+        }
+        token = nextReal();                /* get the next token                */
     }
-    token = nextReal();                /* get the next token                */
-  }
-                                       /* create a new translator object    */
-  newObject = new_variable_instruction(USE, Use, sizeof(RexxInstructionUse) + (variableCount - 1) * sizeof(OREF));
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionUse(variableCount, variable_list);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* create a new translator object    */
+    RexxObject *newObject = new_variable_instruction(USE, Use, sizeof(RexxInstructionUse) + (variableCount - 1) * sizeof(RexxObject *));
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionUse(variableCount, variable_list);
+    removeObj(variable_list);
+    return(RexxInstruction *)newObject; /* done, return this                 */
 }

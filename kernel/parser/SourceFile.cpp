@@ -3430,6 +3430,48 @@ RexxObject *RexxSource::message(
   return (RexxObject *)message;        /* return the message item           */
 }
 
+
+/**
+ * Parse off a single variable symbol or a message term that
+ * can be used for an assignment.
+ *
+ * NOTE:  If this is a message term, then the message term
+ * will be configured as an assignment term.
+ *
+ * @return The object for an assignment target, or OREF_NULL if something
+ *         other than a variable or a message term was found.  On return,
+ *         the clause position pointer will either be unchanged or
+ *         positioned at the next token of the clause.
+ */
+RexxObject *RexxSource::variableOrMessageTerm()
+{
+    // try for a message term first.  If not successful, see if the
+    // next token is a variable symbol.
+    RexxObject *result = messageTerm();
+    if (result == OREF_NULL)
+    {
+        RexxToken *first = nextReal();
+        if (first->classId == TOKEN_SYMBOL)
+        {
+            // ok, add the variable to the processing list
+            this->needVariable(first);
+            result = this->addText(first);
+        }
+        else
+        {
+            previousToken();     // just push back on for the caller to sort out
+        }
+    }
+    else
+    {
+        // we need to convert this into an assignment message.
+        ((RexxExpressionMessage *)result)->makeAssignment(this);
+    }
+    return result;
+}
+
+
+
 RexxObject *RexxSource::messageTerm()
 /******************************************************************************/
 /* Function:  Parse off an instruction leading message term element           */
@@ -3439,6 +3481,8 @@ RexxObject *RexxSource::messageTerm()
   RexxObject  *term;                   /* working term                      */
   RexxObject  *start;                  /* starting term                     */
   INT          classId;                /* token class                       */
+
+  size_t mark = markPosition();       // save the current position so we can reset cleanly
 
   start = this->subTerm(TERM_EOC);     /* get the first term of instruction */
   this->holdObject(start);             /* save the starting term            */
@@ -3452,13 +3496,16 @@ RexxObject *RexxSource::messageTerm()
     else
                                        /* process a message term            */
       term = this->message(start, classId, TERM_EOC);
-//    this->holdObject(term);            /* lock the term                   */
-      /* HOL: The above hold is obsolete (even bad) because both collectionMessage and message "hold" the new term */
     start = term;                      /* set for the next pass             */
     token = nextToken();               /* get the next token                */
     classId = token->classId;          /* get the token class               */
   }
   previousToken();                     /* push this term back               */
+  // if this was not a valid message term, reset the position to the beginning
+  if (term == OREF_NULL)
+  {
+      resetPosition(mark);                 // reset back to the entry conditions
+  }
                                        /* return the message term (returns  */
   return term;                         /* OREF_NULL if not a message term)  */
 }

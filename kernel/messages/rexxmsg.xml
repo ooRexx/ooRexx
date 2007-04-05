@@ -3158,6 +3158,36 @@ special character (such as a parenthesis).
     </Subcodes>
   </Message>
   <Message>
+    <Code>89</Code>
+    <Subcode>000</Subcode>
+    <MessageNumber>652</MessageNumber>
+    <Component>Rexx</Component>
+    <Severity>Warning</Severity>
+    <SymbolicName>Error_Variable_expected</SymbolicName>
+    <Text>Variable or message term expected</Text>
+    <Explanation><para>An instruction was expecting either a single Rexx variable symbol or a message term to be used for an assignment.</para></Explanation>
+    <Subcodes>
+      <SubMessage>
+        <Code>89</Code>
+        <Subcode>001</Subcode>
+        <MessageNumber>653</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Variable_expected_USE</SymbolicName>
+        <Text>The USE instruction requires a comma-separated list of variables or assignment message terms</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>89</Code>
+        <Subcode>002</Subcode>
+        <MessageNumber>654</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Variable_expected_PARSE</SymbolicName>
+        <Text>The PARSE was expecting a variable or a message term.</Text>
+      </SubMessage>
+    </Subcodes>
+  </Message>
+  <Message>
     <Code>90</Code>
     <Subcode>000</Subcode>
     <MessageNumber>90</MessageNumber>

@@ -172,7 +172,7 @@ void RexxTrigger::parse(
       variable = this->variables[i];   /* get the next variable retriever   */
       if (variable != OREF_NULL) {     /* not a place holder dummy?         */
                                        /* set the value                     */
-        variable->set(context, value);
+        variable->assign(context, stack, value);
         context->traceResult(value);   /* trace if necessary                */
       }
       else                             /* dummy variable, just trace it     */
@@ -190,7 +190,7 @@ void RexxTrigger::parse(
         else
           value = target->getWord();   /* just get the next word            */
                                        /* set the value                     */
-        variable->set(context, value);
+        variable->assign(context, stack, value);
       }
       else {                           /* dummy variable, just skip it      */
         if (i == size)                 /* last variable?                    */

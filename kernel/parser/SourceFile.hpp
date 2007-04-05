@@ -51,11 +51,6 @@
 #include "Clause.hpp"
 
                                        /* handy defines to easy coding      */
-#define nextToken() (this->clause->next())
-#define nextReal()  (this->clause->nextRealToken())
-#define previousToken() (this->clause->previous())
-#define firstToken() (this->clause->firstToken())
-#define trimClause() (this->clause->trim())
 #define new_instruction(name, type) this->sourceNewObject(sizeof(RexxInstruction##type), The##type##InstructionBehaviour, KEYWORD_##name)
 #define new_variable_instruction(name, type, size) this->sourceNewObject(size, The##type##InstructionBehaviour, KEYWORD_##name)
 #define report_error_line(errorcode, instruction) this->errorLine(errorcode, instruction)
@@ -160,6 +155,7 @@ class RexxSource : public RexxInternalObject {
   RexxToken  *getToken(int, int);
   RexxObject *message(RexxObject *, int, int);
   RexxObject *messageTerm();
+  RexxObject *variableOrMessageTerm();
   RexxObject *messageSubterm(int);
   RexxObject *subTerm(int);
   void        pushTerm(RexxObject *);
@@ -198,6 +194,14 @@ class RexxSource : public RexxInternalObject {
   inline RexxToken  *topOperator() { return (RexxToken *)(this->operators->peek()); };
   inline void        reclaimClause()  { this->flags |= reclaimed; };
   inline BOOL        atEnd(void) { return (!(this->flags&reclaimed) && (this->line_number > (this->line_count))); };
+
+  inline RexxToken  *nextToken() { return clause->next(); }
+  inline RexxToken  *nextReal() { return clause->nextRealToken(); }
+  inline void        previousToken() { clause->previous(); }
+  inline void        firstToken() { clause->firstToken(); }
+  inline void        trimClause() { clause->trim(); }
+  inline size_t      markPosition() { return clause->mark(); }
+  inline void        resetPosition(size_t p) { clause->reset(p); }
 
   RexxInstruction *addressNew();
   RexxInstruction *assignmentNew(RexxToken *);

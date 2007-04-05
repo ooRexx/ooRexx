@@ -578,6 +578,9 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Unmatched_quote_user_defined    "&1"
    Error_Invalid_whole_number_method    "Result of a method call did not result in a whole number; found ""&1"""
    Error_Logical_value_property    "Property logical value must be exactly ""0"", ""1"", ""true"", or ""false""; found ""&1"""
+   Error_Variable_expected    "Variable or message term expected"
+   Error_Variable_expected_USE    "The USE instruction requires a comma-separated list of variables or assignment message terms"
+   Error_Variable_expected_PARSE    "The PARSE was expecting a variable or a message term."
    
 END
 

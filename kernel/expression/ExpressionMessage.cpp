@@ -265,12 +265,12 @@ void RexxExpressionMessage::assign(
     if (super == OREF_NULL)
     {
         // normal message send
-        result = stack->send(this->u_name, argcount);
+        result = stack->send(this->u_name, argcount + 1);
     }
     else
     {
         // send with an override
-        result = stack->send(this->u_name, super, argcount);
+        result = stack->send(this->u_name, super, argcount + 1);
     }
     // remove all arguments
     stack->popn(argcount + 1);

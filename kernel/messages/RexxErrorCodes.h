@@ -378,6 +378,9 @@
 #define Error_Interpretation                               49000
 #define Error_Interpretation_initialization                49001
 #define Error_Interpretation_user_defined                  49900
+#define Error_Variable_expected                            89000
+#define Error_Variable_expected_USE                        89001
+#define Error_Variable_expected_PARSE                      89002
 #define Error_External_name_not_found                      90000
 #define Error_External_name_not_found_user_defined         90900
 #define Error_External_name_not_found_class                90997
