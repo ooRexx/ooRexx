@@ -1525,6 +1525,37 @@ bool RexxNumberString::isInstanceOf(RexxClass *other)
 }
 
 
+/**
+ * Retrieve the method instance for an object's defined method.
+ *
+ * @param method_name
+ *               The method name.
+ *
+ * @return The method object that implements the object method.
+ */
+RexxMethod *RexxNumberString::instanceMethod(RexxString  *method_name)
+{
+    return stringValue()->instanceMethod(method_name);
+}
+
+
+/**
+ * Return a supplier containing the methods implemented by an
+ * object.  Depending on the argument, this is either A) all of
+ * the methods, B) just the explicitly set instance methods, or
+ * C) the methods provided by a given class.
+ *
+ * @param class_object
+ *               The target class object (optional).
+ *
+ * @return A supplier with the appropriate method set.
+ */
+RexxSupplier *RexxNumberString::instanceMethods(RexxClass *class_object)
+{
+    return stringValue()->instanceMethods(class_object);
+}
+
+
 RexxString *RexxNumberString::concatBlank(RexxObject *other)
 /******************************************************************************/
 /* Function:  Blank concatenation operator                                    */

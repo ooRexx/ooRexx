@@ -103,6 +103,8 @@ CPPM(RexxObject::copyRexx),
 CPPM(RexxObject::defaultNameRexx),
 CPPM(RexxObject::unknownRexx),
 CPPM(RexxObject::isInstanceOfRexx),
+CPPM(RexxObject::instanceMethodRexx),
+CPPM(RexxObject::instanceMethodsRexx),
 CPPM(RexxObject::initProxyRexx),
 CPPM(RexxObject::freeSOMObjRexx),
 CPPM(RexxObject::SOMObjRexx),
@@ -780,6 +782,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_STARTAT                ,TheObjectBehaviour, CPPM(RexxObject::startAt), A_COUNT);
   defineKernelMethod(CHAR_STRING                 ,TheObjectBehaviour, CPPM(RexxObject::stringRexx), 0);
   defineKernelMethod(CHAR_ISINSTANCEOF           ,TheObjectBehaviour, CPPM(RexxObject::isInstanceOfRexx), 1);
+  defineKernelMethod(CHAR_INSTANCEMETHOD         ,TheObjectBehaviour, CPPM(RexxObject::instanceMethodRexx), 1);
+  defineKernelMethod(CHAR_INSTANCEMETHODS        ,TheObjectBehaviour, CPPM(RexxObject::instanceMethodsRexx), 1);
   definePrivateKernelMethod(CHAR_RUN             ,TheObjectBehaviour, CPPM(RexxObject::run), A_COUNT);
   definePrivateKernelMethod(CHAR_SETMETHOD       ,TheObjectBehaviour, CPPM(RexxObject::setMethod), 3);
   definePrivateKernelMethod(CHAR_UNSETMETHOD     ,TheObjectBehaviour, CPPM(RexxObject::unsetMethod), 1);

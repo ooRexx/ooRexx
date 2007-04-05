@@ -188,6 +188,138 @@ RexxObject *RexxObject::isInstanceOfRexx(RexxClass *other)
 }
 
 
+/**
+ * Retrieve the method instance for an object's defined method.
+ *
+ * @param method_name
+ *               The method name.
+ *
+ * @return The method object that implements the object method.
+ */
+RexxMethod *RexxInternalObject::instanceMethod(RexxString  *method_name)
+{
+    return OREF_NULL;
+}
+
+
+/**
+ * Retrieve the method instance for an object's defined method.
+ *
+ * @param method_name
+ *               The method name.
+ *
+ * @return The method object that implements the object method.
+ */
+RexxMethod *RexxObject::instanceMethod(RexxString  *method_name)
+{
+    // the name must be a string...and we use it in upper case
+    method_name = REQUIRED_STRING(method_name, ARG_ONE)->upper();
+    // retrieve the method from the dictionary
+    RexxMethod *method_object = (RexxMethod *)this->behaviour->getMethodDictionary()->stringGet(method_name);
+    // this is an error if it doesn't exist
+    if (method_object == OREF_NULL)
+    {
+        report_exception2(Error_No_method_name, this, method_name);
+    }
+    return method_object;    // got a live one
+}
+
+
+/**
+ * Return a supplier containing the methods implemented by an
+ * object.  Depending on the argument, this is either A) all of
+ * the methods, B) just the explicitly set instance methods, or
+ * C) the methods provided by a given class.
+ *
+ * @param class_object
+ *               The target class object (optional).
+ *
+ * @return A supplier with the appropriate method set.
+ */
+RexxSupplier *RexxInternalObject::instanceMethods(RexxClass *class_object)
+{
+    return OREF_NULL;
+}
+
+
+/**
+ * Return a supplier containing the methods implemented by an
+ * object.  Depending on the argument, this is either A) all of
+ * the methods, B) just the explicitly set instance methods, or
+ * C) the methods provided by a given class.
+ *
+ * @param class_object
+ *               The target class object (optional).
+ *
+ * @return A supplier with the appropriate method set.
+ */
+RexxSupplier *RexxObject::instanceMethods(RexxClass *class_object)
+{
+                                         /* if no parameter specified         */
+                                         /* return my  behaviour mdict as a   */
+                                         /* supplier object                   */
+    if (class_object == OREF_NULL)
+    {
+        return this->behaviour->getMethodDictionary()->supplier();
+    }
+                                         /* if TheNilObject specified         */
+                                         /*  return my instance mdict as a    */
+                                         /*  supplier object                  */
+    if (class_object == TheNilObject)
+    {
+        // we might not have instance methods defined.
+        RexxTable *instanceMethods = this->behaviour->getInstanceMethodDictionary();
+        if (instanceMethods != OREF_NULL)
+        {
+            return instanceMethods->supplier();
+        }
+        // no instance methods, return a null supplier
+        return (RexxSupplier *)TheNullArray->supplier();
+    }
+
+    // if we're an instance of that class
+    if (isInstanceOf(class_object))
+    {
+                                         /*  let the class specified return   */
+                                         /*  it's own methods                 */
+        return (RexxSupplier *)send_message1(class_object, OREF_METHODS, TheNilObject);
+    }
+                                         /* or just return a null supplier    */
+    return (RexxSupplier *)TheNullArray->supplier();
+}
+
+
+/**
+ * Retrieve the method instance for an object's defined method.
+ *
+ * @param method_name
+ *               The method name.
+ *
+ * @return The method object that implements the object method.
+ */
+RexxMethod *RexxObject::instanceMethodRexx(RexxString  *method_name)
+{
+    return instanceMethod(method_name);
+}
+
+
+/**
+ * Return a supplier containing the methods implemented by an
+ * object.  Depending on the argument, this is either A) all of
+ * the methods, B) just the explicitly set instance methods, or
+ * C) the methods provided by a given class.
+ *
+ * @param class_object
+ *               The target class object (optional).
+ *
+ * @return A supplier with the appropriate method set.
+ */
+RexxSupplier *RexxObject::instanceMethodsRexx(RexxClass *class_object)
+{
+    return instanceMethods(class_object);
+}
+
+
 RexxObject * RexxObject::strictEqual(
     RexxObject * other)                /* other object for comparison       */
 /******************************************************************************/

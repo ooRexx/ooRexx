@@ -70,6 +70,8 @@ class RexxInteger : public RexxObject {
   RexxString  *stringValue();
   BOOL         truthValue(LONG);
   bool         isInstanceOf(RexxClass *);
+  RexxMethod   *instanceMethod(RexxString *);
+  RexxSupplier *instanceMethods(RexxClass *);
 
   BOOL        isEqual(RexxObject *);
   long        strictComp(RexxObject *);

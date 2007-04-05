@@ -55,6 +55,8 @@
   class RexxCompoundTail;
   class RexxCompoundElement;
   class RexxInternalStack;
+  class RexxSupplier;
+
   class RexxVirtualBase {              /* create first base level class     */
                                        /* dummy virtual function to force   */
                                        /* the virtual function table to a   */
@@ -113,6 +115,8 @@
 
      virtual BOOL         isEqual(RexxObject *);
      virtual bool         isInstanceOf(RexxClass *);
+     virtual RexxMethod   *instanceMethod(RexxString *);
+     virtual RexxSupplier *instanceMethods(RexxClass *);
 
              RexxObject  *hasUninit();
              void         removedUninit();
@@ -218,6 +222,10 @@ class RexxObject : public RexxInternalObject {
      BOOL         isEqual(RexxObject *);
      bool         isInstanceOf(RexxClass *);
      RexxObject  *isInstanceOfRexx(RexxClass *);
+     RexxMethod   *instanceMethod(RexxString *);
+     RexxSupplier *instanceMethods(RexxClass *);
+     RexxMethod   *instanceMethodRexx(RexxString *);
+     RexxSupplier *instanceMethodsRexx(RexxClass *);
      RexxString  *objectName();
      RexxObject  *objectNameEquals(RexxObject *);
      RexxClass   *classObject();
