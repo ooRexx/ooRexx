@@ -144,7 +144,7 @@ void RexxInstructionUse::execute(
       else {
         context->traceResult(argument);/* trace if necessary                */
                                        /* assign the value                  */
-        variable->assign(context, argument);
+        variable->assign(context, stack, argument);
       }
     }
   }

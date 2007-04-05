@@ -443,7 +443,7 @@ void RexxInstructionDo::controlSetup(
     doblock->setCompare(OPERATOR_GREATERTHAN);
   }
                                        /* do the initial assignment         */
-  this->control->assign(context, initial);
+  this->control->assign(context, stack, initial);
 }
 
 BOOL RexxInstructionDo::checkOver(
@@ -472,7 +472,7 @@ BOOL RexxInstructionDo::checkOver(
     if (result == OREF_NULL)           /* empty for some reason?            */
       result = TheNilObject;           /* use .nil instead                  */
                                        /* do the initial assignment         */
-    this->control->assign(context, result);
+    this->control->assign(context, stack, result);
     context->traceResult(result);      /* trace if necessary                */
     doblock->setFor(over_position + 1);/* set position for next time        */
   }

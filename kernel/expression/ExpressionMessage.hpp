@@ -44,7 +44,7 @@
 #ifndef Included_RexxExpressionMessage
 #define Included_RexxExpressionMessage
 
-class RexxExpressionMessage : public RexxInternalObject {
+class RexxExpressionMessage : public RexxVariableBase {
  public:
   RexxExpressionMessage(RexxObject *, RexxString *, RexxObject *, size_t, RexxQueue *, int);
   inline RexxExpressionMessage(RESTORETYPE restoreType) { ; };
@@ -54,6 +54,8 @@ class RexxExpressionMessage : public RexxInternalObject {
   void       *operator new(size_t, LONG);
   inline void       *operator new(size_t size, void *ptr) {return ptr;};
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+  void assign(RexxActivation *, RexxExpressionStack *, RexxObject *);
+  void makeAssignment(RexxSource *source);
 
   RexxObject * target;                 /* target subexpression              */
   RexxObject * super;                  /* super class target                */

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                     ExpressionBaseVariable.h    */
+/* REXX Kernel                                    ExpressionBaseVariable.h    */
 /*                                                                            */
 /* Polymorphic declarations for all translator variable parse classes         */
 /*                                                                            */
@@ -50,7 +50,7 @@ class RexxVariableBase : public RexxInternalObject {
   virtual BOOL exists(RexxActivation *) { return FALSE; }
   virtual void set(RexxActivation *, RexxObject *) {;}
   virtual void set(RexxVariableDictionary *, RexxObject *) {;}
-  virtual void assign(RexxActivation *, RexxObject *) {;}
+  virtual void assign(RexxActivation *, RexxExpressionStack *, RexxObject *) {;}
   virtual void drop(RexxActivation *) {;}
   virtual void setGuard(RexxActivation *) {;}
   virtual void clearGuard(RexxActivation *) {;}

@@ -1035,13 +1035,10 @@ RexxInstruction *RexxSource::messageNew(
 /****************************************************************************/
 {
   RexxObject *newObject;               /* newly create object               */
-  INT         argument_count;          /* number of arguments               */
 
   hold(message);                       /* lock this temporarily             */
-                                       /* get the argument count            */
-  argument_count = message->argumentCount;
                                        /* allocate a new object             */
-  newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (argument_count - 1) * sizeof(OREF));
+  newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (message->argumentCount - 1) * sizeof(OREF));
                                        /* Initialize this new method        */
   new ((void *)newObject) RexxInstructionMessage(message);
   return (RexxInstruction *)newObject; /* done, return this                 */
@@ -1055,19 +1052,14 @@ RexxInstruction *RexxSource::messageAssignmentNew(
 /****************************************************************************/
 {
   RexxObject *newObject;               /* newly create object               */
-  INT         argument_count;          /* number of arguments               */
   RexxString *name;                    /* message name used                 */
 
   hold(message);                       /* lock this temporarily             */
-  name = (RexxString *)message->u_name; /* get the name                     */
-                                       /* need to add an equal sign to name */
-  name = this->commonString(name->concat(OREF_EQUAL));
-                                       /* get the argument count            */
-  argument_count = message->argumentCount + 1;
-                                       /* allocate a new object             */
-  newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (argument_count - 1) * sizeof(OREF));
+  message->makeAssignment(this);       // convert into an assignment message
+  // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
+  newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (message->argumentCount) * sizeof(OREF));
                                        /* Initialize this new method        */
-  new ((void *)newObject) RexxInstructionMessage(message, name, expression);
+  new ((void *)newObject) RexxInstructionMessage(message, expression);
   return (RexxInstruction *)newObject; /* done, return this                 */
 }
 

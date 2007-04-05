@@ -48,6 +48,7 @@
 #include "RexxActivation.hpp"
 #include "ExpressionMessage.hpp"
 #include "Token.hpp"
+#include "SourceFile.hpp"
 
 RexxExpressionMessage::RexxExpressionMessage(
     RexxObject *target,                /* message send target               */
@@ -210,5 +211,82 @@ void *RexxExpressionMessage::operator new(size_t size,
                                        /* Give new object its behaviour     */
   BehaviourSet(newObject, TheMessageSendBehaviour);
   return newObject;
+}
+
+void RexxExpressionMessage::assign(
+    RexxActivation *context,           /* current activation context        */
+    RexxExpressionStack *stack,        /* current evaluation stack          */
+    RexxObject     *value )            /* new value to assign               */
+/******************************************************************************/
+/* Function:  Emulate a variable assignment using a method                    */
+/******************************************************************************/
+{
+    // evaluate the target
+    RexxObject *target = this->target->evaluate(context, stack);
+    RexxObject *super = OREF_NULL;
+    // message override?
+    if (this->super != OREF_NULL)
+    {
+        // in this context, the value needs to be SELF
+        if (target != context->receiver)
+        {
+            report_exception(Error_Execution_super);
+        }
+        // evaluate the superclass override
+        super = this->super->evaluate(context, stack);
+        stack->toss();
+    }
+    // push the assignment value on to the stack as the argument
+    stack->push(value);
+    // now push the rest of the arguments.  This might be something like a[1,2,3,4] as
+    // an assignment term.  The assignment value is the first argument, followed by
+    // any other arguments that are part of the encoded message term.
+    size_t argcount = (size_t)this->argumentCount;
+
+    RexxObject *result;
+    for (size_t i = 0; i < argcount; i++)
+    {
+        // non-omitted argument?
+        if (this->arguments[i] != OREF_NULL)
+        {
+            // evaluate and potentiall trace
+            result = this->arguments[i]->evaluate(context, stack);
+            context->traceResult(result);
+        }
+        else
+        {
+            // non existant arg....we may still need to trace that
+            stack->push(OREF_NULL);
+            context->traceResult(OREF_NULLSTRING);
+        }
+    }
+
+    // now send the message the appropriate way
+    if (super == OREF_NULL)
+    {
+        // normal message send
+        result = stack->send(this->u_name, argcount);
+    }
+    else
+    {
+        // send with an override
+        result = stack->send(this->u_name, super, argcount);
+    }
+    // remove all arguments
+    stack->popn(argcount + 1);
+}
+
+
+
+/**
+ * Convert a message into an assignment message by adding "="
+ * to the end of the message name.
+ *
+ * @param source The current source context.
+ */
+void RexxExpressionMessage::makeAssignment(RexxSource *source)
+{
+    // add an equal sign to the name
+    u_name = source->commonString(u_name->concat(OREF_EQUAL));
 }
 

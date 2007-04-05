@@ -61,7 +61,7 @@ class RexxParseVariable : public RexxVariableBase {
   BOOL exists(RexxActivation *);
   void set(RexxActivation *, RexxObject *) ;
   void set(RexxVariableDictionary *, RexxObject *) ;
-  void assign(RexxActivation *, RexxObject *);
+  void assign(RexxActivation *, RexxExpressionStack *, RexxObject *);
   void drop(RexxActivation *);
   void setGuard(RexxActivation *);
   void clearGuard(RexxActivation *);

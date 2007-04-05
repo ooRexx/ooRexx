@@ -118,11 +118,11 @@ void RexxInstructionAssignment::execute(
     result = this->expression->evaluate(context, stack);
     context->traceResult(result);      /* trace if necessary                */
                                        /* do the assignment                 */
-    this->variable->assign(context, result);
+    this->variable->assign(context, stack, result);
     context->pauseInstruction();       /* do debug pause if necessary       */
   }
   else                                 /* non-traced execution              */
                                        /* do the assignment                 */
-    this->variable->assign(context, this->expression->evaluate(context, stack));
+    this->variable->assign(context, stack, this->expression->evaluate(context, stack));
 }
 

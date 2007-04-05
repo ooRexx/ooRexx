@@ -77,7 +77,6 @@ RexxInstructionMessage::RexxInstructionMessage(
 
 RexxInstructionMessage::RexxInstructionMessage(
     RexxExpressionMessage *message,    /* templace message to process       */
-    RexxString *name,                  /* name to send                      */
     RexxObject *expression)            /* associated expression             */
 /******************************************************************************/
 /* Function:  Initialize an assignment message instruction                    */
@@ -89,7 +88,7 @@ RexxInstructionMessage::RexxInstructionMessage(
                                        /* copy the message info             */
   OrefSet(this, this->target, message->target);
   OrefSet(this, this->super, message->super);
-  OrefSet(this, this->name, name);     /* get the name                      */
+  OrefSet(this, this->name, message->u_name);     /* get the name                      */
                                        /* get the argument count            */
   message_argument_count = message->argumentCount + 1;
                                        /* and the argument pointer          */

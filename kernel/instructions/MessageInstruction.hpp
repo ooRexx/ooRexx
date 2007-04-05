@@ -53,7 +53,7 @@ class RexxInstructionMessage : public RexxInstruction {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};
   RexxInstructionMessage(RexxExpressionMessage *);
-  RexxInstructionMessage(RexxExpressionMessage *, RexxString *, RexxObject *);
+  RexxInstructionMessage(RexxExpressionMessage *, RexxObject *);
   inline RexxInstructionMessage(RESTORETYPE restoreType) { ; };
   void live();
   void liveGeneral();
