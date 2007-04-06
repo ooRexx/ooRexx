@@ -371,6 +371,53 @@ BUILTIN(SUBSTR) {
   return string->substr(n, length, pad);
 }
 
+
+#define LOWER_MIN 2
+#define LOWER_MAX 3
+#define LOWER_string 1
+#define LOWER_n      2
+#define LOWER_length 3
+
+
+BUILTIN(LOWER) {
+  RexxString  *string;                 /* target string                     */
+  RexxInteger *n;                      /* start position                    */
+  RexxInteger *length;                 /* target string length              */
+
+  fix_args(LOWER);                     /* check on required number of args  */
+                                       /* must have the first argument      */
+  string = required_string(LOWER, string);
+  n = optional_integer(LOWER, n);      /* position is optional              */
+                                       /* length is optional                */
+  length = optional_integer(LOWER, length);
+                                       /* do the LOWER function            */
+  return string->lowerRexx(n, length);
+}
+
+
+#define UPPER_MIN 2
+#define UPPER_MAX 3
+#define UPPER_string 1
+#define UPPER_n      2
+#define UPPER_length 3
+
+
+BUILTIN(UPPER) {
+  RexxString  *string;                 /* target string                     */
+  RexxInteger *n;                      /* start position                    */
+  RexxInteger *length;                 /* target string length              */
+
+  fix_args(UPPER);                     /* check on required number of args  */
+                                       /* must have the first argument      */
+  string = required_string(UPPER, string);
+  n = optional_integer(UPPER, n);       /* position is optional              */
+                                       /* length is optional                */
+  length = optional_integer(UPPER, length);
+                                       /* do the UPPER function            */
+  return string->upperRexx(n, length);
+}
+
+
 #define SUBWORD_MIN 2
 #define SUBWORD_MAX 3
 #define SUBWORD_string 1
@@ -3353,5 +3400,7 @@ pbuiltin builtin_table[] = {
   &builtin_function_X2D              ,
   &builtin_function_XRANGE           ,
   &builtin_function_USERID           ,
+  &builtin_function_LOWER            ,
+  &builtin_function_UPPER            ,
 };
 

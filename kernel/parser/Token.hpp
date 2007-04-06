@@ -366,6 +366,8 @@
 //          the magic number in the tokenized format is increased
 //          for that reason
 #define  BUILTIN_USERID            BUILTIN_XRANGE           + 1
+#define  BUILTIN_LOWER             BUILTIN_USERID           + 1
+#define  BUILTIN_UPPER             BUILTIN_LOWER            + 1
 
 typedef struct _KWDTABLE {             /* keyword table entries             */
     PCHAR  name;                       /* keyword name                      */
