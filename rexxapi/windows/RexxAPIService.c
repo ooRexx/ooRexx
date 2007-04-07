@@ -687,7 +687,7 @@ BOOL ParseStandardArgs( LPSTR lpCmdLine )
           {
             if (!bSilent )
             {
-              printf( chString, "%s failed to install. Error %d\n", SERVICENAME, GetLastError());
+              sprintf( chString, "%s failed to install. Error %d\n", SERVICENAME, GetLastError());
               MessageBox ( NULL , chString, SERVICENAME , MB_OK | MB_ICONERROR ) ;
             }
           }
