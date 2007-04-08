@@ -784,6 +784,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_STARTAT                ,TheObjectBehaviour, CPPM(RexxObject::startAt), A_COUNT);
   defineKernelMethod(CHAR_STRING                 ,TheObjectBehaviour, CPPM(RexxObject::stringRexx), 0);
   defineKernelMethod(CHAR_ISINSTANCEOF           ,TheObjectBehaviour, CPPM(RexxObject::isInstanceOfRexx), 1);
+  defineKernelMethod(CHAR_ISA                    ,TheObjectBehaviour, CPPM(RexxObject::isInstanceOfRexx), 1);
   defineKernelMethod(CHAR_INSTANCEMETHOD         ,TheObjectBehaviour, CPPM(RexxObject::instanceMethodRexx), 1);
   defineKernelMethod(CHAR_INSTANCEMETHODS        ,TheObjectBehaviour, CPPM(RexxObject::instanceMethodsRexx), 1);
   definePrivateKernelMethod(CHAR_RUN             ,TheObjectBehaviour, CPPM(RexxObject::run), A_COUNT);
