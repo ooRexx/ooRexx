@@ -101,33 +101,42 @@ void RexxInstructionEnd::execute(
 /* Function:  Execute a REXX END instruction                                */
 /****************************************************************************/
 {
-  RexxDoBlock       *doBlock;          /* target DO block                   */
+    RexxDoBlock       *doBlock;          /* target DO block                   */
 
-  context->unindent();                 /* remove indentation                */
-  context->traceInstruction(this);     /* trace if necessary                */
-  if (context->blockNest == 0)         /* no possible blocks?               */
-                                       /* this is an error                  */
-    report_exception(Error_Unexpected_end_nodo);
+    context->unindent();                 /* remove indentation                */
+    context->traceInstruction(this);     /* trace if necessary                */
+    if (context->blockNest == 0)         /* no possible blocks?               */
+                                         /* this is an error                  */
+        report_exception(Error_Unexpected_end_nodo);
 
-  switch (this->getStyle()) {          /* process each loop type            */
+    switch (this->getStyle())
+    {          /* process each loop type            */
 
-    case LOOP_BLOCK:                   /* is this a loop?                   */
-      doBlock = context->topBlock();   /* get the top DO block              */
-                                       /* reset the indentation             */
-      context->setIndent(doBlock->getIndent());
-                                       /* pass on the reexecution           */
-      doBlock->getParent()->reExecute(context, stack, doBlock);
-      break;
+        case LOOP_BLOCK:                   /* is this a loop?                   */
+            doBlock = context->topBlock();   /* get the top DO block              */
+                                             /* reset the indentation             */
+            context->setIndent(doBlock->getIndent());
+            /* pass on the reexecution           */
+            ((RexxInstructionDo *)(doBlock->getParent()))->reExecute(context, stack, doBlock);
+            break;
 
-    case SELECT_BLOCK:                 /* END of a select block             */
-                                       /* looking for a WHEN match          */
-                                       /* this is an error                  */
-      report_exception(Error_When_expected_nootherwise);
-      break;
+        case SELECT_BLOCK:                 /* END of a select block             */
+            /* looking for a WHEN match          */
+            /* this is an error                  */
+            report_exception(Error_When_expected_nootherwise);
+            break;
 
-    default:                           /* all others                        */
-      context->removeBlock();          /* just step back next level         */
-      break;
-  }
+            // for labeled BLOCK types, we need to remove the active marker.
+        case LABELED_OTHERWISE_BLOCK:
+        case LABELED_DO_BLOCK:
+            doBlock = context->topBlock();
+
+            context->setIndent(doBlock->getIndent());
+            break;
+
+        default:                           /* all others                        */
+            context->removeBlock();          /* just step back next level         */
+            break;
+    }
 }
 

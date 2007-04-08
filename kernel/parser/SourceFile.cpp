@@ -2302,7 +2302,7 @@ RexxMethod *RexxSource::translateBlock(
                                        /* not working on a block?           */
         if (type != KEYWORD_SELECT &&
             type != KEYWORD_OTHERWISE &&
-            type != KEYWORD_DO ) {
+            type != KEYWORD_DO) {
           if (type == KEYWORD_ELSE)    /* on an else?                       */
                                        /* give the specific error           */
             report_error(Error_Unexpected_end_else);
@@ -2325,7 +2325,7 @@ RexxMethod *RexxSource::translateBlock(
         this->flushControl(OREF_NULL); /* finish pending IFs or ELSEs       */
         break;
 
-      case  KEYWORD_DO:                /* start of new DO group             */
+      case  KEYWORD_DO:                // start of new DO group (also picks up LOOP instruction)
         this->pushDo(instruction);     /* add this to the control queue     */
         break;
 
@@ -2499,6 +2499,11 @@ RexxInstruction *RexxSource::instruction()
             case KEYWORD_DO:           /* all variations of DO instruction  */
                                        /* add the instruction to the parse  */
               instruction = this->doNew();
+              break;
+
+            case KEYWORD_LOOP:         /* all variations of LOOP instruction  */
+                                       /* add the instruction to the parse  */
+              instruction = this->loopNew();
               break;
 
             case KEYWORD_EXIT:         /* EXIT instruction                  */
@@ -2807,6 +2812,14 @@ RexxString *RexxSource::commonString(
   }
   return result;                       /* return the string                 */
 }
+
+
+RexxObject *RexxSource::addVariable(RexxToken *token)
+{
+    needVariable(token);
+    return addText(token);
+}
+
 
 RexxObject *RexxSource::addText(
     RexxToken *token)                  /* token to process                  */

@@ -161,7 +161,7 @@ CLASS_INTERNAL(parse_compound, RexxCompoundVariable)
 
 CLASS_INTERNAL(parse_do,RexxInstructionDo)
 
-CLASS_INTERNAL(parse_dExpressionBaseVariableiable, RexxDotVariable)
+CLASS_INTERNAL(parse_dot_variable, RexxDotVariable)
 
 CLASS_INTERNAL(parse_drop, RexxInstructionDrop)
 
@@ -242,3 +242,5 @@ CLASS_INTERNAL(activation_frame_buffer, RexxActivationFrameBuffer)
 CLASS_INTERNAL(parse_unary_operator, RexxUnaryOperator)
 
 CLASS_INTERNAL(parse_binary_operator, RexxBinaryOperator)
+
+CLASS_INTERNAL(parse_labeled_select, RexxInstructionLabeledSelect)

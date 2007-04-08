@@ -44,12 +44,14 @@
 #ifndef Included_RexxDoBlock
 #define Included_RexxDoBlock
 
+class RexxBlockInstruction;
+
 class RexxDoBlock : public RexxInternalObject {
  public:
 
   void *operator new(size_t);
   inline void *operator new(size_t size, void *ptr) {return ptr;};
-  RexxDoBlock(RexxInstructionDo *, INT);
+  RexxDoBlock(RexxBlockInstruction *, INT);
   inline RexxDoBlock(RESTORETYPE restoreType) { ; };
   void live();
   void liveGeneral();
@@ -59,7 +61,7 @@ class RexxDoBlock : public RexxInternalObject {
   inline LONG getFor() {return this->forcount;};
   inline INT  getCompare() {return (INT)(this->compare);};
   inline RexxObject * getBy() {return this->by;};
-  inline RexxInstructionDo * getParent() {return this->parent;};
+  inline RexxBlockInstruction * getParent() {return this->parent;};
   inline void setTo(RexxObject * value) {this->to = value;};
   inline void setBy(RexxObject * value) {this->by = value;};
   inline void setCompare(int value) {this->compare = (USHORT)value;};
@@ -69,11 +71,12 @@ class RexxDoBlock : public RexxInternalObject {
   inline void setPrevious(RexxDoBlock *block) { this->previous = block; }
 
   RexxDoBlock       *previous;         /* previous stacked Do Block         */
-  RexxInstructionDo *parent;           /* parent instruction                */
+  RexxBlockInstruction *parent;        /* parent instruction                */
   RexxObject        *to;               /* final target value                */
   RexxObject        *by;               /* control increment value           */
   LONG               forcount;         /* number of iterations              */
   LONG               indent;           /* base indentation                  */
   LONG               compare;          /* type of comparison                */
+  bool               loop;             // whether this is a loop or block instruction
 };
 #endif

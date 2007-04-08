@@ -56,7 +56,9 @@
                                        /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
 
-void RexxInstructionDo::matchName(
+
+
+void RexxInstructionDo::matchLabel(
      RexxInstructionEnd *end,          /* end to match up                   */
      RexxSource         *source )      /* parsed source file (for errors)   */
 /******************************************************************************/
@@ -72,11 +74,12 @@ void RexxInstructionDo::matchName(
 
   if (name != OREF_NULL) {             /* was a name given?                 */
     lineNum = this->lineNumber;        /* Instruction line number           */
-    if (this->name == OREF_NULL)       /* name given on non-control form?   */
+    RexxString *myLabel = getLabel();
+    if (myLabel == OREF_NULL)          /* name given on non-control form?   */
                                        /* have a mismatched end             */
       CurrentActivity->raiseException(Error_Unexpected_end_nocontrol, &location, source, OREF_NULL, new_array2(name, new_integer(lineNum)), OREF_NULL);
-    else if (name != this->name)       /* not the same name?                */
-      CurrentActivity->raiseException(Error_Unexpected_end_control, &location, source, OREF_NULL, new_array3(name, this->name, new_integer(lineNum)), OREF_NULL);
+    else if (name != getLabel())       /* not the same name?                */
+      CurrentActivity->raiseException(Error_Unexpected_end_control, &location, source, OREF_NULL, new_array3(name, myLabel, new_integer(lineNum)), OREF_NULL);
   }
 }
 
@@ -87,14 +90,58 @@ void RexxInstructionDo::matchEnd(
 /* Make sure we have a match between and END and a DO                         */
 /******************************************************************************/
 {
-  this->matchName(partner, source);    /* match up the names                */
+  this->matchLabel(partner, source);   /* match up the names                */
   OrefSet(this, this->end, partner);   /* match up with the END instruction */
   if (this->type != SIMPLE_DO) {       /* not a simple DO form?             */
     partner->setStyle(LOOP_BLOCK);     /* this is a loop form               */
   }
   else
-    partner->setStyle(DO_BLOCK);       /* else we have a DO block           */
+  {
+      // for a simple DO, we need to check if this has a label
+      if (getLabel() != OREF_NULL)
+      {
+          partner->setStyle(LABELED_DO_BLOCK);
+      }
+      else
+      {
+          partner->setStyle(DO_BLOCK);
+      }
+  }
 }
+
+
+/**
+ * Check for a label match on a block instruction.
+ *
+ * @param name   The target block name.
+ *
+ * @return True if this is a name match, false otherwise.
+ */
+bool RexxInstructionDo::isLabel(RexxString *name)
+{
+    return label == name;
+}
+
+/**
+ * Get the label for this block instruction.
+ *
+ * @return The label for the loop.  Returns OREF_NULL if there is no label.
+ */
+RexxString *RexxInstructionDo::getLabel()
+{
+    return label;
+}
+
+/**
+ * Tests to see if this is a loop instruction.
+ *
+ * @return True if this is a repetitive loop, false otherwise.
+ */
+bool RexxInstructionDo::isLoop()
+{
+    return this->type != SIMPLE_DO;
+}
+
 
 void RexxInstructionDo::live()
 /******************************************************************************/
@@ -108,7 +155,7 @@ void RexxInstructionDo::live()
   memory_mark(this->by);
   memory_mark(this->forcount);
   memory_mark(this->control);
-  memory_mark(this->name);
+  memory_mark(this->label);
   memory_mark(this->conditional);
   memory_mark(this->end);
   cleanUpMemoryMark
@@ -127,7 +174,7 @@ void RexxInstructionDo::liveGeneral()
   memory_mark_general(this->by);
   memory_mark_general(this->forcount);
   memory_mark_general(this->control);
-  memory_mark_general(this->name);
+  memory_mark_general(this->label);
   memory_mark_general(this->conditional);
   memory_mark_general(this->end);
   cleanUpMemoryMarkGeneral
@@ -146,7 +193,7 @@ void RexxInstructionDo::flatten(RexxEnvelope *envelope)
   flatten_reference(newThis->by, envelope);
   flatten_reference(newThis->forcount, envelope);
   flatten_reference(newThis->control, envelope);
-  flatten_reference(newThis->name, envelope);
+  flatten_reference(newThis->label, envelope);
   flatten_reference(newThis->conditional, envelope);
   flatten_reference(newThis->end, envelope);
 
@@ -161,7 +208,7 @@ void RexxInstructionDo::terminate(
 /******************************************************************************/
 {
                                        /* perform cleanup                   */
-  context->terminateDo(doblock->indent);
+  context->terminateBlock(doblock->indent);
                                        /* jump to the loop end              */
   context->setNext(this->end->nextInstruction);
 }
@@ -173,11 +220,11 @@ void RexxInstructionDo::execute(
 /* Function:  Execute a REXX DO instruction                                   */
 /******************************************************************************/
 {
-  RexxDoBlock  *doblock;               /* active DO block                   */
+  RexxDoBlock  *doblock = OREF_NULL;   /* active DO block                   */
   RexxObject   *result;                /* expression evaluation result      */
   RexxArray    *array;                 /* converted collection object       */
   LONG          count;                 /* count for repetitive or FOR loops */
-  RexxObject   *object;                /* original result object (for error)*/
+  RexxObject   *object;                /* result object (for error)*/
 
   context->traceInstruction(this);     /* trace if necessary                */
   if (this->type != SIMPLE_DO) {       /* a real loop instruction?          */
@@ -339,12 +386,31 @@ void RexxInstructionDo::execute(
     }
   }
   else                                 /* just a simple do                  */
-    context->addBlock();               /* step the nesting level            */
+  {
+      if (getLabel() != OREF_NULL)
+      {
+                                             /* create an active DO block         */
+          doblock = new RexxDoBlock (this, context->getIndent());
+          context->newDo(doblock);           /* set the new block                 */
+
+      }
+      else
+      {
+          context->addBlock();               /* step the nesting level            */
+      }
+  }
                                        /* do debug pause if necessary       */
                                        /* have to re-execute?               */
   if (context->conditionalPauseInstruction()) {
-    this->terminate(context, doblock); /* cause termination cleanup         */
-    context->setNext(this);            /* make this the new next instruction*/
+      if (doblock != OREF_NULL)
+      {
+          this->terminate(context, doblock); /* cause termination cleanup         */
+      }
+      else
+      {
+          context->removeBlock();        /* cause termination cleanup         */
+      }
+      context->setNext(this);            /* make this the new next instruction*/
   }
 }
 

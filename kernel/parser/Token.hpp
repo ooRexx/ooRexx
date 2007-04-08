@@ -187,6 +187,7 @@
 #define KEYWORD_CLASS              KEYWORD_REQUIRES          + 1
 #define KEYWORD_INSTRUCTION        KEYWORD_CLASS             + 1
 #define KEYWORD_FORWARD            KEYWORD_INSTRUCTION       + 1
+#define KEYWORD_LOOP               KEYWORD_FORWARD           + 1
 
 /* token extended types - instruction option keywords */
 #define SUBKEY_ARG         1
@@ -232,6 +233,7 @@
 #define SUBKEY_CLASS       SUBKEY_CONTINUE    + 1
 #define SUBKEY_MESSAGE     SUBKEY_CLASS       + 1
 #define SUBKEY_ARGUMENTS   SUBKEY_MESSAGE     + 1
+#define SUBKEY_LABEL       SUBKEY_ARGUMENTS   + 1
 
 /* token extended types - end of clause */
 #define CLAUSEEND_EOF         2301

@@ -44,6 +44,9 @@
 #ifndef Included_RexxInstruction
 #define Included_RexxInstruction
 
+class RexxInstructionEnd;
+class RexxSource;
+
 #define i_flags  (this->instructionInfo.flags)
 #define i_ushort (this->instructionInfo.general)
 
@@ -78,6 +81,21 @@ class RexxInstruction : public RexxInternalObject {
   INSTRUCTIONINFO   instructionInfo;   /* instruction common information    */
   RexxInstruction  *nextInstruction;   /* next instruction object           */
 };
+
+class RexxDoBlock;
+
+class RexxBlockInstruction : public RexxInstruction {
+public:
+    RexxBlockInstruction() {;};
+    RexxBlockInstruction(RESTORETYPE restoreType) { ; };
+
+    virtual bool isLabel(RexxString *) { return false; }
+    virtual RexxString *getLabel() { return OREF_NULL; };
+    virtual bool isLoop() { return false; };
+    virtual void matchEnd(RexxInstructionEnd *, RexxSource *) { ; };
+    virtual void terminate(RexxActivation *, RexxDoBlock *) { ; };
+};
+
 
 class RexxInstructionSet : public RexxInstruction {
  public:

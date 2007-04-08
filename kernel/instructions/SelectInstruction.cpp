@@ -51,6 +51,8 @@
 #include "EndInstruction.hpp"
 #include "IfInstruction.hpp"
 #include "OtherwiseInstruction.hpp"
+#include "DoBlock.hpp"
+
 
 RexxInstructionSelect::RexxInstructionSelect()
 /******************************************************************************/
@@ -60,6 +62,17 @@ RexxInstructionSelect::RexxInstructionSelect()
                                        /* create a list of WHEN targets     */
   OrefSet(this, this->when_list, new_queue());
 }
+
+
+RexxInstructionLabeledSelect::RexxInstructionLabeledSelect(RexxString *name) : RexxInstructionSelect()
+/******************************************************************************/
+/* Function:  Initialize a SELECT instruction object                          */
+/******************************************************************************/
+{
+    // set the label name
+    OrefSet(this, this->label, name);
+}
+
 
 void RexxInstructionSelect::live()
 /******************************************************************************/
@@ -103,6 +116,119 @@ void RexxInstructionSelect::flatten(RexxEnvelope *envelope)
   cleanUpFlatten
 }
 
+
+void RexxInstructionLabeledSelect::live()
+/******************************************************************************/
+/* Function:  Normal garbage collection live marking                          */
+/******************************************************************************/
+{
+    RexxInstructionSelect::live();
+    setUpMemoryMark
+    memory_mark(this->label);
+    cleanUpMemoryMark
+}
+
+void RexxInstructionLabeledSelect::liveGeneral()
+/******************************************************************************/
+/* Function:  Generalized object marking                                      */
+/******************************************************************************/
+{
+    RexxInstructionSelect::liveGeneral();
+    setUpMemoryMarkGeneral
+    memory_mark_general(label);
+    cleanUpMemoryMarkGeneral
+}
+
+void RexxInstructionLabeledSelect::flatten(RexxEnvelope *envelope)
+/******************************************************************************/
+/* Function:  Flatten an object                                               */
+/******************************************************************************/
+{
+    setUpFlatten(RexxInstructionLabeledSelect)
+
+    flatten_reference(newThis->nextInstruction, envelope);
+    flatten_reference(newThis->when_list, envelope);
+    flatten_reference(newThis->end, envelope);
+    flatten_reference(newThis->otherwise, envelope);
+    flatten_reference(newThis->label, envelope);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * No label on base select class.
+ *
+ * @return Always returns OREF_NULL.
+ */
+RexxString *RexxInstructionSelect::getLabel()
+{
+    return OREF_NULL;
+}
+
+
+/**
+ * No label on labeled select class.
+ *
+ * @return Always returns OREF_NULL.
+ */
+RexxString *RexxInstructionLabeledSelect::getLabel()
+{
+    return label;
+}
+
+
+/**
+ * Check for a label match on a block instruction.
+ *
+ * @param name   The target block name.
+ *
+ * @return True if this is a name match, false otherwise.
+ */
+bool RexxInstructionSelect::isLabel(RexxString *name)
+{
+    return false;
+}
+
+
+/**
+ * Tests to see if this is a loop instruction.
+ *
+ * @return True if this is a repetitive loop, false otherwise.
+ */
+bool RexxInstructionSelect::isLoop()
+{
+    return false;
+}
+
+
+/**
+ * Check for a label match on a block instruction.
+ *
+ * @param name   The target block name.
+ *
+ * @return True if this is a name match, false otherwise.
+ */
+bool RexxInstructionLabeledSelect::isLabel(RexxString *name)
+{
+    return label == name;
+}
+
+
+void RexxInstructionSelect::terminate(
+     RexxActivation *context,          /* current execution context         */
+     RexxDoBlock    *doblock )         /* active do block                   */
+/******************************************************************************/
+/* Function:  Terminate an active do loop                                     */
+/******************************************************************************/
+{
+                                       /* perform cleanup                   */
+  context->terminateBlock(doblock->indent);
+                                       /* jump to the loop end              */
+  context->setNext(this->end->nextInstruction);
+}
+
+
 void RexxInstructionSelect::execute(
     RexxActivation      *context,      /* current activation context        */
     RexxExpressionStack *stack )       /* evaluation stack                  */
@@ -110,17 +236,37 @@ void RexxInstructionSelect::execute(
 /* Function:  Execute a REXX SELECT instruction                             */
 /****************************************************************************/
 {
-  context->traceInstruction(this);     /* trace if necessary                */
-  context->indent();                   /* indent on tracing                 */
-  context->addBlock();                 /* add to the loop nesting           */
+    RexxDoBlock *doblock = OREF_NULL;
+
+    context->traceInstruction(this);     /* trace if necessary                */
+    if (getLabel() != OREF_NULL)
+    {
+                                           /* create an active DO block         */
+        doblock = new RexxDoBlock (this, context->getIndent());
+        context->newDo(doblock);           /* set the new block                 */
+    }
+    else
+    {
+        context->indent();                   /* indent on tracing                 */
+        context->addBlock();               /* step the nesting level            */
+    }
                                        /* do debug pause if necessary       */
 
                                        /* have to re-execute?               */
-  if (context->conditionalPauseInstruction()) {
-    context->removeBlock();            /* cause termination cleanup         */
-    context->unindent();               /* step back trace indentation       */
-  }
+    if (context->conditionalPauseInstruction())
+    {
+        if (doblock != OREF_NULL)
+        {
+            this->terminate(context, doblock); /* cause termination cleanup         */
+        }
+        else
+        {
+            context->removeBlock();        /* cause termination cleanup         */
+            context->unindent();               /* step back trace indentation       */
+        }
+    }
 }
+
 
 void RexxInstructionSelect::matchEnd(
      RexxInstructionEnd *partner,      /* end to match up                   */
@@ -135,9 +281,21 @@ void RexxInstructionSelect::matchEnd(
 
   partner->getLocation(&location);     /* get location of END instruction   */
   lineNum = this->lineNumber;          /* get the instruction line number   */
-  if (partner->name != OREF_NULL)      /* END had a name specified?         */
+
+  RexxString *name = partner->name;    /* get then END name                 */
+  if (name != OREF_NULL) {             /* was a name given?                 */
+    lineNum = this->lineNumber;        /* Instruction line number           */
+    RexxString *myLabel = getLabel();
+    if (myLabel == OREF_NULL)          /* name given on non-control form?   */
+    {
+        CurrentActivity->raiseException(Error_Unexpected_end_select_nolabel, &location, source, OREF_NULL, new_array2(partner->name, new_integer(lineNum)), OREF_NULL);
+    }
+    else if (name != myLabel)          /* not the same name?                */
+    {
+        CurrentActivity->raiseException(Error_Unexpected_end_select, &location, source, OREF_NULL, new_array3(name, myLabel, new_integer(lineNum)), OREF_NULL);
+    }
+  }
                                        /* misplaced END instruction         */
-    CurrentActivity->raiseException(Error_Unexpected_end_select, &location, source, OREF_NULL, new_array2(partner->name, new_integer(lineNum)), OREF_NULL);
   OrefSet(this, this->end, partner);   /* match up with the END instruction */
                                        /* get first item off of WHEN list   */
   when = (RexxInstructionIf *)(this->when_list->pullRexx());
@@ -157,10 +315,27 @@ void RexxInstructionSelect::matchEnd(
                                        /* get rid of the lists              */
   OrefSet(this, this->when_list, OREF_NULL);
   if (this->otherwise != OREF_NULL)    /* an other wise block?              */
-    partner->setStyle(OTHERWISE_BLOCK);/* END closes the OTHERWISE          */
+  {
+      // for the END terminator on an OTHERWISE, we need to see if this
+      // select has a label.  If it does, this needs special handling.
+      if (getLabel() == OREF_NULL)
+      {
+          partner->setStyle(OTHERWISE_BLOCK);
+      }
+      else
+      {
+          partner->setStyle(LABELED_OTHERWISE_BLOCK);
+      }
+  }
   else
-    partner->setStyle(SELECT_BLOCK);   /* SELECT with no otherwise          */
+  {
+      // the SELECT style will raise an error if hit, since it means
+      // there is not OTHERWISE clause.  This doesn't matter if there
+      // is a label or not.
+      partner->setStyle(SELECT_BLOCK);
+  }
 }
+
 
 void RexxInstructionSelect::addWhen(
     RexxInstructionIf *when)           /* associated WHEN instruction       */

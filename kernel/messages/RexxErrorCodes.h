@@ -89,6 +89,7 @@
 #define Error_Unexpected_end_then                          10005
 #define Error_Unexpected_end_else                          10006
 #define Error_Unexpected_end_select                        10004
+#define Error_Unexpected_end_select_nolabel                10007
 #define Error_Control_stack                                11000
 #define Error_Control_stack_full                           11001
 #define Error_Control_stack_user_defined                   11900
@@ -152,6 +153,7 @@
 #define Error_Symbol_expected_user                         20915
 #define Error_Symbol_expected_directive                    20916
 #define Error_Symbol_expected_colon                        20917
+#define Error_Symbol_expected_LABEL                        20918
 #define Error_Invalid_data                                 21000
 #define Error_Invalid_data_user_defined                    21900
 #define Error_Invalid_data_nop                             21901
@@ -205,6 +207,7 @@
 #define Error_Invalid_subkeyword_continue                  25919
 #define Error_Invalid_subkeyword_forward_class             25921
 #define Error_Invalid_subkeyword_message                   25922
+#define Error_Invalid_subkeyword_select                    25923
 #define Error_Invalid_whole_number                         26000
 #define Error_Invalid_whole_number_power                   26008
 #define Error_Invalid_whole_number_repeat                  26002
@@ -226,6 +229,7 @@
 #define Error_Invalid_leave_iterate                        28002
 #define Error_Invalid_leave_leavevar                       28003
 #define Error_Invalid_leave_iteratevar                     28004
+#define Error_Invalid_leave_iterate_name                   28005
 #define Error_Environment_name                             29000
 #define Error_Environment_name_name                        29001
 #define Error_Name_too_long                                30000

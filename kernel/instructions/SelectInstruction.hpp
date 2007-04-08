@@ -46,22 +46,45 @@
 
 #include "RexxInstruction.hpp"
 
-class RexxInstructionSelect : public RexxInstruction {
- public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  RexxInstructionSelect();
-  inline RexxInstructionSelect(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
-  void flatten(RexxEnvelope*);
-  void execute(RexxActivation *, RexxExpressionStack *);
-  void matchEnd(RexxInstructionEnd *, RexxSource *);
-  RexxObject *checkend(RexxObject *);
-  void setOtherwise(RexxInstructionOtherWise *);
-  void addWhen(RexxInstructionIf *);
 
-  RexxQueue                *when_list; /* list of WHEN end targets          */
-  RexxInstructionEnd       *end;       /* END matching the SELECT           */
-  RexxInstructionOtherWise *otherwise; /* OTHERWISE matching the SELECT     */
+class RexxInstructionSelect : public RexxBlockInstruction
+{
+public:
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    RexxInstructionSelect();
+    inline RexxInstructionSelect(RESTORETYPE restoreType) { ; };
+    void live();
+    void liveGeneral();
+    void flatten(RexxEnvelope*);
+    void execute(RexxActivation *, RexxExpressionStack *);
+
+    void matchEnd(RexxInstructionEnd *, RexxSource *);
+    bool isLabel(RexxString *name);
+    RexxString *getLabel();
+    bool isLoop();
+    void terminate(RexxActivation *, RexxDoBlock *);
+
+    void setOtherwise(RexxInstructionOtherWise *);
+    void addWhen(RexxInstructionIf *);
+
+    RexxQueue                *when_list; /* list of WHEN end targets          */
+    RexxInstructionEnd       *end;       /* END matching the SELECT           */
+    RexxInstructionOtherWise *otherwise; /* OTHERWISE matching the SELECT     */
+};
+
+
+class RexxInstructionLabeledSelect : public RexxInstructionSelect
+{
+public:
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    RexxInstructionLabeledSelect(RexxString *);
+    inline RexxInstructionLabeledSelect(RESTORETYPE restoreType) : RexxInstructionSelect(restoreType) { ; };
+    void live();
+    void liveGeneral();
+    void flatten(RexxEnvelope*);
+    virtual RexxString *getLabel();
+    bool isLabel(RexxString *name);
+
+    RexxString * label;      // the select label
 };
 #endif

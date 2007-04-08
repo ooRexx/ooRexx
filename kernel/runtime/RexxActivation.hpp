@@ -310,7 +310,7 @@ RexxObject * activation_find  (void);
    inline void              pushBlock(RexxDoBlock *block) { block->setPrevious(this->dostack); this->dostack = block; }
    inline void              popBlock() { RexxDoBlock *temp; temp = this->dostack; this->dostack = temp->previous; SetObjectHasNoReferences(temp); }
    inline RexxDoBlock     * topBlock() { return this->dostack; }
-   inline void              terminateDo(LONG indent) { this->popBlock(); this->blockNest--; this->settings.traceindent = indent; }
+   inline void              terminateBlock(LONG indent) { this->popBlock(); this->blockNest--; this->settings.traceindent = indent; }
    inline void              newDo(RexxDoBlock *block) { this->pushBlock(block); this->blockNest++; this->settings.traceindent++;}
    inline void              removeBlock() { this->blockNest--; };
    inline void              addBlock()    { this->blockNest++; };

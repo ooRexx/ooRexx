@@ -71,6 +71,7 @@
   class RexxInstruction;
   class RexxInstructionCallBase;
   class RexxInstructionDo;
+  class RexxInstructionLoop;
   class RexxInstructionEnd;
   class RexxInstructionEndIf;
   class RexxInstructionForward;

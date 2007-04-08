@@ -64,18 +64,23 @@
 #define EXP_BY           2             /* BY expression                     */
 #define EXP_FOR          3             /* FOR expression                    */
 
-class RexxInstructionDo : public RexxInstruction {
+class RexxInstructionDo : public RexxBlockInstruction
+{
  public:
 
   inline void *operator new(size_t size, void *ptr) {return ptr;};
   inline RexxInstructionDo(void) { ; }
   inline RexxInstructionDo(RESTORETYPE restoreType) { ; };
-  void matchName(RexxInstructionEnd *, RexxSource *);
-  inline BOOL isName(RexxString *name) { return name == this->name; }
+
+  void matchEnd(RexxInstructionEnd *, RexxSource *);
+  bool    isLabel(RexxString *name);
+  RexxString *getLabel();
+  bool    isLoop();
+  void terminate(RexxActivation *, RexxDoBlock *);
+
   void live();
   void liveGeneral();
   void flatten(RexxEnvelope *);
-  void terminate(RexxActivation *, RexxDoBlock *);
   void execute(RexxActivation *, RexxExpressionStack *);
   void controlSetup(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
   BOOL checkOver(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
@@ -83,15 +88,14 @@ class RexxInstructionDo : public RexxInstruction {
   void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
   BOOL whileCondition(RexxActivation *, RexxExpressionStack *);
   BOOL untilCondition(RexxActivation *, RexxExpressionStack *);
-  void matchEnd(RexxInstructionEnd *, RexxSource *);
-  RexxObject *checkEnd(RexxObject *);
   RexxInstruction *getEnd();
+  void matchLabel(RexxInstructionEnd *end, RexxSource *source );
 
   RexxObject       *initial;           /* initial control expression        */
   RexxObject       *to;                /* final target value                */
   RexxObject       *by;                /* control increment value           */
   RexxVariableBase *control;           /* control variable retriever        */
-  RexxString       *name;              /* control variable name             */
+  RexxString       *label;             /* control variable name             */
   RexxObject       *conditional;       /* while/until expression            */
   RexxInstruction  *end;               /* matching END instruction          */
   RexxObject       *forcount;          /* number of iterations              */

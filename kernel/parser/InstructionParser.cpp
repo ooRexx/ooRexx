@@ -377,227 +377,324 @@ RexxInstruction *RexxSource::doNew()
 /* Function:  Create a new DO translator object                             */
 /****************************************************************************/
 {
-  RexxObject   *newObject;             /* newly created object              */
-
-  newObject = new_instruction(DO, Do); /* create a new translator object    */
-  new((void *)newObject) RexxInstructionDo;
+    RexxInstruction *newObject = createLoop();
                                        /* now complete the parsing          */
-  this->RexxInstructionDoCreate((RexxInstructionDo *)newObject);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    return this->createDoLoop((RexxInstructionDo *)newObject, false);
 }
 
-void RexxSource::RexxInstructionDoCreate(RexxInstructionDo *newDo)
+RexxInstruction *RexxSource::loopNew()
+/****************************************************************************/
+/* Function:  Create a new LOOP translator object                           */
+/****************************************************************************/
+{
+    RexxInstruction *newObject = createLoop();
+                                       /* now complete the parsing          */
+    return this->createDoLoop((RexxInstructionDo *)newObject, true);
+}
+
+
+/**
+ * Create a LOOP/DO instruction instance.
+ *
+ * @return
+ */
+RexxInstruction *RexxSource::createLoop()
+{
+    // NOTE:  we create a DO instruction for both DO and LOOP
+    RexxObject *newObject = new_instruction(DO, Do); /* create a new translator object    */
+    new((void *)newObject) RexxInstructionDo;
+    return (RexxInstruction *)newObject;
+}
+
+
+RexxInstruction *RexxSource::createDoLoop(RexxInstructionDo *newDo, bool isLoop)
 /******************************************************************************/
 /* Function:  Create a new DO translator object                               */
 /******************************************************************************/
 {
-  RexxInstructionDo *newObject;        /* newly created object              */
-  RexxToken         *token;            /* current working token             */
-  INT                keyslot;          /* keyword ordering counter          */
-  RexxToken         *second;           /* second token                      */
-  INT                terminators;      /* set of expression terminators     */
-  INT                conditional;      /* conditional type                  */
+    int position = markPosition();     // get a reset position before getting next token
+    // We've already figured out this is either a LOOP or a DO, now we need to
+    // decode what else is going on.
+    RexxToken *token = nextReal();
+    int conditional;
 
-  token = nextReal();                  /* get the next token                */
-  newObject = newDo;                   /* get addr of new object            */
-  if (token->classId == TOKEN_EOC)     /* this just a simple DO?            */
-    newDo->type = SIMPLE_DO;           /* this is just a simple DO          */
-  else {                               /* have some kind of DO loop         */
-                                       /* have a symbol?                    */
-    if (token->classId == TOKEN_SYMBOL) {
-      second = nextReal();             /* need the second token             */
-                                       /* have the '==' form?               */
-      if (second->subclass == OPERATOR_STRICT_EQUAL)
-                                       /* this is an invalid expression     */
-        report_error_token(Error_Invalid_expression_general, token);
-                                       /* have a control variable form?     */
-      else if (second->subclass == OPERATOR_EQUAL) {
-        keyslot = 0;                   /* starting with the first slot      */
-        newDo->type = CONTROLLED_DO;   /* this is a controlled DO loop      */
-        this->needVariable(token);     /* enforce variable form             */
-                                       /* save the control variable name    */
-        OrefSet(newObject, newDo->name, token->value);
-                                       /* add to variable symbol table      */
-                                       /* and save the control information  */
-        OrefSet(newObject, newDo->control, (RexxVariableBase *)this->addText(token));
-        terminators = TERM_CONTROL;    /* set the appropriate terminator set*/
-                                       /* get initial value expression      */
-        OrefSet(newObject, newDo->initial, this->expression(terminators));
-                                       /* no expression given?              */
-        if (newDo->initial == OREF_NULL)
-                                       /* this is a syntax error            */
-          report_error(Error_Invalid_expression_control);
-                                       /* while we don't have a clause      */
-                                       /* terminator                        */
-        token = nextReal();            /* get the terminator token          */
-        while (token->classId != TOKEN_EOC) {
-                                       /* process the keyword type          */
-          switch (this->subKeyword(token) ) {
 
-            case SUBKEY_BY:            /* BY exprb                          */
-                                       /* already had one?                  */
-              if (newDo->by != OREF_NULL)
-                                       /* another invalid DO                */
-                report_error_token(Error_Invalid_do_duplicate, token);
-                                       /* get next subexpression            */
-              OrefSet(newObject, newDo->by, this->expression(terminators));
-                                       /* nothing really there?             */
-              if (newDo->by == OREF_NULL)
-                                       /* another invalid DO                */
-                report_error(Error_Invalid_expression_by);
-                                       /* remember the evaluation order     */
-              newDo->expressions[keyslot] = EXP_BY;
-              keyslot++;               /* step the key slot                 */
-              break;
-
-            case SUBKEY_TO:            /* TO exprt                          */
-                                       /* already had one?                  */
-              if (newDo->to != OREF_NULL)
-                                       /* another invalid DO                */
-                report_error_token(Error_Invalid_do_duplicate, token);
-                                       /* get next subexpression            */
-              OrefSet(newObject, newDo->to, this->expression(terminators));
-                                       /* nothing really there?             */
-              if (newDo->to == OREF_NULL)
-                                       /* another invalid DO                */
-                report_error(Error_Invalid_expression_to);
-                                       /* remember the evaluation order     */
-              newDo->expressions[keyslot] = EXP_TO;
-              keyslot++;               /* step the key slot                 */
-              break;
-
-            case SUBKEY_FOR:           /* FOR exprf                         */
-                                       /* already had one?                  */
-              if (newDo->forcount != OREF_NULL)
-                                       /* another invalid DO                */
-                report_error_token(Error_Invalid_do_duplicate, token);
-                                       /* get next subexpression            */
-              OrefSet(newObject, newDo->forcount, this->expression(terminators));
-                                       /* nothing really there?             */
-              if (newDo->forcount == OREF_NULL)
-                                       /* another invalid DO                */
-                report_error(Error_Invalid_expression_for);
-                                       /* remember the evaluation order     */
-              newDo->expressions[keyslot] = EXP_FOR;
-              keyslot++;               /* step the key slot                 */
-              break;
-
-            case SUBKEY_WHILE:         /* WHILE exprw                       */
-              previousToken();         /* step back one token               */
-                                       /* go process the conditional        */
-              OrefSet(newObject, newDo->conditional, this->parseConditional(NULL, 0));
-              previousToken();         /* place the terminator back         */
-                                       /* this changes the loop type        */
-              newDo->type = CONTROLLED_WHILE;
-              break;
-
-            case SUBKEY_UNTIL:         /* UNTIL expru                       */
-              previousToken();         /* step back one token               */
-                                       /* go process the conditional        */
-              OrefSet(newObject, newDo->conditional, this->parseConditional(NULL, 0));
-              previousToken();         /* place the terminator back         */
-                                       /* this changes the loop type        */
-              newDo->type = CONTROLLED_UNTIL;
-              break;
-          }
-          token = nextReal();          /* step to the next token            */
+    // before doing anything, we need to test for a "LABEL name" before other options.  We
+    // need to make certain we check that the LABEL keyword is not being
+    // used as control variable.
+    if (token->classId == TOKEN_SYMBOL)
+    {
+        // potentially a label.  Check the keyword value
+        if (this->subKeyword(token) == SUBKEY_LABEL)
+        {
+            // if the next token is a symbol, this is a label.
+            RexxToken *name = nextReal();
+            if (name->classId == TOKEN_SYMBOL)
+            {
+                OrefSet(newDo, newDo->label, name->value);
+                // update the reset position before stepping to the next position
+                position = markPosition();
+                // step to the next token for processing the following parts
+                token = nextReal();
+            }
+            else if (name->subclass == OPERATOR_EQUAL)
+            {
+                // back up to the LABEL token and process as normal
+                previousToken();
+            }
+            else
+            {
+                // this is either an end-of-clause or something not a symbol.  This is an error.
+                report_error(Error_Symbol_expected_LABEL);
+            }
         }
-      }
-                                       /* DO name OVER collection form?     */
-      else if (this->subKeyword(second) == SUBKEY_OVER) {
-        newDo->type = DO_OVER;         /* this is a DO OVER loop            */
-        this->needVariable(token);     /* must have a control variable      */
-                                       /* save the control variable name    */
-        OrefSet(newObject, newDo->name, token->value);
-                                       /* add to variable symbol table      */
-                                       /* and save the control information  */
-        OrefSet(newObject, newDo->control, (RexxVariableBase *)this->addText(token));
-                                       /* and save the control information  */
-        OrefSet(newObject, newDo->initial, this->expression(TERM_COND));
-                                       /* no expression?                    */
-        if (newDo->initial == OREF_NULL)
-                                       /* this is invalid                   */
-          report_error(Error_Invalid_expression_over);
-                                       /* go process the conditional        */
-        OrefSet(newObject, newDo->conditional, this->parseConditional(&conditional, 0));
-                                       /* have a DO name OVER expr WHILE?   */
+    }
+
+
+    // Just the single token means this is either a simple DO block or
+    // a LOOP forever, depending on the type of instruction we're parsing.
+    if (token->classId == TOKEN_EOC)
+    {
+        if (isLoop)
+        {
+            newDo->type = DO_FOREVER;    // a LOOP with nothing else is a LOOP FOREVER
+        }
+        else
+        {
+            newDo->type = SIMPLE_DO;     // this is a simple DO block
+        }
+        return newDo;
+    }
+
+
+    if (token->classId == TOKEN_SYMBOL)
+    {
+        // this can be a control variable or keyword.  We need to look ahead
+        // to the next token.
+        RexxToken *second = nextReal();
+        // similar to assignment instructions, any equal sign triggers this to
+        // be a controlled form, even if the the "=" is part of a larger instruction
+        // such as "==".  We give this as an expression error.
+        if (second->subclass == OPERATOR_STRICT_EQUAL)
+        {
+            report_error_token(Error_Invalid_expression_general, second);
+        }
+        // ok, now check for the control variable.
+        else if (second->subclass == OPERATOR_EQUAL)
+        {
+            newDo->type = CONTROLLED_DO;   // this is a controlled DO loop
+            // the control expressions need to evaluated in the coded order,
+            // so we keep a little table of the order used.
+            int keyslot = 0;
+            // if this DO/LOOP didn't have a label clause, use the control
+            // variable name as the loop name.
+            if (newDo->label == OREF_NULL)
+            {
+                OrefSet(newDo, newDo->label, token->value);
+            }
+
+            // get the variable retriever
+            OrefSet(newDo, newDo->control, (RexxVariableBase *)this->addVariable(token));
+            // go get the initial expression, using the control variable terminators
+            OrefSet(newDo, newDo->initial, this->expression(TERM_CONTROL));
+            // this is a required expression.
+            if (newDo->initial == OREF_NULL)
+            {
+                report_error(Error_Invalid_expression_control);
+            }
+            // ok, keep looping while we don't have a clause terminator
+            // because the parsing of the initial expression is terminated by either
+            // the end-of-clause or DO/LOOP keyword, we know the next token will by
+            // a symbol
+            token = nextReal();
+            while (token->classId != TOKEN_EOC)
+            {
+                // this must be a keyword, so resolve it.
+                switch (this->subKeyword(token) )
+                {
+
+                    case SUBKEY_BY:
+                        // only one per customer
+                        if (newDo->by != OREF_NULL)
+                        {
+                            report_error_token(Error_Invalid_do_duplicate, token);
+                        }
+                        // get the keyword expression, which is required also
+                        OrefSet(newDo, newDo->by, this->expression(TERM_CONTROL));
+                        if (newDo->by == OREF_NULL)
+                        {
+                            report_error(Error_Invalid_expression_by);
+
+                        }
+                        // record the processing order
+                        newDo->expressions[keyslot++] = EXP_BY;
+                        break;
+
+                    case SUBKEY_TO:
+                        // only one per customer
+                        if (newDo->to != OREF_NULL)
+                        {
+                            report_error_token(Error_Invalid_do_duplicate, token);
+                        }
+                        // get the keyword expression, which is required also
+                        OrefSet(newDo, newDo->to, this->expression(TERM_CONTROL));
+                        if (newDo->to == OREF_NULL)
+                        {
+                            report_error(Error_Invalid_expression_to);
+
+                        }
+                        // record the processing order
+                        newDo->expressions[keyslot++] = EXP_TO;
+                        break;
+
+                    case SUBKEY_FOR:
+                        // only one per customer
+                        if (newDo->forcount != OREF_NULL)
+                        {
+                            report_error_token(Error_Invalid_do_duplicate, token);
+                        }
+                        // get the keyword expression, which is required also
+                        OrefSet(newDo, newDo->forcount, this->expression(TERM_CONTROL));
+                        if (newDo->forcount == OREF_NULL)
+                        {
+                            report_error(Error_Invalid_expression_for);
+
+                        }
+                        // record the processing order
+                        newDo->expressions[keyslot++] = EXP_FOR;
+                        break;
+
+                    case SUBKEY_WHILE:
+                        // step back a token and process the conditional
+                        previousToken();
+                        OrefSet(newDo, newDo->conditional, this->parseConditional(NULL, 0));
+                        previousToken();         // place the terminator back
+                        // this changes the loop type
+                        newDo->type = CONTROLLED_WHILE;
+                        break;
+
+                    case SUBKEY_UNTIL:
+                        // step back a token and process the conditional
+                        previousToken();
+                        OrefSet(newDo, newDo->conditional, this->parseConditional(NULL, 0));
+                        previousToken();         // place the terminator back
+                        // this changes the loop type
+                        newDo->type = CONTROLLED_UNTIL;
+                        break;
+                }
+                token = nextReal();          /* step to the next token            */
+            }
+        }
+        // DO name OVER collection form?
+        else if (this->subKeyword(second) == SUBKEY_OVER)
+        {
+            // this is a DO OVER type
+            newDo->type = DO_OVER;
+            // if this DO/LOOP didn't have a label clause, use the control
+            // variable name as the loop name.
+            if (newDo->label == OREF_NULL)
+            {
+                OrefSet(newDo, newDo->label, token->value);
+            }
+            // save the control variable retriever
+            OrefSet(newDo, newDo->control, (RexxVariableBase *)this->addVariable(token));
+            // and get the OVER expression, which is required
+            OrefSet(newDo, newDo->initial, this->expression(TERM_COND));
+            /* no expression?                    */
+            if (newDo->initial == OREF_NULL)
+            {
+                report_error(Error_Invalid_expression_over);
+            }
+            // process an additional conditional
+            OrefSet(newDo, newDo->conditional, this->parseConditional(&conditional, 0));
+            // if we have a conditional, we need to change type DO type.
+            if (conditional == SUBKEY_WHILE)
+            {
+                newDo->type = DO_OVER_WHILE;  // this is the DO var OVER expr WHILE cond form
+            }
+            else if (conditional == SUBKEY_UNTIL)
+            {
+                newDo->type = DO_OVER_UNTIL;  // this is the DO var OVER expr UNTIL cond form
+            }
+        }
+        else // not a controlled form, but this could be a conditional form.
+        {
+            // start the parsing process over from the beginning with the first of the
+            // loop-type tokens
+            resetPosition(position);
+            token = nextReal();
+            // now check the other keyword varieties.
+            switch (this->subKeyword(token))
+            {
+                case SUBKEY_FOREVER:         // DO FOREVER
+
+                    newDo->type = DO_FOREVER;
+                    // this has a potential conditional
+                    OrefSet(newDo, newDo->conditional, this->parseConditional(&conditional, Error_Invalid_do_forever));
+                    // if we have a conditional, then we need to adjust the loop type
+                    if (conditional == SUBKEY_WHILE)
+                    {
+                        newDo->type = DO_WHILE;  // DO FOREVER WHILE cond
+                    }
+                    else if (conditional == SUBKEY_UNTIL)
+                    {
+                        newDo->type = DO_UNTIL;  // DO FOREVER UNTIL cond
+                    }
+                    break;
+
+                case SUBKEY_WHILE:           // DO WHILE cond                     */
+                    // step back one token and process the conditional
+                    previousToken();
+                    OrefSet(newDo, newDo->conditional, this->parseConditional(&conditional, 0));
+                    newDo->type = DO_WHILE;    // set the proper loop type          */
+                    break;
+
+                case SUBKEY_UNTIL:           // DO WHILE cond                     */
+                    // step back one token and process the conditional
+                    previousToken();
+                    OrefSet(newDo, newDo->conditional, this->parseConditional(&conditional, 0));
+                    newDo->type = DO_UNTIL;    // set the proper loop type          */
+                    break;
+
+                default:                       /* not a real DO keyword...expression*/
+                    previousToken();           /* step back one token               */
+                    newDo->type = DO_COUNT;    /* just a DO count form              */
+                                               /* get the repetitor expression      */
+                    OrefSet(newDo, newDo->forcount, this->expression(TERM_COND));
+                    // this has a potential conditional
+                    OrefSet(newDo, newDo->conditional, this->parseConditional(&conditional, 0));
+                    // if we have a conditional, then we need to adjust the loop type
+                    if (conditional == SUBKEY_WHILE)
+                    {
+                        newDo->type = DO_COUNT_WHILE;  // DO expr WHILE cond
+                    }
+                    else if (conditional == SUBKEY_UNTIL)
+                    {
+                        newDo->type = DO_COUNT_UNTIL;  // DO expr UNTIL cond
+                    }
+                    break;
+            }
+        }
+    }
+    else // just a DO expr form
+    {
+        previousToken();           /* step back one token               */
+        newDo->type = DO_COUNT;    /* just a DO count form              */
+                                   /* get the repetitor expression      */
+        OrefSet(newDo, newDo->forcount, this->expression(TERM_COND));
+        // this has a potential conditional
+        OrefSet(newDo, newDo->conditional, this->parseConditional(&conditional, 0));
+        // if we have a conditional, then we need to adjust the loop type
         if (conditional == SUBKEY_WHILE)
-          newDo->type = DO_OVER_WHILE;  /* this is the WHILE form            */
-                                       /* have a DO name OVER expr UNTIL?   */
-        else if (conditional == SUBKEY_UNTIL)
-          newDo->type = DO_OVER_UNTIL;  /* this is the UNTIL form            */
-      }
-      else {                           /* not a controlled form             */
-        firstToken();                  /* restart the process               */
-        token = nextToken();           /* get the first token (the DO)      */
-        token = nextReal();            /* now the keyword token             */
-                                       /* process other keyword forms       */
-        switch (this->subKeyword(token)) {
-
-          case SUBKEY_FOREVER:         /* DO FOREVER                        */
-
-            newDo->type = DO_FOREVER;  /* got a DO FOREVER                  */
-                                       /* go process the conditional        */
-            OrefSet(newObject, newDo->conditional, this->parseConditional(&conditional, Error_Invalid_do_forever));
-                                       /* have a DO name OVER expr WHILE?   */
-            if (conditional == SUBKEY_WHILE)
-              newDo->type = DO_WHILE;  /* this is the WHILE form            */
-                                       /* have a DO name OVER expr UNTIL?   */
-            else if (conditional == SUBKEY_UNTIL)
-              newDo->type = DO_UNTIL;  /* this is the UNTIL form            */
-            break;
-
-
-          case SUBKEY_WHILE:           /* WHILE exprw                       */
-            previousToken();           /* step back one token               */
-                                       /* go process the conditional        */
-            OrefSet(newObject, newDo->conditional, this->parseConditional(&conditional, 0));
-                                       /* this changes the loop type        */
-            newDo->type = DO_WHILE;    /* this is the WHILE form            */
-            break;
-
-          case SUBKEY_UNTIL:           /* UNTIL expru                       */
-            previousToken();           /* step back one token               */
-                                       /* go process the conditional        */
-            OrefSet(newObject, newDo->conditional, this->parseConditional(&conditional, 0));
-                                       /* this changes the loop type        */
-            newDo->type = DO_UNTIL;    /* this is the UNTIL form            */
-            break;
-
-          default:                     /* not a real DO keyword...expression*/
-            previousToken();           /* step back one token               */
-            newDo->type = DO_COUNT;    /* just a DO count form              */
-                                       /* get the repetitor expression      */
-            OrefSet(newObject, newDo->forcount, this->expression(TERM_COND));
-                                       /* go process the conditional        */
-            OrefSet(newObject, newDo->conditional, this->parseConditional(&conditional, 0));
-                                       /* have a DO count WHILE expr?       */
-            if (conditional == SUBKEY_WHILE)
-                                       /* this is the WHILE form            */
-              newDo->type = DO_COUNT_WHILE;
-                                       /* have a DO count UNTIL expr?       */
-            else if (conditional == SUBKEY_UNTIL)
-                                       /* this is the UNTIL form            */
-              newDo->type = DO_COUNT_UNTIL;
-            break;
+        {
+            newDo->type = DO_COUNT_WHILE;  // DO expr WHILE cond
         }
-      }
+        else if (conditional == SUBKEY_UNTIL)
+        {
+            newDo->type = DO_COUNT_UNTIL;  // DO expr UNTIL cond
+        }
     }
-    else {                             /* just DO expr form                 */
-                                       /* just a DO count form              */
-      newDo->type = DO_COUNT;
-      previousToken();                 /* step back one token               */
-                                       /* get the repetitor expression      */
-      OrefSet(newObject, newDo->forcount, this->expression(TERM_COND));
-                                       /* go process the conditional        */
-      OrefSet(newObject, newDo->conditional, this->parseConditional(&conditional, 0));
-      if (conditional == SUBKEY_WHILE) /* have a DO count WHILE expr?       */
-        newDo->type = DO_COUNT_WHILE;  /* this is the WHILE form            */
-                                       /* have a DO count UNTIL expr?       */
-      else if (conditional == SUBKEY_UNTIL)
-        newDo->type = DO_COUNT_UNTIL;  /* this is the UNTIL form            */
-    }
-  }
+    return newDo;
 }
 
 RexxInstruction *RexxSource::dropNew()
@@ -1304,9 +1401,8 @@ RexxInstruction *RexxSource::parseNew(
         if (token->classId != TOKEN_SYMBOL)
                                        /* this is an error                  */
           report_error(Error_Symbol_expected_var);
-        this->needVariable(token);     /* force a variable form             */
                                        /* get the variable retriever        */
-        expression = (RexxObject *)this->addText(token);
+        expression = (RexxObject *)this->addVariable(token);
         this->saveObject(expression);  /* protect it in the saveTable (required for large PARSE statements) */
         break;
 
@@ -1750,18 +1846,51 @@ RexxInstruction *RexxSource::selectNew()
 /* Function:  Create a SELECT instruction object                            */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  RexxToken  *token;                   /* current working token             */
+    // SELECT can be either SELECT; or SELECT LABEL name;
+    // for saved image compatibility, we have different classes for this
+    // depending on the form used.
+    RexxToken *token = nextReal();
+    // easy version, no LABEL.
+    if (token->classId == TOKEN_EOC)
+    {
+        // just a simple SELECT type
+        RexxObject *newObject = new_instruction(SELECT, Select);
+        new ((void *)newObject) RexxInstructionSelect();
+        return (RexxInstruction *)newObject;
+    }
+    else if (token->classId != TOKEN_SYMBOL)
+    {
+        // not a LABEL keyword, this is bad
+        report_error_token(Error_Invalid_data_select, token);
+    }
 
-  token = nextToken();                 /* get the next token                */
-  if (token->classId != TOKEN_EOC)     /* not at the end-of-clause?         */
-                                       /* bad NOP instruction               */
-    report_error_token(Error_Invalid_data_select, token);
-                                       /* create a new translator object    */
-  newObject = new_instruction(SELECT, Select);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionSelect();
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    // potentially a label.  Check the keyword value
+    if (this->subKeyword(token) != SUBKEY_LABEL)
+    {
+                                       /* raise an error                    */
+        report_error_token(Error_Invalid_subkeyword_select, token);
+    }
+    // ok, get the label now
+    token = nextReal();
+    // this is required, and must be a symbol
+    if (token->classId != TOKEN_SYMBOL)
+    {
+        report_error(Error_Symbol_expected_LABEL);
+    }
+
+    RexxString *label = token->value;
+    token = nextReal();
+    // this must be the end of the clause
+    if (token->classId != TOKEN_EOC)
+    {
+        report_error_token(Error_Invalid_data_select, token);
+    }
+
+    // ok, finally allocate this and return
+    // NB:  The instruction type remains SELECT, even though it's a labeled version
+    RexxObject *newObject = new_instruction(SELECT, LabeledSelect);
+    new ((void *)newObject) RexxInstructionLabeledSelect(label);
+    return (RexxInstruction *)newObject;
 }
 
 RexxInstruction *RexxSource::signalNew()

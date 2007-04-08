@@ -47,7 +47,7 @@
 #include "DoBlock.hpp"
 
 RexxDoBlock::RexxDoBlock(
-    RexxInstructionDo* parent,         /* parent DO block                   */
+    RexxBlockInstruction* parent,      /* parent DO block                   */
     INT                indent )        /* current indentation level         */
 /******************************************************************************/
 /* Function:  complete BLOCK instruction initialization                       */

@@ -564,7 +564,7 @@ int checkAndChange(unsigned char *buffer, long length)
       case T_parse_command:
       case T_parse_compound:
       case T_parse_do:
-      case T_parse_dExpressionBaseVariableiable:
+      case T_parse_dot_variable:
       case T_parse_drop:
       case T_parse_else:
       case T_parse_end:

@@ -525,8 +525,8 @@ EXTERN RexxInteger * IntegerNine INITGLOBALPTR;      /* Static integer 9        
 #define T_parse_command              T_parse_call                 + 1
 #define T_parse_compound             T_parse_command              + 1
 #define T_parse_do                   T_parse_compound             + 1
-#define T_parse_dExpressionBaseVariableiable          T_parse_do                   + 1
-#define T_parse_drop                 T_parse_dExpressionBaseVariableiable          + 1
+#define T_parse_dot_variable         T_parse_do                   + 1
+#define T_parse_drop                 T_parse_dot_variable         + 1
 #define T_parse_else                 T_parse_drop                 + 1
 #define T_parse_end                  T_parse_else                 + 1
 #define T_parse_endif                T_parse_end                  + 1
@@ -566,7 +566,8 @@ EXTERN RexxInteger * IntegerNine INITGLOBALPTR;      /* Static integer 9        
 #define T_activation_frame_buffer    T_compound_element           + 1
 #define T_parse_unary_operator       T_activation_frame_buffer    + 1
 #define T_parse_binary_operator      T_parse_unary_operator       + 1
-#define highest_T                    T_parse_binary_operator
+#define T_parse_labeled_select       T_parse_binary_operator      + 1
+#define highest_T                    T_parse_labeled_select
 
 
 /******************************************************************************/
@@ -669,7 +670,7 @@ EXTERN void *VFTArray[highest_T];      /* table of virtual functions        */
 #define TheCommandInstructionBehaviour      ((RexxBehaviour *)(&pbehav[T_parse_command]))
 #define TheCompoundVariableBehaviour        ((RexxBehaviour *)(&pbehav[T_parse_compound]))
 #define TheDoInstructionBehaviour           ((RexxBehaviour *)(&pbehav[T_parse_do]))
-#define TheDotVariableBehaviour             ((RexxBehaviour *)(&pbehav[T_parse_dExpressionBaseVariableiable]))
+#define TheDotVariableBehaviour             ((RexxBehaviour *)(&pbehav[T_parse_dot_variable]))
 #define TheDropInstructionBehaviour         ((RexxBehaviour *)(&pbehav[T_parse_drop]))
 #define TheElseInstructionBehaviour         ((RexxBehaviour *)(&pbehav[T_parse_else]))
 #define TheEndInstructionBehaviour          ((RexxBehaviour *)(&pbehav[T_parse_end]))
@@ -701,6 +702,7 @@ EXTERN void *VFTArray[highest_T];      /* table of virtual functions        */
 #define TheReturnInstructionBehaviour       ((RexxBehaviour *)(&pbehav[T_parse_return]))
 #define TheSayInstructionBehaviour          ((RexxBehaviour *)(&pbehav[T_parse_say]))
 #define TheSelectInstructionBehaviour       ((RexxBehaviour *)(&pbehav[T_parse_select]))
+#define TheLabeledSelectInstructionBehaviour ((RexxBehaviour *)(&pbehav[T_parse_labeled_select]))
 #define TheSignalInstructionBehaviour       ((RexxBehaviour *)(&pbehav[T_parse_signal]))
 #define TheStemVariableBehaviour            ((RexxBehaviour *)(&pbehav[T_parse_stem]))
 #define TheThenInstructionBehaviour         ((RexxBehaviour *)(&pbehav[T_parse_then]))

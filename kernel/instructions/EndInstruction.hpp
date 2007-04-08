@@ -50,6 +50,9 @@
 #define SELECT_BLOCK     2
 #define OTHERWISE_BLOCK  3
 #define LOOP_BLOCK       4
+#define LABELED_SELECT_BLOCK 5
+#define LABELED_OTHERWISE_BLOCK 6
+#define LABELED_DO_BLOCK 7
 
 class RexxInstructionEnd : public RexxInstruction {
  public:

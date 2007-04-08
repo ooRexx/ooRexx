@@ -581,6 +581,10 @@
 #define Error_Variable_expected_msg                                  652
 #define Error_Variable_expected_USE_msg                              653
 #define Error_Variable_expected_PARSE_msg                            654
+#define Error_Symbol_expected_LABEL_msg                              655
+#define Error_Invalid_subkeyword_select_msg                          656
+#define Error_Invalid_leave_iterate_name_msg                         657
+#define Error_Unexpected_end_select_nolabel_msg                      658
 
 
 #endif
