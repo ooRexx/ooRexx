@@ -257,6 +257,7 @@
 #define Error_Logical_value_while                          34003
 #define Error_Logical_value_until                          34004
 #define Error_Logical_value_logical                        34005
+#define Error_Logical_value_logical_list                   34006
 #define Error_Logical_value_user_defined                   34900
 #define Error_Logical_value_method                         34901
 #define Error_Logical_value_guard                          34902
@@ -291,6 +292,7 @@
 #define Error_Invalid_expression_forward_arguments         35926
 #define Error_Invalid_expression_forward_message           35927
 #define Error_Invalid_expression_forward_class             35928
+#define Error_Invalid_expression_logical_list              35929
 #define Error_Unmatched_parenthesis                        36000
 #define Error_Unmatched_parenthesis_user_defined           36900
 #define Error_Unmatched_parenthesis_paren                  36901

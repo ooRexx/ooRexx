@@ -53,14 +53,6 @@
                                        /* handy defines to easy coding      */
 #define new_instruction(name, type) this->sourceNewObject(sizeof(RexxInstruction##type), The##type##InstructionBehaviour, KEYWORD_##name)
 #define new_variable_instruction(name, type, size) this->sourceNewObject(size, The##type##InstructionBehaviour, KEYWORD_##name)
-#define report_error_line(errorcode, instruction) this->errorLine(errorcode, instruction)
-#define report_error_block(instruction) this->blockError(instruction)
-#define report_error_position(errorcode, token) this->errorPosition(errorcode, token)
-#define report_error1(errorcode, a1) this->error(errorcode, a1)
-#define report_error2(errorcode, a1, a2) this->error(errorcode, a1, a2)
-#define report_error3(errorcode, a1, a2, a3) this->error(errorcode, a1, a2, a3)
-#define report_error_token(errorcode, token) this->errorToken(errorcode, token)
-#define report_error(errorcode) this->error(errorcode)
 
 #define requires_allowed 0x00000001    /* ::REQUIRES directives still valid */
 #define _interpret       0x00000002    /* this is interpret translation     */
@@ -179,6 +171,7 @@ class RexxSource : public RexxInternalObject {
   void        parseTraceSetting(RexxString *, PINT, PINT);
   size_t      processVariableList(INT);
   RexxObject *parseConditional(PINT, INT);
+  RexxObject *RexxSource::parseLogical(int terminators);
   BOOL        terminator(INT, RexxToken *);
   BOOL        traceable(void);
 
@@ -203,6 +196,14 @@ class RexxSource : public RexxInternalObject {
   inline void        trimClause() { clause->trim(); }
   inline size_t      markPosition() { return clause->mark(); }
   inline void        resetPosition(size_t p) { clause->reset(p); }
+  inline void        report_error_line(int errorcode, RexxInstruction *instruction) { this->errorLine(errorcode, instruction); }
+  inline void        report_error_block(RexxInstruction *instruction) { this->blockError(instruction); }
+  inline void        report_error_position(int errorcode, RexxToken *token) { this->errorPosition(errorcode, token); }
+  inline void        report_error1(int errorcode, RexxObject *a1) { this->error(errorcode, a1); }
+  inline void        report_error2(int errorcode, RexxObject *a1, RexxObject *a2) { this->error(errorcode, a1, a2); }
+  inline void        report_error3(int errorcode, RexxObject *a1, RexxObject *a2, RexxObject *a3) { this->error(errorcode, a1, a2, a3); }
+  inline void        report_error_token(int errorcode, RexxToken *token) { this->errorToken(errorcode, token); }
+  inline void        report_error(int errorcode) { this->error(errorcode); }
 
   RexxInstruction *addressNew();
   RexxInstruction *assignmentNew(RexxToken *);

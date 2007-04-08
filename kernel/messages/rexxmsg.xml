@@ -1991,6 +1991,15 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>34</Code>
+        <Subcode>006</Subcode>
+        <MessageNumber>659</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Logical_value_logical_list</SymbolicName>
+        <Text>Value of logical list expression element must be exactly <q>0</q> or <q>1</q>; found <q><Sub position="2" name="value"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>34</Code>
         <Subcode>900</Subcode>
         <MessageNumber>629</MessageNumber>
         <Component>Rexx</Component>
@@ -2306,6 +2315,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_expression_forward_class</SymbolicName>
         <Text>Missing expression following CLASS keyword of a FORWARD instruction</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>35</Code>
+        <Subcode>929</Subcode>
+        <MessageNumber>660</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_expression_logical_list</SymbolicName>
+        <Text>Missing expression in logical_expression_list</Text>
       </SubMessage>
     </Subcodes>
   </Message>

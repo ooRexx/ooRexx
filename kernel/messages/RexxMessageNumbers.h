@@ -585,6 +585,8 @@
 #define Error_Invalid_subkeyword_select_msg                          656
 #define Error_Invalid_leave_iterate_name_msg                         657
 #define Error_Unexpected_end_select_nolabel_msg                      658
+#define Error_Logical_value_logical_list_msg                         659
+#define Error_Invalid_expression_logical_list_msg                    660
 
 
 #endif

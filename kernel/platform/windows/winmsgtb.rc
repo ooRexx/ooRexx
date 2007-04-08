@@ -585,6 +585,8 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Invalid_subkeyword_select    "SELECT must be followed by the keyword LABEL; found ""&1"""
    Error_Invalid_leave_iterate_name    "Symbol following ITERATE (""&1"") does not match a repetitive block instruction"
    Error_Unexpected_end_select_nolabel    "END corresponding to SELECT on line &2 must not have a symbol following it because there is no LABEL; found ""&1"""
+   Error_Logical_value_logical_list    "Value of logical list expression element must be exactly ""0"" or ""1""; found ""&2"""
+   Error_Invalid_expression_logical_list    "Missing expression in logical_expression_list"
    
 END
 

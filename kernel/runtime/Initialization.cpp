@@ -96,6 +96,7 @@
  #include "ExpressionFunction.hpp"                /* expression terms                  */
  #include "ExpressionMessage.hpp"
  #include "ExpressionOperator.hpp"
+ #include "ExpressionLogical.hpp"                /* multi-logical expressions         */
 
  #include "ExpressionBaseVariable.hpp"                  /* base variable management class    */
  #include "ExpressionCompoundVariable.hpp"

@@ -77,6 +77,5 @@ class RexxDoBlock : public RexxInternalObject {
   LONG               forcount;         /* number of iterations              */
   LONG               indent;           /* base indentation                  */
   LONG               compare;          /* type of comparison                */
-  bool               loop;             // whether this is a loop or block instruction
 };
 #endif

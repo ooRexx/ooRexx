@@ -101,7 +101,7 @@ OTIOBJ9=$(OR_OUTDIR)\ReplyInstruction.$(OBJ) $(OR_OUTDIR)\ReturnInstruction.$(OB
 OTIOBJ10=$(OR_OUTDIR)\SignalInstruction.$(OBJ) $(OR_OUTDIR)\ThenInstruction.$(OBJ) $(OR_OUTDIR)\TraceInstruction.$(OBJ) \
          $(OR_OUTDIR)\UseInstruction.$(OBJ)
 OTEOBJ1=$(OR_OUTDIR)\ExpressionCompoundVariable.$(OBJ)  $(OR_OUTDIR)\ExpressionDotVariable.$(OBJ)  $(OR_OUTDIR)\ExpressionFunction.$(OBJ) \
-        $(OR_OUTDIR)\ExpressionMessage.$(OBJ)
+        $(OR_OUTDIR)\ExpressionMessage.$(OBJ) $(OR_OUTDIR)\ExpressionLogical.$(OBJ)
 OTEOBJ2=$(OR_OUTDIR)\ExpressionStem.$(OBJ)  $(OR_OUTDIR)\ExpressionVariable.$(OBJ)   $(OR_OUTDIR)\IndirectVariableReference.$(OBJ) \
         $(OR_OUTDIR)\ExpressionOperator.$(OBJ)
 OTEOBJ3=$(OR_OUTDIR)\ParseTarget.$(OBJ) $(OR_OUTDIR)\ParseTrigger.$(OBJ) $(OR_OUTDIR)\RexxInternalStack.$(OBJ) \

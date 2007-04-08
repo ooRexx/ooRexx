@@ -67,6 +67,8 @@
                                        /* terminate on DO conditionals      */
 #define   TERM_COND    (TERM_KEYWORD | TERM_WHILE | TERM_EOC)
 
+#define   TERM_IF      (TERM_KEYWORD | TERM_THEN | TERM_EOC)
+
 /* token types */
 #define TOKEN_NULL        1201
 #define TOKEN_BLANK       TOKEN_NULL      + 1

@@ -61,6 +61,7 @@
 #include "ExpressionFunction.hpp"                 /* expression terms                  */
 #include "ExpressionMessage.hpp"
 #include "ExpressionOperator.hpp"
+#include "ExpressionLogical.hpp"
 
 #include "ExpressionBaseVariable.hpp"                   /* base variable management class    */
 #include "ExpressionCompoundVariable.hpp"
@@ -4246,7 +4247,7 @@ RexxObject *RexxSource::parseConditional(
 
        case SUBKEY_WHILE:              /* DO WHILE exprw                    */
                                        /* get next subexpression            */
-         condition = this->expression(TERM_COND);
+         condition = this->parseLogical(TERM_COND);
          if (condition == OREF_NULL) /* nothing really there?             */
                                        /* another invalid DO                */
            report_error(Error_Invalid_expression_while);
@@ -4260,7 +4261,7 @@ RexxObject *RexxSource::parseConditional(
        case SUBKEY_UNTIL:              /* DO UNTIL expru                    */
                                        /* get next subexpression            */
                                        /* get next subexpression            */
-         condition = this->expression(TERM_COND);
+         condition = this->parseLogical(TERM_COND);
 
          if (condition == OREF_NULL)   /* nothing really there?             */
                                        /* another invalid DO                */
@@ -4284,3 +4285,35 @@ RexxObject *RexxSource::parseConditional(
   return condition;                    /* return the condition expression   */
 }
 
+
+/**
+ * Parse off a "logical list expression", consisting of a
+ * list of conditionals separated by commas.
+ *
+ * @param terminators
+ *               The set of terminators for this logical context.
+ *
+ * @return OREF_NULL if no expressions is found, a single expression
+ *         element if a single expression is located, and a complex
+ *         logical expression operator for a list of expressions.
+ */
+RexxObject *RexxSource::parseLogical(int terminators)
+{
+    size_t count = argList(OREF_NULL, terminators);
+    // arglist has swallowed the terminator token, so we need to back up one.
+    previousToken();
+    // let the caller deal with completely missing expressions
+    if (count == 0)
+    {
+        return OREF_NULL;
+    }
+
+    // just a single item (common)?  Just pop the top item and return it.
+    if (count == 1)
+    {
+        return subTerms->pop();
+    }
+
+                                       /* create a new function item        */
+    return (RexxObject *)new (count) RexxExpressionLogical(this, count, this->subTerms);
+}
