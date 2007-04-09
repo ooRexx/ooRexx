@@ -236,6 +236,8 @@
 #define SUBKEY_MESSAGE     SUBKEY_CLASS       + 1
 #define SUBKEY_ARGUMENTS   SUBKEY_MESSAGE     + 1
 #define SUBKEY_LABEL       SUBKEY_ARGUMENTS   + 1
+#define SUBKEY_STRICT      SUBKEY_LABEL       + 1
+#define SUBKEY_ASSERT      SUBKEY_STRICT      + 1
 
 /* token extended types - end of clause */
 #define CLAUSEEND_EOF         2301

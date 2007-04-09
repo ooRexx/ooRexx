@@ -568,7 +568,8 @@ EXTERN RexxInteger * IntegerNine INITGLOBALPTR;      /* Static integer 9        
 #define T_parse_binary_operator      T_parse_unary_operator       + 1
 #define T_parse_labeled_select       T_parse_binary_operator      + 1
 #define T_parse_logical              T_parse_labeled_select       + 1
-#define highest_T                    T_parse_logical
+#define T_parse_use_strict           T_parse_logical              + 1
+#define highest_T                    T_parse_use_strict
 
 
 /******************************************************************************/
@@ -711,6 +712,7 @@ EXTERN void *VFTArray[highest_T];      /* table of virtual functions        */
 #define TheTraceInstructionBehaviour        ((RexxBehaviour *)(&pbehav[T_parse_trace]))
 #define TheParseTriggerBehaviour            ((RexxBehaviour *)(&pbehav[T_parse_trigger]))
 #define TheUseInstructionBehaviour          ((RexxBehaviour *)(&pbehav[T_parse_use]))
+#define TheUseStrictInstructionBehaviour    ((RexxBehaviour *)(&pbehav[T_parse_use_strict]))
 #define TheParseVariableBehaviour           ((RexxBehaviour *)(&pbehav[T_parse_variable]))
 #define TheVariableReferenceBehaviour       ((RexxBehaviour *)(&pbehav[T_parse_varref]))
 #define TheSourceBehaviour                  ((RexxBehaviour *)(&pbehav[T_source]))

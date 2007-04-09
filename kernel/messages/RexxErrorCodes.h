@@ -208,6 +208,7 @@
 #define Error_Invalid_subkeyword_forward_class             25921
 #define Error_Invalid_subkeyword_message                   25922
 #define Error_Invalid_subkeyword_select                    25923
+#define Error_Invalid_subkeyword_use_strict_option         25924
 #define Error_Invalid_whole_number                         26000
 #define Error_Invalid_whole_number_power                   26008
 #define Error_Invalid_whole_number_repeat                  26002
@@ -263,6 +264,7 @@
 #define Error_Logical_value_guard                          34902
 #define Error_Logical_value_authorization                  34903
 #define Error_Logical_value_property                       34904
+#define Error_Logical_value_use_strict_assert              34905
 #define Error_Invalid_expression                           35000
 #define Error_Invalid_expression_general                   35001
 #define Error_Invalid_expression_user_defined              35900
@@ -293,6 +295,8 @@
 #define Error_Invalid_expression_forward_message           35927
 #define Error_Invalid_expression_forward_class             35928
 #define Error_Invalid_expression_logical_list              35929
+#define Error_Invalid_expression_use_strict_default        35930
+#define Error_Invalid_expression_use_strict_assert         35931
 #define Error_Unmatched_parenthesis                        36000
 #define Error_Unmatched_parenthesis_user_defined           36900
 #define Error_Unmatched_parenthesis_paren                  36901
@@ -525,6 +529,7 @@
 #define Error_Execution_no_concurrency                     98951
 #define Error_Invalid_data_type_for_objspec                98974
 #define Error_Execution_class_server_not_installed         98952
+#define Error_Execution_use_arg_assertion                  98953
 #define Error_Translation                                  99000
 #define Error_Translation_user_defined                     99900
 #define Error_Translation_duplicate_class                  99901
@@ -553,6 +558,7 @@
 #define Error_Translation_class_external_bad_parameters    99926
 #define Error_Translation_class_external_bad_class_name    99928
 #define Error_Translation_class_external_bad_class_server  99929
+#define Error_Translation_use_strict_ellipsis              99930
 #define Error_at_line                                      101000
 #define Message_Translations_January                       101006
 #define Message_Translations_February                      101007

@@ -3074,6 +3074,46 @@ RexxObject *RexxSource::constantExpression()
   return expression;                   /* and return it                     */
 }
 
+RexxObject *RexxSource::constantLogicalExpression()
+/******************************************************************************/
+/* Function:  Evaluate a "constant" expression for REXX instruction keyword   */
+/*            values.  A constant expression is a literal string, constant    */
+/*            symbol, or an expression enclosed in parentheses.  The          */
+/*            expression inside parens can be a complex logical expression.   */
+/******************************************************************************/
+{
+  RexxToken  *token;                   /* current token                     */
+  RexxToken  *second;                  /* second token                      */
+  RexxObject *expression;              /* parse expression                  */
+
+  token = nextReal();                  /* get the first token               */
+  if (token->isLiteral())              /* literal string expression?        */
+
+    expression = this->addText(token); /* get the literal retriever         */
+  else if (token->isConstant())        /* how about a constant symbol?      */
+    expression = this->addText(token); /* get the literal retriever         */
+                                       /* got an end of expression?         */
+  else if (token->classId == TOKEN_EOC) {
+    previousToken();                   /* push the token back               */
+    return OREF_NULL;                  /* nothing here (may be optional)    */
+  }
+                                       /* not a left paren here?            */
+  else if (token->classId != TOKEN_LEFT)
+                                       /* this is an invalid expression     */
+    report_error_token(Error_Invalid_expression_general, token);
+  else {
+                                       /* get the subexpression             */
+    expression = this->parseLogical(TERM_EOC | TERM_RIGHT);
+    second = nextToken();              /* get the terminator token          */
+                                       /* not terminated by a right paren?  */
+    if (second->classId != TOKEN_RIGHT)
+                                       /* this is an error                  */
+      report_error_position(Error_Unmatched_parenthesis_paren, token);
+  }
+  this->holdObject(expression);        /* protect the expression            */
+  return expression;                   /* and return it                     */
+}
+
 RexxObject *RexxSource::parenExpression(RexxToken *start)
 /******************************************************************************/
 /* Function:  Evaluate a "parenthetical" expression for REXX instruction      */

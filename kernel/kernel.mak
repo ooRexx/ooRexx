@@ -99,7 +99,7 @@ OTIOBJ8=$(OR_OUTDIR)\QueueInstruction.$(OBJ) $(OR_OUTDIR)\RaiseInstruction.$(OBJ
 OTIOBJ9=$(OR_OUTDIR)\ReplyInstruction.$(OBJ) $(OR_OUTDIR)\ReturnInstruction.$(OBJ)   $(OR_OUTDIR)\SayInstruction.$(OBJ) \
         $(OR_OUTDIR)\SelectInstruction.$(OBJ)
 OTIOBJ10=$(OR_OUTDIR)\SignalInstruction.$(OBJ) $(OR_OUTDIR)\ThenInstruction.$(OBJ) $(OR_OUTDIR)\TraceInstruction.$(OBJ) \
-         $(OR_OUTDIR)\UseInstruction.$(OBJ)
+         $(OR_OUTDIR)\UseInstruction.$(OBJ) $(OR_OUTDIR)\UseStrictInstruction.$(OBJ)
 OTEOBJ1=$(OR_OUTDIR)\ExpressionCompoundVariable.$(OBJ)  $(OR_OUTDIR)\ExpressionDotVariable.$(OBJ)  $(OR_OUTDIR)\ExpressionFunction.$(OBJ) \
         $(OR_OUTDIR)\ExpressionMessage.$(OBJ) $(OR_OUTDIR)\ExpressionLogical.$(OBJ)
 OTEOBJ2=$(OR_OUTDIR)\ExpressionStem.$(OBJ)  $(OR_OUTDIR)\ExpressionVariable.$(OBJ)   $(OR_OUTDIR)\IndirectVariableReference.$(OBJ) \

@@ -138,6 +138,7 @@ class RexxSource : public RexxInternalObject {
   void        addBlock(void);
   RexxVariableBase *getRetriever(RexxString *);
   RexxObject *constantExpression();
+  RexxObject *constantLogicalExpression();
   RexxObject *parenExpression(RexxToken *);
   RexxObject *expression(int);
   RexxObject *subExpression(int);
@@ -172,6 +173,7 @@ class RexxSource : public RexxInternalObject {
   size_t      processVariableList(INT);
   RexxObject *parseConditional(PINT, INT);
   RexxObject *RexxSource::parseLogical(int terminators);
+
   BOOL        terminator(INT, RexxToken *);
   BOOL        traceable(void);
 
@@ -245,6 +247,7 @@ class RexxSource : public RexxInternalObject {
   RexxInstruction *thenNew(RexxToken *, RexxInstructionIf *);
   RexxInstruction *traceNew();
   RexxInstruction *useNew();
+  RexxInstruction *useStrictNew();
   void        holdObject(RexxObject *object) { this->holdstack->push(object);};
   void        saveObject(RexxObject *object) { this->savelist->put(object, object); };
   void        removeObj(RexxObject *object) { if (object != OREF_NULL) this->savelist->remove(object); };

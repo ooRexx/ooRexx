@@ -85,6 +85,7 @@
 #include "RaiseInstruction.hpp"
 #include "TraceInstruction.hpp"
 #include "UseInstruction.hpp"
+#include "UseStrictInstruction.hpp"
 
 #include "CallInstruction.hpp"                 /* call/signal instructions          */
 #include "SignalInstruction.hpp"
@@ -2176,9 +2177,18 @@ RexxInstruction *RexxSource::useNew()
 /* Function:  Create a USE instruction object                               */
 /****************************************************************************/
 {
+    // The STRICT keyword turns this into a different instruction with different
+    // syntax rules
     RexxToken *token = nextReal();
+    int subkeyword = this->subKeyword(token);
+
+    if (subkeyword == SUBKEY_STRICT)
+    {
+        return useStrictNew();
+    }
+
     // the only subkeyword supported is ARG
-    if (this->subKeyword(token) != SUBKEY_ARG)
+    if (subkeyword != SUBKEY_ARG)
     {
         report_error_token(Error_Invalid_subkeyword_use, token);
     }
@@ -2229,3 +2239,179 @@ RexxInstruction *RexxSource::useNew()
     removeObj(variable_list);
     return(RexxInstruction *)newObject; /* done, return this                 */
 }
+
+/**
+ * Parse a USE STRICT ARG instruction.
+ *
+ * @return The executable instruction object.
+ */
+RexxInstruction *RexxSource::useStrictNew()
+{
+    RexxToken *token = nextReal();
+    // the only subkeyword supported is ARG
+    if (subKeyword(token) != SUBKEY_ARG)
+    {
+        report_error_token(Error_Invalid_subkeyword_use, token);
+    }
+
+    // we accumulate 3 sets of data here, so we need 3 queues to push them in
+    size_t variableCount = 0;
+    RexxQueue *variable_list = new_queue();         // we might be parsing message terms, so we can't use the subterms list.
+    saveObject(variable_list);
+    RexxQueue *defaults_list = new_queue();
+    saveObject(defaults_list);
+    RexxQueue *assertions_list = new_queue();
+    saveObject(assertions_list);
+    token = nextReal();                  /* get the next token                */
+
+    bool allowOptionals = false;  // we don't allow trailing optionals unless the list ends with "..."
+    // keep processing tokens to the end
+    while (token->classId != TOKEN_EOC)
+    {
+        // this could be a token to skip a variable
+        if (token->classId == TOKEN_COMMA)
+        {
+            // this goes on as a variable, but an empty entry to process.
+            // we also need to push empty entries on the other queues to keep everything in sync.
+            variable_list->push(OREF_NULL);
+            defaults_list->push(OREF_NULL);
+            assertions_list->push(OREF_NULL);
+            variableCount++;
+            // step to the next token, and go process more
+            token = nextReal();
+            continue;
+        }
+        else   // something real.  This could be a single symbol or a message term
+        {
+            // we might have an ellipsis (...) on the end of the list meaning stop argument checking at that point
+            if (token->classId == TOKEN_SYMBOL)
+            {
+                // is this an ellipsis symbol?
+                if (token->value->strCompare(CHAR_ELLIPSIS))
+                {
+                    // ok, this is the end of everything.  Tell the instructions to not enforce the max rules
+                    allowOptionals = true;
+                    // but we still need to make sure it's at the end
+                    token = nextReal();
+                    if (token->classId != TOKEN_EOC)
+                    {
+                        report_error(Error_Translation_use_strict_ellipsis);
+                    }
+                }
+            }
+
+
+            previousToken();       // push the current token back for term processing
+            // see if we can get a variable or a message term from this
+            RexxObject *retriever = variableOrMessageTerm();
+            if (retriever == OREF_NULL)
+            {
+                report_error_token(Error_Variable_expected_USE, token);
+            }
+            variable_list->push(retriever);
+            variableCount++;
+            token = nextReal();
+            // a terminator takes us out.  We need to keep all 3 lists in sync with dummy entries.
+            if (token->classId == TOKEN_EOC)
+            {
+                defaults_list->push(OREF_NULL);
+                assertions_list->push(OREF_NULL);
+                break;
+            }
+            // if we've hit a comma here, step to the next token and continue with the next variable
+            else if (token->classId == TOKEN_COMMA)
+            {
+                defaults_list->push(OREF_NULL);
+                assertions_list->push(OREF_NULL);
+                token = nextReal();
+                continue;
+            }
+            // if this is NOT a comma, we potentially have a
+            // default value and/or and ASSERT to process.
+            if (token->subclass == OPERATOR_EQUAL)
+            {
+                // this is a constant expression value.  Single token forms
+                // are fine without parens, more complex forms require parens as
+                // delimiters.
+                RexxObject *default = constantExpression();
+                // no expression is an error
+                if (default == OREF_NULL)
+                {
+                    report_error(Error_Invalid_expression_use_strict_default);
+                }
+
+                // add this to the defaults
+                defaults_list->push(default);
+                // step to the next token
+                token = nextReal();
+                // a terminator takes us out.  We need to keep all 3 lists in sync with dummy entries.
+                if (token->classId == TOKEN_EOC)
+                {
+                    assertions_list->push(OREF_NULL);
+                    break;
+                }
+                // if we've hit a comma here, step to the next token and continue with the next variable
+                else if (token->classId == TOKEN_COMMA)
+                {
+                    assertions_list->push(OREF_NULL);
+                    token = nextReal();
+                    continue;
+                }
+            }
+            else
+            {
+                // we need a more defaults marker
+                defaults_list->push(OREF_NULL);
+            }
+
+            // this MUST be the ASSERT keyword here.  We've already taken care of other options, so
+            // it's do or die now.
+            if (token->classId != TOKEN_SYMBOL)
+            {
+                report_error_token(Error_Invalid_subkeyword_use_strict_option, token);
+            }
+            else
+            {
+                if (subKeyword(token) != SUBKEY_ASSERT)
+                {
+                    report_error_token(Error_Invalid_subkeyword_use_strict_option, token);
+                }
+                RexxObject *condition = this->constantLogicalExpression();
+                if (condition == OREF_NULL)
+                {
+                    report_error(Error_Invalid_expression_use_strict_assert);
+                }
+                assertions_list->push(condition);
+
+                // Sigh, yet another check for EOC or COMMA...
+                token = nextReal();
+                if (token->classId == TOKEN_EOC)
+                {
+                    break;
+                }
+                // if we've hit a comma here, step to the next token and continue with the next variable
+                else if (token->classId == TOKEN_COMMA)
+                {
+                    // step to the next token and continue
+                    token = nextReal();
+                    continue;
+                }
+                else
+                {
+                    // all that work, and we still found something invalid
+                    report_error_token(Error_Invalid_subkeyword_use_strict_option, token);
+                }
+            }
+        }
+    }
+
+    /* create a new translator object    */
+    RexxObject *newObject = new_variable_instruction(USE, UseStrict, sizeof(RexxInstructionUseStrict) + (variableCount - 1) * sizeof(UseVariable));
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionUseStrict(variableCount, allowOptionals, variable_list, defaults_list, assertions_list);
+    removeObj(variable_list);
+    removeObj(defaults_list);
+    removeObj(assertions_list);
+    return(RexxInstruction *)newObject; /* done, return this                 */
+}
+

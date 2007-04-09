@@ -131,6 +131,7 @@
  #include "RaiseInstruction.hpp"
  #include "TraceInstruction.hpp"
  #include "UseInstruction.hpp"
+ #include "UseStrictInstruction.hpp"
 
  #include "CallInstruction.hpp"                /* call/signal instructions          */
  #include "SignalInstruction.hpp"

@@ -176,7 +176,8 @@ instructionsHeaders = $(instructions_dir)/AddressInstruction.hpp \
                       $(instructions_dir)/SignalInstruction.hpp \
                       $(instructions_dir)/ThenInstruction.hpp \
                       $(instructions_dir)/TraceInstruction.hpp \
-                      $(instructions_dir)/UseInstruction.hpp
+                      $(instructions_dir)/UseInstruction.hpp \
+                      $(instructions_dir)/UseStrictInstruction.hpp
 parserHeaders = $(parser_dir)/Clause.hpp \
                 $(parser_dir)/SourceFile.hpp \
                 $(parser_dir)/Token.hpp
@@ -417,7 +418,8 @@ instructions_sources  = $(instructions_dir)/AddressInstruction.cpp \
                         $(instructions_dir)/SignalInstruction.cpp \
                         $(instructions_dir)/ThenInstruction.cpp \
                         $(instructions_dir)/TraceInstruction.cpp \
-                        $(instructions_dir)/UseInstruction.cpp
+                        $(instructions_dir)/UseInstruction.cpp \
+                        $(instructions_dir)/UseStrictInstruction.cpp
 parser_sources = $(parser_dir)/Clause.cpp \
                  $(parser_dir)/InstructionParser.cpp \
                  $(parser_dir)/Scanner.cpp \
