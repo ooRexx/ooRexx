@@ -1,0 +1,267 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/******************************************************************************/
+/* REXX Translator                                 UseStrictInstruction.c     */
+/*                                                                            */
+/* Primitive USE STRICT instruction class                                     */
+/*                                                                            */
+/******************************************************************************/
+#include <stdlib.h>
+#include "RexxCore.h"
+#include "ArrayClass.hpp"
+#include "QueueClass.hpp"
+#include "RexxActivation.hpp"
+#include "UseStrictInstruction.hpp"
+#include "ExpressionBaseVariable.hpp"
+
+
+RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool extraAllowed, RexxQueue *variable_list, RexxQueue *defaults, RexxQueue *assertions)
+{
+    // set the variable count and the option flag
+    variableCount = count;
+    variableSize = extraAllowed; // we might allow an unchecked number of additional arguments
+    minimumRequired = 0;     // do don't necessarily require any of these.
+
+    // items are added to the queues in reverse order, so we pop them off and add
+    // them to the end of the list as we go.
+    while (count > 0)     // loop through our variable set, adding everything in.
+    {
+        // decrement first, so we store at the correct offset.
+        count--;
+        OrefSet(this, variables[count].variable, (RexxVariableBase *)variable_list->pop());
+        OrefSet(this, variables[count].defaultValue, defaults->pop());
+        OrefSet(this, variables[count].assertion, assertions->pop());
+
+        // if this is a real variable, see if this is the last of the required ones.
+        if (minimumRequired < count + 1 && variables[count].variable != OREF_NULL)
+        {
+            // no default value means this is a required argument, this is the min we'll accept.
+            if (variables[count].defaultValue == OREF_NULL)
+            {
+                minimumRequired = count + 1;
+            }
+        }
+    }
+}
+
+
+/**
+ * The runtime, non-debug live marking routine.
+ */
+void RexxInstructionUseStrict::live()
+{
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
+
+  setUpMemoryMark
+  memory_mark(this->nextInstruction);  /* must be first one marked          */
+  for (i = 0, count = variableCount; i < count; i++)
+  {
+      memory_mark(this->variables[i].variable);
+      memory_mark(this->variables[i].defaultValue);
+      memory_mark(this->variables[i].assertion);
+  }
+  cleanUpMemoryMark
+}
+
+
+/**
+ * The generalized live marking routine used for non-performance
+ * critical marking operations.
+ */
+void RexxInstructionUseStrict::liveGeneral()
+{
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
+
+  setUpMemoryMarkGeneral
+                                       /* must be first one marked          */
+  memory_mark_general(this->nextInstruction);
+  for (i = 0, count = variableCount; i < count; i++)
+  {
+      memory_mark_general(this->variables[i].variable);
+      memory_mark_general(this->variables[i].defaultValue);
+      memory_mark_general(this->variables[i].assertion);
+  }
+  cleanUpMemoryMarkGeneral
+}
+
+
+/**
+ * The flattening routine, used for serializing object trees.
+ *
+ * @param envelope The envelope were's flattening into.
+ */
+void RexxInstructionUseStrict::flatten(RexxEnvelope *envelope)
+{
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
+
+  setUpFlatten(RexxInstructionUseStrict)
+
+  flatten_reference(newThis->nextInstruction, envelope);
+  for (i = 0, count = variableCount; i < count; i++)
+  {
+      flatten_reference(newThis->variables[i].variable, envelope);
+      flatten_reference(newThis->variables[i].defaultValue, envelope);
+      flatten_reference(newThis->variables[i].assertion, envelope);
+  }
+  cleanUpFlatten
+}
+
+
+void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionStack *stack)
+{
+    context->traceInstruction(this);     // trace if necessary
+    // get the argument information from the context
+    RexxObject **arglist = context->getMethodArgumentList();
+    size_t argcount = context->getMethodArgumentCount();
+
+    // not enough of the required arguments?  That's an error
+    if (argcount < minimumRequired)
+    {
+        report_exception1(Error_Incorrect_method_minarg, new_integer(minimumRequired));
+    }
+    // potentially too many?
+    if (!variableSize && argcount > variableCount)
+    {
+        report_exception1(Error_Incorrect_method_maxarg, new_integer(variableCount));
+    }
+
+    // now we process each of the variable definitions left-to-right
+    for (size_t i = 0; i < variableCount; i++)
+    {
+        // get our current variable.  We're allowed to skip over variables, so
+        // there might not be anything here.
+        RexxVariableBase *variable = variables[i].variable;
+        if (variable != OREF_NULL)
+        {
+            // get the corresponding argument
+            RexxObject *argument = getArgument(arglist, argcount, i);
+            if (argument != OREF_NULL)
+            {
+                context->traceResult(argument);  // trace if necessary
+                // assign the value
+                variable->assign(context, stack, argument);
+            }
+            else
+            {
+                RexxObject *defaultValue = variables[i].defaultValue;
+
+                // and omitted argument is only value if we've marked it as optional
+                // by giving it a default value
+                if (defaultValue != OREF_NULL)
+                {
+                    context->traceResult(defaultValue);  // trace if necessary
+                    // assign the value
+                    variable->assign(context, stack, defaultValue);
+                    stack->pop();    // remove the value from the stack
+                }
+                else
+                {
+                    report_exception1(Error_Incorrect_method_noarg, new_integer(i + 1));
+                }
+            }
+            // now go check any assertions about the argument
+            checkAssertion(i, context, stack);
+        }
+    }
+    context->pauseInstruction();    // do debug pause if necessary
+}
+
+
+/**
+ * Get the argument corresponding to a given argument position.
+ *
+ * @param arglist The argument list for the method.
+ * @param count   The argument count.
+ * @param target  The target argument offset.
+ *
+ * @return The argument corresponding to the position.  Returns OREF_NULL
+ *         if the argument doesn't exist.
+ */
+RexxObject *RexxInstructionUseStrict::getArgument(RexxObject **arglist, size_t count, size_t target)
+{
+    // is this beyond what we've been provided with?
+    if (target + 1 > count)
+    {
+        return OREF_NULL;
+    }
+    // return the target item
+    return arglist[target];
+}
+
+
+/**
+ * Run the assertion checks, if any, for an argument.
+ *
+ * @param position The list position of the check.
+ * @param context  The current execution context.
+ * @param stack    The execution context evaluation stack.
+ */
+void RexxInstructionUseStrict::checkAssertion(size_t position, RexxActivation *context, RexxExpressionStack *stack)
+{
+    // assertions are optional...only do this if one was specified.
+    RexxObject *assertion = variables[position].assertion;
+
+    if (assertion != OREF_NULL)
+    {
+        // evaluate the expression, and trace, if necessary
+        RexxObject *assertionResult = assertion->evaluate(context, stack);
+        context->traceResult(assertionResult);
+        stack->pop();    // remove the value from the stack
+
+        // the comparison methods return either .true or .false, so we
+        // can to a quick test against those.
+        if (assertionResult == TheTrueObject)
+        {
+            return;       // the assertion passed
+        }
+        if (assertionResult == TheFalseObject)
+        {
+            report_exception1(Error_Execution_use_arg_assertion, new_integer(position + 1));
+        }
+        // this is something we need to evaluate further
+        if (!assertionResult->truthValue(Error_Logical_value_use_strict_assert))
+        {
+            report_exception1(Error_Execution_use_arg_assertion, new_integer(position + 1));
+        }
+    }
+}
+
+
