@@ -67,9 +67,9 @@ RexxString *version_number (void)
     day++;                             /* step over it                      */
                                        /* format the result                 */
 #ifdef NOTHREADSUPPORT
-  sprintf(buffer, "REXX-ooRexx_%d.%d 6.01 %s %s %s", ORX_VER, ORX_REL, day, month, year);
+  sprintf(buffer, "REXX-ooRexx_%d.%d.%d 6.02 %s %s %s", ORX_VER, ORX_REL, ORX_MOD, day, month, year);
 #else
-  sprintf(buffer, "REXX-ooRexx_%d.%d(MT) 6.01 %s %s %s", ORX_VER, ORX_REL, day, month, year);
+  sprintf(buffer, "REXX-ooRexx_%d.%d.%d(MT) 6.02 %s %s %s", ORX_VER, ORX_REL, ORX_MOD, day, month, year);
 #endif
 
   return new_cstring(buffer);          /* return as a rexx string           */

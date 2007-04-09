@@ -88,7 +88,7 @@ cflags_noopt=/nologo /D:_X86_ /DWIN32 /W3 -c $(my_cdebug) /DNULL=0
 !ENDIF
 
 # CHM - added definition for RXDBG
-cflags_common=/nologo -DORX_VER=$(ORX_MAJOR) -DORX_REL=$(ORX_MINOR) -DORX_MOD=$(ORX_MOD_LVL) /D:_X86_ /DWIN32 /W3 -c $(my_cdebug) $(MK_ASM) $(RXDBG) /DNULL=0
+cflags_common=/nologo -DORX_VER=$(ORX_MAJOR) -DORX_REL=$(ORX_MINOR) -DORX_MOD=$(ORX_MOD_LVL)  -DOOREXX_COPY_YEAR=\"$(ORX_COPY_YEAR)\" /D:_X86_ /DWIN32 /W3 -c $(my_cdebug) $(MK_ASM) $(RXDBG) /DNULL=0
 
 # ENG - added for feature 953
 !IFDEF JAPANESE
@@ -131,7 +131,7 @@ libs_exe=
 #
 # set up the rc flags used
 #
-rcflags_common=rc /DWIN32 -dOOREXX_VER=$(ORX_MAJOR) -dOOREXX_REL=$(ORX_MINOR) -dOOREXX_SUB=$(ORX_MOD_LVL) -dOOREXX_BLD=$(ORX_BLD_LVL) -dOOREXX_VER_STR=\"$(ORX_VER_STR)\" -dOOREXX_COPY_YEAR=\"$(ORX_COPY_YEAR)\"
+rcflags_common=rc /DWIN32 -dOOREXX_VER=$(ORX_MAJOR) -dOOREXX_REL=$(ORX_MINOR) -dOOREXX_SUB=$(ORX_MOD_LVL) -DOOREXX_BLD=$(ORX_BLD_LVL) -DOOREXX_VER_STR=\"$(ORX_VER_STR)\" -DOOREXX_COPY_YEAR=\"$(ORX_COPY_YEAR)\"
 
 # CHM - define dependency for WINDBG.OBJ
 !IF "$(REXXDEBUG)" == "1"
