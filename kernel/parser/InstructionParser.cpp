@@ -2297,6 +2297,7 @@ RexxInstruction *RexxSource::useStrictNew()
                     {
                         report_error(Error_Translation_use_strict_ellipsis);
                     }
+                    break;  // done parsing
                 }
             }
 
