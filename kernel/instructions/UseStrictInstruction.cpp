@@ -155,12 +155,27 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
     // not enough of the required arguments?  That's an error
     if (argcount < minimumRequired)
     {
-        report_exception1(Error_Incorrect_method_minarg, new_integer(minimumRequired));
+        // this is a pain, but there are different errors for method errors vs. call errors.
+        if (context->inMethod())
+        {
+            report_exception1(Error_Incorrect_method_minarg, new_integer(minimumRequired));
+        }
+        else
+        {
+            report_exception2(Error_Incorrect_call_minarg, context->getCallname(), new_integer(minimumRequired));
+        }
     }
     // potentially too many?
     if (!variableSize && argcount > variableCount)
     {
-        report_exception1(Error_Incorrect_method_maxarg, new_integer(variableCount));
+        if (context->inMethod())
+        {
+            report_exception1(Error_Incorrect_method_maxarg, new_integer(variableCount));
+        }
+        else
+        {
+            report_exception2(Error_Incorrect_call_maxarg, context->getCallname(), new_integer(variableCount));
+        }
     }
 
     // now we process each of the variable definitions left-to-right
@@ -194,7 +209,14 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
                 }
                 else
                 {
-                    report_exception1(Error_Incorrect_method_noarg, new_integer(i + 1));
+                    if (context->inMethod())
+                    {
+                        report_exception1(Error_Incorrect_method_noarg, new_integer(i + 1));
+                    }
+                    else
+                    {
+                        report_exception2(Error_Incorrect_call_noarg, context->getCallname(), new_integer(i + 1));
+                    }
                 }
             }
             // now go check any assertions about the argument

@@ -325,6 +325,7 @@ RexxObject * activation_find  (void);
    inline RexxActivity    * getActivity() {return this->activity;};
    inline RexxMethod      * getMethod() {return this->method;};
    inline RexxString      * getMsgname() {return this->settings.msgname;};
+   inline RexxString      * getCallname() {return this->settings.msgname;};
    inline RexxInstruction * getCurrent() {return this->current;};
    inline void              getSettings(ACTSETTINGS * s) {this->settings = *s;};
    inline void              putSettings(ACTSETTINGS * s) {*s = this->settings;};
