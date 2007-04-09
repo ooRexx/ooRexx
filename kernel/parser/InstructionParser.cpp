@@ -2334,15 +2334,15 @@ RexxInstruction *RexxSource::useStrictNew()
                 // this is a constant expression value.  Single token forms
                 // are fine without parens, more complex forms require parens as
                 // delimiters.
-                RexxObject *default = constantExpression();
+                RexxObject *defaultValue = constantExpression();
                 // no expression is an error
-                if (default == OREF_NULL)
+                if (defaultValue == OREF_NULL)
                 {
                     report_error(Error_Invalid_expression_use_strict_default);
                 }
 
                 // add this to the defaults
-                defaults_list->push(default);
+                defaults_list->push(defaultValue);
                 // step to the next token
                 token = nextReal();
                 // a terminator takes us out.  We need to keep all 3 lists in sync with dummy entries.
