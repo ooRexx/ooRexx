@@ -186,8 +186,19 @@ class RexxStringClass : public RexxClass {
    RexxInteger *compare(RexxString *, RexxString *);
    RexxString  *copies(RexxInteger *);
    RexxObject  *dataType(RexxString *);
-   RexxInteger *lastPos(RexxString *, RexxInteger *);
+
+   RexxInteger *lastPosRexx(RexxString *, RexxInteger *);
+   RexxInteger *caselessLastPosRexx(RexxString *, RexxInteger *);
+   size_t       lastPos(RexxString  *needle, size_t start);
+   size_t       caselessLastPos(RexxString  *needle, size_t start);
+   PUCHAR       lastPos(PUCHAR needle, size_t needleLen, PUCHAR  haystack, size_t haystackLen);
+   PUCHAR       caselessLastPos(PUCHAR needle, size_t needleLen, PUCHAR  haystack, size_t haystackLen);
+
    RexxInteger *posRexx(RexxString *, RexxInteger *);
+   RexxInteger *caselessPosRexx(RexxString *, RexxInteger *);
+   size_t       pos(RexxString *, size_t);
+   size_t       caselessPos(RexxString *, size_t);
+
    RexxString  *translate(RexxString *, RexxString *, RexxString *);
    RexxInteger *verify(RexxString *, RexxString *, RexxInteger *);
    RexxInteger *countStrRexx(RexxString *);
@@ -219,8 +230,6 @@ class RexxStringClass : public RexxClass {
 /*                                                                          */
 /****************************************************************************/
    int         isSymbol();
-   size_t      pos(RexxString *, size_t);
-   size_t      caselessPos(RexxString *, size_t);
 
    size_t      validDBCS();
    RexxString  *DBCSreverse();

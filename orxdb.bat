@@ -114,6 +114,8 @@ REM
 REM set up the directory search orders for the source include files
 REM
 set OR_ORYXINCL=-I%OR_ORYXLSRC%\ %OR_KERNELINCL% -I%OR_ORYXWSRC%\ -I%OR_ORYXASRC%\ -I%APLATFORM% -I%XPLATFORM% -I%OR_ORYXOODSRC%\ -I%OR_ORYXFSRC%\ -I%OR_ORYXOLESRC%\ -I%OR_ORYXAXSCRIPT%\ -I%OR_ORYXMSRC%\
+set OR_ORYXRCINCL=-I%KMESSAGES%
+
 REM
 REM set up the search order for the dependency list
 REM

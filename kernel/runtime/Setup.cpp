@@ -375,8 +375,10 @@ CPPMSTR(RexxString::abbrev),
 CPPMSTR(RexxString::compare),
 CPPMSTR(RexxString::copies),
 CPPMSTR(RexxString::dataType),
-CPPMSTR(RexxString::lastPos),
+CPPMSTR(RexxString::lastPosRexx),
 CPPMSTR(RexxString::posRexx),
+CPPMSTR(RexxString::caselessLastPosRexx),
+CPPMSTR(RexxString::caselessPosRexx),
 CPPMSTR(RexxString::translate),
 CPPMSTR(RexxString::verify),
 
@@ -1149,8 +1151,10 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_COMPARE                      ,TheStringBehaviour, CPPMSTR(RexxString::compare), 2);
   defineKernelMethod(CHAR_COPIES                       ,TheStringBehaviour, CPPMSTR(RexxString::copies), 1);
   defineKernelMethod(CHAR_COUNTSTR                     ,TheStringBehaviour, CPPMSTR(RexxString::countStrRexx), 1);
-  defineKernelMethod(CHAR_LASTPOS                      ,TheStringBehaviour, CPPMSTR(RexxString::lastPos), 2);
+  defineKernelMethod(CHAR_LASTPOS                      ,TheStringBehaviour, CPPMSTR(RexxString::lastPosRexx), 2);
   defineKernelMethod(CHAR_POS                          ,TheStringBehaviour, CPPMSTR(RexxString::posRexx), 2);
+  defineKernelMethod(CHAR_CASELESSLASTPOS              ,TheStringBehaviour, CPPMSTR(RexxString::caselessLastPosRexx), 2);
+  defineKernelMethod(CHAR_CASELESSPOS                  ,TheStringBehaviour, CPPMSTR(RexxString::caselessPosRexx), 2);
   defineKernelMethod(CHAR_TRANSLATE                    ,TheStringBehaviour, CPPMSTR(RexxString::translate), 3);
   defineKernelMethod(CHAR_VERIFY                       ,TheStringBehaviour, CPPMSTR(RexxString::verify), 3);
   defineKernelMethod(CHAR_BITAND                       ,TheStringBehaviour, CPPMSTR(RexxString::bitAnd), 2);

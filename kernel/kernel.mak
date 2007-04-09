@@ -315,7 +315,7 @@ $(KMESSAGES)\RexxMessageTable.h: $(KMESSAGES)\RexxMessageTable.xsl $(KMESSAGES)\
 $(OR_OUTDIR)\winmsgtb.res: $(KWINDOWS)\winmsgtb.rc
     @ECHO .
     @ECHO ResourceCompiling $(@)
-        $(rc) $(rcflags_common) $(OR_ORYXINCL) -r -fo$(@) $(**)
+        $(rc) $(rcflags_common) $(OR_ORYXRCINCL) -r -fo$(@) $(**)
 
 # Update the version information block
 $(OR_OUTDIR)\verinfo.res: $(KWINDOWS)\verinfo.rc

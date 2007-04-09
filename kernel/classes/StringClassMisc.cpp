@@ -550,89 +550,188 @@ RexxObject *RexxString::dataType(RexxString *ptype)
 }
 
 
-PCHAR  LStrStrb(
-  PCHAR    Needle,                     /* search string                     */
-  size_t   NeedleLen,                  /* needle length                     */
-  PCHAR    Haystack,                   /* target string                     */
-  size_t   HaystackLen )               /* haystack length                   */
-/*********************************************************************/
-/*  Function:                   Locate last substring of a prefix    */
-/*                                                                   */
-/*                              A pointer to the beginning           */
-/*                              of the last occurrence of needle     */
-/*                              as a substring of haystack, if any;  */
-/*                              otherwise, a null pointer is         */
-/*                              returned                             */
-/*                                                                   */
-/*********************************************************************/
+RexxInteger *RexxString::lastPosRexx(RexxString  *needle, RexxInteger *start)
 {
-  PCHAR    Retval;                     /* function return value             */
-  size_t   Count;                      /* number of compares                */
-  CHAR     firstNeedle;                /* first needle character            */
-
-  if (NeedleLen > HaystackLen)         /* if too large                      */
-    Retval = NULL;                     /* just return NULL                  */
-  else {                               /* point at start position           */
-    Haystack = Haystack + HaystackLen - NeedleLen;
-    firstNeedle = *Needle;             /* get the first needle character    */
-                                       /* get count of compares             */
-    Count = HaystackLen - NeedleLen + 1;
-    Retval = NULL;                     /* set failure value                 */
-    while (Count) {                    /* while more to search              */
-                                       /* if found                          */
-      if (firstNeedle == *Haystack && !memcmp(Haystack, Needle, NeedleLen)) {
-        Retval = Haystack;             /* copy the position                 */
-        break;                         /* stop scanning                     */
-      }
-      Count--;                         /* decrement count                   */
-      Haystack--;                      /* and seach position                */
+    // if DBCS mode is turned on...pass it on.
+    if (DBCS_MODE)
+    {
+        return this->DBCSlastPos(needle, start);
     }
-  }
-  return Retval;                       /* fall through, not found           */
+    needle = REQUIRED_STRING(needle, ARG_ONE);
+    // find out where to start the search. The default is at the very end.
+    size_t startPos = optional_position(start, getLength(), ARG_TWO);
+    // now perform the actual search.
+    return new_integer(lastPos(needle, startPos));
 }
 
-RexxInteger *RexxString::lastPos(
-    RexxString  *needle,               /* target search string              */
-    RexxInteger *start)                /* starting position                 */
-/******************************************************************************/
-/* Function:  String LASTPOS method/function                                  */
-/******************************************************************************/
+
+RexxInteger *RexxString::caselessLastPosRexx(RexxString  *needle, RexxInteger *start)
 {
-  size_t      StartPos;                /* start position                    */
-  size_t      HaystackLen;             /* length of the haystack            */
-  size_t      NeedleLen;               /* length of the needle              */
-  PCHAR       MatchLocation;           /* match location                    */
-  RexxInteger*Retval;                  /* function return value             */
-  size_t      tempLoc;
+    // validate that this is a good string argument
+    needle = REQUIRED_STRING(needle, ARG_ONE);
+    // find out where to start the search. The default is at the very end.
+    size_t startPos = optional_position(start, getLength(), ARG_TWO);
+    // now perform the actual search.
+    return new_integer(caselessLastPos(needle, startPos));
+}
 
-  if (DBCS_MODE)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSlastPos(needle, start);
 
-  HaystackLen = this->length;          /* get the haystack length           */
-  needle = get_string(needle, ARG_ONE);/* validate the needle               */
-  NeedleLen = needle->length;          /* and get the length too            */
-                                       /* find our where to start looking   */
-                                       /* default the end of source         */
-  StartPos = optional_position(start, HaystackLen, ARG_TWO);
-                                       /* match impossible?                 */
-  if (!NeedleLen  || !HaystackLen)
-    Retval = IntegerZero;              /* this is zero                      */
-  else {                               /* need to search                    */
-                                       /* adjust for start position         */
-    HaystackLen = min(HaystackLen, StartPos);
-                                       /* do the search                     */
-    MatchLocation = LStrStrb(needle->stringData, NeedleLen, (PCHAR)this->stringData, HaystackLen);
 
-    if (!MatchLocation)                /* no match?                         */
-      Retval = IntegerZero;            /* this is zero                      */
-    else {                             /* format match point                */
-                                       /* place holder to invoke new_integer*/
-      tempLoc = MatchLocation - (PCHAR)this->stringData + 1;
-      Retval = new_integer(tempLoc);
+/**
+ * Primitive implementation of a lastpos search.
+ *
+ * @param needle The search needle.
+ * @param start  The starting position (origin 1).
+ *
+ * @return Returns the last match position, searching back from the start
+ *         position.  The starting position is the right-most character
+ *         of the past possible match (as if the string was truncated
+ *         at start).
+ */
+size_t RexxString::lastPos(RexxString  *needle, size_t start)
+{
+    size_t haystackLen = this->getLength();          /* get the haystack length           */
+    size_t needleLen = needle->getLength();          /* and get the length too            */
+
+    // no match possible if either string is null
+    if (needleLen == 0 || haystackLen == 0)
+    {
+        return 0;
     }
-  }
-  return Retval;                       /* return match location             */
+    else
+    {
+        // get the start position for the search.
+        start = min(start, haystackLen);
+                                         /* do the search                     */
+        PUCHAR matchLocation = lastPos((PUCHAR)needle->getStringData(), needleLen, (PUCHAR )this->getStringData(), haystackLen);
+        if (matchLocation == NULL)
+        {
+            return 0;
+        }
+        else
+        {
+            return matchLocation - (PUCHAR)this->getStringData() + 1;
+        }
+    }
+}
+
+
+/**
+ * Primitive implementation of a caseless lastpos search.
+ *
+ * @param needle The search needle.
+ * @param start  The starting position (origin 1).
+ *
+ * @return Returns the last match position, searching back from the start
+ *         position.  The starting position is the right-most character
+ *         of the past possible match (as if the string was truncated
+ *         at start).
+ */
+size_t RexxString::caselessLastPos(RexxString *needle, size_t start)
+{
+    size_t haystackLen = this->getLength();          /* get the haystack length           */
+    size_t needleLen = needle->getLength();          /* and get the length too            */
+
+    // no match possible if either string is null
+    if (needleLen == 0 || haystackLen == 0)
+    {
+        return 0;
+    }
+    else
+    {
+        // get the start position for the search.
+        start = min(start, haystackLen);
+                                         /* do the search                     */
+        PUCHAR matchLocation = caselessLastPos((PUCHAR)needle->getStringData(), needleLen, (PUCHAR )this->getStringData(), haystackLen);
+        if (matchLocation == NULL)
+        {
+            return 0;
+        }
+        else
+        {
+            return matchLocation - (PUCHAR)this->getStringData() + 1;
+        }
+    }
+}
+
+
+/**
+ * Absolutely most primitive version of a lastpos search.  This
+ * version searches directly in a buffer rather than a Rexx
+ * String.
+ *
+ * @param needle    Pointer to the needle string.
+ * @param needleLen Length of the needle string.
+ * @param haystack  The pointer to the haystack string.
+ * @param haystackLen
+ *                  The length of the haystack string.
+ *
+ * @return A pointer to the match location or NULL if there is no match.
+ */
+PUCHAR RexxString::lastPos(PUCHAR needle, size_t needleLen, PUCHAR  haystack, size_t haystackLen)
+{
+    // if the needle's longer than the haystack, no chance of a match
+    if (needleLen > haystackLen)
+    {
+        return NULL;
+    }
+    // set the search startpoing point relative to the end of the search string
+    haystack = haystack + haystackLen - needleLen;
+    // this is the possible number of compares we might need to perform
+    size_t count = haystackLen - needleLen + 1;
+    // now scan backward
+    while (count > 0)
+    {
+        // got a match at this position, return it directly
+        if (memcmp(haystack, needle, needleLen) == 0)
+        {
+            return haystack;
+        }
+        // decrement count and position
+        count--;
+        haystack--;
+    }
+    return NULL;   // nothing to see here folks, move along
+}
+
+
+/**
+ * Absolutely most primitive version of a caseless lastpos
+ * search. This version searches directly in a buffer rather
+ * than a Rexx String.
+ *
+ * @param needle    Pointer to the needle string.
+ * @param needleLen Length of the needle string.
+ * @param haystack  The pointer to the haystack string.
+ * @param haystackLen
+ *                  The length of the haystack string.
+ *
+ * @return A pointer to the match location or NULL if there is no match.
+ */
+PUCHAR RexxString::caselessLastPos(PUCHAR needle, size_t needleLen, PUCHAR  haystack, size_t haystackLen)
+{
+    // if the needle's longer than the haystack, no chance of a match
+    if (needleLen > haystackLen)
+    {
+        return NULL;
+    }
+    // set the search startpoing point relative to the end of the search string
+    haystack = haystack + haystackLen - needleLen;
+    // this is the possible number of compares we might need to perform
+    size_t count = haystackLen - needleLen + 1;
+    // now scan backward
+    while (count > 0)
+    {
+        // got a match at this position, return it directly
+        if (CaselessCompare(haystack, needle, needleLen) == 0)
+        {
+            return haystack;
+        }
+        // decrement count and position
+        count--;
+        haystack--;
+    }
+    return NULL;   // nothing to see here folks, move along
 }
 
 size_t RexxString::countStr(RexxString *needle)
@@ -741,115 +840,111 @@ RexxInteger *RexxString::posRexx(
   return new_integer(this->pos(needle, start - 1));
 }
 
-size_t RexxString::pos(
-    RexxString *needle,                /* Target needle string              */
-    size_t      start)                 /* Start position                    */
+
+RexxInteger *RexxString::caselessPosRexx(
+    RexxString  *needle,               /* search string                     */
+    RexxInteger *pstart)               /* starting position                 */
 /******************************************************************************/
-/* Function:  Search this string (the haystack) for a needle string, starting */
-/*            the search at the specified starting offset (origin 0).         */
+/* Function:  String class POS method/function                                */
 /******************************************************************************/
 {
-  size_t    haystack_length;           /* length of haystack string         */
-  size_t    needle_length;             /* length of the needle string       */
-  PCHAR     haypointer;                /* haystack data pointer             */
-  PCHAR     needlepointer;             /* needle data pointer               */
-  size_t    count;                     /* number of searchs to perform      */
-  size_t    location;                  /* hit location                      */
-  CHAR      firstNeedleChar;           /* the first needle character        */
+  size_t start;                        /* converted start position          */
 
-  if (DBCS_MODE)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSpos(needle, start);
-
-  haystack_length = this->length;      /* get the haystack length           */
-                                       /* get the needle length             */
-  needle_length = needle->length;
-                                       /* Quick checks ...                  */
-                                       /* if needle is bigger than haystack */
-                                       /* or needle is null or              */
-                                       /* start+needle is bigger than hay   */
-                                       /* impossible to match, return 0     */
-  if (needle_length > haystack_length + start ||
-      needle_length == 0 ||
-      start + needle_length > haystack_length)
-    return 0;                          /* this is not found                 */
-
-                                       /* get addressability to string data */
-  haypointer = this->stringData  + start;
-  needlepointer = needle->stringData;  /* get needle addressibility         */
-  location = start + 1;                /* save the location info            */
-
-                                       /* calculate max number of searches  */
-  count = (haystack_length - start) - needle_length + 1;
-  firstNeedleChar = *needlepointer;    /* get the first character           */
-
-  while (count--) {                    /* while still room                  */
-                                       /* get a hit?                        */
-    if (firstNeedleChar == *haypointer && !memcmp((PCHAR)haypointer, (PCHAR)needlepointer, needle_length))
-      return location;                 /* return current position           */
-    location++;                        /* step the location                 */
-    haypointer++;                      /* step the position                 */
-  }
-  return 0;                            /* no match, return zero             */
+                                       /* force needle to a string          */
+  needle = REQUIRED_STRING(needle, ARG_ONE);
+                                       /* get the starting position         */
+  start = optional_position(pstart, 1, ARG_TWO);
+                                       /* pass on to the primitive function */
+                                       /* and return as an integer object   */
+  return new_integer(this->caselessPos(needle, start - 1));
 }
 
-size_t RexxString::caselessPos(
-    RexxString *needle,                /* Target needle string              */
-    size_t start)                      /* Start position                    */
-/******************************************************************************/
-/* Function:  Search this string (the haystack) for a needle string, starting */
-/*            the search at the specified starting offset (origin 0).  This   */
-/*            function performs the search independently of the case.         */
-/******************************************************************************/
+
+size_t RexxString::pos(RexxString *needle, size_t start)
 {
-  size_t    haystack_length;           /* length of haystack string         */
-  size_t    needle_length;             /* length of the needle string       */
-  PUCHAR    haypointer;                /* haystack data pointer             */
-  PUCHAR    needlepointer;             /* needle data pointer               */
-  size_t    count;                     /* number of searchs to perform      */
-  size_t    location;                  /* hit location                      */
-  size_t    result;                    /* pos result                        */
-
-  if (DBCS_MODE)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCScaselessPos(needle, start);
-
-  haystack_length = this->length;      /* get the haystack length           */
-                                       /* get the needle length             */
-  needle_length = needle->length;
-                                       /* Quick checks ...                  */
-                                       /* if needle is bigger than haystack */
-                                       /* or needle is null or              */
-                                       /* start+needle is bigger than hay   */
-                                       /* impossible to match, return 0     */
-  if (needle_length > haystack_length + start ||
-      needle_length == 0 ||
-      start + needle_length > haystack_length)
-    return FALSE;                      /* this is not found                 */
-
-                                       /* get addressability to string data */
-  haypointer = (PUCHAR)this->stringData  + start;
-                                       /* get needle addressibility         */
-  needlepointer = (PUCHAR)needle->stringData;
-  location = start + 1;                /* save the location info            */
-  result = 0;                          /* default to no match               */
-
-                                       /* calculate max number of searches  */
-  count = (haystack_length - start) - needle_length + 1;
-
-  while (count--) {                    /* while still room                  */
-                                       /* get a hit?                        */
-    if (toupper(*haypointer) == toupper(*needlepointer) &&
-        !CaselessCompare((PUCHAR)haypointer,
-                         (PUCHAR)needlepointer,
-                         needle_length)) {
-      result = location;               /* return current position           */
-      break;                           /* finished                          */
+    // DBCS mode is handled elsewhere
+    if (DBCS_MODE)
+    {
+        return this->DBCSpos(needle, start);
     }
-    haypointer++;                      /* step the haystack pointer         */
-    location++;                        /* step the location                 */
-  }
-  return result;                       /* return match position             */
+
+    // get the two working lengths
+    size_t haystack_length = getLength();
+    size_t needle_length = needle->getLength();
+
+    // ok, there are a few quick checks we can perform.  If the needle is
+    // bigger than the haystack, or the needle is a null string or
+    // our haystack length after adjusting to the starting position
+    // zero, then we can quickly return zero.
+    if (needle_length > haystack_length + start || needle_length == 0 || start + needle_length > haystack_length)
+    {
+        return 0;
+    }
+
+    // address the string value
+    PUCHAR haypointer = (PUCHAR)getStringData() + start;
+    PUCHAR needlepointer = (PUCHAR)needle->getStringData();
+    size_t location = start + 1;         // this is the match location as an index
+    // calculate the number of probes we can make in this string
+    size_t count = (haystack_length - start) - needle_length + 1;
+
+    // now scan
+    while (count--)
+    {
+                                           /* get a hit?                        */
+        if (memcmp((PCHAR)haypointer, (PCHAR)needlepointer, needle_length) == 0)
+        {
+            return location;
+        }
+        // step our pointers accordingly
+        location++;
+        haypointer++;
+    }
+    return 0;  // we got nothing...
+}
+
+
+size_t RexxString::caselessPos(RexxString *needle, size_t start)
+{
+    // DBCS mode is handled elsewhere
+    if (DBCS_MODE)
+    {
+        return this->DBCScaselessPos(needle, start);
+    }
+
+    // get the two working lengths
+    size_t haystack_length = getLength();
+    size_t needle_length = needle->getLength();
+
+    // ok, there are a few quick checks we can perform.  If the needle is
+    // bigger than the haystack, or the needle is a null string or
+    // our haystack length after adjusting to the starting position
+    // zero, then we can quickly return zero.
+    if (needle_length > haystack_length + start || needle_length == 0 || start + needle_length > haystack_length)
+    {
+        return 0;
+    }
+
+    // address the string value
+    PUCHAR haypointer = (PUCHAR)getStringData() + start;
+    PUCHAR needlepointer = (PUCHAR)needle->getStringData();
+    size_t location = start + 1;         // this is the match location as an index
+    // calculate the number of probes we can make in this string
+    size_t count = (haystack_length - start) - needle_length + 1;
+
+    // now scan
+    while (count--)
+    {
+                                           /* get a hit?                        */
+        if (CaselessCompare(haypointer, needlepointer, needle_length) == 0)
+        {
+            return location;
+        }
+        // step our pointers accordingly
+        location++;
+        haypointer++;
+    }
+    return 0;  // we got nothing...
 }
 
 size_t MemPos(
