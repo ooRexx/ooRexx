@@ -699,27 +699,61 @@ RexxArray *RexxList::requestArray()
     return (RexxArray *)send_message1(this, OREF_REQUEST, OREF_ARRAYSYM);
 }
 
+
 RexxArray *RexxList::makeArray(void)
 /******************************************************************************/
 /* Function:  Return all of the list values in an array                       */
 /******************************************************************************/
 {
-  RexxArray *array;                    /* returned array value              */
-  LISTENTRY *element;                  /* current working entry             */
-  long        i;                       /* loop counter                      */
-  long        next;                    /* next item to process              */
-
-                                       /* allocate proper sized array       */
-  array = (RexxArray *)new_array(this->count);
-  next = this->first;                  /* point to the first element        */
-  for (i = 1; i <= this->count; i++) { /* step through the array elements   */
-    element = ENTRY_POINTER(next);     /* get the next item                 */
-                                       /* copy over to the array            */
-    array->put(element->value, i);
-    next = element->next;              /* get the next pointer              */
-  }
-  return array;                        /* return the array element          */
+    return this->allItems();           // this is just all of the array items.
 }
+
+
+/**
+ * Return an array containing all elements contained in the list,
+ * in sorted order.
+ *
+ * @return An array with the list elements.
+ */
+RexxArray *RexxList::allItems(void)
+{
+    // just iterate through the list, copying the elements.
+    RexxArray *array = (RexxArray *)new_array(this->count);
+    long   next = this->first;
+    for (long  i = 1; i <= this->count; i++)
+    {
+        LISTENTRY *element = ENTRY_POINTER(next);
+        array->put(element->value, i);
+        next = element->next;
+    }
+    return array;
+}
+
+
+/**
+ * Return an array containing all elements contained in the list,
+ * in sorted order.
+ *
+ * @return An array with the list elements.
+ */
+RexxArray *RexxList::allIndexes(void)
+{
+    // just iterate through the list, copying the elements.
+    RexxArray *array = (RexxArray *)new_array(this->count);
+    // this requires protecting, since we're going to be creating new
+    // integer objects.
+    save(array);
+    long   next = this->first;
+    for (long   i = 1; i <= this->count; i++)
+    {
+        LISTENTRY *element = ENTRY_POINTER(next);
+        array->put((RexxObject *)new_integer(next), i);
+        next = element->next;
+    }
+    discard_hold(array);
+    return array;
+}
+
 
 RexxObject *RexxList::indexOfValue(
      RexxObject *value)

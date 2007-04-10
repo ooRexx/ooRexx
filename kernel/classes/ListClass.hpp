@@ -73,6 +73,8 @@
    void          flatten(RexxEnvelope *);
    RexxObject   *copy();
    RexxArray    *makeArray();
+   RexxArray    *allItems();
+   RexxArray    *allIndexes();
    RexxArray    *requestArray();
 
    RexxObject   *value(RexxObject *);

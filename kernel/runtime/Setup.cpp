@@ -228,6 +228,8 @@ CPPML(RexxList::firstItem),
 CPPML(RexxList::lastItem),
 CPPML(RexxList::insertRexx),
 CPPML(RexxList::append),
+CPPML(RexxList::allIndexes),
+CPPML(RexxList::allItems),
 
 CPPMLC(RexxListClass::newRexx),
 CPPMLC(RexxListClass::classOf),
@@ -939,6 +941,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_SECTION      ,TheListBehaviour, CPPML(RexxList::section), 2);
   defineKernelMethod(CHAR_SUPPLIER     ,TheListBehaviour, CPPML(RexxList::supplier), 0);
   defineKernelMethod(CHAR_APPEND       ,TheListBehaviour, CPPMA(RexxList::append), 1);
+  defineKernelMethod(CHAR_ALLITEMS     ,TheListBehaviour, CPPML(RexxList::allItems), 0);
+  defineKernelMethod(CHAR_ALLINDEXES   ,TheListBehaviour, CPPML(RexxList::allIndexes), 0);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheListBehaviour->setMethodDictionaryScope(TheListClass);
