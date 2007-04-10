@@ -198,7 +198,64 @@ RexxSupplier *RexxDirectory::supplier(void)
   return result->supplier();           /* convert this to a supplier        */
 }
 
-RexxArray *RexxDirectory::values(void)
+RexxArray *RexxDirectory::requestArray()
+/******************************************************************************/
+/* Function:  Primitive level request('ARRAY') fast path                      */
+/******************************************************************************/
+{
+  if (OTYPE(Directory, this))          /* primitive level object?           */
+    return this->makeArray();          /* just do the makearray             */
+  else                                 /* need to so full request mechanism */
+    return (RexxArray *)this->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
+}
+
+RexxArray *RexxDirectory::makeArray(void)
+/******************************************************************************/
+/* Function:  Create an array of all of the directory indices, including those*/
+/*            of all the SETMETHOD methods.                                   */
+/******************************************************************************/
+{
+    return this->allIndexes();
+}
+
+
+/**
+ * Create an array of all of the directory indices, including those
+ * of all the SETMETHOD methods.
+ *
+ * @return An array containing all of the directory indices.
+ */
+RexxArray *RexxDirectory::allIndexes(void)
+{
+    // get a result array of the appropriate size
+    wholenumber_t count = this->items();
+    RexxArray *result = (RexxArray *)new_array(count);
+    save(result);
+    arraysize_t i = 1;
+    // we're working directly off of the contents.
+    RexxHashTable *hashTab = this->contents;
+
+    // traverse the entire table coping over the items.
+    for (HashLink index = hashTab->first(); hashTab->index(index) != OREF_NULL; index = hashTab->next(index))
+    {
+        RexxString *name = (RexxString *)hashTab->index(index);
+        result->put(name, i++);
+    }
+    // if e hae amethod table, we need to copy those indices also
+    if (this->method_table != OREF_NULL)
+    {
+        RexxTable *methodTable = this->method_table;
+        for (HashLink index = methodTable->first(); methodTable->available(index); index = methodTable->next(index))
+        {
+           RexxString *name = (RexxString *)methodTable->index(index);
+           result->put(name, i++);
+        }
+    }
+    discard_hold(result);
+    return result;                       /* send back the array               */
+}
+
+RexxArray *RexxDirectory::allItems()
 /******************************************************************************/
 /* Function:  Create an array of all of the directory values, including the   */
 /*            values of all the SETMETHOD methods                             */
@@ -239,58 +296,6 @@ RexxArray *RexxDirectory::values(void)
       method = (RexxMethod *)methodTable->value(index);
                                        /* run the method                    */
       value = method->run(CurrentActivity, this, name, 0, NULL);
-      result->put(name, i++);          /* add to the array                  */
-    }
-  }
-  discard_hold(result);                /* unlock the result                 */
-  return result;                       /* send back the array               */
-}
-
-RexxArray *RexxDirectory::requestArray()
-/******************************************************************************/
-/* Function:  Primitive level request('ARRAY') fast path                      */
-/******************************************************************************/
-{
-  if (OTYPE(Directory, this))          /* primitive level object?           */
-    return this->makeArray();          /* just do the makearray             */
-  else                                 /* need to so full request mechanism */
-    return (RexxArray *)this->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
-}
-
-RexxArray *RexxDirectory::makeArray(void)
-/******************************************************************************/
-/* Function:  Create an array of all of the directory indices, including those*/
-/*            of all the SETMETHOD methods.                                   */
-/******************************************************************************/
-{
-  LONG    count;                       /* count of items in the directory   */
-  LONG    i;                           /* loop counter                      */
-  LONG    index;                       /* table index                       */
-  RexxArray *result;                   /* returned result                   */
-  RexxHashTable *hashTab;              /* working hash table pointer        */
-  RexxTable *methodTable;              /* working method table pointer      */
-  RexxString *name;                    /* table index                       */
-
-                                       /* return the count as an object     */
-  count = this->items();               /* get the array size                */
-                                       /* get result array of correct size  */
-  result = (RexxArray *)new_array(count);
-  save(result);                        /* protect this                      */
-  i = 1;                               /* position in array                 */
-  hashTab = this->contents;            /* get the contents                  */
-                                       /* now traverse the entire table     */
-  for (index = hashTab->first(); hashTab->index(index) != OREF_NULL; index = hashTab->next(index)) {
-                                       /* get the directory index           */
-    name = (RexxString *)hashTab->index(index);
-    result->put(name, i++);            /* add to the array                  */
-  }
-                                       /* have a method table?              */
-  if (this->method_table != OREF_NULL) {
-    methodTable = this->method_table;  /* get the method table              */
-                                       /* need to extract method values     */
-    for (index = methodTable->first(); methodTable->available(index); index = methodTable->next(index)) {
-                                       /* get the directory index           */
-      name = (RexxString *)methodTable->index(index);
       result->put(name, i++);          /* add to the array                  */
     }
   }

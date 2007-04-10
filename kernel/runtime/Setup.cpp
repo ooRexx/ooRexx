@@ -174,6 +174,8 @@ CPPMD(RexxDirectory::remove),
 CPPMD(RexxDirectory::setEntry),
 CPPMD(RexxDirectory::setMethod),
 CPPMD(RexxDirectory::supplier),
+CPPMA(RexxDirectory::allIndexes),
+CPPMA(RexxDirectory::allItems),
 
 CPPMD(RexxDirectory::newRexx),
 
@@ -870,6 +872,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_HASINDEX      , TheDirectoryBehaviour, CPPMD(RexxDirectory::hasIndex), 1);
   defineKernelMethod(CHAR_ITEMS         , TheDirectoryBehaviour, CPPMD(RexxDirectory::itemsRexx), 0);
   defineKernelMethod(CHAR_MAKEARRAY     , TheDirectoryBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
+  defineKernelMethod(CHAR_ALLITEMS      , TheDirectoryBehaviour, CPPMD(RexxDirectory::allItems), 0);
+  defineKernelMethod(CHAR_ALLINDEXES    , TheDirectoryBehaviour, CPPMD(RexxDirectory::allIndexes), 0);
   defineKernelMethod(CHAR_PUT           , TheDirectoryBehaviour, CPPMD(RexxDirectory::put), 2);
   defineKernelMethod(CHAR_REMOVE        , TheDirectoryBehaviour, CPPMD(RexxDirectory::remove), 1);
   defineKernelMethod(CHAR_SETENTRY      , TheDirectoryBehaviour, CPPMD(RexxDirectory::setEntry), 2);
