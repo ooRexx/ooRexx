@@ -87,6 +87,7 @@
    RexxObject   *hasIndex(RexxObject *);
    RexxSupplier *supplier();
    RexxObject   *itemsRexx();
+   inline size_t items() { return (size_t)count; };
    RexxObject   *insert(RexxObject *, RexxObject *);
    RexxObject   *put(RexxObject *, RexxObject *);
    RexxObject   *section(RexxObject *, RexxObject *);

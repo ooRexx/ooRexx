@@ -234,6 +234,32 @@ RexxObject *RexxQueue::supplier()
   return (RexxObject *)new_supplier(values, OREF_NULL);
 }
 
+
+/**
+ * Retrieve an array containing all index values for the queue.
+ * For queue classes, the indices are the integers 1 - items(), so
+ * this is generally a pretty silly way to access this.
+ *
+ * @return An array containing all of the queue indices.
+ */
+RexxArray *RexxQueue::allIndexes()
+{
+    // create an array and protect it.
+    arraysize_t size = this->items();
+
+    RexxArray *result = new_array(size);
+    save(result);
+
+    // now just make an array containing each index value.
+    for (arraysize_t i = 1; i <= size; i++)
+    {
+        result->put(new_integer(i), i);
+    }
+
+    discard_hold(result);
+    return result;
+}
+
 RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
 /******************************************************************************/
 /* Function:  Create an instance of a queue                                   */

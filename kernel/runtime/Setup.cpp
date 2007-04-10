@@ -303,6 +303,7 @@ CPPMQ(RexxQueue::at),
 CPPMQ(RexxQueue::hasindex),
 CPPMQ(RexxQueue::remove),
 CPPML(RexxQueue::append),
+CPPML(RexxQueue::allIndexes),
 
 CPPMQ(RexxQueue::newRexx),
 
@@ -1043,7 +1044,9 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_HASINDEX      ,TheQueueBehaviour, CPPMQ(RexxQueue::hasindex), 1);
   defineKernelMethod(CHAR_PUT           ,TheQueueBehaviour, CPPMQ(RexxQueue::put), 2);
   defineKernelMethod(CHAR_REMOVE        ,TheQueueBehaviour, CPPMQ(RexxQueue::remove), 1);
-  defineKernelMethod(CHAR_APPEND        ,TheQueueBehaviour, CPPMA(RexxQueue::append), 1);
+  defineKernelMethod(CHAR_APPEND        ,TheQueueBehaviour, CPPMQ(RexxQueue::append), 1);
+  defineKernelMethod(CHAR_ALLITEMS      ,TheQueueBehaviour, CPPML(RexxList::allItems), 0);
+  defineKernelMethod(CHAR_ALLINDEXES    ,TheQueueBehaviour, CPPMQ(RexxQueue::allIndexes), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
