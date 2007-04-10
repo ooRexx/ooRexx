@@ -276,6 +276,7 @@ ULONG  APIENTRY RexxPullQueue (
 #define MUTEXNAME_MSGEVENT    APInamedObjects[6]
 #define MUTEXNAME_RESULTEVENT APInamedObjects[7]
 #define FMAPNAME_INITEXPORTS  APInamedObjects[8]
+#define FMAPNAME_COMBLOCK(i)  APInamedObjects[9+i]
 
 #define APISTARTUP_MACRO() \
 if (rc=RxAPIStartUp(API_MACRO)) return (rc)

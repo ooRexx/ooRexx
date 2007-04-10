@@ -153,10 +153,12 @@ void __cdecl DebugMsg(const char* pszFormat, ...)
   strcat(buf, "\n");
 
   OutputDebugString(buf);
-  stream = fopen("j:\\apilog.txt","a+"),
-  fwrite ( buf, 1, strlen(buf), stream ) ;
-
-  fclose ( stream ) ;
+  stream = fopen("C:\\apilog.txt","a+");
+  if ( stream )
+  {
+    fwrite ( buf, 1, strlen(buf), stream ) ;
+    fclose ( stream ) ;
+  }
 
 }
 
@@ -1105,8 +1107,8 @@ BOOL APIWin_Register(HINSTANCE hInstance)
 
 BOOL AllocComBlock(int chain, int size, SECURITY_ATTRIBUTES * sa)
 {
-    RX.comhandle[chain] = CreateFileMapping((HANDLE)0xFFFFFFFF, sa,
-                                     PAGE_READWRITE, 0, size, NULL);
+    RX.comhandle[chain] = CreateFileMapping(INVALID_HANDLE_VALUE, sa,
+                                     PAGE_READWRITE, 0, size, FMAPNAME_COMBLOCK(chain));
     if (!RX.comhandle[chain])
         return FALSE;
 
@@ -1177,7 +1179,7 @@ BOOL App_Initialize(void)
 
 
     /* Create a memory mapped file to share RexxinitExports */
-    Rx_Map = CreateFileMapping((HANDLE)0xFFFFFFFF, &sa,
+    Rx_Map = CreateFileMapping(INVALID_HANDLE_VALUE, &sa,
                                     PAGE_READWRITE, 0, sizeof(REXXAPIDATA), FMAPNAME_INITEXPORTS);
     if (!Rx_Map)
         return FALSE;
@@ -1372,7 +1374,7 @@ int Run ( void )
         {
             if (APIMutex[i]) CloseHandle(APIMutex[i]);
         }
-        for (i = 0; i<3; i++)
+        for (i = 0; i<NUMBEROFCOMBLOCKS; i++)
             FreeComBlock(i);
 
         RX.init = -1;

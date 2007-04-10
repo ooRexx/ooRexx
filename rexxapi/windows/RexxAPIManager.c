@@ -46,15 +46,18 @@
 **
 **********************************************************************/
 
-#define INTERNALNAME_EXISTENCE    "RXAPI_EXISTENCE_MUTEX"
-#define INTERNALNAME_START        "RXAPI_START_MUTEX"
-#define INTERNALNAME_API          "RXAPI_API_MUTEX"
-#define INTERNALNAME_QUEUE        "RXAPI_QUEUE_MUTEX"
-#define INTERNALNAME_MACRO        "RXAPI_MACRO_MUTEX"
-#define INTERNALNAME_MESSAGE      "RXAPI_MESSAGE_MUTEX"
-#define INTERNALNAME_MSGEVENT     "RXAPI_MESSAGE_EVENT"
-#define INTERNALNAME_RESULTEVENT  "RXAPI_MESSAGE_RESEVENT"
+#define INTERNALNAME_EXISTENCE            "RXAPI_EXISTENCE_MUTEX"
+#define INTERNALNAME_START                "RXAPI_START_MUTEX"
+#define INTERNALNAME_API                  "RXAPI_API_MUTEX"
+#define INTERNALNAME_QUEUE                "RXAPI_QUEUE_MUTEX"
+#define INTERNALNAME_MACRO                "RXAPI_MACRO_MUTEX"
+#define INTERNALNAME_MESSAGE              "RXAPI_MESSAGE_MUTEX"
+#define INTERNALNAME_MSGEVENT             "RXAPI_MESSAGE_EVENT"
+#define INTERNALNAME_RESULTEVENT          "RXAPI_MESSAGE_RESEVENT"
 #define INTERNALNAME_FMAPNAME_INITEXPORTS "RXAPI_GLOBALS_MAPFILE"
+#define INTERNALNAME_FMAPNAME_API_API     "RXAPI_API_API_MAPFILE"
+#define INTERNALNAME_FMAPNAME_API_MACRO   "RXAPI_API_MACRO_MAPFILE"
+#define INTERNALNAME_FMAPNAME_API_QUEUE   "RXAPI_API_QUEUE_MAPFILE"
 
 char *NormalNamedObjects[] = {
   INTERNALNAME_EXISTENCE,
@@ -65,7 +68,10 @@ char *NormalNamedObjects[] = {
   INTERNALNAME_MESSAGE,
   INTERNALNAME_MSGEVENT,
   INTERNALNAME_RESULTEVENT,
-  INTERNALNAME_FMAPNAME_INITEXPORTS
+  INTERNALNAME_FMAPNAME_INITEXPORTS,
+  INTERNALNAME_FMAPNAME_API_API,
+  INTERNALNAME_FMAPNAME_API_MACRO,
+  INTERNALNAME_FMAPNAME_API_QUEUE
 };
 
 char *GlobalNamedObjects[] = {
@@ -77,7 +83,10 @@ char *GlobalNamedObjects[] = {
   "Global\\"INTERNALNAME_MESSAGE,
   "Global\\"INTERNALNAME_MSGEVENT,
   "Global\\"INTERNALNAME_RESULTEVENT,
-  "Global\\"INTERNALNAME_FMAPNAME_INITEXPORTS
+  "Global\\"INTERNALNAME_FMAPNAME_INITEXPORTS,
+  "Global\\"INTERNALNAME_FMAPNAME_API_API,
+  "Global\\"INTERNALNAME_FMAPNAME_API_MACRO,
+  "Global\\"INTERNALNAME_FMAPNAME_API_QUEUE
 };
 
 char **APInamedObjects = NormalNamedObjects;
@@ -294,19 +303,12 @@ SECURITY_ATTRIBUTES * SetSecurityDesc(SECURITY_ATTRIBUTES * sa)
 
 BOOL MapComBlock(int chain)
 {
-   HANDLE Lclhndl;
-   BOOL rc;
    if (!RX.comhandle[chain]) return FALSE;
 
-   /* Open RXAPI process and duplicate handle to memory mapped file */
-   Lclhndl = OpenProcess(/*STANDARD_RIGHTS_REQUIRED|*/PROCESS_DUP_HANDLE,
-                         FALSE,RX.MemMgrPid);
-   rc = DuplicateHandle(Lclhndl, RX.comhandle[chain],
-                        GetCurrentProcess(),(LPHANDLE)&LRX.comhandle[chain],
-                        0, TRUE, DUPLICATE_SAME_ACCESS);
-   CloseHandle(Lclhndl);
+   /* Obtain handle to named memory mapped file */
+   LRX.comhandle[chain] = OpenFileMapping(FILE_MAP_ALL_ACCESS, TRUE, FMAPNAME_COMBLOCK(chain));
 
-   if (rc && LRX.comhandle[chain])
+   if (LRX.comhandle[chain])
    {
       LRX.comblock[chain]= MapViewOfFile(LRX.comhandle[chain],FILE_MAP_WRITE,0,0,0);
       if (chain == API_QUEUE)
