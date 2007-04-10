@@ -156,6 +156,8 @@ CPPMA(RexxArray::lastRexx),
 CPPMA(RexxArray::nextRexx),
 CPPMA(RexxArray::previousRexx),
 CPPMA(RexxArray::append),
+CPPMA(RexxArray::allIndexes),
+CPPMA(RexxArray::allItems),
 
 CPPMC1(RexxArray::newRexx),
 CPPMA(RexxArray::makeString),
@@ -838,7 +840,9 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_NEXT         ,TheArrayBehaviour, CPPMA(RexxArray::nextRexx), 1);
   defineKernelMethod(CHAR_PREVIOUS     ,TheArrayBehaviour, CPPMA(RexxArray::previousRexx), 1);
   defineKernelMethod(CHAR_APPEND       ,TheArrayBehaviour, CPPMA(RexxArray::append), 1);
-  defineKernelMethod(CHAR_MAKESTRING   ,TheArrayBehaviour, CPPMA(RexxArray::makeString), 1);   /*THU006*/
+  defineKernelMethod(CHAR_MAKESTRING   ,TheArrayBehaviour, CPPMA(RexxArray::makeString), 1);
+  defineKernelMethod(CHAR_ALLINDEXES   ,TheArrayBehaviour, CPPMA(RexxArray::allIndexes), 0);
+  defineKernelMethod(CHAR_ALLITEMS     ,TheArrayBehaviour, CPPMA(RexxArray::allItems), 0);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheArrayBehaviour->setMethodDictionaryScope(TheArrayClass);

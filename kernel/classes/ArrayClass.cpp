@@ -1012,25 +1012,64 @@ RexxArray *RexxArray::makeArray(void)
 /*           has values, so it will be of size items.                         */
 /******************************************************************************/
 {
-  RexxArray *newArray;                 /* New array                         */
-  size_t count;                        /* actual count of items in array    */
-  size_t iterator;
-  RexxObject **item;                   /* array item pointer                */
+    // for an array, this is the all items value.
+    return this->allItems();
+}
 
-  newArray = (RexxArray *)save(new_array(this->numItems()));
 
-  count = 0;                           /* no items yet                      */
-                                       /* loop through all array items      */
-  for (iterator = 0, item = this->data(); iterator < this->size(); iterator++ ) {
-    if (item[iterator] != OREF_NULL) { /* have a real item here?            */
-                                       /* put the next element in newArray  */
-                                       /* and bump the item counter         */
-      newArray->put(item[iterator], ++count);
+/**
+ * Return an array of all real items contained in the collection.
+ *
+ * @return An array with all of the array items (non-sparse).
+ */
+RexxArray *RexxArray::allItems(void)
+{
+    // get a result array of the appropriate size
+    RexxArray *newArray = (RexxArray *)new_array(this->numItems());
+
+    // we need to fill in based on actual items, not the index.
+    arraysize_t count = 0;
+    RexxObject **item = this->data();
+    // loop through the array, copying all of the items.
+    for (arraysize_t iterator = 0; iterator < this->size(); iterator++ )
+    {
+        // if this is a real array item, copy over to the result
+        if (item[iterator] != OREF_NULL)
+        {
+            newArray->put(item[iterator], ++count);
+        }
     }
-  }
+    return newArray;
+}
 
-  discard(hold(newArray));
-  return newArray;
+
+/**
+ * Return an array of all indices of real array items contained
+ * in the collection.
+ *
+ * @return An array with all of the array indices (non-sparse).
+ */
+RexxArray *RexxArray::allIndexes(void)
+{
+    // get a result array of the appropriate size
+    RexxArray *newArray = (RexxArray *)new_array(this->numItems());
+    save(newArray);
+
+    // we need to fill in based on actual items, not the index.
+    arraysize_t count = 0;
+    RexxObject **item = this->data();
+    // loop through the array, copying all of the items.
+    for (arraysize_t iterator = 0; iterator < this->size(); iterator++ )
+    {
+        // if this is a real array item, add an integer index item to the
+        // result collection.
+        if (item[iterator] != OREF_NULL)
+        {
+            newArray->put(new_integer(iterator+1), ++count);
+        }
+    }
+    discard_hold(newArray);
+    return newArray;
 }
 
 

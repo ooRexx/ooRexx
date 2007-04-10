@@ -91,6 +91,8 @@ typedef struct copyElelmentParm {
    void         flatten(RexxEnvelope *);
    RexxObject  *copy();
    RexxArray   *makeArray();
+   RexxArray   *allItems();
+   RexxArray   *allIndexes();
    RexxString  *makeString(RexxString *);
    RexxString  *primitiveMakeString();
    RexxObject  *getRexx(RexxObject **, size_t);
