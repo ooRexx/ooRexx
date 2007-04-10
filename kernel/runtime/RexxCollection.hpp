@@ -67,6 +67,8 @@
     RexxObject   *hasIndex(RexxObject *);
     RexxSupplier *supplier();
     RexxObject   *merge(RexxHashTableCollection *);
+    RexxArray    *allItems();
+    RexxArray    *allIndexes();
 
     inline long          items() { return this->contents->totalEntries(); };
     inline long          first() { return this->contents->first(); };

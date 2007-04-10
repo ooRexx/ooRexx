@@ -1246,7 +1246,7 @@ RexxObject *RexxHashTable::replace(
   return OREF_NULL;                    /* always return nothing             */
 }
 
-RexxArray  *RexxHashTable::values(void)
+RexxArray  *RexxHashTable::allItems()
 /******************************************************************************/
 /* Function:  Create an array containing the hash table values                */
 /******************************************************************************/
@@ -1281,6 +1281,16 @@ RexxArray *RexxHashTable::makeArray(void)
 /* Function:  Create an array containing the hash table indexes.              */
 /******************************************************************************/
 {
+    // this just returns the index values
+    return this->allIndexes();
+}
+
+
+RexxArray *RexxHashTable::allIndexes()
+/******************************************************************************/
+/* Function:  Create an array containing the hash table indexes.              */
+/******************************************************************************/
+{
   size_t count;                        /* count of values                   */
   size_t i;                            /* loop counter                      */
   size_t j;                            /* loop counter                      */
@@ -1305,6 +1315,7 @@ RexxArray *RexxHashTable::makeArray(void)
   }
   return result;                       /* return the result array           */
 }
+
 
 RexxSupplier *RexxHashTable::supplier(void)
 /******************************************************************************/

@@ -307,3 +307,19 @@ RexxSupplier *RexxHashTableCollection::supplier()
                                        /* get the hashtab supplier          */
   return this->contents->supplier();
 }
+
+RexxArray *RexxHashTableCollection::allItems()
+/******************************************************************************/
+/* Function:  retrieve all items of the collection.                           */
+/******************************************************************************/
+{
+  return this->contents->allItems();
+}
+
+RexxArray *RexxHashTableCollection::allIndexes()
+/******************************************************************************/
+/* Function:  retrieve all indexes of the collection.                         */
+/******************************************************************************/
+{
+  return this->contents->allIndexes();
+}

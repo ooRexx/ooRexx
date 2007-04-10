@@ -110,7 +110,7 @@ class RexxVariableDictionary : public RexxInternalObject {
       stem_table->setCompoundVariable(&resolved_tail, value);
     }
 
-  inline RexxArray *getAllVariables() { return contents->values(); }
+  inline RexxArray *getAllVariables() { return contents->allItems(); }
 
   RexxVariable *nextVariable(RexxNativeActivation *);
   void         set(RexxString *, RexxObject *);

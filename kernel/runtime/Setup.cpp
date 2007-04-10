@@ -493,6 +493,8 @@ CPPMHC(RexxHashTableCollection::hasIndex),
 CPPMTBL(RexxTable::itemsRexx),
 CPPMHC(RexxHashTableCollection::merge),
 CPPMHC(RexxHashTableCollection::supplier),
+CPPMHC(RexxHashTableCollection::allItems),
+CPPMHC(RexxHashTableCollection::allIndexes),
 
 CPPMTBL(RexxTable::newRexx),
 
@@ -1084,6 +1086,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_REMOVE       , TheRelationBehaviour, CPPMHC(RexxHashTableCollection::removeRexx), 1);
   defineKernelMethod(CHAR_REMOVEITEM   , TheRelationBehaviour, CPPMREL(RexxRelation::removeItemRexx), 2);
   defineKernelMethod(CHAR_SUPPLIER     , TheRelationBehaviour, CPPMREL(RexxRelation::supplier), 1);
+  defineKernelMethod(CHAR_ALLITEMS     , TheRelationBehaviour, CPPMHC(RexxHashTableCollection::allItems), 0);
+  defineKernelMethod(CHAR_ALLINDEXES   , TheRelationBehaviour, CPPMHC(RexxHashTableCollection::allIndexes), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -1565,6 +1569,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_PUT          , TheTableBehaviour, CPPMHC(RexxHashTableCollection::put), 2);
   defineKernelMethod(CHAR_REMOVE       , TheTableBehaviour, CPPMHC(RexxHashTableCollection::removeRexx), 1);
   defineKernelMethod(CHAR_SUPPLIER     , TheTableBehaviour, CPPMHC(RexxHashTableCollection::supplier), 0);
+  defineKernelMethod(CHAR_ALLITEMS     , TheTableBehaviour, CPPMHC(RexxHashTableCollection::allItems), 0);
+  defineKernelMethod(CHAR_ALLINDEXES   , TheTableBehaviour, CPPMHC(RexxHashTableCollection::allIndexes), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
