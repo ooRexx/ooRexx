@@ -1114,3 +1114,215 @@ RexxInteger *RexxString::verify(
   return Retval;                       /* return formatted number           */
 }
 
+
+/**
+ * Test if regions within two strings match.
+ *
+ * @param start_  The starting compare position within the target string.  This
+ *                must be within the bounds of the string.
+ * @param other   The other compare string.
+ * @param offset_ The starting offset of the compare string.  This must be
+ *                within the string bounds.  The default start postion is 1.
+ * @param len_    The length of the compare substring.  The length and the
+ *                offset must specify a valid substring of other.  If not
+ *                specified, this defaults to the substring from the
+ *                offset to the end of the string.
+ *
+ * @return True if the two regions match, false for any mismatch.
+ */
+RexxInteger *RexxString::match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
+{
+    stringsize_t start = positionArgument(start_, ARG_ONE);
+    // the start position must be within the string bounds
+    if (start > getLength())
+    {
+        reportException(Error_Incorrect_method_position, start);
+    }
+    other = stringArgument(other, ARG_TWO);
+
+    stringsize_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
+
+    if (offset > other->getLength())
+    {
+        reportException(Error_Incorrect_method_position, offset);
+    }
+
+    stringsize_t len = optionalLengthArgument(len_, other->getLength() - offset + 1, ARG_FOUR);
+
+    if ((offset + len - 1) > other->getLength())
+    {
+        reportException(Error_Incorrect_method_length, len);
+    }
+
+    return primitiveMatch(start, other, offset, len) ? TheTrueObject : TheFalseObject;
+}
+
+
+/**
+ * Test if regions within two strings match.
+ *
+ * @param start_  The starting compare position within the target string.  This
+ *                must be within the bounds of the string.
+ * @param other   The other compare string.
+ * @param offset_ The starting offset of the compare string.  This must be
+ *                within the string bounds.  The default start postion is 1.
+ * @param len_    The length of the compare substring.  The length and the
+ *                offset must specify a valid substring of other.  If not
+ *                specified, this defaults to the substring from the
+ *                offset to the end of the string.
+ *
+ * @return True if the two regions match, false for any mismatch.
+ */
+RexxInteger *RexxString::caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_)
+{
+    stringsize_t start = positionArgument(start_, ARG_ONE);
+    // the start position must be within the string bounds
+    if (start > getLength())
+    {
+        reportException(Error_Incorrect_method_position, start);
+    }
+    other = stringArgument(other, ARG_TWO);
+
+    stringsize_t offset = optionalPositionArgument(offset_, 1, ARG_THREE);
+
+    if (offset > other->getLength())
+    {
+        reportException(Error_Incorrect_method_position, offset);
+    }
+
+    stringsize_t len = optionalLengthArgument(len_, other->getLength() - offset + 1, ARG_FOUR);
+
+    if ((offset + len - 1) > other->getLength())
+    {
+        reportException(Error_Incorrect_method_length, len);
+    }
+
+    return primitiveCaselessMatch(start, other, offset, len) ? TheTrueObject : TheFalseObject;
+}
+
+
+/**
+ * Perform a compare of regions of two string objects.  Returns
+ * true if the two regions match, returns false for mismatches.
+ *
+ * @param start  The starting offset within the target string.
+ * @param other  The source string for the compare.
+ * @param offset The offset of the substring of the other string to use.
+ * @param len    The length of the substring to compare.
+ *
+ * @return True if the regions match, false otherwise.
+ */
+bool RexxString::primitiveMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len)
+{
+    start--;      // make the starting point origin zero
+    offset--;
+
+    // if the match is not possible in the target string, just return false now.
+    if ((start + len) > getLength())
+    {
+        return false;
+    }
+
+    return memcmp(getStringData() + start, other->getStringData() + offset, len) == 0;
+}
+
+
+/**
+ * Perform a caselesee compare of regions of two string objects.
+ * Returns true if the two regions match, returns false for
+ * mismatches.
+ *
+ * @param start  The starting offset within the target string.
+ * @param other  The source string for the compare.
+ * @param offset The offset of the substring of the other string to use.
+ * @param len    The length of the substring to compare.
+ *
+ * @return True if the regions match, false otherwise.
+ */
+bool RexxString::primitiveCaselessMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len)
+{
+    start--;      // make the starting point origin zero
+    offset--;
+
+    // if the match is not possible in the target string, just return false now.
+    if ((start + len) > getLength())
+    {
+        return false;
+    }
+
+    return CaselessCompare((PUCHAR)(getStringData() + start), (PUCHAR)(other->getStringData() + offset), len) == 0;
+}
+
+
+/**
+ * Compare a single character at a give position against
+ * a set of characters to see if any of the characters is
+ * a match.
+ *
+ * @param position_ The character position
+ * @param matchSet  The set to compare against.
+ *
+ * @return true if the character at the give position is any of the characters,
+ *         false if none of them match.
+ */
+RexxInteger *RexxString::matchChar(RexxInteger *position_, RexxString *matchSet)
+{
+    stringsize_t position = positionArgument(position_, ARG_ONE);
+    // the start position must be within the string bounds
+    if (position > getLength())
+    {
+        reportException(Error_Incorrect_method_position, position);
+    }
+    matchSet = stringArgument(matchSet, ARG_TWO);
+
+    stringsize_t setLength = matchSet->getLength();
+    stringchar_t matchChar = getChar(position - 1);
+
+    // iterate through the match set looking for a match
+    for (stringsize_t i = 0; i < setLength; i++)
+    {
+        if (matchChar == (stringchar_t)matchSet->getChar(i))
+        {
+            return TheTrueObject;
+        }
+    }
+    return TheFalseObject;
+}
+
+
+/**
+ * Compare a single character at a give position against
+ * a set of characters to see if any of the characters is
+ * a match.
+ *
+ * @param position_ The character position
+ * @param matchSet  The set to compare against.
+ *
+ * @return true if the character at the give position is any of the characters,
+ *         false if none of them match.
+ */
+RexxInteger *RexxString::caselessMatchChar(RexxInteger *position_, RexxString *matchSet)
+{
+    stringsize_t position = positionArgument(position_, ARG_ONE);
+    // the start position must be within the string bounds
+    if (position > getLength())
+    {
+        reportException(Error_Incorrect_method_position, position);
+    }
+    matchSet = stringArgument(matchSet, ARG_TWO);
+
+    stringsize_t setLength = matchSet->getLength();
+    stringchar_t matchChar = getChar(position - 1);
+
+    // iterate through the match set looking for a match, using a
+    // caseless compare
+    for (stringsize_t i = 0; i < setLength; i++)
+    {
+        if (toupper(matchChar) == toupper(matchSet->getChar(i)))
+        {
+            return TheTrueObject;
+        }
+    }
+    return TheFalseObject;
+}
+

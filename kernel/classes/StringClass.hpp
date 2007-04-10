@@ -222,6 +222,13 @@ class RexxStringClass : public RexxClass {
    RexxString  *x2d(RexxInteger *);
    RexxString  *x2dC2d(RexxInteger *, BOOL);
 
+   RexxInteger *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
+   RexxInteger *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
+   bool primitiveMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
+   bool primitiveCaselessMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
+   RexxInteger *matchChar(RexxInteger *position_, RexxString *matchSet);
+   RexxInteger *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
+
    RexxArray   *makeArray(RexxString *);
 
 /****************************************************************************/

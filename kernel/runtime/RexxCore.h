@@ -266,6 +266,13 @@ typedef struct internalmethodentry {   /* internal method table entry       */
   PFN    entryPoint;                   /* method entry point                */
 } internalMethodEntry;
 
+// a couple of convience typedefs to make it easier to write code that can be
+// moved to the 4.0 codebase.
+typedef size_t stringsize_t;
+typedef int    wholenumber_t;
+typedef unsigned char stringchar_t;
+
+
 class ACTIVATION_SETTINGS {            /* activation "global" settings      */
     public:
       inline ACTIVATION_SETTINGS()

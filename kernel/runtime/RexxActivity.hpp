@@ -342,6 +342,37 @@ typedef struct nestedinfo {
    #endif
  };
 
+
+inline void reportException(wholenumber_t error)
+{
+    CurrentActivity->reportAnException(error);
+}
+
+inline void reportException(wholenumber_t error, RexxObject *a1)
+{
+    CurrentActivity->reportAnException(error, a1);
+}
+
+inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2)
+{
+    CurrentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2, RexxObject *a3)
+{
+    CurrentActivity->reportAnException(error, a1, a2, a3);
+}
+
+inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2, RexxObject *a3, RexxObject *a4)
+{
+    CurrentActivity->reportAnException(error, a1, a2, a3, a4);
+}
+
+inline void reportException(wholenumber_t error, wholenumber_t a1)
+{
+    CurrentActivity->reportAnException(error, new_integer(a1));
+}
+
 void activity_create (void);
 void activity_restore (void);
 BOOL activity_halt (LONG, RexxString *);

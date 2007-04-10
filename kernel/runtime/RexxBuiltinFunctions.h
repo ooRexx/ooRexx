@@ -58,6 +58,15 @@ CHAR get_option_character(OREF, size_t);
 #define optionalNonNegative(o, d, p) (o == OREF_NULL ? d : o->requiredNonNegative(p))
 #define optionalPositive(o, d, p) (o == OREF_NULL ? d : o->requiredPositive(p))
 
+// the following are to make it easer to port new features over the 4.0 code base.
+#define stringArgument(s, p) REQUIRED_STRING(s,p)
+#define optionalStringArgument(o, d, p) optional_string(o, d, p)
+#define lengthArgument(o, d) get_length(o, d)
+#define optionalLengthArgument(o, d, p) optional_length(o, d, p)
+#define positionArgument(o, d) get_position(o, d)
+#define optionalPositionArgument(o, d, p) optional_position(o, d, p)
+
+
 RexxString *PackHex(PCHAR String, size_t StringLength);
 
 #define ch_SPACE ' '

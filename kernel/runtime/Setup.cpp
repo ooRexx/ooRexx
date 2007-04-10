@@ -402,6 +402,11 @@ CPPMSTR(RexxString::trunc),
 CPPMSTR(RexxString::x2dC2d),
 CPPMSTR(RexxString::encodeBase64),
 CPPMSTR(RexxString::decodeBase64),
+
+CPPMSTR(RexxString::match),
+CPPMSTR(RexxString::caselessMatch),
+CPPMSTR(RexxString::matchChar),
+CPPMSTR(RexxString::caselessMatchChar),
                                           /* End of BIF methods                */
 CPPMSTR(RexxString::makeArray),
 
@@ -1207,6 +1212,10 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_MAKEARRAY                    ,TheStringBehaviour, CPPMSTR(RexxString::makeArray), 1);
   defineKernelMethod(CHAR_LOWER                        ,TheStringBehaviour, CPPMSTR(RexxString::lowerRexx), 2);
   defineKernelMethod(CHAR_UPPER                        ,TheStringBehaviour, CPPMSTR(RexxString::upperRexx), 2);
+  defineKernelMethod(CHAR_MATCH                        ,TheStringBehaviour, CPPMSTR(RexxString::match), 4);
+  defineKernelMethod(CHAR_CASELESSMATCH                ,TheStringBehaviour, CPPMSTR(RexxString::caselessMatch), 4);
+  defineKernelMethod(CHAR_MATCHCHAR                    ,TheStringBehaviour, CPPMSTR(RexxString::matchChar), 2);
+  defineKernelMethod(CHAR_CASELESSMATCHCHAR            ,TheStringBehaviour, CPPMSTR(RexxString::caselessMatchChar), 2);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheStringBehaviour->setMethodDictionaryScope(TheStringClass);
