@@ -271,6 +271,7 @@ typedef struct internalmethodentry {   /* internal method table entry       */
 typedef size_t stringsize_t;
 typedef int    wholenumber_t;
 typedef unsigned char stringchar_t;
+typedef size_t arraysize_t;
 
 
 class ACTIVATION_SETTINGS {            /* activation "global" settings      */

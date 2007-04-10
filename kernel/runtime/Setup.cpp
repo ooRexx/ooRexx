@@ -303,6 +303,9 @@ CPPMQ(RexxQueue::newRexx),
 CPPMSTEM(RexxStem::bracket),               /* Stem methods                      */
 CPPMSTEM(RexxStem::bracketEqual),
 CPPMSTEM(RexxStem::request),
+CPPMSTEM(RexxStem::supplier),
+CPPMSTEM(RexxStem::allIndexes),
+CPPMSTEM(RexxStem::allItems),
 
 CPPMSTEM(RexxStem::newRexx),
 
@@ -1092,6 +1095,9 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_BRACKETSEQUAL ,TheStemBehaviour, CPPMSTEM(RexxStem::bracketEqual), A_COUNT);
   defineKernelMethod(CHAR_MAKEARRAY     ,TheStemBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
   defineKernelMethod(CHAR_REQUEST       ,TheStemBehaviour, CPPMSTEM(RexxStem::request), 1);
+  defineKernelMethod(CHAR_SUPPLIER      ,TheStemBehaviour, CPPMSTEM(RexxStem::supplier), 0);
+  defineKernelMethod(CHAR_ALLINDEXES    ,TheStemBehaviour, CPPMSTEM(RexxStem::allIndexes), 0);
+  defineKernelMethod(CHAR_ALLITEMS      ,TheStemBehaviour, CPPMSTEM(RexxStem::allItems), 0);
   defineKernelMethod(CHAR_UNKNOWN       ,TheStemBehaviour, CPPM(RexxObject::unknownRexx), 2);
 
                                        /* set the scope of the methods to   */

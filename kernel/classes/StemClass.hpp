@@ -74,6 +74,9 @@
   RexxInteger *integerValue(size_t);
   RexxString  *stringValue();
   RexxArray   *makeArray();
+  RexxArray   *allItems();
+  RexxArray   *allIndexes();
+  RexxSupplier *supplier();
   RexxObject  *request(RexxString *);
 
   void        dropValue();

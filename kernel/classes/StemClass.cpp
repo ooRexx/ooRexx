@@ -638,6 +638,101 @@ void RexxStem::expose(
 }
 
 
+/**
+ * Return all items in the stem.
+ *
+ * @return An array of all items in the stem.
+ */
+RexxArray *RexxStem::allItems()
+{
+    // first, run the tree and get a count of the real items contained here
+    arraysize_t count = 0;
+    RexxCompoundElement *variable = tails.first();
+    while (variable != OREF_NULL)
+    {
+        // we only want to include the non-dropped compounds, so we only count
+        // elements with real values.
+        if (variable->getVariableValue() != OREF_NULL)
+        {
+            count++;
+        }
+        // and keep iterating
+        variable = tails.next(variable);
+    }
+    // now we know how big the return result will be, get an array and
+    // populate it, using the same traversal logic as before
+    RexxArray *array = new_array(count);
+    // we index the array with a origin-one index, so we start with one this time
+    count = 1;
+
+    variable = tails.first();
+    while (variable != OREF_NULL)
+    {
+        // only add the real values
+        if (variable->getVariableValue() != OREF_NULL)
+        {
+            array->put(variable->getVariableValue(), count++);
+        }
+        variable = tails.next(variable);
+    }
+    return array;    // tada, finished
+}
+
+
+/**
+ * Create an array of all indexes of the stem.
+ *
+ * @return An array of all tail names used in the stem.
+ */
+RexxArray  *RexxStem::allIndexes()
+{
+  return this->tailArray();            /* extract the array item            */
+}
+
+
+/**
+ * Create a supplier for the stem, returning the tail names as
+ * the indexes and the values as the items.
+ *
+ * @return A supplier instance.
+ */
+RexxSupplier *RexxStem::supplier()
+{
+    // essentially the same logic as allItems(), but both the item and the
+    // tail value are accumulated.
+    arraysize_t count = 0;
+    RexxCompoundElement *variable = tails.first();
+    while (variable != OREF_NULL)
+    {
+        // again, get the variable count
+        if (variable->getVariableValue() != OREF_NULL)
+        {
+            count++;                     /* count this variable               */
+        }
+        variable = tails.next(variable);
+    }
+
+    // to create the supplier, we need 2 arrays
+    RexxArray *tailValues = new_array(count);
+    RexxArray *values = new_array(count);
+    count = 1;                           // we fill in using 1-based indexes
+
+    variable = tails.first();
+    while (variable != OREF_NULL)
+    {
+        // now grab both the tail and value and put them in the respective arrays
+        if (variable->getVariableValue() != OREF_NULL)
+        {
+            tailValues->put(variable->getName(), count);
+            values->put(variable->getVariableValue(), count++);
+        }
+        variable = tails.next(variable);
+    }
+    // two arrays become one supplier
+    return new_supplier(values, tailValues);
+}
+
+
 /******************************************************************************/
 /* Function:  Below are a series of comparison routines used by the qsort()   */
 /*            library function when sorting stems.                            */
