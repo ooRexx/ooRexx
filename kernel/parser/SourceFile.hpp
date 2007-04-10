@@ -172,7 +172,7 @@ class RexxSource : public RexxInternalObject {
   void        parseTraceSetting(RexxString *, PINT, PINT);
   size_t      processVariableList(INT);
   RexxObject *parseConditional(PINT, INT);
-  RexxObject *RexxSource::parseLogical(int terminators);
+  RexxObject *parseLogical(RexxToken *first, int terminators);
 
   BOOL        terminator(INT, RexxToken *);
   BOOL        traceable(void);

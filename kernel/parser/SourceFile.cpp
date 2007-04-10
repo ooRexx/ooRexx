@@ -3103,7 +3103,7 @@ RexxObject *RexxSource::constantLogicalExpression()
     report_error_token(Error_Invalid_expression_general, token);
   else {
                                        /* get the subexpression             */
-    expression = this->parseLogical(TERM_EOC | TERM_RIGHT);
+    expression = this->parseLogical(token, TERM_EOC | TERM_RIGHT);
     second = nextToken();              /* get the terminator token          */
                                        /* not terminated by a right paren?  */
     if (second->classId != TOKEN_RIGHT)
@@ -4287,7 +4287,7 @@ RexxObject *RexxSource::parseConditional(
 
        case SUBKEY_WHILE:              /* DO WHILE exprw                    */
                                        /* get next subexpression            */
-         condition = this->parseLogical(TERM_COND);
+         condition = this->parseLogical(OREF_NULL, TERM_COND);
          if (condition == OREF_NULL) /* nothing really there?             */
                                        /* another invalid DO                */
            report_error(Error_Invalid_expression_while);
@@ -4301,7 +4301,7 @@ RexxObject *RexxSource::parseConditional(
        case SUBKEY_UNTIL:              /* DO UNTIL expru                    */
                                        /* get next subexpression            */
                                        /* get next subexpression            */
-         condition = this->parseLogical(TERM_COND);
+         condition = this->parseLogical(OREF_NULL, TERM_COND);
 
          if (condition == OREF_NULL)   /* nothing really there?             */
                                        /* another invalid DO                */
@@ -4337,9 +4337,9 @@ RexxObject *RexxSource::parseConditional(
  *         element if a single expression is located, and a complex
  *         logical expression operator for a list of expressions.
  */
-RexxObject *RexxSource::parseLogical(int terminators)
+RexxObject *RexxSource::parseLogical(RexxToken *first, int terminators)
 {
-    size_t count = argList(OREF_NULL, terminators);
+    size_t count = argList(first, terminators);
     // arglist has swallowed the terminator token, so we need to back up one.
     previousToken();
     // let the caller deal with completely missing expressions
