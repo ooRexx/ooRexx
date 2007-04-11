@@ -1073,9 +1073,11 @@ void RexxActivity::live()
   memory_mark(this->save);
   memory_mark(this->local);
   memory_mark(this->conditionobj);
+  memory_mark(this->processObj);
   memory_mark(this->requiresTable);
   memory_mark(this->nextWaitingActivity);
   memory_mark(this->waitingObject);
+  memory_mark(this->currentExit);
   memory_mark(this->nestedInfo.currentExit);
   memory_mark(this->nestedInfo.shvexitvalue);
   for (i = 0; i < LAST_EXIT; i++)
@@ -1099,9 +1101,11 @@ void RexxActivity::liveGeneral()
   memory_mark_general(this->save);
   memory_mark_general(this->local);
   memory_mark_general(this->conditionobj);
+  memory_mark_general(this->processObj);
   memory_mark_general(this->requiresTable);
   memory_mark_general(this->nextWaitingActivity);
   memory_mark_general(this->waitingObject);
+  memory_mark_general(this->currentExit);
   memory_mark_general(this->nestedInfo.currentExit);
   memory_mark_general(this->nestedInfo.shvexitvalue);
 

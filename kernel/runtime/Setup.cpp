@@ -814,8 +814,8 @@ bool kernel_setup (void)
   TheObjectBehaviour->setMethodDictionaryScope(TheObjectClass);
                                        /* Now call the class subclassable   */
                                        /* method for OBJECT then CLASS      */
-  TheObjectClass->subClassable("Object");
-  TheClassClass->subClassable("Class");
+  TheObjectClass->subClassable("Object", true);
+  TheClassClass->subClassable("Class", true);
 
   /************************************** The rest of the classes can now be */
   /************************************** set up.                            */
@@ -856,7 +856,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheArrayClass->subClassable("Array");
+  TheArrayClass->subClassable("Array", false);
 
   /***************************************************************************/
   /*           DIRECTORY                                                     */
@@ -893,7 +893,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheDirectoryClass->subClassable("Directory");
+  TheDirectoryClass->subClassable("Directory", false);
 
   /***************************************************************************/
   /*       ENVELOPE                                                          */
@@ -911,7 +911,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheEnvelopeClass->subClassable("Envelope");
+  TheEnvelopeClass->subClassable("Envelope", true);
 
   /***************************************************************************/
   /*           LIST                                                          */
@@ -952,7 +952,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheListClass->subClassable("List");
+  TheListClass->subClassable("List", false);
 
   /***************************************************************************/
   /*           MESSAGE                                                       */
@@ -986,7 +986,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheMessageClass->subClassable("Message");
+  TheMessageClass->subClassable("Message", true);
 
   /***************************************************************************/
   /*           METHOD                                                        */
@@ -1016,7 +1016,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheMethodClass->subClassable("Method");
+  TheMethodClass->subClassable("Method", true);
 
   /***************************************************************************/
   /*           QUEUE                                                         */
@@ -1056,7 +1056,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheQueueClass->subClassable("Queue");
+  TheQueueClass->subClassable("Queue", false);
 
   /***************************************************************************/
   /*           RELATION                                                      */
@@ -1095,7 +1095,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheRelationClass->subClassable("Relation");
+  TheRelationClass->subClassable("Relation", false);
 
   /***************************************************************************/
   /*           STEM                                                          */
@@ -1134,7 +1134,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheStemClass->subClassable("Stem");
+  TheStemClass->subClassable("Stem", false);
 
   /***************************************************************************/
   /*           STRING                                                        */
@@ -1247,7 +1247,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheStringClass->subClassable("String");
+  TheStringClass->subClassable("String", true);
 
 
   /***************************************************************************/
@@ -1285,7 +1285,7 @@ bool kernel_setup (void)
   TheMutableBufferBehaviour->setMethodDictionaryScope(TheMutableBufferClass);
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheMutableBufferClass->subClassable("MutableBuffer");
+  TheMutableBufferClass->subClassable("MutableBuffer", true);
 
   /***************************************************************************/
   /*             INTEGER                                                     */
@@ -1349,7 +1349,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheIntegerClass->subClassable("String");
+  TheIntegerClass->subClassable("String", true);
 
   /***************************************************************************/
   /*             NUMBERSTRING                                                */
@@ -1413,115 +1413,8 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheNumberStringClass->subClassable("String");
+  TheNumberStringClass->subClassable("String", true);
 
-  /***************************************************************************/
-  /*             SOMPROXY                                                    */
-  /***************************************************************************/
-
-                                       /* SOMProxy needs additional setup   */
-                                       /* Before installing external methods*/
-                                       /* but after .class has been built   */
-  somproxy_setup();
-                                       /* Add the NEW methods to the class  */
-                                       /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW       , TheSomProxyClassBehaviour, CPPMSOMCL(RexxSOMProxyClass::newRexx), A_COUNT);
-  defineKernelMethod(CHAR_INIT      , TheSomProxyClassBehaviour, CPPMSOMCL(RexxSOMProxyClass::init), A_COUNT);
-  defineKernelMethod(CHAR_UNKNOWN   , TheSomProxyClassBehaviour, CPPM(RexxObject::unknownRexx), 2);
-  defineKernelMethod(CHAR_INITPROXY , TheSomProxyClassBehaviour, CPPM(RexxObject::initProxyRexx), 1);
-  defineKernelMethod(CHAR_FREESOMOBJ, TheSomProxyClassBehaviour, CPPM(RexxObject::freeSOMObjRexx), 0);
-  defineKernelMethod(CHAR_SERVER    , TheSomProxyClassBehaviour, CPPM(RexxObject::serverRexx), 0);
-  defineKernelMethod(CHAR_SOMOBJ    , TheSomProxyClassBehaviour, CPPM(RexxObject::SOMObjRexx), 0);
-  defineKernelMethod(CHAR_HASMETHOD , TheSomProxyClassBehaviour, CPPM(RexxObject::hasMethodRexx), 1);
-  defineKernelMethod(CHAR_SOMDNEW   , TheSomProxyClassBehaviour, CPPMSOMCL(RexxSOMProxyClass::somdNew), 0);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-//  TheSOMProxyClassBehaviour->setMethodDictionaryScope(OREF_SOMPROXY);
-                                       /* Add the instance methods to the   */
-                                       /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_INITPROXY , TheSomProxyBehaviour, CPPM(RexxObject::initProxyRexx), 1);
-  defineKernelMethod(CHAR_FREESOMOBJ, TheSomProxyBehaviour, CPPM(RexxObject::freeSOMObjRexx), 0);
-  defineKernelMethod(CHAR_SERVER    , TheSomProxyBehaviour, CPPM(RexxObject::serverRexx), 0);
-  defineKernelMethod(CHAR_SOMOBJ    , TheSomProxyBehaviour, CPPM(RexxObject::SOMObjRexx), 0);
-  defineKernelMethod(CHAR_UNKNOWN   , TheSomProxyBehaviour, CPPM(RexxObject::unknownRexx), 2);
-  defineKernelMethod(CHAR_HASMETHOD , TheSomProxyBehaviour, CPPM(RexxObject::hasMethodRexx), 1);
-  defineKernelMethod(CHAR_MAKESTRING, TheSomProxyBehaviour, CPPM(RexxObject::makeStringRexx), 0);
-
-  defineKernelMethod(CHAR_PLUS                         , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_plusRexx), 1);
-  defineKernelMethod(CHAR_SUBTRACT                     , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_minusRexx), 1);
-  defineKernelMethod(CHAR_MULTIPLY                     , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_multiplyRexx), 1);
-  defineKernelMethod(CHAR_DIVIDE                       , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_divideRexx), 1);
-  defineKernelMethod(CHAR_INTDIV                       , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_integerDivideRexx), 1);
-  defineKernelMethod(CHAR_REMAINDER                    , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_remainderRexx), 1);
-  defineKernelMethod(CHAR_POWER                        , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_powerRexx), 1);
-  defineKernelMethod(CHAR_NULLSTRING                   , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_abuttalRexx), 1);
-  defineKernelMethod(CHAR_CONCATENATE                  , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_concatRexx), 1);
-  defineKernelMethod(CHAR_BLANK                        , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_concatBlankRexx), 1);
-  defineKernelMethod(CHAR_EQUAL                        , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_equalRexx), 1);
-  defineKernelMethod(CHAR_BACKSLASH_EQUAL              , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_notEqualRexx), 1);
-  defineKernelMethod(CHAR_GREATERTHAN                  , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_isGreaterThanRexx), 1);
-  defineKernelMethod(CHAR_BACKSLASH_GREATERTHAN        , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_isBackslashGreaterThanRexx), 1);
-  defineKernelMethod(CHAR_LESSTHAN                     , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_isLessThanRexx), 1);
-  defineKernelMethod(CHAR_BACKSLASH_LESSTHAN           , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_isBackslashLessThanRexx), 1);
-  defineKernelMethod(CHAR_GREATERTHAN_EQUAL            , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_isGreaterOrEqualRexx), 1);
-  defineKernelMethod(CHAR_LESSTHAN_EQUAL               , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_isLessOrEqualRexx), 1);
-  defineKernelMethod(CHAR_STRICT_EQUAL                 , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_strictEqualRexx), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL       , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_strictNotEqualRexx), 1);
-  defineKernelMethod(CHAR_STRICT_GREATERTHAN           , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_strictGreaterThanRexx), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_GREATERTHAN , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_strictBackslashGreaterThanRexx), 1);
-  defineKernelMethod(CHAR_STRICT_LESSTHAN              , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_strictLessThanRexx), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_LESSTHAN    , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_strictBackslashLessThanRexx), 1);
-  defineKernelMethod(CHAR_STRICT_GREATERTHAN_EQUAL     , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_strictGreaterOrEqualRexx), 1);
-  defineKernelMethod(CHAR_STRICT_LESSTHAN_EQUAL        , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_strictLessOrEqualRexx), 1);
-  defineKernelMethod(CHAR_LESSTHAN_GREATERTHAN         , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_lessThanGreaterThanRexx), 1);
-  defineKernelMethod(CHAR_GREATERTHAN_LESSTHAN         , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_greaterThanLessThanRexx), 1);
-  defineKernelMethod(CHAR_AND                          , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_andRexx), 1);
-  defineKernelMethod(CHAR_OR                           , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_orRexx), 1);
-  defineKernelMethod(CHAR_XOR                          , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_xorRexx), 1);
-  defineKernelMethod(CHAR_BACKSLASH                    , TheSomProxyBehaviour, CPPMSOM(RexxSOMProxy::operator_notRexx), 1);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-  TheSomProxyBehaviour->setMethodDictionaryScope(TheSomProxyClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheSomProxyClass->subClassable("SOMProxy");
-
-  /***************************************************************************/
-  /*             M_SOMPROXY                                                  */
-  /***************************************************************************/
-
-                                       /* Add the NEW methods to the class  */
-  {                                    /* behaviour mdict                   */
-    RexxBehaviour *MetaBehav = TheMSomProxyClass->behaviour;
-    RexxBehaviour *MetaInstanceBehav = TheMSomProxyClass->instanceBehaviour;
-                                       /* M_SOMPROXY is a meta. so make     */
-                                       /*  it gets classes/meta NEW         */
-    defineKernelMethod(CHAR_NEW       , MetaBehav        , CPPMC(RexxClass::newRexx), A_COUNT);
-
-    defineKernelMethod(CHAR_NEW       , MetaInstanceBehav, CPPMSOMCL(RexxSOMProxyClass::newRexx), A_COUNT);
-    defineKernelMethod(CHAR_INIT      , MetaInstanceBehav, CPPMSOMCL(RexxSOMProxyClass::init), A_COUNT);
-    defineKernelMethod(CHAR_UNKNOWN   , MetaInstanceBehav, CPPM(RexxObject::unknownRexx), 2);
-    defineKernelMethod(CHAR_INITPROXY , MetaInstanceBehav, CPPM(RexxObject::initProxyRexx), 1);
-    defineKernelMethod(CHAR_FREESOMOBJ, MetaInstanceBehav, CPPM(RexxObject::freeSOMObjRexx), 0);
-    defineKernelMethod(CHAR_SERVER    , MetaInstanceBehav, CPPM(RexxObject::serverRexx), 0);
-    defineKernelMethod(CHAR_SOMOBJ    , MetaInstanceBehav, CPPM(RexxObject::SOMObjRexx), 0);
-    defineKernelMethod(CHAR_HASMETHOD , MetaInstanceBehav, CPPM(RexxObject::hasMethodRexx), 1);
-    defineKernelMethod(CHAR_SOMDNEW   , MetaInstanceBehav, CPPMSOMCL(RexxSOMProxyClass::somdNew), 0);
-
-                                       /* set the scope of the methods to   */
-                                       /* this classes oref                 */
-//    MetaBehav->setMethodDictionaryScope(OREF_M_SOMPROXY);
-    MetaInstanceBehav->setMethodDictionaryScope(TheMSomProxyClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-                                       /* NOTE: this may need a special meth*/
-                                       /*  so that its a subclass of class  */
-    TheMSomProxyClass->subClassable("M_SOMProxy");
-  }
 
   /***************************************************************************/
   /*           SUPPLIER                                                      */
@@ -1544,7 +1437,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheSupplierClass->subClassable("Supplier");
+  TheSupplierClass->subClassable("Supplier", true);
 
   /***************************************************************************/
   /*           TABLE                                                         */
@@ -1578,7 +1471,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheTableClass->subClassable("Table");
+  TheTableClass->subClassable("Table", false);
 
   /***************************************************************************/
   /***************************************************************************/
@@ -1653,14 +1546,6 @@ bool kernel_setup (void)
                                        /* and the system version info       */
   kernel_public(CHAR_VERSION,SysVersion(),TheSystem);
 
-#ifdef SOM
-                                       /* indicate running with SOM V2      */
-  kernel_public(CHAR_SOMVERSION, IntegerTwo, TheSystem);
-#else
-                                       /* SOM not in system use level 0     */
-  kernel_public(CHAR_SOMVERSION, IntegerZero, TheSystem);
-#endif
-
 /******************************************************************************/
 /*      Complete the image build process, calling BaseClasses to establish    */
 /*      the rest of the REXX image.                                           */
@@ -1670,13 +1555,6 @@ bool kernel_setup (void)
   /*  BaseClasses.ORX and ORYXJ.ORX.                                            */
                                        /* create a kernel methods directory */
   kernel_methods = (RexxDirectory *)save(new_directory());
-  kernel_methods->put(createKernelMethod(CPPMSOMS(RexxSOMServer::initDSom), 0), kernel_name(CHAR_SHRIEKSOMSERVER_INITDSOM) );
-  kernel_methods->put(createKernelMethod(CPPMSOMS(RexxSOMServer::initDSomWPS), 0), kernel_name(CHAR_SHRIEKSOMSERVER_INITDSOMWPS) );
-  kernel_methods->put(createKernelMethod(CPPMSOMDS(RexxSOMDServer::getClassObj), 1), kernel_name(CHAR_SOMDSERVER_GETCLASSOBJ) );
-  kernel_methods->put(createKernelMethod(CPPMSOMDS(RexxSOMDServer::createObj), 1), kernel_name(CHAR_SOMDSERVER_CREATEOBJ) );
-  kernel_methods->put(createKernelMethod(CPPMSOMDS(RexxSOMDServer::deleteObj), 1), kernel_name(CHAR_SOMDSERVER_DELETEOBJ) );
-  kernel_methods->put(createKernelMethod(CPPMSOMDO(RexxSOMDObjectMgr::enhanceServer), 2), kernel_name(CHAR_SOMDOBJECTMGR_ENHANCESERVER) );
-  kernel_methods->put(createKernelMethod(CPPMSRV(RexxServer::messageWait), 0), kernel_name(CHAR_SHRIEKSERVER_WAIT) );
   kernel_methods->put(createKernelMethod(CPPMLOC(RexxLocal::local), 0), kernel_name(CHAR_LOCAL));
   kernel_methods->put(createKernelMethod(CPPMLOC(RexxLocal::runProgram), 1), kernel_name(CHAR_RUN_PROGRAM));
   kernel_methods->put(createKernelMethod(CPPMLOC(RexxLocal::callString), A_COUNT), kernel_name(CHAR_CALL_STRING));
@@ -1700,13 +1578,41 @@ bool kernel_setup (void)
                                        /* now call BaseClasses to finish the image*/
   ((RexxObject *)CurrentActivity)->shriekRun(meth, OREF_NULL, OREF_NULL, (RexxObject **)&kernel_methods, 1);
   discard(kernel_methods);             /* release the directory lock        */
-                                       /* remove kernel from .environment   */
-  TheEnvironment->remove(kernel_name(CHAR_KERNEL));
 
   /* define and suppress methods in the nil object */
   TheNilObject->defMethod(kernel_name(CHAR_COPY), (RexxMethod *)TheNilObject);
   TheNilObject->defMethod(kernel_name(CHAR_START), (RexxMethod *)TheNilObject);
   TheNilObject->defMethod(kernel_name(CHAR_OBJECTNAMEEQUALS), (RexxMethod *)TheNilObject);
+
+  RexxClass *ordered = (RexxClass *)TheEnvironment->get(kernel_name(CHAR_ORDEREDCOLLECTION));
+
+  TheArrayClass->inherit(ordered, OREF_NULL);
+  TheArrayClass->setRexxDefined();
+
+  TheQueueClass->inherit(ordered, OREF_NULL);
+  TheQueueClass->setRexxDefined();
+
+  TheListClass->inherit(ordered, OREF_NULL);
+  TheListClass->setRexxDefined();
+
+  RexxClass *map = (RexxClass *)TheEnvironment->get(kernel_name(CHAR_MAPCOLLECTION));
+
+  TheTableClass->inherit(map, OREF_NULL);
+  TheTableClass->setRexxDefined();
+
+  TheRelationClass->inherit(map, OREF_NULL);
+  TheRelationClass->setRexxDefined();
+
+  TheDirectoryClass->inherit(map, OREF_NULL);
+  TheDirectoryClass->setRexxDefined();
+
+  TheStemClass->inherit(map, OREF_NULL);
+  TheStemClass->setRexxDefined();
+
+  // this has been protecting every thing critical
+  // from GC events thus far, but now we remove it because
+  // it contains things we don't want to save in the image.
+  TheEnvironment->remove(kernel_name(CHAR_KERNEL));
   return true;
 }
 

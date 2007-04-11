@@ -381,11 +381,16 @@ RexxTable *RexxClass::getBehaviourDictionary()
     return (RexxTable *)methods->copy();
 }
 
-void RexxClass::subClassable(
-    PCHAR class_id)                    /* name of this class                */
-/*****************************************************************************/
-/* Function:   Initialize a Rexx subclassable class                          */
-/*****************************************************************************/
+/**
+ * Initialize a base Rexx class.
+ *
+ * @param class_id   The name of the class.
+ * @param restricted Whether we should turn the RexxRestricted flag on at this time.
+ *                   Some classes get additional customization after initial
+ *                   creation, so we delay setting this attribute until the
+ *                   class is fully constructed.
+ */
+void RexxClass::subClassable(PCHAR class_id, bool restricted)
 {
                                        /* get a copy of the class instance   */
                                        /* behaviour mdict before the merge   */
@@ -488,15 +493,6 @@ void RexxClass::subClassable(
   this->behaviour->setClass(TheClassClass);
                                        /* set the somclass to .nil           */
   OrefSet(this, this->somClass, (RexxInteger *)TheNilObject);
-                                       /* The class_info for Rexx classes    */
-                                       /* is updated with rexxdefined        */
-                                       /* for all the classes except         */
-                                       /* TABLE DIRECTORY AND RELATION       */
-                                       /* this will be done in BaseClasses.orx     */
-                                       /* after they inherit from singleitem */
-                                       /* or manyitem mixin class            */
-  if (this != TheTableClass && this != TheDirectoryClass && this != TheRelationClass)
-    this->class_info |= REXX_DEFINED;
                                        /* SOMPROXY/M_SOMPROXY aren't        */
                                        /* primitive any more either.        */
   if (TheMSomProxyClass != this && TheSomProxyClass != this)
