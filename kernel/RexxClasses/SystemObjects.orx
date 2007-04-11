@@ -167,7 +167,7 @@ use strict arg index, value=(index)    /* get the index                     */
 /*    S E T                   C L A S S    */
 /* *************************************** */
 
-::CLASS 'Set' SUBCLASS table
+::CLASS 'Set' SUBCLASS table INHERIT setcollection
 /*****************************************/
 /* OF         method                     */
 /*****************************************/
@@ -275,7 +275,7 @@ nomethod:                              /* unknown method sent               */
 /*    B A G                   C L A S S    */
 /* *************************************** */
 
-::CLASS 'Bag' SUBCLASS relation
+::CLASS 'Bag' SUBCLASS relation INHERIT setcollection
 ::METHOD of CLASS
 if (arg() < 1) then                    /* no index given?                   */
   raise syntax 93.901 array (1)        /* raise an error                    */

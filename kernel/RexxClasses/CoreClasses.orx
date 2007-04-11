@@ -94,6 +94,7 @@ set_methods~put(.methods~many_xor,          'XOR')
 .environment~setentry('COLLECTION', .collection)
 .environment~setentry('ORDEREDCOLLECTION', .orderedcollection)
 .environment~setentry('MAPCOLLECTION', .mapcollection)
+.environment~setentry('SETCOLLECTION', .mapcollection)
 
 /* Call the system dependant routine to define addition methods */
 systemMethods = 'SystemMethods.orx'()           /* case sensitive           */
@@ -480,3 +481,4 @@ nomethod:
 ::CLASS Collection MIXINCLASS Object
 ::CLASS OrderedCollection MIXINCLASS Collection
 ::CLASS MapCollection MIXINCLASS Collection
+::CLASS SetCollection MIXINCLASS Collection
