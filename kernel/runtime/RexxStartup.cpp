@@ -75,6 +75,7 @@ extern RexxArray *ProcessLocalActs;    /* list of process activities        */
 
 extern BOOL  ProcessRestoreImage;      /* we're restoring the image         */
 extern RexxDirectory *ProcessLocalEnv; /* process local environment (.local)*/
+extern RexxObject * ProcessLocalServer;
 extern int   ProcessInitializations;   /* number of nested initializations  */
 extern BOOL  ProcessTerminating;       /* termination has started           */
 extern int   ProcessNumActs;           /* number of activities              */
@@ -200,7 +201,6 @@ void start_rexx_environment(void)
 /******************************************************************************/
 {
   RexxObject *server_class;            /* server class object               */
-  RexxObject *result;                  /* returned new result               */
 
   activity_lock_kernel();              /* lock the kernel                   */
   kernelNewProcess();                  /* do new process initialization     */
@@ -213,7 +213,7 @@ void start_rexx_environment(void)
 
   TheActivityClass->getActivity();     /* get an activity set up            */
                                        /* create a new server object        */
-  CurrentActivity->messageSend(server_class, OREF_NEW, 0, OREF_NULL, &result);
+  CurrentActivity->messageSend(server_class, OREF_NEW, 0, OREF_NULL, &ProcessLocalServer);
                                        /* now release this activity         */
   TheActivityClass->returnActivity(CurrentActivity);
   ProcessRestoreImage = FALSE;         /* Turn off restore image flag.      */

@@ -2407,7 +2407,7 @@ RexxInstruction *RexxSource::useStrictNew()
     }
 
     /* create a new translator object    */
-    RexxObject *newObject = new_variable_instruction(USE, UseStrict, sizeof(RexxInstructionUseStrict) + (variableCount - 1) * sizeof(UseVariable));
+    RexxObject *newObject = new_variable_instruction(USE, UseStrict, sizeof(RexxInstructionUseStrict) + (variableCount == 0 ? 0 : (variableCount - 1)) * sizeof(UseVariable));
     /* now complete this                 */
     new ((void *)newObject) RexxInstructionUseStrict(variableCount, allowOptionals, variable_list, defaults_list, assertions_list);
     removeObj(variable_list);

@@ -77,21 +77,12 @@ say 'Stream methods setup'
 /* PUT           method                  */
 /*****************************************/
 ::METHOD put                           /* add an entry to the set           */
-use arg index, value                   /* get the index                     */
+use strict arg index, value=(index)    /* get the index                     */
 
-signal on syntax
-
-if (arg() < 1)                         /* no index given?                   */
-  then raise syntax 93.901 array (1)   /* raise an error                    */
-if (arg() > 2)                         /* too many arguments?               */
-  then raise syntax 93.902 array (1)   /* raise an error                    */
-if (arg() = 2) then                    /* have the second argument given?   */
   if index \== value then              /* these must be identical           */
     raise syntax 93.949                /* this is an error                  */
-self~put:super(index, index)           /* add to the table                  */
-return
-
-syntax: raise propagate
+  self~put:super(index, index)         /* add to the table                  */
+  return
 
 
 /* ******************************** */
@@ -116,17 +107,11 @@ syntax: raise propagate
  /* Output Self (monitor object)                                           */
  /**************************************************************************/
  expose destination
-
- signal on syntax
-
- if arg() > 1 then                     /* too many arguments?               */
-   raise syntax 93.902 array (1)       /* this is an error                  */
+ use strict arg dest = .nil
  destination = .queue~new
  if arg(1,'e') then
-   destination~push(arg(1))
+   destination~push(dest)
  return
-
-syntax: raise propagate
 
 ::METHOD destination
  /**************************************************************************/
@@ -140,21 +125,12 @@ syntax: raise propagate
  /*        message function is handled                                     */
  /**************************************************************************/
  expose destination
-
- signal on halt
- signal on syntax
-
- if arg() > 1 then                     /* too many arguments?               */
-   raise syntax 93.902 array (1)       /* this is an error                  */
+ use strict arg dest = .nil
  if arg(1,'e') then
-   destination~push(arg(1))
+   destination~push(dest)
  else
    destination~pull
  return destination~peek
-
-halt:
-syntax:
-  raise propagate
 
 
 ::METHOD current
@@ -167,17 +143,8 @@ syntax:
  /* Output Current destination object                                      */
  /**************************************************************************/
  expose destination
-
- signal on halt
- signal on syntax
-
- if arg() > 0 then                     /* too many arguments?               */
-   raise syntax 93.902 array (0)       /* this is an error                  */
-  return destination~peek
-
-halt:
-syntax:
-  raise propagate
+ use strict arg
+ return destination~peek
 
 ::METHOD unknown unguarded
  /**************************************************************************/
@@ -191,24 +158,10 @@ syntax:
  /**************************************************************************/
  /* unknown: forward monitored message to destination */
   expose destination
+  use strict arg msgname, arglist
 
-  signal on halt
-  signal on syntax
-
-  if (arg() < 2)                       /* too few arguments?                */
-    then raise syntax 93.901 array (2) /* raise an error                    */
-  if arg() > 2 then                    /* too many arguments?               */
-    raise syntax 93.902 array (2)      /* this is an error                  */
-  if arg(1, 'o') then
-    raise syntax 93.903 array (1)      /* this is an error                  */
-
-  use arg msgname, arglist
   forward to (destination~peek) message (msgname) arguments (arglist)
-  exit
 
-halt:
-syntax:
-  raise propagate
 
 /* *************************************** */
 /*    S E T                   C L A S S    */
@@ -219,7 +172,6 @@ syntax:
 /* OF         method                     */
 /*****************************************/
 ::METHOD of CLASS
-signal on syntax
 if (arg() < 1) then                    /* no index given?                   */
   raise syntax 93.901 array (1)        /* raise an error                    */
 new = self~new                         /* create a new set                  */
@@ -230,22 +182,13 @@ do i = 1 to arg()                      /* loop through all the arguments    */
 end
 return new                             /* return new set                    */
 
-syntax: raise propagate
-
 /*****************************************/
 /* XOR        method                     */
 /*****************************************/
 ::METHOD xor                           /* take the exclusive or of a set    */
-use arg other                          /* get the companion object          */
+use strict arg other                   /* get the companion object          */
 
-signal on syntax                       /* trap unknown method calls         */
-if (arg() < 1)                         /* no index given?                   */
-  then raise syntax 93.901 array (1)   /* raise an error                    */
-if (arg() > 1)                         /* too many arguments?               */
-  then raise syntax 93.902 array (1)   /* raise an error                    */
-
-if \other~hasmethod("hasindex")        /* is other a collection?            */
-  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+signal on nomethod
 
 new = self~copy
 do index over other                    /* loop over the other collection    */
@@ -256,24 +199,16 @@ do index over other                    /* loop over the other collection    */
 end
 return new                             /* return the XOR collection         */
 
-syntax:                                /* unknown method sent               */
-  raise propagate                      /* just send on to the caller        */
+nomethod:                              /* unknown method sent               */
+  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
 
 /*****************************************/
 /* INTERSECTION  method                  */
 /*****************************************/
 ::METHOD intersection                  /* take the intersection of sets     */
-use arg other                          /* get the other collection          */
+use strict arg other                   /* get the other collection          */
 
-signal on syntax                       /* trap unknown method calls         */
-if (arg() < 1)                         /* no index given?                   */
-  then raise syntax 93.901 array (1)   /* raise an error                    */
-if (arg() > 1)                         /* too many arguments?               */
-  then raise syntax 93.902 array (1)   /* raise an error                    */
-
-if \other~hasmethod("hasindex")        /* is other a collection?            */
-  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
-
+signal on nomethod
 new = self~class~new                   /* create a new collection           */
 do index over other                    /* loop over the other collection    */
   if self~hasindex(index) then         /* in this collection?               */
@@ -281,23 +216,17 @@ do index over other                    /* loop over the other collection    */
 end
 return new                             /* return the difference collection  */
 
-syntax:                                /* unknown method sent               */
-  raise propagate                      /* just send on to the caller        */
+nomethod:                              /* unknown method sent               */
+  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+
 
 /*****************************************/
 /* UNION         method                  */
 /*****************************************/
 ::METHOD union                         /* take the union of sets            */
-use arg other                          /* get the other collection          */
+use strict arg other                   /* get the other collection          */
 
-signal on syntax                       /* trap unknown method calls         */
-if (arg() < 1)                         /* no index given?                   */
-  then raise syntax 93.901 array (1)   /* raise an error                    */
-if (arg() > 1)                         /* too many arguments?               */
-  then raise syntax 93.902 array (1)   /* raise an error                    */
-
-if \other~hasmethod("hasindex")        /* is other a collection?            */
-  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+signal on nomethod                     /* trap unknown method calls         */
 
 new = self~copy                        /* copy the collection               */
 do index over other                    /* loop over the other collection    */
@@ -307,23 +236,17 @@ end
 
 return new                             /* return the target collection      */
 
-syntax:                                /* unknown method sent               */
-  raise propagate                      /* just send on to the caller        */
+nomethod:                              /* unknown method sent               */
+  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+
 
 /*****************************************/
 /* SUBSET        method                  */
 /*****************************************/
 ::METHOD subset                        /* do we have a subset?              */
-use arg other                          /* get the other collection          */
+use strict arg other                   /* get the other collection          */
 
-signal on syntax                       /* trap unknown method calls         */
-if (arg() < 1)                         /* no index given?                   */
-  then raise syntax 93.901 array (1)   /* raise an error                    */
-if (arg() > 1)                         /* too many arguments?               */
-  then raise syntax 93.902 array (1)   /* raise an error                    */
-
-if \other~hasmethod("hasindex")        /* is other a collection?            */
-  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+signal on nomethod                     /* trap unknown method calls         */
 
 object = self~copy                     /* make a copy of this object        */
 do index over other                    /* loop over the other collection    */
@@ -331,19 +254,16 @@ do index over other                    /* loop over the other collection    */
 end
 return 0=object~items                  /* if nothing left -> proper subset  */
 
-syntax:                                /* unknown method sent               */
-  raise propagate                      /* just send on to the caller        */
+nomethod:                              /* unknown method sent               */
+  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
 
 
 /*****************************************/
 /* PUTALL        method                  */
 /*****************************************/
 ::method putall
-  use arg other
-  if (arg() < 1)                         /* no index given?                   */
-    then raise syntax 93.901 array (1)   /* raise an error                    */
-  if (arg() > 1)                         /* too many arguments?               */
-    then raise syntax 93.902 array (1)   /* raise an error                    */
+  use strict arg other
+
   supplier = other~supplier              /* get an other supplier             */
   do while supplier~available            /* loop over the other collection    */
     self~put(supplier~item)              -- set and bag only use the item, ignoring the index.
@@ -357,7 +277,6 @@ syntax:                                /* unknown method sent               */
 
 ::CLASS 'Bag' SUBCLASS relation
 ::METHOD of CLASS
-signal on syntax
 if (arg() < 1) then                    /* no index given?                   */
   raise syntax 93.901 array (1)        /* raise an error                    */
 
@@ -369,22 +288,13 @@ do i = 1 to arg()                      /* loop through all the arguments    */
 end
 return new                             /* return new bag                    */
 
-syntax: raise propagate
-
 /*****************************************/
 /* UNION         method                  */
 /*****************************************/
 ::METHOD union
-use arg other                          /* get the other collection          */
+use strict arg other                   /* get the other collection          */
 
-signal on syntax                       /* trap unknown method requests      */
-if (arg() < 1)                         /* no index given?                   */
-  then raise syntax 93.901 array (1)   /* raise an error                    */
-if (arg() > 1)                         /* too many arguments?               */
-  then raise syntax 93.902 array (1)   /* raise an error                    */
-
-if \other~hasmethod("hasindex")        /* is other a collection?            */
-  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+signal on nomethod                     /* trap unknown method requests      */
 
 new = self~copy                        /* copy ourself                      */
 do index over other                    /* loop over the other collection    */
@@ -392,23 +302,16 @@ do index over other                    /* loop over the other collection    */
 end
 return new                             /* return the union collection       */
 
-syntax:                                /* unknown method sent               */
-  raise propagate                      /* just send on to the caller        */
+nomethod:                              /* unknown method sent               */
+  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
 
 /*****************************************/
 /* XOR           method                  */
 /*****************************************/
 ::METHOD xor
-use arg other                          /* get the companion object          */
+use strict arg other                   /* get the companion object          */
 
-signal on syntax                       /* trap unknown method calls         */
-if (arg() < 1)                         /* no index given?                   */
-  then raise syntax 93.901 array (1)   /* raise an error                    */
-if (arg() > 1)                         /* too many arguments?               */
-  then raise syntax 93.902 array (1)   /* raise an error                    */
-
-if \other~hasmethod("hasindex")        /* is other a collection?            */
-  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+signal on nomethod                     /* trap unknown method calls         */
 
 new = self~copy
 catcher = self~class~new               /* create a new empty one            */
@@ -420,23 +323,16 @@ do index over other                    /* loop over the other collection    */
 end
 return new~union(catcher)              /* now remerge these collections     */
 
-syntax:                                /* unknown method sent               */
-  raise propagate                      /* just send on to the caller        */
+nomethod:                              /* unknown method sent               */
+  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
 
 /*****************************************/
 /* INTERSECTION  method                  */
 /*****************************************/
 ::METHOD intersection
-use arg other                          /* get the other collection          */
+use strict arg other                   /* get the other collection          */
 
-signal on syntax                       /* trap unknown method calls         */
-if (arg() < 1)                         /* no index given?                   */
-  then raise syntax 93.901 array (1)   /* raise an error                    */
-if (arg() > 1)                         /* too many arguments?               */
-  then raise syntax 93.902 array (1)   /* raise an error                    */
-
-if \other~hasmethod("hasindex")        /* is other a collection?            */
-  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+signal on nomethod                     /* trap unknown method calls         */
 
 new = self~class~new                   /* start with a new collection       */
 object = self~copy                     /* copy the target collection        */
@@ -448,23 +344,16 @@ do index over other                    /* loop over the other collection    */
 end
 return new                             /* return the intersection collection*/
 
-syntax:                                /* unknown method sent               */
-  raise propagate                      /* just send on to the caller        */
+nomethod:                              /* unknown method sent               */
+  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
 
 /*****************************************/
 /* DIFFERENCE method                     */
 /*****************************************/
 ::METHOD difference
-use arg other                          /* get the companion object          */
+use strict arg other                   /* get the companion object          */
 
-signal on syntax                       /* trap unknown method calls         */
-if (arg() < 1)                         /* no index given?                   */
-  then raise syntax 93.901 array (1)   /* raise an error                    */
-if (arg() > 1)                         /* too many arguments?               */
-  then raise syntax 93.902 array (1)   /* raise an error                    */
-
-if \other~hasmethod("hasindex")        /* is other a collection?            */
-  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+signal on nomethod                     /* trap unknown method calls         */
 
 new = self~copy                        /* make a new set                    */
 do index over other                    /* loop over the other collection    */
@@ -472,23 +361,16 @@ do index over other                    /* loop over the other collection    */
 end
 return new                             /* return the difference collection  */
 
-syntax:                                /* unknown method sent               */
-  raise propagate                      /* just send on to the caller        */
+nomethod:                              /* unknown method sent               */
+  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
 
 /*****************************************/
 /* SUBSET        method                  */
 /*****************************************/
 ::METHOD subset
-use arg other                          /* get the other collection          */
+use strict arg other                   /* get the other collection          */
 
-signal on syntax                       /* trap unknown method calls         */
-if (arg() < 1)                         /* no index given?                   */
-  then raise syntax 93.901 array (1)   /* raise an error                    */
-if (arg() > 1)                         /* too many arguments?               */
-  then raise syntax 93.902 array (1)   /* raise an error                    */
-
-if \other~hasmethod("hasindex")        /* is other a collection?            */
-  then raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+signal on nomethod                     /* trap unknown method calls         */
 
 object = self~copy                     /* make a copy of this object        */
 do index over other                    /* loop over the other collection    */
@@ -496,19 +378,16 @@ do index over other                    /* loop over the other collection    */
 end
 return 0=object~items                  /* if nothing left -> proper subset  */
 
-syntax:                                /* unknown method sent               */
-  raise propagate                      /* just send on to the caller        */
+nomethod:                              /* unknown method sent               */
+  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
 
 
 /*****************************************/
 /* PUTALL        method                  */
 /*****************************************/
 ::method putall
-  use arg other
-  if (arg() < 1)                         /* no index given?                   */
-    then raise syntax 93.901 array (1)   /* raise an error                    */
-  if (arg() > 1)                         /* too many arguments?               */
-    then raise syntax 93.902 array (1)   /* raise an error                    */
+  use strict arg other
+
   supplier = other~supplier              /* get an other supplier             */
   do while supplier~available            /* loop over the other collection    */
     self~put(supplier~item)              -- set and bag only use the item, ignoring the index.
@@ -549,16 +428,7 @@ syntax:                                /* unknown method sent               */
  timerStarted = 0
  canceled = .false
 
- signal on syntax
-
- if (arg() < 2) then                   /* no arguments given?               */
-  raise syntax 93.901 array (2)        /* raise an error                    */
- if (arg() > 2) then                   /* too many arguments given?         */
-  raise syntax 93.902 array (2)        /* raise an error                    */
- if (arg(1,'O')) then                  /* omitted first argument?           */
-   raise syntax 93.903 array(1)        /* also an error                     */
-
- use arg atime, msgobj                 /* get the arguments                 */
+ use strict arg atime, msgobj          /* get the arguments                 */
 
                                        /* not a message object?             */
  if (msgobj~request('MESSAGE') = .nil) then
@@ -633,10 +503,7 @@ syntax:                                /* unknown method sent               */
 ::METHOD cancel unguarded
  expose canceled eventSemHandle timerStarted
 
- signal on syntax /*@CHM003A*/
-
- if (arg() > 0) then                      /* too many arguments?               */
-   raise syntax 93.902 array (0)          /* raise an error                    */
+ use strict arg
 
  guard on  when timerStarted              /* Wait until timer is actually set  */
                                           /* if time hasn't expired?           */
@@ -647,9 +514,6 @@ syntax:                                /* unknown method sent               */
       self~!stopTimer(eventSemHandle)
    end
  return
-
-syntax: raise propagate
-
 
 ::METHOD !stopTimer PRIVATE unguarded EXTERNAL 'REXX alarm_stopTimer'
 
@@ -887,7 +751,6 @@ Output:
 
 ::method of class
 
-  signal on syntax
   storage=self~new(arg())     -- create a circular queue of appropriate size
 
   do i=1 to arg()
@@ -895,18 +758,10 @@ Output:
   end
   return storage              -- return instance
 
-syntax: raise propagate
-
 
 ::method init                 -- create an instance, memorizes the size
   expose size
-  parse arg size
-
-  signal on syntax
-  if arg(1, "O") then
-     raise syntax 93.903 array (1)  -- raise an error
-  if (arg() > 1) then               -- too many arguments given?
-     raise syntax 93.902 array (1)  -- raise an error
+  use strict arg size
 
   -- check for whole number >= 0, raise error
   if datatype(size, "Whole")=.false | size<0  then
@@ -915,41 +770,26 @@ syntax: raise propagate
   self~init:super
   return
 
-syntax: raise propagate
-
-
 
 ::METHOD size                 -- return size
   expose size
-
-  signal on syntax
-  if (arg() > 0) then               -- too many arguments given?
-     raise syntax 93.902 array (0)  -- raise an error
- return size
-
-syntax: raise propagate
+  use strict arg
+  return size
 
 
 ::METHOD resize               -- allow to resize the circularQueue
   expose size
 
-  signal on syntax
-  if arg(1, "O") then
-     raise syntax 93.903 array (1)  -- raise an error
-  if (arg() > 2) then               -- too many arguments given?
-     raise syntax 93.902 array (2)  -- raise an error
-
-   parse upper arg newSize, order +1   -- parse arguments
+  use strict arg newSize, order = "F"
 
    -- check for whole number >= 0, raise error
    if datatype(newSize, "Whole")=.false | newSize<0  then
       raise syntax 93.906 array (1, arg(1))
 
-   if arg(2,"Exists") then
-   do
-      if pos(order, "FL")=0 then  -- oops: not a valid argument!
-         raise syntax 93.914 array (2, '"F" (FIFO) or "L" (LIFO)', arg(2))
-   end
+   order = order~upper~left(1)
+
+   if pos(order, "FL")=0 then  -- oops: not a valid argument!
+      raise syntax 93.914 array (2, '"F" (FIFO) or "L" (LIFO)', arg(2))
 
 
    if newSize<size then       -- too many items, we need to remove the superfluous ones
@@ -968,19 +808,11 @@ syntax: raise propagate
    size=newSize               -- remember new size
    return newSize             -- return the new size
 
-syntax: raise propagate
-
-
 
 ::METHOD queue                -- put an element into the queue, possibly replacing an existing one
   expose size
 
-  signal on syntax
-  if arg(1, "O") then
-     raise syntax 93.903 array (1)  -- raise an error
-  if (arg() > 1) then               -- too many arguments given?
-     raise syntax 93.902 array (1)  -- raise an error
-
+  use strict arg item
   if size=0 then return .nil  -- size is 0, do not process!
 
   if self~items >= size then
@@ -991,17 +823,9 @@ syntax: raise propagate
   forward class (super) continue -- allow the superclass to handle adding the item
   return item                 -- return pulled item
 
-syntax: raise propagate
-
-
 ::METHOD push
   expose size
-
-  signal on syntax
-  if arg(1, "O") then
-     raise syntax 93.903 array (1)  -- raise an error
-  if (arg() > 1) then               -- too many arguments given?
-     raise syntax 93.902 array (1)  -- raise an error
+  use strict arg item
 
   if size=0 then return .nil  -- size is 0, do not process !
 
@@ -1013,8 +837,6 @@ syntax: raise propagate
   forward class (super) continue    -- allow the superclass to handle adding the item
   return item                 -- return removed item
 
-syntax: raise propagate
-
 
 -----------------------------
 
@@ -1022,17 +844,12 @@ syntax: raise propagate
 ::method makearray            -- return a supplier object
   expose size storage
 
-  signal on syntax
-  if (arg() > 1) then               -- too many arguments given?
-     raise syntax 93.902 array (1)  -- raise an error
+  use strict arg order="F"
 
-  parse upper arg order +1
+  order = order~upper~left(1)
 
-  if arg(1,"Exists") then
-  do
-     if pos(order, "FL")=0 then  -- oops: not a valid argument!
-        raise syntax 93.914 array (1, '"F" (FIFO) or "L" (LIFO)', arg(1))
-  end
+  if pos(order, "FL")=0 then  -- oops: not a valid argument!
+     raise syntax 93.914 array (1, '"F" (FIFO) or "L" (LIFO)', arg(1))
 
   if order="L" then           -- in LIFO (last-in, first-out) order (stack-like)
   do
@@ -1053,23 +870,14 @@ syntax: raise propagate
      -- FORWARD class super array ()-- forward to superclass, remove possible argument
   end
 
-syntax: raise propagate
-
-
 ::method supplier             -- return a supplier object
   expose size
 
-  signal on syntax
-  if (arg() > 1) then               -- too many arguments given?
-     raise syntax 93.902 array (1)  -- raise an error
+  use strict arg order="F"
 
-  parse upper arg order +1
-
-  if arg(1,"Exists") then
-  do
-     if pos(order, "FL")=0 then  -- oops: not a valid argument!
-        raise syntax 93.914 array (1, '"F" (FIFO) or "L" (LIFO)', arg(1))
-  end
+  order = order~upper~left(1)
+  if pos(order, "FL")=0 then  -- oops: not a valid argument!
+     raise syntax 93.914 array (1, '"F" (FIFO) or "L" (LIFO)', arg(1))
 
   if order="L" then           -- in LIFO (last-in, first-out) order (stack-like)
   do
@@ -1090,37 +898,23 @@ syntax: raise propagate
      FORWARD class (super) array ()-- forward to superclass, remove possible argument
   end
 
-syntax: raise propagate
-
 
 ::method string               -- create a string representation, using the optional delimiter
   expose size
 
-  signal on syntax
-  if (arg() > 2) then               -- too many arguments given?
-     raise syntax 93.902 array (2)  -- raise an error
+  use strict arg delimiter=",", order = "F"
 
+  order = order~upper~left(1)
   if self~items=0 then        -- return empty strings, if no elements
      return ""
 
-  parse arg delimiter, order +1  -- do not translate to uppercase as to preserve the case of "delimiter"
-
-  if arg(2,"Exists") then
-  do
-     order=translate(order)   -- make sure it is translated to uppercase
-     if pos(order, "FL")=0 then  -- oops: not a valid argument!
-        raise syntax 93.914 array (2, '"F" (FIFO) or "L" (LIFO)', arg(2))
-  end
-
-  if arg(1,"Omitted") then    -- default to comma as a separator, if argument was omitted
-     delimiter=","
+  order = order~upper~left(1)
+  if pos(order, "FL")=0 then  -- oops: not a valid argument!
+     raise syntax 93.914 array (2, '"F" (FIFO) or "L" (LIFO)', arg(2))
 
   mb=.MutableBuffer~new       -- use a MutableBuffer for the string chunks
                               -- use MAKEARRAY for a snapshot in the desired order
-  if arg(2, "Omitted") then   -- order was omitted
-     array=self~makearray     -- omit order as well
-  else
-     array=self~makearray(order) -- use supplied order
+  array=self~makearray(order) -- use supplied order
 
   k=.false                    -- append supplied delimiter?
   do i=1 to array~items
@@ -1134,9 +928,6 @@ syntax: raise propagate
 
   return mb~string            -- now turn MutableBuffer object into a plain string
 
-syntax: raise propagate
-
-
 ::CLASS Properties subclass Directory public
 ::METHOD load class
   use arg input
@@ -1146,14 +937,7 @@ syntax: raise propagate
 
 
 ::METHOD load
-  use arg input
-
-  if (arg() > 1) then               -- too many arguments given?
-     raise syntax 93.902 array (1)  -- raise an error
-
-  if arg(1, 'o') then
-     raise syntax 93.903 array (1)  -- raise an error
-
+  use strict arg input
   if input~isInstanceOf(.string) then  -- if a string use it as a filename
   do
      stream=.stream~new(input)      -- create stream object
@@ -1180,13 +964,7 @@ syntax: raise propagate
   return
 
 ::METHOD save
-  use arg output
-
-  if (arg() > 1) then               -- too many arguments given?
-     raise syntax 93.902 array (1)  -- raise an error
-
-  if arg(1, 'o') then
-     raise syntax 93.903 array (1)  -- raise an error
+  use strict arg output
 
   if output~isInstanceOf(.string) then  -- if a string use it as a filename
   do
@@ -1209,16 +987,7 @@ syntax: raise propagate
 
 
 ::METHOD setProperty
-  use arg name, value
-
-  if (arg() > 2) then               -- too many arguments given?
-     raise syntax 93.902 array (2)  -- raise an error
-
-  if arg(1, 'o') then
-     raise syntax 93.903 array (1)  -- raise an error
-
-  if arg(2, 'o') then
-     raise syntax 93.903 array (2)  -- raise an error
+  use strict arg name, value
 
   value = value~request('STRING')
 
@@ -1230,13 +999,7 @@ syntax: raise propagate
 
 
 ::METHOD getProperty
-  use arg name, default
-
-  if (arg() > 2) then               -- too many arguments given?
-     raise syntax 93.902 array (2)  -- raise an error
-
-  if arg(1, 'o') then
-     raise syntax 93.903 array (1)  -- raise an error
+  use strict arg name, default
 
   value = self~at(name)
   if .nil == value then do
@@ -1297,16 +1060,7 @@ syntax: raise propagate
 
 
 ::METHOD "[]="
-  use arg value, name
-
-  if (arg() > 2) then               -- too many arguments given?
-     raise syntax 93.902 array (2)  -- raise an error
-
-  if arg(1, 'o') then
-     raise syntax 93.903 array (1)  -- raise an error
-
-  if arg(2, 'o') then
-     raise syntax 93.903 array (2)  -- raise an error
+  use strict arg value, name
 
   value = value~request('STRING')
 
@@ -1318,16 +1072,7 @@ syntax: raise propagate
 
 
 ::METHOD put
-  use arg value, name
-
-  if (arg() > 2) then               -- too many arguments given?
-     raise syntax 93.902 array (2)  -- raise an error
-
-  if arg(1, 'o') then
-     raise syntax 93.903 array (1)  -- raise an error
-
-  if arg(2, 'o') then
-     raise syntax 93.903 array (2)  -- raise an error
+  use strict arg value, name
 
   value = value~request('STRING')
 

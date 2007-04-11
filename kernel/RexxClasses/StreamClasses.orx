@@ -93,54 +93,39 @@
 ::METHOD  init                         /* standard init method              */
                                        /* access general stream state       */
   expose stream_name
-  signal on syntax /*@CHM004A*/
-  use arg stream_name                  /* get the stream name               */
-  if arg() = 1 then do                 /* only a name given                 */
-                                       /* get as a string                   */
-    stream_name = stream_name~request('STRING')
-    if .nil == stream_name then        /* not a real string value?          */
-      raise syntax 93.938 array (1)    /* this is an error                  */
-    self~!c_stream_init(stream_name)   /* initialize the stream block       */
-                                       /* upper case the name               */
-    parse upper var stream_name upper_stream_name
-                                       /* one of the standard names?        */
-    /* @CHM002M - also check for standard stream names with colons */
-    if upper_stream_name = 'STDIN' | upper_stream_name = 'STDIN:' |,
-       upper_stream_name = 'STDOUT' | upper_stream_name = 'STDOUT:' |,
-       upper_stream_name = 'STDERR' | upper_stream_name = 'STDERR:' then
-      self~!std_set                    /* have a standard stream            */
-                                       /* and handle open?                  */
-    else if substr(upper_stream_name,1,7) = 'HANDLE:' then
-                                       /* set this as a handle type         */
-      self~!handle_set(substr(stream_name,8))
-  end
-  else
-    raise syntax 93.903 array (1)      /* raise an error                    */
-
-  return /*@CHM004A*/
-
-syntax: raise propagate /*@CHM004A*/
-
+  use strict arg stream_name         /* get the stream name               */
+                                     /* get as a string                   */
+  stream_name = stream_name~request('STRING')
+  if .nil == stream_name then        /* not a real string value?          */
+    raise syntax 93.938 array (1)    /* this is an error                  */
+  self~!c_stream_init(stream_name)   /* initialize the stream block       */
+                                     /* upper case the name               */
+  parse upper var stream_name upper_stream_name
+                                     /* one of the standard names?        */
+  /* - also check for standard stream names with colons */
+  if upper_stream_name = 'STDIN' | upper_stream_name = 'STDIN:' |,
+     upper_stream_name = 'STDOUT' | upper_stream_name = 'STDOUT:' |,
+     upper_stream_name = 'STDERR' | upper_stream_name = 'STDERR:' then
+    self~!std_set                    /* have a standard stream            */
+                                     /* and handle open?                  */
+  else if substr(upper_stream_name,1,7) = 'HANDLE:' then
+                                     /* set this as a handle type         */
+    self~!handle_set(substr(stream_name,8))
+  return
                                        /* close and uninit are actually the */
                                        /* same method                       */
 ::METHOD close        EXTERNAL 'REXX stream_close'
 ::METHOD uninit       EXTERNAL 'REXX stream_close'
 
 ::METHOD  arrayout                     /* write out lines as an array       */
-  use arg array                        /* access the array                  */
+  use strict arg array, type=.nil      /* access the array                  */
 
   /* the count must be defined in case a SYNTAX or NOTREADY                 */
   /* condition is raised                                                    */
   count = 0                            /* set initial counter               */
-  signal on syntax                     /* enable the syntax handler and     */
   signal on notready                   /* the notready handler              */
-  signal on halt                       /* catch Ctrl-Break                  */
-
-  if arg() > 2 then                    /* too many arguments?               */
-    raise syntax 93.902 array (2)      /* this is an error                  */
 
   if arg(2,'E') then do                /* have a second argument?           */
-    type = arg(2)                      /* get the type                      */
     if abbrev('LINES', type) then      /* line type operation?              */
       lineout = 1                      /* set the line flag                 */
     else if abbrev('CHARS', type) then /* character operation?              */
@@ -162,34 +147,22 @@ syntax: raise propagate /*@CHM004A*/
   return 0
 
 notready:                              /* standard notready handler         */
-syntax:                                /* standard syntax handler (shared)  */
   raise propagate return (array~items - count)
-
-halt:                                  /* forward HALT condition            */
-  raise propagate
 
 ::METHOD  arrayin                      /* arrayin method                    */
   forward message 'MAKEARRAY'
 
 ::METHOD  makearray                    /* stream makearray method           */
-  signal on syntax                     /* enable the syntax handler and     */
+  use strict arg type='LINES'
   signal on notready                   /* the notready handler              */
-  signal on halt                       /* catch Ctrl-Break                  */
 
-  if arg() > 1 then                    /* too many arguments?               */
-    raise syntax 93.902 array (1)      /* this is an error                  */
-
-  if arg(1,'E') then do                /* have a second argument?           */
-    parse upper arg type               /* get the type                      */
-    if abbrev('LINES', type) then      /* line type operation?              */
+  type = type~upper
+  if abbrev('LINES', type) then        /* line type operation?              */
       linein = 1                       /* set the line flag                 */
-    else if abbrev('CHARS', type) then /* character operation?              */
+  else if abbrev('CHARS', type) then   /* character operation?              */
       linein = 0                       /* not a line operation              */
-    else
-      raise syntax 93                  /* raise an error                    */
-  end
   else
-    linein = 1                         /* set the default lookup            */
+      raise syntax 93                  /* raise an error                    */
 
   queue = .queue~new                   /* create a queue item               */
   /* Begin - change loop logic */
@@ -208,26 +181,13 @@ notready:                              /* notready handler                  */
                                        /* return the array we've got so far */
   raise propagate return (queue~makearray)
 
-syntax:                                /* standard syntax handerl (shared)  */
-  raise propagate return ('')
-
-halt:                                  /* forward HALT condition            */
-  raise propagate
-
 ::METHOD command                       /* process a stream command          */
   expose stream_name                   /* access the stream name            */
-  /*@CHM004M - moved to the beginning */
-  signal on syntax                     /* enable syntax handler             */
-  signal on notready                   /* enable notready handler           */
-  signal on halt                       /* catch Ctrl-Break                  */
-  if (arg() < 1)                       /* no command given?                 */
-                                       /* raise an error                    */
-    then raise syntax 93.901 array (1)
-  if (arg() > 1)                       /* too many arguments?               */
-                                       /* raise an error                    */
-    then raise syntax 93.902 array (1)
 
-  parse upper arg command_word parms   /* get the command name              */
+  use strict arg command
+  signal on notready                   /* enable notready handler           */
+
+  parse upper var command command_word parms   /* get the command name              */
   command_word = ' 'command_word       /* add a leading blank               */
                                        /* expand any abbreviations          */
   parse value ' CLOSE FLUSH OPEN POSITION QUERY SEEK' with (command_word) +1 command_word .
@@ -257,17 +217,14 @@ halt:                                  /* forward HALT condition            */
   end
 
 notready:                              /* standard notready handler         */
-syntax:                                /* standard syntax handler (shared)  */
-halt:                                  /* forward HALT condition            */
   raise propagate
 
 ::METHOD open        EXTERNAL 'REXX stream_open'
 
 ::METHOD query                         /* standard query routine            */
-  arg subcommand parms                 /* get the parms                     */
-  signal on syntax                     /* enable the standard handlers      */
+  use strict arg subcommand
+  parse upper var subcommand subcommand parms
   signal on notready
-  signal on halt                       /* catch Ctrl-Break                  */
   subcommand = ' 'subcommand           /* add a leading blank               */
                                        /* resolve abbreviations             */
   parse value ' DATETIME EXISTS HANDLE POSITION SEEK SIZE STREAMTYPE TIMESTAMP' with (subcommand) +1 subcommand .
@@ -329,26 +286,14 @@ halt:                                  /* forward HALT condition            */
   end
 
 notready:                              /* standard notready handler         */
-syntax:                                /* standard syntax handler (shared)  */
   raise propagate return (self~description)
 
-halt:                                  /* forward HALT condition            */
-  raise propagate
-
 ::METHOD say UNGUARDED                 /* the SAY method                    */
-  signal on halt                       /* catch Ctrl-Break                  */
   return self~lineout(arg(1))          /* write the target line out         */
 
-halt:                                  /* forward HALT condition            */
-  raise propagate
-
 ::METHOD supplier                      /* create a supplier object          */
-signal on syntax /*@CHM004A*/
-if (arg() > 0) then                    /* too many arguments?               */
-  raise syntax 93.902 array (0)        /* raise an error                    */
+use strict arg
 return .stream_supplier~new(self)      /* return a stream supplier          */
-
-syntax: raise propagate /*@CHM004A*/
 
 ::CLASS 'Stream_Supplier'              /* stream supplier class             */
 ::METHOD init                          /* initialization method             */
@@ -368,10 +313,7 @@ self~next                              /* get the first line                */
 ::METHOD next                          /* step to next element              */
                                        /* access the state information      */
 expose stream position line available transient
-
-signal on syntax /*@CHM004A*/
-if (arg() > 0) then                    /* too many arguments?               */
-  raise syntax 93.902 array (0)        /* raise an error                    */
+use strict arg
 
 if \available then                     /* already reached the end?          */
   raise syntax 93.937                  /* this is an error                  */
@@ -385,37 +327,28 @@ return                                 /* all finished                      */
 notready:                              /* notready condition occurred       */
 available = 0                          /* nothing available now             */
 return                                 /* all finished                      */
-syntax: raise propagate /*@CHM004A*/
 
 ::METHOD available                     /* is an item available?             */
 expose available                       /* access the flag item              */
-signal on syntax /*@CHM004A*/
-if (arg() > 0) then                    /* too many arguments?               */
-  raise syntax 93.902 array (0)        /* raise an error                    */
+use strict arg
 return available                       /* return the access flag            */
-syntax: raise propagate /*@CHM004A*/
 
 ::METHOD item                          /* get the current supplier value    */
 expose line available                  /* access needed object variables    */
-signal on syntax /*@CHM004A*/
-if (arg() > 0) then                    /* too many arguments?               */
-  raise syntax 93.902 array (0)        /* raise an error                    */
+use strict arg
 
 if \available then                     /* already reached the end?          */
   raise syntax 93.937                  /* this is an error                  */
 return line                            /* return the file line              */
-syntax: raise propagate /*@CHM004A*/
 
 ::METHOD index                         /* get the current supplier index    */
 expose position available              /* access needed object variables    */
-signal on syntax /*@CHM004A*/
+use strict arg
 if (arg() > 0) then                    /* too many arguments?               */
   raise syntax 93.902 array (0)        /* raise an error                    */
 
 if \available then                     /* already reached the end?          */
   raise syntax 93.937                  /* this is an error                  */
-return position                        /* return the line number            */
-syntax: raise propagate /*@CHM004A*/
 
 /*****************************************************************/
 /* Create the rx_queue class and define its associated methods */

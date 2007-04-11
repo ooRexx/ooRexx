@@ -246,3 +246,5 @@ CLASS_INTERNAL(parse_binary_operator, RexxBinaryOperator)
 CLASS_INTERNAL(parse_labeled_select, RexxInstructionLabeledSelect)
 
 CLASS_INTERNAL(parse_logical, RexxExpressionLogical)
+
+CLASS_INTERNAL(parse_use_strict, RexxInstructionUseStrict)
