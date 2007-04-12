@@ -54,12 +54,6 @@ say 'Adding appendAll method to ARRAY, LIST and QUEUE'
 appendMethods = .table~new
 appendMethods~put(.methods~ordered_appendall, 'APPENDALL')
 
-/*
-.array~inherit(.OrderedCollection);
-.list~inherit(.OrderedCollection);
-.queue~inherit(.OrderedCollection);
-*/
-
 .array~!define_methods(appendMethods)
 .list~!define_methods(appendMethods)
 .queue~!define_methods(appendMethods)
@@ -94,7 +88,7 @@ set_methods~put(.methods~many_xor,          'XOR')
 .environment~setentry('COLLECTION', .collection)
 .environment~setentry('ORDEREDCOLLECTION', .orderedcollection)
 .environment~setentry('MAPCOLLECTION', .mapcollection)
-.environment~setentry('SETCOLLECTION', .mapcollection)
+.environment~setentry('SETCOLLECTION', .setcollection)
 
 /* Call the system dependant routine to define addition methods */
 systemMethods = 'SystemMethods.orx'()           /* case sensitive           */
