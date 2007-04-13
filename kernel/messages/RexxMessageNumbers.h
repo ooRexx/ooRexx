@@ -235,7 +235,6 @@
 #define Error_Invalid_subkeyword_signalonname_msg                    295
 #define Error_Invalid_subkeyword_parse_msg                           296
 #define Error_Invalid_subkeyword_use_msg                             297
-#define Error_Invalid_subkeyword_use_strict_option_msg               297
 #define Error_Invalid_subkeyword_raise_msg                           298
 #define Error_Invalid_subkeyword_raiseoption_msg                     299
 #define Error_Invalid_subkeyword_description_msg                     300
@@ -588,11 +587,8 @@
 #define Error_Unexpected_end_select_nolabel_msg                      658
 #define Error_Logical_value_logical_list_msg                         659
 #define Error_Invalid_expression_logical_list_msg                    660
-#define Error_Logical_value_use_strict_assert_msg                    661
-#define Error_Execution_use_arg_assertion_msg                        662
 #define Error_Translation_use_strict_ellipsis_msg                    663
 #define Error_Invalid_expression_use_strict_default_msg              664
-#define Error_Invalid_expression_use_strict_assert_msg               666
 
 
 #endif

@@ -2172,11 +2172,18 @@ RexxInstruction *RexxSource::traceNew()
   return (RexxInstruction *)newObject; /* done, return this                 */
 }
 
+/**
+ * Parse a USE STRICT ARG instruction.
+ *
+ * @return The executable instruction object.
+ */
 RexxInstruction *RexxSource::useNew()
-/****************************************************************************/
-/* Function:  Create a USE instruction object                               */
-/****************************************************************************/
 {
+    // assume we only require the simpler form of the instruction until
+    // we find a feature that requires the enhanced one.
+    bool generateStrict = false;
+    bool strictChecking = false;  // no strict checking enabled yet
+
     // The STRICT keyword turns this into a different instruction with different
     // syntax rules
     RexxToken *token = nextReal();
@@ -2184,84 +2191,24 @@ RexxInstruction *RexxSource::useNew()
 
     if (subkeyword == SUBKEY_STRICT)
     {
-        return useStrictNew();
+        token = nextReal();        // skip over the token
+        generateStrict = true;     // we need the enhanced version here
+        strictChecking = true;     // apply the strict checks.
     }
 
-    // the only subkeyword supported is ARG
-    if (subkeyword != SUBKEY_ARG)
-    {
-        report_error_token(Error_Invalid_subkeyword_use, token);
-    }
-    size_t variableCount = 0;                   /* no variables yet                  */
-    RexxQueue *variable_list = new_queue();         // we might be parsing message terms, so we can't use the subterms list.
-    saveObject(variable_list);
-    token = nextReal();                  /* get the next token                */
-    // keep processing tokens to the end
-    while (token->classId != TOKEN_EOC)
-    {
-        // this could be a token to skip a variable
-        if (token->classId == TOKEN_COMMA)
-        {
-            // this goes on as a variable, but an empty entry to process
-            variable_list->push(OREF_NULL);
-            variableCount++;
-        }
-        else   // something real.  This could be a single symbol or a message term
-        {
-            previousToken();       // push the current token back for term processing
-            // see if we can get a variable or a message term from this
-            RexxObject *retriever = variableOrMessageTerm();
-            if (retriever != OREF_NULL)
-            {
-                variable_list->push(retriever);
-                variableCount++;
-                token = nextReal();
-                if (token->classId == TOKEN_EOC)
-                {
-                    break;
-                }
-                else if (token->classId != TOKEN_COMMA)
-                {
-                    report_error_token(Error_Translation_use_comma, token);
-                }
-            }
-            else   // invalid assignment type
-            {
-                report_error_token(Error_Variable_expected_USE, token);
-            }
-        }
-        token = nextReal();                /* get the next token                */
-    }
-    /* create a new translator object    */
-    RexxObject *newObject = new_variable_instruction(USE, Use, sizeof(RexxInstructionUse) + (variableCount - 1) * sizeof(RexxObject *));
-    /* now complete this                 */
-    new ((void *)newObject) RexxInstructionUse(variableCount, variable_list);
-    removeObj(variable_list);
-    return(RexxInstruction *)newObject; /* done, return this                 */
-}
-
-/**
- * Parse a USE STRICT ARG instruction.
- *
- * @return The executable instruction object.
- */
-RexxInstruction *RexxSource::useStrictNew()
-{
-    RexxToken *token = nextReal();
     // the only subkeyword supported is ARG
     if (subKeyword(token) != SUBKEY_ARG)
     {
         report_error_token(Error_Invalid_subkeyword_use, token);
     }
 
-    // we accumulate 3 sets of data here, so we need 3 queues to push them in
+    // we accumulate 2 sets of data here, so we need 2 queues to push them in
+    // if this is the SIMPLE version, the second queue will be empty.
     size_t variableCount = 0;
     RexxQueue *variable_list = new_queue();         // we might be parsing message terms, so we can't use the subterms list.
     saveObject(variable_list);
     RexxQueue *defaults_list = new_queue();
     saveObject(defaults_list);
-    RexxQueue *assertions_list = new_queue();
-    saveObject(assertions_list);
     token = nextReal();                  /* get the next token                */
 
     bool allowOptionals = false;  // we don't allow trailing optionals unless the list ends with "..."
@@ -2275,7 +2222,6 @@ RexxInstruction *RexxSource::useStrictNew()
             // we also need to push empty entries on the other queues to keep everything in sync.
             variable_list->push(OREF_NULL);
             defaults_list->push(OREF_NULL);
-            assertions_list->push(OREF_NULL);
             variableCount++;
             // step to the next token, and go process more
             token = nextReal();
@@ -2316,21 +2262,21 @@ RexxInstruction *RexxSource::useStrictNew()
             if (token->classId == TOKEN_EOC)
             {
                 defaults_list->push(OREF_NULL);
-                assertions_list->push(OREF_NULL);
                 break;
             }
             // if we've hit a comma here, step to the next token and continue with the next variable
             else if (token->classId == TOKEN_COMMA)
             {
                 defaults_list->push(OREF_NULL);
-                assertions_list->push(OREF_NULL);
                 token = nextReal();
                 continue;
             }
             // if this is NOT a comma, we potentially have a
-            // default value and/or and ASSERT to process.
+            // default value
             if (token->subclass == OPERATOR_EQUAL)
             {
+                // this requires the enhanced form of USE to implement.
+                generateStrict = true;
                 // this is a constant expression value.  Single token forms
                 // are fine without parens, more complex forms require parens as
                 // delimiters.
@@ -2348,13 +2294,11 @@ RexxInstruction *RexxSource::useStrictNew()
                 // a terminator takes us out.  We need to keep all 3 lists in sync with dummy entries.
                 if (token->classId == TOKEN_EOC)
                 {
-                    assertions_list->push(OREF_NULL);
                     break;
                 }
                 // if we've hit a comma here, step to the next token and continue with the next variable
                 else if (token->classId == TOKEN_COMMA)
                 {
-                    assertions_list->push(OREF_NULL);
                     token = nextReal();
                     continue;
                 }
@@ -2364,55 +2308,27 @@ RexxInstruction *RexxSource::useStrictNew()
                 // we need a more defaults marker
                 defaults_list->push(OREF_NULL);
             }
-
-            // this MUST be the ASSERT keyword here.  We've already taken care of other options, so
-            // it's do or die now.
-            if (token->classId != TOKEN_SYMBOL)
-            {
-                report_error_token(Error_Invalid_subkeyword_use_strict_option, token);
-            }
-            else
-            {
-                if (subKeyword(token) != SUBKEY_ASSERT)
-                {
-                    report_error_token(Error_Invalid_subkeyword_use_strict_option, token);
-                }
-                RexxObject *condition = this->constantLogicalExpression();
-                if (condition == OREF_NULL)
-                {
-                    report_error(Error_Invalid_expression_use_strict_assert);
-                }
-                assertions_list->push(condition);
-
-                // Sigh, yet another check for EOC or COMMA...
-                token = nextReal();
-                if (token->classId == TOKEN_EOC)
-                {
-                    break;
-                }
-                // if we've hit a comma here, step to the next token and continue with the next variable
-                else if (token->classId == TOKEN_COMMA)
-                {
-                    // step to the next token and continue
-                    token = nextReal();
-                    continue;
-                }
-                else
-                {
-                    // all that work, and we still found something invalid
-                    report_error_token(Error_Invalid_subkeyword_use_strict_option, token);
-                }
-            }
         }
     }
 
-    /* create a new translator object    */
-    RexxObject *newObject = new_variable_instruction(USE, UseStrict, sizeof(RexxInstructionUseStrict) + (variableCount == 0 ? 0 : (variableCount - 1)) * sizeof(UseVariable));
-    /* now complete this                 */
-    new ((void *)newObject) RexxInstructionUseStrict(variableCount, allowOptionals, variable_list, defaults_list, assertions_list);
+    RexxObject *newObject;
+
+    // if we use any of the enhanced features, we need the strict form.
+    if (generateStrict)
+    {
+        newObject = new_variable_instruction(USE, UseStrict, sizeof(RexxInstructionUseStrict) + (variableCount == 0 ? 0 : (variableCount - 1)) * sizeof(UseVariable));
+        new ((void *)newObject) RexxInstructionUseStrict(variableCount, strictChecking, allowOptionals, variable_list, defaults_list);
+    }
+    else
+    {
+        // simpler, legacy form
+        newObject = new_variable_instruction(USE, Use, sizeof(RexxInstructionUse) + (variableCount - 1) * sizeof(RexxObject *));
+        new ((void *)newObject) RexxInstructionUse(variableCount, variable_list);
+    }
+
+    // release the object locks and return;
     removeObj(variable_list);
     removeObj(defaults_list);
-    removeObj(assertions_list);
-    return(RexxInstruction *)newObject; /* done, return this                 */
+    return(RexxInstruction *)newObject;
 }
 

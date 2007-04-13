@@ -51,14 +51,13 @@ class UseVariable
 public:
     RexxVariableBase *variable;        // the variable accessor
     RexxObject *defaultValue;          // default value for optional variables
-    RexxObject *assertion;             // optional assertion to validate the value.
 };
 
 
 class RexxInstructionUseStrict : public RexxInstruction {
 public:
     inline void *operator new(size_t size, void *ptr) {return ptr;};
-    RexxInstructionUseStrict(size_t, bool, RexxQueue *, RexxQueue *, RexxQueue *);
+    RexxInstructionUseStrict(size_t, bool, bool, RexxQueue *, RexxQueue *);
     inline RexxInstructionUseStrict(RESTORETYPE restoreType) { ; };
     void live();
     void liveGeneral();
@@ -67,11 +66,11 @@ public:
 
 protected:
     RexxObject *getArgument(RexxObject **arglist, size_t count, size_t target);
-    void checkAssertion(size_t position, RexxActivation *context, RexxExpressionStack *stack);
 
     size_t variableCount;            // count of variables to process
     size_t minimumRequired;          // the minimum number of require arguments
     bool variableSize;               // additional arguments allowed after last
+    bool strictChecking;             // determines whether to apply strict argument checks
     UseVariable variables[1];        // List of variables for USE
 };
 #endif

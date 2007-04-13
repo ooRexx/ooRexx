@@ -247,7 +247,6 @@ class RexxSource : public RexxInternalObject {
   RexxInstruction *thenNew(RexxToken *, RexxInstructionIf *);
   RexxInstruction *traceNew();
   RexxInstruction *useNew();
-  RexxInstruction *useStrictNew();
   void        holdObject(RexxObject *object) { this->holdstack->push(object);};
   void        saveObject(RexxObject *object) { this->savelist->put(object, object); };
   void        removeObj(RexxObject *object) { if (object != OREF_NULL) this->savelist->remove(object); };

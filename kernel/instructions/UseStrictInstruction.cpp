@@ -50,7 +50,7 @@
 #include "ExpressionBaseVariable.hpp"
 
 
-RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool extraAllowed, RexxQueue *variable_list, RexxQueue *defaults, RexxQueue *assertions)
+RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool strict, bool extraAllowed, RexxQueue *variable_list, RexxQueue *defaults)
 {
     // set the variable count and the option flag
     variableCount = count;
@@ -65,7 +65,6 @@ RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool extraAllow
         count--;
         OrefSet(this, variables[count].variable, (RexxVariableBase *)variable_list->pop());
         OrefSet(this, variables[count].defaultValue, defaults->pop());
-        OrefSet(this, variables[count].assertion, assertions->pop());
 
         // if this is a real variable, see if this is the last of the required ones.
         if (minimumRequired < count + 1 && variables[count].variable != OREF_NULL)
@@ -94,7 +93,6 @@ void RexxInstructionUseStrict::live()
   {
       memory_mark(this->variables[i].variable);
       memory_mark(this->variables[i].defaultValue);
-      memory_mark(this->variables[i].assertion);
   }
   cleanUpMemoryMark
 }
@@ -116,7 +114,6 @@ void RexxInstructionUseStrict::liveGeneral()
   {
       memory_mark_general(this->variables[i].variable);
       memory_mark_general(this->variables[i].defaultValue);
-      memory_mark_general(this->variables[i].assertion);
   }
   cleanUpMemoryMarkGeneral
 }
@@ -139,7 +136,6 @@ void RexxInstructionUseStrict::flatten(RexxEnvelope *envelope)
   {
       flatten_reference(newThis->variables[i].variable, envelope);
       flatten_reference(newThis->variables[i].defaultValue, envelope);
-      flatten_reference(newThis->variables[i].assertion, envelope);
   }
   cleanUpFlatten
 }
@@ -151,30 +147,33 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
     // get the argument information from the context
     RexxObject **arglist = context->getMethodArgumentList();
     size_t argcount = context->getMethodArgumentCount();
-
-    // not enough of the required arguments?  That's an error
-    if (argcount < minimumRequired)
+    // strict checking means we need to enforce min/max limits
+    if (strictChecking)
     {
-        // this is a pain, but there are different errors for method errors vs. call errors.
-        if (context->inMethod())
+        // not enough of the required arguments?  That's an error
+        if (argcount < minimumRequired)
         {
-            report_exception1(Error_Incorrect_method_minarg, new_integer(minimumRequired));
+            // this is a pain, but there are different errors for method errors vs. call errors.
+            if (context->inMethod())
+            {
+                report_exception1(Error_Incorrect_method_minarg, new_integer(minimumRequired));
+            }
+            else
+            {
+                report_exception2(Error_Incorrect_call_minarg, context->getCallname(), new_integer(minimumRequired));
+            }
         }
-        else
+        // potentially too many?
+        if (!variableSize && argcount > variableCount)
         {
-            report_exception2(Error_Incorrect_call_minarg, context->getCallname(), new_integer(minimumRequired));
-        }
-    }
-    // potentially too many?
-    if (!variableSize && argcount > variableCount)
-    {
-        if (context->inMethod())
-        {
-            report_exception1(Error_Incorrect_method_maxarg, new_integer(variableCount));
-        }
-        else
-        {
-            report_exception2(Error_Incorrect_call_maxarg, context->getCallname(), new_integer(variableCount));
+            if (context->inMethod())
+            {
+                report_exception1(Error_Incorrect_method_maxarg, new_integer(variableCount));
+            }
+            else
+            {
+                report_exception2(Error_Incorrect_call_maxarg, context->getCallname(), new_integer(variableCount));
+            }
         }
     }
 
@@ -209,18 +208,26 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
                 }
                 else
                 {
-                    if (context->inMethod())
+                    // not doing strict checks, revert to old rules and drop the variable.
+                    if (!strictChecking)
                     {
-                        report_exception1(Error_Incorrect_method_noarg, new_integer(i + 1));
+                        variable->drop(context);
+
                     }
                     else
                     {
-                        report_exception2(Error_Incorrect_call_noarg, context->getCallname(), new_integer(i + 1));
+                        if (context->inMethod())
+                        {
+                            report_exception1(Error_Incorrect_method_noarg, new_integer(i + 1));
+                        }
+                        else
+                        {
+                            report_exception2(Error_Incorrect_call_noarg, context->getCallname(), new_integer(i + 1));
+                        }
                     }
+
                 }
             }
-            // now go check any assertions about the argument
-            checkAssertion(i, context, stack);
         }
     }
     context->pauseInstruction();    // do debug pause if necessary
@@ -246,44 +253,6 @@ RexxObject *RexxInstructionUseStrict::getArgument(RexxObject **arglist, size_t c
     }
     // return the target item
     return arglist[target];
-}
-
-
-/**
- * Run the assertion checks, if any, for an argument.
- *
- * @param position The list position of the check.
- * @param context  The current execution context.
- * @param stack    The execution context evaluation stack.
- */
-void RexxInstructionUseStrict::checkAssertion(size_t position, RexxActivation *context, RexxExpressionStack *stack)
-{
-    // assertions are optional...only do this if one was specified.
-    RexxObject *assertion = variables[position].assertion;
-
-    if (assertion != OREF_NULL)
-    {
-        // evaluate the expression, and trace, if necessary
-        RexxObject *assertionResult = assertion->evaluate(context, stack);
-        context->traceResult(assertionResult);
-        stack->pop();    // remove the value from the stack
-
-        // the comparison methods return either .true or .false, so we
-        // can to a quick test against those.
-        if (assertionResult == TheTrueObject)
-        {
-            return;       // the assertion passed
-        }
-        if (assertionResult == TheFalseObject)
-        {
-            report_exception1(Error_Execution_use_arg_assertion, new_integer(position + 1));
-        }
-        // this is something we need to evaluate further
-        if (!assertionResult->truthValue(Error_Logical_value_use_strict_assert))
-        {
-            report_exception1(Error_Execution_use_arg_assertion, new_integer(position + 1));
-        }
-    }
 }
 
 

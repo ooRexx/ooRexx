@@ -1515,15 +1515,6 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Invalid_subkeyword_select</SymbolicName>
         <Text>SELECT must be followed by the keyword LABEL; found <q><Sub position="1" name="word"/></q></Text>
       </SubMessage>
-      <SubMessage>
-        <Code>25</Code>
-        <Subcode>924</Subcode>
-        <MessageNumber>297</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_subkeyword_use_strict_option</SymbolicName>
-        <Text>USE STRICT argument option must be ASSERT; found <q><Sub position="1" name="word"/></q></Text>
-      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -2052,15 +2043,6 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Logical_value_property</SymbolicName>
         <Text>Property logical value must be exactly <q>0</q>, <q>1</q>, <q>true</q>, or <q>false</q>; found <q><Sub position="1" name="value"/></q></Text>
       </SubMessage>
-      <SubMessage>
-        <Code>34</Code>
-        <Subcode>905</Subcode>
-        <MessageNumber>661</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Logical_value_use_strict_assert</SymbolicName>
-        <Text>USE STRICT ARG ASSERT logical value must be exactly <q>0</q> or <q>1</q>; found <q><Sub position="1" name="value"/></q></Text>
-      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -2351,15 +2333,6 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_expression_use_strict_default</SymbolicName>
         <Text>Missing expression following <q>=</q> token of a USE STRICT ARG instruction</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>35</Code>
-        <Subcode>931</Subcode>
-        <MessageNumber>666</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_expression_use_strict_assert</SymbolicName>
-        <Text>Missing expression following ASSERT keyword of a USE STRICT ARG instruction</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -2939,7 +2912,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Conversion_raise</SymbolicName>
-        <Text>Value of RAISE SYNTAX expression of DO instruction must be numeric; found <q><Sub position="1" name="value"/></q></Text>
+        <Text>Value of RAISE instruction SYNTAX expression must be numeric; found <q><Sub position="1" name="value"/></q></Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -4536,15 +4509,6 @@ special character (such as a parenthesis).
         <Severity>Error</Severity>
         <SymbolicName>Error_Execution_class_server_not_installed</SymbolicName>
         <Text><Sub position="1" name="servername"/> class server not installed</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>953</Subcode>
-        <MessageNumber>662</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Error</Severity>
-        <SymbolicName>Error_Execution_use_arg_assertion</SymbolicName>
-        <Text>USE STRICT ARG ASSERT expression at position <Sub position="1" name="position"/> failed</Text>
       </SubMessage>
     </Subcodes>
   </Message>

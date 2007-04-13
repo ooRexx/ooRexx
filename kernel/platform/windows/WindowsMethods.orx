@@ -39,12 +39,10 @@
                                        /*  This is our starting point for */
                                        /* The return directory of methods */
 meths = .methods~copy
-                                       /* add the SOM Initializationroutne*/
-meths[server_SomInitialize] = .method~newfile("SOMInterfaceObjects.orx")
 
 functions = .kernel~functions          /* get the function table            */
   /**************************************************************/
-  /* Define the OS/2 system specific functions                  */
+  /* Define the Windows system specific functions               */
   /**************************************************************/
 functions['BEEP']         = meths~function_beep
 functions['SETLOCAL']     = meths~function_setlocal
@@ -115,17 +113,4 @@ syntax: raise propagate
 ::method function_filespec      EXTERNAL 'REXX sysFilespec'
 ::method function_rxmessagebox  EXTERNAL 'REXX sysMessageBox'
 
-
-/* ******************************** */
-/*  S E R V E R     M E T H O D S   */
-/* ******************************** */
-
-::METHOD server_init_local EXTERNAL 'REXX server_init_local'
-::METHOD server_C_sominit    EXTERNAL 'REXX server_c_sominit'
-::METHOD server_findSomClass EXTERNAL 'REXX server_findsomclass'
-::METHOD server_somclass EXTERNAL 'REXX server_somclass'
-::METHOD server_somname EXTERNAL 'REXX server_somname'
-::METHOD server_somparent EXTERNAL 'REXX server_somparent'
-::METHOD server_somproxy EXTERNAL 'REXX server_somproxy'
-::METHOD server_somtrace EXTERNAL 'REXX server_somtrace'
 
