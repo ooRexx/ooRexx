@@ -878,8 +878,9 @@ BOOL WINAPI DllMain(
     /* check if a named object with "Global\..." can be created      */
     /* if yes, use "Global\..." for ALL RXAPI communication objects. */
     /* this test is needed for W2K & Terminal Services               */
-    hTest = CreateMutex(NULL, FALSE, "Global\\uniqueREXXtestMutex123HUGO");
-    if (hTest != NULL) {
+    hTest = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READONLY, 0, 256,
+                              "Global\\unique_ooRexxFMap20070413ACegiJ");
+    if (hTest != NULL && hTest != INVALID_HANDLE_VALUE) {
       CloseHandle(hTest);
       APInamedObjects = GlobalNamedObjects;
     } else {
