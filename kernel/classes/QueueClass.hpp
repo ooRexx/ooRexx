@@ -64,6 +64,7 @@ class RexxQueue : public RexxList {
  RexxObject *peek();
  RexxObject *supplier();
  RexxObject *newRexx(RexxObject **, size_t);
+ RexxQueue  *ofRexx(RexxObject **, size_t);
  RexxObject *append(RexxObject *);
  RexxArray  *allIndexes();
 

@@ -312,6 +312,7 @@ CPPML(RexxQueue::append),
 CPPML(RexxQueue::allIndexes),
 
 CPPMQ(RexxQueue::newRexx),
+CPPMQ(RexxQueue::ofRexx),
 
 CPPMSTEM(RexxStem::bracket),               /* Stem methods                      */
 CPPMSTEM(RexxStem::bracketEqual),
@@ -1041,6 +1042,7 @@ bool kernel_setup (void)
                                        /* Add the NEW method to the class   */
                                        /* behaviour mdict                   */
   defineKernelMethod(CHAR_NEW, TheQueueClassBehaviour, CPPMQ(RexxQueue::newRexx), A_COUNT);
+  defineKernelMethod(CHAR_OF,  TheQueueClassBehaviour, CPPMQ(RexxQueue::ofRexx), A_COUNT);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
