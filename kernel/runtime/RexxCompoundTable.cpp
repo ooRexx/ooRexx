@@ -45,28 +45,6 @@
 #include "RexxCompoundTable.hpp"
 #include "RexxCompoundElement.hpp"
 
-void RexxCompoundTable::dump()
-{
-  fprintf(stderr,"-------- dumping %p\n",root);
-  dump(root);
-  fprintf(stderr,"-------------------------\n");
-}
-
-void RexxCompoundTable::dump(RexxCompoundElement *current)
-{
-  RexxCompoundElement *left, *right;
-  if (current == OREF_NULL) return;
-  left = current->left;
-  right = current->right;
-  if (left == OREF_NULL && right == OREF_NULL) {
-    fprintf(stderr,"%p a leaf, p %p (%s)\n",current,current->parent,current->tail_name->stringData);
-  } else {
-    fprintf(stderr,"%p a node, l %p r %p p %p (%s)\n",current,left,right,current->parent,current->tail_name->stringData);
-    dump(left);
-    dump(right);
-  }
-}
-
 void RexxCompoundTable::init(
     RexxStem *parent)                  /* the parent object we're embedded in */
 {

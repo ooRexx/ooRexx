@@ -186,16 +186,124 @@ RexxObject *RexxStem::bracket(
 /*            with all of the indices taken as constants                      */
 /******************************************************************************/
 {
-  RexxObject   * value;                /* element value                     */
-
   if (argCount == 0)                   /* default value request?            */
     return this->value;                /* just return the default value     */
                                        /* create a searchable tail from the array elements */
   RexxCompoundTail resolved_tail(tails, argCount);
                                        /* now look up this element */
-  value = evaluateCompoundVariableValue(OREF_NULL, &resolved_tail);
-  return value;                        /* return variable value             */
+  return evaluateCompoundVariableValue(OREF_NULL, &resolved_tail);
 }
+
+
+/**
+ * Test if this compound variable has a given index.
+ *
+ * @param tails    The set of tail expressions.
+ * @param argCount The argument count
+ *
+ * @return True if the fully resolved tail exists in the stem, false
+ *         otherwise.
+ */
+RexxObject *RexxStem::hasIndex(RexxObject **tails, size_t argCount)
+{
+    if (argCount == 0)
+    {
+        return TheTrueObject;          // we always have something here
+    }
+    // compose the tail element
+    RexxCompoundTail resolved_tail(tails, argCount);
+    // see if we have a compound
+    RexxCompoundElement *compound = findCompoundVariable(&resolved_tail);
+    // if there's a variable there, and it has a real value, then
+    // this is true.
+    if (compound != OREF_NULL && compound->getVariableValue() != OREF_NULL)
+    {
+        return TheTrueObject;
+    }
+    // nope, we got nuttin'
+    return TheFalseObject;
+}
+
+
+/**
+ * Remove an item from the collection.  This is essentially
+ * equivalent to a drop operation on the stem variable.
+ *
+ * @param tails    The set of tail indexes.
+ * @param argCount The number of indexes.
+ *
+ * @return The removed object.  If nothing was removed, this returns
+ *         .nil.
+ */
+RexxObject *RexxStem::remove(RexxObject **tails, size_t argCount)
+{
+    // if asked to remove the default value, reset this back to the name
+    if (argCount == 0)
+    {
+        // replace with the name and return the old value.
+        RexxObject *oldValue = this->value;
+        OrefSet(this, value, getName());
+        return oldValue;
+    }
+
+    // compose the tail element
+    RexxCompoundTail resolved_tail(tails, argCount);
+    RexxCompoundElement *compound = findCompoundVariable(&resolved_tail);
+    // if there's a variable there, and it has a real value, then
+    // we have something to remove
+    if (compound != OREF_NULL && compound->getVariableValue() != OREF_NULL)
+    {
+        // get the value, which is the return value, and drop the variable.
+        RexxObject *oldValue = compound->getVariableValue();
+        compound->drop();
+        return oldValue;
+    }
+    return TheNilObject;       // nothing dropped.
+}
+
+
+/**
+ * Search for any index that matches the target object.
+ *
+ * @param target The object of interest.
+ *
+ * @return .true if the object is in the collection, .false otherwise.
+ */
+RexxObject *RexxStem::hasItem(RexxObject *target)
+{
+    RexxCompoundElement *variable = findByValue(target);
+    return variable == OREF_NULL ? TheFalseObject : TheTrueObject;
+}
+
+
+/**
+ * Return the index for a target item.
+ *
+ * @param target The target object.
+ *
+ * @return The tail name for the match, or .nil if it was not found.
+ */
+RexxObject *RexxStem::index(RexxObject *target)
+{
+    RexxCompoundElement *variable = findByValue(target);
+    if (variable != OREF_NULL)
+    {
+        return variable->getName();
+    }
+    return TheNilObject;
+}
+
+/**
+ * Return the number of items set in the collection.
+ *
+ * @return The count of items in the collection, not counting the
+ *         default value.
+ */
+RexxObject *RexxStem::itemsRexx()
+{
+    return new_integer(items());
+}
+
 
 RexxObject *RexxStem::bracketEqual(
     RexxObject **tails,                /* tail elements                     */
@@ -651,6 +759,28 @@ RexxArray *RexxStem::allItems()
         variable = tails.next(variable);
     }
     return array;    // tada, finished
+}
+
+
+/**
+ * Locate a stem item by value.
+ *
+ * @return The compound item for the located element.
+ */
+RexxCompoundElement *RexxStem::findByValue(RexxObject *target)
+{
+    RexxCompoundElement *variable = tails.first();
+    while (variable != OREF_NULL)
+    {
+        RexxObject *value = variable->getVariableValue();
+        // if this has a value, and we have a match, then return it
+        if (value != OREF_NULL && target->equalValue(value))
+        {
+            return variable;
+        }
+        variable = tails.next(variable);
+    }
+    return OREF_NULL;     // not here, oh dear
 }
 
 

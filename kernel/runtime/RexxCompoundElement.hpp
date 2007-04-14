@@ -67,7 +67,6 @@ class RexxCompoundElement : public RexxVariable {
   RexxCompoundElement *left;             /* the left child */
   RexxCompoundElement *right;            /* the right child */
   RexxCompoundElement *parent;           /* the parent entry to this node */
-  RexxString *tail_name;                  /* the node name (tail part only) */
   unsigned short leftdepth;               /* depth on the left side */
   unsigned short rightdepth;              /* depth on the right side */
   RexxCompoundElement *real_element;      /* a potential expose indirection */

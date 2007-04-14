@@ -70,8 +70,6 @@ class RexxCompoundTable {
   void         copy(RexxStem *newObject, RexxStem *oldObject);
   void         init(RexxStem *parent);
   void         clear();
-  void dump();
-  void dump(RexxCompoundElement*);
   inline RexxCompoundElement *get(RexxCompoundTail *name) { return findEntry(name); }
   RexxCompoundElement *findEntry(RexxCompoundTail *tail)
     /******************************************************************************/

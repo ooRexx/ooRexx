@@ -331,6 +331,11 @@ CPPMSTEM(RexxStem::allIndexes),
 CPPMSTEM(RexxStem::allItems),
 CPPMSTEM(RexxStem::empty),
 CPPMSTEM(RexxStem::isEmpty),
+CPPMSTEM(RexxStem::itemsRexx),
+CPPMSTEM(RexxStem::hasIndex),
+CPPMSTEM(RexxStem::remove),
+CPPMSTEM(RexxStem::index),
+CPPMSTEM(RexxStem::hasItem),
 
 CPPMSTEM(RexxStem::newRexx),
 
@@ -1114,6 +1119,8 @@ bool kernel_setup (void)
                                        /* instance behaviour mdict          */
   defineKernelMethod(CHAR_BRACKETS      ,TheStemBehaviour, CPPMSTEM(RexxStem::bracket), A_COUNT);
   defineKernelMethod(CHAR_BRACKETSEQUAL ,TheStemBehaviour, CPPMSTEM(RexxStem::bracketEqual), A_COUNT);
+  defineKernelMethod(CHAR_AT            ,TheStemBehaviour, CPPMSTEM(RexxStem::bracket), A_COUNT);
+  defineKernelMethod(CHAR_PUT           ,TheStemBehaviour, CPPMSTEM(RexxStem::bracketEqual), A_COUNT);
   defineKernelMethod(CHAR_MAKEARRAY     ,TheStemBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
   defineKernelMethod(CHAR_REQUEST       ,TheStemBehaviour, CPPMSTEM(RexxStem::request), 1);
   defineKernelMethod(CHAR_SUPPLIER      ,TheStemBehaviour, CPPMSTEM(RexxStem::supplier), 0);
@@ -1122,6 +1129,12 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_EMPTY         ,TheStemBehaviour, CPPMSTEM(RexxStem::empty), 0);
   defineKernelMethod(CHAR_ISEMPTY       ,TheStemBehaviour, CPPMSTEM(RexxStem::isEmpty), 0);
   defineKernelMethod(CHAR_UNKNOWN       ,TheStemBehaviour, CPPM(RexxObject::unknownRexx), 2);
+
+  defineKernelMethod(CHAR_ITEMS         ,TheStemBehaviour, CPPMSTEM(RexxStem::itemsRexx), 0);
+  defineKernelMethod(CHAR_HASINDEX      ,TheStemBehaviour, CPPMSTEM(RexxStem::hasIndex), A_COUNT);
+  defineKernelMethod(CHAR_REMOVE        ,TheStemBehaviour, CPPMSTEM(RexxStem::remove), A_COUNT);
+  defineKernelMethod(CHAR_INDEX         ,TheStemBehaviour, CPPMSTEM(RexxStem::index), 1);
+  defineKernelMethod(CHAR_HASITEM       ,TheStemBehaviour, CPPMSTEM(RexxStem::hasItem), 1);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
