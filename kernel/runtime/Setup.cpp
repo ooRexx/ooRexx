@@ -158,6 +158,8 @@ CPPMA(RexxArray::previousRexx),
 CPPMA(RexxArray::append),
 CPPMA(RexxArray::allIndexes),
 CPPMA(RexxArray::allItems),
+CPPMA(RexxArray::empty),
+CPPMA(RexxArray::isEmpty),
 
 CPPMC1(RexxArray::newRexx),
 CPPMA(RexxArray::makeString),
@@ -176,6 +178,8 @@ CPPMD(RexxDirectory::setMethod),
 CPPMD(RexxDirectory::supplier),
 CPPMA(RexxDirectory::allIndexes),
 CPPMA(RexxDirectory::allItems),
+CPPMA(RexxDirectory::empty),
+CPPMA(RexxDirectory::isEmpty),
 
 CPPMD(RexxDirectory::newRexx),
 
@@ -230,6 +234,8 @@ CPPML(RexxList::insertRexx),
 CPPML(RexxList::append),
 CPPML(RexxList::allIndexes),
 CPPML(RexxList::allItems),
+CPPMA(RexxList::empty),
+CPPMA(RexxList::isEmpty),
 
 CPPMLC(RexxListClass::newRexx),
 CPPMLC(RexxListClass::classOf),
@@ -313,6 +319,8 @@ CPPMSTEM(RexxStem::request),
 CPPMSTEM(RexxStem::supplier),
 CPPMSTEM(RexxStem::allIndexes),
 CPPMSTEM(RexxStem::allItems),
+CPPMSTEM(RexxStem::empty),
+CPPMSTEM(RexxStem::isEmpty),
 
 CPPMSTEM(RexxStem::newRexx),
 
@@ -495,6 +503,8 @@ CPPMHC(RexxHashTableCollection::merge),
 CPPMHC(RexxHashTableCollection::supplier),
 CPPMHC(RexxHashTableCollection::allItems),
 CPPMHC(RexxHashTableCollection::allIndexes),
+CPPMHC(RexxHashTableCollection::empty),
+CPPMHC(RexxHashTableCollection::isEmpty),
 
 CPPMTBL(RexxTable::newRexx),
 
@@ -850,6 +860,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_MAKESTRING   ,TheArrayBehaviour, CPPMA(RexxArray::makeString), 1);
   defineKernelMethod(CHAR_ALLINDEXES   ,TheArrayBehaviour, CPPMA(RexxArray::allIndexes), 0);
   defineKernelMethod(CHAR_ALLITEMS     ,TheArrayBehaviour, CPPMA(RexxArray::allItems), 0);
+  defineKernelMethod(CHAR_EMPTY        ,TheArrayBehaviour, CPPMA(RexxArray::empty), 0);
+  defineKernelMethod(CHAR_ISEMPTY      ,TheArrayBehaviour, CPPMA(RexxArray::isEmpty), 0);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheArrayBehaviour->setMethodDictionaryScope(TheArrayClass);
@@ -879,6 +891,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_MAKEARRAY     , TheDirectoryBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
   defineKernelMethod(CHAR_ALLITEMS      , TheDirectoryBehaviour, CPPMD(RexxDirectory::allItems), 0);
   defineKernelMethod(CHAR_ALLINDEXES    , TheDirectoryBehaviour, CPPMD(RexxDirectory::allIndexes), 0);
+  defineKernelMethod(CHAR_EMPTY         , TheDirectoryBehaviour, CPPMD(RexxDirectory::empty), 0);
+  defineKernelMethod(CHAR_ISEMPTY       , TheDirectoryBehaviour, CPPMD(RexxDirectory::isEmpty), 0);
   defineKernelMethod(CHAR_PUT           , TheDirectoryBehaviour, CPPMD(RexxDirectory::put), 2);
   defineKernelMethod(CHAR_REMOVE        , TheDirectoryBehaviour, CPPMD(RexxDirectory::remove), 1);
   defineKernelMethod(CHAR_SETENTRY      , TheDirectoryBehaviour, CPPMD(RexxDirectory::setEntry), 2);
@@ -946,6 +960,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_APPEND       ,TheListBehaviour, CPPMA(RexxList::append), 1);
   defineKernelMethod(CHAR_ALLITEMS     ,TheListBehaviour, CPPML(RexxList::allItems), 0);
   defineKernelMethod(CHAR_ALLINDEXES   ,TheListBehaviour, CPPML(RexxList::allIndexes), 0);
+  defineKernelMethod(CHAR_EMPTY        ,TheListBehaviour, CPPML(RexxList::empty), 0);
+  defineKernelMethod(CHAR_ISEMPTY      ,TheListBehaviour, CPPML(RexxList::isEmpty), 0);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheListBehaviour->setMethodDictionaryScope(TheListClass);
@@ -1049,6 +1065,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_APPEND        ,TheQueueBehaviour, CPPMQ(RexxQueue::append), 1);
   defineKernelMethod(CHAR_ALLITEMS      ,TheQueueBehaviour, CPPML(RexxList::allItems), 0);
   defineKernelMethod(CHAR_ALLINDEXES    ,TheQueueBehaviour, CPPMQ(RexxQueue::allIndexes), 0);
+  defineKernelMethod(CHAR_EMPTY         ,TheQueueBehaviour, CPPMQ(RexxList::empty), 0);
+  defineKernelMethod(CHAR_ISEMPTY       ,TheQueueBehaviour, CPPMQ(RexxList::isEmpty), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -1088,6 +1106,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_SUPPLIER     , TheRelationBehaviour, CPPMREL(RexxRelation::supplier), 1);
   defineKernelMethod(CHAR_ALLITEMS     , TheRelationBehaviour, CPPMHC(RexxHashTableCollection::allItems), 0);
   defineKernelMethod(CHAR_ALLINDEXES   , TheRelationBehaviour, CPPMHC(RexxHashTableCollection::allIndexes), 0);
+  defineKernelMethod(CHAR_EMPTY        , TheRelationBehaviour, CPPMHC(RexxHashTableCollection::empty), 0);
+  defineKernelMethod(CHAR_ISEMPTY      , TheRelationBehaviour, CPPMHC(RexxHashTableCollection::isEmpty), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -1117,6 +1137,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_SUPPLIER      ,TheStemBehaviour, CPPMSTEM(RexxStem::supplier), 0);
   defineKernelMethod(CHAR_ALLINDEXES    ,TheStemBehaviour, CPPMSTEM(RexxStem::allIndexes), 0);
   defineKernelMethod(CHAR_ALLITEMS      ,TheStemBehaviour, CPPMSTEM(RexxStem::allItems), 0);
+  defineKernelMethod(CHAR_EMPTY         ,TheStemBehaviour, CPPMSTEM(RexxStem::empty), 0);
+  defineKernelMethod(CHAR_ISEMPTY       ,TheStemBehaviour, CPPMSTEM(RexxStem::isEmpty), 0);
   defineKernelMethod(CHAR_UNKNOWN       ,TheStemBehaviour, CPPM(RexxObject::unknownRexx), 2);
 
                                        /* set the scope of the methods to   */
@@ -1464,6 +1486,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_SUPPLIER     , TheTableBehaviour, CPPMHC(RexxHashTableCollection::supplier), 0);
   defineKernelMethod(CHAR_ALLITEMS     , TheTableBehaviour, CPPMHC(RexxHashTableCollection::allItems), 0);
   defineKernelMethod(CHAR_ALLINDEXES   , TheTableBehaviour, CPPMHC(RexxHashTableCollection::allIndexes), 0);
+  defineKernelMethod(CHAR_EMPTY        , TheTableBehaviour, CPPMHC(RexxHashTableCollection::empty), 0);
+  defineKernelMethod(CHAR_ISEMPTY      , TheTableBehaviour, CPPMHC(RexxHashTableCollection::isEmpty), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

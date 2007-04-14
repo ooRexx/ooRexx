@@ -615,10 +615,39 @@ void RexxDirectory::reset(void)
 /* Function:  Reset a directory to a "pristine" empty state                   */
 /******************************************************************************/
 {
-  OrefSet(this, this->contents, new_hashtab(DEFAULT_HASH_SIZE));
-  OrefSet(this, this->method_table, OREF_NULL);
-  OrefSet(this, this->unknown_method, OREF_NULL);
+    // empty the hashtables without reallocating.
+    contents->empty();
+    if (method_table != OREF_NULL)
+    {
+        method_table->empty();
+    }
+    // clear out the unknown method.
+    OrefSet(this, this->unknown_method, OREF_NULL);
 }
+
+
+/**
+ * Empty a hash table collection.
+ *
+ * @return nothing
+ */
+RexxObject *RexxDirectory::empty()
+{
+    reset();
+    return OREF_NULL;
+}
+
+
+/**
+ * Test if a HashTableCollection is empty.
+ *
+ * @return
+ */
+RexxObject *RexxDirectory::isEmpty()
+{
+    return items() == 0 ? TheTrueObject : TheFalseObject;
+}
+
 
 RexxObject *RexxDirectory::newRexx(
     RexxObject **init_args,

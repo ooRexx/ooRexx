@@ -196,6 +196,45 @@ RexxObject  *RexxArray::putRexx(RexxObject **arguments, size_t argCount)
 
 
 /**
+ * Empty all of the items from an array.
+ *
+ * @return No return value.
+ */
+RexxObject *RexxArray::empty()
+{
+
+    // if not working with an oldspace object (VERY likely), we can just use memset to clear
+    // everything.
+    if (!OldSpace(this))
+    {
+        memset(this->data(), '\0', sizeof(RexxObject *) * this->arraySize);
+    }
+    else
+    {
+        // sigh, we have to use OrefSet
+        for (size_t i = 0; i < this->arraySize; i++)
+        {
+
+            OrefSet(this, this->objects[i], OREF_NULL);
+        }
+    }
+    return OREF_NULL;     // no real return value
+}
+
+
+/**
+ * Test if an array is empty.
+ *
+ * @return True if the array is empty, false otherwise
+ */
+RexxObject *RexxArray::isEmpty()
+{
+    return (numItems() == 0) ? TheTrueObject : TheFalseObject;
+}
+
+
+
+/**
  * Append an item after the last item in the array.
  *
  * @param value  The value to append.

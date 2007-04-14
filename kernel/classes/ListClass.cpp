@@ -731,6 +731,37 @@ RexxArray *RexxList::allItems(void)
 
 
 /**
+ * Empty all of the items from a list.
+ *
+ * @return No return value.
+ */
+RexxObject *RexxList::empty()
+{
+    // just iterate through the list, copying the elements.
+    RexxArray *array = (RexxArray *)new_array(this->count);
+    while (this->first != LIST_END)
+    {
+        // get the list entry and remove the value
+        LISTENTRY *element = ENTRY_POINTER(this->first);
+        primitiveRemove(element);
+    }
+    return OREF_NULL;
+}
+
+
+
+/**
+ * Test if a list is empty.
+ *
+ * @return True if the list is empty, false otherwise
+ */
+RexxObject *RexxList::isEmpty()
+{
+    return (count == 0) ? TheTrueObject : TheFalseObject;
+}
+
+
+/**
  * Return an array containing all elements contained in the list,
  * in sorted order.
  *

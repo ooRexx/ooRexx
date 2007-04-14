@@ -132,6 +132,8 @@ typedef struct copyElelmentParm {
    void         ensureSpace(size_t newSize);
    RexxObject  *newRexx(RexxObject **, size_t);
    RexxObject  *of(RexxObject **, size_t);
+   RexxObject  *empty();
+   RexxObject  *isEmpty();
 
    inline void         addLast(RexxObject *item) { this->insertItem(item, this->size() + 1); }
    inline void         addFirst(RexxObject *item) { this->insertItem(item, 1); }

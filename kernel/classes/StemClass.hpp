@@ -78,6 +78,9 @@
   RexxArray   *allIndexes();
   RexxSupplier *supplier();
   RexxObject  *request(RexxString *);
+  RexxObject   *empty();
+  RexxObject   *isEmpty();
+  arraysize_t  items();
 
   void        dropValue();
   RexxObject *unknown (RexxString *, RexxArray *);

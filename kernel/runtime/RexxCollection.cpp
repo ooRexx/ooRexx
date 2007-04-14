@@ -121,6 +121,7 @@ RexxObject *RexxHashTableCollection::makeProxy(RexxEnvelope *envelope)
   return newProxy;
 }
 
+
 RexxObject *RexxHashTableCollection::copy(void)
 /******************************************************************************/
 /* Function:  Copy a hash based collection object                             */
@@ -255,6 +256,7 @@ RexxObject *RexxHashTableCollection::merge(
   return this->contents->merge(target);
 }
 
+
 RexxObject *RexxHashTableCollection::copyValues(
    long depth)                         /* depth to propagate the copy to    */
 /******************************************************************************/
@@ -322,4 +324,27 @@ RexxArray *RexxHashTableCollection::allIndexes()
 /******************************************************************************/
 {
   return this->contents->allIndexes();
+}
+
+
+/**
+ * Empty a hash table collection.
+ *
+ * @return nothing
+ */
+RexxObject *RexxHashTableCollection::empty()
+{
+    contents->empty();
+    return OREF_NULL;
+}
+
+
+/**
+ * Test if a HashTableCollection is empty.
+ *
+ * @return
+ */
+RexxObject *RexxHashTableCollection::isEmpty()
+{
+    return contents->isEmpty() ? TheTrueObject : TheFalseObject;
 }

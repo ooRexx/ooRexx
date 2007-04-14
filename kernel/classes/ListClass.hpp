@@ -103,6 +103,8 @@
    RexxObject   *removeLast() { return (this->last != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->last)) : TheNilObject; }
    LISTENTRY    *getEntry(RexxObject *, RexxObject *);
    RexxObject   *indexOfValue(RexxObject *);
+   RexxObject   *empty();
+   RexxObject   *isEmpty();
 
    void          addLast(RexxObject *value);
    void          addFirst(RexxObject *value);

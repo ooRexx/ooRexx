@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                          RexxCompoundTable.hpp   */
+/* REXX Kernel                                        RexxCompoundTable.hpp   */
 /*                                                                            */
 /* Balanced binary tree table for stem variables                              */
 /*                                                                            */

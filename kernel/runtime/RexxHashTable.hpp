@@ -69,6 +69,10 @@ typedef unsigned long HashLink;
    void         liveGeneral();
    void         flatten(RexxEnvelope *);
    RexxArray  * makeArray();
+   void         empty();
+   bool         isEmpty();
+   size_t       items();
+   void         emptySlot(HashLink);
 
    HashLink       next(HashLink position);
    RexxObject    *value(HashLink position);
