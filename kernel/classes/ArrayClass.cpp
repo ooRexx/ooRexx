@@ -533,6 +533,18 @@ size_t  RexxArray::validateIndex(      /* validate an array index           */
   size_t  offset;                      /* accumulated offset                */
   size_t  dimension;                   /* current working dimension         */
   size_t  numSize;                     /* temporary long variable           */
+
+
+  // do we really have a single index item given as an array?
+  if (indexCount == 1 && index[0] != OREF_NULL && OTYPE(Array, index[0]))
+  {
+      // we process this exactly the same way, but swap the count and
+      // pointers around to be the array data.
+      RexxArray *indirect = (RexxArray *)index[0];
+      indexCount = indirect->numItems();
+      index = indirect->data();
+  }
+
                                        /* Is this array one-dimensional?    */
   if (this->dimensions == OREF_NULL || this->dimensions->size() == 1) {
                                        /* Too many subscripts?  Say so.     */
