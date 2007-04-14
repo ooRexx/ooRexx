@@ -309,6 +309,7 @@ INT ParseOptionscount =            /* size of Parse options table     */
 /*********************************************************************/
 
 KWDTABLE SubDirectives[] = {           /* language directive subkeywords    */
+   KWD(CHAR_ABSTRACT,    SUBDIRECTIVE_ABSTRACT)
    KWD(CHAR_ATTRIBUTE,   SUBDIRECTIVE_ATTRIBUTE)
    KWD(CHAR_CLASS,       SUBDIRECTIVE_CLASS)
    KWD(CHAR_EXTERNAL,    SUBDIRECTIVE_EXTERNAL)

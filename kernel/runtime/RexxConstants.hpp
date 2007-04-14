@@ -411,6 +411,7 @@ CHARCONSTANT(ELLIPSIS, "...");
                                           /*now names for the builtin functions   */
 CHARCONSTANT(ABBREV, "ABBREV");
 CHARCONSTANT(ABS, "ABS");
+CHARCONSTANT(ABSTRACT, "ABSTRACT");
 CHARCONSTANT(ADDRESS, "ADDRESS");
 CHARCONSTANT(ARG, "ARG");
 CHARCONSTANT(B2X, "B2X");

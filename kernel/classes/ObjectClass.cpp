@@ -1255,6 +1255,12 @@ RexxObject  *RexxObject::getAttribute()
   return method_save->getAttribute()->getValue(this->getObjectVariables(method_save->scope));
 }
 
+RexxObject  *RexxObject::abstractMethod(RexxObject **args, size_t count)
+{
+    report_exception1(Error_Incorrect_method_abstract, last_msgname());
+    return OREF_NULL;
+}
+
 RexxString  *RexxObject::defaultName()
 /******************************************************************************/
 /* Function:  Handle "final" string coercion level                            */

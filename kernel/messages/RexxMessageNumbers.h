@@ -589,6 +589,7 @@
 #define Error_Invalid_expression_logical_list_msg                    660
 #define Error_Translation_use_strict_ellipsis_msg                    663
 #define Error_Invalid_expression_use_strict_default_msg              664
+#define Error_Incorrect_method_abstract_msg                          665
 
 
 #endif

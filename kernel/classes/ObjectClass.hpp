@@ -50,6 +50,7 @@
 
 #define getAttributeIndex 0            /* location of getAttribute method   */
 #define setAttributeIndex 1            /* location of setAttribute method   */
+#define abstractIndex     2            /* location of the abstractMethod    */
 
   class RexxObject;
   class RexxCompoundTail;
@@ -260,6 +261,7 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *getObjectVariable(RexxString *, RexxObject *);
      RexxObject  *setAttribute(RexxObject *);
      RexxObject  *getAttribute();
+     RexxObject  *abstractMethod(RexxObject **, size_t);
      void         addObjectVariables(RexxVariableDictionary *);
      void         copyObjectVariables(RexxObject *newObject);
      RexxObject  *superScope(RexxObject *);

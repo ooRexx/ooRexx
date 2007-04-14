@@ -80,6 +80,7 @@ PCPPM ExportedMethods[] = {            /* start of exported methods table   */
                                        /* predictable location              */
 CPPM(RexxObject::getAttribute),
 CPPM(RexxObject::setAttribute),
+CPPM(RexxObject::abstractMethod),      // also must be at this location ALWAYS
 CPPM(RexxObject::objectName),
 CPPM(RexxObject::objectNameEquals),
 CPPM(RexxObject::run),

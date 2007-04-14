@@ -3991,6 +3991,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Application_error</SymbolicName>
         <Text>Application error:  <Sub position="1" name="message"/></Text>
       </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>965</Subcode>
+        <MessageNumber>665</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_abstract</SymbolicName>
+        <Text>Method <Sub position="1" name="name"/> is ABSTRACT and cannot be directly invoked</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
