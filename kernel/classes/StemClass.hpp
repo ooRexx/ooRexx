@@ -55,6 +55,8 @@
 #define SORT_ASCENDING 0
 #define SORT_DECENDING 1
 
+class RexxSupplier;
+
  class RexxStem : public RexxObject {
   public:
    void *operator new (size_t);

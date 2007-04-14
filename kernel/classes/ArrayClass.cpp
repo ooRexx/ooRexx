@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ArrayClass.c     */
+/* REXX Kernel                                               ArrayClass.c     */
 /*                                                                            */
 /* Primitive Array Class                                                      */
 /*                                                                            */
@@ -478,7 +478,7 @@ RexxObject *RexxArray::supplier()
 
       if (fMultiDim) {
                                        /* add the index location            */
-        indexes->put((RexxObject*) indexToStringRep(i, buffer, multiIndex), count);
+        indexes->put((RexxObject*) indexToArray(i), count);
       } else {
                                        /* add the index location            */
         indexes->put((RexxObject*) new_integer(i), count);
@@ -496,44 +496,6 @@ RexxObject *RexxArray::supplier()
   return (RexxObject *)new_supplier(values, indexes);
 }
 
-RexxString* RexxArray::indexToStringRep(size_t idx, char *buffer, size_t *indices)
-/******************************************************************************/
-/* Function:  Create human-readable representation for multi-dimensional index*/
-/******************************************************************************/
-{
-  char       *tmp = buffer;
-  size_t      dims;
-  size_t      dimension;
-  size_t      digit;
-  size_t      i;
-
-  /* create the string representation of the multidimensional array. as the */
-  /* single indices can only be determined with the last first, they are    */
-  /* stored in the indices array first and then made human-readable.        */
-  /* this method gets the char buffer passed in so it does not have to alloc*/
-  /* memory on each call. the allocation is done in RexxArray::supplier in- */
-  /* stead. the same is true for the indices array.                         */
-  idx--;
-  dims = this->dimensions->size();
-  for (i = dims; i != 0; i--) {
-    dimension = ((RexxInteger *)this->dimensions->get(i))->value;
-    digit = idx % dimension;           /* calculate current index           */
-    indices[dims-i] = digit+1;         /* set digit in indices array        */
-    idx = (idx - digit) / dimension;   /* remove numberspace for this index */
-  }
-
-  tmp[0] = 0x00;                       /* create string representation      */
-  for (i = dims; i > 0; i--) {
-    if (i == dims) {
-      sprintf(tmp,"%d",indices[i-1]);
-    } else {
-      sprintf(tmp,",%d",indices[i-1]);
-    }
-    tmp = tmp + strlen(tmp);
-  }
-
-  return new_cstring(buffer);          /* create RexxString for char buffer */
-}
 
 void  RexxArray::setExpansion(RexxObject * expansion)
 /******************************************************************************/
@@ -1111,7 +1073,8 @@ RexxArray *RexxArray::allIndexes(void)
     return newArray;
 }
 
-
+// Temporary bypass for BUG #1700606
+#if 0
 RexxString  *RexxArray::primitiveMakeString()
 /******************************************************************************/
 /* Function:  Handle a REQUEST('STRING') request for a REXX string object     */
@@ -1119,9 +1082,14 @@ RexxString  *RexxArray::primitiveMakeString()
 {
   return this->makeString((RexxString *)OREF_NULL);    /* forward to the real makestring method */
 }
-
+#endif
 
 RexxString *RexxArray::makeString(RexxString *format)
+{
+    return toString(format);
+}
+
+RexxString *RexxArray::toString(RexxString *format)
 /******************************************************************************/
 /* Function:  Make a string out of an array                                   */
 /******************************************************************************/
@@ -1187,7 +1155,11 @@ RexxString *RexxArray::makeString(RexxString *format)
               {
                   mutbuffer->append((RexxObject *) line_end_string);
               }
-              mutbuffer->append(item);
+              RexxObject *stringValue = item->requiredString();
+              if (stringValue != TheNilObject)
+              {
+                  mutbuffer->append(stringValue);
+              }
               first = false;
           }
       }
@@ -1392,6 +1364,121 @@ RexxArray *RexxArray::extend(          /* join two arrays into one          */
   newArray->arraySize = newSize;
   return this;                         /* All done, return array            */
 }
+
+
+/**
+ * Find the index of a single item in the array.
+ *
+ * @param item   The item to locate.
+ *
+ * @return The numeric index of the item.
+ */
+arraysize_t RexxArray::findSingleIndexItem(RexxObject *item)
+{
+    for (arraysize_t i = 0; i < this->arraySize; i++)
+    {
+        // if there's an object in the slot, compare it.
+        if (objects[i] != OREF_NULL)
+        {
+            // if the items are equal, return the index
+            if (item->equalValue(objects[i]))
+            {
+                return i + 1;
+            }
+        }
+    }
+    return 0;
+}
+
+
+/**
+ * Convert a multi-dimensional array index into an array
+ * of index values for the flattened dimension.
+ *
+ * @param idx     The index to covert.
+ *
+ * @return An array of the individual index items.
+ */
+RexxObject* RexxArray::indexToArray(size_t idx)
+{
+  // work with an origin-origin zero version of the index, which is easier
+  // do work with.
+  idx--;
+  // get the number of dimensions specified.
+  size_t dims = this->dimensions->size();
+  // get an array we fill in as we go
+  RexxArray *index = new_array(dims);
+
+  for (size_t i = dims; i > 0; i--)
+  {
+      // get the next dimension size
+      size_t dimension = ((RexxInteger *)this->dimensions->get(i))->value;
+      // now get the remainder.  This tells us the position within this
+      // dimension of the array.  Make an integer object and store in the
+      // array.
+      size_t digit = idx % dimension;
+      // the digit is origin-zero, but the Rexx index is origin-one.
+      index->put(new_integer(digit + 1), i);
+      // now strip out that portion of the index.
+      idx = (idx - digit) / dimension;
+  }
+  // return the array object
+  discard_hold(index);
+  return index;
+}
+
+
+/**
+ * Return the index for the first occurrence of the target in
+ * the array.
+ *
+ * @param target The target object.
+ *
+ * @return The index for the array.  For a multi-dimensional array, this
+ *         returns an array of indices.
+ */
+RexxObject *RexxArray::index(RexxObject *target)
+{
+    // we require the index to be there.
+    required_arg(target, ONE);
+    // see if we have this item.  If not, then
+    // we return .nil.
+    arraysize_t index = findSingleIndexItem(target);
+
+    if (index == 0)
+    {
+        return TheNilObject;
+    }
+    // single dimensional arrays are easy, we return
+    if (this->dimensions == OREF_NULL || this->dimensions->size() == 1)
+    {
+        return new_integer(index);
+    }
+    else
+    {
+        // convert this into an array of integers
+        return indexToArray(index);
+    }
+}
+
+
+/**
+ * Test if an item is within the array.
+ *
+ * @param target The target test item.
+ *
+ * @return .true if this item exists in the array. .false if it does not
+ *         exist.
+ */
+RexxObject *RexxArray::hasItem(RexxObject *target)
+{
+    // this is pretty simple.  One argument, required, and just search to see
+    // if we have it.
+    required_arg(target, ONE);
+    return findSingleIndexItem(target) == 0 ? TheFalseObject : TheTrueObject;
+}
+
+
 
 void copyElements(
     COPYELEMENTPARM *parm,

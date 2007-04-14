@@ -215,6 +215,7 @@ class RexxObject : public RexxInternalObject {
      LONG         requestLong(size_t);
      RexxArray   *requestArray();
      RexxString  *requiredString(LONG);
+     RexxString  *requiredString();
      RexxInteger *requiredInteger(LONG, size_t);
      LONG         requiredLong(LONG, size_t precision = DEFAULT_DIGITS);
      LONG         requiredPositive(LONG, size_t precision = DEFAULT_DIGITS);
@@ -292,6 +293,13 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *SOMObjRexx();
      RexxObject  *serverRexx();
      BOOL         callSecurityManager(RexxString *, RexxDirectory *);
+     // compare 2 values for equality, potentially falling back on the
+     // "==" method for the test.
+     bool inline equalValue(RexxObject *other)
+     {
+         // test first for direct equality, followed by value equality.
+         return (this == other) || this->isEqual(other);
+     }
 
  // Define operator methods here.
 

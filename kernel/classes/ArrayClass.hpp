@@ -93,8 +93,12 @@ typedef struct copyElelmentParm {
    RexxArray   *makeArray();
    RexxArray   *allItems();
    RexxArray   *allIndexes();
+   RexxString  *toString(RexxString *);
    RexxString  *makeString(RexxString *);
+// Temporary bypass for BUG #1700606
+#if 0
    RexxString  *primitiveMakeString();
+#endif
    RexxObject  *getRexx(RexxObject **, size_t);
    void         put(RexxObject * eref, size_t pos);
    RexxObject  *putRexx(RexxObject **, size_t);
@@ -134,6 +138,8 @@ typedef struct copyElelmentParm {
    RexxObject  *of(RexxObject **, size_t);
    RexxObject  *empty();
    RexxObject  *isEmpty();
+   RexxObject  *index(RexxObject *);
+   RexxObject  *hasItem(RexxObject *);
 
    inline void         addLast(RexxObject *item) { this->insertItem(item, this->size() + 1); }
    inline void         addFirst(RexxObject *item) { this->insertItem(item, 1); }
@@ -143,7 +149,8 @@ typedef struct copyElelmentParm {
    inline RexxObject **data() { return this->expansionArray->objects; }
    inline RexxObject **data(size_t pos) { return &((this->data())[pos-1]);}
    inline RexxArray   *getExpansion() { return this->expansionArray; }
-   inline RexxString  *indexToStringRep(size_t, char*, size_t*);  // def. 1048
+   arraysize_t         findSingleIndexItem(RexxObject *item);
+   RexxObject*         indexToArray(size_t idx);
 
    size_t arraySize;                   /* current size of array         */
    size_t maximumSize;                 /* Maximum size array can grow   */

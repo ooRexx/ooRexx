@@ -161,6 +161,9 @@ CPPMA(RexxArray::allIndexes),
 CPPMA(RexxArray::allItems),
 CPPMA(RexxArray::empty),
 CPPMA(RexxArray::isEmpty),
+CPPMA(RexxArray::index),
+CPPMA(RexxArray::hasItem),
+CPPMA(RexxArray::toString),
 
 CPPMC1(RexxArray::newRexx),
 CPPMA(RexxArray::makeString),
@@ -860,10 +863,13 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_PREVIOUS     ,TheArrayBehaviour, CPPMA(RexxArray::previousRexx), 1);
   defineKernelMethod(CHAR_APPEND       ,TheArrayBehaviour, CPPMA(RexxArray::append), 1);
   defineKernelMethod(CHAR_MAKESTRING   ,TheArrayBehaviour, CPPMA(RexxArray::makeString), 1);
+  defineKernelMethod(CHAR_TOSTRING     ,TheArrayBehaviour, CPPMA(RexxArray::toString), 1);
   defineKernelMethod(CHAR_ALLINDEXES   ,TheArrayBehaviour, CPPMA(RexxArray::allIndexes), 0);
   defineKernelMethod(CHAR_ALLITEMS     ,TheArrayBehaviour, CPPMA(RexxArray::allItems), 0);
   defineKernelMethod(CHAR_EMPTY        ,TheArrayBehaviour, CPPMA(RexxArray::empty), 0);
   defineKernelMethod(CHAR_ISEMPTY      ,TheArrayBehaviour, CPPMA(RexxArray::isEmpty), 0);
+  defineKernelMethod(CHAR_INDEX        ,TheArrayBehaviour, CPPMA(RexxArray::index), 1);
+  defineKernelMethod(CHAR_HASITEM      ,TheArrayBehaviour, CPPMA(RexxArray::hasItem), 1);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheArrayBehaviour->setMethodDictionaryScope(TheArrayClass);

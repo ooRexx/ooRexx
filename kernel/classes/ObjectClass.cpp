@@ -1072,6 +1072,28 @@ RexxString *RexxObject::requiredString(
   return string_value;                 /* return the converted form         */
 }
 
+/**
+ * Handle a string request for a required string value where
+ * the caller wishes to handle the error itself.
+ *
+ * @return The object's string value, or OREF_NULL if this is not a
+ *         string.
+ */
+RexxString *RexxObject::requiredString()
+{
+    // primitive object?  We have a bypass for this
+    if (isPrimitive(this))
+    {
+        return this->makeString();
+    }
+    else
+    {
+        // we have to use REQUEST to get this
+        return (RexxString *)this->sendMessage(OREF_REQUEST, OREF_STRINGSYM);
+    }
+}
+
+
 RexxInteger *RexxObject::requestInteger(
     size_t precision )                 /* precision to use                  */
 /******************************************************************************/
