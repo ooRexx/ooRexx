@@ -133,9 +133,15 @@ RexxObject *RexxRelation::hasItem(
 /* Function:  Remove an item from a relation using an index                   */
 /******************************************************************************/
 {
-  required_arg(value, ONE);            /* make sure we have a value         */
-  required_arg(index, TWO);            /* and the index                     */
-  return this->contents->hasItem(value, index);
+    required_arg(value, ONE);            /* make sure we have a value         */
+    if (index == OREF_NULL)              // just an item search
+    {
+        return this->contents->hasItem(value);
+    }
+    else   // tuple search
+    {
+        return this->contents->hasItem(value, index);
+    }
 }
 
 RexxObject *RexxRelation::allIndex(
@@ -160,21 +166,6 @@ RexxObject *RexxRelation::allAt(
   return this->contents->allIndex(index);
 }
 
-RexxObject *RexxRelation::getIndex(
-  RexxObject *index)                   /* index to get                      */
-/******************************************************************************/
-/* Function:  return all value with the same index                            */
-/******************************************************************************/
-{
-  RexxObject *result;                  /* returned result                   */
-
-  required_arg(index, ONE);            /* make sure we have an index        */
-                                       /* just get from the hash table      */
-  result = this->contents->getIndex(index);
-  if (result == OREF_NULL)             /* nothing found?                    */
-    result = TheNilObject;             /* just return a nil                 */
-  return result;
-}
 
 RexxObject *RexxRelation::put(
   RexxObject *value,                   /* new value to add                  */

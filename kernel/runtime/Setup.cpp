@@ -184,6 +184,8 @@ CPPMA(RexxDirectory::allIndexes),
 CPPMA(RexxDirectory::allItems),
 CPPMA(RexxDirectory::empty),
 CPPMA(RexxDirectory::isEmpty),
+CPPMA(RexxDirectory::indexRexx),
+CPPMA(RexxDirectory::hasItem),
 
 CPPMD(RexxDirectory::newRexx),
 
@@ -240,6 +242,8 @@ CPPML(RexxList::allIndexes),
 CPPML(RexxList::allItems),
 CPPMA(RexxList::empty),
 CPPMA(RexxList::isEmpty),
+CPPMA(RexxList::index),
+CPPMA(RexxList::hasItem),
 
 CPPMLC(RexxListClass::newRexx),
 CPPMLC(RexxListClass::classOf),
@@ -314,6 +318,7 @@ CPPMQ(RexxQueue::hasindex),
 CPPMQ(RexxQueue::remove),
 CPPML(RexxQueue::append),
 CPPML(RexxQueue::allIndexes),
+CPPML(RexxQueue::index),
 
 CPPMQ(RexxQueue::newRexx),
 CPPMQ(RexxQueue::ofRexx),
@@ -450,45 +455,6 @@ CPPMMUTB(RexxMutableBuffer::getBufferSize),
 CPPMMUTB(RexxMutableBuffer::setBufferSize),
 CPPMMUTB(RexxMutableBuffer::uninitMB),
 
-CPPMSOM(RexxSOMProxy::operator_equal),
-                                          /* SOMProxy Operator methods....     */
-CPPMSOM(RexxSOMProxy::operator_plusRexx),
-CPPMSOM(RexxSOMProxy::operator_minusRexx),
-CPPMSOM(RexxSOMProxy::operator_multiplyRexx),
-CPPMSOM(RexxSOMProxy::operator_divideRexx),
-CPPMSOM(RexxSOMProxy::operator_integerDivideRexx),
-CPPMSOM(RexxSOMProxy::operator_remainderRexx),
-CPPMSOM(RexxSOMProxy::operator_powerRexx),
-CPPMSOM(RexxSOMProxy::operator_abuttalRexx),
-CPPMSOM(RexxSOMProxy::operator_concatRexx),
-CPPMSOM(RexxSOMProxy::operator_concatBlankRexx),
-CPPMSOM(RexxSOMProxy::operator_equalRexx),
-CPPMSOM(RexxSOMProxy::operator_notEqualRexx),
-CPPMSOM(RexxSOMProxy::operator_isGreaterThanRexx),
-CPPMSOM(RexxSOMProxy::operator_isBackslashGreaterThanRexx),
-CPPMSOM(RexxSOMProxy::operator_isLessThanRexx),
-CPPMSOM(RexxSOMProxy::operator_isBackslashLessThanRexx),
-CPPMSOM(RexxSOMProxy::operator_isGreaterOrEqualRexx),
-CPPMSOM(RexxSOMProxy::operator_isLessOrEqualRexx),
-CPPMSOM(RexxSOMProxy::operator_strictEqualRexx),
-CPPMSOM(RexxSOMProxy::operator_strictNotEqualRexx),
-CPPMSOM(RexxSOMProxy::operator_strictGreaterThanRexx),
-CPPMSOM(RexxSOMProxy::operator_strictBackslashGreaterThanRexx),
-CPPMSOM(RexxSOMProxy::operator_strictLessThanRexx),
-CPPMSOM(RexxSOMProxy::operator_strictBackslashLessThanRexx),
-CPPMSOM(RexxSOMProxy::operator_strictGreaterOrEqualRexx),
-CPPMSOM(RexxSOMProxy::operator_strictLessOrEqualRexx),
-CPPMSOM(RexxSOMProxy::operator_lessThanGreaterThanRexx),
-CPPMSOM(RexxSOMProxy::operator_greaterThanLessThanRexx),
-CPPMSOM(RexxSOMProxy::operator_andRexx),
-CPPMSOM(RexxSOMProxy::operator_orRexx),
-CPPMSOM(RexxSOMProxy::operator_xorRexx),
-CPPMSOM(RexxSOMProxy::operator_notRexx),
-
-CPPMSOMCL(RexxSOMProxyClass::newRexx),
-CPPMSOMCL(RexxSOMProxyClass::init),
-CPPMSOMCL(RexxSOMProxyClass::somdNew),
-
 CPPMSUP(RexxSupplier::available),         /* Supplier methods                  */
 CPPMSUP(RexxSupplier::next),
 CPPMSUP(RexxSupplier::value),
@@ -503,23 +469,24 @@ CPPMHC(RexxHashTableCollection::put),
 CPPMHC(RexxHashTableCollection::add),
 CPPMHC(RexxHashTableCollection::allAt),
 CPPMHC(RexxHashTableCollection::hasIndex),
-CPPMTBL(RexxTable::itemsRexx),
 CPPMHC(RexxHashTableCollection::merge),
 CPPMHC(RexxHashTableCollection::supplier),
 CPPMHC(RexxHashTableCollection::allItems),
 CPPMHC(RexxHashTableCollection::allIndexes),
 CPPMHC(RexxHashTableCollection::empty),
 CPPMHC(RexxHashTableCollection::isEmpty),
+CPPMHC(RexxHashTableCollection::indexRexx),
+CPPMHC(RexxHashTableCollection::hasItem),
 
+CPPMTBL(RexxTable::itemsRexx),
 CPPMTBL(RexxTable::newRexx),
 
 CPPMREL(RexxRelation::put),               /* Relation methods                  */
 CPPMREL(RexxRelation::removeItemRexx),
-CPPMREL(RexxRelation::hasItem),
 CPPMREL(RexxRelation::allIndex),
-CPPMREL(RexxRelation::getIndex),
 CPPMREL(RexxRelation::itemsRexx),
 CPPMREL(RexxRelation::supplier),
+CPPMREL(RexxRelation::hasItem),
 
 CPPMREL(RexxRelation::newRexx),
 
@@ -907,7 +874,9 @@ bool kernel_setup (void)
   defineProtectedKernelMethod(CHAR_SETMETHOD   , TheDirectoryBehaviour, CPPMD(RexxDirectory::setMethod), 2);
   defineKernelMethod(CHAR_SUPPLIER      , TheDirectoryBehaviour, CPPMD(RexxDirectory::supplier), 0);
   defineKernelMethod(CHAR_UNKNOWN       , TheDirectoryBehaviour, CPPM(RexxObject::unknownRexx), 2);
-  defineProtectedKernelMethod(CHAR_UNSETMETHOD   , TheDirectoryBehaviour, CPPMD(RexxDirectory::remove), 1);  // ENG004M
+  defineProtectedKernelMethod(CHAR_UNSETMETHOD   , TheDirectoryBehaviour, CPPMD(RexxDirectory::remove), 1);
+  defineKernelMethod(CHAR_INDEX        , TheDirectoryBehaviour, CPPMD(RexxDirectory::indexRexx), 1);
+  defineKernelMethod(CHAR_HASITEM      , TheDirectoryBehaviour, CPPMD(RexxDirectory::hasItem), 1);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -970,6 +939,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_ALLINDEXES   ,TheListBehaviour, CPPML(RexxList::allIndexes), 0);
   defineKernelMethod(CHAR_EMPTY        ,TheListBehaviour, CPPML(RexxList::empty), 0);
   defineKernelMethod(CHAR_ISEMPTY      ,TheListBehaviour, CPPML(RexxList::isEmpty), 0);
+  defineKernelMethod(CHAR_INDEX        ,TheListBehaviour, CPPML(RexxList::index), 1);
+  defineKernelMethod(CHAR_HASITEM      ,TheListBehaviour, CPPML(RexxList::hasItem), 1);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheListBehaviour->setMethodDictionaryScope(TheListClass);
@@ -1076,6 +1047,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_ALLINDEXES    ,TheQueueBehaviour, CPPMQ(RexxQueue::allIndexes), 0);
   defineKernelMethod(CHAR_EMPTY         ,TheQueueBehaviour, CPPMQ(RexxList::empty), 0);
   defineKernelMethod(CHAR_ISEMPTY       ,TheQueueBehaviour, CPPMQ(RexxList::isEmpty), 0);
+  defineKernelMethod(CHAR_INDEX         ,TheQueueBehaviour, CPPML(RexxQueue::index), 1);
+  defineKernelMethod(CHAR_HASITEM       ,TheQueueBehaviour, CPPML(RexxList::hasItem), 1);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -1107,7 +1080,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_AT           , TheRelationBehaviour, CPPMHC(RexxHashTableCollection::getRexx), 1);
   defineKernelMethod(CHAR_HASINDEX     , TheRelationBehaviour, CPPMHC(RexxHashTableCollection::hasIndex), 1);
   defineKernelMethod(CHAR_HASITEM      , TheRelationBehaviour, CPPMREL(RexxRelation::hasItem), 2);
-  defineKernelMethod(CHAR_INDEX        , TheRelationBehaviour, CPPMREL(RexxRelation::getIndex), 1);
+  defineKernelMethod(CHAR_INDEX        , TheRelationBehaviour, CPPMREL(RexxHashTableCollection::indexRexx), 1);
   defineKernelMethod(CHAR_ITEMS        , TheRelationBehaviour, CPPMREL(RexxRelation::itemsRexx), 1);
   defineKernelMethod(CHAR_PUT          , TheRelationBehaviour, CPPMREL(RexxRelation::put), 2);
   defineKernelMethod(CHAR_REMOVE       , TheRelationBehaviour, CPPMHC(RexxHashTableCollection::removeRexx), 1);
@@ -1497,6 +1470,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_ALLINDEXES   , TheTableBehaviour, CPPMHC(RexxHashTableCollection::allIndexes), 0);
   defineKernelMethod(CHAR_EMPTY        , TheTableBehaviour, CPPMHC(RexxHashTableCollection::empty), 0);
   defineKernelMethod(CHAR_ISEMPTY      , TheTableBehaviour, CPPMHC(RexxHashTableCollection::isEmpty), 0);
+  defineKernelMethod(CHAR_INDEX        , TheTableBehaviour, CPPMHC(RexxHashTableCollection::indexRexx), 1);
+  defineKernelMethod(CHAR_HASITEM      , TheTableBehaviour, CPPMHC(RexxHashTableCollection::hasItem), 1);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

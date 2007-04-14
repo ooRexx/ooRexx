@@ -261,6 +261,36 @@ RexxArray *RexxQueue::allIndexes()
 }
 
 
+/**
+ * Return the index of the first item with a matching value
+ * in the list.  Returns .nil if the object is not found.
+ *
+ * @param target The target object.
+ *
+ * @return The index of the item, or .nil.
+ */
+RexxObject *RexxQueue::index(RexxObject *target)
+{
+    // we require the index to be there.
+    required_arg(target, ONE);
+
+    // ok, now run the list looking for the target item
+    long next = this->first;
+    for (long i = 1; i <= this->count; i++)
+    {
+        LISTENTRY *element = ENTRY_POINTER(next);
+        // if we got a match, return the item
+        if (target->equalValue(element->value))
+        {
+            // queue indices are positional.
+            return new_integer(i);
+        }
+        next = element->next;
+    }
+    // no match
+    return TheNilObject;
+}
+
 
 RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
 /******************************************************************************/

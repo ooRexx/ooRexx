@@ -108,6 +108,7 @@ typedef unsigned long HashLink;
    RexxArray     *stringGetAll(RexxString *key);
    RexxObject    *stringMerge(RexxHashTable *target);
    RexxObject    *hasItem(RexxObject * value, RexxObject *key);
+   RexxObject    *hasItem(RexxObject * value);
    void           reMerge(RexxHashTable *target);
    void           primitiveMerge(RexxHashTable *target);
    RexxHashTable *insert(RexxObject *value, RexxObject *index, HashLink position, LONG type);

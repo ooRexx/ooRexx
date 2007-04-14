@@ -649,6 +649,63 @@ RexxObject *RexxDirectory::isEmpty()
 }
 
 
+
+/**
+ * Retrieve an index for a given item.  Which index is returned
+ * is indeterminate.
+ *
+ * @param target The target object.
+ *
+ * @return The index for the target object, or .nil if no object was
+ *         found.
+ */
+RexxObject *RexxDirectory::indexRexx(RexxObject *target)
+{
+    // required argument
+    required_arg(target, ONE);
+    // retrieve this from the hash table
+    RexxObject *result = this->contents->getIndex(target);
+    // not found, return .nil
+    if (result == OREF_NULL)
+    {
+        // rats, we might need to do this the hardway
+        if (this->method_table != OREF_NULL)
+        {
+            RexxTable *methodTable = this->method_table;
+
+            for (HashLink index = methodTable->first(); methodTable->available(index); index = methodTable->next(index))
+            {
+                // we need to run each method, looking for a value that matches
+                RexxString *name = (RexxString *)methodTable->index(index);
+                RexxMethod *method = (RexxMethod *)methodTable->value(index);
+                RexxObject *value = method->run(CurrentActivity, this, name, 0, NULL);
+                // got a match?
+                if (target->equalValue(value))
+                {
+                    return name;    // the name is the index
+                }
+            }
+        }
+        return TheNilObject;          // the nil object is the unknown index
+    }
+    return result;
+}
+
+
+/**
+ * Test if a given item exists in the collection.
+ *
+ * @param target The target object.
+ *
+ * @return .true if the object exists, .false otherwise.
+ */
+RexxObject *RexxDirectory::hasItem(RexxObject *target)
+{
+    required_arg(target, ONE);
+    // the lookup is more complicated, so just delegate to the index lookup code.
+    return indexRexx(target) != TheNilObject ? TheTrueObject : TheFalseObject;
+}
+
 RexxObject *RexxDirectory::newRexx(
     RexxObject **init_args,
     size_t       argCount)

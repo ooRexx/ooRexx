@@ -786,6 +786,66 @@ RexxArray *RexxList::allIndexes(void)
 }
 
 
+/**
+ * Return the index of the first item with a matching value
+ * in the list.  Returns .nil if the object is not found.
+ *
+ * @param target The target object.
+ *
+ * @return The index of the item, or .nil.
+ */
+RexxObject *RexxList::index(RexxObject *target)
+{
+    // we require the index to be there.
+    required_arg(target, ONE);
+
+    // ok, now run the list looking for the target item
+    long next = this->first;
+    for (long   i = 1; i <= this->count; i++)
+    {
+        LISTENTRY *element = ENTRY_POINTER(next);
+        // if we got a match, return the item
+        if (target->equalValue(element->value))
+        {
+            return new_integer(next);
+        }
+        next = element->next;
+    }
+    // no match
+    return TheNilObject;
+}
+
+
+/**
+ * Tests whether there is an object with the given value in the
+ * list.
+ *
+ * @param target The target value.
+ *
+ * @return .true if there is a match, .false otherwise.
+ */
+RexxObject *RexxList::hasItem(RexxObject *target)
+{
+    // we require the index to be there.
+    required_arg(target, ONE);
+
+    // ok, now run the list looking for the target item
+    long next = this->first;
+    for (long   i = 1; i <= this->count; i++)
+    {
+        LISTENTRY *element = ENTRY_POINTER(next);
+        // if we got a match, return the item
+        if (target->equalValue(element->value))
+        {
+            return TheTrueObject;
+        }
+        next = element->next;
+    }
+    // no match
+    return TheFalseObject;
+}
+
+
 RexxObject *RexxList::indexOfValue(
      RexxObject *value)
 /*****************************************************************************/

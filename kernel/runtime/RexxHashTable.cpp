@@ -546,6 +546,38 @@ RexxObject *RexxHashTable::hasItem(
   return (RexxObject *)TheFalseObject; /* item was not found                */
 }
 
+
+/**
+ * Test if an item exists in the hash collection.
+ *
+ * @param value  The test value.
+ *
+ * @return .true if it exists, .false otherwise.
+ */
+RexxObject *RexxHashTable::hasItem(RexxObject *value)
+{
+    // our size
+    size_t size = this->totalSlotsSize();
+
+    TABENTRY *ep = this->entries;
+    TABENTRY *endp = ep + size;
+                                         /* loop through all of the entries   */
+    for (; ep < endp; ep++)
+    {
+        // if we have an item, see if it's the one we're looking for.
+        if (ep->index != OREF_NULL)
+        {
+            if (EQUAL_VALUE(value, ep->value))
+            {
+                return TheTrueObject;    // return the index value
+
+            }
+        }
+    }
+    return TheFalseObject;
+}
+
+
 RexxObject *RexxHashTable::nextItem(
   RexxObject *value,                   /* item to locate                    */
   RexxObject *index )                  /* index to locate                   */

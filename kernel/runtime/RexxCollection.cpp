@@ -301,6 +301,45 @@ RexxObject *RexxHashTableCollection::hasIndex(
   return (value != OREF_NULL) ? (RexxObject *)TheTrueObject : (RexxObject *)TheFalseObject;
 }
 
+
+/**
+ * Retrieve an index for a given item.  Which index is returned
+ * is indeterminate.
+ *
+ * @param target The target object.
+ *
+ * @return The index for the target object, or .nil if no object was
+ *         found.
+ */
+RexxObject *RexxHashTableCollection::indexRexx(RexxObject *target)
+{
+    // required argument
+    required_arg(target, ONE);
+    // retrieve this from the hash table
+    RexxObject *result = this->contents->getIndex(target);
+    // not found, return .nil
+    if (result == OREF_NULL)
+    {
+        return TheNilObject;
+    }
+    return result;
+}
+
+
+/**
+ * Test if a given item exists in the collection.
+ *
+ * @param target The target object.
+ *
+ * @return .true if the object exists, .false otherwise.
+ */
+RexxObject *RexxHashTableCollection::hasItem(RexxObject *target)
+{
+    required_arg(target, ONE);
+    return this->contents->hasItem(target);
+}
+
+
 RexxSupplier *RexxHashTableCollection::supplier()
 /******************************************************************************/
 /* Function:  create a table supplier                                         */

@@ -80,6 +80,8 @@ class RexxDirectory : public RexxHashTableCollection {
   void          reset();
   RexxObject   *empty();
   RexxObject   *isEmpty();
+  RexxObject   *indexRexx(RexxObject *);
+  RexxObject   *hasItem(RexxObject *);
 
   RexxObject   *newRexx(RexxObject **init_args, size_t);
 

@@ -195,7 +195,7 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
             }
             else
             {
-                RexxObject *defaultValue = variables[i].defaultValue;
+                RexxObject *defaultValue = variables[i].defaultValue->evaluate(context, stack);
 
                 // and omitted argument is only value if we've marked it as optional
                 // by giving it a default value
@@ -225,7 +225,6 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
                             report_exception2(Error_Incorrect_call_noarg, context->getCallname(), new_integer(i + 1));
                         }
                     }
-
                 }
             }
         }

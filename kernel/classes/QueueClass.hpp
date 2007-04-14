@@ -67,6 +67,7 @@ class RexxQueue : public RexxList {
  RexxQueue  *ofRexx(RexxObject **, size_t);
  RexxObject *append(RexxObject *);
  RexxArray  *allIndexes();
+ RexxObject *index(RexxObject *);
 
  inline RexxObject *pop() { return this->removeFirst();};
  inline void push(RexxObject *obj) { this->addFirst(obj);};

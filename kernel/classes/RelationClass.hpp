@@ -58,7 +58,6 @@ class RexxRelation : public RexxTable {
    RexxObject   *hasItem(RexxObject *, RexxObject *);
    RexxObject   *allAt(RexxObject *);
    RexxObject   *allIndex(RexxObject *);
-   RexxObject   *getIndex(RexxObject *);
    RexxObject   *itemsRexx(RexxObject *);
    RexxSupplier *supplier(RexxObject *);
    RexxObject   *removeItem(RexxObject *, RexxObject *);
