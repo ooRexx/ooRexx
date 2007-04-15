@@ -151,7 +151,8 @@ typedef struct copyElelmentParm {
    inline RexxObject **data(size_t pos) { return &((this->data())[pos-1]);}
    inline RexxArray   *getExpansion() { return this->expansionArray; }
    arraysize_t         findSingleIndexItem(RexxObject *item);
-   RexxObject*         indexToArray(size_t idx);
+   RexxObject *        indexToArray(size_t idx);
+   RexxObject *        convertIndex(size_t idx);
 
    size_t arraySize;                   /* current size of array         */
    size_t maximumSize;                 /* Maximum size array can grow   */
