@@ -845,90 +845,141 @@ return new                             /* return new set                    */
 /*****************************************/
 /* XOR        method                     */
 /*****************************************/
-::METHOD xor                           /* take the exclusive or of a set    */
-use strict arg other                   /* get the companion object          */
+::METHOD xor                           -- take the exclusive or of a set
+use strict arg other                   -- get the companion object
 
 signal on nomethod
 
-new = self~copy
-do index over other                    /* loop over the other collection    */
-  if self~hasindex(index) then         /* in this collection?               */
-    new~remove(index)                  /* remove from the reference set     */
-  else
-    new~put(index)                     /* add non-located to target set     */
-end
-return new                             /* return the XOR collection         */
+new = self~copy                        -- work off of a copy
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
 
-nomethod:                              /* unknown method sent               */
-  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+do i = 1 to count
+    index = values[i]
+    -- if in the collection, remove it from the result.
+    -- otherwise, add to the result
+    if self~hasindex(index) then
+        new~remove(index)
+    else
+        new~put(index)
+end
+
+return new                             -- return the XOR collection
+
+nomethod:
+  raise syntax 93.948 array(1, "Collection") -- no, complain about it
 
 /*****************************************/
 /* INTERSECTION  method                  */
 /*****************************************/
-::METHOD intersection                  /* take the intersection of sets     */
-use strict arg other                   /* get the other collection          */
+::METHOD intersection                  -- take the intersection of sets
+use strict arg other                   -- get the companion object
 
 signal on nomethod
-new = self~class~new                   /* create a new collection           */
-do index over other                    /* loop over the other collection    */
-  if self~hasindex(index) then         /* in this collection?               */
-    new~put(index)                     /* add to the target collection      */
-end
-return new                             /* return the difference collection  */
 
-nomethod:                              /* unknown method sent               */
-  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+new = self~class~new                   -- use a new instance
+
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    -- if we have one of these, put into the result
+    -- NB:  Since this is a SET, there will only be one copy accumulated.
+    if self~hasindex(index) then
+         new~put(index)
+end
+
+return new                             -- return the difference collection
+
+nomethod:                              -- unknown method sent
+  raise syntax 93.948 array(1, "Collection")
 
 
 /*****************************************/
 /* UNION         method                  */
 /*****************************************/
-::METHOD union                         /* take the union of sets            */
-use strict arg other                   /* get the other collection          */
+::METHOD union                         -- take the union of sets
+use strict arg other                   -- get the companion object
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod
 
-new = self~copy                        /* copy the collection               */
-do index over other                    /* loop over the other collection    */
-  if \new~hasindex(index) then         /* not already there?                */
-    new~put(index)                     /* add to the target collection      */
+new = self~copy                        -- use a copy of this instance
+
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    -- only add if not already there
+    if \new~hasindex(index) then
+         new~put(index)
 end
 
-return new                             /* return the target collection      */
+return new                             -- return the union collection
 
-nomethod:                              /* unknown method sent               */
-  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+nomethod:                              -- unknown method sent
+  raise syntax 93.948 array(1, "Collection")
 
 
 /*****************************************/
 /* SUBSET        method                  */
 /*****************************************/
-::METHOD subset                        /* do we have a subset?              */
-use strict arg other                   /* get the other collection          */
+::METHOD subset                        -- do we have a subset?
+use strict arg other                   -- get the companion object
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod
 
-object = self~copy                     /* make a copy of this object        */
-do index over other                    /* loop over the other collection    */
-  object~remove(index)                 /* remove from the target collection */
+new = self~copy                        -- use a copy of this instance
+
+values = other~allitems                -- get all of the items from the other collection
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    -- subtract each item
+    new~remove(index)
 end
-return 0=object~items                  /* if nothing left -> proper subset  */
 
-nomethod:                              /* unknown method sent               */
-  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+return new~isempty                     -- subset of this is empty
+
+nomethod:                              -- unknown method sent
+  raise syntax 93.948 array(1, "Collection")
 
 
 /*****************************************/
 /* PUTALL        method                  */
 /*****************************************/
-::method putall
-  use strict arg other
+::METHOD putall
+  use strict arg other                   -- get the companion object
 
-  supplier = other~supplier              /* get an other supplier             */
-  do while supplier~available            /* loop over the other collection    */
-    self~put(supplier~item)              -- set and bag only use the item, ignoring the index.
-    supplier~next
+  signal on nomethod
+
+  if other~isA(.Collection) then
+      values = other~allitems            -- get all of the items from the other collection
+  else
+      values = other~makearray           -- ask for an array version of the source
+
+  count = values~items
+
+  do i = 1 to count
+      -- just put each item into the set
+      self~put(values[i])
   end
+
+  return                                 -- no return value
+
+  nomethod:                              -- unknown method sent
+    raise syntax 93.948 array(1, "Collection")
 
 
 /* *************************************** */
@@ -952,107 +1003,170 @@ return new                             /* return new bag                    */
 /* UNION         method                  */
 /*****************************************/
 ::METHOD union
-use strict arg other                   /* get the other collection          */
+use strict arg other                   -- get the companion object
 
-signal on nomethod                     /* trap unknown method requests      */
+signal on nomethod
 
-new = self~copy                        /* copy ourself                      */
-do index over other                    /* loop over the other collection    */
-  new~put(index)                       /* add to the target collection      */
+new = self~copy                        -- work off of a copy
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    -- just add each item
+    new~put(index)
 end
-return new                             /* return the union collection       */
 
-nomethod:                              /* unknown method sent               */
-  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+return new                             -- return the XOR collection
+
+nomethod:
+  raise syntax 93.948 array(1, "Collection") -- no, complain about it
 
 /*****************************************/
 /* XOR           method                  */
 /*****************************************/
 ::METHOD xor
-use strict arg other                   /* get the companion object          */
+use strict arg other                   -- get the companion object
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod
 
-new = self~copy
-catcher = self~class~new               /* create a new empty one            */
-do index over other                    /* loop over the other collection    */
-  if new~hasindex(index) then          /* in the reference collection?      */
-    new~remove(index)                  /* remove from the reference set     */
-  else
-    catcher~put(index)                 /* add non-located to the catcher    */
+new = self~copy                        -- copy ourselves
+catcher = self~class~new               -- and create an empty result
+
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    -- if the index is not in the reference, we
+    -- copy it to the catcher, otherwise we remove it from the reference
+    if new~hasindex(index) then
+        new~remove(index)
+    else
+        catcher~put(index)
 end
-return new~union(catcher)              /* now remerge these collections     */
 
-nomethod:                              /* unknown method sent               */
-  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+new~putall(catcher)                    -- remerge the two collections
+return new
+
+nomethod:
+  raise syntax 93.948 array(1, "Collection") -- no, complain about it
 
 /*****************************************/
 /* INTERSECTION  method                  */
 /*****************************************/
 ::METHOD intersection
-use strict arg other                   /* get the other collection          */
+use strict arg other                   -- get the companion object
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod
 
-new = self~class~new                   /* start with a new collection       */
-object = self~copy                     /* copy the target collection        */
-do index over other                    /* loop over the other collection    */
-  if object~hasindex(index) then do    /* in the reference collection?      */
-    new~put(index)                     /* add to the target collection      */
-    object~remove(index)               /* remove from the reference set     */
-  end
+new = self~class~new                   -- start with a new collection
+object = self~copy                     -- copy the target collection
+
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    -- if the reference collection contains this index, then
+    -- add to the result and remove from the reference.
+    if object~hasindex(index) then do
+        new~put(index)
+        object~remove(index)
+    end
 end
-return new                             /* return the intersection collection*/
 
-nomethod:                              /* unknown method sent               */
-  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+return new                             -- and return the new collection
+
+nomethod:
+  raise syntax 93.948 array(1, "Collection") -- no, complain about it
 
 /*****************************************/
 /* DIFFERENCE method                     */
 /*****************************************/
 ::METHOD difference
-use strict arg other                   /* get the companion object          */
+use strict arg other                   -- get the companion object
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod
 
-new = self~copy                        /* make a new set                    */
-do index over other                    /* loop over the other collection    */
-  new~remove(index)                    /* "subtract" this item              */
+new = self~copy                        -- copy the target collection
+
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    new~remove(index)                  -- just subtract this from the copy
 end
-return new                             /* return the difference collection  */
 
-nomethod:                              /* unknown method sent               */
-  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+return new                             -- and return the new collection
+
+nomethod:
+  raise syntax 93.948 array(1, "Collection") -- no, complain about it
 
 /*****************************************/
 /* SUBSET        method                  */
 /*****************************************/
 ::METHOD subset
-use strict arg other                   /* get the other collection          */
+use strict arg other                   -- get the companion object
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod
 
-object = self~copy                     /* make a copy of this object        */
-do index over other                    /* loop over the other collection    */
-  object~remove(index)                 /* remove from the target collection */
+new = self~copy                        -- copy the target collection
+
+if other~isA(.Collection) then
+    values = other~allitems            -- get all of the items from the other collection
+else
+    values = other~makearray           -- ask for an array version of the source
+count = values~items
+
+do i = 1 to count
+    index = values[i]
+    new~remove(index)                  -- just subtract this from the copy
 end
-return 0=object~items                  /* if nothing left -> proper subset  */
 
-nomethod:                              /* unknown method sent               */
-  raise syntax 93.948 array(1, "Collection") /* no, complain about it  */
+return new~isempty                     -- and test to see if we used everything up
+
+nomethod:
+  raise syntax 93.948 array(1, "Collection") -- no, complain about it
 
 
 /*****************************************/
 /* PUTALL        method                  */
 /*****************************************/
-::method putall
-  use strict arg other
+::METHOD putall
+  use strict arg other                   -- get the companion object
 
-  supplier = other~supplier              /* get an other supplier             */
-  do while supplier~available            /* loop over the other collection    */
-    self~put(supplier~item)              -- set and bag only use the item, ignoring the index.
-    supplier~next
+  signal on nomethod
+
+  if other~isA(.Collection) then
+      values = other~allitems            -- get all of the items from the other collection
+  else
+      values = other~makearray           -- ask for an array version of the source
+
+  count = values~items
+
+  do i = 1 to count
+      -- just put each item into the set
+      self~put(values[i])
   end
+
+  return                                 -- no return value
+
+  nomethod:                              -- unknown method sent
+    raise syntax 93.948 array(1, "Collection")
 
 /* ******************************** */
 /*    A L A R M        C L A S S    */
