@@ -285,13 +285,6 @@ $(OR_OUTDIR)\rxcmd16.dll : $(OR_ORYXKSRC)\$(@B).dll
 
 # Update the Windows Message Table resource if necessary
 
-!IFDEF JAPANESE
-$(OR_OUTDIR)\winmsgjp.res: $(OR_ORYXKSRC)\winmsgtb.jap
-    @ECHO .
-    @ECHO ResourceCompiling winmsgjp.res
-        $(rc) $(rcflags_common) -r -c932 -fo$(@) $(**)
-!ENDIF
-
 $(KWINDOWS)\winmsgtb.rc: $(KWINDOWS)\WinMessageResource.xsl $(KMESSAGES)\rexxmsg.xml
     @ECHO .
     @ECHO Generating $(@)
@@ -301,6 +294,11 @@ $(KMESSAGES)\RexxErrorCodes.h: $(KMESSAGES)\RexxErrorCodes.xsl $(KMESSAGES)\rexx
     @ECHO .
     @ECHO Generating $(@)
     xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\RexxErrorCodes.xsl
+
+$(KMESSAGES)\DocErrorMessages.sgml: $(KMESSAGES)\DocBookErrors.xsl $(KMESSAGES)\rexxmsg.xml
+    @ECHO .
+    @ECHO Generating $(@)
+    xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\DocBookErrors.xsl
 
 $(KMESSAGES)\RexxMessageNumbers.h: $(KMESSAGES)\RexxMessageNumbers.xsl $(KMESSAGES)\rexxmsg.xml
     @ECHO .
@@ -312,10 +310,10 @@ $(KMESSAGES)\RexxMessageTable.h: $(KMESSAGES)\RexxMessageTable.xsl $(KMESSAGES)\
     @ECHO Generating $(@)
     xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\RexxMessageTable.xsl
 
-$(OR_OUTDIR)\winmsgtb.res: $(KWINDOWS)\winmsgtb.rc
+$(OR_OUTDIR)\winmsgtb.res: $(KWINDOWS)\winmsgtb.rc $(KMESSAGES)\DocErrorMessages.sgml
     @ECHO .
     @ECHO ResourceCompiling $(@)
-        $(rc) $(rcflags_common) $(OR_ORYXRCINCL) -r -fo$(@) $(**)
+        $(rc) $(rcflags_common) $(OR_ORYXRCINCL) -r -fo$(@) $(KWINDOWS)\winmsgtb.rc
 
 # Update the version information block
 $(OR_OUTDIR)\verinfo.res: $(KWINDOWS)\verinfo.rc
