@@ -92,19 +92,25 @@ PCHAR nextArgument(BOOL getprog, PCHAR argptr, PULONG ndx, PULONG len, BOOL allo
 PRXSTRING getArguments(PCHAR * program, PCHAR argptr, PULONG count, PRXSTRING retarr)
 {
     ULONG i, isave, len, maxarglen;
+    PCHAR tmp;
 
     /* don't forget the break after program_name */
 
     /* WindowsNT accepts 2048 bytes, Windows95/98 1024 bytes */
     if (which_system_is_running() == 1) maxarglen=2048;
-	else maxarglen=1024;
+    else maxarglen=1024;
 
     i = 0;
     if (program)
         (*program) = nextArgument(TRUE, argptr, &i, &len, TRUE, maxarglen);  /* for REXXHIDE script is first argument */
     else {
-        nextArgument(FALSE, argptr, &i, &len, FALSE, maxarglen);    /* skip REXX.EXE */
-        nextArgument(FALSE, argptr, &i, &len, FALSE, maxarglen);    /* skip REXX script */
+        nextArgument(FALSE, argptr, &i, &len, FALSE, maxarglen);             /* skip REXX*.EXE */
+        tmp = nextArgument(FALSE, argptr, &i, &len, FALSE, maxarglen);       /* skip REXX script or -e switch */
+        /* the following test ensure that the -e switch on rexx.exe is not included in the arguments */
+        /* passed to the running program as specified on the command line. Unfortunately it also     */
+        /* affects rexxhide, rexxpaws, etc, that all use this code; may not be important             */
+        if (tmp && strlen(tmp) > 1 && (tmp[0] == '/' || tmp[0] == '-') && (tmp[1] == 'e' || tmp[1] == 'E') )
+          nextArgument(FALSE, argptr, &i, &len, FALSE, maxarglen);           /* skip REXX code*/
     }
 
     retarr->strptr = NULL;

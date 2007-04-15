@@ -94,6 +94,9 @@ int __cdecl main(int argc, char *argv[])
   RXSTRING arguments;                  /* rexxstart argument                */
   ULONG argcount;
   RXSTRING rxretbuf;                   // program return buffer
+  BOOL from_string = FALSE;            /* running from command line string? */
+  BOOL real_argument = TRUE;           /* running from command line string? */
+  RXSTRING instore[2];
 
   RexxStartedByApplication = FALSE;    /* Call NOT from internal            */
   rc = 0;                              /* set default return                */
@@ -118,6 +121,21 @@ int __cdecl main(int argc, char *argv[])
           ProcessSaveImage = TRUE;     /* say this is a save image          */
           break;
 
+        case 'e': case 'E':            /* execute from string               */
+          if (from_string == FALSE) {    /* only treat 1st -e differently     */
+            from_string = TRUE;
+            if ( argc == i+1 ) {
+              break;
+            }
+            program_name = "INSTORE";
+            instore[0].strptr = argv[i+1];
+            instore[0].strlength = strlen(instore[0].strptr);
+            instore[1].strptr = NULL;
+            instore[1].strlength = 0;
+            real_argument = FALSE;
+          }
+          break;
+
         case 'v': case 'V':            /* version display */
             {
                 PCHAR ptr = RexxGetVersionInformation();
@@ -138,11 +156,12 @@ int __cdecl main(int argc, char *argv[])
         program_name = argv[i];        /* program is first non-option       */
         break;      /* end parsing after program_name has been resolved */
       }
-      else {                           /* part of the argument string       */
+      else if ( real_argument ) {      /* part of the argument string       */
         if (arg_buffer[0] != '\0')     /* not the first one?                */
           strcat(arg_buffer, " ");     /* add an blank                      */
         strcat(arg_buffer, argv[i]);   /* add this to the argument string   */
       }
+    real_argument = TRUE;
     }
   }
 
@@ -154,7 +173,8 @@ int __cdecl main(int argc, char *argv[])
   else if (program_name == NULL) {
                                        /* give a simple error message       */
     #undef printf
-    printf("Syntax: REXX ProgramName [parameter_1....parameter_n]\n");
+    printf("Syntax: REXX [-v] ProgramName [parameter_1....parameter_n]\n");
+    printf("or    : REXX [-e] ProgramString [parameter_1....parameter_n]\n");
     /* try to unload the orexx memory manager */
     RexxShutDownAPI();
     return -1;
@@ -174,36 +194,51 @@ int __cdecl main(int argc, char *argv[])
     #endif
 
 
-   /* Here we call the interpreter.  We don't really need to use     */
-   /* all the casts in this call; they just help illustrate          */
-   /* the data types used.                                           */
-   rc=REXXSTART((LONG)       argcount,      /* number of arguments   */
-                (PRXSTRING)  &arguments,     /* array of arguments   */
-                (PSZ)        program_name,  /* name of REXX file     */
-                (PRXSTRING)  0,             /* No INSTORE used       */
-                (PSZ)        "CMD",         /* Command env. name     */
-                (LONG)       RXCOMMAND,     /* Code for how invoked  */
-//                (PRXSYSEXIT) exit_list,     /* No EXITs on this call */
-                NULL,
-                (PSHORT)     &rexxrc,       /* Rexx program output   */
-                (PRXSTRING)  &rxretbuf );   /* Rexx program output   */
+    if (from_string)
+    {
+      /* Here we call the interpreter.  We don't really need to use     */
+      /* all the casts in this call; they just help illustrate          */
+      /* the data types used.                                           */
+      rc=REXXSTART((LONG)       argcount,      /* number of arguments   */
+                   (PRXSTRING)  &arguments,     /* array of arguments   */
+                   (PSZ)        program_name,  /* name of REXX file     */
+                   (PRXSTRING)  instore,       /* rexx code from command line */
+                   (PSZ)        "CMD",         /* Command env. name     */
+                   (LONG)       RXCOMMAND,     /* Code for how invoked  */
+ //                  (PRXSYSEXIT) exit_list,     /* No EXITs on this call */
+                    NULL,
+                   (PSHORT)     &rexxrc,       /* Rexx program output   */
+                   (PRXSTRING)  &rxretbuf );   /* Rexx program output   */
+    }
+    else
+    {
+      rc=REXXSTART((LONG)       argcount,      /* number of arguments   */
+                   (PRXSTRING)  &arguments,     /* array of arguments   */
+                   (PSZ)        program_name,  /* name of REXX file     */
+                   (PRXSTRING)  0,             /* No INSTORE used       */
+                   (PSZ)        "CMD",         /* Command env. name     */
+                   (LONG)       RXCOMMAND,     /* Code for how invoked  */
+ //                  (PRXSYSEXIT) exit_list,     /* No EXITs on this call */
+                    NULL,
+                   (PSHORT)     &rexxrc,       /* Rexx program output   */
+                   (PRXSTRING)  &rxretbuf );   /* Rexx program output   */
+    }
+    /* wait until all activities did finish so no activity will be canceled */
+    RexxWaitForTermination();
 
-   /* wait until all activities did finish so no activity will be canceled */
-   RexxWaitForTermination();
+    /* free for DB2 2.1.1 version */
+ //   #undef free
+ //   if (rc==0) free(rxretbuf.strptr);        /* Release storage only if*/
+                         /* rexx procedure executed*/
+    if ((rc==0) && rxretbuf.strptr) GlobalFree(rxretbuf.strptr);        /* Release storage only if*/
+    freeArguments(NULL, &arguments);
 
-   /* free for DB2 2.1.1 version */
-//   #undef free
-//   if (rc==0) free(rxretbuf.strptr);        /* Release storage only if*/
-                        /* rexx procedure executed*/
-   if ((rc==0) && rxretbuf.strptr) GlobalFree(rxretbuf.strptr);        /* Release storage only if*/
-   freeArguments(NULL, &arguments);
-
-//   RexxDeregisterExit("MY_IOC",NULL);     // remove the exit in exe exit list
+ //   RexxDeregisterExit("MY_IOC",NULL);     // remove the exit in exe exit list
   }
   /* try to unload the orexx memory manager */
   RexxShutDownAPI();
-                                             // return interpeter or
- return rc ? rc : rexxrc;                    // rexx program return cd
+                                              // return interpeter or
+  return rc ? rc : rexxrc;                    // rexx program return cd
 }
 
 

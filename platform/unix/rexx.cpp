@@ -102,6 +102,9 @@ int main (int argc, char **argv)
   LONG  argCount;
   PCHAR ptr;
   SHORT rexxrc = 0;                    /* exit List array                   */
+  BOOL from_string = FALSE;            /* running from command line string? */
+  BOOL real_argument = TRUE;           /* running from command line string? */
+  RXSTRING instore[2];
 
   RexxStartedByApplication = FALSE;    /* Call NOT from internal            */
   rc = 0;                              /* set default return                */
@@ -117,6 +120,19 @@ int main (int argc, char **argv)
           ProcessSaveImage = TRUE;     /* say this is a save image          */
           break;
 
+        case 'e': case 'E':            /* execute from string               */
+          from_string = TRUE;          /* hit the startup flags             */
+          if ( argc == i+1 ) {
+            break;
+          }
+          program_name = "INSTORE";
+          instore[0].strptr = argv[i+1];
+          instore[0].strlength = strlen(instore[0].strptr);
+          instore[1].strptr = NULL;
+          instore[1].strlength = 0;
+          real_argument = FALSE;
+          break;
+
         case 'v': case 'V':            /* display version string            */
           ptr = RexxGetVersionInformation();
           fprintf(stderr, ptr);
@@ -129,18 +145,20 @@ int main (int argc, char **argv)
     else {                             /* convert into an argument string   */
       if (program_name == NULL)        /* no name yet?                      */
         program_name = argv[i];        /* program is first non-option       */
-      else {                           /* part of the argument string       */
+      else if (real_argument) {
         if (arg_buffer[0] != '\0')     /* not the first one?                */
           strcat(arg_buffer, " ");     /* add an blank                      */
         strcat(arg_buffer, argv[i]);   /* add this to the argument string   */
         ++argCount;
       }
+    real_argument = TRUE;
     }
   }
                                        /* missing a program name?           */
   if (program_name == NULL && !ProcessSaveImage) {
                                        /* give a simple error message       */
-    fprintf(stderr,"Syntax is \"rexx [-v] filename [arguments]\".\n");
+    fprintf(stderr,"Syntax is \"rexx [-v] filename [arguments]\"\n");
+    fprintf(stderr,"or        \"rexx [-e] program_string [arguments]\".\n");
     return -1;
   }
 
@@ -155,18 +173,30 @@ int main (int argc, char **argv)
     MAKERXSTRING(argument, arg_buffer, strlen(arg_buffer));
                                        /* run this via RexxStart            */
 
-//    rc = RexxStart(argCount, &argument, program_name, NULL, SYSINITIALADDRESS, RXCOMMAND, NULL, NULL, NULL);
-
-    rc = RexxStart((LONG)       argCount,         /* number of arguments    */
-                   (PRXSTRING)  &argument,        /* array of arguments     */
-                   (PSZ)        program_name,     /* name of REXX file      */
-                   (PRXSTRING)  0,                /* no instore used        */
-                   (PSZ)        SYSINITIALADDRESS,/* command env. name      */
-                   (LONG)       RXCOMMAND,        /* code for how invoked   */
-                                NULL,
-                   (PSHORT)     &rexxrc,          /* REXX program output    */
-                                NULL);            /* REXX program output    */
-
+    if (from_string)
+    {
+      rc = RexxStart((LONG)       argCount,         /* number of arguments    */
+                     (PRXSTRING)  &argument,        /* array of arguments     */
+                     (PSZ)        program_name,     /* INSTORE                */
+                     (PRXSTRING)  instore,          /* rexx code from -e      */
+                     (PSZ)        SYSINITIALADDRESS,/* command env. name      */
+                     (LONG)       RXCOMMAND,        /* code for how invoked   */
+                                  NULL,
+                     (PSHORT)     &rexxrc,          /* REXX program output    */
+                                  NULL);            /* REXX program output    */
+    }
+    else
+    {
+      rc = RexxStart((LONG)       argCount,         /* number of arguments    */
+                     (PRXSTRING)  &argument,        /* array of arguments     */
+                     (PSZ)        program_name,     /* name of REXX file      */
+                     (PRXSTRING)  0,                /* no instore used        */
+                     (PSZ)        SYSINITIALADDRESS,/* command env. name      */
+                     (LONG)       RXCOMMAND,        /* code for how invoked   */
+                                  NULL,
+                     (PSHORT)     &rexxrc,          /* REXX program output    */
+                                  NULL);            /* REXX program output    */
+    }
 
     RexxWaitForTermination();
 
