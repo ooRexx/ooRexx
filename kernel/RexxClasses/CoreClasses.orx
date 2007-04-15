@@ -64,19 +64,20 @@ appendMethods~put(.methods~ordered_xor,          'XOR')
 .queue~!define_methods(appendMethods)
 
 say 'Adding putAll methods to TABLE, DIRECTORY, and RELATION'
-putMethods = .table~new
-putMethods~put(.methods~collection_putall, 'PUTALL')
 
 say ('Adding setlike methods to table, relation, and directory')
 set_methods = .table~new               /* get a table directory             */
                                        /* add the single item methods       */
+set_methods~put(.methods~collection_putall,   'PUTALL')
 set_methods~put(.methods~single_union,        'UNION')
 set_methods~put(.methods~single_subset,       'SUBSET')
 set_methods~put(.methods~single_intersection, 'INTERSECTION')
 set_methods~put(.methods~single_difference,   'DIFFERENCE')
 set_methods~put(.methods~single_xor,          'XOR')
-.table~!define_methods(set_methods)    /* add to both table and directory   */
+
+.table~!define_methods(set_methods)        -- add to the single-value collections
 .directory~!define_methods(set_methods)
+.stem~!define_methods(set_methods)
 
                                        /* now repeat with the many item ones*/
 set_methods~put(.methods~many_union,        'UNION')
@@ -294,52 +295,73 @@ nomethod:
   raise syntax 93.948 array(1, "Collection")
 
 /*============================================================================*/
-/*    S I N G L E I T E M   M E T H O D S      (for Directory, and Table)     */
+/*    S I N G L E I T E M   M E T H O D S  (For Directory, Table, and Stem)   */
 /*============================================================================*/
 
 /*****************************************/
 /* DIFFERENCE method                     */
 /*****************************************/
-::METHOD single_difference             /* take the difference of collections*/
-use strict arg other                   /* get the companion object          */
+::METHOD single_difference             -- take the difference between collections
+use strict arg other
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod                     -- trap unknown method calls
 
-new = self~copy                        /* make a new collection             */
-do index over other                    /* loop over the other collection    */
-  new~remove(index)                    /* "subtract" this item              */
+-- all set operations are done using the receiver index values.  However, the
+-- objects we use for the index differ depending on the other class.
+
+if (other~isA(.OrderedCollection))     -- for ordered collections, us the items
+    then indexes = other~allItems
+else if (other~isA(.MapCollection))    -- this includes the SetCollections
+    then indexes = other~allIndexes    -- use the index values
+else indexes = other~makearray         -- an arbitrary class supporting makearray
+
+new = self~copy                        -- make a new collection we can modify
+
+count = other~items                    -- get the size of the array
+
+-- loop over the other collection using an index do rather than DO OVER so
+-- we don't make another copy of the index array
+do i = 1 to count
+  new~remove(indexex[i])               -- "subtract" this item
 end
 
-return new                             /* return the difference collection  */
+return new                             -- return the difference collection  */
 
-nomethod:                              /* unknown method sent               */
+nomethod:
       -- an unknown method is an argument problem.  report it as such.
   raise syntax 93.948 array(1, "Collection")
 
 /*****************************************/
 /* XOR        method                     */
 /*****************************************/
-::METHOD single_xor                    /* take the exclusive or of a set    */
-use strict arg other                   /* get the companion object          */
+::METHOD single_xor                    -- take the exclusive or of a set
+use strict arg other
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod                     -- trap unknown method calls
 
 new = self~copy
-if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
-do index over other                    /* do for directory, table, relation */
-  if self~hasindex(index) then         /* in this collection?               */
-    new~remove(index)                  /* remove from the reference set     */
-  else
-    new~put(other[index], index)       /* add non-located                   */
+
+if (other~isA(.OrderedCollection)) then do    -- for ordered collections, us the items
+    indexes = other~allItems
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
 end
-else do index over other               /* do it for array, queue, and list  */
-  if self~hasindex(index) then         /* in this collection?               */
-    new~remove(index)                  /* remove from the reference set     */
-  else
-    new~put(index, index)              /* add non-located                   */
+else if (other~isA(.MapCollection))    -- this includes the SetCollections
+    then supplier = other~supplier     -- get the supplier directly
+else do
+    indexes = other~makearray          -- an arbitrary class supporting makearray
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
 end
 
-return new                             /* return the XOR collection         */
+do while supplier~available            -- now iterate over the supplier seeing if
+    index = supplier~index             -- the item is defined in the target.  If
+    if new~hasIndex(index) then        -- not, then we copy into the result collection
+        new~remove(index)
+    else
+        new~put(index, supplier~item)
+    supplier~next
+end
+
+return new                             -- return the XOR collection
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
@@ -348,18 +370,32 @@ nomethod:
 /*****************************************/
 /* INTERSECTION  method                  */
 /*****************************************/
-::METHOD single_intersection           /* take the intersection of sets     */
-use strict arg other                   /* get the other collection          */
+::METHOD single_intersection           -- take the intersection of sets
+use strict arg other
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod                     -- trap unknown method calls
 
-new = self~class~new                   /* create a new collection           */
-do index over other                    /* loop over the other collection    */
-  if self~hasindex(index) then         /* in this collection?               */
-    new~put(self[index], index)        /* add to the intersection collection*/
+new = self~class~new                   -- create a new collection
+
+if (other~isA(.OrderedCollection)) then do    -- for ordered collections, us the items
+    indexes = other~allItems
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
+end
+else if (other~isA(.MapCollection))    -- this includes the SetCollections
+    then supplier = other~supplier     -- get the supplier directly
+else do
+    indexes = other~makearray          -- an arbitrary class supporting makearray
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
 end
 
-return new                             /* return the result collection      */
+do while supplier~available            -- now iterate over the supplier seeing if
+    index = supplier~index             -- the item is defined in the target.  If
+    if self~hasIndex(index) then       -- so, we we copy into the result collection
+        new~put(index, supplier~item)
+    supplier~next
+end
+
+return new                             -- return the result collection
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
@@ -368,23 +404,32 @@ nomethod:
 /*****************************************/
 /* UNION         method                  */
 /*****************************************/
-::METHOD single_union                  /* take the union of sets            */
-use strict arg other                   /* get the other collection          */
+::METHOD single_union                  -- take the union of sets
+use strict arg other
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod                     -- trap unknown method calls
 
-new = self~copy                        /* copy the collection               */
-if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
-do index over other                    /* do for directory, table, relation */
-  if \new~hasindex(index) then         /* not already there?                */
-    new~put(other[index], index)       /* add to the target collection      */
+new = self~copy                        -- copy the collection
+
+if (other~isA(.OrderedCollection)) then do    -- for ordered collections, us the items
+    indexes = other~allItems
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
 end
-else do index over other               /* do it for array, queue, and list  */
-  if \new~hasindex(index) then         /* not already there?                */
-    new~put(index, index)              /* add to the target collection      */
+else if (other~isA(.MapCollection))    -- this includes the SetCollections
+    then supplier = other~supplier     -- get the supplier directly
+else do
+    indexes = other~makearray          -- an arbitrary class supporting makearray
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
 end
 
-return new                             /* return the target collection      */
+do while supplier~available            -- now iterate over the supplier seeing if
+    index = supplier~index             -- the item is not defined in the target.  If
+    if \new~hasIndex(index) then       -- so, we we copy into the result collection
+        new~put(index, supplier~item)
+    supplier~next
+end
+
+return new                             -- return the target collection
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
@@ -393,25 +438,32 @@ nomethod:
 /*****************************************/
 /* SUBSET        method                  */
 /*****************************************/
-::METHOD single_subset                 /* do we have a subset?              */
-use strict arg other                   /* get the other collection          */
+::METHOD single_subset                 -- is the target a subset of the other?
+use strict arg other
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod                     -- trap unknown method calls
 
-if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
-do index over self                     /* do for directory, table, relation */
-  if \other~hasindex(index) then       /* not in the other collection?      */
-    return .false                      /* return FALSE (no subset)          */
+-- all set operations are done using the receiver index values.  However, the
+-- objects we use for the index differ depending on the other class.
+
+if (other~isA(.OrderedCollection))     -- for ordered collections, us the items
+    then indexes = other~allItems
+else if (other~isA(.MapCollection))    -- this includes the SetCollections
+    then indexes = other~allIndexes    -- use the index values
+else indexes = other~makearray         -- an arbitrary class supporting makearray
+
+new = self~copy                        -- make a new collection we can modify
+
+count = other~items                    -- get the size of the array
+
+-- loop over the other collection using an index do rather than DO OVER so
+-- we don't make another copy of the index array
+do index over self                     -- now check all of my indexes against the reference
+   if \indexes~hasItem(index)
+       then return .false              -- something missing, not a subset
 end
-else do                                /* do it for array, queue, and list  */
-  object = self~copy                   /* make a copy of this object        */
-  do index over other                  /* loop over the other collection    */
-    object~remove(index)               /* remove from the target collection */
-  end
-  return 0=object~items                /* if nothing left -> proper subset  */
-end
 
-return .true                           /* collection is a proper subset     */
+return .true                           -- collection is a proper subset
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
@@ -424,25 +476,31 @@ nomethod:
 /*****************************************/
 /* UNION         method                  */
 /*****************************************/
-::METHOD many_union
-use strict arg other                   /* get the other collection          */
+::METHOD many_union                    -- union of collections
+use strict arg other
 
-signal on nomethod                     /* trap unknown method requests      */
+signal on nomethod                     -- trap unknown method calls
 
-new = self~copy                        /* copy ourself                      */
-if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
-do                                     /* do for directory, table, relation */
-  supplier = other~supplier            /* get a supplier                    */
-  do while supplier~available          /* loop over the other collection    */
-                                       /* add to the target collection      */
+new = self~copy                        -- copy ourself
+
+if (other~isA(.OrderedCollection)) then do    -- for ordered collections, us the items
+    indexes = other~allItems
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
+end
+else if (other~isA(.MapCollection))    -- this includes the SetCollections
+    then supplier = other~supplier     -- get the supplier directly
+else do
+    indexes = other~makearray          -- an arbitrary class supporting makearray
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
+end
+
+
+-- just copy all of the items into the relation
+do while supplier~available            -- now iterate over the supplier seeing if
     new~put(supplier~item, supplier~index)
-    supplier~next                      /* step to the next item             */
-  end
 end
-else do index over other               /* do it for array, queue, and list  */
-  new~put(index, index)                /* add to the target collection      */
-end
-return new                             /* return the union collection       */
+
+return new                             -- return the union collection
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
@@ -452,25 +510,31 @@ nomethod:
 /*****************************************/
 /* DIFFERENCE    method                  */
 /*****************************************/
-::METHOD many_difference               /* take the difference of collections*/
-use strict arg other                   /* get the companion object          */
+::METHOD many_difference               -- take the difference of collections
+use strict arg other
 
-signal on nomethod                     /* trap unknown method requests      */
+signal on nomethod                     -- trap unknown method calls
 
-new = self~copy                        /* make a new set                    */
-if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
-do                                     /* do for directory, table, relation */
-  supplier = other~supplier            /* get an object supplier            */
-  do while supplier~available          /* loop over the other collection    */
-                                       /* remove from the target collection */
-    new~removeitem(supplier~item, supplier~index)
-    supplier~next                      /* step to the next item             */
-  end
+new = self~copy                        -- copy ourself
+
+if (other~isA(.OrderedCollection)) then do    -- for ordered collections, us the items
+    indexes = other~allItems
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
 end
-else do index over other               /* do it for array, queue, and list  */
-  new~removeitem(index, index)         /* remove from the target collection */
+else if (other~isA(.MapCollection))    -- this includes the SetCollections
+    then supplier = other~supplier     -- get the supplier directly
+else do
+    indexes = other~makearray          -- an arbitrary class supporting makearray
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
 end
-return new                             /* return the difference collection  */
+
+
+-- remove the tuples from the result collection
+do while supplier~available            -- now iterate over the supplier seeing if
+    new~removeItem(supplier~item, supplier~index)
+end
+
+return new                             -- return the difference collection
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
@@ -480,33 +544,40 @@ nomethod:
 /*****************************************/
 /* XOR           method                  */
 /*****************************************/
-::METHOD many_xor                      /* take the exclusive or of a set    */
-use strict arg other                   /* get the companion object          */
+::METHOD many_xor                      -- take the exclusive or of a relation
+use strict arg other
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod                     -- trap unknown method calls
 
-new = self~copy
-catcher = self~class~new               /* create a new empty one            */
-if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
-do                                     /* do for directory, table, relation */
-  supplier = other~supplier            /* get an object supplier            */
-  do while supplier~available          /* loop over the other collection    */
-    index = supplier~index             /* get the index                     */
-    value = supplier~item              /* and the value                     */
-    if new~hasitem(value, index) then  /* in the reference collection?      */
-      new~removeitem(value, index)     /* remove from the reference set     */
+new = self~copy                        -- we need a copy of our self, plus
+catcher = self~class~new               -- a catcher method use to accumulate values
+
+if (other~isA(.OrderedCollection)) then do    -- for ordered collections, us the items
+    indexes = other~allItems
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
+end
+else if (other~isA(.MapCollection))    -- this includes the SetCollections
+    then supplier = other~supplier     -- get the supplier directly
+else do
+    indexes = other~makearray          -- an arbitrary class supporting makearray
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
+end
+
+-- now loop over the supplier checking the existance.  If we have this
+-- item, we remove it from the copy.  Otherwise, it is put into the
+-- catcher.  When we're finished, we merge the two collections.
+do while supplier~available
+    index = supplier~index
+    value = supplier~item
+    if new~hasitem(value, index) then  -- in the reference collection?
+        new~removeitem(value, index)   -- remove from the reference set
     else
-      catcher~put(value, index)        /* add non-located to the catcher    */
-    supplier~next                      /* step to the next item             */
-  end
+        catcher~put(value, index)      -- add non-located to the catcher
+    supplier~next                      -- step to the next item
 end
-else do index over other               /* do it for array, queue, and list  */
-  if new~hasitem(index, index) then    /* in the other collection?          */
-    new~removeitem(index, index)       /* remove from the reference set     */
-  else
-    catcher~put(index, index)          /* add non-located to the catcher    */
-end
-return new~union(catcher)              /* now remerge these collections     */
+
+new~putall(catcher)                    -- now copy into the result
+return new                             -- now return the merged collection
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
@@ -516,35 +587,41 @@ nomethod:
 /*****************************************/
 /* INTERSECTION  method                  */
 /*****************************************/
-::METHOD many_intersection             /* take the intersection of sets     */
-use strict arg other                   /* get the other collection          */
+::METHOD many_intersection             -- take the intersection of relations
+use strict arg other
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod                     -- trap unknown method calls
 
-new = self~class~new                   /* start with a new collection       */
-object = self~copy                     /* copy the target collection        */
-if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
-do                                     /* do for directory, table, relation */
-  supplier = other~supplier            /* get an other supplier             */
-  do while supplier~available          /* loop over the other collection    */
-    index = supplier~index             /* get the index                     */
-    value = supplier~item              /* and the value                     */
-                                       /* in the reference collection?      */
-    if object~hasitem(value, index) then do
-      new~put(value, index)            /* add to the new collection         */
-      object~removeitem(value, index)  /* remove from the reference set     */
+new = self~class~new                   -- start with a new collection
+ref = self~copy                        -- our reference copy
+
+if (other~isA(.OrderedCollection)) then do    -- for ordered collections, us the items
+    indexes = other~allItems
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
+end
+else if (other~isA(.MapCollection))    -- this includes the SetCollections
+    then supplier = other~supplier     -- get the supplier directly
+else do
+    indexes = other~makearray          -- an arbitrary class supporting makearray
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
+end
+
+-- now loop over the values supplied by the other, checking our
+-- reference collection for existance.  We remove any matches from the
+-- reference to eliminate duplicate errors
+
+do while supplier~available
+    index = supplier~index
+    value = supplier~item
+    -- if found, copy to the result, and remove from the reference checker
+    if ref~hasitem(value, index) then do
+        new~put(value, index)
+        ref~removeitem(value, index)
     end
-    supplier~next                      /* step to the next item             */
-  end
+    supplier~next
 end
-else do index over other               /* do it for array, queue, and list  */
-                                       /* in the reference collection?      */
-  if object~hasitem(index, index) then do
-    new~put(index, index)              /* add to the new collection         */
-    object~removeitem(index, index)    /* remove from the reference set     */
-  end
-end
-return new                             /* return the new collection         */
+
+return new
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
@@ -554,25 +631,32 @@ nomethod:
 /*****************************************/
 /* SUBSET        method                  */
 /*****************************************/
-::METHOD many_subset                   /* do we have a subset?              */
-use strict arg other                   /* get the other collection          */
+::METHOD many_subset                   -- do we have a subset?
+use strict arg other
 
-signal on nomethod                     /* trap unknown method calls         */
+signal on nomethod                     -- trap unknown method calls
 
-object = self~copy                     /* make a copy of this object        */
-if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
-do                                     /* do for directory, table, relation */
-  supplier = other~supplier            /* get an other supplier             */
-  do while supplier~available          /* loop over the other collection    */
-                                       /* remove from target collection     */
-    object~removeitem(supplier~item, supplier~index)
-    supplier~next                      /* step to the next item             */
-  end
+ref = self~copy                        -- make a copy of this object
+
+if (other~isA(.OrderedCollection)) then do    -- for ordered collections, us the items
+    indexes = other~allItems
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
 end
-else do index over other               /* do it for array, queue, and list  */
-  object~removeitem(index, index)      /* remove from the target collection */
+else if (other~isA(.MapCollection))    -- this includes the SetCollections
+    then supplier = other~supplier     -- get the supplier directly
+else do
+    indexes = other~makearray          -- an arbitrary class supporting makearray
+    supplier = .supplier~new(indexes, indexes)  -- create a supplier from the index values
 end
-return 0=object~items                  /* if nothing left -> proper subset  */
+
+-- now iterate and try removing the items from the reference.
+-- if it's all gone when we're finished
+do while supplier~available
+  ref~removeitem(supplier~item, supplier~index)
+  supplier~next
+end
+
+return ref~isEmpty                     -- if nothing left -> proper subset
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
@@ -609,6 +693,7 @@ nomethod:
     self~put(supplier~item, supplier~index)   -- putting the item using the same index
     supplier~next
   end
+  return
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
