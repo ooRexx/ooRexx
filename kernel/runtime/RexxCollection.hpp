@@ -73,6 +73,7 @@
     RexxArray    *allIndexes();
     RexxObject   *empty();
     RexxObject   *isEmpty();
+    RexxObject   *removeItem(RexxObject *value);
 
     inline long          items() { return this->contents->totalEntries(); };
     inline long          first() { return this->contents->first(); };

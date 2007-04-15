@@ -706,6 +706,27 @@ RexxObject *RexxDirectory::hasItem(RexxObject *target)
     return indexRexx(target) != TheNilObject ? TheTrueObject : TheFalseObject;
 }
 
+
+/**
+ * Remove a given item from the collection.
+ *
+ * @param target The target object.
+ *
+ * @return .true if the object exists, .false otherwise.
+ */
+RexxObject *RexxDirectory::removeItem(RexxObject *target)
+{
+    required_arg(target, ONE);
+    // the lookup is more complicated, so just delegate to the index lookup code.
+    RexxObject *index = indexRexx(target);
+    // just use the retrieved index to remove.
+    if (index != TheNilObject)
+    {
+        return remove((RexxString *)index);
+    }
+    return TheNilObject;     // nothing removed.
+}
+
 RexxObject *RexxDirectory::newRexx(
     RexxObject **init_args,
     size_t       argCount)

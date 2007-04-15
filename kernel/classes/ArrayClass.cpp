@@ -1475,6 +1475,31 @@ RexxObject *RexxArray::index(RexxObject *target)
 
 
 /**
+ * Remove the target object from the collection.
+ *
+ * @param target The target object.
+ *
+ * @return The removed object (same as target).
+ */
+RexxObject *RexxArray::removeItem(RexxObject *target)
+{
+    // we require the index to be there.
+    required_arg(target, ONE);
+    // see if we have this item.  If not, then
+    // we return .nil.
+    arraysize_t index = findSingleIndexItem(target);
+
+    if (index == 0)
+    {
+        return TheNilObject;
+    }
+    // remove the item at the location
+    OrefSet(this, objects[index - 1], OREF_NULL);
+    return target;
+}
+
+
+/**
  * Test if an item is within the array.
  *
  * @param target The target test item.

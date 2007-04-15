@@ -163,6 +163,7 @@ CPPMA(RexxArray::empty),
 CPPMA(RexxArray::isEmpty),
 CPPMA(RexxArray::index),
 CPPMA(RexxArray::hasItem),
+CPPMA(RexxArray::removeItem),
 CPPMA(RexxArray::toString),
 
 CPPMC1(RexxArray::newRexx),
@@ -186,6 +187,7 @@ CPPMA(RexxDirectory::empty),
 CPPMA(RexxDirectory::isEmpty),
 CPPMA(RexxDirectory::indexRexx),
 CPPMA(RexxDirectory::hasItem),
+CPPMA(RexxDirectory::removeItem),
 
 CPPMD(RexxDirectory::newRexx),
 
@@ -244,6 +246,7 @@ CPPMA(RexxList::empty),
 CPPMA(RexxList::isEmpty),
 CPPMA(RexxList::index),
 CPPMA(RexxList::hasItem),
+CPPMA(RexxList::removeItem),
 
 CPPMLC(RexxListClass::newRexx),
 CPPMLC(RexxListClass::classOf),
@@ -336,6 +339,7 @@ CPPMSTEM(RexxStem::hasIndex),
 CPPMSTEM(RexxStem::remove),
 CPPMSTEM(RexxStem::index),
 CPPMSTEM(RexxStem::hasItem),
+CPPMSTEM(RexxStem::removeItem),
 
 CPPMSTEM(RexxStem::newRexx),
 
@@ -482,6 +486,7 @@ CPPMHC(RexxHashTableCollection::empty),
 CPPMHC(RexxHashTableCollection::isEmpty),
 CPPMHC(RexxHashTableCollection::indexRexx),
 CPPMHC(RexxHashTableCollection::hasItem),
+CPPMHC(RexxHashTableCollection::removeItem),
 
 CPPMTBL(RexxTable::itemsRexx),
 CPPMTBL(RexxTable::newRexx),
@@ -501,9 +506,6 @@ CPPMMEM(RexxMemory::dump),
 CPPMMEM(RexxMemory::setDump),
 CPPMMEM(RexxMemory::gutCheck),
 
-CPPMSOMS(RexxSOMServer::initDSom),         /* SOM server methods ...            */
-CPPMSOMS(RexxSOMServer::initDSomWPS),
-
 CPPMLOC(RexxLocal::local),                /* the .local environment methods    */
 CPPMLOC(RexxLocal::runProgram),
 CPPMLOC(RexxLocal::callProgram),
@@ -513,13 +515,6 @@ CPPMSND(RexxSender::getPid),              /* the .sender class methods         *
 CPPMSND(RexxSender::sendMessage),
 
 CPPMSRV(RexxServer::messageWait),         /* the .server class methods */
-
-CPPMSOMDS(RexxSOMDServer::getClassObj),   /* the .dsom   class methods         */
-CPPMSOMDS(RexxSOMDServer::createObj),
-CPPMSOMDS(RexxSOMDServer::deleteObj),
-                                          /* the .objectMgr methods.        */
-CPPMSOMDO(RexxSOMDObjectMgr::enhanceServer),
-
 NULL                                   /* final terminating method          */
 };
 
@@ -842,6 +837,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_ISEMPTY      ,TheArrayBehaviour, CPPMA(RexxArray::isEmpty), 0);
   defineKernelMethod(CHAR_INDEX        ,TheArrayBehaviour, CPPMA(RexxArray::index), 1);
   defineKernelMethod(CHAR_HASITEM      ,TheArrayBehaviour, CPPMA(RexxArray::hasItem), 1);
+  defineKernelMethod(CHAR_REMOVEITEM   ,TheArrayBehaviour, CPPMA(RexxArray::removeItem), 1);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheArrayBehaviour->setMethodDictionaryScope(TheArrayClass);
@@ -881,7 +877,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_UNKNOWN       , TheDirectoryBehaviour, CPPM(RexxObject::unknownRexx), 2);
   defineProtectedKernelMethod(CHAR_UNSETMETHOD   , TheDirectoryBehaviour, CPPMD(RexxDirectory::remove), 1);
   defineKernelMethod(CHAR_INDEX        , TheDirectoryBehaviour, CPPMD(RexxDirectory::indexRexx), 1);
-  defineKernelMethod(CHAR_HASITEM      , TheDirectoryBehaviour, CPPMD(RexxDirectory::hasItem), 1);
+  defineKernelMethod(CHAR_REMOVEITEM   , TheDirectoryBehaviour, CPPMD(RexxDirectory::removeItem), 1);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -946,6 +942,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_ISEMPTY      ,TheListBehaviour, CPPML(RexxList::isEmpty), 0);
   defineKernelMethod(CHAR_INDEX        ,TheListBehaviour, CPPML(RexxList::index), 1);
   defineKernelMethod(CHAR_HASITEM      ,TheListBehaviour, CPPML(RexxList::hasItem), 1);
+  defineKernelMethod(CHAR_REMOVEITEM   ,TheListBehaviour, CPPML(RexxList::removeItem), 1);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheListBehaviour->setMethodDictionaryScope(TheListClass);
@@ -1054,6 +1051,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_ISEMPTY       ,TheQueueBehaviour, CPPMQ(RexxList::isEmpty), 0);
   defineKernelMethod(CHAR_INDEX         ,TheQueueBehaviour, CPPML(RexxQueue::index), 1);
   defineKernelMethod(CHAR_HASITEM       ,TheQueueBehaviour, CPPML(RexxList::hasItem), 1);
+  defineKernelMethod(CHAR_REMOVEITEM    ,TheQueueBehaviour, CPPML(RexxList::removeItem), 1);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -1135,6 +1133,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_REMOVE        ,TheStemBehaviour, CPPMSTEM(RexxStem::remove), A_COUNT);
   defineKernelMethod(CHAR_INDEX         ,TheStemBehaviour, CPPMSTEM(RexxStem::index), 1);
   defineKernelMethod(CHAR_HASITEM       ,TheStemBehaviour, CPPMSTEM(RexxStem::hasItem), 1);
+  defineKernelMethod(CHAR_REMOVEITEM    ,TheStemBehaviour, CPPMSTEM(RexxStem::removeItem), 1);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -1485,6 +1484,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_ISEMPTY      , TheTableBehaviour, CPPMHC(RexxHashTableCollection::isEmpty), 0);
   defineKernelMethod(CHAR_INDEX        , TheTableBehaviour, CPPMHC(RexxHashTableCollection::indexRexx), 1);
   defineKernelMethod(CHAR_HASITEM      , TheTableBehaviour, CPPMHC(RexxHashTableCollection::hasItem), 1);
+  defineKernelMethod(CHAR_REMOVEITEM   , TheTableBehaviour, CPPMHC(RexxHashTableCollection::removeItem), 1);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

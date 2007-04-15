@@ -327,6 +327,22 @@ RexxObject *RexxHashTableCollection::indexRexx(RexxObject *target)
 
 
 /**
+ * Remove an item specified by value.
+ *
+ * @param target The target object.
+ *
+ * @return The target object again.
+ */
+RexxObject *RexxHashTableCollection::removeItem(RexxObject *target)
+{
+    // required argument
+    required_arg(target, ONE);
+    // the contents handle all of this.
+    return this->contents->removeItem(target);
+}
+
+
+/**
  * Test if a given item exists in the collection.
  *
  * @param target The target object.

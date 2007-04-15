@@ -276,6 +276,30 @@ RexxObject *RexxStem::hasItem(RexxObject *target)
 }
 
 
+
+/**
+ * Remove an item from the collection.
+ *
+ * @param target The object of interest.
+ *
+ * @return .true if the object is in the collection, .false otherwise.
+ */
+RexxObject *RexxStem::removeItem(RexxObject *target)
+{
+    RexxCompoundElement *compound = findByValue(target);
+    // if there's a variable there, and it has a real value, then
+    // we have something to remove
+    if (compound != OREF_NULL && compound->getVariableValue() != OREF_NULL)
+    {
+        // get the value, which is the return value, and drop the variable.
+        RexxObject *oldValue = compound->getVariableValue();
+        compound->drop();
+        return oldValue;
+    }
+    return TheNilObject;       // nothing dropped.
+}
+
+
 /**
  * Return the index for a target item.
  *

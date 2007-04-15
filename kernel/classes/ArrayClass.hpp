@@ -140,6 +140,7 @@ typedef struct copyElelmentParm {
    RexxObject  *isEmpty();
    RexxObject  *index(RexxObject *);
    RexxObject  *hasItem(RexxObject *);
+   RexxObject  *removeItem(RexxObject *);
 
    inline void         addLast(RexxObject *item) { this->insertItem(item, this->size() + 1); }
    inline void         addFirst(RexxObject *item) { this->insertItem(item, 1); }

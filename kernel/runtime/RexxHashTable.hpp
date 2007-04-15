@@ -102,6 +102,7 @@ typedef unsigned long HashLink;
    RexxArray     *allItems();
    RexxArray     *allIndexes();
    RexxObject    *removeItem(RexxObject *value, RexxObject *key);
+   RexxObject    *removeItem(RexxObject *value);
    RexxObject    *stringGet(RexxString *key);
    RexxHashTable *stringPut(RexxObject *value, RexxString *key);
    RexxHashTable *stringAdd(RexxObject *value, RexxString *key);

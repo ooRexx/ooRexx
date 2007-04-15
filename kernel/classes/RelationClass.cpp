@@ -118,9 +118,16 @@ RexxObject *RexxRelation::removeItemRexx(
   RexxObject *item;                    /* removed item                      */
 
   required_arg(value, ONE);            /* make sure we have a value         */
-  required_arg(index, TWO);            /* and the index                     */
 
-  item = this->contents->removeItem(value, index);
+  // standard remove form?
+  if (index == OREF_NULL)
+  {
+      item = this->contents->removeItem(value);
+  }
+  else    // multi-item form
+  {
+      item = this->contents->removeItem(value, index);
+  }
   if (item == OREF_NULL)               /* If nothing found, give back .nil  */
     item = TheNilObject;               /* (never return OREF_NULL to REXX)  */
   return item;                         /* return removed value              */

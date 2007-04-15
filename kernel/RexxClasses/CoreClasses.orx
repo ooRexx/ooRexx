@@ -137,6 +137,15 @@ use strict arg other                   /* get the companion object          */
 
 signal on nomethod                     /* trap unknown method calls         */
 
+-- the merge operation differs for mapcollections vs. more item-oriented
+-- collections like set or array.  For map collections, we determine membership
+-- based on index value.  For other collections, it is determined by
+-- item value.
+if other~isa(.setcollection) | other~isa(.orderedcollection) then do
+   do item over other~allitems      -- we use the items only
+   end
+end
+
 new = self~copy                        /* make a new collection             */
 do index over other                    /* loop over the other collection    */
   new~remove(index)                    /* "subtract" this item              */

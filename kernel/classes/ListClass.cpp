@@ -846,6 +846,36 @@ RexxObject *RexxList::hasItem(RexxObject *target)
 }
 
 
+/**
+ * Removes an item from the collection.
+ *
+ * @param target The target value.
+ *
+ * @return The target item.
+ */
+RexxObject *RexxList::removeItem(RexxObject *target)
+{
+    // we require the index to be there.
+    required_arg(target, ONE);
+
+    // ok, now run the list looking for the target item
+    long next = this->first;
+    for (long   i = 1; i <= this->count; i++)
+    {
+        LISTENTRY *element = ENTRY_POINTER(next);
+        // if we got a match, return the item
+        if (target->equalValue(element->value))
+        {
+            // remove this item
+            return primitiveRemove(element);
+        }
+        next = element->next;
+    }
+    // no match
+    return TheNilObject;
+}
+
+
 RexxObject *RexxList::indexOfValue(
      RexxObject *value)
 /*****************************************************************************/

@@ -94,6 +94,7 @@ class RexxSupplier;
   RexxObject *hasItem(RexxObject *);
   RexxObject *index(RexxObject *);
   RexxObject *itemsRexx();
+  RexxObject *removeItem(RexxObject *);
 
 
   RexxString *tail(RexxArray *, long);

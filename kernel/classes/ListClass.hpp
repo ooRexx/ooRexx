@@ -107,6 +107,7 @@
    RexxObject   *isEmpty();
    RexxObject  *index(RexxObject *);
    RexxObject  *hasItem(RexxObject *);
+   RexxObject  *removeItem(RexxObject *);
 
    void          addLast(RexxObject *value);
    void          addFirst(RexxObject *value);
