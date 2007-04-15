@@ -96,6 +96,7 @@ if ERRORLEVEL 1 goto error
 ECHO Building REXX.IMG ...
 CD %OR_OUTDIR%
 REXX -IB >>%OR_ERRLOG% 2>&1
+if ERRORLEVEL 1 goto error
 
 @ECHO Building RXSUBCOM and RXQUEUE..
 CD  %OR_ORYXASRC%
