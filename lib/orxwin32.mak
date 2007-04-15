@@ -88,7 +88,7 @@ cflags_noopt=/nologo /D:_X86_ /DWIN32 /W3 -c $(my_cdebug) /DNULL=0
 !ENDIF
 
 # CHM - added definition for RXDBG
-cflags_common=/nologo -DORX_VER=$(ORX_MAJOR) -DORX_REL=$(ORX_MINOR) -DORX_MOD=$(ORX_MOD_LVL)  -DOOREXX_COPY_YEAR=\"$(ORX_COPY_YEAR)\" /D:_X86_ /DWIN32 /W3 -c $(my_cdebug) $(MK_ASM) $(RXDBG) /DNULL=0
+cflags_common=/nologo -DORX_VER=$(ORX_MAJOR) -DORX_REL=$(ORX_MINOR) -DORX_MOD=$(ORX_MOD_LVL)  -DOOREXX_COPY_YEAR=\"$(ORX_COPY_YEAR)\" /D:_X86_ /DWIN32 /W3 -c $(my_cdebug) $(MK_ASM) $(RXDBG) /DNULL=0 /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
 
 # ENG - added for feature 953
 !IFDEF JAPANESE
