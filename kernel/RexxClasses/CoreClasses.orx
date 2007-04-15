@@ -137,15 +137,6 @@ use strict arg other                   /* get the companion object          */
 
 signal on nomethod                     /* trap unknown method calls         */
 
--- the merge operation differs for mapcollections vs. more item-oriented
--- collections like set or array.  For map collections, we determine membership
--- based on index value.  For other collections, it is determined by
--- item value.
-if other~isa(.setcollection) | other~isa(.orderedcollection) then do
-   do item over other~allitems      -- we use the items only
-   end
-end
-
 new = self~copy                        /* make a new collection             */
 do index over other                    /* loop over the other collection    */
   new~remove(index)                    /* "subtract" this item              */
@@ -166,7 +157,7 @@ use strict arg other                   /* get the companion object          */
 signal on nomethod                     /* trap unknown method calls         */
 
 new = self~copy
-if other~hasmethod("union") then       /* is other non-primitive collection?*/
+if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
 do index over other                    /* do for directory, table, relation */
   if self~hasindex(index) then         /* in this collection?               */
     new~remove(index)                  /* remove from the reference set     */
@@ -215,7 +206,7 @@ use strict arg other                   /* get the other collection          */
 signal on nomethod                     /* trap unknown method calls         */
 
 new = self~copy                        /* copy the collection               */
-if other~hasmethod("union") then       /* is other non-primitive collection?*/
+if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
 do index over other                    /* do for directory, table, relation */
   if \new~hasindex(index) then         /* not already there?                */
     new~put(other[index], index)       /* add to the target collection      */
@@ -239,7 +230,7 @@ use strict arg other                   /* get the other collection          */
 
 signal on nomethod                     /* trap unknown method calls         */
 
-if other~hasmethod("union") then       /* is other non-primitive collection?*/
+if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
 do index over self                     /* do for directory, table, relation */
   if \other~hasindex(index) then       /* not in the other collection?      */
     return .false                      /* return FALSE (no subset)          */
@@ -271,7 +262,7 @@ use strict arg other                   /* get the other collection          */
 signal on nomethod                     /* trap unknown method requests      */
 
 new = self~copy                        /* copy ourself                      */
-if other~hasmethod("union") then       /* is other non-primitive collection?*/
+if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
 do                                     /* do for directory, table, relation */
   supplier = other~supplier            /* get a supplier                    */
   do while supplier~available          /* loop over the other collection    */
@@ -299,7 +290,7 @@ use strict arg other                   /* get the companion object          */
 signal on nomethod                     /* trap unknown method requests      */
 
 new = self~copy                        /* make a new set                    */
-if other~hasmethod("union") then       /* is other non-primitive collection?*/
+if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
 do                                     /* do for directory, table, relation */
   supplier = other~supplier            /* get an object supplier            */
   do while supplier~available          /* loop over the other collection    */
@@ -328,7 +319,7 @@ signal on nomethod                     /* trap unknown method calls         */
 
 new = self~copy
 catcher = self~class~new               /* create a new empty one            */
-if other~hasmethod("union") then       /* is other non-primitive collection?*/
+if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
 do                                     /* do for directory, table, relation */
   supplier = other~supplier            /* get an object supplier            */
   do while supplier~available          /* loop over the other collection    */
@@ -364,7 +355,7 @@ signal on nomethod                     /* trap unknown method calls         */
 
 new = self~class~new                   /* start with a new collection       */
 object = self~copy                     /* copy the target collection        */
-if other~hasmethod("union") then       /* is other non-primitive collection?*/
+if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
 do                                     /* do for directory, table, relation */
   supplier = other~supplier            /* get an other supplier             */
   do while supplier~available          /* loop over the other collection    */
@@ -401,7 +392,7 @@ use strict arg other                   /* get the other collection          */
 signal on nomethod                     /* trap unknown method calls         */
 
 object = self~copy                     /* make a copy of this object        */
-if other~hasmethod("union") then       /* is other non-primitive collection?*/
+if other~isA(.MapCollection) then      /* is other non-primitive collection?*/
 do                                     /* do for directory, table, relation */
   supplier = other~supplier            /* get an other supplier             */
   do while supplier~available          /* loop over the other collection    */
