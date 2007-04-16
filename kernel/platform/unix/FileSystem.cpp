@@ -201,16 +201,6 @@ RexxString *  LocateProgram(
   {
       return new_cstring(Result);
   }
-  // try again, in lower case
-  strncpy((PCHAR)TempName, Name, sizeof(TempName));
-  strlower((char *)TempName);
-
-  Result = SearchFileName((char *)TempName, 'P'); /* check on the "raw" name first     */
-  if (Result != NULL)                      /* not found?  try adding extensions */
-  {
-      return new_cstring(Result);
-  }
-
                                      /* get space left for an extension   */
   ExtensionSpace = sizeof(TempName) - strlen(Name);
                                      /* loop through the extensions list  */
