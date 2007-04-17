@@ -377,6 +377,30 @@ BOOL RexxString::primitiveIsEqual(
   return !memcmp(this->stringData, other->stringData, otherLen);
 }
 
+
+/**
+ * Primitive string caseless comparison.
+ *
+ * @param otherObj The other string to compare.
+ *
+ * @return true if the strings compare, false otherwise.
+ */
+bool RexxString::primitiveCaselessIsEqual(RexxObject *otherObj)
+{
+    // we have one required string object
+    required_arg(otherObj, ONE);
+    RexxString *other = REQUEST_STRING(otherObj);
+    stringsize_t otherLen = other->getLength();
+    // can't compare equal if different lengths
+    if (otherLen != this->getLength())
+    {
+        return false;
+    }
+    // do the actual string compare
+    return CaselessCompare((PUCHAR)this->getStringData(), (PUCHAR)other->getStringData(), otherLen) == 0;
+}
+
+
 long RexxString::comp(RexxObject *other)
 /******************************************************************************/
 /* Function:  Do a value comparison of two strings for the non-strict         */
@@ -705,6 +729,34 @@ RexxObject *RexxString::format(RexxObject *Integers, RexxObject *Decimals, RexxO
                                        /* have numberstring do this         */
   return numstr->formatRexx(Integers, Decimals, MathExp, ExpTrigger);
 }
+
+
+/**
+ * The string equals() method, which does a strict compare with
+ * another string object.
+ *
+ * @param other  The other string object.
+ *
+ * @return True if the strings are equal, false for inequality.
+ */
+RexxInteger *RexxString::equals(RexxString *other)
+{
+    return this->primitiveIsEqual(other) ? TheTrueObject : TheFalseObject;
+}
+
+/**
+ * The string equals() method, which does a strict caseless
+ * compare with another string object.
+ *
+ * @param other  The other string object.
+ *
+ * @return True if the strings are equal, false for inequality.
+ */
+RexxInteger *RexxString::caselessEquals(RexxString *other)
+{
+    return this->primitiveCaselessIsEqual(other) ? TheTrueObject : TheFalseObject;
+}
+
 
 RexxInteger *RexxString::strictEqual(RexxObject *other)
 /******************************************************************************/

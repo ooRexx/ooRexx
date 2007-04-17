@@ -102,6 +102,7 @@ class RexxStringClass : public RexxClass {
 
    BOOL        isEqual(RexxObject *);
    BOOL        primitiveIsEqual(RexxObject *);
+   bool        primitiveCaselessIsEqual(RexxObject *);
    long        strictComp(RexxObject *);
    long        comp(RexxObject *);
    RexxInteger *equal(RexxObject *);
@@ -228,6 +229,9 @@ class RexxStringClass : public RexxClass {
    bool primitiveCaselessMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
    RexxInteger *matchChar(RexxInteger *position_, RexxString *matchSet);
    RexxInteger *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
+
+   RexxInteger *RexxString::equals(RexxString *other);
+   RexxInteger *RexxString::caselessEquals(RexxString *other);
 
    RexxArray   *makeArray(RexxString *);
 
