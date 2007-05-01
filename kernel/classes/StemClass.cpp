@@ -50,6 +50,7 @@
 #include "RexxVariableDictionary.hpp"
 #include "RexxVariable.hpp"
 #include "StemClass.hpp"
+#include "SupplierClass.hpp"
 #include <limits.h>
 
 /* a pair of static variables used by the stem sort function. */

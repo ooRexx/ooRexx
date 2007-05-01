@@ -6,7 +6,7 @@
 ; Run as:
 ;  makensis /DVERSION=x.x /DNODOTVER=xx /DSRCDIR=xxx /DBINDIR=xxx oorexx.nsi
 ;  eg
-;  makensis /DVERSION=3.1.1 /DNODOTVER=311 /DSRCDIR=d:\oorexx\oorexx /DBINDIR=d:\oorexx\oorexx\win32rel oorexx.nsi
+;  makensis /DVERSION=3.1.2 /DNODOTVER=312 /DSRCDIR=d:\oorexx\oorexx /DBINDIR=d:\oorexx\oorexx\win32rel oorexx.nsi
 ; Note:
 ;  oorexx.nsi MUST be in the current directory!
 

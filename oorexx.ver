@@ -1,16 +1,16 @@
 # This defines the current version of ooRexx
 ORX_MAJOR=3
 ORX_MINOR=1
-ORX_MOD_LVL=3
+ORX_MOD_LVL=2
 ORX_BLD_LVL=1
-ORX_VER_STR="3.1.3"
+ORX_VER_STR="3.1.2.1"
 ORX_COPY_YEAR="2005-2007"
 
 # This defines the oorexx library version. For ooRexx this should always be the
 # same as the ORX_MAJOR number.
 ORX_CURRENT=$(ORX_MAJOR)
 # Each public release of ooRexx should increment this number by one.
-ORX_REVISION=2
+ORX_REVISION=3
 # For ooRexx, this number should ALWAYS be zero. This will force the linker to
 # utilize all previous releases for linking.
 ORX_AGE=0

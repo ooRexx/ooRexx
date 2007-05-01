@@ -43,16 +43,22 @@
 %define _prefix /opt/ooRexx
 
 # Specify a top dir so we can build the RPM as a non-root user
-$_define _topdir @TOP_SRCDIR@/rpm
+%define _rpmtopdir @abs_top_srcdir@/rpm
+%define _builddir @abs_top_srcdir@/rpm/BUILD
+%define _rpmdir @abs_top_srcdir@/rpm/RPMS
+%define _sourcedir @abs_top_srcdir@
+%define _specdir @abs_top_srcdir@/platform/unix
+%define _srcrpmdir @abs_top_srcdir@/rpm/SRPMS
+%define _tmpdir /tmp
 
 # Specify the package version
 %define orx_major 3
 %define orx_minor 1
-%define orx_mod_lvl 1
+%define orx_mod_lvl 2
 
 # Specify the libtool library version
 %define orx_current 3
-%define orx_revision 2
+%define orx_revision 3
 %define orx_age 0
 # the order of these looks wrong, but that is how it comes out!
 %define orx_libversion %{orx_current}.%{orx_age}.%{orx_revision}

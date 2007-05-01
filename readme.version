@@ -1,10 +1,16 @@
 When changing the version number of ooRexx you will need to change the following files:
 
 oorexx/oorexx.ver
-oorexx/platform/unix/oorexx.spec
+oorexx/platform/unix/oorexx.spec.in
 oorexx/configure.ac
 oorexx/rexutils/rxftp.cls
 oorexx/platform/windows/oorexx.nsi
+oorexx/platform/windows/winmsgtb.tpl
+platform/unix/rexx.1
+platform/unix/rexxc.1
+platform/unix/rxmigrate.1
+platform/unix/rxqueue.1
+platform/unix/rxsubcom.1
 
 When the library interface changes you need to modify the oorexx/oorexx.ver
 file. BE CAREFUL!!!!! This info has no relationship to the ooRexx package

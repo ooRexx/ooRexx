@@ -39,6 +39,7 @@
 touch ./kernel/messages/RexxErrorCodes.h
 touch ./kernel/messages/RexxMessageNumbers.h
 touch ./kernel/messages/RexxMessageTable.h
+touch ./kernel/messages/gencat.inp
 touch ./kernel/platform/windows/winmsgtb.rc
 touch ./kernel/platform/unix/rexx.cat
 

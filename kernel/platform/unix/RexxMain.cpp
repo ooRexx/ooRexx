@@ -86,7 +86,7 @@
 #define BUFFERLEN         256          /* Length of bufs used                 */
 #define BUFFERLEN_OS      1024         /* Length of bufs used                 */
 #define DEFAULT_PRECISION  9           /* default precision to use   */
-#define COPYRIGHT "Copyright (c) IBM Corporation 1995, 2004.\nCopyright (c) RexxLA 2005-2006.\nAll Rights Reserved.\n" \
+#define COPYRIGHT "Copyright (c) IBM Corporation 1995, 2004.\nCopyright (c) RexxLA 2005-2007.\nAll Rights Reserved.\n" \
                   "This program and the accompanying materials \n" \
                   "are made available under the terms of the Common Public License v1.0\n" \
                   "which accompanies this distribution. \n" \

@@ -1,72 +1,62 @@
-            Fixes in Open Object Rexx 3.1.1
+            Fixes in Open Object Rexx 3.1.2
 
 The following is the list of fixes and enhancements added to ooRexx since the
-3.1.0 release.
+3.1.1 release. This is only a partial list and is known not to be complete.
+
 
 All Platforms
 =============
 
-1. Bug 1547980 - Parse source output includes two bytes of trailing x'00'.
-
-2. Bug 177650 - encodebase64 and decodebase64 string class methods fail.
-
-3. Bug 1593178- encodebase64 and decodebase64 string class methods fail.
-
-4. Bug 1554203 - "hashbang line" should be ignored/removed by interpreter.
-
-5. Bug 1549561 - parse source output includes two bytes of trailing '00'x.
+1693689 - ConditionObject raises 93.903 on 'supplier' message
+1660942 - running method causes rexx crash
+1659332 - Can't subclass .method class
+1647330 - object creation issue
+1646738 - DO loop not executing...
+1634162 - Copy method buffer error
+1607010 - Provide a way to direct object coercion
+1605177 - Error text for 25.906 incomplete
+1683291 - Add an "instanceof" capability to the .object class.
+1661587 - Add lOgical option to Datatype BIF and String Method
+1659877 - Add a "user" subcode for each of the Rexx error categories
+1659861 - Add a class like the Java Peroperties class.
+1659225 - Add a better mechanism for retrieving started message errors
+1565805 - Add DATATYPE() test for logical values
+1479837 - Add POS Method to Mutablebuffer Class (and LASTPOS)
+1682637 - MESSAGE: access to target and arguments
 
 
 Windows
 =======
 
-1. Bug 1068288 - OLE event not invoked.
-
-2. Bug 1546863 - Access of NULL pointer in OLEObject getKnownMethods.
-
-3. Bug 1547980 - Empty string not accepted as argument to OLE method.
-
-4. Bug 1149952 - OLEObject OUT-part of INOUT not supported.
-
-5. Bug 1066294 - OLE/Excel error: if negative argument given.
-
-6. Bug 1202335 - Scriptlet/Typelib: OLR error 92.901 occurred.
-
-7. Memory leak in OLEObject fixed.
-
-8. Bug 1563547 - Possible NULL pointer access in OLEObject.
+1685711 - Large OODialog application causes access violation
+1683068 - DLGAREA.cls not getting included with distribution.
+1668663 - OODialog parses style attributes in RC file incorrectly
+1668003 - OODialog doc confuses ListControl with ListBox
+1607510 - OLEObject getKnownMethods returns wrong information
+1323259 - OleOject Does Not Return Array For Out Parameters
+1214589 - "return .True" returns false in DHTML
+1166659 - Incorrect value vrom Parse Source
+1098405 - OLE-interface to OpenOffice
+1626612 - OODialog YesNoMessage function allow default button selectio
+1323007 - RxWinExec
+1644977 - FileNameDialog doesn't accept path name only
 
 
 Unix/Linux
 ==========
 
-1. Bug 1593871 - File I/O on Mac OSX fails.
-
-2. Bug 1593037 - Trap in 3.1.1 gamma.
-
-3. Bug 1592408 - ooRexx won't build on Solaris 9.
-
-4. Bug 1585065 - ooRexx on Solaris won't work.
-
-5. Bug 1584045 - Solaris package has wrong paths.
+1639773 - Debian Linux package fails to run ooRexxUnit
+1623592 - Segmentation fault on complex program
 
 
 Documentation
 =============
 
-1. Bug 1546516 - Fix description of default stem value.
-
-2. Bug 1553200 - Rail diagram for SETMETHOD object class incomplete.
-
-3. Bug 1554608 - Shared directory for HTML files not available.
-
-4. Bug 1562035 - Unresolved tags in RexxPG doc.
-
-5. Bug 1563727 - Wording change in SockGetPeerName documentation.
-
-6. Bug 1577642 - String methods not list in overview of methods.
-
-7. Bug 1580415 - Small error in Arg() BIF description.
-
-8. Bug 1554608 - shared directory for HTML files not available.
+1644984 - Doc for FileNameDialog / GetFileName unclear to users
+1644003 - Add docs and files to make .deb packages
+1687721 - Overlay() doc error
+1623767 - String and Uninit method of MutableBuffer class not documented
+1697719 - Spurous chars in RexxRef
+1580415 - Small error in ARG() doc
+1577642 - Encodebase64 and decodebase64 methods not in the String class overview
 

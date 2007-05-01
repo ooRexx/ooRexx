@@ -133,13 +133,13 @@ expressionHeaders = $(expression_dir)/BuiltinFunctions.hpp \
                     $(expression_dir)/ExpressionCompoundVariable.hpp \
                     $(expression_dir)/ExpressionDotVariable.hpp \
                     $(expression_dir)/ExpressionFunction.hpp \
-                    $(expression_dir)/ExpressionLogical.hpp \
                     $(expression_dir)/ExpressionMessage.hpp \
                     $(expression_dir)/ExpressionOperator.hpp \
                     $(expression_dir)/ExpressionStack.hpp \
                     $(expression_dir)/ExpressionStem.hpp \
                     $(expression_dir)/ExpressionVariable.hpp \
-                    $(expression_dir)/IndirectVariableReference.hpp
+                    $(expression_dir)/IndirectVariableReference.hpp \
+                    $(expression_dir)/ExpressionLogical.hpp
 instructionsHeaders = $(instructions_dir)/AddressInstruction.hpp \
                       $(instructions_dir)/AssignmentInstruction.hpp \
                       $(instructions_dir)/CallInstruction.hpp \
@@ -376,13 +376,13 @@ expression_sources = $(expression_dir)/BuiltinFunctions.cpp \
                      $(expression_dir)/ExpressionCompoundVariable.cpp \
                      $(expression_dir)/ExpressionDotVariable.cpp \
                      $(expression_dir)/ExpressionFunction.cpp \
-                     $(expression_dir)/ExpressionLogical.cpp \
                      $(expression_dir)/ExpressionMessage.cpp \
                      $(expression_dir)/ExpressionOperator.cpp \
                      $(expression_dir)/ExpressionStack.cpp \
                      $(expression_dir)/ExpressionStem.cpp \
                      $(expression_dir)/ExpressionVariable.cpp \
-                     $(expression_dir)/IndirectVariableReference.cpp
+                     $(expression_dir)/IndirectVariableReference.cpp \
+                     $(expression_dir)/ExpressionLogical.cpp
 instructions_sources  = $(instructions_dir)/AddressInstruction.cpp \
                         $(instructions_dir)/AssignmentInstruction.cpp \
                         $(instructions_dir)/CallInstruction.cpp \
@@ -792,6 +792,8 @@ clean-local: am_config_clean-local
 
 am_config_clean-local:
 	rm -fr $(PACKAGE)-*.tar.gz
+	rm -fr $(PACKAGE)-*.zip
+	rm -fr $(top_srcdir)/rpm
 
 install-exec-local:
 	echo $(DESTDIR) is destdir
@@ -823,6 +825,5 @@ rpm: dist
 	mkdir rpm/SOURCES
 	mkdir rpm/SPECS
 	mkdir rpm/SRPMS
-	cp ooRexx*.tar.gz rpm/SOURCES
-	rpmbuild -ba oorexx.spec
+	rpmbuild -ba platform/unix/oorexx.spec < /dev/null;
 

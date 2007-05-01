@@ -1733,15 +1733,13 @@ PCHAR RexxGetVersionInformation(void)
 {
     char ver[20];
     sprintf( ver, "%d.%d.%d", ORX_VER, ORX_REL, ORX_MOD );
-    char vbuf0[] = "Open Object Rexx %s Version ";
+    char vbuf0[] = "Open Object Rexx %s Version";
   #ifdef _DEBUG
     char vbuf1[] = "- Internal Test Version\nBuild date: ";
   #else
     char vbuf1[] = "\nBuild date: ";
   #endif
-    char vbuf2[] = "\nCopyright (c) IBM Corporation 1995, 2004.\nCopyright (c) RexxLA ";
-    char vbuf2a[] = OOREXX_COPY_YEAR;
-    char vbuf2b[] = "\nAll Rights Reserved.";
+    char vbuf2[] = "\nCopyright (c) IBM Corporation 1995, 2004.\nCopyright (c) RexxLA 2005-2007.\nAll Rights Reserved.";
     char vbuf3[] = "\nThis program and the accompanying materials";
     char vbuf4[] = "\nare made available under the terms of the Common Public License v1.0";
     char vbuf5[] = "\nwhich accompanies this distribution.";
@@ -1749,15 +1747,13 @@ PCHAR RexxGetVersionInformation(void)
     INT s0 = strlen(vbuf0);
     INT s1 = strlen(vbuf1);
     INT s2 = strlen(vbuf2);
-    INT s2a = strlen(vbuf2a);
-    INT s2b = strlen(vbuf2b);
     INT s3 = strlen(vbuf3);
     INT s4 = strlen(vbuf4);
     INT s5 = strlen(vbuf5);
     INT s6 = strlen(vbuf6);
     INT sd = strlen(__DATE__);
     INT sv = strlen(ver);
-    PCHAR ptr = (PCHAR) GlobalAlloc(GMEM_FIXED, sv+s0+s1+s2+s2a+s2b+s3+s4+s5+s6+sd+1);
+    PCHAR ptr = (PCHAR) GlobalAlloc(GMEM_FIXED, sv+s0+s1+s2+s3+s4+s5+s6+sd+1);
     if (ptr)
     {
         memcpy(ptr, vbuf0, s0);
@@ -1765,12 +1761,10 @@ PCHAR RexxGetVersionInformation(void)
         memcpy(ptr+s0+sv, vbuf1, s1);
         memcpy(ptr+s0+sv+s1, __DATE__, sd);
         memcpy(ptr+s0+sv+s1+sd, vbuf2, s2);
-        memcpy(ptr+s0+sv+s1+sd+s2, vbuf2a, s2a);
-        memcpy(ptr+s0+sv+s1+sd+s2+s2a, vbuf2b, s2b);
-        memcpy(ptr+s0+sv+s1+sd+s2+s2a+s2b, vbuf3, s3);
-        memcpy(ptr+s0+sv+s1+sd+s2+s2a+s2b+s3, vbuf4, s4);
-        memcpy(ptr+s0+sv+s1+sd+s2+s2a+s2b+s3+s4, vbuf5, s5);
-        memcpy(ptr+s0+sv+s1+sd+s2+s2a+s2b+s3+s4+s5, vbuf6, s6+1);
+        memcpy(ptr+s0+sv+s1+sd+s2, vbuf3, s3);
+        memcpy(ptr+s0+sv+s1+sd+s2+s3, vbuf4, s4);
+        memcpy(ptr+s0+sv+s1+sd+s2+s3+s4, vbuf5, s5);
+        memcpy(ptr+s0+sv+s1+sd+s2+s3+s4+s5, vbuf6, s6+1);
     }
     return ptr;
 }
