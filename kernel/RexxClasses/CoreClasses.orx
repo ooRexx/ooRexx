@@ -742,7 +742,7 @@ use strict arg index, value=(index)    /* get the index                     */
   .local~setentry('STDERR',.stream~new('STDERR')~~command('open nobuffer'))
   .local~setentry('ERROR', .monitor~new(.stderr))
 
-  .local~setentry('STDQUE',.rx_queue~new~~set('SESSION'))
+  .local~setentry('STDQUE',.RexxQueue~new('SESSION'))
 
 -- tagging classes for Collection class types
 ::CLASS Collection MIXINCLASS Object
