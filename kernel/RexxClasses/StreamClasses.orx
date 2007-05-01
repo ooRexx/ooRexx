@@ -361,7 +361,6 @@ if \available then                     /* already reached the end?          */
   use strict arg name = "SESSION"
   if name \= 'SESSION' then do
       createdName = self~class~create(name)
-      Say "Created queue name is" createdName
       if createdName \= name then do
           self~class~delete(createdName)
       end
