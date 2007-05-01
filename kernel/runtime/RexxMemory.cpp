@@ -2051,6 +2051,7 @@ void memoryCreate()
   IntegerSeven   = new_integer(7L);
   IntegerEight   = new_integer(8L);
   IntegerNine    = new_integer(9L);
+  IntegerMinusOne = new_integer(-1);
 
                                        /* avoid that through caching        */
                                        /* TheTrueObject == IntegerOne etc.  */

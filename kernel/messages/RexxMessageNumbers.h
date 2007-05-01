@@ -590,6 +590,9 @@
 #define Error_Translation_use_strict_ellipsis_msg                    663
 #define Error_Invalid_expression_use_strict_default_msg              664
 #define Error_Incorrect_method_abstract_msg                          665
+#define Error_Invalid_whole_number_compareto_msg                     666
+#define Error_Invalid_whole_number_compare_msg                       667
+#define Error_Execution_sparse_array_msg                             668
 
 
 #endif

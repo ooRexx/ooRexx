@@ -220,6 +220,8 @@
 #define Error_Invalid_whole_number_rem                     26012
 #define Error_Invalid_whole_number_method                  26901
 #define Error_Invalid_whole_number_user_defined            26900
+#define Error_Invalid_whole_number_compareto               26902
+#define Error_Invalid_whole_number_compare                 26903
 #define Error_Invalid_do                                   27000
 #define Error_Invalid_do_whileuntil                        27001
 #define Error_Invalid_do_forever                           27901
@@ -527,6 +529,7 @@
 #define Error_Execution_no_concurrency                     98951
 #define Error_Invalid_data_type_for_objspec                98974
 #define Error_Execution_class_server_not_installed         98952
+#define Error_Execution_sparse_array                       98975
 #define Error_Translation                                  99000
 #define Error_Translation_user_defined                     99900
 #define Error_Translation_duplicate_class                  99901

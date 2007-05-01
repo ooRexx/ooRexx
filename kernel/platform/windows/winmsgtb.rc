@@ -590,6 +590,9 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Translation_use_strict_ellipsis    "The ""..."" argument marker can only appear at the end of the argument list"
    Error_Invalid_expression_use_strict_default    "Missing expression following ""="" token of a USE STRICT ARG instruction"
    Error_Incorrect_method_abstract    "Method &1 is ABSTRACT and cannot be directly invoked"
+   Error_Invalid_whole_number_compareto    "Result of a COMPARETO method call did not result in a whole number; found ""&1"""
+   Error_Invalid_whole_number_compare    "Result of a COMPARE method call did not result in a whole number; found ""&1"""
+   Error_Execution_sparse_array    "Missing array element at position &1"
    
 END
 

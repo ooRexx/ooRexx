@@ -141,6 +141,17 @@ typedef struct copyElelmentParm {
    RexxObject  *index(RexxObject *);
    RexxObject  *hasItem(RexxObject *);
    RexxObject  *removeItem(RexxObject *);
+   void         mergeSort(RexxArray *working, size_t left, size_t right);
+   void         merge(RexxArray *working, size_t left, size_t mid, size_t right);
+   void         mergeSort(RexxObject *comparator, RexxArray *working, size_t left, size_t right);
+   void         merge(RexxObject *comparator, RexxArray *working, size_t left, size_t mid, size_t right);
+   void         quickSort(size_t left, size_t right);
+   void         quickSort(RexxObject *comparator, size_t left, size_t right);
+   wholenumber_t sortCompare(RexxObject *comparator, RexxObject *left, RexxObject *right);
+   RexxArray   *sortRexx();
+   RexxArray   *sortWithRexx(RexxObject *comparator);
+   RexxArray   *stableSortRexx();
+   RexxArray   *stableSortWithRexx(RexxObject *comparator);
 
    inline void         addLast(RexxObject *item) { this->insertItem(item, this->size() + 1); }
    inline void         addFirst(RexxObject *item) { this->insertItem(item, 1); }

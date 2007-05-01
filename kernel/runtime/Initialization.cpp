@@ -201,6 +201,7 @@ void kernelRestore(void)
   IntegerSeven  = new_integer(7L);
   IntegerEight  = new_integer(8L);
   IntegerNine   = new_integer(9L);
+  IntegerMinusOne = new_integer(-1);
   restoreStrings();                    /* restore the global strings        */
   nmethod_restore();                   /* fix up native methods             */
   activity_restore();                  /* do activity restores              */

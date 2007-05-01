@@ -1634,6 +1634,24 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Invalid_whole_number_user_defined</SymbolicName>
         <Text><Sub position="1" name="message"/></Text>
       </SubMessage>
+      <SubMessage>
+        <Code>26</Code>
+        <Subcode>902</Subcode>
+        <MessageNumber>666</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_whole_number_compareto</SymbolicName>
+        <Text>Result of a COMPARETO method call did not result in a whole number; found <q><Sub position="1" name="value"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>26</Code>
+        <Subcode>903</Subcode>
+        <MessageNumber>667</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_whole_number_compare</SymbolicName>
+        <Text>Result of a COMPARE method call did not result in a whole number; found <q><Sub position="1" name="value"/></q></Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -4518,6 +4536,15 @@ special character (such as a parenthesis).
         <Severity>Error</Severity>
         <SymbolicName>Error_Execution_class_server_not_installed</SymbolicName>
         <Text><Sub position="1" name="servername"/> class server not installed</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>975</Subcode>
+        <MessageNumber>668</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Error</Severity>
+        <SymbolicName>Error_Execution_sparse_array</SymbolicName>
+        <Text>Missing array element at position <Sub position="1" name="position"/></Text>
       </SubMessage>
     </Subcodes>
   </Message>

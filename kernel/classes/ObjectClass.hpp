@@ -300,6 +300,7 @@ class RexxObject : public RexxInternalObject {
          // test first for direct equality, followed by value equality.
          return (this == other) || this->isEqual(other);
      }
+     virtual wholenumber_t compareTo(RexxObject *);
 
  // Define operator methods here.
 

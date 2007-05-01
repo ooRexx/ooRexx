@@ -45,6 +45,7 @@
 #define Included_RexxInteger
 
 void integer_create (void);
+#define INTEGERCACHELOW  -10
 #define INTEGERCACHESIZE 100
 #define MAX_INTEGER_LENGTH 10
 
@@ -149,13 +150,13 @@ class RexxIntegerClass : public RexxClass {
   void *operator new (size_t);
   void *operator new(size_t size, long size1, RexxBehaviour *classBehave, RexxBehaviour *instance) { return new (size, classBehave, instance) RexxClass; }
   RexxIntegerClass();
-  RexxInteger *newCache(long value) {if (value >= 0 && value < INTEGERCACHESIZE)
-                                       return this->integercache[value];
+  RexxInteger *newCache(long value) {if (value >= INTEGERCACHELOW && value < INTEGERCACHESIZE)
+                                       return this->integercache[value - INTEGERCACHELOW];
                                      else
                                        return new RexxInteger (value); };
   void live();
   void liveGeneral();
                                      /* array of fast aloocation integers 0-99      */
-  RexxInteger *integercache[INTEGERCACHESIZE];
+  RexxInteger *integercache[INTEGERCACHESIZE - INTEGERCACHELOW];
 };
 #endif

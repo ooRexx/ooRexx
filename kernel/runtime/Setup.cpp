@@ -165,6 +165,10 @@ CPPMA(RexxArray::index),
 CPPMA(RexxArray::hasItem),
 CPPMA(RexxArray::removeItem),
 CPPMA(RexxArray::toString),
+CPPMA(RexxArray::sortRexx),
+CPPMA(RexxArray::stableSortRexx),
+CPPMA(RexxArray::sortWithRexx),
+CPPMA(RexxArray::stableSortWithRexx),
 
 CPPMC1(RexxArray::newRexx),
 CPPMA(RexxArray::makeString),
@@ -446,6 +450,8 @@ CPPMSTR(RexxString::matchChar),
 CPPMSTR(RexxString::caselessMatchChar),
 CPPMSTR(RexxString::equals),
 CPPMSTR(RexxString::caselessEquals),
+CPPMSTR(RexxString::compareToRexx),
+CPPMSTR(RexxString::caselessCompareToRexx),
                                           /* End of BIF methods                */
 CPPMSTR(RexxString::makeArray),
 
@@ -840,6 +846,10 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_INDEX        ,TheArrayBehaviour, CPPMA(RexxArray::index), 1);
   defineKernelMethod(CHAR_HASITEM      ,TheArrayBehaviour, CPPMA(RexxArray::hasItem), 1);
   defineKernelMethod(CHAR_REMOVEITEM   ,TheArrayBehaviour, CPPMA(RexxArray::removeItem), 1);
+  defineKernelMethod(CHAR_SORT         ,TheArrayBehaviour, CPPMA(RexxArray::sortRexx), 0);
+  defineKernelMethod(CHAR_SORTWITH     ,TheArrayBehaviour, CPPMA(RexxArray::sortWithRexx), 1);
+  defineKernelMethod(CHAR_STABLESORT   ,TheArrayBehaviour, CPPMA(RexxArray::stableSortRexx), 0);
+  defineKernelMethod(CHAR_STABLESORTWITH ,TheArrayBehaviour, CPPMA(RexxArray::stableSortWithRexx), 1);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheArrayBehaviour->setMethodDictionaryScope(TheArrayClass);
@@ -1261,13 +1271,15 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_CASELESSMATCHCHAR            ,TheStringBehaviour, CPPMSTR(RexxString::caselessMatchChar), 2);
   defineKernelMethod(CHAR_EQUALS                       ,TheStringBehaviour, CPPMSTR(RexxString::equals), 1);
   defineKernelMethod(CHAR_CASELESSEQUALS               ,TheStringBehaviour, CPPMSTR(RexxString::caselessEquals), 1);
+  defineKernelMethod(CHAR_COMPARETO                    ,TheStringBehaviour, CPPMSTR(RexxString::compareToRexx), 3);
+  defineKernelMethod(CHAR_CASELESSCOMPARETO            ,TheStringBehaviour, CPPMSTR(RexxString::caselessCompareToRexx), 3);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheStringBehaviour->setMethodDictionaryScope(TheStringClass);
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheStringClass->subClassable("String", true);
+  TheStringClass->subClassable("String", false);
 
 
   /***************************************************************************/
@@ -1633,6 +1645,11 @@ bool kernel_setup (void)
 
   TheStemClass->inherit(map, OREF_NULL);
   TheStemClass->setRexxDefined();
+
+  RexxClass *comparable = (RexxClass *)TheEnvironment->get(kernel_name(CHAR_COMPARABLE));
+
+  TheStringClass->inherit(comparable, OREF_NULL);
+  TheStringClass->setRexxDefined();
 
   // this has been protecting every thing critical
   // from GC events thus far, but now we remove it because

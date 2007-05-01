@@ -1890,6 +1890,451 @@ void *   RexxArray::operator new(size_t size, RexxObject **args, size_t argCount
   return temp;
 }
 
+
+/**
+ * The merge sort routine.  This will partition the data in to
+ * two sections, mergesort each partition, then merge the two
+ * partitions together.
+ *
+ * @param working The working array (same size as the sorted array).
+ * @param left    The left bound of the partition.
+ * @param right   The right bounds of the parition.
+ */
+void RexxArray::mergeSort(RexxArray *working, size_t left, size_t right)
+{
+    if (right > left)
+    {
+        size_t mid = (right + left) / 2;
+        mergeSort(working, left, mid);
+        mergeSort(working, mid + 1, right);
+        merge(working, left, mid + 1, right);
+    }
+}
+
+
+/**
+ * Perform the merge operation on two partitions.
+ *
+ * @param working The temporary working storage.
+ * @param left    The left bound of the range.
+ * @param mid     The midpoint of the range.  This merges the two partitions
+ *                (left, mid - 1) and (mid, right).
+ * @param right   The right bound of the array.
+ */
+void RexxArray::merge(RexxArray *working, size_t left, size_t mid, size_t right)
+{
+    size_t leftEnd = mid - 1;
+    size_t elements = right - left + 1;
+    size_t mergePosition = left;
+
+    while ((left <= leftEnd) && (mid <= right))
+    {
+        RexxObject *leftItem = get(left);
+        RexxObject *midItem = get(mid);
+        if (leftItem->compareTo(midItem) <= 0)
+        {
+            working->put(leftItem, mergePosition);
+            mergePosition++;
+            left++;
+        }
+        else
+        {
+            working->put(midItem, mergePosition);
+            mergePosition++;
+            mid++;
+        }
+    }
+
+    // now we have to copy any remainders in the segments
+    while (left <= leftEnd)
+    {
+        RexxObject *item = get(left);
+        working->put(item, mergePosition);
+        left++;
+        mergePosition++;
+    }
+
+    while (mid <= right)
+    {
+        RexxObject *item = get(mid);
+        working->put(item, mergePosition);
+        mid++;
+        mergePosition++;
+    }
+
+    // we've not modified the right position, so we can use that now to copy the
+    // merged elements back into the original array in reverse order
+    for (size_t i = 1; i <= elements; i++)
+    {
+        RexxObject *item = working->get(right);
+        put(item, right);
+        right--;
+    }
+}
+
+
+/**
+ * The merge sort routine.  This will partition the data in to
+ * two sections, mergesort each partition, then merge the two
+ * partitions together.
+ *
+ * @param comparator The comparator object used for the compares.
+ * @param working    The working array (same size as the sorted array).
+ * @param left       The left bound of the partition.
+ * @param right      The right bounds of the parition.
+ */
+void RexxArray::mergeSort(RexxObject *comparator, RexxArray *working, size_t left, size_t right)
+{
+    if (right > left)
+    {
+        size_t mid = (right + left) / 2;
+        mergeSort(comparator, working, left, mid);
+        mergeSort(comparator, working, mid + 1, right);
+        merge(comparator, working, left, mid + 1, right);
+    }
+}
+
+
+/**
+ * Perform the merge operation on two partitions.
+ *
+ * @param comparator The comparator used to produce the ordering.
+ * @param working    The temporary working storage.
+ * @param left       The left bound of the range.
+ * @param mid        The midpoint of the range.  This merges the two partitions
+ *                   (left, mid - 1) and (mid, right).
+ * @param right      The right bound of the array.
+ */
+void RexxArray::merge(RexxObject *comparator, RexxArray *working, size_t left, size_t mid, size_t right)
+{
+    size_t leftEnd = mid - 1;
+    size_t elements = right - left + 1;
+    size_t mergePosition = left;
+
+    while ((left <= leftEnd) && (mid <= right))
+    {
+        RexxObject *leftItem = get(left);
+        RexxObject *midItem = get(mid);
+        if (sortCompare(comparator, leftItem, midItem) <= 0)
+        {
+            working->put(leftItem, mergePosition);
+            mergePosition++;
+            left++;
+        }
+        else
+        {
+            working->put(midItem, mergePosition);
+            mergePosition++;
+            mid++;
+        }
+    }
+
+    // now we have to copy any remainders in the segments
+    while (left <= leftEnd)
+    {
+        RexxObject *item = get(left);
+        working->put(item, mergePosition);
+        left++;
+        mergePosition++;
+    }
+
+    while (mid <= right)
+    {
+        RexxObject *item = get(mid);
+        working->put(item, mergePosition);
+        mid++;
+        mergePosition++;
+    }
+
+    // we've not modified the right position, so we can use that now to copy the
+    // merged elements back into the original array in reverse order
+    for (size_t i = 1; i <= elements; i++)
+    {
+        RexxObject *item = working->get(right);
+        put(item, right);
+        right--;
+    }
+}
+
+
+/**
+ * Recursive quick sort routine for sorting a partition.
+ *
+ * @param left   The left bound of the partition.
+ * @param right  The right bound of the partition.
+ */
+void RexxArray::quickSort(size_t left, size_t right)
+{
+    size_t old_left = left;
+    size_t old_right = right;
+
+    RexxObject *pivot = get(left);     // get the pivot value
+
+    // now find the new partitioning
+    while (left < right)
+    {
+        // fix the right end
+        while (get(right)->compareTo(pivot) >= 0 && (left < right))
+        {
+            right--;
+        }
+        // did we find a mismatch while testing?  then pull things in from the left too
+        if (left != right)
+        {
+            // swap these and pull the left in
+            put(get(right), left);
+            left++;
+        }
+        // now compare from the left
+        while (get(left)->compareTo(pivot) <= 0 && (left < right))
+        {
+            left++;
+        }
+        // still not done?
+        if (left != right)
+        {
+            // swap these two and continue
+            put(get(left), right);
+            right--;
+        }
+    }
+
+    // store the pivot value in the current left position
+    put(pivot, left);
+    // this is the new pivot point
+    size_t pivotPoint = left;
+    // restore the old end points
+    left = old_left;
+    right = old_right;
+    // something to the left of the pivot?
+    if (left < pivotPoint)
+    {
+        // sort the left partition
+        quickSort(left, pivotPoint - 1);
+    }
+    // and also the right partition if we have one
+    if (right > pivotPoint)
+    {
+        quickSort(pivotPoint + 1, right);
+    }
+}
+
+
+/**
+ * Recursive quick sort routine for sorting a partition.
+ *
+ * @param left   The left bound of the partition.
+ * @param right  The right bound of the partition.
+ */
+void RexxArray::quickSort(RexxObject *comparator, size_t left, size_t right)
+{
+    size_t old_left = left;
+    size_t old_right = right;
+
+    RexxObject *pivot = get(left);     // get the pivot value
+
+    // now find the new partitioning
+    while (left < right)
+    {
+        // fix the right end
+        while (sortCompare(comparator, get(right), pivot) >= 0 && (left < right))
+        {
+            right--;
+        }
+        // did we find a mismatch while testing?  then pull things in from the left too
+        if (left != right)
+        {
+            // swap these and pull the left in
+            put(get(right), left);
+            left++;
+        }
+        // now compare from the left
+        while (sortCompare(comparator, get(left), pivot) <= 0 && (left < right))
+        {
+            left++;
+        }
+        // still not done?
+        if (left != right)
+        {
+            // swap these two and continue
+            put(get(left), right);
+            right--;
+        }
+    }
+
+    // store the pivot value in the current left position
+    put(pivot, left);
+    // this is the new pivot point
+    size_t pivotPoint = left;
+    // restore the old end points
+    left = old_left;
+    right = old_right;
+    // something to the left of the pivot?
+    if (left < pivotPoint)
+    {
+        // sort the left partition
+        quickSort(comparator, left, pivotPoint - 1);
+    }
+    // and also the right partition if we have one
+    if (right > pivotPoint)
+    {
+        quickSort(comparator, pivotPoint + 1, right);
+    }
+}
+
+
+/**
+ * Utility method for calling the sort comparators during a sort
+ * operation.
+ *
+ * @param comparator The comparator object.
+ * @param left       The left object to compare.
+ * @param right      The right object to compare.
+ *
+ * @return -1, 0, 1 depending on the compare results.
+ */
+wholenumber_t RexxArray::sortCompare(RexxObject *comparator, RexxObject *left, RexxObject *right)
+{
+    RexxObject *result = comparator->sendMessage(OREF_COMPARE, left, right);
+    wholenumber_t comparison = result->longValue(DEFAULT_DIGITS);
+    if (comparison == NO_LONG)
+    {
+        reportException(Error_Invalid_whole_number_compare, result);
+    }
+    return comparison;
+}
+
+
+/**
+ * Sort elements of the array in place, using a quicksort.
+ *
+ * @return Returns the same array, with the elements sorted.
+ */
+RexxArray *RexxArray::sortRexx()
+{
+    arraysize_t count = numItems();
+    if (count == 0)         // if the count is zero, sorting is easy!
+    {
+        return this;
+    }
+
+    // make sure this is a non-sparse array.  Checking up front means we don't
+    // need to check on each compare operation.
+    for (arraysize_t i = 1; i <= count; i++)
+    {
+        if (get(i) == OREF_NULL)
+        {
+            reportException(Error_Execution_sparse_array, new_integer(i));
+        }
+    }
+
+    // go do the quick sort
+    quickSort(1, count);
+    return this;
+}
+
+
+/**
+ * Sort elements of the array in place, using a quicksort.
+ *
+ * @return Returns the same array, with the elements sorted.
+ */
+RexxArray *RexxArray::sortWithRexx(RexxObject *comparator)
+{
+    required_arg(comparator, ONE);
+
+    arraysize_t count = numItems();
+    if (count <= 1)         // if the count is zero, sorting is easy!
+    {
+        return this;
+    }
+
+    // make sure this is a non-sparse array.  Checking up front means we don't
+    // need to check on each compare operation.
+    for (arraysize_t i = 1; i <= count; i++)
+    {
+        if (get(i) == OREF_NULL)
+        {
+            reportException(Error_Execution_sparse_array, new_integer(i));
+        }
+    }
+
+    // go do the quick sort
+    quickSort(comparator, 1, count);
+    return this;
+}
+
+
+/**
+ * Sort elements of the array in place, using a quicksort.
+ *
+ * @return Returns the same array, with the elements sorted.
+ */
+RexxArray *RexxArray::stableSortRexx()
+{
+    arraysize_t count = numItems();
+    if (count == 0)         // if the count is zero, sorting is easy!
+    {
+        return this;
+    }
+
+    // make sure this is a non-sparse array.  Checking up front means we don't
+    // need to check on each compare operation.
+    for (arraysize_t i = 1; i <= count; i++)
+    {
+        if (get(i) == OREF_NULL)
+        {
+            reportException(Error_Execution_sparse_array, new_integer(i));
+        }
+    }
+
+    // the merge sort requires a temporary scratch area for the sort.
+    RexxArray *working = new_array(count);
+    save(working);
+
+    // go do the quick sort
+    mergeSort(working, 1, count);
+    discard_hold(working);
+    return this;
+}
+
+
+/**
+ * Sort elements of the array in place, using a quicksort.
+ *
+ * @return Returns the same array, with the elements sorted.
+ */
+RexxArray *RexxArray::stableSortWithRexx(RexxObject *comparator)
+{
+    required_arg(comparator, ONE);
+
+    arraysize_t count = numItems();
+    if (count <= 1)         // if the count is zero, sorting is easy!
+    {
+        return this;
+    }
+
+    // make sure this is a non-sparse array.  Checking up front means we don't
+    // need to check on each compare operation.
+    for (arraysize_t i = 1; i <= count; i++)
+    {
+        if (get(i) == OREF_NULL)
+        {
+            reportException(Error_Execution_sparse_array, new_integer(i));
+        }
+    }
+
+    // the merge sort requires a temporary scratch area for the sort.
+    RexxArray *working = new_array(count);
+    save(working);
+
+    // go do the quick sort
+    mergeSort(comparator, working, 1, count);
+    discard_hold(working);
+    return this;
+}
+
+
 void *  RexxArray::operator new(size_t size, RexxObject *first)
 /******************************************************************************/
 /* Function:  Create an array with 1 element (new_array1)                     */

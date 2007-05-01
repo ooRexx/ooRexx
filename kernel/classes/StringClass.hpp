@@ -105,6 +105,7 @@ class RexxStringClass : public RexxClass {
    bool        primitiveCaselessIsEqual(RexxObject *);
    long        strictComp(RexxObject *);
    long        comp(RexxObject *);
+   wholenumber_t compareTo(RexxObject *);
    RexxInteger *equal(RexxObject *);
    RexxInteger *strictEqual(RexxObject *);
    RexxInteger *notEqual(RexxObject *);
@@ -229,6 +230,11 @@ class RexxStringClass : public RexxClass {
    bool primitiveCaselessMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
    RexxInteger *matchChar(RexxInteger *position_, RexxString *matchSet);
    RexxInteger *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
+
+   RexxInteger *compareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_);
+   RexxInteger *caselessCompareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_);
+   RexxInteger *primitiveCompareTo(RexxString *other, stringsize_t start, stringsize_t len);
+   RexxInteger *primitiveCaselessCompareTo(RexxString *other, stringsize_t start, stringsize_t len);
 
    RexxInteger *RexxString::equals(RexxString *other);
    RexxInteger *RexxString::caselessEquals(RexxString *other);

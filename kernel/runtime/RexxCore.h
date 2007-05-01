@@ -438,6 +438,7 @@ EXTERN RexxInteger * IntegerSix INITGLOBALPTR;       /* Static integer 6        
 EXTERN RexxInteger * IntegerSeven INITGLOBALPTR;     /* Static integer 7                  */
 EXTERN RexxInteger * IntegerEight INITGLOBALPTR;     /* Static integer 8                  */
 EXTERN RexxInteger * IntegerNine INITGLOBALPTR;      /* Static integer 9                  */
+EXTERN RexxInteger * IntegerMinusOne INITGLOBALPTR;  /* Static integer -1                 */
 
 
 /******************************************************************************/

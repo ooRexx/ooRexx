@@ -975,13 +975,13 @@ RexxIntegerClass::RexxIntegerClass()
 {
  long i;                               /* loop counter                      */
 
- for (i=0;i<INTEGERCACHESIZE ;i++ ) {  /* now create all our cached integers*/
-   OrefSet(this, this->integercache[i], new  RexxInteger (i));
+ for (i=INTEGERCACHELOW; i<INTEGERCACHESIZE; i++ ) {  /* now create all our cached integers*/
+   OrefSet(this, this->integercache[i - INTEGERCACHELOW], new  RexxInteger (i));
    /* force the item to create its string value too.  This can save */
    /* us a lot of time when string indices are used for compound */
    /* variables and also eliminate a bunch of old-new table */
    /* references. */
-   this->integercache[i]->stringValue();
+   this->integercache[i - INTEGERCACHELOW]->stringValue();
  }
 }
 
@@ -996,8 +996,8 @@ void RexxIntegerClass::live()
 
   setUpMemoryMark
                                        /* now mark the cached integers      */
-  for (i = 0;i < INTEGERCACHESIZE ;i++ ) {
-   memory_mark(this->integercache[i]);
+  for (i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ ) {
+   memory_mark(this->integercache[i - INTEGERCACHELOW]);
   }
   cleanUpMemoryMark
 }
@@ -1013,8 +1013,8 @@ void RexxIntegerClass::liveGeneral()
 
   setUpMemoryMarkGeneral
                                        /* now mark the cached integers      */
-  for (i = 0;i < INTEGERCACHESIZE ;i++ ) {
-   memory_mark_general(this->integercache[i]);
+  for (i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ ) {
+   memory_mark_general(this->integercache[i - INTEGERCACHELOW]);
   }
   cleanUpMemoryMarkGeneral
 }

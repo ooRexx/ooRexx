@@ -1199,6 +1199,18 @@ special character (such as a parenthesis).
 <para>Result of a method call did not result in a whole number; found "<emphasis>value</emphasis>"</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>902</term>
+<listitem>
+<para>Result of a COMPARETO method call did not result in a whole number; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>903</term>
+<listitem>
+<para>Result of a COMPARE method call did not result in a whole number; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR27">
@@ -3285,6 +3297,13 @@ special character (such as a parenthesis).
 <term>974</term>
 <listitem>
 <para>Invalid parameter type for key form "<emphasis>keyform</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>975</term>
+<listitem>
+<para>Missing array element at position <emphasis>position</emphasis>
+</para>
 </listitem>
 </varlistentry>
 </variablelist>

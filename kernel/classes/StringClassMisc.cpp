@@ -1326,3 +1326,174 @@ RexxInteger *RexxString::caselessMatchChar(RexxInteger *position_, RexxString *m
     return TheFalseObject;
 }
 
+
+/**
+ * Do a sorting comparison of two strings.
+ *
+ * @param other  The other compare string.
+ * @param start_ The starting compare position within the target string.
+ * @param len_   The length of the compare substring.
+ *
+ * @return True if the two regions match, false for any mismatch.
+ */
+RexxInteger *RexxString::compareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_)
+{
+    other = stringArgument(other, ARG_ONE);
+
+    stringsize_t start = optionalPositionArgument(start_, 1, ARG_TWO);
+    stringsize_t len = optionalLengthArgument(len_, getLength() - start + 1, ARG_THREE);
+
+    return primitiveCompareTo(other, start, len);
+}
+
+
+/**
+ * Perform a compare of regions of two string objects.  Returns
+ * -1, 0, 1 based on the relative ordering of the two strings.
+ *
+ * @param other  The source string for the compare.
+ * @param start  The starting offset within the target string.
+ * @param len    The length of the substring to compare.
+ *
+ * @return -1 if the target string is less than, 0 if the two strings are
+ *         equal, 1 if the target string is the greater.
+ */
+RexxInteger *RexxString::primitiveCompareTo(RexxString *other, stringsize_t start, stringsize_t len)
+{
+    stringsize_t myLength = getLength();
+    stringsize_t otherLength = other->getLength();
+
+    // if doing the compare outside of the string length, we're less than the other string
+    // unless the start is
+    if (start > myLength)
+    {
+        return start > otherLength ? IntegerZero : IntegerMinusOne;
+    }
+    // if beyond the other length, they we're the larger
+    if (start > otherLength)
+    {
+        return IntegerOne;
+    }
+
+    start--;      // make the starting point origin zero
+
+    myLength = min(len, myLength - start);
+    otherLength = min(len, otherLength - start);
+
+    len = min(myLength, otherLength);
+
+    wholenumber_t result = memcmp(getStringData() + start, other->getStringData() + start, len);
+
+    // if they compare equal, then they are only
+    if (result == 0)
+    {
+        if (myLength == otherLength)
+        {
+            return IntegerZero;
+        }
+        else if (myLength > otherLength)
+        {
+            return IntegerOne;
+        }
+        else
+        {
+            return IntegerMinusOne;
+        }
+    }
+    else if (result > 0)
+    {
+        return IntegerOne;
+    }
+    else
+    {
+        return IntegerMinusOne;
+    }
+}
+
+
+
+
+/**
+ * Do a sorting comparison of two strings.
+ *
+ * @param other  The other compare string.
+ * @param start_ The starting compare position within the target string.
+ * @param len_   The length of the compare substring.
+ *
+ * @return True if the two regions match, false for any mismatch.
+ */
+RexxInteger *RexxString::caselessCompareToRexx(RexxString *other, RexxInteger *start_, RexxInteger *len_)
+{
+    other = stringArgument(other, ARG_ONE);
+
+    stringsize_t start = optionalPositionArgument(start_, 1, ARG_TWO);
+    stringsize_t len = optionalLengthArgument(len_, getLength() - start + 1, ARG_THREE);
+
+    return primitiveCaselessCompareTo(other, start, len);
+}
+
+
+
+
+/**
+ * Perform a compare of regions of two string objects.  Returns
+ * -1, 0, 1 based on the relative ordering of the two strings.
+ *
+ * @param other  The source string for the compare.
+ * @param start  The starting offset within the target string.
+ * @param len    The length of the substring to compare.
+ *
+ * @return -1 if the target string is less than, 0 if the two strings are
+ *         equal, 1 if the target string is the greater.
+ */
+RexxInteger *RexxString::primitiveCaselessCompareTo(RexxString *other, stringsize_t start, stringsize_t len)
+{
+    stringsize_t myLength = getLength();
+    stringsize_t otherLength = other->getLength();
+
+    // if doing the compare outside of the string length, we're less than the other string
+    // unless the start is
+    if (start > myLength)
+    {
+        return start > otherLength ? IntegerZero : IntegerMinusOne;
+    }
+    // if beyond the other length, they we're the larger
+    if (start > otherLength)
+    {
+        return IntegerOne;
+    }
+
+    start--;      // make the starting point origin zero
+
+    myLength = min(len, myLength - start);
+    otherLength = min(len, otherLength - start);
+
+    len = min(myLength, otherLength);
+
+    wholenumber_t result = CaselessCompare((PUCHAR)getStringData() + start, (PUCHAR)other->getStringData() + start, len);
+
+    // if they compare equal, then they are only
+    if (result == 0)
+    {
+        if (myLength == otherLength)
+        {
+            return IntegerZero;
+        }
+        else if (myLength > otherLength)
+        {
+            return IntegerOne;
+        }
+        else
+        {
+            return IntegerMinusOne;
+        }
+    }
+    else if (result > 0)
+    {
+        return IntegerOne;
+    }
+    else
+    {
+        return IntegerMinusOne;
+    }
+}

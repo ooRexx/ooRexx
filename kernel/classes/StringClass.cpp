@@ -401,6 +401,27 @@ bool RexxString::primitiveCaselessIsEqual(RexxObject *otherObj)
 }
 
 
+/**
+ * Wrapper around the compareTo() method that validates and
+ * extracts integer value.
+ *
+ * @param other  The other comparison object
+ *
+ * @return -1, 0, 1 depending on the comparison result.
+ */
+wholenumber_t RexxString::compareTo(RexxObject *other )
+{
+    if (isPrimitive(this))
+    {
+        return compareToRexx((RexxString *)other, OREF_NULL, OREF_NULL)->value;
+    }
+    else
+    {
+        return RexxObject::compareTo(other);
+    }
+}
+
+
 long RexxString::comp(RexxObject *other)
 /******************************************************************************/
 /* Function:  Do a value comparison of two strings for the non-strict         */

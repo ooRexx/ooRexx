@@ -147,6 +147,26 @@ BOOL RexxObject::isEqual(
 
 
 /**
+ * Wrapper around the compareTo() method that validates and
+ * extracts integer value.
+ *
+ * @param other  The other comparison object
+ *
+ * @return -1, 0, 1 depending on the comparison result.
+ */
+wholenumber_t RexxObject::compareTo(RexxObject *other )
+{
+    RexxObject *result = sendMessage(OREF_COMPARETO, other);
+    wholenumber_t comparison = result->longValue(DEFAULT_DIGITS);
+    if (comparison == NO_LONG)
+    {
+        reportException(Error_Invalid_whole_number_compareto, result);
+    }
+    return comparison;
+}
+
+
+/**
  * Test if an internal object is an instance of another class.
  *
  * @param other  The test class.
