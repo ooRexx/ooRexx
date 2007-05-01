@@ -57,12 +57,12 @@ Select
  when 'WINDOWS' = sysIntName | 'WINDOWSNT' = sysIntName | 'WINDOWS95' = sysIntName
  then do
      methodDirectory = 'WindowsMethods.orx'()           /* get the WIN  specific met*/
-     .environment~setentry('LINEND', '0d0a'x)
+     .environment~setentry('LINEEND', '0d0a'x)
  end
                                             /* running on LINUX  ?      */
  when 'LINUX' = sysIntname | 'SUNOS' = sysIntname | 'AIX' = sysIntname Then do  /* Like on AIX  */
      methodDirectory = 'UnixMethods.orx'()      /* get the Linux specific m. */
-     .environment~setentry('LINEND', '0a'x)
+     .environment~setentry('LINEEND', '0a'x)
  end
  otherwise
    raise syntax 1.000
