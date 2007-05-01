@@ -380,6 +380,12 @@ if \available then                     /* already reached the end?          */
   self~objectname = new_queue          /* and also set as an object name    */
   return old_queue                     /* and return the old one            */
 
+-- delete the named queue when finished
+::method delete
+  exposed named_queue
+  if named_queue \= 'SESSION then do
+      self~class~delete(named_queue)
+  end
 ::METHOD push            EXTERNAL 'REXX rexx_push_queue'
 ::METHOD queue           EXTERNAL 'REXX rexx_queue_queue'
 ::METHOD pull            EXTERNAL 'REXX rexx_pull_queue'
