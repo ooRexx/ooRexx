@@ -55,15 +55,15 @@ sysIntName = .system~intname~translate
 Select
                                             /* running on Windows       */
  when 'WINDOWS' = sysIntName | 'WINDOWSNT' = sysIntName | 'WINDOWS95' = sysIntName
- then
+ then do
      methodDirectory = 'WindowsMethods.orx'()           /* get the WIN  specific met*/
+     .environment~setentry('LINEND', '0d0a'x)
+ end
                                             /* running on LINUX  ?      */
- when 'LINUX' = sysIntname | 'SUNOS' = sysIntname Then  /* Like on AIX  */
+ when 'LINUX' = sysIntname | 'SUNOS' = sysIntname | 'AIX' = sysIntname Then do  /* Like on AIX  */
      methodDirectory = 'UnixMethods.orx'()      /* get the Linux specific m. */
-                                            /* running on AIX  ?        */
- when 'AIX' = sysIntname Then               /* lower case methods!      */
-     methodDirectory = 'UnixMethods.orx'()      /* get the AIX specific meth*/
-                                            /* running on MVS  ?        */
+     .environment~setentry('LINEND', '0a'x)
+ end
  otherwise
    raise syntax 1.000
 
