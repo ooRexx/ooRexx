@@ -1766,6 +1766,22 @@ bool RexxClass::isCompatibleWith(RexxClass *other)
 }
 
 
+/**
+ * A stub to test compatibility of two classes.
+ *
+ * @param other  The class for the superclass test.
+ *
+ * @return True if the class is a subclass of the argument class (or IS
+ *         the argument class).
+ */
+RexxObject *RexxClass::isSubclassOf(RexxClass *other)
+{
+    required_arg(other, ONE);            // must have the other argument
+    return isCompatibleWith(other) ? TheTrueObject : TheFalseObject;
+}
+
+
+
 void  *RexxClass::operator new(size_t size,
     long size1,                        /* additional size                   */
     RexxBehaviour *class_behaviour,    /* new class behaviour               */

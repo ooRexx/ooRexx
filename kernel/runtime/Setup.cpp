@@ -140,6 +140,7 @@ CPPMC(RexxClass::importedRexx),
 CPPMC(RexxClass::equal),
 CPPMC(RexxClass::strictEqual),
 CPPMC(RexxClass::notEqual),
+CPPMC(RexxClass::isSubclassOf),
 
 CPPMC1(RexxClass::newRexx),
 
@@ -739,7 +740,6 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_MIXINCLASS      ,TheClassBehaviour, CPPMC(RexxClass::mixinclass), 3);
   defineKernelMethod(CHAR_QUERYMIXINCLASS ,TheClassBehaviour, CPPMC(RexxClass::queryMixinClass), 0);
   defineKernelMethod(CHAR_NEWOPART        ,TheClassBehaviour, CPPMC(RexxClass::newOpart), 1);
-  defineKernelMethod(CHAR_SOMCLASS        ,TheClassBehaviour, CPPMC(RexxClass::getSomClass), 0);
   defineKernelMethod(CHAR_SUBCLASS        ,TheClassBehaviour, CPPMC(RexxClass::subclass), 3);
   defineProtectedKernelMethod(CHAR_SUBCLASSES      ,TheClassBehaviour, CPPMC(RexxClass::getSubClasses), 0);
   defineProtectedKernelMethod(CHAR_SUPERCLASSES    ,TheClassBehaviour, CPPMC(RexxClass::getSuperClasses), 0);
@@ -751,6 +751,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_LESSTHAN_GREATERTHAN   ,TheClassBehaviour, CPPMC(RexxClass::notEqual), 1);
   defineKernelMethod(CHAR_GREATERTHAN_LESSTHAN   ,TheClassBehaviour, CPPMC(RexxClass::notEqual), 1);
   defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL ,TheClassBehaviour, CPPMC(RexxClass::notEqual), 1);
+  defineKernelMethod(CHAR_ISSUBCLASSOF           ,TheClassBehaviour, CPPMC(RexxClass::isSubclassOf), 1);
                                        /* and the private class methods     */
   defineProtectedKernelMethod(CHAR_SHRIEKREXXDEFINED,TheClassBehaviour, CPPMC(RexxClass::setRexxDefined), 0);
   defineProtectedKernelMethod(CHAR_SHRIEKIMPORT,TheClassBehaviour, CPPMC(RexxClass::importMethod), 0);
