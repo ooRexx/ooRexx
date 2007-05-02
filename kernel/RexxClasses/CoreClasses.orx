@@ -1,4 +1,4 @@
-/*----------------------------------------------------------------------------*/
+clas/*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
 /* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
@@ -98,9 +98,12 @@ set_methods~put(.methods~many_xor,          'XOR')
 
 .environment~setentry('COMPARABLE', .comparable)
 .environment~setentry('COMPARATOR', .comparator)
+.environment~setentry('DESCENDINGCOMPARATOR', .descendingcomparator)
 .environment~setentry('CASELESSCOMPARATOR', .caselesscomparator)
+.environment~setentry('DESCENDINGCASELESSCOMPARATOR', .descendingcaselesscomparator)
 .environment~setentry('COLUMNCOMPARATOR', .columncomparator)
 .environment~setentry('CASELESSCOLUMNCOMPARATOR', .caselesscolumncomparator)
+.environment~setentry('INVERTINGCOMPARATOR', .invertingcomparator)
 
 /* Call the system dependant routine to define addition methods */
 systemMethods = 'SystemMethods.orx'()           /* case sensitive           */
@@ -759,21 +762,35 @@ use strict arg index, value=(index)    /* get the index                     */
 use strict arg left, right
 return left~compareTo(right)
 
+::CLASS DescendingComparator MIXINCLASS Object
+::METHOD compare
+use strict arg left, right
+return -left~compareTo(right)
+
 ::CLASS CaselessComparator MIXINCLASS Comparator
 ::METHOD compare
 use strict arg left, right
 return left~caselessCompareTo(right)
+
+::CLASS DescendingCaselessComparator MIXINCLASS Comparator
+::METHOD compare
+use strict arg left, right
+return -left~caselessCompareTo(right)
 
 ::CLASS ColumnComparator MIXINCLASS Object
 ::METHOD init
 expose start length
 use strict arg start, length
 
-::METHOD compare
-expose start length
+::CLASS InvertingComparator MIXINCLASS Object
+::METHOD init
+expose comparator
+use strict arg comparator
 
-use strict arg left, right
-return left~compareTo(right, start, length)
+::METHOD compare
+expose comparator
+
+return -comparator~compare(left, right)
 
 ::CLASS CaselessColumnComparator MIXINCLASS Object
 ::METHOD init
