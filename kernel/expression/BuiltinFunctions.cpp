@@ -2959,7 +2959,7 @@ BUILTIN(QUEUED) {
   if (CurrentActivity->sysExitMsqSiz(context, &queuesize)) {
     queue = CurrentActivity->local->at(OREF_REXXQUEUE);
                                        /* return count on the queue         */
-    return send_message0(queue, OREF_QUERY);
+    return send_message0(queue, OREF_QUEUED);
   }
   else
     return queuesize;                  /* return count from system exit     */

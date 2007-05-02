@@ -359,6 +359,7 @@ if \available then                     /* already reached the end?          */
 
 ::METHOD init
   use strict arg name = "SESSION"
+  name = name~upper
   if name \= 'SESSION' then do
       createdName = self~class~create(name)
       if createdName \= name then do
@@ -385,8 +386,15 @@ if \available then                     /* already reached the end?          */
   if named_queue \= 'SESSION' then do
       self~class~delete(named_queue)
   end
+
+::METHOD lineout
+  forward message 'QUEUE'
+
+::METHOD say
+  forward message 'QUEUE'
+
 ::METHOD push            EXTERNAL 'REXX rexx_push_queue'
 ::METHOD queue           EXTERNAL 'REXX rexx_queue_queue'
 ::METHOD pull            EXTERNAL 'REXX rexx_pull_queue'
 ::METHOD linein          EXTERNAL 'REXX rexx_linein_queue'
-::METHOD query           EXTERNAL 'REXX rexx_query_queue'
+::METHOD queued          EXTERNAL 'REXX rexx_query_queue'
