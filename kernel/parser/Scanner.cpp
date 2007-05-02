@@ -730,7 +730,7 @@ RexxString *RexxSource::packLiteral(
   real_length = length;                /* pick up the string length         */
   for (i = 0; i < length; i++) {       /* loop through entire string        */
                                        /* got a blank?                      */
-   if (this->current[inpointer] == ' ') {
+   if (this->current[inpointer] == ' ' || this->current[inpointer] == '\t') {
      blanks = TRUE;                    /* remember scanning blanks          */
     /* don't like initial blanks or groups after the first                  */
     /* which are not in twos (hex) or fours (binary)                        */
@@ -790,7 +790,7 @@ RexxString *RexxSource::packLiteral(
                                        /* get the next nibble               */
         nibble = this->current[inpointer];
         inpointer++;                   /* step to the next character        */
-        while (nibble == ' ') {        /* step over any inter-nibble blanks */
+        while (nibble == ' ' || nibble == '\t') {   /* step over any inter-nibble blanks */
                                        /* get the next nibble               */
           nibble = this->current[inpointer];
           inpointer++;                 /* step to the next character        */
@@ -836,7 +836,7 @@ RexxString *RexxSource::packLiteral(
                                        /* get the next bit                  */
         nibble = this->current[inpointer];
         inpointer++;                   /* step to the next character        */
-        while (nibble == ' ') {        /* step over any inter-nibble blanks */
+        while (nibble == ' ' || nibble == '\t') {  /* step over any inter-nibble blanks */
                                        /* get the next nibble               */
           nibble = this->current[inpointer];
           inpointer++;                 /* step to the next character        */

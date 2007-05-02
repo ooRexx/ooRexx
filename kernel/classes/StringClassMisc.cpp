@@ -104,7 +104,7 @@ INT ValSet(
   INT      rc;                         /* return code                       */
 
   rc = FALSE;                          /* default to failure                */
-  if (*String != ' ') {                /* if no leading blank               */
+  if (*String != ' ' && *String != '\t') {    /* if no leading blank               */
     SpaceFound = 0;                    /* set initial space flag            */
     Count = 0;                         /* start count with zero             */
     Current = (PUCHAR)String;          /* point to start                    */
@@ -116,7 +116,7 @@ INT ValSet(
       if (c != '\0' && strchr(Set, c) != NULL)
         Count++;                       /* bump count                        */
       else {
-        if (c == ' ') {                /* if c blank                        */
+        if (c == ' ' || c == '\t') {   /* if c blank                        */
           if (!SpaceFound) {           /* if 1st blank                      */
                                        /* save position                     */
             Residue = (Count % Modulus);
@@ -135,7 +135,7 @@ INT ValSet(
       }
     }
     if (rc) {                          /* still good?                       */
-      if (c == ' ')                    /* if trailing blank                 */
+      if (c == ' ' || c == '\t')       /* if trailing blank                 */
         rc = FALSE;                    /* report error                      */
       else if (SpaceFound && (Count % Modulus) != Residue)
         rc = FALSE;                    /* grouping problem                  */

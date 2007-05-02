@@ -74,7 +74,7 @@ void SkipBlanks(
   Length = *StringLength;              /* get the length             */
 
   for (;Length; Length--) {            /* scan entire string         */
-    if (*Scan != ' ')                  /* if not a space             */
+    if (*Scan != ' ' && *Scan != '\t') /* if not a space             */
       break;                           /* just quit the loop         */
     Scan++;                            /* step to next character     */
   }
@@ -103,7 +103,7 @@ void SkipNonBlanks(
   Length = *StringLength;              /* get the length             */
 
   for (;Length; Length--) {            /* scan entire string         */
-    if (*Scan == ' ')                  /* if not a space             */
+    if (*Scan == ' ' || *Scan == '\t') /* if not a space             */
       break;                           /* just quit the loop         */
     Scan++;                            /* step to next character     */
   }

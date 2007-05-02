@@ -58,6 +58,7 @@
 #define ch_ONE    '1'                       /* Define the One   character.          */
 #define ch_FIVE   '5'                       /* Define the Five  character.          */
 #define ch_NINE   '9'                       /* Define the Nine  character.          */
+#define ch_TAB    '\t'                      /* Define the alternate whitespace char */
 
 #define DEFAULTDIGITS  9                    /* Define the default digits setting.   */
 #define DEFAULTFUZZ    0                    /* Define the default fuzz   setting.   */

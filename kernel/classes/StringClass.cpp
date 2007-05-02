@@ -474,12 +474,12 @@ long RexxString::comp(RexxObject *other)
   secondStart = (PUCHAR)second->stringData; /* get pointer to start of data */
 
                                        /* while we have leading blanks.     */
-  while (firstLen > 0 && *firstStart == ch_BLANK) {
+  while (firstLen > 0 && (*firstStart == ch_BLANK || *firstStart == ch_TAB)) {
    firstStart++;                       /* ignore character and look at next */
    firstLen--;                         /* and string is now one char less.  */
   }
                                        /* while we have leading blanks.     */
-  while (secondLen > 0 && *secondStart == ch_BLANK) {
+  while (secondLen > 0 && (*secondStart == ch_BLANK || *secondStart == ch_TAB)) {
    secondStart++;                      /* ignore character and look at next */
    secondLen--;                        /* and string is now one char less.  */
   }
@@ -1610,14 +1610,14 @@ RexxObject *RexxString::isInteger()
     digitsLeft = this->length;
 
                                        /* Skip all leading blanks           */
-    for (; digitsLeft && *digitPtr == ch_BLANK; ++digitPtr, --digitsLeft) ;
+    for (; digitsLeft && (*digitPtr == ch_BLANK || *digitPtr == ch_TAB); ++digitPtr, --digitsLeft) ;
 
     if (digitsLeft){                   /* Still Digits left ?               */
       if (*digitPtr == ch_PLUS || *digitPtr == ch_MINUS) {
                                        /* need to move past the sign and    */
                                        /*  remove any remaining blanks.     */
        for (++digitPtr, --digitsLeft;
-            digitsLeft && *digitPtr == ' ';
+            digitsLeft && (*digitPtr == ch_BLANK || *digitPtr == ch_TAB);
             ++digitPtr, --digitsLeft) ;
                                        /* Yes, skip any blanks              */
        if (!digitsLeft)                /* Did we reach end of data ?        */
@@ -1637,7 +1637,7 @@ RexxObject *RexxString::isInteger()
      }
                                        /* if chars left make sure all are   */
                                        /* blanks.                           */
-     for (; digitsLeft && *digitPtr == ch_BLANK; ++digitPtr, --digitsLeft) ;
+     for (; digitsLeft && (*digitPtr == ch_BLANK || *digitPtr == ch_TAB); ++digitPtr, --digitsLeft) ;
                                        /* skipped all trailing blanks.      */
                                        /* we better be at the end of the    */
                                        /* string, otherwise its invalid.    */

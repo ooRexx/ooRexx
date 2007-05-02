@@ -681,12 +681,12 @@ BOOL numberStringScan(PCHAR number, size_t length)
    InPtr = (PUCHAR) number;            /*Point to start of input string.    */
    EndData = InPtr + length;           /*Point to end of Data + 1.          */
 
-   while (*InPtr == ch_BLANK)          /* Skip all leading blanks.          */
+   while (*InPtr == ch_BLANK || *InPtr == ch_TAB)  /* Skip all leading blanks.          */
      InPtr++;                          /* Skip it, and go on to next char   */
                                        /* Is this a sign Character?         */
    if ((ch = *InPtr) == ch_MINUS || ch == ch_PLUS) {
      InPtr++;                          /* Yes, skip it.                     */
-     while (*InPtr == ch_BLANK)        /* Ship all leading blanks.          */
+     while (*InPtr == ch_BLANK || *InPtr == ch_TAB)   /* Ship all leading blanks.          */
        InPtr++;                        /* Skip it, and go on to next char   */
    }
 
@@ -742,7 +742,7 @@ BOOL numberStringScan(PCHAR number, size_t length)
    }
                                        /* At this point all that should be  */
                                        /* left Are trailing blanks.         */
-   while (*InPtr == ch_BLANK)          /* Skip all trailing blanks          */
+   while (*InPtr == ch_BLANK || *InPtr == ch_TAB)  /* Skip all trailing blanks          */
      InPtr++;                          /* Skip it, and go on to next char   */
    if (InPtr >= EndData)               /* Did we reach end of data          */
      return FALSE;                     /* this was fine                     */
@@ -1279,7 +1279,7 @@ long RexxNumberString::format(PCHAR number, size_t length)
    InPtr = (PUCHAR) number;            /*Point to start of input string.    */
    EndData = InPtr + length;           /*Point to end of Data + 1.          */
 
-   while (*InPtr == ch_BLANK)          /* Ship all leading blanks.          */
+   while (*InPtr == ch_BLANK || *InPtr == ch_TAB)    /* Ship all leading blanks.          */
      InPtr++;                          /* Skip it, and go on to next char   */
                                        /* Is this a sign Character?         */
    if ((ch = *InPtr) == ch_MINUS || ch == ch_PLUS) {
@@ -1287,7 +1287,7 @@ long RexxNumberString::format(PCHAR number, size_t length)
     if (ch == ch_MINUS)                /* is it a Minus sign?               */
      this->sign   = -1;                /* Yup, indicate a negative number.  */
    }
-   while (*InPtr == ch_BLANK)          /* Ship all leading blanks.          */
+   while (*InPtr == ch_BLANK || *InPtr == ch_TAB)   /* Ship all leading blanks.          */
      InPtr++;                          /* Skip it, and go on to next char   */
    ch = *InPtr;                        /* Get 1st Digit.                    */
    MaxDigits = NumDigits = length;     /* Set our max digits counter.       */
