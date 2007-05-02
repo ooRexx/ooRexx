@@ -382,7 +382,7 @@ if \available then                     /* already reached the end?          */
 -- delete the named queue when finished
 ::method delete
   exposed named_queue
-  if named_queue \= 'SESSION then do
+  if named_queue \= 'SESSION' then do
       self~class~delete(named_queue)
   end
 ::METHOD push            EXTERNAL 'REXX rexx_push_queue'
