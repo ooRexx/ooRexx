@@ -1,62 +1,26 @@
-            Fixes in Open Object Rexx 3.1.2
+            Fixes in Open Object Rexx 3.2.0
 
 The following is the list of fixes and enhancements added to ooRexx since the
-3.1.1 release. This is only a partial list and is known not to be complete.
+3.1.2 release. This is only a partial list and is known not to be complete.
 
 
 All Platforms
 =============
 
-1693689 - ConditionObject raises 93.903 on 'supplier' message
-1660942 - running method causes rexx crash
-1659332 - Can't subclass .method class
-1647330 - object creation issue
-1646738 - DO loop not executing...
-1634162 - Copy method buffer error
-1607010 - Provide a way to direct object coercion
-1605177 - Error text for 25.906 incomplete
-1683291 - Add an "instanceof" capability to the .object class.
-1661587 - Add lOgical option to Datatype BIF and String Method
-1659877 - Add a "user" subcode for each of the Rexx error categories
-1659861 - Add a class like the Java Peroperties class.
-1659225 - Add a better mechanism for retrieving started message errors
-1565805 - Add DATATYPE() test for logical values
-1479837 - Add POS Method to Mutablebuffer Class (and LASTPOS)
-1682637 - MESSAGE: access to target and arguments
 
 
 Windows
 =======
 
-1685711 - Large OODialog application causes access violation
-1683068 - DLGAREA.cls not getting included with distribution.
-1668663 - OODialog parses style attributes in RC file incorrectly
-1668003 - OODialog doc confuses ListControl with ListBox
-1607510 - OLEObject getKnownMethods returns wrong information
-1323259 - OleOject Does Not Return Array For Out Parameters
-1214589 - "return .True" returns false in DHTML
-1166659 - Incorrect value vrom Parse Source
-1098405 - OLE-interface to OpenOffice
-1626612 - OODialog YesNoMessage function allow default button selectio
-1323007 - RxWinExec
-1644977 - FileNameDialog doesn't accept path name only
 
 
 Unix/Linux
 ==========
 
-1639773 - Debian Linux package fails to run ooRexxUnit
-1623592 - Segmentation fault on complex program
 
 
 Documentation
 =============
 
-1644984 - Doc for FileNameDialog / GetFileName unclear to users
-1644003 - Add docs and files to make .deb packages
-1687721 - Overlay() doc error
-1623767 - String and Uninit method of MutableBuffer class not documented
-1697719 - Spurous chars in RexxRef
-1580415 - Small error in ARG() doc
-1577642 - Encodebase64 and decodebase64 methods not in the String class overview
+1590646 - Merge chapters 5 and 6 in the Reference.
 
