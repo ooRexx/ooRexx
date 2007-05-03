@@ -56,17 +56,15 @@ Select
                                             /* running on Windows       */
  when 'WINDOWS' = sysIntName | 'WINDOWSNT' = sysIntName | 'WINDOWS95' = sysIntName
  then do
-     methodDirectory = 'WindowsMethods.orx'()           /* get the WIN  specific met*/
+     call 'WindowsMethods.orx'             /* get the WIN  specific met*/
      .environment~setentry('ENDOFLINE', '0d0a'x)
  end
                                             /* running on LINUX  ?      */
  when 'LINUX' = sysIntname | 'SUNOS' = sysIntname | 'AIX' = sysIntname | 'MACOSX' == sysIntname Then do  /* Like on AIX  */
-     methodDirectory = 'UnixMethods.orx'()      /* get the Linux specific m. */
+     call 'UnixMethods.orx'        /* get the Linux specific m. */
      .environment~setentry('ENDOFLINE', '0a'x)
  end
  otherwise
    raise syntax 1.000
 
 End
-
-return methodDirectory
