@@ -144,21 +144,23 @@ if not exist %OR_OUTDIR%\ASM md %OR_OUTDIR%\ASM
 :build
 REM Call build program
 call %SRC_DRV%%SRC_DIR%\platform\windows\buildorx
+if ERRORLEVEL 1 goto error
+
 cd %OR_OUTDIR%
 
 IF %NODEBUG%x == 1x goto :EDITBINREL
 REM EDITBIN for debug version, rexxjap.dll not build for debug version.
-echo calling EDITBIN for DEBUG version
-rem ..\kill rxapi.exe
+rem echo calling EDITBIN for DEBUG version
+rem killer rxapi.exe
 rem IF %OR_ERRLOG%x == x editbin /REBASE:base=0x6B000000,BASEFILE rexx.dll rexxapi.dll rxwinsys.dll  rxsock.dll orexxole.dll orxscrpt.dll
 rem IF NOT %OR_ERRLOG%x == x editbin /REBASE:base=0x6B000000,BASEFILE rexx.dll rexxapi.dll rxwinsys.dll  rxsock.dll orexxole.dll orxscrpt.dll >>%OR_ERRLOG% 2>&1
 goto :CONTINUE
 
 :EDITBINREL
 REM EDITBIN for release version
-echo calling EDITBIN for RELEASE version
+rem echo calling EDITBIN for RELEASE version
 
-rem ..\kill \rxapi.exe
+rem killer rxapi.exe
 rem IF %OR_ERRLOG%x == x editbin /REBASE:base=0x6B000000,BASEFILE rexx.dll %JAPDLL% rexxapi.dll rexxutil.dll rxwinsys.dll  rxsock.dll orexxole.dll orxscrpt.dll
 rem IF NOT %OR_ERRLOG%x == x editbin /REBASE:base=0x6B000000,BASEFILE rexx.dll %JAPDLL% rexxapi.dll rexxutil.dll rxwinsys.dll rxsock.dll orexxole.dll orxscrpt.dll >>%OR_ERRLOG% 2>&1
 
@@ -169,7 +171,7 @@ goto END
 
 :HELP_MKASM
 ECHO *======================================================
-ECHO The environment variabel MKASM is not set
+ECHO The environment variable MKASM is not set
 ECHO Set the variable to 0 - create no assembler listings
 ECHO                     1 - create assembler listings
 ECHO e.g. "SET MKASM=0"
@@ -179,9 +181,14 @@ goto END
 
 :HELP_SRC_DRV
 ECHO *======================================================
-ECHO The environment variabel SRC_DRV is not set
+ECHO The environment variable SRC_DRV is not set
 ECHO Set the variable to the build directory drive letter
 ECHO e.g. "SET SRC_DRV=F:"
 ECHO *======================================================
+
+goto END
+
+:error
+exit /b 1
 
 :END

@@ -154,6 +154,7 @@ REM
 CD  %OR_ORYXOODSRC%
 IF %OR_ERRLOG%x == x NMAKE /F OODIALOG.MAK
 IF NOT %OR_ERRLOG%x == x NMAKE /F OODIALOG.MAK >>%OR_ERRLOG% 2>&1
+if ERRORLEVEL 1 goto error
 
 
 ECHO Building OODIALOG classes
@@ -233,6 +234,9 @@ goto arounderr
 @echo ***! Error occured !** : build halted
 set LIB=%RXSAVE_LIB%
 set INCLUDE=%RXSAVE_INCLUDE%
+%SRC_DRV%
+CD %SRC_DIR%
+exit /b 1
 
 :arounderr
 %SRC_DRV%

@@ -1,74 +1,303 @@
                     Building Open Object Rexx on Windows
                     ====================================
 
-Please read ALL of these notes before building ooRexx!
+Please read ALL of these notes, to be sure you understand your options,
+before building ooRexx.  These notes cover building the 3.x versions of
+ooRexx.
 
-On Windows, the process of building ooRexx is the same if building from a
-release source file archive or building form a svn checkout.  Once the
-source tree is installed on a system, this file is the top-level directory
-of the tree.  (Hereafter referred to as <this directory>.)
+Obtaining the source
+====================
 
-Requires Microsoft Visual C++ V 6.0 plus service packs
-Requires kill.exe
+SVN:  Anonymous check out of the ooRexx source is available from
+SourceForge using Subversion.  SourceForge also has documentation on
+obtaining and using a Subversion client.  A pre-compiled Subversion client
+for Windows can be obtained from:
 
-From the current directory (where this file is):
+  http://subversion.tigris.org/
 
-set SRC_DIR=<this directory> eg \oorexx\oorexx
-set SRC_DRV=<this drive>     eg d:
-makeorx NODEBUG
+Use this command to check out a copy of the head revision of ooRexx 3.x:
 
-All files will be built in win32rel
+  svn co https://oorexx.svn.sourceforge.net/svnroot/oorexx/interpreter-3.x/trunk interpreter
+
+The 'interpreter' at the end of the command will be the root directory of
+the source tree.  This directory can be given any name.
+
+Release Source File Archive:  Download from SourceForge the archive desired,
+for instance, ooRexx-3.1.2.zip, and unzip it in a work directory.
+
+Build Requirements
+==================
+
+Some of these items are optional, have alternatives, or have caveats.  The
+options, alternatives, or caveats are discussed at the relevant point in the
+build instructions.
+
+[Required] Microsoft Visual C++ V 6.0 plus service packs, or later.
+
+[Required] Microsoft Platform SDK February 2003, or later.
+
+Note: The release ooRexx, built by the project team, is built using Visual
+C++ 6.0 and the February 2003 SDK.  However, ooRexx builds without problems
+using later versions of these tools.  For instance, ooRexx is easily built
+using Microsoft Visual Studio 2005 and the Windows Server 2003 R2 Platform
+SDK.
+
+Microsoft has the tendency to move the download URL for the SDKs, often.  A
+good starting point for locating a SDK is:
+
+  http://en.wikipedia.org/wiki/Microsoft_Windows_SDK
+
+[Optional] The Windows build-utilities package.
+
+Note: This package is part of the ooRexx project and is available from
+SourceForge on the download page.  The package contains pre-compiled
+binaries that can be used to meet some of the other requirements of the
+build process.  For instance, the package contains a process killer and a
+touch program.
+
+[Required] Some form of a process killer.
+
+Note: The build process uses killer.exe, available in the build-utilities
+package.  However, other process killers can be used by editing some of the
+build batch files.  For instance, on XP systems taskkill is part of the OS.
+If building on an XP system, the builder could edit the batch file(s) and
+replace killer with taskkill.
+
+[Required] Some form of a touch program, (or Xalan/Xerces.)
+
+Note: When using source checked out from SVN, 'touching' the proper files
+negates the necessity of having Xalan available.  The easiest approach here
+is to use the touchheaders.bat file provided in the source.  This batch file
+uses stouch.exe which is provided in the build-utilities package.
+
+Nothing is needed if building from a Release Source File archive.  The
+proper files have already been 'touched' in the archive.  (Unless the
+builder makes changes to the messages source in the archive.)
+
+Xalan/Xerces is needed if the builder is making changes to the ooRexx
+message files.  This would be a *rare* case.  However, pre-compiled versions
+of Xalan and Xerces for Windows are easy to obtain.  Xalan version 1.1.0 and
+Xerces version 2.7.0 are needed.  Obtain the binaries from the links below
+and put them in a location in the path.
+
+  http://xml.apache.org/xalan-c/index.html
+
+  http://xml.apache.org/xerces-c/
+
+[Optional]  Nullsoft Scriptable Install System (NSIS)
+
+Note: NSIS is used to build the Windows installer package.  It is only
+needed if the builder wants to also create the installer package.  Detailed
+notes on obtaining and installing NSIS are in the Build section.
+
+  http://nsis.sourceforge.net/Main_Page
+
+Building ooRexx
+===============
+
+On Windows, the process of building ooRexx is mostly the same whether
+building from a release source file archive or building from a svn checkout.
+Once the source tree is installed on a system, this file is in the top-level
+directory of the tree.
+
+Initial set up
+--------------
+
+* Check out or download / unzip the ooRexx source.
+
+* Install the C++ compiler and Platform SDK
+
+* If using the build utilities, download the current Windows package and
+place the binaries somewhere in the path.
+
+* If using Xalan download the Xalan and Xerces binaries and place them
+somewhere in the path.
+
+* If creating the Windows Installer package, download and configure NSIS.
+
+Environment set up
+-----------------
+
+* Set the environment variables for the C++ compiler and the Platform SDK.
+
+Depending on how the builder has installed these tools, the environment
+variables may be already set in the System environment.  However, it is more
+common to run the batch files provided by the tools.  Run the compiler batch
+file first, then the SDK batch file.  The builder will need to determine
+what is needed for her specific system, but as an example:
+
+F:\>call F:\Tools\MsVisualStudio.2005\VC\vcvarsall.bat x86
+F:\>call F:\Tools\MsPlatformSDK\SetEnv.cmd  /XP32 /RETAIL
+
+* Set the ooRexx build batch file variables.
+
+Set SRC_DIR to the top-level directory of the source tree.  Set SRC_DRV to
+the drive letter of the drive the source is located on.  For example:
+
+F:\>set SRC_DIR=\interpreter-3.x
+F:\>set SRC_DRV=E:
+
+Build
+-----
+
+The Windows build is controlled by batch files.  These batch files in turn
+invoke nMake.
+
+* Change to the top-level of the source directory.
+
+* If building from SVN source, and not using Xalan, touch the appropriate
+message files.  (This is only necessary the very first time after an initial
+check out.)
+
+* Run makeorx with the appropriate arguments.
+
+For example:
+
+F:\>e:
+E:\>cd \interpreter-3.x
+E:\interpreter-3.x>touchheaders
+E:\interpreter-3.x>makeorx NODEBUG
+
+Build Notes and Caveats
+=======================
+
+makeorx.bat
+----------
+
+makeorx takes one required argument and one optional argument.  The first
+required argument is exactly one of: NODEBUG DEBUG BOTH.  The second
+optional argument, if used, must be exactly: PACKAGE.
+
+NODEBUG causes a non-debug version to be built, DEBUG causes a debug version
+to be built, and BOTH will build both.  The optional PACKAGE argument will
+first run the build(s) and then create the Windows installer package.
+(See the NSIS notes for details on setting NSIS up correctly.)
+
+For a non-debug version, the built files are placed in .\Win32Rel, for
+instance E:\interpreter-3.x\Win32Rel.  Debug version files are placed in
+.\Win32Dbg.
+
+The installer package files will be placed in the top-level source directory
+and will be named:  ooRexx<version>.exe or ooRexx<version>-debug.exe.  For
+example: ooRexx312.exe or ooRexx312-debug.exe
+
+The output of the build process is redirected into a log file.  The log file
+is named Win32Rel.log or Win32Dbg.log depending on the type of build and
+will be located in the .\Win32Rel or .\Win32Dbg directory as appropriate.
+
+There is no 'clean' option at this time.  To ensure a completely clean
+build, delete the respective build directory.  For example, from the
+top-level source directory, the following command will ensure a complete
+rebuild of the release version:
+
+E:\interpreter-3.x>rd /Q /S Win32Rel
+
+Windows Platform SDK
+--------------------
+
+* The February 2003 version of the Platform SDK has a bug in NewAPIs.h.
+This bug is fixed in later version of the SDK.  If using the February 2003
+SDK, one can either edit the NewAPIs.h file to fix the bug, or replace the
+header file with the fixed version from a later SDK.
+
+The error is on line 312 of the file.  To fix it, locate the NewAPIs.h file
+in the SDK and change line 312 from:
+
+      BOOL (CALLBACK *RealGetLongPathName)(LPCTSTR, LPTSTR, DWORD);
+
+to:
+
+      DWORD (CALLBACK *RealGetLongPathName)(LPCTSTR, LPTSTR, DWORD);
+
+* The "Windows Software Development Kit (SDK) for Windows Vista" version of
+the Platform SDK no longer supports Windows 95, 98, or NT.  This version of
+the SDK can be used to compile ooRexx, but the result may have problems
+running on Windows versions previous to Windows 2000 (i.e., Windows NT,
+Windows 95, Windows 98, etc.)
+
+In addition, to compile, the file kernel\platform\windows\FileSystem.cpp
+will need to be edited to remove the reference to NewAPIs.h.  In
+FileSystem.cpp, comment out lines 60 - 62.  For example:
+
+// #define COMPILE_NEWAPIS_STUBS          /* Allows GetLongPathName to run on  */
+// #define WANT_GETLONGPATHNAME_WRAPPER   /* NT and Windows 95                 */
+// #include <NewAPIs.h>
+
+Process killer
+--------------
+
+The Windows batch file(s) need to kill the rxapi.exe process if it is
+running.  This is done using killer.exe, which is available in the
+build-utilities package of the ooRexx project.  The builder can download
+pre-compiled binaries of the build utilities from the project download page.
+Or, the source for the build utilities can also be checked out from the SVN
+repository and the builder can build her own version of killer.exe.
+
+Alternatively, the batch file(s) can be edited and some other process killer
+can be used.  As an example, taskkill.exe is available on Windows XP
+systems.  The builder could search for all occurrences of:
+
+  killer rxapi.exe
+
+and replace them with
+
+  taskkill /F /IM rxapi.exe
+
+Whichever process killer is used, it must be available in the path when the
+build process is started.
+
+The ooRexx message files
+------------------------
+
+Xalan is used to generate a number of files related to the ooRexx messages.
+The output files are already generated and included in the source tree.
+However, due to a quirk in time stamps, the first time the source is checked
+out from SVN the build process will try to call Xalan to generate
+(re-generate) these files.  This causes the build to fail if Xalan is not
+installed.
+
+If the builder does not want to install Xalan and Xerces, (which is normally
+really not necessary,) the solution is to change the time stamp on the
+appropriate files.
+
+This is easily done by executing the touchheaders.bat file.  However, this
+batch file uses stouch.exe from the build-utilities package.  To use this
+method, download the Windows build-utilities package and place the binaries
+somewhere in the path.
+
+Alternatively, the builder can manually change the time stamp on the files,
+maybe using some other touch utility.  To determine the proper files to
+touch, the builder should examine the touchheaders.sh file.
+
+Note: If a developer is making changes to the ooRexx messages, then it *is*
+necessary to install Xalan and Xerces to generate the proper output files.
+This would not be the normal case.
 
 Packaging with NSIS
 -------------------
 
 Requires NSIS 2.0.3 or greater.
 
-cd <this directory>\platform\windows
-Look at the top of oorexx.nsi and run makensis.exe as explained.
+The build process using makeorx can automatically create the Windows
+installer by using the PACKAGE option.  NSIS needs to be installed correctly
+for this to work.
 
-####################################################################
-The following is old; will be deleted in future
-####################################################################
+After installing the base NSIS package, do the following:
 
-How to setup and start the Build Process for Object REXX on Windows
--------------------------------------------------------------------
+Be sure makensis.exe is in the path.  This file is located in the top-level
+directory of the installed NSIS package.
 
-Install Microsoft Visual Studio 6.0 with the actual service pack.
+3 additional NSIS plugins need to be added to the base install.  These files
+need to be put into the 'Plugins' subdirectory of the base install.  They
+are:
 
-Unpack all Object REXX source file to the build directory usually "orxdev"
+FindProcDLL.dll
+KillProcDLL.dll
+services.dll
 
-Set the Windows environment variable SRC_DRV to the drive where the "orxdev"
-directory is located : SET SRC_DRV=G:
+The files can be obtained from the NSIS project at:
 
-Set the Windows environment variable CPU to IX86 : SET CPU=IX86
+  http://nsis.sourceforge.net/FindProcDLL_plug-in
+  http://nsis.sourceforge.net/KillProcDLL_plug-in
+  http://nsis.sourceforge.net/File:Services.zip
 
-Extend the Windows PATH so that the KILL.EXE will be found in orxdev.
-KILL.EXE is used to destroy the RXAPI.EXE from memory during the build process
-
-Edit "MAKEORX.BAT" and change SRC_DIR to the build directory
-e.g. SET SRC_DIR=\orxdev
-
-Edit "ORXDB.BAT" and change SRC_DIR to the build directory
-e.g. SET SRC_DIR=\orxdev
-
-Install Object REXX REXX Interpreter, it will be used during the build process
-
-Open a Windows Command Prompt and change to the build directory
-
-The batch file "MAKEORX.BAT" starts the build process in dependency of the passed parameters.
-
-"makeorx DEBUG"         : Build Object REXX Debug Version of Development and Interpreter Edition.
-"makeorx NODEBUG"       : Build Object REXX Release Version of Development and Interpreter Edition.
-"makeorx BOTH"          : Build die Object REXX Debug ande Release Version of Development and Interpreter Edition.
-
-Note: The code for the Object REXX workbench is not included. In this case the Development Edition means,
-that OODialog is to be build.
-
-After the build is completed the target files (obj, exe, dll,..) are placed with in the directories
-
-Win32Rel     : Object REXX Release version
-Win32Dbg     : Object REXX Debug version
-
-In each directory corresponding output file *.log is crated which contains the
-output of the build process.

@@ -4,7 +4,6 @@ oorexx/oorexx.ver
 oorexx/platform/unix/oorexx.spec.in
 oorexx/configure.ac
 oorexx/rexutils/rxftp.cls
-oorexx/platform/windows/oorexx.nsi
 oorexx/platform/windows/winmsgtb.tpl
 platform/unix/rexx.1
 platform/unix/rexxc.1
