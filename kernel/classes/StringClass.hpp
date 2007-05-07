@@ -236,8 +236,8 @@ class RexxStringClass : public RexxClass {
    RexxInteger *primitiveCompareTo(RexxString *other, stringsize_t start, stringsize_t len);
    RexxInteger *primitiveCaselessCompareTo(RexxString *other, stringsize_t start, stringsize_t len);
 
-   RexxInteger *RexxString::equals(RexxString *other);
-   RexxInteger *RexxString::caselessEquals(RexxString *other);
+   RexxInteger *equals(RexxString *other);
+   RexxInteger *caselessEquals(RexxString *other);
 
    RexxArray   *makeArray(RexxString *);
 

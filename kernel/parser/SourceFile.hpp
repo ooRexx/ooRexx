@@ -213,7 +213,7 @@ class RexxSource : public RexxInternalObject {
   RexxInstruction *commandNew();
   RexxInstruction *doNew();
   RexxInstruction *loopNew();
-  RexxInstruction *RexxSource::createLoop();
+  RexxInstruction *createLoop();
   RexxInstruction *createDoLoop(RexxInstructionDo *, bool);
   RexxInstruction *dropNew();
   RexxInstruction *elseNew(RexxToken *);
