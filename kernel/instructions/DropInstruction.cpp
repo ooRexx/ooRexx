@@ -122,7 +122,6 @@ void RexxInstructionDrop::execute(
 {
   size_t      size;                    /* size of guard variables list      */
   size_t      i;                       /* loop counter                      */
-  BOOL        forceUninits = FALSE;    /* objects that require uninit methods */
 
   context->traceInstruction(this);     /* trace if necessary                */
                                        /* get the array size                */
@@ -131,29 +130,9 @@ void RexxInstructionDrop::execute(
   for (i = 0; i < size; i++) {         /* loop through the variable list    */
                                        /* get the value of the variable     */
     RexxObject *varObject = this->variables[i]->getValue(context);
-    /* does the referenced value have an uninit method?  If we find */
-    /* one that does, we're going to have to force a GC and run the */
-    /* uninit methods when we finish dropping */
-    if (varObject != OREF_NULL && CurrentActivity->isPendingUninit(varObject)) {
-        /* we wan */
-        forceUninits = TRUE;
-    }
     /* have the variable drop itself */
     variables[i]->drop(context);
   }
-
-  /* if we have objects with uninit methods that we've just dropped */
-  /* references to, we try to run the uninit methods now, as that */
-  /* is what the user expectations are.  However, since a memory */
-  /* reclaim operation is very expensive, we only do this if we've */
-  /* dropped references to objects with uninit methods. */
-  if (forceUninits) {
-      /* make sure dead objects are marked dead in the uninit table */
-      memoryObject.reclaim();
-      /* now go run the uninit stuff       */
-      TheActivityClass->checkUninitQueue();
-  }
-
   context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

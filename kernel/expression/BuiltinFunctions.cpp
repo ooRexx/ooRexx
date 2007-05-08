@@ -2659,15 +2659,6 @@ BUILTIN(LINEOUT) {
         result = (RexxString *)send_message2(stream, OREF_LINEOUT, string, line);
         break;
     }
-    //                                                            close or open error?
-    //if (argcount == 1 && name->length > 0 || added && ((RexxInteger *)result)->value > 0)
-    //{
-    //                                                         // remove from stream table
-    // context->settings.streams->remove(fullName);
-    // force uninit of the stream object to collect orphaned memory
-    // memoryObject.reclaim();
-    // CurrentActivity->uninitObject((RexxObject *)stream);
-    //}
   }
   return result;                       /* all finished                      */
 }
@@ -2711,15 +2702,6 @@ BUILTIN(CHAROUT) {
       result = (RexxString *)send_message2(stream, OREF_CHAROUT, string, position);
       break;
   }
-  //                                                             close or open error?
-  //if (argcount == 1 && name->length > 0 || added && ((RexxInteger *)result)->value > 0)
-  //{
-   //                                                            remove from stream table
-  //  context->settings.streams->remove(fullName);
-  //  force uninit of the stream object to collect orphaned memory
-  //  memoryObject.reclaim();
-  //  CurrentActivity->uninitObject((RexxObject *)stream);
-  //}
   return result;                       /* all finished                      */
 }
 
@@ -2914,19 +2896,6 @@ BUILTIN(STREAM) {
           context->getStreams()->remove(fullName);
         }
       }
-
-      //                                                               remove from streamTable
-      //if (fClose || added && fOpen && !((RexxString *)result)->isEqual(new_cstring("READY:")))
-      //{
-      //   context->settings.streams->remove(fullName);
-      //   force uninit of the stream object to collect orphaned memory
-      //   but only when stream should is closed */
-      //   if (fClose)
-      //   {
-      //      memoryObject.reclaim();
-      //      CurrentActivity->uninitObject((RexxObject *)stream);
-      //   }
-      //}
 
       discard(command);        /* use discard instead of discard_hold */
       discard(command_upper);  /* use discard instead of discard_hold */
