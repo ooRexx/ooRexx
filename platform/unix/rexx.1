@@ -1,10 +1,13 @@
-.TH REXX l "31 December 2004" "Version 3.0"
+.TH REXX l "15 May 2007" "Version 3.2.0"
 .SH NAME
 \fBrexx\fP \- Open Object Rexx Interpreter
 .SH SYNTAX
 .B rexx
 .RI [-v]
-.RI [filename | -e "statements"]
+.RI [filename
+.RI |
+.RI -e
+.RI statements]
 .RI [arguments]
 .SH DESCRIPTION
 .I Open Object Rexx
@@ -23,6 +26,9 @@ documentation files included in the Open Object Rexx distribution.
 .TP
 .B -v
 display the build date of the product.
+.TP
+.B -e
+Rexx program statements. These should be contained within double quotes.
 
 .SH "SEE ALSO"
 .BR rexxc (1)

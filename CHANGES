@@ -7,6 +7,7 @@ The following is the list of fixes and enhancements added to ooRexx since the
 All Platforms
 =============
 
+Improved the performance of the DROP instruction.
 
 
 Windows

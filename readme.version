@@ -1,10 +1,9 @@
 When changing the version number of ooRexx you will need to change the following files:
 
-oorexx/oorexx.ver
-oorexx/platform/unix/oorexx.spec.in
-oorexx/configure.ac
-oorexx/rexutils/rxftp.cls
-oorexx/platform/windows/winmsgtb.tpl
+oorexx.ver
+configure.ac
+rexutils/rxftp.cls
+platform/unix/oorexx.spec.in
 platform/unix/rexx.1
 platform/unix/rexxc.1
 platform/unix/rxmigrate.1

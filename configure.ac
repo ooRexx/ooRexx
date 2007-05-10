@@ -34,11 +34,11 @@ dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 
 dnl Process this file with autoconf to produce a configure script
-AC_INIT(oorexx, 3.1.2)
+AC_INIT(oorexx, 3.2.0)
 AC_PREFIX_DEFAULT(/opt/ooRexx)
 
 PACKAGE=ooRexx
-VERSION=3.1.2
+VERSION=3.2.0
 
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
