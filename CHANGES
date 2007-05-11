@@ -25,3 +25,6 @@ Documentation
 
 1590646 - Merge chapters 5 and 6 in the Reference.
 
+1710275 - Fixed a problem with the FtpErrNo docs and added an example line
+          to the example at the end og the doc.
+
