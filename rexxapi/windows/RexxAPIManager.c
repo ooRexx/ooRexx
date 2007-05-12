@@ -303,10 +303,34 @@ SECURITY_ATTRIBUTES * SetSecurityDesc(SECURITY_ATTRIBUTES * sa)
 
 BOOL MapComBlock(int chain)
 {
+    // The com blocks used for the QUEUE and MACROSPACE apis need to
+    // be reallocatable.  Because we're using named memory, this requires
+    // that the server process AND all of the client processes close
+    // the named memory segment before we can allocate a new segment
+    // with the same name.  This is generally difficult (if not impossible)
+    // to implement, so we get around the problem by using named memory
+    // segments that incorporate the extension size in the name so that
+    // we avoid conflicts between the new and old segments.
+   char mapName[256];
+
    if (!RX.comhandle[chain]) return FALSE;
 
+
+   if (chain == API_QUEUE)
+   {
+       sprintf(mapName, "%s%d", FMAPNAME_COMBLOCK(chain), RX.comblockQueue_ExtensionLevel);
+   }
+   else if (chain == API_MACRO)
+   {
+       sprintf(mapName, "%s%d", FMAPNAME_COMBLOCK(chain), RX.comblockMacro_ExtensionLevel);
+   }
+   else
+   {
+       strcpy(mapName, FMAPNAME_COMBLOCK(chain));
+   }
+
    /* Obtain handle to named memory mapped file */
-   LRX.comhandle[chain] = OpenFileMapping(FILE_MAP_ALL_ACCESS, TRUE, FMAPNAME_COMBLOCK(chain));
+   LRX.comhandle[chain] = OpenFileMapping(FILE_MAP_ALL_ACCESS, TRUE, mapName);
 
    if (LRX.comhandle[chain])
    {

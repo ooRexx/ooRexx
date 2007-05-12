@@ -116,7 +116,7 @@ extern _declspec(dllimport) char** APInamedObjects;
 
 extern _declspec(dllimport) SECURITY_DESCRIPTOR SD_NullAcl;      /* let RXAPI.EXE share its null ACL */
 
-BOOL AllocComBlock(int chain, int size, SECURITY_ATTRIBUTES * sa);
+BOOL AllocComBlock(int chain, int size, int modifer, SECURITY_ATTRIBUTES * sa);
 void FreeComBlock(int chain);
 
 extern _declspec(dllimport) SECURITY_ATTRIBUTES * SetSecurityDesc(SECURITY_ATTRIBUTES * sa);
@@ -958,7 +958,7 @@ BOOL APIMessageHandler()
                ULONG size;
                size = RX.msg.wParam / PAGE_SIZE + 1;
                FreeComBlock(API_QUEUE);
-               result = !AllocComBlock(API_QUEUE, size * PAGE_SIZE, SetSecurityDesc(&sa));
+               result = !AllocComBlock(API_QUEUE, size * PAGE_SIZE, size, SetSecurityDesc(&sa));
                RX.comblockQueue_ExtensionLevel = size;
            }
            APIRETURN(result);
@@ -985,7 +985,7 @@ BOOL APIMessageHandler()
                ULONG size;
                size = RX.msg.wParam / PAGE_SIZE + 1;
                FreeComBlock(API_MACRO);
-               result = !AllocComBlock(API_MACRO, size * PAGE_SIZE, SetSecurityDesc(&sa));
+               result = !AllocComBlock(API_MACRO, size * PAGE_SIZE, size, SetSecurityDesc(&sa));
                RX.comblockMacro_ExtensionLevel = size;
            }
            APIRETURN(result);
@@ -1105,10 +1105,29 @@ BOOL APIWin_Register(HINSTANCE hInstance)
 #endif
 
 
-BOOL AllocComBlock(int chain, int size, SECURITY_ATTRIBUTES * sa)
+BOOL AllocComBlock(int chain, int size, int modifier, SECURITY_ATTRIBUTES * sa)
 {
+    // The com blocks used for the QUEUE and MACROSPACE apis need to
+    // be reallocatable.  Because we're using named memory, this requires
+    // that the server process AND all of the client processes close
+    // the named memory segment before we can allocate a new segment
+    // with the same name.  This is generally difficult (if not impossible)
+    // to implement, so we get around the problem by using named memory
+    // segments that incorporate the extension size in the name so that
+    // we avoid conflicts between the new and old segments.
+    char mapName[256];
+
+    if (chain == API_QUEUE || chain == API_MACRO)
+    {
+        sprintf(mapName, "%s%d", FMAPNAME_COMBLOCK(chain), modifier);
+    }
+    else
+    {
+        strcpy(mapName, FMAPNAME_COMBLOCK(chain));
+    }
+
     RX.comhandle[chain] = CreateFileMapping(INVALID_HANDLE_VALUE, sa,
-                                     PAGE_READWRITE, 0, size, FMAPNAME_COMBLOCK(chain));
+                                     PAGE_READWRITE, 0, size, mapName);
     if (!RX.comhandle[chain])
         return FALSE;
 
@@ -1247,7 +1266,7 @@ BOOL App_Initialize(void)
     }
 
 
-    if (!AllocComBlock(API_QUEUE, API_QUEUE_INITIAL_EXTLEVEL * PAGE_SIZE, &sa))
+    if (!AllocComBlock(API_QUEUE, API_QUEUE_INITIAL_EXTLEVEL * PAGE_SIZE, API_QUEUE_INITIAL_EXTLEVEL, &sa))
     {
         for (i = 0; i<MUTEXCOUNT; i++) CloseHandle(APIMutex[i]);
         return FALSE;
@@ -1255,14 +1274,16 @@ BOOL App_Initialize(void)
 
     RX.comblockQueue_ExtensionLevel = API_QUEUE_INITIAL_EXTLEVEL;
 
-    if (!AllocComBlock(API_API, sizeof(RXREG_TALK), &sa))
+
+    if (!AllocComBlock(API_API, sizeof(RXREG_TALK), 0, &sa))
     {
         for (i = 0; i<MUTEXCOUNT; i++) CloseHandle(APIMutex[i]);
         FreeComBlock(API_QUEUE);
         return FALSE;
     }
 
-    if (!AllocComBlock(API_MACRO, API_MACRO_INITIAL_EXTLEVEL * PAGE_SIZE, &sa))
+
+    if (!AllocComBlock(API_MACRO, API_MACRO_INITIAL_EXTLEVEL * PAGE_SIZE, API_MACRO_INITIAL_EXTLEVEL, &sa))
     {
         for (i = 0; i<MUTEXCOUNT; i++) CloseHandle(APIMutex[i]);
         FreeComBlock(API_API);
@@ -1271,7 +1292,6 @@ BOOL App_Initialize(void)
     }
 
     RX.comblockMacro_ExtensionLevel = API_MACRO_INITIAL_EXTLEVEL;
-
 
 #ifdef WINDOWED_APP     /* we don't use a window anymore */
     // Create a main window for this application instance.
