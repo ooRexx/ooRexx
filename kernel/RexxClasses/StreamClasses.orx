@@ -46,20 +46,92 @@
                                        /* make seek a synonym of position   */
   .Stream~define('SEEK', .Stream~method('POSITION'))
 
+.InputStream~!REXXDefined
+.OutputStream~!REXXDefined
+.InputOutputStream~!REXXDefined
 .Stream~!REXXDefined
 .Stream_Supplier~!REXXDefined
 .rx_queue~!REXXDefined
                                        /* add these classes to global, saved*/
                                        /*environment                        */
 .environment~setentry('STREAM', .Stream)
+.environment~setentry('INPUTSTREAM', .InputStream)
+.environment~setentry('OUTPUTSTREAM', .OutputStream)
+.environment~setentry('INPUTOUTPUTSTREAM', .InputOutputStream)
 .environment~setentry('STREAM_SUPPLIER', .Stream_Supplier)
 .environment~setentry('REXXQUEUE', .rx_queue)
+
+-- mixin class objects used for stream types
+::class OutputStream public MIXINCLASS Object
+
+::method charout abstract     -- the input methods must be implemented
+::method lineout abstract
+
+::method open    -- by default, these exist as nops
+::method close
+
+::method arrayOut
+  use strict arg lines
+
+  do line over lines
+      self~lineout(line)
+  end
+
+::method linein
+  raise syntax 93.963 -- not supported
+
+::method lines
+  raise syntax 93.963  -- not supported
+
+::method charin
+  raise syntax 93.963  -- not supported
+
+::method chars
+  raise syntax 93.963  -- not supported
+
+::method position
+  raise syntax 93.963  -- not supported
+
+
+::class InputStream public MIXINCLASS Object
+::method charout
+  raise syntax 93.963  -- not supported
+::method lineout
+  raise syntax 93.963  -- not supported
+
+::method open           -- nop operations by default
+::method close
+
+::method linein abstract   -- These are abstract and must be implemented
+::method lines  abstract
+::method charin abstract
+::method chars  abstract
+
+::method position
+  raise syntax 93.963  -- not supported by default...this is optional
+
+
+::class InputOutputStream public MIXINCLASS Object
+
+::method charout abstract  -- all of the base input/output operations must be implemented
+::method lineout abstract
+::method linein abstract
+::method lines  abstract
+::method charin abstract
+::method chars  abstract
+
+::method open              -- these are nops by default
+::method close
+
+
+::method position
+  raise syntax 93.963  -- not supported by default...this is optional
 
 /***************************************************/
 /* Create the stream class                         */
 /***************************************************/
 
-::CLASS 'Stream'
+::CLASS 'Stream' MIXINCLASS InputOutputStream
 
 /******************************************************/
 /* init method for setup on stream instance           */
