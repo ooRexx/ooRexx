@@ -55,7 +55,8 @@ RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool strict, bo
     // set the variable count and the option flag
     variableCount = count;
     variableSize = extraAllowed; // we might allow an unchecked number of additional arguments
-    minimumRequired = 0;     // do don't necessarily require any of these.
+    minimumRequired = 0;         // do don't necessarily require any of these.
+    strictChecking = strict;     // record if this is the strict form
 
     // items are added to the queues in reverse order, so we pop them off and add
     // them to the end of the list as we go.
@@ -195,12 +196,15 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
             }
             else
             {
-                RexxObject *defaultValue = variables[i].defaultValue->evaluate(context, stack);
+                // grab a potential default value
+                RexxObject *defaultValue = variables[i].defaultValue;
 
                 // and omitted argument is only value if we've marked it as optional
                 // by giving it a default value
                 if (defaultValue != OREF_NULL)
                 {
+                    // evaluate the default value now
+                    defaultValue = defaultValue->evaluate(context, stack);
                     context->traceResult(defaultValue);  // trace if necessary
                     // assign the value
                     variable->assign(context, stack, defaultValue);
