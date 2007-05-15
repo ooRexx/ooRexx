@@ -147,17 +147,11 @@ RXQUEUE_TALK * FillQueueComBlock(BOOL add, DWORD addflag, DWORD waitflag, PCHAR 
     /* do we need to extend the communication block? */
     if (add && (datalen + sizeof(RXQUEUE_TALK) > LRX.comblockQueue_ExtensionLevel * PAGE_SIZE))
     {
-        /* To extend, the existing named memory mapped file must be closed and
-         * a new, larger one created. Unmap and close this processes view of
-         * the memory file, the API service creates the new memory mapped file,
-         * then map a new view.
-         */
-        UnmapComBlock(API_QUEUE);
-        if (MySendMessage(RXAPI_QUEUECOMEXTEND,
+       if (MySendMessage(RXAPI_QUEUECOMEXTEND,
                        (WPARAM)datalen + sizeof(RXQUEUE_TALK),
                        (LPARAM)0)) return NULL;
-        if (!MapComBlock(API_QUEUE)) return NULL;
-        icom = LRX.comblock[API_QUEUE];
+       if (!CheckQueueComBlock()) return NULL;
+       icom = LRX.comblock[API_QUEUE];
     }
 
     icom->AddFlag = (WORD)addflag;

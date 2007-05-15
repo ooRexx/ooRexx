@@ -1404,17 +1404,10 @@ static RXQUEUE_TALK *
 
         if (size + sizeof(RXMACRO_TALK) > LRX.comblockMacro_ExtensionLevel * PAGE_SIZE)
         {
-            /* Need to extend the size of the memory buffer.  To do this the
-             * existing named memory mapped file must be closed and a new,
-             * larger one created. Unmap and close this processes view of the
-             * memory, the API service creates the new memory mapped file, then
-             * map a view to the new memory buffer.
-             */
-            UnmapComBlock(API_MACRO);
             if (MySendMessage(RXAPI_MACROCOMEXTEND,
                            (WPARAM)size + sizeof(RXMACRO_TALK),
                            (LPARAM)0)) return NULL;
-            if (!MapComBlock(API_MACRO)) return NULL;
+            if (!CheckMacroComBlock()) return NULL;
             icom = LRX.comblock[API_MACRO];
         }
           ptr = (PUCHAR)(icom + 1);  /* set absolute pointer */
