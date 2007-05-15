@@ -797,7 +797,7 @@ ULONG APIENTRY DataTable(
 
        i = atoi(argv[2].strptr);
 
-       if ((i > 0) && (i < dlgAdm->DT_size))
+       if ((i >= 0) && (i < dlgAdm->DT_size))
        {
            sprintf(retstr->strptr, "%ld %d %d", dlgAdm->DataTab[i].id,
                                             dlgAdm->DataTab[i].typ,

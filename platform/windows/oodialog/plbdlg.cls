@@ -522,7 +522,7 @@
        if self~ProcessingLoad = 1 then attributeName = id
        id = self~ResolveSymbolicId(id)
    end
-   if id = -1 then return -1
+   if id < 1 then return -1
    if attributeName~space(0) = "" | self~HasMethod(attributeName) = 1 then
        attributeName = "DATA"id~space(0)
    else do

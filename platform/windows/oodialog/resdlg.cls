@@ -66,7 +66,7 @@
    /* because of autodetection we have to create attributes automatically */
    if self~AutoDetect = 1 then
    do
-      id = 1; i=1
+      id = 1; i=0
       do while id > 0
          parse value DataTable(self~Adm,"GET", i) with id typ cat
          hnd = self~GetItem(id)
