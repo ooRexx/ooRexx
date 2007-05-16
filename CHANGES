@@ -9,6 +9,8 @@ All Platforms
 
 Improved the performance of the DROP instruction.
 
+1262210 - Rexx.exe fails on a large script.
+
 
 Windows
 =======
@@ -17,7 +19,6 @@ Windows
 
 Unix/Linux
 ==========
-
 
 
 Documentation
