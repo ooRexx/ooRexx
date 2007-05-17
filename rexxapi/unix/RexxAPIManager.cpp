@@ -506,9 +506,13 @@ LONG RxAPIHOMEset( void )
     pcharHome = pstUsrDat->pw_dir;        /* Get pointer to own home var    */
 #elif defined( HAVE_IDTOUSER )
     pcharUsername = IDtouser(geteuid()));
-    /* this is not the best method to obtain the user's home dir as it      */
-    /* could fail on LDAP enabled systems.                                  */
-    pcharHome = getenv("HOME");           /* Get pointer to own home var    */
+    #if defined( HAVE_GETUSERATTR )
+        getuserattr(pcharUsername, S_HOME, &pcharHome, SEC_CHAR);
+    #else
+        /* this is not the best method to obtain the user's home dir as it      */
+        /* could fail on LDAP enabled systems.                                  */
+        pcharHome = getenv("HOME");           /* Get pointer to own home var    */
+    #endif
 #else
     pcharUsername = "unknown";
     /* this is not the best method to obtain the user's home dir as it      */

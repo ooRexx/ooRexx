@@ -274,6 +274,7 @@ AC_HEADER_TIME
 
 AC_CHECK_FUNCS([ \
                 IDtouser \
+                getuserattr \
                 catopen \
                 fstat \
                 gcvt \
