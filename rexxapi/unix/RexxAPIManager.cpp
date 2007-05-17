@@ -503,12 +503,18 @@ LONG RxAPIHOMEset( void )
 #if defined( HAVE_GETPWUID )
     pstUsrDat = getpwuid(geteuid());
     pcharUsername = pstUsrDat->pw_name;
+    pcharHome = pstUsrDat->pw_dir;        /* Get pointer to own home var    */
 #elif defined( HAVE_IDTOUSER )
     pcharUsername = IDtouser(geteuid()));
+    /* this is not the best method to obtain the user's home dir as it      */
+    /* could fail on LDAP enabled systems.                                  */
+    pcharHome = getenv("HOME");           /* Get pointer to own home var    */
 #else
     pcharUsername = "unknown";
-#endif
+    /* this is not the best method to obtain the user's home dir as it      */
+    /* could fail on LDAP enabled systems.                                  */
     pcharHome = getenv("HOME");           /* Get pointer to own home var    */
+#endif
     sprintf(achRexxHomeDir,"%s/..OOREXX%d.%d.%d.%d_%s",
               pcharHome, ORX_VER, ORX_REL, ORX_MOD, ORX_FIX, pcharUsername );
     iHandleHome = open( achRexxHomeDir, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR );

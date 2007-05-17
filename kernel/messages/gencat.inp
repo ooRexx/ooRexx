@@ -342,10 +342,10 @@ $ Error_Unexpected_end_nodo
 212 END has no corresponding DO or SELECT
 
 $ Error_Unexpected_end_control
-213 Symbol following END ("&1") must either match control variable of DO specification ("&2" on line &3) or be omitted
+213 Symbol following END ("&1") must either match control variable or LABEL of block specification ("&2" on line &3) or be omitted
 
 $ Error_Unexpected_end_nocontrol
-214 END corresponding to DO on line &2 must not have a symbol following it because there is no control variable; found "&1"
+214 END corresponding to block on line &2 must not have a symbol following it because there is no LABEL or control variable; found "&1"
 
 $ Error_Unexpected_end_then
 215 END must not immediately follow THEN
@@ -354,7 +354,7 @@ $ Error_Unexpected_end_else
 216 END must not immediately follow ELSE
 
 $ Error_Unexpected_end_select
-217 END corresponding to SELECT on line &2 must not have a symbol following; found "&1"
+217 Symbol following END ("&1") must match LABEL of SELECT specification ("&2" on line &3) or be omitted
 
 $ Error_Control_stack_full
 218 Insufficient control stack space; cannot continue execution
@@ -597,7 +597,7 @@ $ Error_Invalid_subkeyword_use
 297 USE must be followed by the keyword ARG; found "&1"
 
 $ Error_Invalid_subkeyword_raise
-298 RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, or SYNTAX; found "&1"
+298 RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, SYNTAX, or USER; found "&1"
 
 $ Error_Invalid_subkeyword_raiseoption
 299 Unknown keyword on RAISE instruction; found "&1"
@@ -648,16 +648,16 @@ $ Error_Invalid_do_forever
 314 Incorrect data following FOREVER keyword on the DO loop; found "&1"
 
 $ Error_Invalid_leave_leave
-315 LEAVE is valid only within a repetitive DO loop
+315 LEAVE is valid only within a repetitive loop or labeled block instruction
 
 $ Error_Invalid_leave_iterate
-316 ITERATE is valid only within a repetitive DO loop
+316 ITERATE is valid only within a repetitive loop
 
 $ Error_Invalid_leave_leavevar
-317 Symbol following LEAVE ("&1") must either match the control variable of a current DO loop or be omitted
+317 Symbol following LEAVE ("&1") must either match the label of a current loop or block instruction.
 
 $ Error_Invalid_leave_iteratevar
-318 Symbol following ITERATE ("&1") must either match the control variable of a current DO loop or be omitted
+318 Symbol following ITERATE ("&1") must either match the label of a current loop or be omitted
 
 $ Error_Environment_name_name
 319 Environment name exceeds &1 characters; found "&2"
@@ -927,7 +927,7 @@ $ Error_Conversion_control
 409 Value of control variable expression of DO instruction must be numeric; found "&1"
 
 $ Error_Conversion_raise
-410 Value of RAISE SYNTAX expression of DO instruction must be numeric; found "&1"
+410 Value of RAISE instruction SYNTAX expression must be numeric; found "&1"
 
 $ Error_Overflow_overflow
 411 Arithmetic overflow detected at:  "&1&2&3"
@@ -1461,10 +1461,10 @@ $ Error_Unknown_OLE_Error
 590 An unknown OLE error occured (HRESULT=&1).
 
 $ Error_Variant2Rexx
-591 Cannot convert VARIANT to REXX object: The conversion of the VARIANT type &1 into a REXX object failed.
+591 Cannot convert OLE VARIANT to REXX object: The conversion of the VARIANT type &1 into a REXX object failed.
 
 $ Error_Rexx2Variant
-592 Cannot convert REXX object to VARIANT: The conversion of &1 into a VARIANT failed.
+592 Cannot convert REXX object to OLE VARIANT: The conversion of &1 into a VARIANT failed.
 
 $ Error_Argument_Count_Mismatch
 593 The number of elements provided to the method or property is different from the number of parameters accepted by it.
@@ -1502,10 +1502,177 @@ $ Error_Incorrect_call_read_from_writeonly
 $ Error_Incorrect_call_write_to_readonly
 604 Cannot write to a read-only property or typelib element.
 
+$ Error_Incorrect_method_invbase64
+611 Invalid Base 64 encoded string.
+
+$ Error_Unsupported_method
+612 Call to unsupported or unimplemented method
+
+$ Error_Application_error
+613 Application error:  &1
+
+$ Error_Program_unreadable_user_defined
+614 &1
+
+$ Error_Program_interrupted_user_defined
+615 &1
+
+$ Error_System_resources_user_defined
+616 &1
+
+$ Error_Control_stack_user_defined
+617 &1
+
+$ Error_Invalid_character_user_defined
+618 &1
+
+$ Error_Symbol_or_string_user_defined
+619 &1
+
+$ Error_Symbol_expected_user_defined
+620 &1
+
+$ Error_Invalid_data_user_defined
+621 &1
+
+$ Error_Invalid_character_string_user_defined
+622 &1
+
+$ Error_Invalid_data_string_user_defined
+623 &1
+
+$ Error_Invalid_subkeyword_string_user_defined
+624 &1
+
+$ Error_Invalid_whole_number_user_defined
+625 &1
+
+$ Error_Name_too_long_user_defined
+626 &1
+
+$ Error_Invalid_variable_user_defined
+627 &1
+
+$ Error_Expression_user_defined
+628 &1
+
+$ Error_Logical_value_user_defined
+629 &1
+
+$ Error_Invalid_expression_user_defined
+630 &1
+
+$ Error_Unmatched_parenthesis_user_defined
+631 &1
+
+$ Error_Unexpected_comma_user_defined
+632 &1
+
+$ Error_Invalid_template_user_defined
+633 &1
+
+$ Error_Incorrect_call_user_defined
+634 &1
+
+$ Error_Conversion_user_defined
+635 &1
+
+$ Error_Overflow_user_defined
+636 &1
+
+$ Error_Routine_not_found_user_defined
+637 &1
+
+$ Error_Function_no_data_user_defined
+638 &1
+
+$ Error_Variable_reference_user_defined
+639 &1
+
+$ Error_System_service_user_defined
+640 &1
+
+$ Error_Interpretation_user_defined
+641 &1
+
+$ Error_External_name_not_found_user_defined
+642 &1
+
+$ Error_No_result_object_user_defined
+643 &1
+
+$ Error_OLE_Error_user_defined
+644 &1
+
+$ Error_Incorrect_method_user_defined
+645 &1
+
+$ Error_No_method_user_defined
+646 &1
+
+$ Error_Execution_user_defined
+647 &1
+
+$ Error_Translation_user_defined
+648 &1
+
+$ Error_Unmatched_quote_user_defined
+649 &1
+
+$ Error_Invalid_whole_number_method
+650 Result of a method call did not result in a whole number; found "&1"
+
+$ Error_Logical_value_property
+651 Property logical value must be exactly "0", "1", "true", or "false"; found "&1"
+
+$ Error_Variable_expected
+652 Variable or message term expected
+
+$ Error_Variable_expected_USE
+653 The USE instruction requires a comma-separated list of variables or assignment message terms
+
+$ Error_Variable_expected_PARSE
+654 The PARSE was expecting a variable or a message term.
+
+$ Error_Symbol_expected_LABEL
+655 Symbol expected after LABEL keyword
+
+$ Error_Invalid_subkeyword_select
+656 SELECT must be followed by the keyword LABEL; found "&1"
+
+$ Error_Invalid_leave_iterate_name
+657 Symbol following ITERATE ("&1") does not match a repetitive block instruction
+
+$ Error_Unexpected_end_select_nolabel
+658 END corresponding to SELECT on line &2 must not have a symbol following it because there is no LABEL; found "&1"
+
+$ Error_Logical_value_logical_list
+659 Value of logical list expression element must be exactly "0" or "1"; found "&2"
+
+$ Error_Invalid_expression_logical_list
+660 Missing expression in logical_expression_list
+
+$ Error_Translation_use_strict_ellipsis
+663 The "..." argument marker can only appear at the end of the argument list
+
+$ Error_Invalid_expression_use_strict_default
+664 Missing expression following "=" token of a USE STRICT ARG instruction
+
+$ Error_Incorrect_method_abstract
+665 Method &1 is ABSTRACT and cannot be directly invoked
+
+$ Error_Invalid_whole_number_compareto
+666 Result of a COMPARETO method call did not result in a whole number; found "&1"
+
+$ Error_Invalid_whole_number_compare
+667 Result of a COMPARE method call did not result in a whole number; found "&1"
+
+$ Error_Execution_sparse_array
+668 Missing array element at position &1
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */
 $ * --            DO NOT CHANGE THIS FILE, ALL CHANGES WILL BE LOST!        -- */
 $ * --            ==================================================        -- */
 $ * -------------------------------------------------------------------------- */
-   

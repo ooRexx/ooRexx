@@ -11,6 +11,8 @@ Improved the performance of the DROP instruction.
 
 1262210 - Rexx.exe fails on a large script.
 
+1711398 - Add case-insensitive option to SysFileTree function.
+
 
 Windows
 =======
@@ -19,6 +21,8 @@ Windows
 
 Unix/Linux
 ==========
+
+1709847 - Fixed seg fault on LDAP enabled systems.
 
 
 Documentation
