@@ -266,6 +266,7 @@ VOID CALLBACK SleepTimerProc( HWND, UINT, UINT, DWORD);
 #define  NAME_ONLY      0x0010
 #define  EDITABLE_TIME  0x0020
 #define  LONG_TIME      0x0040   /* long time format for SysFileTree */
+#define  CASELESS       0x0080
 #define  RXIGNORE       2              /* Ignore attributes entirely */
 #define  AllAtts        FILE_NORMAL | FILE_READONLY | FILE_HIDDEN | \
 FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED
@@ -2192,6 +2193,7 @@ LONG APIENTRY SysFileSearch(
 *                        'S' - Recursively scan subdirectories.          *
 *                        'T' - Combine time & date fields into one.      *
 *                        'L' - Long time format                          *
+*                        'I' - Case Insensitive search.                  *
 *                                                                        *
 * Return:    NO_UTIL_ERROR   - Successful.                               *
 *            ERROR_NOMEM     - Out of memory.                            *
@@ -2305,6 +2307,9 @@ LONG APIENTRY SysFileTree(
           options |= DO_DIRS;          /* Should include dirs !      */
           options |= DO_FILES;         /* Should include files !     */
           break;
+
+        case 'I':                      /* case insensitive?          */
+          break;                       /* nop on Windows             */
 
         default:                       /* unknown option             */
           if (FileSpec != buff1) {

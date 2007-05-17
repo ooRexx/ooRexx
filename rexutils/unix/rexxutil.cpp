@@ -425,6 +425,7 @@ extern RexxMutex rexxutil_call_sem;
 #define  NAME_ONLY      0x0010
 #define  EDITABLE_TIME  0x0020
 #define  LONG_TIME      0x0040
+#define  CASELESS       0x0080
 #define  IGNORE         2              /* Ignore attributes entirely */
 
 
@@ -1372,23 +1373,22 @@ VOID getpath(
 }
 
 
-/*****************************************************************
-* Function:  LinFindNextFile(path, dir_handle, finfo, d_name)    *
-*                                                                *
-* Purpose:  This function finds the next file in the directory   *
-*           PATH pointed by DIR_HANDLE which matchs the filespec.*
-*           All needed info is returned via the FINFO struct     *
-*           and the D_NAME pointer.                              *
-*                                                                *
-* Note:  '?' is currently not supported. Add the impletmentation *
-*        here !                                                  *
-*****************************************************************/
+/*****************************************************************************
+* Function:  LinFindNextFile(path, dir_handle, finfo, d_name, caseless)      *
+*                                                                            *
+* Purpose:  This function finds the next file in the directory PATH pointed  *
+*           by DIR_HANDLE which matchs the filespec.  All needed info is     *
+*           returned via the FINFO struct and the D_NAME pointer.            *
+*                                                                            *
+* Note:  '?' is currently not supported. Add the impletmentation here !      *
+******************************************************************************/
 int LinFindNextFile(
   PCHAR filespec,                      /* filespec to search for     */
   PCHAR path,                          /* current path               */
   DIR *dir_handle,                     /* directory handle           */
   struct stat *finfo,                  /* return buf for the finfo   */
-  PCHAR *d_name)                       /* name of the file found     */
+  PCHAR *d_name,                       /* name of the file found     */
+  ULONG caseless)                      /* case insensitive matching  */
 {
   struct dirent *dir_entry;            /* Directory entry            */
   CHAR full_path[IBUF_LEN+1];
@@ -1402,7 +1402,7 @@ int LinFindNextFile(
   INT bad,no_delimiter,found_flag;
 
 
- if(!(dir_entry = readdir(dir_handle)))/* get first entry           */
+ if(!(dir_entry = readdir(dir_handle)))/* get first entry            */
    return 0;                           /* no entry or EOF            */
 
  do{
@@ -1418,10 +1418,26 @@ int LinFindNextFile(
      S_ISLNK(finfo->st_mode) ||        /* or a symbolic link         */
      S_ISFIFO(finfo->st_mode)){        /* or a FIFO                  */
 
-     if(fnmatch(filespec,dir_entry->d_name,FNM_NOESCAPE|FNM_PATHNAME|FNM_PERIOD)==0){
-       *d_name = dir_entry->d_name;    /* retptr to the name location*/
-       return 1;                       /* return success             */
-     }
+    if (caseless) {                    /* if caseless search         */
+      CHAR dup_d_name[IBUF_LEN+1];     /* compare upper cased copy   */
+      PCHAR pDest = dup_d_name;        /* of the entry name          */
+      PCHAR pSrc  = dir_entry->d_name;
+
+      for ( ; *pSrc; pDest++, pSrc++ )
+        *pDest = toupper(*pSrc);
+      *pDest = '\x0';
+
+      if(fnmatch(filespec,dup_d_name,FNM_NOESCAPE|FNM_PATHNAME|FNM_PERIOD)==0){
+        *d_name = dir_entry->d_name;    /* retptr to the name location*/
+        return 1;                       /* return success             */
+      }
+    }
+    else {                              /* else compare normally      */
+      if(fnmatch(filespec,dir_entry->d_name,FNM_NOESCAPE|FNM_PATHNAME|FNM_PERIOD)==0){
+        *d_name = dir_entry->d_name;    /* retptr to the name location*/
+        return 1;                       /* return success             */
+      }
+    }
   }
    }
  while(dir_entry = readdir(dir_handle));/* while have entries       */
@@ -1526,7 +1542,8 @@ int LinFindNextDir(
   PCHAR path,                          /* current path               */
   DIR *dir_handle,                     /* directory handle           */
   struct stat *finfo,                  /* return buf for the finfo   */
-  PCHAR *d_name)                       /* name of the file found     */
+  PCHAR *d_name,                       /* name of the file found     */
+  ULONG caseless)                      /* case insensitive matching  */
 {
   struct dirent *dir_entry;            /* Directory entry            */
   CHAR full_path[IBUF_LEN+1];
@@ -1553,10 +1570,26 @@ int LinFindNextDir(
 
     if(S_ISDIR(finfo->st_mode)){       /* if it is a directory       */
 
-     if(fnmatch(filespec,dir_entry->d_name,FNM_NOESCAPE|FNM_PATHNAME|FNM_PERIOD)==0){
-       *d_name = dir_entry->d_name;    /* retptr to the name location*/
-       return 1;                       /* return success             */
-     }
+      if (caseless) {                    /* if caseless search         */
+        CHAR dup_d_name[IBUF_LEN+1];     /* compare upper cased copy   */
+        PCHAR pDest = dup_d_name;        /* of the entry name          */
+        PCHAR pSrc  = dir_entry->d_name;
+
+        for ( ; *pSrc; pDest++, pSrc++ )
+          *pDest = toupper(*pSrc);
+        *pDest = '\x0';
+
+        if(fnmatch(filespec,dup_d_name,FNM_NOESCAPE|FNM_PATHNAME|FNM_PERIOD)==0){
+          *d_name = dir_entry->d_name;    /* retptr to the name location*/
+          return 1;                       /* return success             */
+        }
+      }
+      else {                              /* else compare normally      */
+        if(fnmatch(filespec,dir_entry->d_name,FNM_NOESCAPE|FNM_PATHNAME|FNM_PERIOD)==0){
+          *d_name = dir_entry->d_name;    /* retptr to the name location*/
+          return 1;                       /* return success             */
+        }
+      }
     }
    }
  while(dir_entry = readdir(dir_handle));/* while have entries       */
@@ -1814,6 +1847,8 @@ ULONG FormatFile(
 *                                   be output as one timestamp.              *
 *                    LONG_TIME   - Indicates time and date fields should     *
 *                                   be output as one long formatted timestamp*
+*                    CASELESS    - Indicates do a case insensitive check for *
+*                                   file names.                              *
 *                                                                            *
 *****************************************************************************/
 
@@ -1831,6 +1866,8 @@ LONG RecursiveFindFile(
   DIR *dir_handle;                     /* Directory handle           */
   struct stat finfo;                   /* file information           */
   PCHAR filename;
+  ULONG caseless = options&CASELESS;
+
 
   /********************************************************************
   * First, process all of the normal files, saving directories for    *
@@ -1843,7 +1880,7 @@ LONG RecursiveFindFile(
 
   if (options&DO_FILES &&              /* if processing files        */
                                        /* and have some              */
-      (LinFindNextFile(ldp->TargetSpec,path ,dir_handle,&finfo, &filename))) {
+      (LinFindNextFile(ldp->TargetSpec,path ,dir_handle,&finfo, &filename, caseless))) {
                                        /* Get the rest of the files  */
     do {
                                        /* build the full name        */
@@ -1853,14 +1890,14 @@ LONG RecursiveFindFile(
         closedir(dir_handle);          /* close the search           */
         return INVALID_ROUTINE;        /* error on non-zero          */
       }
-    } while (LinFindNextFile(ldp->TargetSpec,path, dir_handle, &finfo, &filename));
+    } while (LinFindNextFile(ldp->TargetSpec,path, dir_handle, &finfo, &filename, caseless));
   }
   closedir(dir_handle);                /* reset the                  */
   dir_handle = opendir(path);          /* directory handle (rewinddir*/
                                        /* doesn't work!)             */
   if (options&DO_DIRS  &&              /* need directories?          */
                                        /* and have some              */
-      (LinFindNextDir(ldp->TargetSpec,path,dir_handle,&finfo,&filename))) {
+      (LinFindNextDir(ldp->TargetSpec,path,dir_handle,&finfo,&filename, caseless))) {
 
     do {
                                        /* dot directory?             */
@@ -1873,14 +1910,14 @@ LONG RecursiveFindFile(
           closedir(dir_handle);        /* close the search           */
           return INVALID_ROUTINE;      /* error on non-zero          */
       }
-   } while (LinFindNextDir(ldp->TargetSpec,path, dir_handle, &finfo, &filename));
+   } while (LinFindNextDir(ldp->TargetSpec,path, dir_handle, &finfo, &filename, caseless));
   }
-  closedir(dir_handle);                /* reset the                  */
-  dir_handle = opendir(path);          /* directory handle (rewinddir*/
-                                       /* doesn't work!)             */
-  if (options&RECURSE) {               /* need to recurse?           */
-                                       /* and have some              */
-    if (LinFindNextDir("*",path,dir_handle,&finfo,&filename)) {
+  closedir(dir_handle);                /* reset the directory handle */
+  dir_handle = opendir(path);          /* (rewinddir doesn't work!)  */
+                                       /* need to recurse? and have  */
+  if (options&RECURSE) {               /* some? no need for caseless */
+                                       /* matching star              */
+    if (LinFindNextDir("*",path,dir_handle,&finfo,&filename, 0)) {
       do {
                                        /* dot directory?             */
         if (!strcmp(filename, ".") ||
@@ -1894,7 +1931,7 @@ LONG RecursiveFindFile(
           closedir(dir_handle);        /* close the search           */
           return INVALID_ROUTINE;      /* error on non-zero          */
         }
-      } while (LinFindNextDir("*",path,dir_handle,&finfo,&filename));
+      } while (LinFindNextDir("*",path,dir_handle,&finfo,&filename, 0));
     }
   }
   closedir(dir_handle);
@@ -4176,6 +4213,7 @@ LONG APIENTRY SysCloseMutexSem(
 *                        'S' - Recursively scan subdirectories.          *
 *                        'T' - Combine time & date fields into one.      *
 *                        'L' - Long time format                          *
+*                        'I' - Case Insensitive search.                  *
 *                                                                        *
 * Return:    NO_UTIL_ERROR   - Successful.                               *
 *            ERROR_NOMEM     - Out of memory.                            *
@@ -4282,6 +4320,10 @@ LONG APIENTRY SysFileTree(
           options |= DO_FILES;         /* Should include files !     */
           break;
 
+        case 'I':                      /* case insensitive?          */
+          options |= CASELESS;         /* do caseless check          */
+          break;
+
         default:                       /* unknown option             */
           return INVALID_ROUTINE;      /* raise an error             */
       }
@@ -4290,6 +4332,13 @@ LONG APIENTRY SysFileTree(
   }
                                        /* get path and name          */
   getpath(FileSpec, path, ldp.TargetSpec);
+
+  if ( options & CASELESS ) {          /* if caseless upper case     */
+    PCHAR p = ldp.TargetSpec;          /* file name portion now      */
+    for ( ; *p; ++p ) {
+      *p = toupper(*p);
+    }
+  }
                                        /* recursively search         */
   if (RecursiveFindFile(FileSpec, path, &ldp, smask, dmask, options))
     return INVALID_ROUTINE;
