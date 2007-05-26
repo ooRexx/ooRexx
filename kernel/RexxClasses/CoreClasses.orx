@@ -331,7 +331,7 @@ count = other~items                    -- get the size of the array
 -- loop over the other collection using an index do rather than DO OVER so
 -- we don't make another copy of the index array
 do i = 1 to count
-  new~remove(indexex[i])               -- "subtract" this item
+  new~remove(indexes[i])               -- "subtract" this item
 end
 
 return new                             -- return the difference collection  */
@@ -507,6 +507,7 @@ end
 -- just copy all of the items into the relation
 do while supplier~available            -- now iterate over the supplier seeing if
     new~put(supplier~item, supplier~index)
+    supplier~next
 end
 
 return new                             -- return the union collection
@@ -541,6 +542,7 @@ end
 -- remove the tuples from the result collection
 do while supplier~available            -- now iterate over the supplier seeing if
     new~removeItem(supplier~item, supplier~index)
+    supplier~next
 end
 
 return new                             -- return the difference collection
