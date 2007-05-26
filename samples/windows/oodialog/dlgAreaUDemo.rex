@@ -42,7 +42,6 @@ MyDlg~DeInstall
 
 exit
 ::requires 'OODWIN32.CLS'
-::requires 'DlgAreaU.CLS'
 /* ========================================================================= */
 ::class MyDialog Subclass UserDialog Inherit AdvancedControls
 /* ========================================================================= */
