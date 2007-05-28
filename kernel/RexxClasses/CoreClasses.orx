@@ -798,6 +798,7 @@ use strict arg comparator
 ::METHOD compare
 expose comparator
 
+use strict arg left, right
 return -comparator~compare(left, right)
 
 ::CLASS CaselessColumnComparator MIXINCLASS Object
