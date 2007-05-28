@@ -894,8 +894,6 @@ return left~caselessCompareTo(right, start, length)
 /* OF         method                     */
 /*****************************************/
 ::METHOD of CLASS
-if (arg() < 1) then                    /* no index given?                   */
-  raise syntax 93.901 array (1)        /* raise an error                    */
 new = self~new                         /* create a new set                  */
 do i = 1 to arg()                      /* loop through all the arguments    */
   if arg(i, 'O') then                  /* omitted argument?                 */
@@ -1050,8 +1048,6 @@ nomethod:                              -- unknown method sent
 
 ::CLASS 'Bag' SUBCLASS relation INHERIT setcollection
 ::METHOD of CLASS
-if (arg() < 1) then                    /* no index given?                   */
-  raise syntax 93.901 array (1)        /* raise an error                    */
 
 new = self~new                         /* create a new bag                  */
 do i = 1 to arg()                      /* loop through all the arguments    */
