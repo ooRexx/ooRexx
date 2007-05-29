@@ -1777,6 +1777,14 @@ RexxObject *RexxClass::isSubclassOf(RexxClass *other)
     return isCompatibleWith(other) ? TheTrueObject : TheFalseObject;
 }
 
+RexxString *RexxClass::defaultNameRexx()
+/******************************************************************************/
+/* Function:  Exported access to an object virtual function                   */
+/******************************************************************************/
+{
+  return this->defaultName();          /* forward to the virtual function   */
+}
+
 
 
 void  *RexxClass::operator new(size_t size,

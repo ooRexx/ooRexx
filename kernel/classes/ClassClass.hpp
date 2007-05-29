@@ -114,6 +114,7 @@ void class_create (void);
    RexxClass  *external(RexxString *, RexxClass *, RexxTable *);
    bool        isCompatibleWith(RexxClass *other);
    RexxObject *isSubclassOf(RexxClass *other);
+   RexxString  *defaultNameRexx();
 
 
    inline BOOL         rexxDefined() { return this->class_info & REXX_DEFINED; };

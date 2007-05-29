@@ -114,6 +114,7 @@ CPPM(RexxObject::serverRexx),
 CPPM(RexxObject::newRexx),
 
 CPPMC(RexxClass::setRexxDefined),       /* Class methods                     */
+CPPMC(RexxClass::defaultNameRexx),
 CPPMC(RexxClass::queryMixinClass),
 CPPMC(RexxClass::getId),
 CPPMC(RexxClass::getBaseClass),
@@ -750,6 +751,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL ,TheClassBehaviour, CPPMC(RexxClass::notEqual), 1);
   defineKernelMethod(CHAR_ISSUBCLASSOF           ,TheClassBehaviour, CPPMC(RexxClass::isSubclassOf), 1);
   defineProtectedKernelMethod(CHAR_SHRIEKREXXDEFINED,TheClassBehaviour, CPPMC(RexxClass::setRexxDefined), 0);
+  defineKernelMethod(CHAR_DEFAULTNAME            ,TheClassBehaviour, CPPM(RexxClass::defaultNameRexx), 0);
 
                                        /* set the scope of the methods to   */
                                        /* the CLASS scope                   */
