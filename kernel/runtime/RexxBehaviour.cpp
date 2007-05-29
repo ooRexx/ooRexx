@@ -441,6 +441,56 @@ void RexxBehaviour::setMethodDictionaryScope(
   }
 }
 
+
+/**
+ * Extract from the method dictionary all methods defined with
+ * a given scope.
+ *
+ * @param scope  The target scope.  If null, then all methods
+ *               are returned.
+ *
+ * @return A supplier holding the names and methods with the target
+ *         scope.  This supplier can be empty.
+ */
+RexxSupplier *RexxBehaviour::getMethods(RexxObject *scope)
+{
+    // if asking for everything, just return the supplier.
+    if (scope == OREF_NULL)
+    {
+        return this->methodDictionary->supplier();
+    }
+
+    size_t count = 0;
+
+    long i;
+    // travese the method dictionary, searching for methods with the target scope
+    for (i = this->methodDictionary->first(); this->methodDictionary->index(i) != OREF_NULL; i = this->methodDictionary->next(i))
+    {
+        if (((RexxMethod *)this->methodDictionary->value(i))->getScope() == scope)
+        {
+            count++;
+        }
+    }
+
+    RexxArray *names = new_array(count);
+    RexxArray *methods = new_array(count);
+    count = 1;
+
+    // pass two, copy the entries into the array
+    for (i = this->methodDictionary->first(); this->methodDictionary->index(i) != OREF_NULL; i = this->methodDictionary->next(i))
+    {
+        if (((RexxMethod *)this->methodDictionary->value(i))->getScope() == scope)
+        {
+            names->put(this->methodDictionary->index(i), count);
+            methods->put(this->methodDictionary->value(i), count);
+            count++;
+        }
+    }
+
+    return (RexxSupplier *)new_supplier(methods, names);
+}
+
+
 RexxObject *RexxBehaviour::setScopes(
     RexxObjectTable *newscopes)        /* new table of scopes               */
 /******************************************************************************/

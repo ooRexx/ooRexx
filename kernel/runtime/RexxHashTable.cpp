@@ -1189,6 +1189,7 @@ size_t RexxHashTable::totalEntries(void)
   return result;                       /* return the count                  */
 }
 
+
 RexxObject *RexxHashTable::merge(
     RexxHashTableCollection *target)   /* target other collection           */
 /******************************************************************************/
@@ -1206,6 +1207,7 @@ RexxObject *RexxHashTable::merge(
   }
   return OREF_NULL;                    /* always returns nothing            */
 }
+
 
 void RexxHashTable::reMerge(
   RexxHashTable *newHash)              /* target other collection           */

@@ -153,7 +153,14 @@ RexxObject *RexxHashTableCollection::mergeItem(RexxObject *value, RexxObject *in
 /*  Returned:  Nothing                                                        */
 /******************************************************************************/
 {
-  return this->add(value, index);
+    // put this in with duplicate protection
+    RexxHashTable *newHash = this->contents->putNodupe(value, index);
+    // the put can expand, so protect against that
+    if (newHash != OREF_NULL)
+    {
+        OrefSet(this, this->contents, newHash);
+    }
+    return OREF_NULL;
 }
 
 RexxObject *RexxHashTableCollection::removeRexx(

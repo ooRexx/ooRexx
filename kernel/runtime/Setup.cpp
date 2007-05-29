@@ -731,14 +731,12 @@ bool kernel_setup (void)
   defineProtectedKernelMethod(CHAR_DELETE ,TheClassBehaviour, CPPMC(RexxClass::deleteMethod), 1);
   defineKernelMethod(CHAR_ENHANCED        ,TheClassBehaviour, CPPMC(RexxClass::enhanced), A_COUNT);
   defineKernelMethod(CHAR_ID              ,TheClassBehaviour, CPPMC(RexxClass::getId), 0);
-  defineKernelMethod(CHAR_IMPORTED        ,TheClassBehaviour, CPPMC(RexxClass::importedRexx), 0);
   defineKernelMethod(CHAR_INHERIT         ,TheClassBehaviour, CPPMC(RexxClass::inherit), 2);
   defineProtectedKernelMethod(CHAR_METACLASS       ,TheClassBehaviour, CPPMC(RexxClass::getMetaClass), 0);
   defineKernelMethod(CHAR_METHOD          ,TheClassBehaviour, CPPMC(RexxClass::method), 1);
   defineKernelMethod(CHAR_METHODS         ,TheClassBehaviour, CPPMC(RexxClass::methods), 1);
   defineKernelMethod(CHAR_MIXINCLASS      ,TheClassBehaviour, CPPMC(RexxClass::mixinclass), 3);
   defineKernelMethod(CHAR_QUERYMIXINCLASS ,TheClassBehaviour, CPPMC(RexxClass::queryMixinClass), 0);
-  defineKernelMethod(CHAR_NEWOPART        ,TheClassBehaviour, CPPMC(RexxClass::newOpart), 1);
   defineKernelMethod(CHAR_SUBCLASS        ,TheClassBehaviour, CPPMC(RexxClass::subclass), 3);
   defineProtectedKernelMethod(CHAR_SUBCLASSES      ,TheClassBehaviour, CPPMC(RexxClass::getSubClasses), 0);
   defineProtectedKernelMethod(CHAR_SUPERCLASSES    ,TheClassBehaviour, CPPMC(RexxClass::getSuperClasses), 0);
@@ -751,9 +749,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_GREATERTHAN_LESSTHAN   ,TheClassBehaviour, CPPMC(RexxClass::notEqual), 1);
   defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL ,TheClassBehaviour, CPPMC(RexxClass::notEqual), 1);
   defineKernelMethod(CHAR_ISSUBCLASSOF           ,TheClassBehaviour, CPPMC(RexxClass::isSubclassOf), 1);
-                                       /* and the private class methods     */
   defineProtectedKernelMethod(CHAR_SHRIEKREXXDEFINED,TheClassBehaviour, CPPMC(RexxClass::setRexxDefined), 0);
-  defineProtectedKernelMethod(CHAR_SHRIEKIMPORT,TheClassBehaviour, CPPMC(RexxClass::importMethod), 0);
 
                                        /* set the scope of the methods to   */
                                        /* the CLASS scope                   */

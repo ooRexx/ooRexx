@@ -275,37 +275,8 @@ RexxSupplier *RexxInternalObject::instanceMethods(RexxClass *class_object)
  */
 RexxSupplier *RexxObject::instanceMethods(RexxClass *class_object)
 {
-                                         /* if no parameter specified         */
-                                         /* return my  behaviour mdict as a   */
-                                         /* supplier object                   */
-    if (class_object == OREF_NULL)
-    {
-        return this->behaviour->getMethodDictionary()->supplier();
-    }
-                                         /* if TheNilObject specified         */
-                                         /*  return my instance mdict as a    */
-                                         /*  supplier object                  */
-    if (class_object == TheNilObject)
-    {
-        // we might not have instance methods defined.
-        RexxTable *instanceMethods = this->behaviour->getInstanceMethodDictionary();
-        if (instanceMethods != OREF_NULL)
-        {
-            return instanceMethods->supplier();
-        }
-        // no instance methods, return a null supplier
-        return (RexxSupplier *)TheNullArray->supplier();
-    }
-
-    // if we're an instance of that class
-    if (isInstanceOf(class_object))
-    {
-                                         /*  let the class specified return   */
-                                         /*  it's own methods                 */
-        return (RexxSupplier *)send_message1(class_object, OREF_METHODS, TheNilObject);
-    }
-                                         /* or just return a null supplier    */
-    return (RexxSupplier *)TheNullArray->supplier();
+    // the behaviour handles all of this
+    return this->behaviour->getMethods(class_object);
 }
 
 

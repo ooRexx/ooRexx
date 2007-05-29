@@ -90,6 +90,7 @@ void behaviour_setup (void);
   RexxObject *mergeScope( RexxObject *);
   BOOL        checkScope( RexxObject *);
   void        subclass(RexxBehaviour *);
+  RexxSupplier *getMethods(RexxObject *scope);
 
   void merge( RexxBehaviour *);
   void methodDictionaryMerge( RexxTable *);
