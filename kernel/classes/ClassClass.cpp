@@ -454,7 +454,7 @@ void RexxClass::subClassable(PCHAR class_id, bool restricted)
                                        /* initialization.                    */
                                        /* Now fill in the state data         */
 
-  if (TheObjectClass != this && TheMSomProxyClass != this && TheSomProxyClass != this) {
+  if (TheObjectClass != this ) {
                                        /* set up the new metaclass list      */
     OrefSet(this, this->metaClass, new_array1(TheClassClass));
                                        /* the metaclass mdict list           */
@@ -493,11 +493,8 @@ void RexxClass::subClassable(PCHAR class_id, bool restricted)
   this->behaviour->setClass(TheClassClass);
                                        /* set the somclass to .nil           */
   OrefSet(this, this->somClass, (RexxInteger *)TheNilObject);
-                                       /* SOMPROXY/M_SOMPROXY aren't        */
-                                       /* primitive any more either.        */
-  if (TheMSomProxyClass != this && TheSomProxyClass != this)
                                        /* these are primitive classes       */
-    this->class_info |= PRIMITIVE_CLASS;
+  this->class_info |= PRIMITIVE_CLASS;
 
   if (this == TheClassClass)           /* mark CLASS as a meta class        */
     this->setMeta();

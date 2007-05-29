@@ -604,7 +604,6 @@ void kernelInit (void)
   CLASS_CREATE(Message, RexxClass);    /* RexxMessage                       */
   CLASS_CREATE(MutableBuffer, RexxClass);
 
-  somproxy_create();                   /* RexxSOMProxy                      */
                                        /* build the common retriever tables */
   TheCommonRetrievers = (RexxDirectory *)new_directory();
                                        /* add all of the special variables  */
@@ -1547,8 +1546,6 @@ bool kernel_setup (void)
   kernel_public(CHAR_STRING           ,TheStringClass  ,TheEnvironment);
   kernel_public(CHAR_MUTABLEBUFFER    ,TheMutableBufferClass  ,TheEnvironment);
   kernel_public(CHAR_STEM             ,TheStemClass    ,TheEnvironment);
-  kernel_public(CHAR_SHRIEKSOMPROXY   ,TheSomProxyClass,TheEnvironment);
-  kernel_public(CHAR_SHRIEKM_SOMPROXY ,TheMSomProxyClass,TheEnvironment);
   kernel_public(CHAR_SUPPLIER         ,TheSupplierClass,TheEnvironment);
   kernel_public(CHAR_SYSTEM           ,TheSystem       ,TheEnvironment);
   kernel_public(CHAR_TABLE            ,TheTableClass   ,TheEnvironment);

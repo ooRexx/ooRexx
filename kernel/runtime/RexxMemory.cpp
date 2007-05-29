@@ -2102,7 +2102,6 @@ void memoryRestore()
   TheNativeCodeClass  = (RexxNativeCodeClass *)TheSaveArray->get(saveArray_NMETHOD);
   TheGenericSomMethod = (RexxSOMCode *)TheSaveArray->get(saveArray_GENERIC_SOMMETHOD);
   TheCommonRetrievers = (RexxDirectory *)TheSaveArray->get(saveArray_COMMON_RETRIEVERS);
-  TheMSomProxyClass   = (RexxSOMProxyClass *)TheSaveArray->get(saveArray_M_SOMPROXY);
   TheStaticRequires   = (RexxDirectory *)TheSaveArray->get(saveArray_STATIC_REQ);
   ThePublicRoutines   = (RexxDirectory *)TheSaveArray->get(saveArray_PUBLIC_RTN);
 
@@ -2121,7 +2120,6 @@ void memoryRestore()
   RESTORE_CLASS(NumberString, numberstring, RexxNumberStringClass);
   RESTORE_CLASS(Queue, queue, RexxClass);
   RESTORE_CLASS(Stem, stem, RexxClass);
-  RESTORE_CLASS(SomProxy, somproxy, RexxSOMProxyClass);
   RESTORE_CLASS(Supplier, supplier, RexxClass);
   RESTORE_CLASS(Table, table, RexxClass);
   RESTORE_CLASS(Relation, relation, RexxClass);
