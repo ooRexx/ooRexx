@@ -111,8 +111,8 @@ typedef struct copyElelmentParm {
    RexxInteger *sizeRexx();
    RexxObject  *firstRexx();
    RexxObject  *lastRexx();
-   RexxObject  *nextRexx(RexxObject *);
-   RexxObject  *previousRexx(RexxObject *);
+   RexxObject  *nextRexx(RexxObject **, size_t);
+   RexxObject  *previousRexx(RexxObject **, size_t);
    RexxArray   *section(size_t, size_t);
    RexxObject  *sectionRexx(RexxObject *, RexxObject *);
    RexxObject  *sectionSubclass(size_t, size_t);

@@ -804,10 +804,6 @@ RexxObject  *RexxArray::firstRexx(void)
   RexxObject **thisObject;
   size_t  arraySize;                   /* size of the array                 */
 
-                                       /* multidimensional array?           */
-  if (this->dimensions != OREF_NULL && this->dimensions->size() != 1)
-                                       /* yes - report error                */
-    CurrentActivity->reportException(Error_Incorrect_method_array_dimension, CHAR_FIRST);
                                        /* get the address of the first      */
                                        /*element in the array               */
   thisObject = this->expansionArray->objects;
@@ -820,7 +816,7 @@ RexxObject  *RexxArray::firstRexx(void)
     result = TheNilObject;             /* return nil object                 */
   else
                                        /* return index of the first entry   */
-    result = (RexxObject *)new_integer(i+1);
+    result = (RexxObject *)convertIndex(i + 1);
 
   return result;
 }
@@ -834,10 +830,6 @@ RexxObject  *RexxArray::lastRexx(void)
   RexxObject *result;
   RexxObject **thisObject;
 
-                                       /* multidimensional array?           */
-  if (this->dimensions != OREF_NULL && this->dimensions->size() != 1)
-                                       /* yes - report error                */
-    CurrentActivity->reportException(Error_Incorrect_method_array_dimension, CHAR_LAST);
                                        /* get the address of the first      */
                                        /*element in the array               */
   thisObject = this->data();
@@ -849,11 +841,11 @@ RexxObject  *RexxArray::lastRexx(void)
     result = TheNilObject;             /* return nil object                 */
   else
                                        /* return index to the last entry    */
-    result = (RexxObject *)new_integer(i);
+    result = (RexxObject *)convertIndex(i);
   return result;
 }
 
-RexxObject *RexxArray::nextRexx(RexxObject *index)
+RexxObject  *RexxArray::nextRexx(RexxObject **arguments, size_t argCount)
 /******************************************************************************/
 /* Function:  Return the next entry after a given array index                 */
 /******************************************************************************/
@@ -862,30 +854,31 @@ RexxObject *RexxArray::nextRexx(RexxObject *index)
   RexxObject *result;
   RexxObject **thisObject;
   size_t arraySize;                    /* size of the array                 */
-
-  required_arg(index, ONE);            /* this is required.                 */
-                                       /* multidimensional array?           */
-  if (this->dimensions != OREF_NULL && this->dimensions->size() != 1)
-                                       /* no - report error                 */
-    CurrentActivity->reportException(Error_Incorrect_method_array_dimension, CHAR_NEXT);
+                                       /* go validate the index             */
+  size_t position = this->validateIndex(arguments, argCount, 1, RaiseBoundsTooMany | RaiseBoundsInvalid);
+  // out of bounds results in the .nil object
+  if (position == NO_LONG)
+  {
+      return TheNilObject;
+  }
                                        /* get the address of the first      */
                                        /*element in the array               */
   thisObject = this->data();
   arraySize = this->size();            /* get the size of the array         */
                                        /* find next entry in the array with */
                                        /*data                               */
-  for (i = index->requiredPositive(ARG_ONE); i < arraySize && thisObject[i] == OREF_NULL; i++);
+  for (i = position; i < arraySize && thisObject[i] == OREF_NULL; i++);
 
   if (i >= this->size())
     result = TheNilObject;             /* return nil object                 */
   else
                                        /* return index of the next entry    */
-    result = (RexxObject *)new_integer(i+1);
+    result = (RexxObject *)convertIndex(i + 1);
 
   return result;
 }
 
-RexxObject  *RexxArray::previousRexx(RexxObject *index)
+RexxObject  *RexxArray::previousRexx(RexxObject **arguments, size_t argCount)
 /******************************************************************************/
 /* Function:  Return the index preceeding a given index                       */
 /******************************************************************************/
@@ -895,14 +888,10 @@ RexxObject  *RexxArray::previousRexx(RexxObject *index)
   RexxObject **thisObject;
   size_t  arraySize;                   /* size of the array                 */
 
-  required_arg(index, ONE);            /* this is required.                 */
-                                       /* multidimensional array?           */
-  if (this->dimensions != OREF_NULL && this->dimensions->size() != 1)
-                                       /* no - report error                 */
-    CurrentActivity->reportException(Error_Incorrect_method_array_dimension, CHAR_PREVIOUS);
+  size_t position = this->validateIndex(arguments, argCount, 1, RaiseBoundsTooMany | RaiseBoundsInvalid);
                                        /* get the index object into an      */
                                        /*integer object                     */
-  i = index->requiredPositive(ARG_ONE);
+  i = position;
 
   arraySize = this->size();            /* get the size of the array         */
 
@@ -926,7 +915,7 @@ RexxObject  *RexxArray::previousRexx(RexxObject *index)
   else
                                        /* return the index to the           */
                                        /*previous entry                     */
-    result = (RexxObject *)new_integer(i);
+    result = (RexxObject *)convertIndex(i);
 
   return result;
 }

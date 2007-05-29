@@ -832,8 +832,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_SUPPLIER     ,TheArrayBehaviour, CPPMA(RexxArray::supplier), 0);
   defineKernelMethod(CHAR_FIRST        ,TheArrayBehaviour, CPPMA(RexxArray::firstRexx), 0);
   defineKernelMethod(CHAR_LAST         ,TheArrayBehaviour, CPPMA(RexxArray::lastRexx), 0);
-  defineKernelMethod(CHAR_NEXT         ,TheArrayBehaviour, CPPMA(RexxArray::nextRexx), 1);
-  defineKernelMethod(CHAR_PREVIOUS     ,TheArrayBehaviour, CPPMA(RexxArray::previousRexx), 1);
+  defineKernelMethod(CHAR_NEXT         ,TheArrayBehaviour, CPPMA(RexxArray::nextRexx), A_COUNT);
+  defineKernelMethod(CHAR_PREVIOUS     ,TheArrayBehaviour, CPPMA(RexxArray::previousRexx), A_COUNT);
   defineKernelMethod(CHAR_APPEND       ,TheArrayBehaviour, CPPMA(RexxArray::append), 1);
   defineKernelMethod(CHAR_MAKESTRING   ,TheArrayBehaviour, CPPMA(RexxArray::makeString), 1);
   defineKernelMethod(CHAR_TOSTRING     ,TheArrayBehaviour, CPPMA(RexxArray::toString), 1);
