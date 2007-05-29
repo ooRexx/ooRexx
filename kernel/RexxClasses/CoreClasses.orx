@@ -764,7 +764,7 @@ use strict arg index, value=(index)    /* get the index                     */
 use strict arg left, right
 return left~compareTo(right)
 
-::CLASS DescendingComparator MIXINCLASS Object
+::CLASS DescendingComparator MIXINCLASS Comparator
 ::METHOD compare
 use strict arg left, right
 return -left~compareTo(right)
@@ -779,7 +779,7 @@ return left~caselessCompareTo(right)
 use strict arg left, right
 return -left~caselessCompareTo(right)
 
-::CLASS ColumnComparator MIXINCLASS Object
+::CLASS ColumnComparator MIXINCLASS Comparator
 ::METHOD init
 expose start length
 use strict arg start, length
@@ -790,7 +790,7 @@ expose start length
 use strict arg left, right
 return left~compareTo(right, start, length)
 
-::CLASS InvertingComparator MIXINCLASS Object
+::CLASS InvertingComparator MIXINCLASS Comparator
 ::METHOD init
 expose comparator
 use strict arg comparator
@@ -801,7 +801,7 @@ expose comparator
 use strict arg left, right
 return -comparator~compare(left, right)
 
-::CLASS CaselessColumnComparator MIXINCLASS Object
+::CLASS CaselessColumnComparator MIXINCLASS Comparator
 ::METHOD init
 expose start length
 use strict arg start, length
