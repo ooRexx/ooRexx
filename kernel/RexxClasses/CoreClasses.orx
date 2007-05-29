@@ -266,8 +266,7 @@ if \other~isA(.Collection) then do     -- if not a collection, then ask for an
 end
 
 do item over other~allItems            -- iterate over all of the items
-   if \new~hasItem(item) then          -- if not in the accumulator, add to the end
-       new~append(item)
+    new~append(item)                   -- ordered lists behave more like bags...duplicates are allowed.
 end
 
 if new~isA(.array) then                -- if this is an array, remove sparse entries
