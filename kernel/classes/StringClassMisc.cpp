@@ -1341,7 +1341,7 @@ RexxInteger *RexxString::compareToRexx(RexxString *other, RexxInteger *start_, R
     other = stringArgument(other, ARG_ONE);
 
     stringsize_t start = optionalPositionArgument(start_, 1, ARG_TWO);
-    stringsize_t len = optionalLengthArgument(len_, getLength() - start + 1, ARG_THREE);
+    stringsize_t len = optionalLengthArgument(len_, max(getLength(), other->getLength()) - start + 1, ARG_THREE);
 
     return primitiveCompareTo(other, start, len);
 }
@@ -1427,7 +1427,7 @@ RexxInteger *RexxString::caselessCompareToRexx(RexxString *other, RexxInteger *s
     other = stringArgument(other, ARG_ONE);
 
     stringsize_t start = optionalPositionArgument(start_, 1, ARG_TWO);
-    stringsize_t len = optionalLengthArgument(len_, getLength() - start + 1, ARG_THREE);
+    stringsize_t len = optionalLengthArgument(len_, max(getLength(), other->getLength()) - start + 1, ARG_THREE);
 
     return primitiveCaselessCompareTo(other, start, len);
 }
