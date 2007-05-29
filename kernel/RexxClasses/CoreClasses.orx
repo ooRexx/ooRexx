@@ -685,6 +685,7 @@ nomethod:
   do item over other~allItems            /* loop over the other collection    */
     self~append(item)                    -- appending the item
   end
+  return
 
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
