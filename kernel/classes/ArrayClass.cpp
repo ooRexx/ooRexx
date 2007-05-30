@@ -245,6 +245,12 @@ RexxObject  *RexxArray::append(RexxObject *value)
 {
     required_arg(value, ONE);
 
+    // this is not intended for multi-dimensional arrays since they can't expand
+    if (this->dimensions != OREF_NULL && this->dimensions->size() != 1)
+    {
+        CurrentActivity->reportException(Error_Incorrect_method_array_dimension, CHAR_APPEND);
+    }
+
     RexxObject *lastIndex = lastRexx();
 
     size_t newIndex;
