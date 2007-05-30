@@ -601,7 +601,7 @@ size_t RexxString::lastPos(RexxString  *needle, size_t start)
     else
     {
         // get the start position for the search.
-        start = min(start, haystackLen);
+        haystackLen = min(start, haystackLen);
                                          /* do the search                     */
         PUCHAR matchLocation = lastPos((PUCHAR)needle->getStringData(), needleLen, (PUCHAR )this->getStringData(), haystackLen);
         if (matchLocation == NULL)
@@ -640,7 +640,7 @@ size_t RexxString::caselessLastPos(RexxString *needle, size_t start)
     else
     {
         // get the start position for the search.
-        start = min(start, haystackLen);
+        haystackLen = min(start, haystackLen);
                                          /* do the search                     */
         PUCHAR matchLocation = caselessLastPos((PUCHAR)needle->getStringData(), needleLen, (PUCHAR )this->getStringData(), haystackLen);
         if (matchLocation == NULL)
