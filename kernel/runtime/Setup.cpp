@@ -328,6 +328,10 @@ CPPMQ(RexxQueue::remove),
 CPPML(RexxQueue::append),
 CPPML(RexxQueue::allIndexes),
 CPPML(RexxQueue::index),
+CPPML(RexxQueue::firstRexx),
+CPPML(RexxQueue::lastRexx),
+CPPML(RexxQueue::next),
+CPPML(RexxQueue::previous),
 
 CPPMQ(RexxQueue::newRexx),
 CPPMQ(RexxQueue::ofRexx),
@@ -932,13 +936,13 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_BRACKETSEQUAL,TheListBehaviour, CPPML(RexxList::put), 2);
   defineKernelMethod(CHAR_MAKEARRAY    ,TheListBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
   defineKernelMethod(CHAR_AT           ,TheListBehaviour, CPPML(RexxList::value), 1);
-  defineKernelMethod(CHAR_FIRST        ,TheListBehaviour, CPPML(RexxList::firstRexx), 0);
   defineKernelMethod(CHAR_FIRSTITEM    ,TheListBehaviour, CPPML(RexxList::firstItem), 0);
   defineKernelMethod(CHAR_HASINDEX     ,TheListBehaviour, CPPML(RexxList::hasIndex), 1);
   defineKernelMethod(CHAR_INSERT       ,TheListBehaviour, CPPML(RexxList::insertRexx), 2);
   defineKernelMethod(CHAR_ITEMS        ,TheListBehaviour, CPPML(RexxList::itemsRexx), 0);
-  defineKernelMethod(CHAR_LAST         ,TheListBehaviour, CPPML(RexxList::lastRexx), 0);
   defineKernelMethod(CHAR_LASTITEM     ,TheListBehaviour, CPPML(RexxList::lastItem), 0);
+  defineKernelMethod(CHAR_FIRST        ,TheListBehaviour, CPPML(RexxList::firstRexx), 0);
+  defineKernelMethod(CHAR_LAST         ,TheListBehaviour, CPPML(RexxList::lastRexx), 0);
   defineKernelMethod(CHAR_NEXT         ,TheListBehaviour, CPPML(RexxList::next), 1);
   defineKernelMethod(CHAR_PREVIOUS     ,TheListBehaviour, CPPML(RexxList::previous), 1);
   defineKernelMethod(CHAR_PUT          ,TheListBehaviour, CPPML(RexxList::put), 2);
@@ -1062,6 +1066,10 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_INDEX         ,TheQueueBehaviour, CPPML(RexxQueue::index), 1);
   defineKernelMethod(CHAR_HASITEM       ,TheQueueBehaviour, CPPML(RexxList::hasItem), 1);
   defineKernelMethod(CHAR_REMOVEITEM    ,TheQueueBehaviour, CPPML(RexxList::removeItem), 1);
+  defineKernelMethod(CHAR_FIRST         ,TheQueueBehaviour, CPPMQ(RexxQueue::firstRexx), 0);
+  defineKernelMethod(CHAR_LAST          ,TheQueueBehaviour, CPPMQ(RexxQueue::lastRexx), 0);
+  defineKernelMethod(CHAR_NEXT          ,TheQueueBehaviour, CPPMQ(RexxQueue::next), 1);
+  defineKernelMethod(CHAR_PREVIOUS      ,TheQueueBehaviour, CPPMQ(RexxQueue::previous), 1);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

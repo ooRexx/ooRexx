@@ -56,7 +56,7 @@ class RexxQueue : public RexxList {
  RexxObject *pullRexx();
  RexxObject *pushRexx(RexxObject *);
  RexxObject *queueRexx(RexxObject *);
- RexxObject *getEntry(RexxObject *, RexxObject *);
+ LISTENTRY *locateEntry(RexxObject *, RexxObject *);
  RexxObject *put(RexxObject *, RexxObject *);
  RexxObject *at(RexxObject *);
  RexxObject *remove(RexxObject *);
@@ -68,6 +68,11 @@ class RexxQueue : public RexxList {
  RexxObject *append(RexxObject *);
  RexxArray  *allIndexes();
  RexxObject *index(RexxObject *);
+ RexxObject *firstRexx();
+ RexxObject *lastRexx();
+ RexxObject *next(RexxObject *);
+ RexxObject *previous(RexxObject *);
+ long        entryToIndex(long target);
 
  inline RexxObject *pop() { return this->removeFirst();};
  inline void push(RexxObject *obj) { this->addFirst(obj);};
