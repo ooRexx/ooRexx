@@ -1838,7 +1838,7 @@ Output:
 
 
 ::METHOD getProperty
-  use strict arg name, default
+  use strict arg name, default=.nil
 
   value = self~at(name)
   if .nil == value then do
