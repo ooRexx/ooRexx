@@ -49,6 +49,7 @@
 #define NOGLOBALVARIABLES 1
 #include "oovutil.h"
 #undef NOGLOBALVARIABLES
+#include "oodResources.h"
 
 
 extern HINSTANCE MyInstance = NULL;
@@ -68,6 +69,8 @@ extern BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr);
 extern BOOL IsNT = TRUE;
 extern LONG HandleError(PRXSTRING r, CHAR * text);
 extern LONG SetRexxStem(CHAR * name, INT id, char * secname, CHAR * data);
+extern BOOL GetDialogIcons(DIALOGADMIN *, INT, BOOL, PHANDLE, PHANDLE);
+extern HICON GetIconForID(DIALOGADMIN *, UINT, BOOL, int, int);
 
 INT DelDialog(DIALOGADMIN * aDlg);
 
@@ -338,6 +341,8 @@ INT DelDialog(DIALOGADMIN * aDlg)
    DIALOGADMIN * current;
    INT ret, i;
    BOOL wasFGW;
+   HICON hIconBig = NULL;
+   HICON hIconSmall = NULL;
 
    EnterCriticalSection(&crit_sec);
    wasFGW = (aDlg->TheDlg == GetForegroundWindow());
@@ -368,7 +373,33 @@ INT DelDialog(DIALOGADMIN * aDlg)
 #ifdef __CTL3D
    if ((!StoredDialogs) && (aDlg->Use3DControls)) Ctl3dUnregister(aDlg->TheInstance);
 #endif
-   DeleteObject((HICON) SetClassLong(aDlg->TheDlg, GCL_HICON, (LONG)aDlg->SysMenuIcon));
+
+    /* Swap back the saved icons. If not shared, the icon was loaded from a file
+     * and needs to be freed, otherwise the OS handles the free.  The title bar
+     * icon is tricky.  At this point the dialog is still visible.  If the small
+     * icon in the class is set to 0, the application will hang.  Same thing
+     * happens if the icon is freed.  So, don't set a zero into the class bytes,
+     * and, if the icon is to be freed, do so after leaving the critical
+     * section.
+     */
+    if ( aDlg->DidChangeIcon )
+    {
+        hIconBig = (HICON)SetClassLong(aDlg->TheDlg, GCL_HICON, (LONG)aDlg->SysMenuIcon);
+        if ( aDlg->TitleBarIcon )
+            hIconSmall = (HICON)SetClassLong(aDlg->TheDlg, GCL_HICONSM, (LONG)aDlg->TitleBarIcon);
+
+        if ( ! aDlg->SharedIcon )
+        {
+            DestroyIcon(hIconBig);
+            if ( ! hIconSmall )
+                hIconSmall = (HICON)GetClassLong(aDlg->TheDlg, GCL_HICONSM);
+        }
+        else
+        {
+            hIconSmall = NULL;
+        }
+    }
+
    if ((aDlg->TheInstance) && (aDlg->TheInstance != MyInstance)) FreeLibrary(aDlg->TheInstance);
    current = (DIALOGADMIN *)aDlg->previous;
 
@@ -418,6 +449,18 @@ INT DelDialog(DIALOGADMIN * aDlg)
       aDlg->BT_size = 0;
    }
 
+   /* delete the icon resource table */
+   if (aDlg->IconTab)
+   {
+       for ( i = 0; i < aDlg->IT_size; i++ )
+       {
+           if ( aDlg->IconTab[i].fileName )
+               LocalFree(aDlg->IconTab[i].fileName);
+       }
+       LocalFree(aDlg->IconTab);
+       aDlg->IT_size = 0;
+   }
+
        /* The message queue and the admin block are freed in HandleDialogAdmin called from HandleMessages */
 
    if (!StoredDialogs) topDlg = NULL; else topDlg = current;
@@ -436,6 +479,9 @@ INT DelDialog(DIALOGADMIN * aDlg)
        else topDlg = NULL;
    }
    LeaveCriticalSection(&crit_sec);
+   if ( hIconSmall )
+       DestroyIcon(hIconSmall);
+
    return ret;
 }
 
@@ -521,7 +567,6 @@ ULONG APIENTRY StartDialog(
   PRXSTRING retstr )
 {
    LONG argList[4];
-   HINSTANCE hI;
    ULONG thID;
    BOOL Release = FALSE;
    DEF_ADM;
@@ -557,20 +602,21 @@ ULONG APIENTRY StartDialog(
    {
        if (dlgAdm->TheDlg)
        {
+          HICON hBig = NULL;
+          HICON hSmall = NULL;
+
           SetThreadPriority(dlgAdm->TheThread, THREAD_PRIORITY_ABOVE_NORMAL);   /* for a faster drawing */
           dlgAdm->OnTheTop = TRUE;
                                   /* modal flag = yes ? */
           if (dlgAdm->previous && !IsYes(argv[6].strptr) && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg)) EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
 
-          if (atoi(argv[5].strptr) > 0)
+          if ( GetDialogIcons(dlgAdm, atoi(argv[5].strptr), FALSE, &hBig, &hSmall) )
           {
-              dlgAdm->SysMenuIcon = (HICON)SetClassLong(dlgAdm->TheDlg, GCL_HICON, (LONG)LoadIcon(dlgAdm->TheInstance, MAKEINTRESOURCE(atoi(argv[5].strptr))));
-          }
-          else
-          {
-              hI = LoadLibrary(VISDLL);
-              dlgAdm->SysMenuIcon = (HICON)SetClassLong(dlgAdm->TheDlg, GCL_HICON, (LONG)LoadIcon(hI, MAKEINTRESOURCE(99)));
-              FreeLibrary(hI);
+              dlgAdm->SysMenuIcon = (HICON)SetClassLong(dlgAdm->TheDlg, GCL_HICON, (LONG)hBig);
+              dlgAdm->TitleBarIcon = (HICON)SetClassLong(dlgAdm->TheDlg, GCL_HICONSM, (LONG)hSmall);
+              dlgAdm->DidChangeIcon = TRUE;
+
+              SendMessage(dlgAdm->TheDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
           }
 
           RETVAL((ULONG)dlgAdm->TheDlg)
@@ -584,6 +630,143 @@ ULONG APIENTRY StartDialog(
 }
 
 
+/**
+ * Loads and returns the handles to the regular size and small size icons for
+ * the dialog. These icons are used in the title bar of the dialog, on the task
+ * bar, and for the alt-tab display.
+ *
+ * The icons can come from the user resource DLL, a user defined dialog, or the
+ * OODialog DLL.  IDs for the icons bound to the OODialog.dll are reserved.
+ *
+ * This function attempts to always succeed.  If an icon is not attained, the
+ * default icon from the resources in the OODialog DLL is used.  This icon
+ * should always be present, it is bound to the DLL when ooRexx is built.
+ *
+ * @param dlgAdm    Pointer to the dialog administration block.
+ * @param id        Numerical resource ID.
+ * @param fromFile  Flag indicating whether the icon is located in a DLL or to
+ *                  be loaded from a file.
+ * @param phBig     In/Out Pointer to an icon handle.  If the function succeeds,
+ *                  on return will contian the handle to a regular size icon.
+ * @param phSmall   In/Out Pointer to an icon handle.  On success will contain
+ *                  a handle to a small size icon.
+ *
+ * @return True if the icons were loaded and the returned handles are valid,
+ *         otherwise false.
+ */
+BOOL GetDialogIcons(DIALOGADMIN *dlgAdm, INT id, BOOL fromFile, PHANDLE phBig, PHANDLE phSmall)
+{
+    int cx, cy;
+
+    if ( phBig == NULL || phSmall == NULL )
+        return FALSE;
+
+    if ( id < 1 )
+        id = IDI_DLG_DEFAULT;
+
+    /* If one of the reserved IDs, fromFile has to be false. */
+    if ( id <= IDI_DLG_MAX_ID )
+        fromFile = FALSE;
+
+    cx = GetSystemMetrics(SM_CXICON);
+    cy = GetSystemMetrics(SM_CYICON);
+
+    *phBig = GetIconForID(dlgAdm, id, fromFile, cx, cy);
+
+    /* If that didn't get the big icon, try to get the default icon. */
+    if ( ! *phBig && id != IDI_DLG_DEFAULT )
+    {
+        id = IDI_DLG_DEFAULT;
+        fromFile = FALSE;
+        *phBig = GetIconForID(dlgAdm, id, fromFile, cx, cy);
+    }
+
+    /* If still no big icon, don't bother trying for the small icon. */
+    if ( *phBig )
+    {
+        cx = GetSystemMetrics(SM_CXSMICON);
+        cy = GetSystemMetrics(SM_CYSMICON);
+        *phSmall = GetIconForID(dlgAdm, id, fromFile, cx, cy);
+
+        /* Very unlikely that the big icon was obtained and failed to get the
+         * small icon.  But, if so, fail completely.  If the big icon came from
+         * a DLL it was loaded as shared and the system handles freeing it.  If
+         * it was loaded from a file, free it here.
+         */
+        if ( ! *phSmall )
+        {
+            if ( fromFile )
+                DestroyIcon(*phBig);
+            *phBig = NULL;
+        }
+    }
+
+    if ( ! *phBig )
+        return FALSE;
+
+    dlgAdm->SharedIcon = !fromFile;
+    return TRUE;
+}
+
+
+/**
+ * Loads and returns the handle to an icon for the specified ID, of the
+ * specified size.
+ *
+ * The icons can come from the user resource DLL, a user defined dialog, or the
+ * OODialog DLL.  IDs for the icons bound to the OODialog.dll are reserved.
+ *
+ * @param dlgAdm    Pointer to the dialog administration block.
+ * @param id        Numerical resource ID.
+ * @param fromFile  Flag indicating whether the icon is located in a DLL or to
+ *                  be loaded from a file.
+ * @param cx        The desired width of the icon.
+ * @param cy        The desired height of the icon.
+ *
+ * @return The handle to the loaded icon on success, or null on failure.
+ */
+HICON GetIconForID(DIALOGADMIN *dlgAdm, UINT id, BOOL fromFile, int cx, int cy)
+{
+    HINSTANCE hInst = NULL;
+    LPCTSTR   pName = NULL;
+    UINT      loadFlags = 0;
+
+    if ( fromFile )
+    {
+        /* Load the icon from a file, file name should be in the icon table. */
+        INT i;
+
+        for ( i = 0; i < dlgAdm->IT_size; i++ )
+        {
+            if ( dlgAdm->IconTab[i].iconID == id )
+            {
+                pName = dlgAdm->IconTab[i].fileName;
+                break;
+            }
+        }
+
+        if ( ! pName )
+            return NULL;
+
+        loadFlags = LR_LOADFROMFILE;
+    }
+    else if ( id <= IDI_DLG_MAX_ID )
+    {
+        /* Load the icon from the resources in oodialog.dll. */
+        hInst = MyInstance;
+        pName = MAKEINTRESOURCE(id);
+        loadFlags = LR_SHARED;
+    }
+    else
+    {
+        /* Load the icon from the user's resource DLL. */
+        hInst = dlgAdm->TheInstance;
+        pName = MAKEINTRESOURCE(id);
+        loadFlags = LR_SHARED;
+    }
+
+    return LoadImage(hInst, pName, IMAGE_ICON, cx, cy, loadFlags);
+}
 
 LONG InternalStopDialog(HWND h)
 {
@@ -1055,13 +1238,14 @@ CHAR * SpecialFuncTab[SFTS] = {\
                      };
 
 
-#define UFTS 5
+#define UFTS 6
 CHAR * UserFuncTab[UFTS] = {\
                      "UsrAddControl", \
                      "UsrCreateDialog", \
                      "UsrDefineDialog", \
                      "UsrMenu", \
                      "UsrAddNewCtrl", \
+                     "UsrAddResource", \
                      };
 
 

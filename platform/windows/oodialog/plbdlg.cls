@@ -206,7 +206,7 @@
 
 ::method Init protected
    expose Library Resource DlgData.
-   use arg Library, Resource, DlgData.
+   use arg Library, Resource, DlgData., includeFile
 
    self~Adm = 0
    self~ParentDlg = .Nil
@@ -252,12 +252,52 @@
    self~AddUserMsg("OK", 0x00000111, 0xFFFFFFFF, 1, 0xFFFFFFFF, 0, 0)
    self~AddUserMsg("Cancel", 0x00000111, 0xFFFFFFFF, 2, 0xFFFFFFFF, 0, 0)
    self~AddUserMsg("Help", 0x00000111, 0xFFFFFFFF, 9, 0xFFFFFFFF, 0, 0)
-   self~ConstDir = .Nil
    self~ProcessingLoad = 0
    self~DlgHandle = 0
    self~ChildDialogs = .list~new
 
+   self~ConstDir = .directory~new
+   self~ConstDir["IDOK"] = 1
+   self~ConstDir["IDCANCEL"] = 2
+   self~ConstDir["IDHELP"] = 9
+
+   -- Common in Microsoft compatible resource script files
+   self~ConstDir["IDC_STATIC"] = -1
+
+   -- ooDialog supplied resources, defined in oodResources.h
+   self~ConstDir["IDI_DLG_OODIALOG"] = 1
+   self~ConstDir["IDI_DLG_APPICON"] = 2
+   self~ConstDir["IDI_DLG_APPICON2"] = 3
+   self~ConstDir["IDI_DLG_OOREXX"] = 4
+   self~ConstDir["IDI_DLG_DEFAULT"] = 2
+
+
+   if arg(4, 'E') then
+     self~ParseIncludeFile(includeFile);
+
    return 0
+
+::method ParseIncludeFile protected
+  use arg hFile
+
+  if arg(1, 'O') then return 1
+
+  -- Revisit. Should an error msg box be put up if the file is not found?
+  hFile = SysSearchPath("PATH", hFile)
+  if hFile == "" then return 1
+
+  f = .stream~new(hFile)
+  f~open(read)
+
+  do while f~state == "READY"
+    line = f~linein~strip('L')
+    if line~abbrev("#define") & line~words == 3 then do
+      parse var line def symbol numericID .
+      if numericID~datatype('N') then self~ConstDir[symbol~translate] = numericID
+    end
+  end
+  f~close
+  return 0
 
 ::method DlgHandle unguarded
    return self~hwnd
@@ -289,6 +329,8 @@
 ::method Execute unguarded
    expose DlgData.
    use arg sh, icon, sleeptime, nomodal
+   if \ icon~Datatype('N') then icon = self~ResolveSymbolicId(icon)
+   if icon = -1 then icon = 0
    if sleeptime~Datatype('N') = 0 then sleeptime = 0   /* default is no sleep for execute */
    if Arg(4, 'o') = 1 then nomodal = 0
    if self~startit(icon, nomodal) \= 0 then

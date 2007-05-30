@@ -68,9 +68,13 @@
    /* arg style=[ "DROPDOWN" | "TOPLINE" | "NOBORDER" | "WIZARD"] */
 
 ::method Init
-   use arg DlgData., cdx, cdy, cdcx, cdstyle, cdtable, cdlabel, cdmax
-   if Arg(1,'e') = 1 then self~init:super(DlgData.)
-   else self~init:super
+   use arg DlgData., cdx, cdy, cdcx, cdstyle, cdtable, cdlabel, cdmax, includeFile
+
+   select
+     when Arg(1,'E') & Arg(9, 'E') then self~init:super(DlgData., Arg(9))
+     when Arg(1,'E') then self~init:super(DlgData.)
+     otherwise self~init:super
+   end
 
    self~catalog = .directory~new
    self~catalog['count'] = 0

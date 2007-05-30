@@ -1,12 +1,11 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007 Rexx Language Association. All rights reserved.         */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,66 +34,16 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/*                                                                            */
-/*       Windows Dialog Interface for Object REXX                             */
-/* Resource Dialog Class                                                      */
-/*                                                                            */
-/******************************************************************************/
-::requires "BaseDlg.cls"
 
-::class ResDialog subclass BaseDialog public
+/* Symbolic ID definitions for ooDialog resources.  The init method in
+ * PlainBaseDialog puts these into the ConstDir directory.  IF changing these
+ * IDs here, it would be nice to sync up the PlainBaseDialog.
+ */
 
-::method Init
-   expose Library Resource DlgData.
-   use arg Library, Resource, DlgData., includeFile
+#define IDI_DLG_OODIALOG    1
+#define IDI_DLG_APPICON     2
+#define IDI_DLG_APPICON2    3
+#define IDI_DLG_OOREXX      4
 
-   if arg(4, 'E') then ret = self~init:super(Library, Resource, DlgData., includeFile)
-   else ret = self~init:super(Library, Resource, DlgData.)
-
-   if Arg(3,'o') = 1 then self~UseStem = 0; else self~UseStem = 1
-   if \ Resource~datatype("N") then Resource = self~ResolveSymbolicId(Resource)
-   return ret
-
-   /* create a Windows dialog out of the resource stored in Library */
-
-::method StartIt
-   expose Library Resource DlgData.
-   use arg icon, modal
-
-   if Arg(1,"o") = 1 | icon~Datatype("N") = 0 then icon = 0
-   if Arg(2,"o") = 1 then modal = 0; else if modal~translate = "NOTMODAL" then modal = 1
-   self~DlgHandle = StartDialog(self~Adm, Library, Resource, self~AutoDetect, 1, icon, modal)
-
-   /* because of autodetection we have to create attributes automatically */
-   if self~AutoDetect = 1 then
-   do
-      id = 1; i=0
-      do while id > 0
-         parse value DataTable(self~Adm,"GET", i) with id typ cat
-         hnd = self~GetItem(id)
-         if (hnd \= 0) then do
-             txt = Wnd_Desktop("TXT",hnd)
-             self~AddAttribute(id, txt)
-         end
-         i = i +1
-      end
-   end
-
-   if self~DlgHandle \= 0 then self~InitDialog
-   return self~DlgHandle
-
-
-::method StopIt
-   forward class (super) continue
-   ret = result
-   if self~BkgBrushBmp \= 0 then self~DeleteObject(self~BkgBrushBmp)
-   if self~BkgBitmap \= 0 then self~RemoveBitmap(self~BkgBitmap)
-   return ret
-
-
-::method SetMenu
-   use arg id
-   return DialogMenu("ASSOC", self~DlgHandle, id)
-
-
+#define IDI_DLG_DEFAULT     IDI_DLG_APPICON2
+#define IDI_DLG_MAX_ID      IDI_DLG_OOREXX

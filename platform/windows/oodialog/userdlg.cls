@@ -51,10 +51,12 @@
 
   /* The init method */
 ::method Init
-   if Arg() >= 1 then
-       InitRet = self~init:super(0, 0, Arg(1))
-   else
-       InitRet = self~init:super
+   select
+      when Arg() >= 2 then InitRet = self~init:super(0, 0, Arg(1),Arg(2))
+      when Arg() == 1 then InitRet = self~init:super(0, 0, Arg(1))
+      otherwise InitRet = self~init:super
+   end
+
    if InitRet = 0 then forward message "DynamicInit"
    else return InitRet
 

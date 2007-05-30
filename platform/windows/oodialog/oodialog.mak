@@ -74,4 +74,4 @@ $(OR_OUTDIR)\oodialog.dll:     $(SOURCEF)
 $(OR_OUTDIR)\oodialog.res: $(OR_ORYXOODSRC)\oodialog.rc
     @ECHO .
     @ECHO ResourceCompiling $(@B).res
-        $(rc) $(rcflags_common) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_ORYXOODSRC)\$(@B).rc
+        $(rc) $(rcflags_common) /i $(OR_ORYXOODSRC) /i $(OR_ORYXWSRC) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_ORYXOODSRC)\$(@B).rc

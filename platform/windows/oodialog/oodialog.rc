@@ -35,7 +35,13 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 //                                                                            */
 //----------------------------------------------------------------------------*/
-OODLGICO    ICON   "OODIALOG.ICO"
+
+#include <oodResources.h>
+
+IDI_DLG_OODIALOG    ICON   "oodialog.ico"
+IDI_DLG_APPICON     ICON   "AppIcon.ico"
+IDI_DLG_APPICON2    ICON   "AppIcon2.ico"
+IDI_DLG_OOREXX      ICON   "rexx.ico"
 
 1 VERSIONINFO
  FILEVERSION OOREXX_VER,OOREXX_REL,OOREXX_SUB,OOREXX_BLD

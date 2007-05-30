@@ -50,10 +50,13 @@
 
   /* The init method */
 ::method Init
-   use arg DlgData.
-   if self~init:super(0, 0, DlgData.) = 0 then
-       forward message "DynamicInit"
-   else return result
+   use arg DlgData., includeFile
+
+   if arg() >= 2 then ret = self~init:super(0, 0, DlgData., includeFile)
+   else ret = self~init:super(0, 0, DlgData.)
+
+   if ret = 0 then forward message "DynamicInit"
+   else return ret
 
 ::method StopIt
    forward class (super) continue

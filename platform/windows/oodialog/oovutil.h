@@ -51,6 +51,7 @@
 #define MAX_BT_ENTRIES  300
 #define MAX_DT_ENTRIES  750
 #define MAX_CT_ENTRIES 1000
+#define MAX_IT_ENTRIES   20
 #define MAXCHILDDIALOGS 20
 #define CREATECHILD 0x0a01
 #define INTERRUPTSCROLL 0x0a02
@@ -183,8 +184,6 @@ extern LONG HandleError(PRXSTRING r, CHAR * text);
 #define DEF_ADM     DIALOGADMIN * dlgAdm = NULL
 #define GET_ADM     dlgAdm = (DIALOGADMIN *)atol(argv[0].strptr)
 
-
-
 /* structures to manage the dialogs */
 typedef struct {
    ULONG msg;
@@ -222,6 +221,11 @@ typedef struct {
    HBRUSH ColorBrush;
 } COLORTABLEENTRY;
 
+typedef struct {
+   ULONG iconID;
+   PCHAR fileName;
+} ICONTABLEENTRY;
+
 typedef struct
 {
    void * previous;
@@ -234,6 +238,8 @@ typedef struct
    INT BT_size;
    COLORTABLEENTRY * ColorTab;
    INT CT_size;
+   ICONTABLEENTRY * IconTab;
+   INT IT_size;
    HWND TheDlg;
    HWND ChildDlg[MAXCHILDDIALOGS+1];
    HWND AktChild;
@@ -247,6 +253,9 @@ typedef struct
    HPALETTE ColorPalette;
    HMENU menu;
    HICON SysMenuIcon;
+   HICON TitleBarIcon;
+   BOOL  SharedIcon;
+   BOOL  DidChangeIcon;
    WPARAM StopScroll;
    CHAR * pMessageQueue;
 } DIALOGADMIN;

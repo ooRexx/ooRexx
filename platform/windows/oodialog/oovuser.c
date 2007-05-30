@@ -45,6 +45,7 @@
 #include <ctl3d.h>
 #endif
 #include "oovutil.h"
+#include "oodResources.h"
 #include <commctrl.h>
 
 extern LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
@@ -53,6 +54,7 @@ extern BOOL DataAutodetection(DIALOGADMIN * aDlg);
 extern INT DelDialog(DIALOGADMIN * aDlg);
 extern CRITICAL_SECTION crit_sec;
 extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
+extern BOOL GetDialogIcons(DIALOGADMIN *, INT, BOOL, PHANDLE, PHANDLE);
 
 
 static BOOL CommCtrlLoaded = FALSE;
@@ -375,7 +377,6 @@ ULONG APIENTRY UsrCreateDialog(
 {
    LONG argList[4];
    DLGTEMPLATE * p;
-   HINSTANCE hI;
    ULONG thID;
    BOOL Release = FALSE;
    HANDLE hThread;
@@ -458,15 +459,16 @@ ULONG APIENTRY UsrCreateDialog(
 
               if (GetWindowLong(dlgAdm->TheDlg, GWL_STYLE) & WS_SYSMENU)
               {
-                 if (atoi(argv[7].strptr) > 0)
+                 HICON hBig = NULL;
+                 HICON hSmall = NULL;
+
+                 if ( GetDialogIcons(dlgAdm, atoi(argv[7].strptr), TRUE, &hBig, &hSmall) )
                  {
-                    dlgAdm->SysMenuIcon = (HICON)SetClassLong(dlgAdm->TheDlg, GCL_HICON, (LONG)LoadIcon(dlgAdm->TheInstance, MAKEINTRESOURCE(atoi(argv[7].strptr))));
-                 }
-                 else
-                 {
-                    hI = LoadLibrary(VISDLL);
-                    dlgAdm->SysMenuIcon = (HICON)SetClassLong(dlgAdm->TheDlg, GCL_HICON, (LONG)LoadIcon(hI, MAKEINTRESOURCE(99)));
-                    FreeLibrary(hI);
+                    dlgAdm->SysMenuIcon = (HICON)SetClassLong(dlgAdm->TheDlg, GCL_HICON, (LONG)hBig);
+                    dlgAdm->TitleBarIcon = (HICON)SetClassLong(dlgAdm->TheDlg, GCL_HICONSM, (LONG)hSmall);
+                    dlgAdm->DidChangeIcon = TRUE;
+
+                    SendMessage(dlgAdm->TheDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
                  }
               }
               RETVAL((ULONG)dlgAdm->TheDlg);
@@ -848,7 +850,84 @@ LONG EvaluateListStyle(CHAR * styledesc)
     return lStyle;
 }
 
+/* Store a resource in a resource table.  Currently this is only icon resources,
+ * but this function could be expanded to include other resources.
+ */
+ULONG APIENTRY UsrAddResource(
+  PUCHAR funcname,
+  ULONG argc,
+  RXSTRING argv[],
+  PUCHAR qname,
+  PRXSTRING retstr )
+{
+    DIALOGADMIN * dlgAdm = NULL;
+    ULONG iconID;
 
+    CHECKARG(4);
+
+    dlgAdm = (DIALOGADMIN *)atol(argv[0].strptr);
+    if ( !dlgAdm ) RETERR
+
+        /* Store the file name of an ICON that can then be loaded as a resource. */
+        if ( !strcmp(argv[1].strptr,"ICO") )
+        {
+            if ( !dlgAdm->IconTab )
+            {
+                dlgAdm->IconTab = LocalAlloc(LPTR, sizeof(ICONTABLEENTRY) * MAX_IT_ENTRIES);
+                if ( !dlgAdm->IconTab )
+                {
+                    MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
+                    RETVAL(-1);
+                }
+                dlgAdm->IT_size = 0;
+            }
+
+            if ( dlgAdm->IT_size < MAX_IT_ENTRIES )
+            {
+                INT i;
+
+                iconID = atol(argv[2].strptr);
+                if ( iconID <= IDI_DLG_MAX_ID )
+                {
+                    char szBuf[196];
+                    sprintf(szBuf, "Icon resource ID: %d is not valid.  Resource\n"
+                            "IDs from 1 through %d are reserved for ooDialog\n"
+                            "internal resources.  The icon resource will not\n"
+                            "be added.", iconID, IDI_DLG_MAX_ID);
+                    MessageBox(0, szBuf, "Error", MB_OK | MB_ICONHAND);
+                    RETVAL(-1);
+                }
+
+                /* If there is already a resource with this ID, it is replaced. */
+                for ( i = 0; i < dlgAdm->IT_size; i++ )
+                {
+                    if ( dlgAdm->IconTab[i].iconID == iconID )
+                        break;
+                }
+
+                dlgAdm->IconTab[i].fileName = LocalAlloc(LPTR, argv[3].strlength + 1);
+                if ( ! dlgAdm->IconTab[i].fileName )
+                {
+                    MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
+                    RETVAL(-1);
+                }
+                dlgAdm->IconTab[i].iconID = iconID;
+                strcpy(dlgAdm->IconTab[i].fileName, argv[3].strptr);
+                if ( i == dlgAdm->IT_size )
+                    dlgAdm->IT_size++;
+
+            }
+            else
+            {
+                MessageBox(0, "Icon resource elements have exceeded the maximum\n"
+                           "number of allocated icon table entries. The icon\n"
+                           "resource will not be added.",
+                           "Error", MB_OK | MB_ICONHAND);
+                RETVAL(-1)
+            }
+        }
+    RETC(0)
+}
 
 ULONG APIENTRY UsrAddNewCtrl(
   PUCHAR funcname,

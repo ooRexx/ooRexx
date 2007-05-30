@@ -74,10 +74,6 @@
    self~MenuMemHandle = 0
    self~DialogItemCount = 0
    if Arg(1,'o') = 1 then self~UseStem = 0; else self~UseStem = 1
-   self~ConstDir = .directory~new
-   self~ConstDir["IDOK"] = 1
-   self~ConstDir["IDCANCEL"] = 2
-   self~ConstDir["IDHELP"] = 9
    return 0
 
    /*  */
@@ -300,19 +296,33 @@
    do while found = 0
       do while n = 0 & fl > 0
          s = f~linein; fl = fl -1
-         n = s~wordpos("DIALOG ")
-         /* premission: #define only at the top of the RC and separated by a tab or a blank */
-         if s~wordpos("#define") > 0 then do
-             s = s~translate(" ", "9"x)
-             parse var s "#define " symb iid
-             self~ConstDir[symb~space(0)~translate] = iid
+         select
+            when s~wordpos("DIALOG ") > 0 then n = s~wordpos("DIALOG ")
+            when s~wordpos("DIALOGEX ") > 0 then n = s~wordpos("DIALOGEX ")
+            when s~wordpos("ICON") = 2 then do
+               -- ICON RESOURCE statement as opposed to an ICON CONTROL statement.
+               -- filename could have spaces and *should* be in quotes.
+               parse var s nameID ic fileName
+               self~AddIcon(nameID, fileName)
+            end
+            /* premission: #define only at the top of the RC and separated by a tab or a blank */
+            when s~wordpos("#define") > 0 then do
+               s = s~translate(" ", "9"x)
+               parse var s "#define " symb iid
+               self~ConstDir[symb~space(0)~translate] = iid
+            end
+            otherwise
+               nop
          end
+         -- End select
       end
       if (self~checkfile(f) = 1) then return 1
       if Arg(2,'o') = 1 | dialogid = "DIALOGID" then found = 1
       else do
-         if s~word(n-1)~translate = dialogid~translate then found = 1
-         else if self~CheckId(s~word(n-1)) = dialogid then found = 1
+         foundID = s~word(n-1)~translate
+         if foundID = dialogid~translate then found = 1
+         else if self~CheckId(foundID) = dialogid then found = 1
+         else if foundID = self~CheckId(dialogid~translate) then found = 1
          else n = 0
       end
    end
@@ -328,6 +338,7 @@
    end
    if (self~checkfile(f) = 1) then return 1
    parse var s prev dlg.style
+   dlg.style = dlg.style~translate(" ", "|")
 
    internopts = internopts || self~InternGetRCStyle(dlg.style, "DLG")
 
@@ -394,12 +405,15 @@
              self~ConstDir[symb~space(0)~translate] = iid
          end
          n = s~wordpos("DIALOG")
+         if n = 0 then n = s~wordpos("DIALOGEX")
       end
       if self~checkfile(f)=1 then return 1
       if Arg(2,'o') = 1 | dialogid = "DIALOGID" then found = 1
       else do
-         if s~word(n-1)~translate = dialogid~translate then found = 1
-         else if self~CheckId(s~word(n-1)) = dialogid then found = 1
+         foundID = s~word(n-1)~translate
+         if foundID = dialogid~translate then found = 1
+         else if self~CheckId(foundID) = dialogid then found = 1
+         else if foundID = self~CheckId(dialogid~translate) then found = 1
          else n = 0
       end
    end
@@ -563,11 +577,11 @@
 
    if id~datatype("N") = 0 then do
       if self~ConstDir = .Nil then do
-         ret = ErrorMessage("Adding dialog item: undefined non-numeric identification number!")
+         ret = ErrorMessage("Adding dialog item:" id "undefined non-numeric identification number!")
          return -1
       end
       else if self~ConstDir[id~space(0)~translate] = .Nil then do
-          ret = ErrorMessage("Adding dialog item: undefined non-numeric identification number!")
+          ret = ErrorMessage("Adding dialog item:" id "undefined non-numeric identification number!")
           return -1
       end
       id = self~ResolveSymbolicId(id)
@@ -996,6 +1010,12 @@
 ::method AddOkCancelLeftTop
    self~AddButtonGroup(5, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "FIX DEFAULT")
 
+::method AddIcon
+   use arg id, fileName
+
+   id = self~CheckId(id~strip~translate)
+   fileName = fileName~strip~strip('B', '"')
+   if id <> -1 then ret = UsrAddResource(self~Adm, "ICO", id, fileName)
 
 ::method GetDefaultOpts protected
    use arg opts
@@ -1010,7 +1030,11 @@
 ::method StartIt
    use arg icon, modal
 
-   if Arg(1,"o") = 1 | icon~Datatype("N") = 0 then icon = 0
+   if Arg(1,"o") then icon = 0
+   else do
+     if \ icon~DataType("N") then icon = self~ResolveSymbolicId(icon)
+     if icon < 0 then icon = 0
+   end
    if Arg(2,"o") = 1 then modal = 0; else if modal~translate = "NOTMODAL" then modal = 1
    if self~BasePtr = 0 then return 0
    self~DlgHandle = UsrCreateDialog(self~Adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, 0 /* no autodetection */, 1, icon, modal)
