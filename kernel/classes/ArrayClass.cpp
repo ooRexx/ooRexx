@@ -1346,15 +1346,17 @@ RexxArray *RexxArray::extend(          /* join two arrays into one          */
  */
 arraysize_t RexxArray::findSingleIndexItem(RexxObject *item)
 {
-    for (arraysize_t i = 0; i < this->arraySize; i++)
+    for (arraysize_t i = 1; i <= this->size(); i++)
     {
+        RexxObject *test = get(i);
+
         // if there's an object in the slot, compare it.
-        if (objects[i] != OREF_NULL)
+        if (test != OREF_NULL)
         {
             // if the items are equal, return the index
-            if (item->equalValue(objects[i]))
+            if (item->equalValue(test))
             {
-                return i + 1;
+                return i;
             }
         }
     }
@@ -1468,7 +1470,7 @@ RexxObject *RexxArray::removeItem(RexxObject *target)
         return TheNilObject;
     }
     // remove the item at the location
-    OrefSet(this, objects[index - 1], OREF_NULL);
+    put(OREF_NULL, index);
     return target;
 }
 
