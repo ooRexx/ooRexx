@@ -4018,6 +4018,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Incorrect_method_abstract</SymbolicName>
         <Text>Method <Sub position="1" name="name"/> is ABSTRACT and cannot be directly invoked</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>966</Subcode>
+        <MessageNumber>669</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_queue_index</SymbolicName>
+        <Text>Incorrect queue index <q><Sub position="1" name="index"/></q></Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

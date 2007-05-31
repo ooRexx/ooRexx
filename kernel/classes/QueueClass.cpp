@@ -118,27 +118,27 @@ LISTENTRY *RexxQueue::locateEntry(RexxObject *index, RexxObject *position)
     RexxInteger *integerIndex = (RexxInteger *)REQUEST_INTEGER(index);
     if (integerIndex == TheNilObject)
     {
-        report_exception1(Error_Incorrect_method_index, index);
+        report_exception1(Error_Incorrect_method_queue_index, index);
     }
     // and positive
     wholenumber_t item_index = integerIndex->value;
     if (item_index < 1)
     {
-        report_exception1(Error_Incorrect_method_index, index);
+        report_exception1(Error_Incorrect_method_queue_index, index);
     }
 
     // we need to iterate through the entries to locate this
-    LISTENTRY *listIndex = ENTRY_POINTER(this->first);
-    while (listIndex != NULL)
+    long listIndex = this->first;
+    while (listIndex != LIST_END)
     {
         // have we reached the entry?  return the item
         item_index--;
         if (item_index == 0)
         {
-            return listIndex;
+            return ENTRY_POINTER(listIndex);
         }
         // step to the next entry
-        listIndex = ENTRY_POINTER(listIndex->next);
+        listIndex = ENTRY_POINTER(listIndex)->next;
     }
     return NULL;          // this queue item not found
 }
@@ -156,7 +156,7 @@ RexxObject *RexxQueue::put(
   LISTENTRY *list_index = this->locateEntry(index, IntegerTwo);
   if (list_index == NULL)              /* not a valid index?                */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_index, index);
+    report_exception1(Error_Incorrect_method_queue_index, index);
   OrefSet(this->table, list_index->value, value);
   return OREF_NULL;                    /* return nothing at all             */
 }
@@ -324,7 +324,7 @@ RexxObject *RexxQueue::next(
     element = this->locateEntry(index, (RexxObject *)IntegerOne);
     if (element == NULL)                 /* not a valid index?                */
     {
-        report_exception1(Error_Incorrect_method_index, index);
+        report_exception1(Error_Incorrect_method_queue_index, index);
     }
 
     if (element->next == LIST_END)     /* no next item?                     */
@@ -351,7 +351,7 @@ RexxObject *RexxQueue::previous(
   element = this->locateEntry(index, (RexxObject *)IntegerOne);
   if (element == NULL)                 /* not a valid index?                */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_index, index);
+    report_exception1(Error_Incorrect_method_queue_index, index);
 
   if (element->previous == LIST_END)   /* no previous item?                 */
     return TheNilObject;               /* just return .nil                  */
@@ -375,13 +375,16 @@ long RexxQueue::entryToIndex(long target)
     long counter = 0;
     while (current != LIST_END)
     {
+        counter++;
         if (current == target)
         {
-            return counter + 1;
+            return counter;
         }
 
         current = ENTRY_POINTER(current)->next;
     }
+
+    return 0;
 }
 
 

@@ -2941,6 +2941,12 @@ special character (such as a parenthesis).
 <para>Method <emphasis>name</emphasis> is ABSTRACT and cannot be directly invoked</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>966</term>
+<listitem>
+<para>Incorrect queue index "<emphasis>index</emphasis>"</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR97">
