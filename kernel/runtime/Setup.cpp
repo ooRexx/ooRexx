@@ -891,6 +891,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_UNKNOWN       , TheDirectoryBehaviour, CPPM(RexxObject::unknownRexx), 2);
   defineProtectedKernelMethod(CHAR_UNSETMETHOD   , TheDirectoryBehaviour, CPPMD(RexxDirectory::remove), 1);
   defineKernelMethod(CHAR_INDEX        , TheDirectoryBehaviour, CPPMD(RexxDirectory::indexRexx), 1);
+  defineKernelMethod(CHAR_HASITEM      , TheDirectoryBehaviour, CPPMD(RexxDirectory::hasItem), 1);
   defineKernelMethod(CHAR_REMOVEITEM   , TheDirectoryBehaviour, CPPMD(RexxDirectory::removeItem), 1);
 
                                        /* set the scope of the methods to   */
