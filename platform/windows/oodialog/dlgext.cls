@@ -56,6 +56,7 @@
    if sleeptime~Datatype('N') = 0 then sleeptime = 10
    if Arg(2,'o') = 1 then sh = "DEFAULT"
    if Arg(4,'o') = 1 then nomodal = 0
+   DlgData. = self~DlgData
    if self~startit(icon, nomodal) \= 0 then
    do
       if self~UseStem = 1 then self~SetDataStem(DlgData.); else self~SetData

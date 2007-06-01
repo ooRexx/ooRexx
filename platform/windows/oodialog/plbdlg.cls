@@ -188,6 +188,10 @@
 ::method AutoDetect attribute      /* Automatic data field detection on/off */
 ::method DataConnection attribute protected /* store connections between ids and class attributes */
 ::method UseStem attribute protected   /* flag whether to use a stem to set/get data or not */
+::method DlgData private
+   expose DlgData.
+   return DlgData.
+
 ::method Finished attribute
 ::method ParentDlg attribute protected
 
