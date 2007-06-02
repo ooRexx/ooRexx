@@ -52,7 +52,7 @@
 /* if it is a dialog or a dialog item                                         */
 /******************************************************************************/
 
-::class WindowBase public MIXINCLASS object
+::class 'WindowBase' public MIXINCLASS object
 
 ::method Hwnd attribute
 ::method InitCode attribute        /* attribute to get the result of init */
@@ -182,7 +182,7 @@
 /* methods (UserDialog).                                 */
 /******************************************************************************/
 
-::class PlainBaseDialog public inherit WindowBase
+::class 'PlainBaseDialog' public inherit WindowBase
 
 ::method Adm attribute protected   /* external adminstration buffer */
 ::method AutoDetect attribute      /* Automatic data field detection on/off */

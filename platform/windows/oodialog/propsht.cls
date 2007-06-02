@@ -48,7 +48,7 @@
 /* This class creates and controls a dialog that has more than one panel */
 /* using a tab control to select the single pages */
 
-::class PropertySheet subclass CategoryDialog public inherit MessageExtensions AdvancedControls
+::class 'PropertySheet' subclass CategoryDialog public inherit MessageExtensions AdvancedControls
 
 ::method Init
    argarr = Arg(1, "A")

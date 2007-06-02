@@ -43,7 +43,7 @@
 If Arg(1) = "REXX" Then
   Say "OLEObject class setup"
 
-::CLASS OLEObject
+::CLASS 'OLEObject'
 ::METHOD New CLASS
   Signal On Syntax
 
@@ -75,7 +75,7 @@ Syntax:
 use arg name
 return self~unknown(name, arg(2,'A'))
 
-::CLASS OLEVariant
+::CLASS 'OLEVariant'
 ::METHOD new class
   signal on syntax
 

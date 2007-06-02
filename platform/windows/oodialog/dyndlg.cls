@@ -43,7 +43,7 @@
 /*                                                                            */
 /******************************************************************************/
 
-::class DynamicDialog Mixinclass Object public
+::class 'DynamicDialog' Mixinclass Object public
 
     /* attributes for internal use */
 ::method BasePtr attribute protected

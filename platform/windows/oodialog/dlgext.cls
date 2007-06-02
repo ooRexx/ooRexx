@@ -45,7 +45,7 @@
 
 
 
-::class DialogExtensions public MIXINCLASS object
+::class 'DialogExtensions' public MIXINCLASS object
 
    /* This method will do the same as Execute but it will do an asynchronous */
    /* dispatch of messages      */

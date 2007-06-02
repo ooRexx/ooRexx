@@ -41,7 +41,7 @@
 /* This is the base class for all the other Windows... classes. It handles the ext. function
 registration incl. queue counter and deregistration */
 
-::class WindowsClassesBase
+::class 'WindowsClassesBase'
 
 ::method InitCode attribute
 
@@ -79,7 +79,7 @@ registration incl. queue counter and deregistration */
 
 
 
-::class WindowsRegistry subclass WindowsClassesBase public
+::class 'WindowsRegistry' subclass WindowsClassesBase public
 
 ::method Local_Machine attribute
 ::method Current_User attribute
@@ -251,7 +251,7 @@ registration incl. queue counter and deregistration */
 
 /*********************************** WindowsProgramManager ****************************************/
 
-::class WindowsProgramManager subclass WindowsClassesBase public inherit VirtualKeyCodes
+::class 'WindowsProgramManager' subclass WindowsClassesBase public inherit VirtualKeyCodes
 
 ::method ActGroup
 
@@ -382,7 +382,7 @@ registration incl. queue counter and deregistration */
 
 
 
-::class WindowsEventLog subclass WindowsClassesBase public
+::class 'WindowsEventLog' subclass WindowsClassesBase public
 
 ::method CurrentHandle attribute
 ::method Events attribute
@@ -473,7 +473,7 @@ registration incl. queue counter and deregistration */
 
 /***********  VirtualKeyCodes **********************/
 
-::class VirtualKeyCodes mixinclass Object public
+::class 'VirtualKeyCodes' mixinclass Object public
 
 ::method VCode
    parse arg k
@@ -710,7 +710,7 @@ registration incl. queue counter and deregistration */
 
 /********************* WindowsManager **********************/
 
-::class WindowsManager subclass WindowsClassesBase public
+::class 'WindowsManager' subclass WindowsClassesBase public
 
 ::method Find
    parse arg title
@@ -775,7 +775,7 @@ registration incl. queue counter and deregistration */
 
 /********************* WindowsObject **********************/
 
-::class WindowObject public inherit VirtualKeyCodes
+::class 'WindowObject' public inherit VirtualKeyCodes
 
 ::method hwnd attribute
 
@@ -1085,7 +1085,7 @@ registration incl. queue counter and deregistration */
 
 /********************* MenuObject **********************/
 
-::class MenuObject subclass WindowObject public
+::class 'MenuObject' subclass WindowObject public
 
 ::method MainWnd attribute
 
@@ -1155,7 +1155,7 @@ registration incl. queue counter and deregistration */
 
 /********************* WindowsClipboard **********************/
 
-::class WindowsClipboard subclass WindowsClassesBase public
+::class 'WindowsClipboard' subclass WindowsClassesBase public
 
 ::method Copy
    use arg txt

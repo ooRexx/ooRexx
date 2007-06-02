@@ -41,7 +41,7 @@
 /*                                                                            */
 /******************************************************************************/
 /* ========================================================================= */
-::class DlgArea public
+::class 'DlgArea' public
 /* ========================================================================= */
 /*  define an area of your dialog to place controls on                       */
 /*                                                                           */
@@ -241,7 +241,7 @@ else return self~w(100 - self~LastX~changestr('%','')||'%')       /* X was % */
 ::method LastY          Attribute Private
 
 /* ========================================================================= */
-::Class DlgAreaU SubClass DlgArea Public -- DlgAreaUniversal - Whole of Dialog
+::Class 'DlgAreaU' SubClass DlgArea Public -- DlgAreaUniversal - Whole of Dialog
 /* ========================================================================= */
 /*  define the Area of the calling Dialog                                    */
 /*                                                                           */

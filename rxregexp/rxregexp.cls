@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-::CLASS RegularExpression PUBLIC
+::CLASS 'RegularExpression' PUBLIC
 
 ::METHOD New CLASS
   Signal On Syntax

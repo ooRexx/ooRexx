@@ -46,7 +46,7 @@
 
 /* This class shows a message window for a defined duration */
 
-::class TimedMessage subclass PlainUserDialog public
+::class 'TimedMessage' subclass PlainUserDialog public
 
    /* The class' constructor */
 
@@ -76,7 +76,7 @@
 /* This class provides a simple dialog with a titel, a message, one entry line, */
 /*   an OK and a Cancel push button */
 
-::class InputBox subclass PlainUserDialog public
+::class 'InputBox' subclass PlainUserDialog public
 
 ::method sx attribute
 ::method sy attribute
@@ -119,7 +119,7 @@
 
 /* This class is an InputBox dialog which entry line have the not visible flag */
 
-::class PasswordBox subclass InputBox public
+::class 'PasswordBox' subclass InputBox public
 
 ::method AddLine
    use arg x, y, l
@@ -128,7 +128,7 @@
 
 /* This class is an InputBox dialog which entry line allows only numerical data */
 
-::class IntegerBox subclass InputBox public
+::class 'IntegerBox' subclass InputBox public
 
 ::method validate
    self~GetDataStem(datas.)
@@ -144,7 +144,7 @@
 /* entry lines. After execution of this dialog you can query the values of the */
 /* entry lines. */
 
-::class MultiInputBox subclass PlainUserDialog public
+::class 'MultiInputBox' subclass PlainUserDialog public
 
 ::method init
    expose message title datas. entries. len
@@ -187,7 +187,7 @@
 /* This class provides a dialog with a list box, an OK and a Cancel button. */
 /* You the selected item will be returned when the OK pushbutton terminates the dialog */
 
-::class ListChoice subclass PlainUserDialog public
+::class 'ListChoice' subclass PlainUserDialog public
 
 ::method sx attribute
 ::method sy attribute
@@ -256,7 +256,7 @@
 
 
 
-::class MultiListChoice subclass ListChoice public
+::class 'MultiListChoice' subclass ListChoice public
 
 
 ::method DefineDialog
@@ -267,7 +267,7 @@
 
 /* This class is a dialog with a group of one or more check boxes. */
 
-::class CheckList subclass PlainUserDialog public
+::class 'CheckList' subclass PlainUserDialog public
 
   /* Entries is a stem variable with all the titles for the check boxes */
   /* Datas is a stem variable you can use to preselect the check boxes */
@@ -319,7 +319,7 @@
 /* The dialog this class shows has a group of radio buttons. That is you only can */
 /* select one item at the same time. */
 
-::class SingleSelection subclass PlainUserDialog public
+::class 'SingleSelection' subclass PlainUserDialog public
 
   /*  */
 ::method Init

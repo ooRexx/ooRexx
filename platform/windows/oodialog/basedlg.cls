@@ -52,7 +52,7 @@
 /* the WindowBase mixin-class                                                 */
 /******************************************************************************/
 
-::class WindowExtensions public MIXINCLASS object
+::class 'WindowExtensions' public MIXINCLASS object
 
 ::method Init_WindowExtensions
    if RxFuncQuery("InstExtendedMMFuncs") \= 0 then do
@@ -401,7 +401,7 @@
 /* methods (UserDialog).                                 */
 /******************************************************************************/
 
-::class BaseDialog public subclass PlainBaseDialog inherit DialogExtensions WindowExtensions
+::class 'BaseDialog' public subclass PlainBaseDialog inherit DialogExtensions WindowExtensions
 
 ::method ScrollNow attribute        /* Indicator whether or not scrolling is active */
 

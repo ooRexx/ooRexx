@@ -49,7 +49,7 @@
 /* diferent pages by clicking radio buttons. Each page has its own */
 /* window controls. You can setup a page out of a dialog resource script. */
 
-::class CategoryDialog subclass UserDialog public
+::class 'CategoryDialog' subclass UserDialog public
 
    /* arg style=[ "DROPDOWN" | "TOPLINE" | "NOBORDER" | "WIZARD"] */
 

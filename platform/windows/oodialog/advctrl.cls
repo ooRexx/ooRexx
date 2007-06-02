@@ -43,7 +43,7 @@
 /*                                                                            */
 /******************************************************************************/
 
-::class AdvancedControls Mixinclass Object public
+::class 'AdvancedControls' Mixinclass Object public
 
 
 ::method GetControl unguarded private
@@ -307,7 +307,7 @@
 /***************************************************************************************************************/
 
 /* Base class for all other controls */
-::class DialogControl public inherit WindowBase WindowExtensions
+::class 'DialogControl' public inherit WindowBase WindowExtensions
 
 ::method oDlg attribute
 ::method hDlg attribute
@@ -431,7 +431,7 @@
 /****************************************************** Tree Control Class *********************************************************/
 
 
-::class TreeControl subclass DialogControl public
+::class 'TreeControl' subclass DialogControl public
 
 ::method RootArray attribute private
 
@@ -673,7 +673,7 @@
 
 /****************************************************** List Control Class *********************************************************/
 
-::class ListControl subclass DialogControl public
+::class 'ListControl' subclass DialogControl public
 
 ::method LastItem attribute
 
@@ -1072,7 +1072,7 @@
 /****************************************************** Progress Bar Class *********************************************************/
 
 
-::class ProgressBar subclass DialogControl public
+::class 'ProgressBar' subclass DialogControl public
 
 ::method Step
    if Arg(1,'e') then
@@ -1111,7 +1111,7 @@
 /****************************************************** Track Bar Class *********************************************************/
 
 
-::class SliderControl subclass DialogControl public
+::class 'SliderControl' subclass DialogControl public
 
 ::method "Pos="
    forward message (SetPos)
@@ -1220,7 +1220,7 @@
 /****************************************************** Tab Control Class *********************************************************/
 
 
-::class TabControl subclass DialogControl public
+::class 'TabControl' subclass DialogControl public
 
 ::method LastItem attribute
 
@@ -1356,11 +1356,11 @@
 
 /**********                                    Old controls                                         ****************************/
 
-::class StaticControl subclass DialogControl public
+::class 'StaticControl' subclass DialogControl public
 
 /****************************************************** Edit Control Class *********************************************************/
 
-::class EditControl subclass DialogControl public
+::class 'EditControl' subclass DialogControl public
 
 ::Method Selected
     selndx = self~Message2Parent(0x00B0, 0, 0)
@@ -1477,7 +1477,7 @@
 
 /****************************************************** ButtonControl Classes *********************************************************/
 
-::class ButtonControl subclass DialogControl public
+::class 'ButtonControl' subclass DialogControl public
 
 ::Method State
     ch = self~Message2Parent(0x00F2, 0, 0)
@@ -1595,7 +1595,7 @@
    forward to (self~oDlg) Arguments (newarg)
 
 
-::class RadioButton subclass ButtonControl public
+::class 'RadioButton' subclass ButtonControl public
 
 ::Method IsChecked
     ch = self~Message2Parent(0x00F0, 0, 0)
@@ -1613,12 +1613,12 @@
 ::Method Indeterminate
     return self~Message2Parent(0x00F1, 2, 0)
 
-::class CheckBox subclass RadioButton public
+::class 'CheckBox' subclass RadioButton public
 
 
 /****************************************************** List Box Class *********************************************************/
 
-::class ListBox subclass DialogControl public
+::class 'ListBox' subclass DialogControl public
 
 ::method Add
    use arg data
@@ -1768,7 +1768,7 @@
 /****************************************************** Combo Box Class *********************************************************/
 
 
-::class ComboBox subclass DialogControl public
+::class 'ComboBox' subclass DialogControl public
 
 ::method Add
    use arg data
@@ -1871,7 +1871,7 @@
 /****************************************************** ScrollBar Class *********************************************************/
 
 
-::class ScrollBar subclass DialogControl public
+::class 'ScrollBar' subclass DialogControl public
 
 ::method SetRange
    use arg min, max, redraw

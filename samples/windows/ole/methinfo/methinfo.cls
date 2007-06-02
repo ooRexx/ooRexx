@@ -41,7 +41,7 @@
 /* to stdout.                                                      */
 /*******************************************************************/
 
-::class methodInfo public
+::class 'MethodInfo' public
 
 ::method init
   expose methods.

@@ -46,7 +46,7 @@
 ::requires "dyndlg.cls"
 
 /* This class extends the 'PlainBaseDialog' class */
-::class PlainUserDialog subclass PlainBaseDialog public inherit DynamicDialog
+::class 'PlainUserDialog' subclass PlainBaseDialog public inherit DynamicDialog
 
   /* The init method */
 ::method Init

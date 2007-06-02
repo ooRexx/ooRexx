@@ -43,7 +43,7 @@
 /*                                                                            */
 /******************************************************************************/
 
-::class AnimatedButton public
+::class 'AnimatedButton' public
 
 ::method ParentDlg attribute
 ::method stopped attribute

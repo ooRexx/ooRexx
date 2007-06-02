@@ -43,7 +43,7 @@
 /******************************************************************************/
 ::requires "BaseDlg.cls"
 
-::class ResDialog subclass BaseDialog public
+::class 'ResDialog' subclass BaseDialog public
 
 ::method Init
    expose Library Resource DlgData.

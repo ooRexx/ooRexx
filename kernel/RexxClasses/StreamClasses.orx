@@ -50,19 +50,19 @@
 .OutputStream~!REXXDefined
 .InputOutputStream~!REXXDefined
 .Stream~!REXXDefined
-.Stream_Supplier~!REXXDefined
-.rx_queue~!REXXDefined
+.StreamSupplier~!REXXDefined
+.RexxQueue~!REXXDefined
                                        /* add these classes to global, saved*/
                                        /*environment                        */
 .environment~setentry('STREAM', .Stream)
 .environment~setentry('INPUTSTREAM', .InputStream)
 .environment~setentry('OUTPUTSTREAM', .OutputStream)
 .environment~setentry('INPUTOUTPUTSTREAM', .InputOutputStream)
-.environment~setentry('STREAM_SUPPLIER', .Stream_Supplier)
-.environment~setentry('REXXQUEUE', .rx_queue)
+.environment~setentry('STREAMSUPPLIER', .StreamSupplier)
+.environment~setentry('REXXQUEUE', .RexxQueue)
 
 -- mixin class objects used for stream types
-::class OutputStream public MIXINCLASS Object
+::CLASS 'OutputStream' public MIXINCLASS Object
 
 ::method charout abstract     -- the input methods must be implemented
 ::method lineout abstract
@@ -93,7 +93,7 @@
   raise syntax 93.963  -- not supported
 
 
-::class InputStream public MIXINCLASS Object
+::CLASS 'InputStream' public MIXINCLASS Object
 ::method charout
   raise syntax 93.963  -- not supported
 ::method lineout
@@ -111,7 +111,7 @@
   raise syntax 93.963  -- not supported by default...this is optional
 
 
-::class InputOutputStream public MIXINCLASS Object
+::CLASS 'InputOutputStream' public MIXINCLASS Object
 
 ::method charout abstract  -- all of the base input/output operations must be implemented
 ::method lineout abstract
@@ -365,9 +365,9 @@ notready:                              /* standard notready handler         */
 
 ::METHOD supplier                      /* create a supplier object          */
 use strict arg
-return .stream_supplier~new(self)      /* return a stream supplier          */
+return .StreamSupplier~new(self)       /* return a stream supplier          */
 
-::CLASS 'Stream_Supplier'              /* stream supplier class             */
+::CLASS 'StreamSupplier'               /* stream supplier class             */
 ::METHOD init                          /* initialization method             */
                                        /* access the state information      */
 expose stream position line available transient
@@ -425,7 +425,7 @@ if \available then                     /* already reached the end?          */
 /*****************************************************************/
 /* Create the rx_queue class and define its associated methods */
 /*****************************************************************/
-::CLASS rx_queue
+::CLASS 'RexxQueue'
 ::METHOD create  CLASS   EXTERNAL 'REXX rexx_create_queue'
 ::METHOD delete  CLASS   EXTERNAL 'REXX rexx_delete_queue'
 

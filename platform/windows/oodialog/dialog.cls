@@ -49,4 +49,4 @@
 
 
 /* set default dialog to resource dialog */
-::class Dialog subclass UserDialog public
+::class 'Dialog' subclass UserDialog public

@@ -44,7 +44,7 @@
 ::requires "USERDLG.CLS"
 ::requires "ADVCTRL.CLS"
 
-::class StateIndicator subclass UserDialog public
+::class 'StateIndicator' subclass UserDialog public
 
 ::method Xext attribute
 ::method TitleTxt attribute
@@ -118,7 +118,7 @@
 
 
 
-::class ProgressIndicator subclass StateIndicator public inherit AdvancedControls
+::class 'ProgressIndicator' subclass StateIndicator public inherit AdvancedControls
 
 ::method LowValue attribute
 ::method HighValue attribute

@@ -750,36 +750,36 @@ use strict arg index, value=(index)    /* get the index                     */
   .local~setentry('STDQUE',.RexxQueue~new('SESSION'))
 
 -- tagging classes for Collection class types
-::CLASS Collection MIXINCLASS Object
-::CLASS OrderedCollection MIXINCLASS Collection
-::CLASS MapCollection MIXINCLASS Collection
-::CLASS SetCollection MIXINCLASS Collection
+::CLASS 'Collection' MIXINCLASS Object
+::CLASS 'OrderedCollection' MIXINCLASS Collection
+::CLASS 'MapCollection' MIXINCLASS Collection
+::CLASS 'SetCollection' MIXINCLASS Collection
 
 -- sort comparison classes.
-::CLASS Comparable MIXINCLASS Object
+::CLASS 'Comparable' MIXINCLASS Object
 ::METHOD compareTo ABSTRACT
 
-::CLASS Comparator MIXINCLASS Object
+::CLASS 'Comparator' MIXINCLASS Object
 ::METHOD compare
 use strict arg left, right
 return left~compareTo(right)
 
-::CLASS DescendingComparator MIXINCLASS Comparator
+::CLASS 'DescendingComparator' MIXINCLASS Comparator
 ::METHOD compare
 use strict arg left, right
 return -left~compareTo(right)
 
-::CLASS CaselessComparator MIXINCLASS Comparator
+::CLASS 'CaselessComparator' MIXINCLASS Comparator
 ::METHOD compare
 use strict arg left, right
 return left~caselessCompareTo(right)
 
-::CLASS DescendingCaselessComparator MIXINCLASS Comparator
+::CLASS 'DescendingCaselessComparator' MIXINCLASS Comparator
 ::METHOD compare
 use strict arg left, right
 return -left~caselessCompareTo(right)
 
-::CLASS ColumnComparator MIXINCLASS Comparator
+::CLASS 'ColumnComparator' MIXINCLASS Comparator
 ::METHOD init
 expose start length
 use strict arg start, length
@@ -790,7 +790,7 @@ expose start length
 use strict arg left, right
 return left~compareTo(right, start, length)
 
-::CLASS InvertingComparator MIXINCLASS Comparator
+::CLASS 'InvertingComparator' MIXINCLASS Comparator
 ::METHOD init
 expose comparator
 use strict arg comparator
@@ -801,7 +801,7 @@ expose comparator
 use strict arg left, right
 return -comparator~compare(left, right)
 
-::CLASS CaselessColumnComparator MIXINCLASS Comparator
+::CLASS 'CaselessColumnComparator' MIXINCLASS Comparator
 ::METHOD init
 expose start length
 use strict arg start, length
@@ -1585,7 +1585,7 @@ Output:
 */
 
    -- circular buffer (round-robin queue) of a defined size
-::class "CircularQueue" subclass queue public
+::CLASS 'CircularQueue' subclass queue public
 
 
 ::method of class
@@ -1767,7 +1767,7 @@ Output:
 
   return mb~string            -- now turn MutableBuffer object into a plain string
 
-::CLASS Properties subclass Directory public
+::CLASS 'Properties' subclass Directory public
 ::METHOD load class
   use arg input
   properties = .properties~new

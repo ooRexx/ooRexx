@@ -43,7 +43,7 @@
 /*                                                                            */
 /******************************************************************************/
 
-::class MessageExtensions Mixinclass Object public
+::class 'MessageExtensions' Mixinclass Object public
 
 
 ::method ConnectCommonNotify

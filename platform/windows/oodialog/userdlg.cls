@@ -47,7 +47,7 @@
 
 
 /* This class extends the 'BaseDialog' class */
-::class UserDialog subclass BaseDialog public inherit DynamicDialog
+::class 'UserDialog' subclass BaseDialog public inherit DynamicDialog
 
   /* The init method */
 ::method Init
