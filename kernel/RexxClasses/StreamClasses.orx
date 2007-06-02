@@ -110,6 +110,18 @@
 ::method position
   raise syntax 93.963  -- not supported by default...this is optional
 
+::method arrayIn
+  array = .array~new
+
+  signal on notready
+
+  do forever
+      array~append(self~linein)
+  end
+
+notready:
+  return array
+
 
 ::CLASS 'InputOutputStream' public MIXINCLASS Object
 
@@ -123,6 +135,24 @@
 ::method open              -- these are nops by default
 ::method close
 
+::method arrayIn
+  array = .array~new
+
+  signal on notready
+
+  do forever
+      array~append(self~linein)
+  end
+
+notready:
+  return array
+
+::method arrayOut
+  use strict arg lines
+
+  do line over lines
+      self~lineout(line)
+  end
 
 ::method position
   raise syntax 93.963  -- not supported by default...this is optional
