@@ -60,9 +60,6 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
   RexxMutableBuffer *newBuffer;         /* new mutable buffer object         */
   size_t            bufferLength;
   size_t            defaultSize;
-  if (argc > 2) {                       /* accept no more than two arguments */
-    report_exception1(Error_Incorrect_method_maxarg, IntegerTwo);
-  }
   if (argc >= 1) {
     if (args[0] != NULL) {
                                         /* force argument to string value    */
@@ -78,7 +75,7 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
      string = OREF_NULLSTRING;
   }
 
-  if (argc == 2) {
+  if (argc >= 2) {
     bufferLength = REQUIRED_LONG(args[1], DEFAULT_DIGITS, ARG_TWO);
     if ((int) bufferLength < 1) {
       report_exception2(Error_Incorrect_method_whole, IntegerTwo, args[1]);
@@ -159,7 +156,7 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
 
   save(newBuffer);                      /* protect new object from GC        */
   newBuffer->hasUninit();               /* important! we have an UNINT method*/
-  send_message0(newBuffer, OREF_INIT);  /* call any rexx init's              */
+  newBuffer->sendMessage(OREF_INIT, args, argc > 2 ? argc - 2 : 0);
   discard_hold(newBuffer);
   return newBuffer;
 }
