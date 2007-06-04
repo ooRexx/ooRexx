@@ -91,6 +91,16 @@ set_methods~put(.methods~many_xor,          'XOR')
 .orderedcollection~!rexxdefined
 .mapcollection~!rexxdefined
 
+supplier_methods = .table~new
+
+supplier_methods~put(.methods~supplier_allitems, 'ALLITEMS')
+supplier_methods~put(.methods~supplier_allindexes, 'ALLINDEXES')
+supplier_methods~put(.methods~supplier_getarrays, 'GETARRAYS')
+supplier_methods~put(.methods~supplier_supplier, 'SUPPLIER')
+
+.supplier~!define_methods(supplier_methods)
+.supplier~!rexxdefined
+
 .environment~setentry('COLLECTION', .collection)
 .environment~setentry('ORDEREDCOLLECTION', .orderedcollection)
 .environment~setentry('MAPCOLLECTION', .mapcollection)
@@ -159,6 +169,49 @@ exit
 /* *** Start of unattached METHOD definitions for the various enhanced objects created above *** */
 /* ********************************************************************************************* */
 /* ********************************************************************************************* */
+
+/*============================================================================*/
+/*    Additional S U P P L I E R methods                                      */
+/*============================================================================*/
+::method supplier_allItems
+  expose items
+  use strict arg    -- enforces no arguments
+
+  self~getArrays
+
+  return items
+
+
+::method supplier_allIndexes
+  expose indexes
+  use strict arg    -- enforces no arguments
+
+  self~getArrays
+
+  return indexes
+
+
+::method supplier_getArrays private
+  expose indexes items
+
+  if \var('INDEXES') then do
+     indexes = .array~new
+     items = .array~new
+
+     do while self~available
+         indexes~append(self~index)
+         items~append(self~item)
+         self~next
+     end
+  end
+
+
+::method supplier_supplier
+  use strict arg
+  return self
+
+
+
 
 /*============================================================================*/
 /*    A R R A Y set methods                                                   */
@@ -700,6 +753,7 @@ nomethod:
   signal on nomethod
 
   supplier = other~supplier              /* get an other supplier             */
+
   do while supplier~available            /* loop over the other collection    */
     self~put(supplier~item, supplier~index)   -- putting the item using the same index
     supplier~next

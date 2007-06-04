@@ -47,6 +47,7 @@
 #include "ArrayClass.hpp"
 #include "SupplierClass.hpp"
 
+
 RexxSupplier::RexxSupplier(
   RexxArray  *values,                  /* array of values                   */
   RexxArray  *indexes )                /* array of indexes                  */
@@ -58,6 +59,14 @@ RexxSupplier::RexxSupplier(
                                        /* and the index array also          */
   OrefSet(this, this->indexes, indexes);
   this->position = 1;                  /* set the first position            */
+}
+
+
+RexxSupplier::RexxSupplier()
+/****************************************************************************/
+/* Function:  Initialize a supplier                                         */
+/****************************************************************************/
+{
 }
 
 
@@ -182,6 +191,41 @@ void *RexxSupplier::operator new(size_t size)
   return newObject;                    /* return the new object             */
 }
 
+
+/**
+ * Supplier initializer for suppliers created via
+ * .supplier~new(values, indexes).
+ *
+ * @param values  The values array object
+ * @param indexes The indexes array object
+ *
+ * @return Nothing
+ */
+RexxObject *RexxSupplier::initRexx(RexxArray *values, RexxArray *indexes)
+{
+    required_arg(values, ONE);           // both values are required
+    required_arg(indexes, TWO);
+
+    // now verify both values
+    RexxArray *new_values = REQUEST_ARRAY(values);
+    RexxArray *new_indexes = REQUEST_ARRAY(indexes);
+    if (new_values == (RexxArray  *)TheNilObject || new_values->getDimension() != 1)
+    {
+        report_exception1(Error_Incorrect_method_noarray, values);
+    }
+    if (new_indexes == (RexxArray  *)TheNilObject || new_indexes->getDimension() != 1)
+    {
+        report_exception1(Error_Incorrect_method_noarray, indexes);
+    }
+
+    OrefSet(this, this->values, new_values);
+    OrefSet(this, this->indexes, new_indexes);
+    this->position = 1;
+    return OREF_NULL;
+}
+
+
+
 RexxObject  *RexxSupplierClass::newRexx(
     RexxObject **init_args,            /* subclass init arguments           */
     size_t argCount)                   /* count of arguments                */
@@ -189,37 +233,13 @@ RexxObject  *RexxSupplierClass::newRexx(
 /* Function:  Public REXX supplier new method                               */
 /****************************************************************************/
 {
-  RexxObject *values;                  /* array of collection values        */
-  RexxObject *indexes;                 /* array of collection indexes       */
-  RexxArray  *new_values;              /* converted values array            */
-  RexxArray  *new_indexes;             /* converted indexes array           */
-  RexxObject *newObject;               /* newly created object              */
-
-                                       /* break up the arguments            */
-  process_new_args(init_args, argCount, &init_args, &argCount, 2, &values, &indexes);
-  required_arg(values, ONE);           /* first argument is required        */
-  required_arg(indexes, TWO);          /* as is the second                  */
-
-                                       /* get arrays for both values and    */
-  new_values = REQUEST_ARRAY(values);
-                                       /* and the indices arguments         */
-  new_indexes = REQUEST_ARRAY(indexes);
-                                       /* didn't convert?                   */
-  if (new_values == (RexxArray  *)TheNilObject || new_values->getDimension() != 1)
-                                       /* raise an error                    */
-    report_exception1(Error_Incorrect_method_noarray, values);
-                                       /* didn't convert?                   */
-  if (new_indexes == (RexxArray  *)TheNilObject || new_indexes->getDimension() != 1)
-                                       /* raise an error                    */
-    report_exception1(Error_Incorrect_method_noarray, indexes);
-                                       /* create the new supplier           */
-  newObject = new RexxSupplier(new_values, new_indexes);
-  BehaviourSet(newObject, this->instanceBehaviour);
-  if (this->uninitDefined()) {
-    newObject->hasUninit();
-  }
-
+    RexxObject *newObject = new RexxSupplier();
+    BehaviourSet(newObject, this->instanceBehaviour);
+    if (this->uninitDefined())
+    {
+        newObject->hasUninit();
+    }
                                        /* Initialize the new instance       */
-  newObject->sendMessage(OREF_INIT, init_args, argCount);
-  return newObject;                    /* return the new supplier           */
+    newObject->sendMessage(OREF_INIT, init_args, argCount);
+    return newObject;                    /* return the new supplier           */
 }

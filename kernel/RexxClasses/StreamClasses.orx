@@ -397,7 +397,8 @@ notready:                              /* standard notready handler         */
 use strict arg
 return .StreamSupplier~new(self)       /* return a stream supplier          */
 
-::CLASS 'StreamSupplier'               /* stream supplier class             */
+::CLASS 'StreamSupplier' subclass 'Supplier'   /* stream supplier class             */
+
 ::METHOD init                          /* initialization method             */
                                        /* access the state information      */
 expose stream position line available transient
@@ -446,11 +447,11 @@ return line                            /* return the file line              */
 ::METHOD index                         /* get the current supplier index    */
 expose position available              /* access needed object variables    */
 use strict arg
-if (arg() > 0) then                    /* too many arguments?               */
-  raise syntax 93.902 array (0)        /* raise an error                    */
 
 if \available then                     /* already reached the end?          */
   raise syntax 93.937                  /* this is an error                  */
+
+return position
 
 /*****************************************************************/
 /* Create the rx_queue class and define its associated methods */

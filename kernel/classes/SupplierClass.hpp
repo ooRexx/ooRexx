@@ -48,6 +48,7 @@
   public:
    inline RexxSupplier(RESTORETYPE restoreType) { ; };
    RexxSupplier(RexxArray  *, RexxArray  *);
+   RexxSupplier();
 
    void       *operator new(size_t);
    inline void       *operator new(size_t size, void *ptr) { return ptr; };
@@ -59,6 +60,7 @@
    RexxObject  *next();
    RexxObject  *value();
    RexxObject  *index();
+   RexxObject  *initRexx(RexxArray *values, RexxArray *indexes);
 
    RexxArray  *values;                 /* array of values                   */
    RexxArray  *indexes;                /* array of indexes                  */

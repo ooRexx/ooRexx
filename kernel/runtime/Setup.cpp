@@ -482,6 +482,7 @@ CPPMSUP(RexxSupplier::available),         /* Supplier methods                  *
 CPPMSUP(RexxSupplier::next),
 CPPMSUP(RexxSupplier::value),
 CPPMSUP(RexxSupplier::index),
+CPPMSUP(RexxSupplier::initRexx),
 
 CPPMSUPCL(RexxSupplierClass::newRexx),
 
@@ -1473,6 +1474,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_INDEX     ,TheSupplierBehaviour, CPPMSUP(RexxSupplier::index), 0);
   defineKernelMethod(CHAR_NEXT      ,TheSupplierBehaviour, CPPMSUP(RexxSupplier::next), 0);
   defineKernelMethod(CHAR_ITEM      ,TheSupplierBehaviour, CPPMSUP(RexxSupplier::value), 0);
+  defineKernelMethod(CHAR_INIT      ,TheSupplierBehaviour, CPPMSUP(RexxSupplier::initRexx), 2);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -1480,7 +1482,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheSupplierClass->subClassable("Supplier", true);
+  TheSupplierClass->subClassable("Supplier", false);
 
   /***************************************************************************/
   /*           TABLE                                                         */
