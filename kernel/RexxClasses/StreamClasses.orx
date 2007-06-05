@@ -44,7 +44,7 @@
 /*****************************************************************/
 
                                        /* make seek a synonym of position   */
-  .Stream~define('SEEK', .Stream~method('POSITION'))
+.Stream~define('SEEK', .Stream~method('POSITION'))
 
 .InputStream~!REXXDefined
 .OutputStream~!REXXDefined
@@ -123,39 +123,7 @@ notready:
   return array
 
 
-::CLASS 'InputOutputStream' public MIXINCLASS Object
-
-::method charout abstract  -- all of the base input/output operations must be implemented
-::method lineout abstract
-::method linein abstract
-::method lines  abstract
-::method charin abstract
-::method chars  abstract
-
-::method open              -- these are nops by default
-::method close
-
-::method arrayIn
-  array = .array~new
-
-  signal on notready
-
-  do forever
-      array~append(self~linein)
-  end
-
-notready:
-  return array
-
-::method arrayOut
-  use strict arg lines
-
-  do line over lines
-      self~lineout(line)
-  end
-
-::method position
-  raise syntax 93.963  -- not supported by default...this is optional
+::CLASS 'InputOutputStream' public MIXINCLASS Object INHERIT InputStream OutputStream
 
 /***************************************************/
 /* Create the stream class                         */
