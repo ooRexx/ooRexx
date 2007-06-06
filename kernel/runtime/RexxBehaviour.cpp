@@ -47,6 +47,7 @@
 #include "StringClass.hpp"
 #include "MethodClass.hpp"
 #include "ArrayClass.hpp"
+#include "SupplierClass.hpp"
 
 extern PCPPM objectOperatorMethods[];
 
