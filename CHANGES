@@ -33,3 +33,18 @@ Documentation
 1710275 - Fixed a problem with the FtpErrNo docs and added an example line
           to the example at the end og the doc.
 
+1616454 - Updated the text for the Finished and Initcode attributes of the
+          BaseDialog class.
+
+1726442 - Updated the Releation class Removeitem method to indicate that the
+          index will also be removed if the value is the only member with that
+	  index.
+
+1727766 - Remove Init method docs from the Class class.
+
+1729042 - Changed the Init method to New for the MutableBuffer class.
+
+1729050
+1729048
+1729041 - Updated docs to reflect changes to class NEW and INIT methods.
+
