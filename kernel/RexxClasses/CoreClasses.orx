@@ -486,7 +486,7 @@ end
 do while supplier~available            -- now iterate over the supplier seeing if
     index = supplier~index             -- the item is not defined in the target.  If
     if \new~hasIndex(index) then       -- so, we we copy into the result collection
-        new~put(index, supplier~item)
+        new~put(supplier~item, index)
     supplier~next
 end
 
