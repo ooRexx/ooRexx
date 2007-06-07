@@ -310,7 +310,11 @@ BOOL InstallNecessaryStuff(DIALOGADMIN* dlgAdm, RXSTRING ar[], INT argc)
       dlgAdm->TheInstance = LoadLibrary(Library);
       if (!dlgAdm->TheInstance)
       {
-         MessageBox(0,"Couldn't load DLL","Error",MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+         CHAR msg[256];
+         sprintf(msg, "Failed to load Dynamic Link Library (resource DLL.)\n"
+                      "  File name:\t\t\t%s\n"
+                      "  Windows System Error Code:\t%d\n", Library, GetLastError());
+         MessageBox(0, msg, "ooDialog DLL Load Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
          return FALSE;
       }
    } else
