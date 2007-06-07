@@ -177,6 +177,81 @@ RexxObject *RexxQueue::at(RexxObject *index)
   return (RexxObject *)result;         /* return this item                  */
 }
 
+
+/**
+ * Insert an item into the queue at a specific index position.
+ *
+ * @param value  The value to insert.
+ * @param index  The index.  This can be omitted, which inserts at the end, .nil
+ *               which inserts at the beginning, or a valid existing index.
+ *
+ * @return The inserted object's index.
+ */
+RexxObject *RexxQueue::insert(RexxObject *value, RexxObject *index)
+{
+  LISTENTRY *element;                  /* list element                      */
+  LISTENTRY *new_element;              /* new insertion element             */
+  long       new_index;                /* index of new inserted item        */
+
+  required_arg(value, ONE);            /* must have a value to insert       */
+
+                                       /* make sure we have room to insert  */
+  new_index = this->getFree();
+                                       /* point to the actual element       */
+  new_element = ENTRY_POINTER(new_index);
+  if (index == TheNilObject)           /* inserting at the front?           */
+    element = NULL;                    /* flag this as new                  */
+  else if (index == OREF_NULL) {       /* inserting at the end?             */
+    if (this->last == LIST_END)        /* currently empty?                  */
+      element = NULL;                  /* just use the front insert code    */
+    else                               /* insert after the last element     */
+      element = ENTRY_POINTER(this->last);
+  }
+  else {
+                                       /* locate this entry                 */
+    element = this->locateEntry(index, IntegerTwo);
+    if (element == NULL)               /* index doesn't exist?              */
+                                       /* raise an error                    */
+      report_exception1(Error_Incorrect_method_queue_index, index);
+  }
+  this->count++;                       /* increase our count                */
+                                       /* set the value                     */
+  OrefSet(this->table, new_element->value, value);
+  if (element == NULL) {               /* adding at the front               */
+    if (this->last == LIST_END) {      /* first element added?              */
+      this->first = new_index;         /* set this as the first             */
+      this->last = new_index;          /* and the last                      */
+      new_element->next = LIST_END;    /* this is the last element          */
+      new_element->previous = LIST_END;/* in both directions                */
+    }
+    else {                             /* adding at the front               */
+
+      new_element->next = this->first; /* previous is current first         */
+      new_element->previous = LIST_END;/* nothing before this               */
+                                       /* point to the first element        */
+      element = ENTRY_POINTER(this->first);
+      element->previous = new_index;   /* point it at the new entry         */
+      this->first = new_index;         /* this is the new first element     */
+    }
+  }
+  else {                               /* have a real insertion point       */
+                                       /* set the next pointer              */
+    new_element->previous = ENTRY_INDEX(element);
+
+    if (element->next == LIST_END)     /* inserting at the end?             */
+      this->last = new_index;          /* new first element                 */
+    else                               /* fudge the next element            */
+      ENTRY_POINTER(element->next)->previous = new_index;
+    new_element->next = element->next; /* insert after this element         */
+    element->next = new_index;         /* new following one                 */
+                                       /* point at the insertion point      */
+    new_element->previous = ENTRY_INDEX(element);
+  }
+                                       /* return this index item            */
+  return (RexxObject *)new_integer(entryToIndex(new_index));
+}
+
+
 RexxObject *RexxQueue::remove(RexxObject *index)
 /******************************************************************************/
 /* Function:  Remove a given queue item                                       */

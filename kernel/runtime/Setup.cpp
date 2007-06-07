@@ -332,6 +332,7 @@ CPPML(RexxQueue::firstRexx),
 CPPML(RexxQueue::lastRexx),
 CPPML(RexxQueue::next),
 CPPML(RexxQueue::previous),
+CPPML(RexxQueue::insert),
 
 CPPMQ(RexxQueue::newRexx),
 CPPMQ(RexxQueue::ofRexx),
@@ -1072,6 +1073,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_LAST          ,TheQueueBehaviour, CPPMQ(RexxQueue::lastRexx), 0);
   defineKernelMethod(CHAR_NEXT          ,TheQueueBehaviour, CPPMQ(RexxQueue::next), 1);
   defineKernelMethod(CHAR_PREVIOUS      ,TheQueueBehaviour, CPPMQ(RexxQueue::previous), 1);
+  defineKernelMethod(CHAR_INSERT        ,TheQueueBehaviour, CPPML(RexxQueue::insert), 2);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
