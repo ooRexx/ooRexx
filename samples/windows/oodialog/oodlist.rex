@@ -209,7 +209,34 @@ return
                   "Column Width : " info.!Width"d"x,
                   "Allignment : " info.!Align )
 
+/* an item was double clicked (activated in Windows terms.) */
+::method OnActivate
+  use arg id
+  curList = self~GetListControl(id)
+  if curList == .nil then return
 
+  -- Get the index of the item with the focus and the text associated with it
+  index = curList~Focused
+  firstName = curList~ItemText(index, 1)
+  age = curList~ItemText(index, 4)
+
+  -- The item info stem will contain the text for column 0 and the icon index
+  info. = curList~ItemInfo(index)
+  lastName = info.!Text
+  iconIndex = info.!Image
+  if iconIndex == 1 then pronoun = "her"; else pronoun = "his"
+
+  msg = "You have doubled clicked on" firstName lastName || "0d0a0d0a"x ,
+        "Should" pronoun "age be increased by 1?"
+  ret = AskDialog(msg)
+  if ret == 1 then do
+    age = age + 1
+    curList~SetItemText(index, 4, age)
+  end
+
+  -- Deselect the focused item and move the focus to the first item
+  curList~Deselect(index)
+  curList~Focus(0)
 
 /* Add button selected, handle the address input dialog */
 ::method OnAddButton
