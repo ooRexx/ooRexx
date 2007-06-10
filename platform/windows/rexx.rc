@@ -35,6 +35,11 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //----------------------------------------------------------------------------
+
+#include "windows.h"
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "rexx.exe.manifest"
+
 REXXICO ICON "rexx.ico"
 
 1 VERSIONINFO
