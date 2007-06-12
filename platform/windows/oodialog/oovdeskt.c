@@ -168,7 +168,7 @@ ULONG APIENTRY Wnd_Desktop(
              break;
        }
        if ( ! result )
-          RETVAL(0);  /* change retstr to indicate failure */
+          RETVAL(0)   /* change retstr to indicate failure */
        else
           return 0;   /* retstr has handle of control that previously had the focus */
    }
