@@ -143,8 +143,10 @@ ULONG APIENTRY Wnd_Desktop(
        CHECKARG(2);
        hW = (ULONG) GetForegroundWindow();
        if (hW == (ULONG)atol(argv[1].strptr)) RETVAL(hW)
-       hW = (ULONG) SetForegroundWindow((HWND)atol(argv[1].strptr));
-       RETVAL(hW)  /* return the handle of the window that had the focus before */
+       if ( SetForegroundWindow((HWND)atol(argv[1].strptr)) )
+           RETVAL(hW)  /* return the handle of the window that had the focus before */
+       else
+           RETVAL(0)   /* indicate failure */
    }
    else
    if (!strcmp(argv[0].strptr,"FG"))       /* get foreground window */
