@@ -861,7 +861,7 @@ ULONG APIENTRY HandleDlg(
            RETVAL((ULONG)dlgAdm->TheDlg)
        }
        else {
-           if (topDlg->TheDlg)
+           if (topDlg && topDlg->TheDlg)
                RETVAL((ULONG)topDlg->TheDlg)
            else
                RETC(0)
