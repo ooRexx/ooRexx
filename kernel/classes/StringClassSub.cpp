@@ -521,59 +521,98 @@ RexxString *RexxString::right(RexxInteger *length,
 RexxString *RexxString::strip(RexxString *option,
                               RexxString *stripchar)
 {
-  PCHAR       Back;                    /* pointer to back part              */
-  PCHAR       Front;                   /* pointer to front part             */
-  size_t      Length;                  /* length of the string              */
-  CHAR        RemoveChar;              /* character to remove               */
-  CHAR        Option;                  /* strip option                      */
-  RexxString *Retval;                  /* return value                      */
+    PCHAR       Back;                    /* pointer to back part              */
+    PCHAR       Front;                   /* pointer to front part             */
+    size_t      Length;                  /* length of the string              */
+    CHAR        RemoveChar;              /* character to remove               */
+    CHAR        Option;                  /* strip option                      */
+    RexxString *Retval;                  /* return value                      */
 
-  if (DBCS_MODE)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSstrip(option, stripchar);
+    if (DBCS_MODE)                       /* need to use DBCS?                 */
+                                         /* do the DBCS version               */
+        return this->DBCSstrip(option, stripchar);
 
-                                       /* get the option character          */
-  Option = option_character(option, STRIP_BOTH, ARG_ONE);
-  if (Option != STRIP_TRAILING &&      /* must be a valid option            */
+    /* get the option character          */
+    Option = option_character(option, STRIP_BOTH, ARG_ONE);
+    if (Option != STRIP_TRAILING &&      /* must be a valid option            */
         Option != STRIP_LEADING &&
         Option != STRIP_BOTH )
-  report_exception2(Error_Incorrect_method_option,
-                    new_string("BLT", 3),
-                    option);
-                                       /* go get the character we are going */
-                                       /* to be stripping.                  */
-  RemoveChar = (UCHAR) get_pad(stripchar, ' ', ARG_TWO);
+        report_exception2(Error_Incorrect_method_option,
+                          new_string("BLT", 3),
+                          option);
+    // get the strip character.  This is a phony default, as the
+    // real default strips the entire set of recognized whitespace characters.
+    RemoveChar = (UCHAR) get_pad(stripchar, ' ', ARG_TWO);
+    // and get a special processing flag
+    bool stripWhite = stripchar == OREF_NULL;
 
-  Front = (PCHAR)this->stringData;     /* point to string start             */
-  Length = this->length;               /* get the length                    */
+    Front = (PCHAR)this->stringData;     /* point to string start             */
+    Length = this->length;               /* get the length                    */
 
-                                       /* need to strip leading?            */
-  if (Option == STRIP_LEADING || Option == STRIP_BOTH) {
+                                         /* need to strip leading?            */
+    if (Option == STRIP_LEADING || Option == STRIP_BOTH)
+    {
+        // stripping all white space?  need multiple checks
+        if (stripWhite)
+        {
+            while (Length > 0)
+            {
+                // stop of not a blank or a tab
+                if (*Front != ch_BLANK && *Front != ch_TAB)
+                {
+                    break;
+                }
+                Front++;                         /* step the pointer                  */
+                Length--;                        /* reduce the length                 */
+            }
 
-    while (Length) {                   /* while more string                 */
-      if (*Front != RemoveChar)        /* done stripping?                   */
-        break;                         /* quit                              */
-      Front++;                         /* step the pointer                  */
-      Length--;                        /* reduce the length                 */
+        }
+        else
+        {
+            while (Length > 0)
+            {                   /* while more string                 */
+                if (*Front != RemoveChar)        /* done stripping?                   */
+                    break;                         /* quit                              */
+                Front++;                         /* step the pointer                  */
+                Length--;                        /* reduce the length                 */
+            }
+        }
     }
-  }
 
-                                       /* need to strip trailing?           */
-  if (Option == STRIP_TRAILING || Option == STRIP_BOTH) {
-    Back = Front + Length - 1;         /* point to the end                  */
-    while (Length) {                   /* while more string                 */
-      if (*Back != RemoveChar)         /* done stripping?                   */
-        break;                         /* quit                              */
-      Back--;                          /* step the pointer back             */
-      Length--;                        /* reduce the length                 */
+    /* need to strip trailing?           */
+    if (Option == STRIP_TRAILING || Option == STRIP_BOTH)
+    {
+        Back = Front + Length - 1;         /* point to the end                  */
+        if (stripWhite)
+        {
+            while (Length > 0)
+            {
+                if (*Back != ch_BLANK && *Back != ch_TAB)
+                {
+                    break;
+                }
+                Back--;                          /* step the pointer back             */
+                Length--;                        /* reduce the length                 */
+            }
+
+        }
+        else
+        {
+            while (Length > 0)
+            {                   /* while more string                 */
+                if (*Back != RemoveChar)         /* done stripping?                   */
+                    break;                         /* quit                              */
+                Back--;                          /* step the pointer back             */
+                Length--;                        /* reduce the length                 */
+            }
+        }
     }
-  }
 
-  if (Length)                          /* have anything left?               */
-    Retval = new_string(Front, Length);/* extract remaining piece           */
-  else
-    Retval = OREF_NULLSTRING;          /* nothing left, us a null           */
-  return Retval;                       /* return stripped string            */
+    if (Length > 0)                      /* have anything left?               */
+        Retval = new_string(Front, Length);/* extract remaining piece           */
+    else
+        Retval = OREF_NULLSTRING;          /* nothing left, us a null           */
+    return Retval;                       /* return stripped string            */
 }
 
 /* the SUBSTR function */
