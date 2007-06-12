@@ -53,12 +53,14 @@
 #define MAX_CT_ENTRIES 1000
 #define MAX_IT_ENTRIES   20
 #define MAXCHILDDIALOGS 20
-#define CREATECHILD 0x0a01
-#define INTERRUPTSCROLL 0x0a02
-#define GETSETFOCUS 0x0a03
-#define GETSETCAPTURE 0x0a04
-#define GETKEYSTATE 0x0a05
 #define MAXDIALOGS 20
+
+/* User defined window messages used for RexxDlgProc() */
+#define WM_USER_CREATECHILD         WM_USER + 0x0601
+#define WM_USER_INTERRUPTSCROLL     WM_USER + 0x0602
+#define WM_USER_GETFOCUS            WM_USER + 0x0603
+#define WM_USER_GETSETCAPTURE       WM_USER + 0x0604
+#define WM_USER_GETKEYSTATE         WM_USER + 0x0605
 
 #define VISDLL "OODIALOG.DLL"
 #define DLLVER 2130

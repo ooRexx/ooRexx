@@ -535,6 +535,7 @@
       ret = ScrollText(self~Adm, hwnd, text, fontName, fontSize, fontStyle,,
                        displaceY, step, sleep, color)
    end; else do
+      -- Send the interrupt scroll message, 0x0a02 == WM_USER_INTERRUPTSCROLL
       ret = SendWinMsg("ANY",self~DlgHandle, "0x0a02", hwnd, 0)
    end
    self~ScrollNow = 0

@@ -396,7 +396,7 @@ ULONG APIENTRY UsrCreateDialog(
 
        l = atol(argv[4].strptr);
        /* send a create message. This is out of history so the child dialog has been created in a faster thread */
-       hW = (HWND) SendMessage((HWND)l, CREATECHILD, (WPARAM) l, (LPARAM) p);
+       hW = (HWND) SendMessage((HWND)l, WM_USER_CREATECHILD, (WPARAM) l, (LPARAM) p);
 
        dlgAdm->ChildDlg[atoi(argv[5].strptr)] = hW;
 

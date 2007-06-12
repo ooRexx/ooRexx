@@ -65,6 +65,20 @@ ULONG APIENTRY FindTheWindow(
    RETC(0)  /* in this case 0 is an error */
 }
 
+/**
+ * Gets the window handle of the dialog control that has the focus.  The call to
+ * GetFocus() needs to run in the window thread of the dialog to ensure that the
+ * correct handle is obtained.
+ *
+ * @param hDlg    Handle to the dialog of interest.
+ * @param retstr  Rexx string to return the result in.
+ */
+static void getCurrentFocus( HWND hDlg, PRXSTRING retstr )
+{
+   ULONG hW = (ULONG)SendMessage(hDlg, WM_USER_GETFOCUS, 0,0);
+   ltoa(hW, retstr->strptr, 10);
+   retstr->strlength = strlen(retstr->strptr);
+}
 
 ULONG APIENTRY Wnd_Desktop(
   PUCHAR funcname,
@@ -122,19 +136,49 @@ ULONG APIENTRY Wnd_Desktop(
    else
    if (!strcmp(argv[0].strptr,"SETFOC"))
    {
-       CHECKARG(3);
-       hW = (ULONG) SendMessage((HWND)atol(argv[1].strptr), GETSETFOCUS, 0,atol(argv[2].strptr));
-       ltoa(hW, retstr->strptr, 10);                 /* return the handle of the window that had the focus before */
-       retstr->strlength = strlen(retstr->strptr);
-       return 0;
+       CHAR qualifier = 'C';
+       LRESULT result;
+       CHECKARGL(3);
+
+       /* Get the handle of the window control that had the focus before setting
+        * the new focus.  This will be returned to the caller in retstr.
+        */
+       getCurrentFocus((HWND)atol(argv[1].strptr), retstr);
+
+       if ( argc > 3 )
+          qualifier = argv[3].strptr[0];
+
+       switch ( qualifier )
+       {
+          case 'F' :  /* set window to Foreground  like Wnd_Desktop("TOP"..) but returns hwnd of control */
+             result = SetForegroundWindow((HWND)atol(argv[2].strptr));
+             break;
+
+          case 'N' :  /* set focus on Next tab stop control */
+             result = SendMessage((HWND)atol(argv[1].strptr), WM_NEXTDLGCTL, (WPARAM)0, (LPARAM)FALSE);
+             break;
+
+          case 'P' :  /* set focus on Previous tab stop control */
+             result = SendMessage((HWND)atol(argv[1].strptr), WM_NEXTDLGCTL, (WPARAM)1, (LPARAM)FALSE);
+             break;
+
+          case 'C' :  /* set focus on specified Control */
+          default  :
+             result = SendMessage((HWND)atol(argv[1].strptr), WM_NEXTDLGCTL, (WPARAM)atol(argv[2].strptr), TRUE);
+             break;
+       }
+       if ( ! result )
+          RETVAL(0);  /* change retstr to indicate failure */
+       else
+          return 0;   /* retstr has handle of control that previously had the focus */
    }
    else
    if (!strcmp(argv[0].strptr,"GETFOC"))
    {
        CHECKARG(2);
-       hW = (ULONG) SendMessage((HWND)atol(argv[1].strptr), GETSETFOCUS, 0,0);
-       ltoa(hW, retstr->strptr, 10);         /* return the handle of the window that has the focus */
-       retstr->strlength = strlen(retstr->strptr);
+
+       /* return the handle of the window control that has the focus */
+       getCurrentFocus((HWND)atol(argv[1].strptr), retstr);
        return 0;
    }
    else
@@ -185,15 +229,15 @@ ULONG APIENTRY Wnd_Desktop(
    {   /* capture must be handled by window thread, therefore sendmessage is used */
        CHECKARG(3);
        if (argv[2].strptr[0] == 'G')
-           RETVAL((ULONG)SendMessage((HWND)atol(argv[1].strptr), GETSETCAPTURE, 0,0))
+           RETVAL((ULONG)SendMessage((HWND)atol(argv[1].strptr), WM_USER_GETSETCAPTURE, 0,0))
        else
        if (argv[2].strptr[0] == 'R')
-           RETC(!SendMessage((HWND)atol(argv[1].strptr), GETSETCAPTURE, 2,0))
+           RETC(!SendMessage((HWND)atol(argv[1].strptr), WM_USER_GETSETCAPTURE, 2,0))
        else {
            hW = atol(argv[2].strptr);
            if (hW)
            {
-              RETVAL(SendMessage((HWND)atol(argv[1].strptr), GETSETCAPTURE, 1,hW))
+              RETVAL(SendMessage((HWND)atol(argv[1].strptr), WM_USER_GETSETCAPTURE, 1,hW))
            }
            RETC(0)
        }
@@ -257,7 +301,7 @@ ULONG APIENTRY Wnd_Desktop(
                if (k == 1) k = 2;
                else if (k==2) k = 1;
            }
-           RETVAL((ULONG)SendMessage((HWND)hW, GETKEYSTATE, k,0))
+           RETVAL((ULONG)SendMessage((HWND)hW, WM_USER_GETKEYSTATE, k,0))
        }
        RETC(0)
    }

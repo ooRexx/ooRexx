@@ -205,23 +205,22 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 #endif
                 return FALSE;
 
-             case CREATECHILD:
+             case WM_USER_CREATECHILD:
                 hW = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *) lParam, (HWND) wParam, RexxDlgProc, addressedTo->Use3DControls); /* pass 3D flag to WM_INITDIALOG */
                 ReplyMessage((LRESULT) hW);
                 return (LRESULT) hW;
-             case INTERRUPTSCROLL:
+             case WM_USER_INTERRUPTSCROLL:
                 addressedTo->StopScroll = wParam;
                 return (TRUE);
-             case GETSETFOCUS:
-                if (!lParam) ReplyMessage((LRESULT)GetFocus());
-                else ReplyMessage((LRESULT)SetFocus((HWND)lParam));
+             case WM_USER_GETFOCUS:
+                ReplyMessage((LRESULT)GetFocus());
                 return (TRUE);
-             case GETSETCAPTURE:
+             case WM_USER_GETSETCAPTURE:
                 if (!wParam) ReplyMessage((LRESULT)GetCapture());
                 else if (wParam == 2) ReplyMessage((LRESULT)ReleaseCapture());
                 else ReplyMessage((LRESULT)SetCapture((HWND)lParam));
                 return (TRUE);
-             case GETKEYSTATE:
+             case WM_USER_GETKEYSTATE:
                 ReplyMessage((LRESULT)GetAsyncKeyState(wParam));
                 return (TRUE);
           }
