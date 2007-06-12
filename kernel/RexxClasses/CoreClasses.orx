@@ -425,7 +425,7 @@ do while supplier~available            -- now iterate over the supplier seeing i
     if new~hasIndex(index) then        -- not, then we copy into the result collection
         new~remove(index)
     else
-        new~put(index, supplier~item)
+        new~put(supplier~item, index)
     supplier~next
 end
 
@@ -459,7 +459,7 @@ end
 do while supplier~available            -- now iterate over the supplier seeing if
     index = supplier~index             -- the item is defined in the target.  If
     if self~hasIndex(index) then       -- so, we we copy into the result collection
-        new~put(index, supplier~item)
+        new~put(supplier~item, index)
     supplier~next
 end
 
