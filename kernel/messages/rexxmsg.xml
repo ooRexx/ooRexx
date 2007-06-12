@@ -332,7 +332,7 @@ Say NOT EQUALS
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Unexpected_end_control</SymbolicName>
-        <Text>Symbol following END (<q><Sub position="1" name="symbol"/></q>) must either match control variable or LABEL of block specification (<q><Sub position="2" name="control_variable"/></q> on line <Sub position="3" name="line_number"/>) or be omitted</Text>
+        <Text>Symbol following END (<q><Sub position="1" name="symbol"/></q>) must match block specification name (<q><Sub position="2" name="control_variable"/></q>) on line <Sub position="3" name="line_number"/> or be omitted</Text>
       </SubMessage>
       <SubMessage>
         <Code>10</Code>
@@ -368,7 +368,7 @@ Say NOT EQUALS
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Unexpected_end_select</SymbolicName>
-        <Text>Symbol following END (<q><Sub position="1" name="symbol"/></q>) must match LABEL of SELECT specification (<q><Sub position="2" name="control_variable"/></q> on line <Sub position="3" name="line_number"/>) or be omitted</Text>
+        <Text>Symbol following END (<q><Sub position="1" name="symbol"/></q>) must match LABEL of SELECT specification (<q><Sub position="2" name="control_variable"/></q>) on line <Sub position="3" name="line_number"/> or be omitted</Text>
       </SubMessage>
       <SubMessage>
         <Code>10</Code>

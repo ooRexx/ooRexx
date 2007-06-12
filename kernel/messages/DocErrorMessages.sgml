@@ -255,7 +255,7 @@ Say NOT EQUALS
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Symbol following END ("<emphasis>symbol</emphasis>") must either match control variable or LABEL of block specification ("<emphasis>control_variable</emphasis>" on line <emphasis>line_number</emphasis>) or be omitted</para>
+<para>Symbol following END ("<emphasis>symbol</emphasis>") must match block specification name ("<emphasis>control_variable</emphasis>") on line <emphasis>line_number</emphasis> or be omitted</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -267,7 +267,7 @@ Say NOT EQUALS
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>Symbol following END ("<emphasis>symbol</emphasis>") must match LABEL of SELECT specification ("<emphasis>control_variable</emphasis>" on line <emphasis>line_number</emphasis>) or be omitted</para>
+<para>Symbol following END ("<emphasis>symbol</emphasis>") must match LABEL of SELECT specification ("<emphasis>control_variable</emphasis>") on line <emphasis>line_number</emphasis> or be omitted</para>
 </listitem>
 </varlistentry>
 <varlistentry>
