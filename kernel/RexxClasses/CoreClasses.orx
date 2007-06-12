@@ -254,16 +254,23 @@ use strict arg other
 signal on nomethod                     -- trap unknown method calls
 
 new = self~copy                        -- we need to work off of a copy
+reference = self~copy                  -- the reference handles adding duplicates
 
 if \other~isA(.Collection) then do     -- if not a collection, then ask for an
     other = other~makearray            -- array value and use that as the iterator
 end
 
 do item over other~allitems            -- iterate over the items of the other collection
-  if new~hasItem(item) then            -- in the accumulator collection still?
+  say "Checking item" item
+  if reference~hasItem(item) then      -- in the accumulator collection still?
+  do
       new~removeItem(item)             -- remove it
+      reference~removeItem(item)       -- remove it from both the accumulator and the ref
+  end
   else
+  do
       new~append(item)                 -- append to the end of the accumulator
+  end
 end
 
 if new~isA(.array) then                -- if this is an array, remove sparse entries
