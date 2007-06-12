@@ -425,7 +425,7 @@ RexxObject *RexxDirectory::remove(
                                        /* have methods?                     */
     if (this->method_table != OREF_NULL)
                                        /* remove this method                */
-      this->method_table->remove(entryname);
+      this->method_table->remove(entryname->upper());
 //  }
   return value;                        /* return the directory value        */
 }
