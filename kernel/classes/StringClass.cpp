@@ -495,10 +495,11 @@ long RexxString::comp(RexxObject *other)
                                        /* point to first remainder char     */
       firstStart = (PUCHAR) firstStart + secondLen;
       while (firstLen-- > secondLen) { /* while still have more to compare  */
-                                       /* subtract a blank                  */
-        result = *firstStart++ - ch_BLANK;
-        if (result != 0)               /* not equal?                        */
-          break;                       /* all done                          */
+          unsigned char current = *firstStart++;
+          if (current != ch_BLANK && current != ch_TAB)
+          {
+              return current - ch_BLANK;
+          }
       }
     }
   }
@@ -512,10 +513,11 @@ long RexxString::comp(RexxObject *other)
                                        /* part with blanks                  */
       secondStart = (PUCHAR) secondStart + firstLen;
       while (secondLen-- > firstLen) { /* while the longer string stills has*/
-                                       /* subtract from a blank             */
-        result = ch_BLANK - *secondStart++;
-        if (result != 0)               /* not equal?                        */
-          break;                       /* all done                          */
+        unsigned char current = *secondStart++;
+        if (current != ch_BLANK && current != ch_TAB)
+        {
+            return ch_BLANK - current;
+        }
       }
     }
   }
