@@ -372,7 +372,7 @@ BUILTIN(SUBSTR) {
 }
 
 
-#define LOWER_MIN 2
+#define LOWER_MIN 1
 #define LOWER_MAX 3
 #define LOWER_string 1
 #define LOWER_n      2
@@ -395,7 +395,7 @@ BUILTIN(LOWER) {
 }
 
 
-#define UPPER_MIN 2
+#define UPPER_MIN 1
 #define UPPER_MAX 3
 #define UPPER_string 1
 #define UPPER_n      2
