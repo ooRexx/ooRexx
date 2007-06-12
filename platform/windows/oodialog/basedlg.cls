@@ -146,6 +146,10 @@
     use arg x,y
     return Wnd_Desktop("COORD", self~hwnd, x, y, "C2S")
 
+::method SetForegroundWindow unguarded
+    use arg hwnd
+    return Wnd_Desktop("TOP", hwnd)
+
 ::method ForegroundWindow unguarded
    return Wnd_Desktop("FG")
 

@@ -1007,6 +1007,10 @@
    use arg hwnd
    return Wnd_Desktop("SETFOC", self~DlgHandle, hwnd)
 
+::method SetFocusToWindow unguarded
+   use arg hwnd
+   return Wnd_Desktop("SETFOC", self~DlgHandle, hwnd, 'F')
+
 ::method GetMouseCapture
    return Wnd_Desktop("CAP", self~DlgHandle, "G")
 
