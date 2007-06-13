@@ -6378,7 +6378,7 @@ LONG APIENTRY SysUtilVersion(
   if (numargs != 0)                    /* validate arg count         */
     return INVALID_ROUTINE;
                                        /* format into the buffer     */
-  sprintf(retstr->strptr, "%d.%d.%d.", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
+  sprintf(retstr->strptr, "%d.%d.%d", ORX_VER, ORX_REL, ORX_MOD);
   retstr->strlength = strlen(retstr->strptr);
 
   return VALID_ROUTINE;
