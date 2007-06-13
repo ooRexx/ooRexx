@@ -2694,23 +2694,66 @@ ULONG APIENTRY WSCtrlSend(
    }
    else if (!strcmp(argv[0].strptr,"MSG"))
    {
-       ULONG n[3];
-       CHECKARG(5,5);
+       ULONG n[4];
+       INT i;
 
-       hW = (HWND)atol(argv[1].strptr);
-       if (hW)
+       CHECKARG(5,6);
+
+       for ( i = 0; i < 4; i++ )
        {
-          INT i;
-          for (i=0;i<3;i++)
-          {
-            if (ISHEX(argv[i+2].strptr))
-                 n[i] = strtol(argv[i+2].strptr,'\0',16);
-            else
-                 n[i] = atol(argv[i+2].strptr);
-          }
-          itoa(SendNotifyMessage(hW,n[0], (WPARAM)n[1], (LPARAM)n[2]), retstr->strptr, 10);
-          return 0;
+           if ( ISHEX(argv[i+1].strptr) )
+               n[i] = strtol(argv[i+1].strptr,'\0',16);
+           else
+               n[i] = atol(argv[i+1].strptr);
        }
+
+       /* The 6th arg can, optionally, be used as an extra qualifier.  Currently
+        * only used in one case.
+        */
+       if ( argc > 5 && argv[5].strptr[0] == 'E' )
+           n[3] = (ULONG)"Environment";
+
+       if ( SendNotifyMessage((HWND)n[0], n[1], (WPARAM)n[2], (LPARAM)n[3]) )
+           RETVAL(0)
+       else
+           RETVAL(GetLastError())
+   }
+   else if ( ! strcmp(argv[0].strptr,"TO") )  /* Send message Time Out */
+   {
+       DWORD dwResult;
+       LRESULT lResult;
+       ULONG n[5];
+       INT i;
+
+       CHECKARG(6,7);
+
+       for ( i = 0; i < 5; i++ )
+       {
+           if (ISHEX(argv[i+1].strptr))
+                n[i] = strtol(argv[i+1].strptr,'\0',16);
+           else
+                n[i] = atol(argv[i+1].strptr);
+       }
+
+       /* The 7th arg can, optionally, be used as an extra qualifier.  Currently
+        * only used in one case.
+        */
+       if ( argc > 6 && argv[6].strptr[0] == 'E' )
+           n[3] = (ULONG)"Environment";
+
+       lResult = SendMessageTimeout((HWND)n[0], n[1], (WPARAM)n[2], (LPARAM)n[3],
+                                    MSG_TIMEOUT_OPTS, n[4], &dwResult);
+       if ( ! lResult )
+       {
+           DWORD err = GetLastError();
+           if ( err == 0 )
+               lResult = -1;          /* This is a timeout. */
+           else
+               lResult = -(INT)err;   /* Some other system error. */
+           RETVAL(lResult)
+       }
+       else
+           RETVAL(dwResult)
    }
    else if (!strcmp(argv[0].strptr,"MAP"))
    {

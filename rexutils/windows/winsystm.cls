@@ -769,7 +769,20 @@ registration incl. queue counter and deregistration */
        sub~ProcessItem(sub~FindItem(Arg(Arg())))
    end
 
+/**
+ * Send the WM_SETTINGSCHANGE message to all top-level windows.  The format is:
+ *
+ *   SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, "Environment")
+ *
+ * HWND_BROADCAST == 0xffff, WM_SETTINGCHANGE == 0x001A.
+*/
+::method BroadcastSettingChanged
+   use arg milliseconds
+   if Arg(1, 'O') then return WSCtrlSend("MSG", "0xFFFF", "0x001A", "0x0", "0x0", 'E')
 
+   if \ milliseconds~datatype('W') then milliseconds = 5000
+   if milliseconds < 1 then milliseconds = 5000
+   return WSCtrlSend("TO", "0xFFFF", "0x001A", "0x0", "0x0", milliseconds, 'E')
 
 
 
