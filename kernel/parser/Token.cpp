@@ -46,6 +46,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "Token.hpp"
+#include "SourceFile.hpp"
 
 RexxToken::RexxToken(
     int            classId,            /* class of token                    */
@@ -123,6 +124,26 @@ void RexxToken::setEnd(
     this->location.endoffset = offset;   /* and the ending character          */
   } /* endif */
 }
+
+
+/**
+ * Check and update this token for the special assignment forms
+ * (+=, -=, etc.).
+ *
+ * @param source The source for the original operator token.
+ */
+void RexxToken::checkAssignment(RexxSource *source, RexxString *newValue)
+{
+    // check if the next character is a special assignment shortcut
+    if (source->nextSpecial('=', &location))
+    {
+        // this is a special type, which uses the same subtype.
+        classId = TOKEN_ASSIGNMENT;
+        // this is the new string value of the token
+        value = newValue;
+    }
+}
+
 
 void *RexxToken::operator new(size_t size)
 /******************************************************************************/

@@ -59,6 +59,7 @@
 #include "SourceFile.hpp"                /* this is part of source            */
 
 #include "ExpressionMessage.hpp"
+#include "ExpressionOperator.hpp"
 #include "RexxInstruction.hpp"                /* base REXX instruction class       */
 
 #include "AssignmentInstruction.hpp"                /* keyword <expression> instructions */
@@ -175,6 +176,37 @@ RexxInstruction *RexxSource::assignmentNew(
   newObject = new_instruction(ASSIGNMENT, Assignment);
   new ((void *)newObject) RexxInstructionAssignment((RexxVariableBase *)(this->addText(target)), expression);
   return (RexxInstruction *)newObject; /* done, return this                 */
+}
+
+
+/**
+ * Create a special assignment op of the form "variable (op)= expr".
+ *
+ * @param target    The assignment target variable.
+ * @param operation The operator token.  classId is TOKEN_ASSIGNMENT, the subclass
+ *                  is the type of the operation to perform.
+ *
+ * @return The constructed instruction object.
+ */
+RexxInstruction *RexxSource::assignmentOpNew(RexxToken *target, RexxToken *operation)
+{
+    this->needVariable(target);     // make sure this is a variable
+    // we require an expression for the additional part, which is required
+    RexxObject *expression = this->expression(TERM_EOC);
+    if (expression == OREF_NULL)
+    {
+        report_error(Error_Invalid_expression_assign);
+    }
+
+    // we need an evaluator for both the expression and the assignment
+    RexxObject *variable = addText(target);
+    // now add a binary operator to this expression tree
+    expression = (RexxObject *)new RexxBinaryOperator(operation->subclass, variable, expression);
+
+    // now everything is the same as an assignment operator
+    RexxObject *newObject = new_instruction(ASSIGNMENT, Assignment);
+    new ((void *)newObject) RexxInstructionAssignment((RexxVariableBase *)variable, expression);
+    return (RexxInstruction *)newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::callNew()
@@ -1157,6 +1189,38 @@ RexxInstruction *RexxSource::messageAssignmentNew(
   new ((void *)newObject) RexxInstructionMessage(message, expression);
   return (RexxInstruction *)newObject; /* done, return this                 */
 }
+
+
+/**
+ * Create a message term pseudo assignment instruction for a
+ * shortcut operator.  The instruction is of the form
+ * "messageTerm (op)= expr".
+ *
+ * @param message    The target message term.
+ * @param operation  The operation to perform in the expansion.
+ * @param expression The expression (which is the right-hand term of the eventual
+ *                   expression).
+ *
+ * @return The constructed message operator.
+ */
+RexxInstruction *RexxSource::messageAssignmentOpNew(RexxExpressionMessage *message, RexxToken *operation, RexxObject *expression)
+{
+  hold(message);                       // lock this temporarily
+  // make a copy of the message term for use in the expression
+  RexxObject *retriever = message->copy();
+
+  message->makeAssignment(this);       // convert into an assignment message (the original message term)
+
+  // now add a binary operator to this expression tree
+  expression = (RexxObject *)new RexxBinaryOperator(operation->subclass, retriever, expression);
+
+  // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
+  RexxObject *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (message->argumentCount) * sizeof(OREF));
+                                       /* Initialize this new method        */
+  new ((void *)newObject) RexxInstructionMessage(message, expression);
+  return (RexxInstruction *)newObject; /* done, return this                 */
+}
+
 
 RexxInstruction *RexxSource::nopNew()
 /****************************************************************************/

@@ -435,6 +435,7 @@ INT lookup[]={
 #define GETCHAR()  ((UCHAR)(this->current[this->line_offset]))
 #define MORELINE() (this->line_offset < this->current_length)
 #define OPERATOR(op) (this->clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, (RexxString *)OREF_##op, &location))
+#define CHECK_ASSIGNMENT(op, token) (token->checkAssignment(this, (RexxString *)OREF_ASSIGNMENT_##op))
 
 void RexxSource::endLocation(
   LOCATIONINFO *location )             /* token location information        */
@@ -1302,73 +1303,85 @@ RexxToken *RexxSource::sourceNextToken(
          case '+':                     /* plus sign                         */
                                        /* addition operator                 */
            token = OPERATOR(PLUS);     /* this is an operator class         */
+           CHECK_ASSIGNMENT(PLUS, token); // this is allowed as an assignment shortcut
            break;
 
          case '-':                     /* minus sign                        */
                                        /* subtraction operator              */
            token = OPERATOR(SUBTRACT); /* this is an operator class         */
+           CHECK_ASSIGNMENT(SUBTRACT, token); // this is allowed as an assignment shortcut
            break;
 
          case '%':                     /* percent sign                      */
                                        /* integer divide operator           */
            token = OPERATOR(INTDIV);   /* this is an operator class         */
+           CHECK_ASSIGNMENT(INTDIV, token);  // this is allowed as an assignment shortcut
            break;
 
          case '/':                     /* forward slash                     */
-#ifdef NONSAA
-                                       /* next one an equal sign?           */
-           if (this->nextSpecial('=', &location)) {
-                                       /* have an equal sign after that?    */
-             if (this->nextSpecial('=', &location))
-                                       /* this is the /== operator          */
-               token = OPERATOR(STRICT_BACKSLASH_EQUAL);
-             else                      /* this is the /= operator           */
-               token = OPERATOR(BACKSLASH_EQUAL);
-           }
-                                       /* next one a slash also?            */
-           else if (this->nextSpecial('/', &location))
-                                       /* this is the remainder operator    */
-             token = OPERATOR(REMAINDER);
-           else
-             token = OPERATOR(DIVIDE); /* this is the divide operator       */
-           break;
-#else
                                        /* this is division                  */
                                        /* next one a slash also?            */
            if (this->nextSpecial('/', &location))
+           {
+
+               token = OPERATOR(REMAINDER);
+               CHECK_ASSIGNMENT(REMAINDER, token);  // this is allowed as an assignment shortcut
+           }
                                        /* this is an operator class         */
-             token = OPERATOR(REMAINDER);
            else
-             token = OPERATOR(DIVIDE); /* this is an operator class         */
+           {
+               token = OPERATOR(DIVIDE); /* this is an operator class         */
+               CHECK_ASSIGNMENT(DIVIDE, token);  // this is allowed as an assignment shortcut
+           }
            break;
-#endif
 
          case '*':                     /* asterisk?                         */
                                        /* this is multiply                  */
                                        /* next one a star also?             */
            if (this->nextSpecial('*', &location))
-             token = OPERATOR(POWER);  /* this is an operator class         */
+           {
+               token = OPERATOR(POWER);  /* this is an operator class         */
+               CHECK_ASSIGNMENT(POWER, token);  // this is allowed as an assignment shortcut
+           }
            else                        /* this is an operator class         */
-             token = OPERATOR(MULTIPLY);
+           {
+
+               token = OPERATOR(MULTIPLY);
+               CHECK_ASSIGNMENT(MULTIPLY, token);  // this is allowed as an assignment shortcut
+           }
            break;
 
          case '&':                     /* ampersand?                        */
                                        /* this is the and operator          */
                                        /* next one an ampersand also?       */
            if (this->nextSpecial('&', &location))
-             token = OPERATOR(XOR);    /* this is an operator class         */
+           {
+
+               token = OPERATOR(XOR);    /* this is an operator class         */
+               CHECK_ASSIGNMENT(XOR, token);  // this is allowed as an assignment shortcut
+           }
            else                        /* this is an operator class         */
-             token = OPERATOR(AND);
+           {
+               token = OPERATOR(AND);
+               CHECK_ASSIGNMENT(AND, token);  // this is allowed as an assignment shortcut
+           }
            break;
 
          case '|':                     /* vertical bar?                     */
                                        /* this is an or operator            */
                                        /* next one a vertical bar also?     */
            if (this->nextSpecial('|', &location))
+           {
                                        /* this is a concatenation           */
-             token = OPERATOR(CONCATENATE);
+               token = OPERATOR(CONCATENATE);
+               CHECK_ASSIGNMENT(CONCATENATE, token);  // this is allowed as an assignment shortcut
+           }
            else                        /* this is an operator class         */
-             token = OPERATOR(OR);     /* this is the OR operator           */
+           {
+
+               token = OPERATOR(OR);     /* this is the OR operator           */
+               CHECK_ASSIGNMENT(OR, token);  // this is allowed as an assignment shortcut
+           }
            break;
 
          case '=':                     /* equal sign?                       */

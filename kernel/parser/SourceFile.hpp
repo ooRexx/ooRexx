@@ -209,6 +209,7 @@ class RexxSource : public RexxInternalObject {
 
   RexxInstruction *addressNew();
   RexxInstruction *assignmentNew(RexxToken *);
+  RexxInstruction *assignmentOpNew(RexxToken *, RexxToken *);
   RexxInstruction *callNew();
   RexxInstruction *commandNew();
   RexxInstruction *doNew();
@@ -231,6 +232,7 @@ class RexxSource : public RexxInternalObject {
   RexxInstruction *leaveNew(INT);
   RexxInstruction *messageNew(RexxExpressionMessage *);
   RexxInstruction *messageAssignmentNew(RexxExpressionMessage *, RexxObject *);
+  RexxInstruction *messageAssignmentOpNew(RexxExpressionMessage *, RexxToken *, RexxObject *);
   RexxInstruction *nopNew();
   RexxInstruction *numericNew();
   RexxInstruction *optionsNew();

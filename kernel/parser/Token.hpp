@@ -88,6 +88,7 @@
 #define TOKEN_SQRIGHT     TOKEN_SQLEFT    + 1
 #define TOKEN_DCOLON      TOKEN_SQRIGHT   + 1
 #define TOKEN_CONTINUE    TOKEN_DCOLON    + 1
+#define TOKEN_ASSIGNMENT  TOKEN_CONTINUE  + 1
 
 /* token extended types - symbols */
 #define SYMBOL_CONSTANT    1251
@@ -134,6 +135,7 @@
 #define OPERATOR_OR                             OPERATOR_AND                           + 1
 #define OPERATOR_XOR                            OPERATOR_OR                            + 1
 #define OPERATOR_BACKSLASH                      OPERATOR_XOR                           + 1
+
 
 /* token extended types - instruction keywords */
 #define KEYWORD_ADDRESS            1
@@ -407,6 +409,7 @@ class RexxToken : public RexxInternalObject {
   inline void       setNumeric(INT value)   { this->numeric = value; };
   inline void       getLocation(PLOCATIONINFO location) { *location = this->location; }
   inline void       setLocation(PLOCATIONINFO location) { this->location = *location; }
+         void       checkAssignment(RexxSource *source, RexxString *newValue);
 
   LOCATIONINFO location;               /* token source location             */
   RexxString *value;                   /* token string value                */
