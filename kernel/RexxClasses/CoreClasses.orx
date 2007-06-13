@@ -261,7 +261,6 @@ if \other~isA(.Collection) then do     -- if not a collection, then ask for an
 end
 
 do item over other~allitems            -- iterate over the items of the other collection
-  say "Checking item" item
   if reference~hasItem(item) then      -- in the accumulator collection still?
   do
       new~removeItem(item)             -- remove it
