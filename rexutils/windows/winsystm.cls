@@ -778,7 +778,11 @@ registration incl. queue counter and deregistration */
 */
 ::method BroadcastSettingChanged
    use arg milliseconds
-   if Arg(1, 'O') then return WSCtrlSend("MSG", "0xFFFF", "0x001A", "0x0", "0x0", 'E')
+   if Arg(1, 'O') then do
+       ret = WSCtrlSend("MSG", "0xFFFF", "0x001A", "0x0", "0x0", 'E')
+       if ret > 0 then ret = -ret
+       return ret
+   end
 
    if \ milliseconds~datatype('W') then milliseconds = 5000
    if milliseconds < 1 then milliseconds = 5000
