@@ -110,6 +110,7 @@ CPPM(RexxObject::initProxyRexx),
 CPPM(RexxObject::freeSOMObjRexx),
 CPPM(RexxObject::SOMObjRexx),
 CPPM(RexxObject::serverRexx),
+CPPM(RexxObject::identityHashRexx),
 
 CPPM(RexxObject::newRexx),
 
@@ -800,6 +801,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_ISA                    ,TheObjectBehaviour, CPPM(RexxObject::isInstanceOfRexx), 1);
   defineKernelMethod(CHAR_INSTANCEMETHOD         ,TheObjectBehaviour, CPPM(RexxObject::instanceMethodRexx), 1);
   defineKernelMethod(CHAR_INSTANCEMETHODS        ,TheObjectBehaviour, CPPM(RexxObject::instanceMethodsRexx), 1);
+  defineKernelMethod(CHAR_IDENTITYHASH           ,TheObjectBehaviour, CPPM(RexxObject::identityHashRexx), 0);
   definePrivateKernelMethod(CHAR_RUN             ,TheObjectBehaviour, CPPM(RexxObject::run), A_COUNT);
   definePrivateKernelMethod(CHAR_SETMETHOD       ,TheObjectBehaviour, CPPM(RexxObject::setMethod), 3);
   definePrivateKernelMethod(CHAR_UNSETMETHOD     ,TheObjectBehaviour, CPPM(RexxObject::unsetMethod), 1);
@@ -1530,19 +1532,6 @@ bool kernel_setup (void)
   /***************************************************************************/
     /* These classes don't have any class methods                            */
     /*  and are not subclassed from object                                   */
-
-  /***************************************************************************/
-  /*       MEMORY                                                            */
-  /***************************************************************************/
-#ifdef EXPOSE_MEMORY
-  defineKernelMethod(CHAR_RECLAIM,TheMemoryBehaviour, CPPMMEM(RexxMemory::reclaim), 0);
-  defineKernelMethod(CHAR_SETDUMP,TheMemoryBehaviour, CPPMMEM(RexxMemory::setDump), 1);
-  defineKernelMethod(CHAR_SETPARMS,TheMemoryBehaviour, CPPMMEM(RexxMemory::setParms), 2);
-  defineKernelMethod(CHAR_SHRIEKDUMP,TheMemoryBehaviour, CPPMMEM(RexxMemory::dump), 0);
-  defineKernelMethod(CHAR_SHRIEKGUTCHECK,TheMemoryBehaviour, CPPMMEM(RexxMemory::getCheck), 0);
-    /* set the scope of the methods to this classes oref                     */
-  TheMemoryBehaviour->setMethodDictionaryScope(TheMemoryObject);
-#endif
 
   /* put the kernel-provided public objects in the environment directory */
   kernel_public(CHAR_ARRAY            ,TheArrayClass   ,TheEnvironment);

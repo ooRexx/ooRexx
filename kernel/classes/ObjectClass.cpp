@@ -1892,6 +1892,20 @@ RexxObject *RexxObject::init(void)
   return OREF_NULL;                    /* this is basically a no-op         */
 }
 
+
+/**
+ * Return a unique identity hash value for this object.  This
+ * hash will be unique among the set of currently active Rexx
+ * objects.
+ *
+ * @return The identity hash value as an integer object.
+ */
+RexxInteger *RexxObject::identityHashRexx()
+{
+    return new_integer(this->identityHash());
+}
+
+
 void        RexxObject::uninit(void)
 /******************************************************************************/
 /* Function:  Exported Object INIT method                                     */

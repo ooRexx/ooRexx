@@ -101,6 +101,8 @@
      virtual ULONG        hash()  { return HASHVALUE(this); }
              ULONG        getHashValue()  { return HASHVALUE(this); }
 
+     inline  ULONG        identityHash() { return HASHOREF(this); }
+
      virtual BOOL         truthValue(LONG);
      virtual RexxString  *makeString();
      virtual void         copyIntoTail(RexxCompoundTail *buffer);
@@ -280,6 +282,8 @@ class RexxObject : public RexxInternalObject {
      RexxInteger *notEqual(RexxObject *other);
      RexxObject  *strictEqual(RexxObject *);
      RexxInteger *strictNotEqual(RexxObject *other);
+
+     RexxInteger *identityHashRexx();
 
      RexxString  *stringRexx();
      RexxObject  *makeStringRexx();
