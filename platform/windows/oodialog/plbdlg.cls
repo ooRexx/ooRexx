@@ -1118,6 +1118,12 @@
    use arg id
    return SendWinMsg("ANY", self~DlgHandle, "0x0028", self~GetItem(id), 1)
 
+::method TabToNext unguarded
+   return Wnd_Desktop("SETFOC", self~DlgHandle, 0, "N")
+
+::method TabToPrevious unguarded
+   return Wnd_Desktop("SETFOC", self~DlgHandle, 1, "P")
+
 
 ::method Center unguarded
    use arg showOptions

@@ -395,9 +395,11 @@
    use arg hwnd
    return Wnd_Desktop("SETFOC", self~hDlg, hwnd)
 
-::method SetFocusToWindow unguarded
-   use arg hwnd
-   return Wnd_Desktop("SETFOC", self~hDlg, hwnd, 'F')
+::method TabToNext unguarded
+   return Wnd_Desktop("SETFOC", self~hDlg, 0, "N")
+
+::method TabToPrevious unguarded
+   return Wnd_Desktop("SETFOC", self~hDlg, 1, "P")
 
 ::method Clear
    parse value WindowRect("GET", self~Hwnd) with r.1 r.2 r.3 r.4
