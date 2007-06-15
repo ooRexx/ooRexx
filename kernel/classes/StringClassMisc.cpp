@@ -769,6 +769,41 @@ RexxInteger *RexxString::countStrRexx(RexxString *needle)
   return new_integer(count);           /* return the count as an object     */
 }
 
+size_t RexxString::caselessCountStr(RexxString *needle)
+/******************************************************************************/
+/* Function:  Count occurrences of one string in another.                     */
+/******************************************************************************/
+{
+  size_t count;                        /* count of strings                  */
+  size_t match;                        /* last match position               */
+  size_t needlelength ;                /* length of the needle              */
+
+  count = 0;                           /* no matches yet                    */
+                                       /* get the length of the needle      */
+  needlelength = needle->length;
+                                       /* get the first match position      */
+  match = this->caselessPos(needle, 0);
+  while (match != 0) {                 /* while we're getting matches       */
+    count = count + 1;                 /* count this match                  */
+                                       /* do the next search                */
+    match = this->caselessPos(needle, match + needlelength - 1);
+  }
+  return count;                        /* return the match count            */
+}
+
+RexxInteger *RexxString::caselessCountStrRexx(RexxString *needle)
+/******************************************************************************/
+/* Function:  Count occurrences of one string in another.                     */
+/******************************************************************************/
+{
+  size_t count;                        /* count of strings                  */
+
+                                       /* force needle to a string          */
+  needle = REQUIRED_STRING(needle, ARG_ONE);
+  count = this->caselessCountStr(needle); /* do the counting                   */
+  return new_integer(count);              /* return the count as an object     */
+}
+
 RexxString *RexxString::changeStr(RexxString *needle,
                                   RexxString *newNeedle)
 /******************************************************************************/
@@ -821,6 +856,60 @@ RexxString *RexxString::changeStr(RexxString *needle,
   result->generateHash();              /* now finishe off this string       */
   return result;                       /* finished                          */
 }
+
+RexxString *RexxString::caselessChangeStr(RexxString *needle,
+                                  RexxString *newNeedle)
+/******************************************************************************/
+/* Function:  Change strings into another string.                             */
+/******************************************************************************/
+{
+  size_t start;                        /* converted start position          */
+  size_t match;                        /* last match position               */
+  size_t needleLength;                 /* length of the needle              */
+  size_t newLength;                    /* length of the replacement string  */
+  size_t matches;                      /* number of replacements            */
+  size_t copyLength;                   /* length to copy                    */
+  PCHAR source;                        /* point to the string source        */
+  PCHAR copy;                          /* current copy position             */
+  PCHAR newPtr;                        /* pointer to replacement data       */
+  RexxString *result;                  /* returned result string            */
+                                       /* force needle to a string          */
+  needle = REQUIRED_STRING(needle, ARG_ONE);
+                                       /* newneedle must be a string two    */
+  newNeedle = REQUIRED_STRING(newNeedle, ARG_TWO);
+  matches = this->caselessCountStr(needle);    /* find the number of replacements   */
+  needleLength = needle->length;       /* get the length of the needle      */
+  newLength = newNeedle->length;       /* and the replacement length        */
+                                       /* get a proper sized string         */
+  result = (RexxString *)raw_string(this->length - (matches * needleLength) + (matches * newLength));
+  copy = result->stringData;           /* point to the copy location        */
+  source = this->stringData;           /* and out own data                  */
+                                       /* and the string to replace         */
+  newPtr = newNeedle->stringData;
+  start = 0;                           /* set a zero starting point         */
+  for (;;) {                           /* loop forever                      */
+    match = this->caselessPos(needle, start);  /* look for the next occurrence      */
+    if (match == 0)                    /* not found?                        */
+      break;                           /* get out of here                   */
+    copyLength = (match - 1) - start;  /* get the next length to copy       */
+    if (copyLength != 0) {             /* something to copy?                */
+                                       /* add on the next string section    */
+      memcpy(copy, source + start, copyLength);
+      copy += copyLength;              /* step over the copied part         */
+    }
+    if (newLength != 0) {              /* something to replace with?        */
+      memcpy(copy, newPtr, newLength); /* copy over the new segment         */
+      copy += newLength;               /* and step it over also             */
+    }
+    start = match + needleLength - 1;  /* step to the next position         */
+  }
+  if (start < this->length)            /* some remainder left?              */
+                                       /* add it on                         */
+    memcpy(copy, source + start, this->length - start);
+  result->generateHash();              /* now finishe off this string       */
+  return result;                       /* finished                          */
+}
+
 
 RexxInteger *RexxString::posRexx(
     RexxString  *needle,               /* search string                     */

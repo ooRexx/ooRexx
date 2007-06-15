@@ -419,7 +419,9 @@ CPPMSTR(RexxString::words),
                                           /* following methods are in OKBMISC  */
 
 CPPMSTR(RexxString::changeStr),
+CPPMSTR(RexxString::caselessChangeStr),
 CPPMSTR(RexxString::countStrRexx),
+CPPMSTR(RexxString::caselessCountStrRexx),
 CPPMSTR(RexxString::abbrev),
 CPPMSTR(RexxString::compare),
 CPPMSTR(RexxString::copies),
@@ -1218,9 +1220,11 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_WORDS                        ,TheStringBehaviour, CPPMSTR(RexxString::words), 0);
   defineKernelMethod(CHAR_ABBREV                       ,TheStringBehaviour, CPPMSTR(RexxString::abbrev), 2);
   defineKernelMethod(CHAR_CHANGESTR                    ,TheStringBehaviour, CPPMSTR(RexxString::changeStr), 2);
+  defineKernelMethod(CHAR_CASELESSCHANGESTR            ,TheStringBehaviour, CPPMSTR(RexxString::caselessChangeStr), 2);
   defineKernelMethod(CHAR_COMPARE                      ,TheStringBehaviour, CPPMSTR(RexxString::compare), 2);
   defineKernelMethod(CHAR_COPIES                       ,TheStringBehaviour, CPPMSTR(RexxString::copies), 1);
   defineKernelMethod(CHAR_COUNTSTR                     ,TheStringBehaviour, CPPMSTR(RexxString::countStrRexx), 1);
+  defineKernelMethod(CHAR_CASELESSCOUNTSTR             ,TheStringBehaviour, CPPMSTR(RexxString::caselessCountStrRexx), 1);
   defineKernelMethod(CHAR_LASTPOS                      ,TheStringBehaviour, CPPMSTR(RexxString::lastPosRexx), 2);
   defineKernelMethod(CHAR_POS                          ,TheStringBehaviour, CPPMSTR(RexxString::posRexx), 2);
   defineKernelMethod(CHAR_CASELESSLASTPOS              ,TheStringBehaviour, CPPMSTR(RexxString::caselessLastPosRexx), 2);

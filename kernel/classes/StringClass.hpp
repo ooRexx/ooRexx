@@ -184,6 +184,7 @@ class RexxStringClass : public RexxClass {
                                        /* the following methods are in    */
                                        /* OKBMISC                         */
    RexxString  *changeStr(RexxString *, RexxString *);
+   RexxString  *caselessChangeStr(RexxString *, RexxString *);
    RexxInteger *abbrev(RexxString *, RexxInteger *);
    RexxInteger *compare(RexxString *, RexxString *);
    RexxString  *copies(RexxInteger *);
@@ -205,6 +206,8 @@ class RexxStringClass : public RexxClass {
    RexxInteger *verify(RexxString *, RexxString *, RexxInteger *);
    RexxInteger *countStrRexx(RexxString *);
    size_t       countStr(RexxString *);
+   RexxInteger *caselessCountStrRexx(RexxString *);
+   size_t       caselessCountStr(RexxString *);
                                        /* the following methods are in    */
                                        /* OKBBITS                         */
    RexxString  *bitAnd(RexxString *, RexxString *);
