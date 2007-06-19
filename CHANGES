@@ -11,11 +11,51 @@ Improved the performance of the DROP instruction.
 
 1262210 - Rexx.exe fails on a large script.
 
-1711398 - Add case-insensitive option to SysFileTree function.
+1711398 - [Enhancement] Add case-insensitive option to SysFileTree function.
 
 
 Windows
 =======
+
+1711444 - ooDialog can not correctly parse a .rc file with tabs
+
+1717166 - Queue Push fails when larger than 7128
+
+1718951 - OODialog's autodetection wrong for ResDialog
+
+1729152 - ooDialog executeAsync incorrect DlgData.
+
+1732525 - ooDialog Couldn't load DLL error message not helpful
+          The name of the file that could not be loaded and the Windows System
+          Error code were added to the message.
+
+1734289 - Bug in the ooDialog ListControl sample
+
+1735330 - ooDialog - setFocus method implemented incorrectly
+
+1735869 - ooDialog - Wnd_Desktop "TOP" bug
+
+1735934 - ooDialog - crash in aDlg~get method
+
+1729566 - [Enhancement] Allow broadcasting WM_SETTINGCHANGE
+          The method: broadcastSettingChanged, was added to the .WindowsManager
+          class.  This method is documented in the ooRexx Reference.
+
+1734253 - [Enhancement] Update ooDialog - add manifest
+          A change was made that allows ooDialog, when running on Windows XP,
+          to use the updated Windows Common Controls supplied by that OS.
+          This dramatically improves the appearence of ooDialog on XP.
+
+1736032 - [Enhancement] Add ability to set foreground window to ooDialog
+          Two new methods are added to the ooDialog classes: SetFocusToWindow
+          and SetFocusToWindow.  The methods are documented in the ooDialog
+          Reference.
+
+1737468 - [Enhancment] ooDialog - add tab to next / tab to previous
+          Methods to programmatically move to the next or previous tabstop
+          control have been added to the BaseDialog and DialogControls
+          classes.  These methods, tabToNext and tabToPrevious are documented
+          in the ooDialog Reference.
 
 
 
