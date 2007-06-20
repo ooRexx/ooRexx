@@ -90,7 +90,6 @@ CPPM(RexxObject::setMethod),
 CPPM(RexxObject::hasMethodRexx),
 CPPM(RexxObject::start),
 CPPM(RexxObject::unsetMethod),
-CPPM(RexxObject::startAt),
 CPPM(RexxObject::requestRexx),
 CPPM(RexxObject::makeStringRexx),
 CPPM(RexxObject::makeArrayRexx),
@@ -797,7 +796,6 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_OBJECTNAMEEQUALS       ,TheObjectBehaviour, CPPM(RexxObject::objectNameEquals), 1);
   defineKernelMethod(CHAR_REQUEST                ,TheObjectBehaviour, CPPM(RexxObject::requestRexx), 1);
   defineKernelMethod(CHAR_START                  ,TheObjectBehaviour, CPPM(RexxObject::start), A_COUNT);
-  defineKernelMethod(CHAR_STARTAT                ,TheObjectBehaviour, CPPM(RexxObject::startAt), A_COUNT);
   defineKernelMethod(CHAR_STRING                 ,TheObjectBehaviour, CPPM(RexxObject::stringRexx), 0);
   defineKernelMethod(CHAR_ISINSTANCEOF           ,TheObjectBehaviour, CPPM(RexxObject::isInstanceOfRexx), 1);
   defineKernelMethod(CHAR_ISA                    ,TheObjectBehaviour, CPPM(RexxObject::isInstanceOfRexx), 1);
