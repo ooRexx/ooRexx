@@ -51,6 +51,7 @@
 
    if arg(4, 'E') then ret = self~init:super(Library, Resource, DlgData., includeFile)
    else ret = self~init:super(Library, Resource, DlgData.)
+   if ret \= 0 then return ret
 
    if Arg(3,'o') = 1 then self~UseStem = 0; else self~UseStem = 1
    if \ Resource~datatype("N") then Resource = self~ResolveSymbolicId(Resource)
