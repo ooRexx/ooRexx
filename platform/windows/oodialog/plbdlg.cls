@@ -82,6 +82,7 @@
          if (ret = 1) then say "Couldn't load function library (OODIALOG.DLL)!"
          else if ret < oodver then say "This OODialog Class Library requires OODIALOG.DLL level 2.1.2.0!"
          else say "This OODialog Class Library only supports OODIALOG.DLL level 2.1.2.0!"
+         call RxFuncDrop("InstMMFuncs")
          self~InitCode = 1
          return 1
       end
@@ -94,6 +95,7 @@
       if ret \= 0 then
       do
          say "Couldn't load function library -->" ret
+         call RxFuncDrop("InstExtendedMMFuncs")
          self~InitCode = 1
          return 1
       end

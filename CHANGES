@@ -39,6 +39,8 @@ Windows
 
 1740102 - ooDialog - ResDialog's init method should fail on error
 
+1740105 - ooDialog - should fail when problems with function library
+
 1729566 - [Enhancement] Allow broadcasting WM_SETTINGCHANGE
           The method: broadcastSettingChanged, was added to the .WindowsManager
           class.  This method is documented in the ooRexx Reference.

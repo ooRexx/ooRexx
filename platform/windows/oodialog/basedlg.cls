@@ -61,6 +61,7 @@
       if ret \= 0 then
       do
          say "Couldn't load function library -->" ret
+         call RxFuncDrop("InstExtendedMMFuncs")
          self~InitCode = 1
          return 1
       end
