@@ -4555,6 +4555,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Execution_sparse_array</SymbolicName>
         <Text>Missing array element at position <Sub position="1" name="position"/></Text>
       </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>976</Subcode>
+        <MessageNumber>670</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Error</Severity>
+        <SymbolicName>Error_Execution_nostem</SymbolicName>
+        <Text>Stem object default value cannot be another stem object</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

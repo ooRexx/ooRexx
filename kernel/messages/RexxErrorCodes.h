@@ -531,6 +531,7 @@
 #define Error_Invalid_data_type_for_objspec                98974
 #define Error_Execution_class_server_not_installed         98952
 #define Error_Execution_sparse_array                       98975
+#define Error_Execution_nostem                             98976
 #define Error_Translation                                  99000
 #define Error_Translation_user_defined                     99900
 #define Error_Translation_duplicate_class                  99901

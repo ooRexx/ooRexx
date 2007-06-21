@@ -594,6 +594,7 @@
 #define Error_Invalid_whole_number_compare_msg                       667
 #define Error_Execution_sparse_array_msg                             668
 #define Error_Incorrect_method_queue_index_msg                       669
+#define Error_Execution_nostem_msg                                   670
 
 
 #endif

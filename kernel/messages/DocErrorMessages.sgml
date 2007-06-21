@@ -3312,6 +3312,12 @@ special character (such as a parenthesis).
 </para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>976</term>
+<listitem>
+<para>Stem object default value cannot be another stem object</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR99">

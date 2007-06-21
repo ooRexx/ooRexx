@@ -533,6 +533,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Invalid_data_type_for_objspec)
       MINOR(Error_Execution_class_server_not_installed)
       MINOR(Error_Execution_sparse_array)
+      MINOR(Error_Execution_nostem)
   MAJOR(Error_Translation)
       MINOR(Error_Translation_user_defined)
       MINOR(Error_Translation_duplicate_class)

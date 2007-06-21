@@ -350,6 +350,10 @@ RexxObject *RexxStem::bracketEqual(
     report_exception1(Error_Incorrect_method_noarg, IntegerOne);
 
   if (argCount == 1) {                 /* just setting the default value?   */
+    if (OTYPE(Stem, new_value))        // stem value as default?  don't allow this as it leads to recursion loops
+    {
+        report_exception(Error_Execution_nostem);
+    }
                                        /* set the new default value         */
     OrefSet(this, this->value, new_value);
     this->tails.clear();               /* clear out the dictionary          */
