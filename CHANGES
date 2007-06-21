@@ -13,6 +13,8 @@ Improved the performance of the DROP instruction.
 
 1711398 - [Enhancement] Add case-insensitive option to SysFileTree function.
 
+1708391 - [Enhancement] Add isSubclassOf method to the Class class.
+
 
 Windows
 =======
