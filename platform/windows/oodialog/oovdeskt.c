@@ -138,37 +138,48 @@ ULONG APIENTRY Wnd_Desktop(
    {
        CHAR qualifier = 'C';
        LRESULT result;
+       HWND hDlg, hNextFocus;
        CHECKARGL(3);
+
+       hDlg = (HWND)atol(argv[1].strptr);
+       if ( ! IsWindow(hDlg) )
+          RETVAL(-1)
 
        /* Get the handle of the window control that had the focus before setting
         * the new focus.  This will be returned to the caller in retstr.
         */
-       getCurrentFocus((HWND)atol(argv[1].strptr), retstr);
+       getCurrentFocus(hDlg, retstr);
 
        if ( argc > 3 )
           qualifier = argv[3].strptr[0];
 
        switch ( qualifier )
        {
-          case 'F' :  /* set window to Foreground  like Wnd_Desktop("TOP"..) but returns hwnd of control */
-             result = SetForegroundWindow((HWND)atol(argv[2].strptr));
+          case 'F' :  /* set window to Foreground like Wnd_Desktop("TOP"..) but returns hwnd of previous control */
+             hNextFocus = (HWND)atol(argv[2].strptr);
+             if ( ! IsWindow(hNextFocus) )
+                RETVAL(-1)
+             result = SetForegroundWindow(hNextFocus);
              break;
 
           case 'N' :  /* set focus on Next tab stop control */
-             result = SendMessage((HWND)atol(argv[1].strptr), WM_NEXTDLGCTL, (WPARAM)0, (LPARAM)FALSE);
+             result = SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)0, (LPARAM)FALSE);
              break;
 
           case 'P' :  /* set focus on Previous tab stop control */
-             result = SendMessage((HWND)atol(argv[1].strptr), WM_NEXTDLGCTL, (WPARAM)1, (LPARAM)FALSE);
+             result = SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)1, (LPARAM)FALSE);
              break;
 
           case 'C' :  /* set focus on specified Control */
           default  :
-             result = SendMessage((HWND)atol(argv[1].strptr), WM_NEXTDLGCTL, (WPARAM)atol(argv[2].strptr), TRUE);
+             hNextFocus = (HWND)atol(argv[2].strptr);
+             if ( ! IsWindow(hNextFocus) )
+                RETVAL(-1)
+             result = SendMessage(hDlg, WM_NEXTDLGCTL, hNextFocus, TRUE);
              break;
        }
        if ( ! result )
-          RETVAL(0)   /* change retstr to indicate failure */
+          RETVAL(-1)  /* change retstr to indicate failure */
        else
           return 0;   /* retstr has handle of control that previously had the focus */
    }
