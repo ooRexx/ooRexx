@@ -25,6 +25,8 @@ Windows
 
 1718951 - OODialog's autodetection wrong for ResDialog
 
+1719592 - OODialog's 'dialog icon' is dysfunctional
+
 1729152 - ooDialog executeAsync incorrect DlgData.
 
 1732525 - ooDialog Couldn't load DLL error message not helpful
