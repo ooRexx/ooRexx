@@ -413,6 +413,7 @@ CPPMSTR(RexxString::word),
 CPPMSTR(RexxString::wordIndex),
 CPPMSTR(RexxString::wordLength),
 CPPMSTR(RexxString::wordPos),
+CPPMSTR(RexxString::caselessWordPos),
 CPPMSTR(RexxString::words),
 
                                           /* following methods are in OKBMISC  */
@@ -1215,6 +1216,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_WORDINDEX                    ,TheStringBehaviour, CPPMSTR(RexxString::wordIndex), 1);
   defineKernelMethod(CHAR_WORDLENGTH                   ,TheStringBehaviour, CPPMSTR(RexxString::wordLength), 1);
   defineKernelMethod(CHAR_WORDPOS                      ,TheStringBehaviour, CPPMSTR(RexxString::wordPos), 2);
+  defineKernelMethod(CHAR_CASELESSWORDPOS              ,TheStringBehaviour, CPPMSTR(RexxString::caselessWordPos), 2);
   defineKernelMethod(CHAR_WORDS                        ,TheStringBehaviour, CPPMSTR(RexxString::words), 0);
   defineKernelMethod(CHAR_ABBREV                       ,TheStringBehaviour, CPPMSTR(RexxString::abbrev), 2);
   defineKernelMethod(CHAR_CHANGESTR                    ,TheStringBehaviour, CPPMSTR(RexxString::changeStr), 2);

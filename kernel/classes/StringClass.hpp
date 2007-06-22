@@ -180,6 +180,7 @@ class RexxStringClass : public RexxClass {
    RexxInteger *wordIndex(RexxInteger *);
    RexxInteger *wordLength(RexxInteger *);
    RexxInteger *wordPos(RexxString *, RexxInteger *);
+   RexxInteger *caselessWordPos(RexxString *, RexxInteger *);
    RexxInteger *words();
                                        /* the following methods are in    */
                                        /* OKBMISC                         */
