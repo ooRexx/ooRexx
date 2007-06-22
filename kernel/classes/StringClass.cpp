@@ -894,17 +894,24 @@ RexxString *RexxString::concat(RexxString *other)
 
   len1 = this->length;                 /* get this length                   */
   len2 = other->length;                /* and the other length              */
+
+  if (len2 == 0)                       // some people have taken to using a''b
+  {                                    // to perform concatenation operations
+      return this;                     // it makes sense to optimize concatenation
+  }                                    // with a null string by just returning
+  if (len1 == 0)                       // the non-null object.
+  {
+      return other;
+  }
                                        /* create a new string               */
   result = (RexxString *)raw_string(len1+len2);
   data = result->stringData;           /* point to the string data          */
-  if (len1 != 0) {                     /* have real data?                   */
+
+  // both lengths are non-zero because of the test above, so we can
+  // unconditionally copy
                                        /* copy the front part               */
-    memcpy(data, this->stringData, len1);
-    data += len1;                      /* step past the length              */
-  }
-  if (len2 != 0)                       /* have a second length              */
-                                       /* and the second part               */
-    memcpy(data, other->stringData, len2);
+  memcpy(data, this->stringData, len1);
+  memcpy(data + len1, other->stringData, len2);
   result->generateHash();              /* done building the string          */
   return result;                       /* return the result                 */
 
