@@ -63,7 +63,11 @@
    expose Library Resource DlgData.
    use arg icon, modal
 
-   if Arg(1,"o") = 1 | icon~Datatype("N") = 0 then icon = 0
+   if Arg(1,"o") then icon = 0
+   else do
+     if \ icon~DataType("N") then icon = self~ResolveSymbolicId(icon)
+     if icon < 0 then icon = 0
+   end
    if Arg(2,"o") = 1 then modal = 0; else if modal~translate = "NOTMODAL" then modal = 1
    self~DlgHandle = StartDialog(self~Adm, Library, Resource, self~AutoDetect, 1, icon, modal)
 
