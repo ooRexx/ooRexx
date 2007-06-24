@@ -676,14 +676,9 @@
    use arg dataStem.
    ret = GetStemData(self~Adm, "InternDlgData.")
    do k over InternDlgData.
-      if dataStem.~hasIndex(k) then dataStem.k = InternDlgData.k
-      else do
-         symbolicID = self~resolveNumericID(k)
-         if symbolicID \== -1, dataStem.~hasIndex(symbolicID) then
-            dataStem.symbolicID = InternDlgData.k
-         else
-            dataStem.k = InternDlgData.k
-      end
+      dataStem.k = InternDlgData.k
+      symbolicID = self~resolveNumericID(k)
+      if symbolicID \== -1 then dataStem.symbolicID = InternDlgData.k
    end
 
 
