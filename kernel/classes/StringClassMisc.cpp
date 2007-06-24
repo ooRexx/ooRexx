@@ -419,6 +419,7 @@ RexxInteger *RexxString::abbrev(
   return (rc) ? IntegerOne : IntegerZero;
 }
 
+
 RexxInteger *RexxString::compare(
     RexxString *string2,               /* other string to compare against   */
     RexxString *pad)                   /* optional padding character        */
@@ -483,6 +484,70 @@ RexxInteger *RexxString::compare(
     Retval = new_integer(MisMatch);    /* make an integer return value      */
   return Retval;                       /* return result string              */
 }
+
+
+/**
+ * Caseless version of the compare() method.
+ *
+ * @param string2 The string to compare to.
+ * @param pad     The padding character used for length mismatches.
+ *
+ * @return 0 if the two strings are equal (with padding applied), otherwise
+ *         it returns the mismatch position.
+ */
+RexxInteger *RexxString::caselessCompare(RexxString *other, RexxString *pad)
+{
+    stringsize_t length1 = this->getLength(); /* get this strings length           */
+                                         /* validate the compare string       */
+    other = get_string(other, ARG_ONE);
+    stringsize_t length2 = other->getLength();       /* get the length also               */
+    // we uppercase the pad character now since this is caseless
+    stringchar_t padChar = toupper(get_pad(pad, ' ', ARG_TWO));
+
+    stringchar_t *string1;
+    stringchar_t *string2;
+    stringsize_t lead;
+    stringsize_t remainder;
+
+    // is the first longer?
+    if (length1 > length2)
+    {
+        string1 = (stringchar_t *)this->getStringData();   /* make arg 1 first string           */
+                                           /* arg 2 is second string            */
+        string2 = (stringchar_t *)other->getStringData();
+        lead = length2;                    /* get shorter length                */
+        remainder = length1 - lead;        /* get trailing size                 */
+    }
+    else
+    {
+        string1 = (stringchar_t *)other->getStringData();    /* make arg 2 first string           */
+        string2 = (stringchar_t *)this->getStringData();     /* arg 1 is second string            */
+        lead = length1;                      /* get shorter length                */
+        remainder = length2 - lead;          /* get trailing size                 */
+    }
+    stringsize_t i = 0;                      /* set the start                     */
+    // compare the leading parts
+    for (stringsize_t i = 0; i < lead; i++)
+    {
+        // have a mismatch?
+        if (toupper(string1[i]) != toupper(string2[i]))
+        {
+            return new_integer(i+1);           // return the mismatch position
+        }
+    }
+    string1 += lead;              // step to the remainder and scan
+    for (stringsize_t i = 0; i < remainder; i++)
+    {
+        // mismatch on the pad?
+        if (toupper(string1[i]) != padChar)
+        {
+            // this is the mismatch position, return it
+            return new_integer(lead + i + 1);
+        }
+    }
+    return IntegerZero;    // no mismatch, return the failure indicator
+}
+
 
 RexxString *RexxString::copies(RexxInteger *copies)
 /******************************************************************************/

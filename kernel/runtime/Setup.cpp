@@ -424,6 +424,7 @@ CPPMSTR(RexxString::countStrRexx),
 CPPMSTR(RexxString::caselessCountStrRexx),
 CPPMSTR(RexxString::abbrev),
 CPPMSTR(RexxString::compare),
+CPPMSTR(RexxString::caselessCompare),
 CPPMSTR(RexxString::copies),
 CPPMSTR(RexxString::dataType),
 CPPMSTR(RexxString::lastPosRexx),
@@ -1222,6 +1223,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_CHANGESTR                    ,TheStringBehaviour, CPPMSTR(RexxString::changeStr), 2);
   defineKernelMethod(CHAR_CASELESSCHANGESTR            ,TheStringBehaviour, CPPMSTR(RexxString::caselessChangeStr), 2);
   defineKernelMethod(CHAR_COMPARE                      ,TheStringBehaviour, CPPMSTR(RexxString::compare), 2);
+  defineKernelMethod(CHAR_CASELESSCOMPARE              ,TheStringBehaviour, CPPMSTR(RexxString::caselessCompare), 2);
   defineKernelMethod(CHAR_COPIES                       ,TheStringBehaviour, CPPMSTR(RexxString::copies), 1);
   defineKernelMethod(CHAR_COUNTSTR                     ,TheStringBehaviour, CPPMSTR(RexxString::countStrRexx), 1);
   defineKernelMethod(CHAR_CASELESSCOUNTSTR             ,TheStringBehaviour, CPPMSTR(RexxString::caselessCountStrRexx), 1);
