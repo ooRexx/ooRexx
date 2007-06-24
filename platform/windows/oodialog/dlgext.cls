@@ -51,15 +51,13 @@
    /* dispatch of messages      */
 
 ::method ExecuteAsync unguarded
-   expose DlgData.
    use arg sleeptime, sh, icon, nomodal
    if sleeptime~Datatype('N') = 0 then sleeptime = 10
    if Arg(2,'o') = 1 then sh = "DEFAULT"
    if Arg(4,'o') = 1 then nomodal = 0
-   DlgData. = self~DlgData
    if self~startit(icon, nomodal) \= 0 then
    do
-      if self~UseStem = 1 then self~SetDataStem(DlgData.); else self~SetData
+      if self~UseStem = 1 then self~SetDataStem(self~DlgData); else self~SetData
       self~show(sh)
       self~start("AsyncMessageHandling", sleeptime)
       do while self~AutomaticMethods~Items > 0
@@ -81,7 +79,7 @@
       call sleepms(20)
    end
    if self~InitCode = 1 then do
-      if (self~UseStem = 1) then self~GetDataStem(DlgData.)
+      if (self~UseStem = 1) then self~GetDataStem(self~DlgData)
       self~GetData
    end
    if self~Adm \= 0 then self~stopit
