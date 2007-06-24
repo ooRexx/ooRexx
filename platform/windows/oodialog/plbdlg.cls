@@ -417,12 +417,21 @@
 
 ::method ResolveSymbolicId unguarded
    use arg id
-   if self~ConstDir \= .Nil then do
-       id = self~ConstDir[id~space(0)~translate]
-       if id \= .Nil then return id
-   end
-   return -1
+   id = self~ConstDir[id~space(0)~translate]
+   if id \= .Nil then return id; else return -1
 
+/**
+ * Return a symbolic ID from the ConstDir that matches the numeric ID.
+ * The docs will advise users of ooDialog to use unique numbers for all
+ * resources.
+ */
+::method ResolveNumericID unguarded
+  use arg numericID
+  if \ numericID~datatype('W') then return -1
+  do symbolicID over self~ConstDir~allIndexes
+    if self~ConstDir[symbolicID] == numericID then return symbolicID
+  end
+  return -1
 
    /* This method returns the handle of a dialog item */
 
@@ -653,8 +662,10 @@
 ::method SetDataStem protected unguarded
    use arg dataStem.
    do k over dataStem.
-      InternDlgData.k = dataStem.k
-      if InternDlgData.k = "INTERNDLGDATA."k then InternDlgData.k = ""
+      if k~dataType('W') then numericID = k
+      else numericID = self~ResolveSymbolicID(k)
+      InternDlgData.numericID = dataStem.k
+      if InternDlgData.numericID = "INTERNDLGDATA."numericID then InternDlgData.numericID = ""
    end
    ret = SetStemData(self~Adm, "InternDlgData.")
 
@@ -665,7 +676,14 @@
    use arg dataStem.
    ret = GetStemData(self~Adm, "InternDlgData.")
    do k over InternDlgData.
-      dataStem.k = InternDlgData.k
+      if dataStem.~hasIndex(k) then dataStem.k = InternDlgData.k
+      else do
+         symbolicID = self~resolveNumericID(k)
+         if symbolicID \== -1, dataStem.~hasIndex(symbolicID) then
+            dataStem.symbolicID = InternDlgData.k
+         else
+            dataStem.k = InternDlgData.k
+      end
    end
 
 
