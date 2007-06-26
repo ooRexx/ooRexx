@@ -96,3 +96,5 @@ Documentation
 1729048
 1729041 - Updated docs to reflect changes to class NEW and INIT methods.
 
+1743208 - Removed SysProcessType from the docs.
+
