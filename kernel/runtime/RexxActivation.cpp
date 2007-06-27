@@ -2327,12 +2327,20 @@ static PCHAR trace_prefix_table[] = {  /* table of trace prefixes           */
   ">>>",                               /* TRACE_PREFIX_RESULT               */
   ">.>",                               /* TRACE_PREFIX_DUMMY                */
   ">V>",                               /* TRACE_PREFIX_VARIABLE             */
+  ">D>",                               /* TRACE_PREFIX_DOTVARIABLE          */
   ">L>",                               /* TRACE_PREFIX_LITERAL              */
   ">F>",                               /* TRACE_PREFIX_FUNCTION             */
   ">P>",                               /* TRACE_PREFIX_PREFIX               */
   ">O>",                               /* TRACE_PREFIX_OPERATOR             */
-  ">C>",                               /* TRACE_PREFIX_COMPOUND             */
-  ">M>"                                /* TRACE_PREFIX_MESSAGE              */
+  "=C=",                               /* TRACE_PREFIX_COMPOUND             */
+  ">M>",                               /* TRACE_PREFIX_MESSAGE              */
+  ">,>",                               /* TRACE_PREFIX_ARGUMENT             */
+  "=V=",                               /* TRACE_PREFIX_VARIABLE_NAME        */
+  "=D=",                               /* TRACE_PREFIX_DOTVARIABLE_NAME     */
+  "=F=",                               /* TRACE_PREFIX_FUNCTION_NAME        */
+  "=O=",                               /* TRACE_PREFIX_OPERATOR_NAME        */
+  "=P=",                               /* TRACE_PREFIX_PREFIX_NAME          */
+  "=M=",                               /* TRACE_PREFIX_MESSAGE_NAME         */
 };
 
                                        /* extra space required to format a  */

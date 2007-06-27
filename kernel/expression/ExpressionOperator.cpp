@@ -47,6 +47,7 @@
 #include "ExpressionOperator.hpp"
 
 RexxExpressionOperator::RexxExpressionOperator(
+    RexxString *name,                  /* character name of operator        */
     INT         oper,                  /* operator index                    */
     RexxObject *left,                  /* left expression objects           */
     RexxObject *right)                 /* right expression objects          */
@@ -56,6 +57,7 @@ RexxExpressionOperator::RexxExpressionOperator(
 {
   ClearObject(this);                   /* start completely clean            */
                                        /* just fill in the three terms      */
+  this->u_name = name;
   this->oper = oper;
   OrefSet(this, this->left_term, left);
   OrefSet(this, this->right_term, right);
@@ -82,14 +84,14 @@ RexxObject *RexxExpressionOperator::evaluate(
                                        /* replace top two stack elements    */
     stack->operatorResult(result);     /* with this one                     */
                                        /* trace if necessary                */
-    context->traceIntermediate(result, TRACE_PREFIX_OPERATOR);
+    context->traceOperator(u_name, result);
   }
   else {                               /* prefix operator                   */
                                        /* process this directly             */
     result = callOperatorMethod(left_term, this->oper, OREF_NULL);
     stack->prefixResult(result);       /* replace the top element           */
                                        /* trace if necessary                */
-    context->traceIntermediate(result, TRACE_PREFIX_PREFIX);
+    context->tracePrefix(u_name, result);
   }
   return result;                       /* return the result                 */
 }
@@ -114,7 +116,7 @@ RexxObject *RexxBinaryOperator::evaluate(
                                        /* replace top two stack elements    */
   stack->operatorResult(result);       /* with this one                     */
                                        /* trace if necessary                */
-  context->traceIntermediate(result, TRACE_PREFIX_OPERATOR);
+  context->traceOperator(u_name, result);
   return result;                       /* return the result                 */
 }
 
@@ -134,7 +136,7 @@ RexxObject *RexxUnaryOperator::evaluate(
   result = callOperatorMethod(left_term, this->oper, OREF_NULL);
   stack->prefixResult(result);         /* replace the top element           */
                                        /* trace if necessary                */
-  context->traceIntermediate(result, TRACE_PREFIX_PREFIX);
+  context->tracePrefix(u_name, result);
   return result;                       /* return the result                 */
 }
 
@@ -144,6 +146,7 @@ void RexxExpressionOperator::live()
 /******************************************************************************/
 {
   setUpMemoryMark
+  memory_mark(this->u_name);
   memory_mark(this->left_term);
   memory_mark(this->right_term);
   cleanUpMemoryMark
@@ -155,6 +158,7 @@ void RexxExpressionOperator::liveGeneral()
 /******************************************************************************/
 {
   setUpMemoryMarkGeneral
+  memory_mark_general(this->u_name);
   memory_mark_general(this->left_term);
   memory_mark_general(this->right_term);
   cleanUpMemoryMarkGeneral
@@ -167,6 +171,7 @@ void RexxExpressionOperator::flatten(RexxEnvelope *envelope)
 {
    setUpFlatten(RexxExpressionOperator)
 
+   flatten_reference(newThis->u_name, envelope);
    flatten_reference(newThis->left_term, envelope);
    flatten_reference(newThis->right_term, envelope);
 

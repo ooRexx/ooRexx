@@ -200,8 +200,10 @@ RexxInstruction *RexxSource::assignmentOpNew(RexxToken *target, RexxToken *opera
 
     // we need an evaluator for both the expression and the assignment
     RexxObject *variable = addText(target);
+    // we need the operator name from the composite
+    RexxString *opName = operation->value->extract(0, operation->value->getLength() - 1);
     // now add a binary operator to this expression tree
-    expression = (RexxObject *)new RexxBinaryOperator(operation->subclass, variable, expression);
+    expression = (RexxObject *)new RexxBinaryOperator(opName, operation->subclass, variable, expression);
 
     // now everything is the same as an assignment operator
     RexxObject *newObject = new_instruction(ASSIGNMENT, Assignment);
@@ -1211,8 +1213,11 @@ RexxInstruction *RexxSource::messageAssignmentOpNew(RexxExpressionMessage *messa
 
   message->makeAssignment(this);       // convert into an assignment message (the original message term)
 
+
+  // we need the operator name from the composite
+  RexxString *opName = operation->value->extract(0, operation->value->getLength() - 1);
   // now add a binary operator to this expression tree
-  expression = (RexxObject *)new RexxBinaryOperator(operation->subclass, retriever, expression);
+  expression = (RexxObject *)new RexxBinaryOperator(opName, operation->subclass, retriever, expression);
 
   // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
   RexxObject *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (message->argumentCount) * sizeof(OREF));

@@ -115,7 +115,7 @@ RexxObject  *RexxStemVariable::evaluate(
                                        /* unexpectedly                      */
   stack->push(value);                  /* place on the evaluation stack     */
                                        /* trace if necessary                */
-  context->traceIntermediate(value, TRACE_PREFIX_VARIABLE);
+  context->traceVariable(stem, value);
   return value;                        /* return the located variable       */
 }
 

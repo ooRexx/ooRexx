@@ -193,13 +193,13 @@ void RexxInstructionMessage::execute (
     if (this->arguments[i] != OREF_NULL) {
                                        /* evaluate the expression           */
       result = this->arguments[i]->evaluate(context, stack);
-
-      context->traceResult(result);    /* trace if necessary                */
+                                     /* trace if necessary                */
+      context->traceIntermediate(result, TRACE_PREFIX_ARGUMENT);
     }
     else {
       stack->push(OREF_NULL);          /* push an non-existent argument     */
                                        /* trace if necessary                */
-      context->traceResult(OREF_NULLSTRING);
+      context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
     }
   }
   if (super == OREF_NULL)              /* no super class override?          */

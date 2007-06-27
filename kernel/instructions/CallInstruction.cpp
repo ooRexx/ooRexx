@@ -229,12 +229,13 @@ void RexxInstructionCall::execute(
                                        /* evaluate the expression           */
         result = this->arguments[i]->evaluate(context, stack);
 
-        context->traceResult(result);  /* trace if necessary                */
+                                       /* trace if necessary                */
+        context->traceIntermediate(result, TRACE_PREFIX_ARGUMENT);
       }
       else {
         stack->push(OREF_NULL);        /* push an non-existent argument     */
                                        /* trace if necessary                */
-        context->traceResult(OREF_NULLSTRING);
+        context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
       }
     }
     switch (type) {                    /* process various call types        */

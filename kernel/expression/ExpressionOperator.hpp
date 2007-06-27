@@ -47,7 +47,7 @@
 class RexxExpressionOperator : public RexxInternalObject {
  public:
   inline RexxExpressionOperator() { ; }
-  RexxExpressionOperator(INT, RexxObject *, RexxObject *);
+  RexxExpressionOperator(RexxString *name, INT, RexxObject *, RexxObject *);
   inline RexxExpressionOperator(RESTORETYPE restoreType) { ; };
   void   live();
   void   liveGeneral();
@@ -63,8 +63,8 @@ class RexxExpressionOperator : public RexxInternalObject {
 
 class RexxBinaryOperator : public RexxExpressionOperator {
  public:
-  inline RexxBinaryOperator(INT oper, RexxObject *left, RexxObject *right)
-      : RexxExpressionOperator(oper, left, right) { ; }
+  inline RexxBinaryOperator(RexxString *name, INT oper, RexxObject *left, RexxObject *right)
+      : RexxExpressionOperator(name, oper, left, right) { ; }
   inline RexxBinaryOperator(RESTORETYPE restoreType) { ; };
   void  *operator new(size_t);
   inline void  *operator new(size_t size, void *ptr) {return ptr;};
@@ -73,8 +73,8 @@ class RexxBinaryOperator : public RexxExpressionOperator {
 
 class RexxUnaryOperator : public RexxExpressionOperator {
  public:
-  inline RexxUnaryOperator(INT oper, RexxObject *left)
-      : RexxExpressionOperator(oper, left, OREF_NULL) { ; }
+  inline RexxUnaryOperator(RexxString *name, INT oper, RexxObject *left)
+      : RexxExpressionOperator(name, oper, left, OREF_NULL) { ; }
   inline RexxUnaryOperator(RESTORETYPE restoreType) { ; };
   void  *operator new(size_t);
   inline void  *operator new(size_t size, void *ptr) {return ptr;};

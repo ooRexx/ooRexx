@@ -340,6 +340,18 @@ RexxObject * activation_find  (void);
    inline ACTIVATION_SETTINGS * getGlobalSettings() {return &(this->settings.global_settings);};
    inline LONG              getIndent() {return this->settings.traceindent;};
    inline void              traceIntermediate(RexxObject * v, int p) { if (this->settings.intermediate_trace) this->traceValue(v, p); };
+   inline void              traceVariable(RexxString *n, RexxObject *v)
+       { if (this->settings.intermediate_trace) { this->traceValue(n, TRACE_PREFIX_VARIABLE_NAME); this->traceValue(v, TRACE_PREFIX_VARIABLE);} };
+   inline void              traceDotVariable(RexxString *n, RexxObject *v)
+       { if (this->settings.intermediate_trace) { this->traceValue(n->concatToCstring(CHAR_PERIOD), TRACE_PREFIX_DOTVARIABLE_NAME); this->traceValue(v, TRACE_PREFIX_DOTVARIABLE);} };
+   inline void              traceFunction(RexxString *n, RexxObject *v)
+       { if (this->settings.intermediate_trace) { this->traceValue(n, TRACE_PREFIX_FUNCTION_NAME); this->traceValue(v, TRACE_PREFIX_FUNCTION);} };
+   inline void              traceMessage(RexxString *n, RexxObject *v)
+       { if (this->settings.intermediate_trace) { this->traceValue(n, TRACE_PREFIX_MESSAGE_NAME); this->traceValue(v, TRACE_PREFIX_MESSAGE);} };
+   inline void              traceOperator(RexxString *n, RexxObject *v)
+       { if (this->settings.intermediate_trace) { this->traceValue(n, TRACE_PREFIX_OPERATOR_NAME); this->traceValue(v, TRACE_PREFIX_OPERATOR);} };
+   inline void              tracePrefix(RexxString *n, RexxObject *v)
+       { if (this->settings.intermediate_trace) { this->traceValue(n, TRACE_PREFIX_PREFIX_NAME); this->traceValue(v, TRACE_PREFIX_PREFIX);} };
    inline void              traceCompoundName(RexxString *stem, RexxCompoundTail *tail) { if (this->settings.intermediate_trace) this->traceValue(tail->createCompoundName(stem), TRACE_PREFIX_COMPOUND); };
    inline void              traceCompoundName(RexxString *stem, RexxString *tail) { if (this->settings.intermediate_trace) this->traceValue(stem->concat(tail), TRACE_PREFIX_COMPOUND); };
    inline void              traceResult(RexxObject * v) { if ((this->settings.flags&trace_results) || (this->settings.dbg_flags&dbg_trace)) this->traceValue(v, TRACE_PREFIX_RESULT); };

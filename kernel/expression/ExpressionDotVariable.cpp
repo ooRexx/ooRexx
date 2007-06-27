@@ -107,13 +107,10 @@ RexxObject * RexxDotVariable::evaluate(
   if (result == OREF_NULL) {           /* not there?                        */
                                        /* add a period to the name          */
     result = this->variableName->concatToCstring(CHAR_PERIOD);
-                                       /* trace if necessary                */
-    context->traceIntermediate(result, TRACE_PREFIX_LITERAL);
   }
-  else
-                                       /* trace if necessary                */
-    context->traceIntermediate(result, TRACE_PREFIX_VARIABLE);
   stack->push(result);                 /* place on the evaluation stack     */
+                                       /* trace if necessary                */
+  context->traceDotVariable(variableName, result);
   return result;                       /* also return the result            */
 }
 

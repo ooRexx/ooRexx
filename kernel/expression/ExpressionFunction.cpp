@@ -102,8 +102,6 @@ void RexxExpressionFunction::resolve(
                                        /* have a builtin function?          */
     if (this->builtin_index != NO_BUILTIN) {
       this->flags |= function_builtin; /* this is a builtin function        */
-                                       /* cast off the routine name         */
-      OrefSet(this, this->u_name, OREF_NULL);
     }
     else
       this->flags |= function_external;/* have an external routine          */
@@ -182,13 +180,13 @@ RexxObject *RexxExpressionFunction::evaluate(
     if (this->arguments[i] != OREF_NULL) {
                                        /* evaluate the expression           */
       result = this->arguments[i]->evaluate(context, stack);
-
-      context->traceResult(result);    /* trace if necessary                */
+                                       /* trace if necessary                */
+      context->traceIntermediate(result, TRACE_PREFIX_ARGUMENT);
     }
     else {
       stack->push(OREF_NULL);          /* push an non-existent argument     */
                                        /* trace if necessary                */
-      context->traceResult(OREF_NULLSTRING);
+      context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
     }
   }
 
@@ -220,7 +218,7 @@ RexxObject *RexxExpressionFunction::evaluate(
   stack->push(result);                 /* push onto the stack               */
   if ((this->flags&function_type_mask) != function_builtin) discard(result);
                                        /* trace if necessary                */
-  context->traceIntermediate(result, TRACE_PREFIX_FUNCTION);
+  context->traceFunction(u_name, result);
   return result;                       /* and return this to the caller     */
 }
 
