@@ -304,7 +304,7 @@ void RexxCompoundVariable::procedureExpose(
     /* have the stem expose this */
     stem_table->expose(variable);
     /* trace resolved compound name */
-    context->traceCompoundName(stem, variable->getName());
+    context->traceCompoundName(stem, (RexxObject **)&tails[0], tailCount, variable->getName());
 }
 
 
@@ -332,7 +332,7 @@ void RexxCompoundVariable::expose(
     /* tracing intermediate values?      */
     if (context->tracingIntermediates()) {
         /* trace resolved compound name */
-        context->traceCompoundName(stem, variable->getName());
+        context->traceCompoundName(stem, (RexxObject **)&tails[0], tailCount, variable->getName());
     }
 }
 

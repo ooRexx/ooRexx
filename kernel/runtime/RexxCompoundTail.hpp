@@ -67,6 +67,19 @@
        init();                                  /* do the common initialization */
        buildTail(tails, count);                 /* build the full tail up */
    }
+
+   inline RexxCompoundTail(RexxObject **tails, size_t count, bool resolve) {
+       init();                                  /* do the common initialization */
+       if (resolve)
+       {
+           buildTail(tails, count);             /* build the full tail up */
+       }
+       else
+       {
+           buildUnresolvedTail(tails, count);   /* build the full tail up */
+       }
+   }
+
    inline RexxCompoundTail(RexxString *tails, size_t count) {
        init();                                  /* do the common initialization */
        buildTail(tails, count);                 /* build the full tail up */
@@ -122,6 +135,7 @@
    void buildTail(RexxVariableDictionary *dictionary, RexxObject **tails, size_t tailCount);
    void buildTail(RexxActivation *context, RexxObject **tails, size_t tailCount);
    void buildTail(RexxObject **tails, size_t count);
+   void buildUnresolvedTail(RexxObject **tails, size_t count);
    void buildTail(RexxString *tail);
    void buildTail(RexxString *tail, size_t index);
    void buildTail(size_t index);
@@ -134,6 +148,9 @@
        }
        return rc;
    }
+
+   inline size_t getLength() { return length; }
+   inline UCHAR *getTail()  { return tail; }
 
    size_t       length;                      /* length of the buffer (current) */
    size_t       remainder;                   /* remaining length in the buffer */

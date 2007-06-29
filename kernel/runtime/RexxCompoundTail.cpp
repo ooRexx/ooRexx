@@ -46,6 +46,7 @@
 #include "StringClass.hpp"
 #include "RexxCompoundTail.hpp"
 #include "RexxBuffer.hpp"
+#include "ExpressionVariable.hpp"
 
 
 void RexxCompoundTail::buildTail(
@@ -177,6 +178,40 @@ void RexxCompoundTail::buildTail(
       if (part == OREF_NULL)           /* omitted piece?                    */
           part = OREF_NULLSTRING;      /* use a null string                 */
       part->copyIntoTail(this);        /* add this to our tail              */
+  }
+  length = current - tail;             /* set the final, updated length     */
+}
+
+
+void RexxCompoundTail::buildUnresolvedTail(
+    RexxObject **tails,                /* tail elements                     */
+    size_t count)                      /* number of tail elements           */
+/******************************************************************************/
+/* Function:  Build a tail value from a set of tail elements without doing    */
+/*            variable resolution.                                            */
+/******************************************************************************/
+{
+  bool         first = true;           /* first tail piece indicator        */
+
+  for (size_t i = 0; i < count; i++) {
+      if (!first) {                    /* if not the first tail piece       */
+          addDot();                    /* add a dot to the buffer           */
+      }
+      first = false;                   /* we need to add a dot from here on */
+      RexxObject *part = tails[i];
+      // this could be ommitted
+      if (part != OREF_NULL)
+      {
+          // if this is a variable, just copy the name.  Otherwixe, copy the value
+          if (OTYPE(ParseVariable, part))
+          {
+              ((RexxParseVariable *)part)->getName()->copyIntoTail(this);
+          }
+          else
+          {
+              part->stringValue()->copyIntoTail(this);
+          }
+      }
   }
   length = current - tail;             /* set the final, updated length     */
 }

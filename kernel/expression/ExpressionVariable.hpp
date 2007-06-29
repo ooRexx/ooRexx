@@ -67,7 +67,7 @@ class RexxParseVariable : public RexxVariableBase {
   void clearGuard(RexxActivation *);
   void expose(RexxActivation *, RexxExpressionStack *, RexxVariableDictionary *);
   void procedureExpose(RexxActivation *, RexxActivation *, RexxExpressionStack *);
-
+  RexxString *getName();
                                        /* name of the variable is in hash   */
   LONG        index;                   /* lookaside table index             */
 };

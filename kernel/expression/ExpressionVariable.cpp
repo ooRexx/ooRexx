@@ -305,6 +305,16 @@ void RexxParseVariable::expose(
   context->putLocalVariable(old_variable, index);
 }
 
+/**
+ * Return the name of this variable.
+ *
+ * @return The string value of the variable name.
+ */
+RexxString *RexxParseVariable::getName()
+{
+    return variableName;
+}
+
 
 void *RexxParseVariable::operator new(size_t size)
 /******************************************************************************/
