@@ -58,6 +58,7 @@
    if argarr~hasindex(3) = 1 then newarg[2] = argarr[3] /* tabx */
    if argarr~hasindex(4) = 1 then newarg[3] = argarr[4] /* taby */
    if argarr~hasindex(5) = 1 then newarg[5] = argarr[5] /* options */
+   if argarr~hasindex(6) = 1 then newarg[9] = argarr[6] /* include file */
    newarg[4] = 0
    forward class (super) arguments (newarg)
 

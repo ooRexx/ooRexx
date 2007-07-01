@@ -70,11 +70,11 @@
 ::method Init
    use arg DlgData., cdx, cdy, cdcx, cdstyle, cdtable, cdlabel, cdmax, includeFile
 
-   select
-     when Arg(1,'E') & Arg(9, 'E') then self~init:super(DlgData., Arg(9))
-     when Arg(1,'E') then self~init:super(DlgData.)
-     otherwise self~init:super
-   end
+   newArgs = .array~new(2)
+   if Arg(1, 'E') then newArgs[1] = Arg(1)
+   if Arg(9, 'E') then newArgs[2] = Arg(9)
+   forward class (super) arguments (newArgs) continue
+   if result <> 0 then return result
 
    self~catalog = .directory~new
    self~catalog['count'] = 0
