@@ -282,7 +282,7 @@
 
    return 0
 
-::method ParseIncludeFile protected
+::method ParseIncludeFile
   use arg hFile
 
   if arg(1, 'O')  | hFile == "" then return 1
@@ -296,13 +296,36 @@
 
   do while f~state == "READY"
     line = f~linein~strip('L')
+
+    if line~abbrev("#ifdef") then do
+      self~skipThroughIfDefs(f, line)
+      iterate
+    end
+
     if line~abbrev("#define") & line~words == 3 then do
       parse var line def symbol numericID .
-      if numericID~datatype('N') then self~ConstDir[symbol~translate] = numericID
+      if numericID~datatype('W') then self~ConstDir[symbol~translate] = numericID
     end
   end
   f~close
   return 0
+
+::method skipThroughIfDefs private
+  use arg fObj, line
+
+  if \ line~abbrev("#ifdef") & \ line~abbrev("#ifndef") then return
+  ifDefStack = .queue~new
+  ifDefStack~push(line)
+  do while fObj~state == "READY"
+    l = fObj~linein~strip("L")
+    select
+      when l~abbrev("#endif") then ifDefStack~pull
+      when l~abbrev("#ifdef") then ifDefStack~push(l)
+      when l~abbrev("#ifndef") then ifDefStack~push(l)
+      otherwise nop
+    end
+    if ifDefStack~items == 0 then leave
+  end
 
 ::method DlgHandle unguarded
    return self~hwnd
