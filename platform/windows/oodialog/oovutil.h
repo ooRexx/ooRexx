@@ -69,6 +69,24 @@
 
 extern LONG HandleError(PRXSTRING r, CHAR * text);
 
+/* Defines for the different possible versions of comctl32.dll up to Windows
+ * XP SP2. These DWORD "packed version" numbers are calculated using the
+ * following macro:
+ */
+#define MAKEVERSION(major,minor) MAKELONG(minor,major)
+
+#define COMCTL32_4_0         262144
+#define COMCTL32_4_7         262151
+#define COMCTL32_4_71        262215
+#define COMCTL32_4_72        262216
+#define COMCTL32_5_8         327688
+#define COMCTL32_5_81        327761
+#define COMCTL32_5_82        327762
+#define COMCTL32_6_0         393216
+
+/* The version of comctl32.dll in use when oodialog.dll is loaded. */
+extern DWORD ComCtl32Version;
+
 /* macros to check the number of arguments */
 #define CHECKARG(argexpct) { \
    if (argc != argexpct) \

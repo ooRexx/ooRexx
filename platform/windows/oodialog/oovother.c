@@ -35,6 +35,10 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+#define NTDDI_VERSION   NTDDI_WINXPSP2
+#define _WIN32_WINNT    0x0501
+#define WINVER          0x0501
+
 #include <windows.h>
 #include <mmsystem.h>
 #define INCL_REXXSAA

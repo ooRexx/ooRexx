@@ -37,6 +37,8 @@
 /*----------------------------------------------------------------------------*/
 #include <windows.h>
 #include <mmsystem.h>
+#include <shlwapi.h>
+#include <commctrl.h>
 #define INCL_REXXSAA
 #define INCL_RXMACRO
 #include <rexx.h>
@@ -59,6 +61,7 @@ extern DIALOGADMIN * topDlg = {NULL};
 extern INT StoredDialogs = 0;
 extern CRITICAL_SECTION crit_sec = {0};
 extern WPARAM InterruptScroll;
+extern DWORD ComCtl32Version = 0;
 
 extern BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
 extern BOOL DrawBitmapButton(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam, BOOL MsgEnabled);
@@ -71,8 +74,12 @@ extern LONG HandleError(PRXSTRING r, CHAR * text);
 extern LONG SetRexxStem(CHAR * name, INT id, char * secname, CHAR * data);
 extern BOOL GetDialogIcons(DIALOGADMIN *, INT, BOOL, PHANDLE, PHANDLE);
 extern HICON GetIconForID(DIALOGADMIN *, UINT, BOOL, int, int);
+extern BOOL InitForCommonControls(void);
 
 INT DelDialog(DIALOGADMIN * aDlg);
+
+#define COMCTL_ERR_TITLE    "ooDialog - Windows Common Controls Error"
+#define GENERIC_ERR_TITLE   "ooDialog - Error"
 
 LONG HandleError(PRXSTRING r, CHAR * text)
 {
@@ -577,6 +584,9 @@ ULONG APIENTRY StartDialog(
    CHECKARG(7);
    GET_ADM;
    if (!dlgAdm) RETERR;
+
+   if ( ! ComCtl32Version && ! InitForCommonControls() )
+       RETC(0)
 
    EnterCriticalSection(&crit_sec);
    if (!InstallNecessaryStuff(dlgAdm, &argv[1], argc-1))
@@ -1283,6 +1293,86 @@ ULONG APIENTRY RemoveMMFuncs(
 
 }
 
+/**
+ * Convenience function to put up an error message box.
+ *
+ * @param pszMsg    The message.
+ * @param pszTitle  The title of for the message box.
+ */
+static void internalErrorMsg(PSZ pszMsg, PSZ pszTitle)
+{
+    MessageBox(0, pszMsg, pszTitle, MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+}
+
+/**
+ * Determines the version of comctl32.dll and initializes the common controls.
+ *
+ * The minimum version of 4.71 is supported on Windows 95 with Internet Explorer
+ * 4.0, Windows NT 4.0 with Internet Explorer 4.0, Windows 98, and Windows 2000.
+ *
+ * @return TRUE if comctl32.dll is at least version 4.71, otherwise FALSE.
+ */
+BOOL InitForCommonControls(void)
+{
+    HINSTANCE hinst;
+    BOOL      success = FALSE;
+
+    hinst = LoadLibrary(TEXT("comctl32.dll"));
+    if ( hinst )
+    {
+        DLLGETVERSIONPROC pDllGetVersion;
+
+        pDllGetVersion = (DLLGETVERSIONPROC)GetProcAddress(hinst, "DllGetVersion");
+        if ( pDllGetVersion )
+        {
+            DLLVERSIONINFO info;
+
+            ZeroMemory(&info, sizeof(info));
+            info.cbSize = sizeof(info);
+            if ( SUCCEEDED((*pDllGetVersion)(&info)) )
+                ComCtl32Version = MAKEVERSION(info.dwMajorVersion, info.dwMinorVersion);
+        }
+        FreeLibrary(hinst);
+    }
+
+    if ( ComCtl32Version == 0 )
+    {
+        internalErrorMsg("The version of the Windows Common Controls library (comctl32.dll)\n"
+                         "could not be determined.  ooDialog will not run", COMCTL_ERR_TITLE);
+    }
+    else if ( ComCtl32Version < COMCTL32_4_71 )
+    {
+        CHAR msg[256];
+        sprintf(msg, "ooDialog can not run with this version of the Windows Common Controls library\n"
+                "(comctl32.dll.)  The minimum version required is 4.71.\n\nThis system has version: %s\n",
+                ComCtl32Version == COMCTL32_4_0 ? "4.0" : "4.7" );
+
+        internalErrorMsg(msg, COMCTL_ERR_TITLE);
+        ComCtl32Version = 0;
+    }
+    else
+    {
+        INITCOMMONCONTROLSEX ctrlex;
+
+        ctrlex.dwSize = sizeof(ctrlex);
+        ctrlex.dwICC = ICC_WIN95_CLASSES;
+        if ( ! InitCommonControlsEx(&ctrlex) )
+        {
+            CHAR msg[128];
+            sprintf(msg, "Initializing the Windows Common Controls library (InitCommonControlsEx)\n"
+                    "failed.  Windows System Error Code: %d\n", GetLastError());
+            internalErrorMsg(msg, COMCTL_ERR_TITLE);
+            ComCtl32Version = 0;
+        }
+        else
+        {
+            success = TRUE;
+        }
+    }
+    return success;
+}
+
+
 ULONG APIENTRY InstMMFuncs(
   PUCHAR funcname,
   ULONG argc,
@@ -1294,6 +1384,10 @@ ULONG APIENTRY InstMMFuncs(
    INT rc, i;
    BOOL err = FALSE;
    retstr->strlength = 1;
+
+   /* If the common controls are not initialized, don't load. */
+   if ( ! ComCtl32Version && ! InitForCommonControls() )
+      RETC(1)
 
    rc = RexxRegisterFunctionDll(
      "RemoveMMFuncs",
@@ -1308,9 +1402,9 @@ ULONG APIENTRY InstMMFuncs(
    }
 
    if (err)
-      RETC(1)          /* not ok then return 1 so that old CLS files won't run  */
-   else
-      RETVAL(DLLVER)   /* ok, so we return the DLL version */
+      RETC(1)       /* not ok then return 1 so that old CLS files won't run  */
+
+   RETVAL(DLLVER)   /* ok, so we return the DLL version */
 }
 
 
@@ -1358,6 +1452,10 @@ ULONG APIENTRY InstExtendedMMFuncs(
    INT rc, i;
    BOOL err = FALSE;
    retstr->strlength = 1;
+
+   /* If the common controls are not initialized, don't load. */
+   if ( ! ComCtl32Version && ! InitForCommonControls() )
+      RETC(1)
 
    rc = RexxRegisterFunctionDll(
      "RemoveExtendedMMFuncs",
@@ -1424,6 +1522,10 @@ ULONG APIENTRY InstUserMMFuncs(
    INT rc, i;
    BOOL err = FALSE;
    retstr->strlength = 1;
+
+   /* If the common controls are not initialized, don't load. */
+   if ( ! ComCtl32Version && ! InitForCommonControls() )
+      RETC(1)
 
    rc = RexxRegisterFunctionDll(
      "RemoveUserMMFuncs",

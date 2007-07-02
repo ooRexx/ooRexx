@@ -55,9 +55,8 @@ extern INT DelDialog(DIALOGADMIN * aDlg);
 extern CRITICAL_SECTION crit_sec;
 extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
 extern BOOL GetDialogIcons(DIALOGADMIN *, INT, BOOL, PHANDLE, PHANDLE);
+extern BOOL InitForCommonControls(void);
 
-
-static BOOL CommCtrlLoaded = FALSE;
 //#define USE_DS_CONTROL
 
 
@@ -408,6 +407,10 @@ ULONG APIENTRY UsrCreateDialog(
    else
    {
        CHECKARGL(8);
+
+       if ( ! ComCtl32Version && ! InitForCommonControls() )
+           RETC(0)
+
        /* set number of items to dialogtemplate */
        p = (DLGTEMPLATE *) atol(argv[4].strptr);
        if (!p)
@@ -951,10 +954,6 @@ ULONG APIENTRY UsrAddNewCtrl(
    if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
    if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
    if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-   if (!CommCtrlLoaded) {
-       InitCommonControls();
-       CommCtrlLoaded = TRUE;
-   }
 
    if (!strcmp(argv[0].strptr,"TREE"))
    {
