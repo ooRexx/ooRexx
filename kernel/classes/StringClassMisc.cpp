@@ -420,6 +420,39 @@ RexxInteger *RexxString::abbrev(
 }
 
 
+RexxInteger *RexxString::caselessAbbrev(RexxString *info, RexxInteger *length)
+{
+    size_t   Len1;                       /* length of string1                 */
+    size_t   Len2;                       /* length of string1                 */
+    size_t   ChkLen;                     /* required check length             */
+    INT      rc;                         /* compare result                    */
+
+    // the info must be a string value
+    info = get_string(info, ARG_ONE);
+    stringsize_t len2 = info->getLength();
+    // the check length is optional, and defaults to the length of info.
+    stringsize_t chkLen = optional_length(length, len2, ARG_TWO);
+
+    stringsize_t len1 = this->getLength();
+
+    // if a null string match is allowed, this is true
+    if (chkLen == 0 && len2 == 0)
+    {
+        return TheTrueObject;
+    }
+
+    // if the info is a null string, no match is possible
+    // if the target string is shorter than the check length, also no match
+    // if the info string is shorter than this string, not a match.
+    if (len1 == 0 || (len2 < chkLen) || (len1 < len2))
+    {
+        return TheFalseObject;
+    }
+    /* do the comparison                 */
+    return(CaselessCompare((PUCHAR)this->getStringData(), (PUCHAR)info->getStringData(), len2) == 0) ? TheTrueObject : TheFalseObject;
+}
+
+
 RexxInteger *RexxString::compare(
     RexxString *string2,               /* other string to compare against   */
     RexxString *pad)                   /* optional padding character        */

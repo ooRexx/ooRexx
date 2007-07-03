@@ -110,7 +110,7 @@ supplier_methods~put(.methods~supplier_supplier, 'SUPPLIER')
 .environment~setentry('COMPARATOR', .comparator)
 .environment~setentry('DESCENDINGCOMPARATOR', .descendingcomparator)
 .environment~setentry('CASELESSCOMPARATOR', .caselesscomparator)
-.environment~setentry('DESCENDINGCASELESSCOMPARATOR', .descendingcaselesscomparator)
+.environment~setentry('CASELESSDESCENDINGCOMPARATOR', .caselessdescendingcomparator)
 .environment~setentry('COLUMNCOMPARATOR', .columncomparator)
 .environment~setentry('CASELESSCOLUMNCOMPARATOR', .caselesscolumncomparator)
 .environment~setentry('INVERTINGCOMPARATOR', .invertingcomparator)
@@ -834,7 +834,7 @@ return -left~compareTo(right)
 use strict arg left, right
 return left~caselessCompareTo(right)
 
-::CLASS 'DescendingCaselessComparator' MIXINCLASS Comparator
+::CLASS 'CaselessDescendingComparator' MIXINCLASS Comparator
 ::METHOD compare
 use strict arg left, right
 return -left~caselessCompareTo(right)

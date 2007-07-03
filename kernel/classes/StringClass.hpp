@@ -187,6 +187,7 @@ class RexxStringClass : public RexxClass {
    RexxString  *changeStr(RexxString *, RexxString *);
    RexxString  *caselessChangeStr(RexxString *, RexxString *);
    RexxInteger *abbrev(RexxString *, RexxInteger *);
+   RexxInteger *caselessAbbrev(RexxString *, RexxInteger *);
    RexxInteger *compare(RexxString *, RexxString *);
    RexxInteger *caselessCompare(RexxString *, RexxString *);
    RexxString  *copies(RexxInteger *);
