@@ -175,7 +175,7 @@ ULONG APIENTRY Wnd_Desktop(
              hNextFocus = (HWND)atol(argv[2].strptr);
              if ( ! IsWindow(hNextFocus) )
                 RETVAL(-1)
-             result = SendMessage(hDlg, WM_NEXTDLGCTL, hNextFocus, TRUE);
+             result = SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)hNextFocus, TRUE);
              break;
        }
        if ( ! result )
@@ -471,4 +471,5 @@ ULONG APIENTRY WndShow_Pos(
        w = (HWND)atol(argv[1].strptr);
        RETC(!ScrollWindow(w, atol(argv[2].strptr), atol(argv[3].strptr), NULL, NULL))  /* x, y */
    }
+   RETERR
 }
