@@ -515,7 +515,7 @@
    use arg id, msgToRise
    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
    if id = -1 then return -1
-   self~AddUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, '0x0001'||id~d2x(4), 0xFFFFFFFF, 0, 0)
+   return self~AddUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, '0x0001'||id~d2x(4), 0xFFFFFFFF, 0, 0)
 
    /* Connect a list left double-click with a method */
 
@@ -523,7 +523,7 @@
    use arg id, msgToRise
    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
    if id = -1 then return -1
-   self~AddUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, '0x0002'||id~d2x(4), 0xFFFFFFFF, 0, 0)
+   return self~AddUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, '0x0002'||id~d2x(4), 0xFFFFFFFF, 0, 0)
 
 
    /* Connect any Windows message with a class method */
