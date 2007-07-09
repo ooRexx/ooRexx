@@ -56,6 +56,8 @@ WORD NumDIBColorEntries(LPBITMAPINFO lpBmpInfo);
 extern LPBITMAPINFO LoadDIB(LPSTR szFile);
 extern LONG EvaluateListStyle(CHAR * styledesc);
 
+/* Local functions */
+static LONG SetStyle(HWND, LONG);
 
 ULONG APIENTRY PlaySoundFile(
   PUCHAR funcname,
@@ -782,10 +784,311 @@ ULONG APIENTRY HandleTreeCtrl(
    RETC(0)
 }
 
+/**
+ * Set a window style and check for error.
+ *
+ * @param hwnd    Handle of window having its style changed / set.
+ * @param lStyle  The stlye to be set.
+ *
+ * @return The previous window style on success, or the negated system error on
+ *         failure.
+ */
+static LONG SetStyle(HWND hwnd, LONG lStyle)
+{
+    LONG lErr;
+
+    SetLastError(0);
+    lStyle = SetWindowLong(hwnd, GWL_STYLE, lStyle);
+
+    /* SetWindowLong returns 0 on error, or the value of the previous long at
+     * the specified index.  Very unlikely that the last style was 0, but assume
+     * it is possible.  In that case, 0 is only an error if GetLastError does
+     * not return 0.
+     */
+    if ( ! lStyle )
+    {
+        lErr = (LONG)GetLastError();
+        if ( ! lErr ) lStyle = -lErr;
+    }
+    return lStyle;
+}
+
+/**
+ * Take an edit control's window flags and construct a Rexx string that
+ * represents the control's style.
+ */
+ULONG EditWindowFlagsToString(LONG lStyle, PRXSTRING retstr)
+{
+    if ( lStyle & WS_VISIBLE ) strcpy(retstr->strptr, "VISIBLE");
+    else strcpy(retstr->strptr, "HIDDEN");
+
+    if ( lStyle & WS_TABSTOP ) strcat(retstr->strptr, " TAB");
+    else strcat(retstr->strptr, " NOTAB");
+
+    if ( lStyle & WS_DISABLED ) strcat(retstr->strptr, " DISABLED");
+    else strcat(retstr->strptr, " ENABLED");
+
+    if ( lStyle & WS_GROUP )       strcat(retstr->strptr, " GROUP");
+    if ( lStyle & WS_HSCROLL )     strcat(retstr->strptr, " HSCROLL");
+    if ( lStyle & WS_VSCROLL )     strcat(retstr->strptr, " VSCROLL");
+    if ( lStyle & ES_LEFT )        strcat(retstr->strptr, " LEFT");
+    if ( lStyle & ES_RIGHT )       strcat(retstr->strptr, " RIGHT");
+    if ( lStyle & ES_CENTER )      strcat(retstr->strptr, " CENTER");
+    if ( lStyle & ES_PASSWORD )    strcat(retstr->strptr, " PASSWORD");
+    if ( lStyle & ES_MULTILINE )   strcat(retstr->strptr, " MULTILINE");
+    if ( lStyle & ES_AUTOHSCROLL ) strcat(retstr->strptr, " AUTOSCROLLH");
+    if ( lStyle & ES_AUTOVSCROLL ) strcat(retstr->strptr, " AUTOSCROLLV");
+    if ( lStyle & ES_READONLY )    strcat(retstr->strptr, " READONLY");
+    if ( lStyle & ES_WANTRETURN )  strcat(retstr->strptr, " WANTRETURN");
+    if ( lStyle & ES_NOHIDESEL )   strcat(retstr->strptr, " WANTRETURN");
+    if ( lStyle & ES_UPPERCASE )   strcat(retstr->strptr, " UPPER");
+    if ( lStyle & ES_LOWERCASE )   strcat(retstr->strptr, " LOWER");
+    if ( lStyle & ES_NUMBER )      strcat(retstr->strptr, " NUMBER");
+    if ( lStyle & ES_OEMCONVERT )  strcat(retstr->strptr, " OEM");
+
+    retstr->strlength = strlen(retstr->strptr);
+    return 0;
+}
+
+/**
+ * Parse an edit control style string sent from ooDialog into the corresponding
+ * style flags.
+ *
+ * Note that this is meant to only deal with the styles that can be changed
+ * after the control is created through SetWindowLong.
+ */
+LONG ParseEditStyle(CHAR * style)
+{
+    LONG lStyle = 0;
+
+    if (strstr(style, "UPPER"     )) lStyle |= ES_UPPERCASE;
+    if (strstr(style, "LOWER"     )) lStyle |= ES_LOWERCASE;
+    if (strstr(style, "NUMBER"    )) lStyle |= ES_NUMBER;
+    if (strstr(style, "WANTRETURN")) lStyle |= ES_WANTRETURN;
+    if (strstr(style, "OEM"       )) lStyle |= ES_OEMCONVERT;
+
+    /* Although these styles can be changed by individual ooDialog methods, as
+     * a convenience, allow the programmer to include them when changing
+     * multiple styles at once.
+     */
+    if (strstr(style, "TABSTOP" )) lStyle |= WS_TABSTOP;
+    if (strstr(style, "GROUP"   )) lStyle |= WS_GROUP;
+
+    return lStyle;
+}
 
 
+/**
+ * Extended Common Control functionality.  This function implements capabilities
+ * for the common controls that were not available at the time of the original
+ * IBM ooDialog, or were available but not put into ooDialog.
+ *
+ * For sending many messages to dialog controls, the SendWinMsg() function is
+ * usually adequate.  This function is used when special processing needs to
+ * take place to construct the message parameters, or for Windows API calls that
+ * do not involve SendWindowMessage.
+ *
+ * The parameters sent from ooRexx as an array of RXString:
+ *
+ * argv[0]  Dialog handle.
+ *
+ * argv[1]  Control ID.
+ *
+ * argv[2]  In general, the control type, i.e. "EDIT", "STATIC", etc..  However,
+ *          also used for some generic functions.
+ *
+ * argv[3]  Sub-function qualifier.
+ *
+ * argv[4] ... arv[n]  Varies depending on the function.
+ *
+ * Return to ooRexx, in general:
+ *  < -4 a negated system error code
+ *    -4 unsupported ComCtl32 Version
+ *    -3 problem with an argument
+ *    -2 problem with the dialog handle
+ *    -1 problem with the dialog control (id or handle)
+ *     0 the Windows API call succeeds
+ *     1 the Windows API call failed
+ *  >  1 dependent on the function, usually a returned value not a return code
+ */
+ULONG APIENTRY HandleControlEx(
+  PUCHAR funcname,
+  ULONG argc,
+  RXSTRING argv[],
+  PUCHAR qname,
+  PRXSTRING retstr )
+{
+    HWND hDlg;
+    HWND hCtrl;
+    int id;
 
+    /* Minimum of 4 args. */
+    CHECKARGL(4);
 
+    hDlg = (HWND)atol(argv[0].strptr);
+    if ( hDlg == 0 || ! IsWindow(hDlg) ) RETVAL(-2)
+
+    id = atoi(argv[1].strptr);
+    if ( id == 0 ) RETVAL(-1)
+
+    hCtrl = (HWND)GetDlgItem(hDlg, id);
+    if ( ! hCtrl ) RETVAL(-(LONG)GetLastError())
+
+    /* Determine the control, or other function.  The single first letter is
+     * checked.
+     */
+    if ( argv[2].strptr[0] == 'E' )      /* Edit control function */
+    {
+        if ( !strcmp(argv[3].strptr, "MSG") ) /* Send an edit message (EM_*) */
+        {
+            CHECKARGL(5);
+
+            if ( !strcmp(argv[4].strptr, "TIP" ) )  /* Show or hide ballon tip */
+            {
+                /* Requires XP Common Controls version 6.0 */
+                if ( ComCtl32Version < COMCTL32_6_0 ) RETVAL(-4)
+
+                if ( argc == 5 )  /* EM_HIDEBALLONTIP */
+                {
+                    if ( Edit_HideBalloonTip(hCtrl) )
+                        RETVAL(0)
+                    else
+                        RETVAL(1)
+                }
+                else if ( argc == 7 )  /* EM_SHOWBALLONTIP */
+                {
+                    EDITBALLOONTIP tip;
+                    WCHAR wszTitle[128];
+                    WCHAR wszText[1024];
+
+                    /* The title string has a limit of 99 characters. */
+                    if ( argv[5].strlength > 99 || argv[6].strlength > 1023 )
+                        RETVAL(-3)
+
+                    if ( MultiByteToWideChar(CP_ACP, 0, argv[5].strptr, -1, wszTitle, 128) == 0 )
+                        RETVAL(-3)
+
+                    if ( MultiByteToWideChar(CP_ACP, 0, argv[6].strptr, -1, wszText, 1024) == 0 )
+                        RETVAL(-3)
+
+                    tip.cbStruct = sizeof(tip);
+                    tip.pszText = wszText;
+                    tip.pszTitle = wszTitle;
+                    tip.ttiIcon = TTI_INFO;
+
+                    RETVAL(!Edit_ShowBalloonTip(hCtrl, &tip))
+                }
+                else RETERR
+            }
+            else if ( !strcmp(argv[4].strptr, "CUE" ) )  /* Set or get cue banner */
+            {
+                /* Note that the EM_GETCUEBANNER simply does not work.  At least
+                 * on XP.  So the code is removed.  But, it might be worth
+                 * trying on Vista.
+                 */
+                WCHAR wszCue[256];
+
+                /* Requires Common Controls version 6.0 (XP) */
+                if ( ComCtl32Version < COMCTL32_6_0 ) RETVAL(-4)
+
+                if ( argc == 6 )
+                {
+                    if ( argv[5].strlength > 255 )
+                        RETVAL(-3)
+
+                    if ( MultiByteToWideChar(CP_ACP, 0, argv[5].strptr, -1, wszCue, 256) == 0 )
+                        RETVAL(-3)
+
+                    RETVAL(!Edit_SetCueBannerText(hCtrl, wszCue))
+                }
+                else RETERR
+            }
+            else RETERR
+        }
+        else RETERR
+    }
+    else if ( argv[2].strptr[0] == 'X' ) /* eXtended work with the window style */
+    {
+        LONG lStyle = GetWindowLong(hCtrl, GWL_STYLE);
+        if ( ! lStyle ) RETC(-3)
+
+        CHECKARGL(4);
+
+        if ( !strcmp(argv[3].strptr, "GET") )         /* Get the window style */
+        {
+            /* Return the window style as a long for any dialog control. */
+            RETVAL(lStyle);
+        }
+         else if ( !strcmp(argv[3].strptr, "TAB") )   /* Set or remove tab stop  style */
+        {
+            CHECKARGL(5);
+            if ( argv[4].strptr[0] == '1' )
+                lStyle |= WS_TABSTOP;
+            else
+                lStyle &= ~WS_TABSTOP;
+        }
+        else if ( !strcmp(argv[3].strptr, "GROUP") )  /* Set or remove group style */
+        {
+            CHECKARGL(5);
+            if ( argv[4].strptr[0] == '1' )
+                lStyle |= WS_GROUP;
+            else
+                lStyle &= ~WS_GROUP;
+        }
+        else if ( !strcmp(argv[3].strptr, "EDIT" ) )  /* Work with edit control style */
+        {
+            LONG lChangeStyle;
+
+            CHECKARGL(5);
+
+            /* If 'G' get the current style and return its string form. */
+            if ( argv[4].strptr[0] == 'G' ) return EditWindowFlagsToString(lStyle, retstr);
+
+            CHECKARGL(6);
+
+            lChangeStyle = ParseEditStyle(argv[5].strptr);
+            if ( ! lChangeStyle ) RETVAL(-3)
+
+            if ( argv[4].strptr[0] == 'S' )           /* Set style */
+            {
+                lStyle |= lChangeStyle;
+            }
+            else if ( argv[4].strptr[0] == 'C' )      /* Clear style */
+            {
+                lStyle &= ~lChangeStyle;
+            }
+            else if ( argv[4].strptr[0] == 'R' )      /* Replace style */
+            {
+                LONG lAddedStyle;
+
+                CHECKARG(7);
+
+                lAddedStyle = ParseEditStyle(argv[6].strptr);
+                if ( ! lAddedStyle ) RETVAL(-3)
+
+                lStyle = (lStyle & ~lChangeStyle) | lAddedStyle;
+            }
+            else RETERR
+        }
+        else RETERR
+
+        RETVAL(SetStyle(hCtrl, lStyle));
+    }
+    else if ( argv[2].strptr[0] == 'U' ) /* Get, set 4-byte user data */
+    {
+        if ( argc == 3 )
+        {
+            RETVAL(GetWindowLong(hCtrl, GWL_USERDATA));
+        }
+        else if ( argc == 4 )
+        {
+            RETVAL(SetWindowLong(hCtrl, GWL_USERDATA, atol(argv[3].strptr)));
+        }
+        else RETERR
+    }
+
+    RETERR
+}
 
 ULONG APIENTRY HandleListCtrl(
   PUCHAR funcname,

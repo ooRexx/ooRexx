@@ -651,6 +651,8 @@ ULONG APIENTRY UsrAddControl(
        else lStyle |= ES_LEFT;
        if (strstr(argv[7].strptr,"UPPER")) lStyle |= ES_UPPERCASE;
        if (strstr(argv[7].strptr,"LOWER")) lStyle |= ES_LOWERCASE;
+       if (strstr(argv[7].strptr,"NUMBER")) lStyle |= ES_NUMBER;
+       if (strstr(argv[7].strptr,"OEM")) lStyle |= ES_OEMCONVERT;
        if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
        if (!strstr(argv[7].strptr,"NOBORDER")) lStyle |= WS_BORDER;
        if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;

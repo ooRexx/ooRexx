@@ -1163,6 +1163,28 @@
    return Wnd_Desktop("SETFOC", self~DlgHandle, 1, "P")
 
 
+ -- 2 methods to set / remove the WS_TABSTOP / WS_GROUP styles for any control.
+::method SetTabStop unguarded
+   use strict arg id, wantStop = .true
+   if \ id~datatype("W") then id = self~ResolveSymbolicId(id)
+   if id == -1 then return -1
+   if \ wantStop~datatype('O')then return -3
+   return HandleControlEx(self~DlgHandle, id, "X", "TAB", wantStop)
+
+::method SetGroup unguarded
+   use strict arg id, wantGroup = .true
+   if \ id~datatype("W") then id = self~ResolveSymbolicId(id)
+   if id == -1 then return -1
+   if \ wantGroup~datatype('O')then return -3
+   return HandleControlEx(self~DlgHandle, id, "X", "GROUP", wantGroup)
+
+ -- Get the window style for any control (the GWL_STYLE long value)
+::method GetControlStyleRaw unguarded
+   use strict arg id
+   if \ id~datatype("W") then id = self~ResolveSymbolicId(id)
+   if id == -1 then return -1
+   return HandleControlEx(self~DlgHandle, id, "X", "GET")
+
 ::method Center unguarded
    use arg showOptions
    if Arg(1,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate

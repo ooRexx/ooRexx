@@ -309,9 +309,9 @@
 /* Base class for all other controls */
 ::class 'DialogControl' public inherit WindowBase WindowExtensions
 
-::method oDlg attribute
-::method hDlg attribute
-::method Id attribute
+::method oDlg attribute   -- The ooRexx dialog object this control belongs to
+::method hDlg attribute   -- The window handle of that dialog
+::method Id attribute     -- The numerical resource ID for this control
 
 ::method new class
    use arg pdialog, id, category
@@ -400,6 +400,19 @@
 
 ::method TabToPrevious unguarded
    return Wnd_Desktop("SETFOC", self~hDlg, 1, "P")
+
+::method TabStop unguarded
+   use arg wantStop = .true
+   if \ wantStop~datatype('O')then return -3
+   return HandleControlEx(self~hDlg, self~id, "X", "TAB", wantStop)
+
+::method Group unguarded
+   use arg wantGroup = .true
+   if \ wantGroup~datatype('O')then return -3
+   return HandleControlEx(self~hDlg, self~id, "X", "GROUP", wantGroup)
+
+::method GetStyleRaw     -- Get the control's current style as a GWL_STYLE long
+   return HandleControlEx(self~hDlg, self~id, "X", "GET")
 
 ::method Clear
    parse value WindowRect("GET", self~Hwnd) with r.1 r.2 r.3 r.4
@@ -1480,6 +1493,31 @@
     use arg dlgunits
     self~Message2Parent(0x00CB, 1, "L" || dlgunits)
 
+::method HideBallon
+    return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP")
+
+::method ShowBallon
+    use arg title, text
+    return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP", title, text)
+
+::method SetCue
+    use arg text
+    return HandleControlEx(self~hDlg, self~id, "E", "MSG", "CUE", text)
+
+::method ReplaceStyle  -- Replace
+   use strict arg oldstyle, newstyle
+   return HandleControlEx(self~hDlg, self~id, "X", "EDIT", "R", oldstyle, newstyle)
+
+::method AddStyle      -- Set
+   use strict arg style
+   return HandleControlEx(self~hDlg, self~id, "X", "EDIT", "S", style)
+
+::method RemoveStyle   -- Clear
+   use strict arg style
+   return HandleControlEx(self~hDlg, self~id, "X", "EDIT", "C", style)
+
+::method GetStyle
+   return HandleControlEx(self~hDlg, self~id, "X", "EDIT", "G")
 
 /****************************************************** ButtonControl Classes *********************************************************/
 

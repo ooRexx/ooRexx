@@ -205,6 +205,8 @@
       if style~wordpos("ES_RIGHT") > 0 then ret = ret || " RIGHT"
       if style~wordpos("ES_UPPERCASE") > 0 then ret = ret || " UPPER"
       if style~wordpos("ES_LOWERCASE") > 0 then ret = ret || " LOWER"
+      if style~wordpos("ES_NUMBER") > 0 then ret = ret || " NUMBER"
+      if style~wordpos("ES_OEMCONVERT") > 0 then ret = ret || " OEM"
       if style~wordpos("NOT WS_TABSTOP") > 0 then ret = ret || " NOTAB"
    end
    else if kind = "CB" then do
