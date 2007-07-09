@@ -52,14 +52,14 @@ UtilName = "OODUTILS.CLS"
 Arrax = .Array~new(3)
 ArrClasses = .Array~new(3)
 Arrax[1] = .CheckArray~of("PLBDLG.CLS","DYNDLG.CLS","PLUDLG.CLS","STDDLG.CLS")
-Arrax[2] = .CheckArray~of("DLGEXT.CLS","BASEDLG.CLS","RESDLG.CLS","USERDLG.CLS","CATDLG.CLS", "ANIBUTTN.CLS", "DLGAREA.CLS")
+Arrax[2] = .CheckArray~of("DLGEXT.CLS","BASEDLG.CLS","RESDLG.CLS","USERDLG.CLS", "RCDIALOG.CLS", "CATDLG.CLS", "ANIBUTTN.CLS", "DLGAREA.CLS")
 Arrax[3] = .CheckArray~of("ADVCTRL.CLS","STDEXT.CLS","MSGEXT.CLS", "PROPSHT.CLS")
 
 ArrClasses[1] = .Array~of("PLAINBASEDIALOG","PLAINUSERDIALOG","DYNAMICDIALOG","TIMEDMESSAGE", "INPUTBOX",,
                                "PASSWORDBOX", "INTEGERBOX","MULTIINPUTBOX", "LISTCHOICE",,
                                "MULTILISTCHOICE", "CHECKLIST","SINGLESELECTION","WINDOWBASE")
 
-ArrClasses[2] = .Array~of("BASEDIALOG","DIALOGEXTENSIONS","WINDOWEXTENSIONS","RESDIALOG","USERDIALOG","CATEGORYDIALOG","ANIMATEDBUTTON")
+ArrClasses[2] = .Array~of("BASEDIALOG","DIALOGEXTENSIONS","WINDOWEXTENSIONS","RESDIALOG","USERDIALOG","RCDIALOG.CLS","CATEGORYDIALOG","ANIMATEDBUTTON")
 ArrClasses[3] = .Array~of("ADVANCEDCONTROLS","DIALOGCONTROL","TREECONTROL","LISTCONTROL","PROGRESSBAR","SLIDERCONTROL",,
                           "TABCONTROL", "STATICCONTROL", "EDITCONTROL", "BUTTONCONTROL", "RADIOBUTTON", "CHECKBOX", "LISTBOX",,
                           "COMBOBOX", "SCROLLBAR", "MESSAGEEXTENSIONS", "PROPERTYSHEET", "STATEINDICATOR","PROGRESSINDICATOR")
@@ -73,7 +73,7 @@ do j over Arrax
     NewFile~lineout("/"||"*"~copies(78)||"/")
     NewFile~lineout("/*"||" "~copies(76)||"*/")
     NewFile~lineout("/*"||center(outname[i]||".CLS - OODialog Class Definition File",76)||"*/")
-    NewFile~lineout("/*"||center("Windows Dialog Interface for Object REXX",76)||"*/")
+    NewFile~lineout("/*"||center("Windows Dialog Interface for Open Object REXX",76)||"*/")
     NewFile~lineout("/*"||" "~copies(76)||"*/")
     NewFile~lineout("/"||"*"~copies(78)||"/")
     NewFile~lineout("")
