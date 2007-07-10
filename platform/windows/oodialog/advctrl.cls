@@ -1493,10 +1493,10 @@
     use arg dlgunits
     self~Message2Parent(0x00CB, 1, "L" || dlgunits)
 
-::method HideBallon
+::method HideBalloon
     return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP")
 
-::method ShowBallon
+::method ShowBalloon
     use arg title, text
     return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP", title, text)
 
