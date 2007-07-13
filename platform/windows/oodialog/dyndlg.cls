@@ -491,19 +491,19 @@
             when class = '"SCROLLBAR"' then
                self~AddScrollBar(id, x, y, w, h, self~InternGetRCStyle(style, "SB"))
 
-            when class = '"SYSTREEVIEW32"' then
+            when class = 'WC_TREEVIEW' | class = '"SYSTREEVIEW32"' then
                self~AddTreeControl(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "TREE"))
 
-            when class = '"SYSLISTVIEW32"' then
+            when class = 'WC_LISTVIEW' | class = '"SYSLISTVIEW32"' then
                self~AddListControl(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "LIST"))
 
-            when class = '"MSCTLS_PROGRESS32"' then
+            when class = 'PROGRESS_CLASS' | class = '"MSCTLS_PROGRESS32"' then
                self~AddProgressBar(id, x, y, w, h, self~InternGetNewCtrlStyle(style, "PROGRESS"))
 
-            when class = '"MSCTLS_TRACKBAR32"' then
+            when class = 'TRACKBAR_CLASS' | class = '"MSCTLS_TRACKBAR32"' then
                self~AddSliderControl(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "SLIDER"))
 
-            when class = '"SYSTABCONTROL32"' then
+            when class = 'WC_TABCONTROL' | class = '"SYSTABCONTROL32"' then
                self~AddTabControl(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "TAB"))
 
             otherwise do
