@@ -93,6 +93,31 @@ CHAR * GetDlgMessage(DIALOGADMIN * addressedTo, CHAR * buffer, BOOL remove)
 }
 
 
+#define SelectionDidChange(p) ((p->uNewState & LVIS_SELECTED) != (p->uOldState & LVIS_SELECTED))
+#define FocusDidChange(p)     ((p->uNewState & LVIS_FOCUSED) != (p->uOldState & LVIS_FOCUSED))
+
+/* MatchSelectFocus
+ * Check that: (a) tag is for select change and focuse change, and (b) that
+ * either the selection or the focus actually changed.
+ */
+#define MatchSelectFocus(tag, p)    \
+( ((tag & TAG_SELECTCHANGED) && (tag & TAG_FOCUSCHANGED)) && (SelectionDidChange(p) || FocusDidChange(p)) )
+
+/* MatchSelect
+ * Check that: (a) tag is only for selection change and not focuse change, and (b)
+ * that the selection actually changed.
+ */
+#define MatchSelect(tag, p)    \
+( ((tag & TAG_SELECTCHANGED) && !(tag & TAG_FOCUSCHANGED)) && (SelectionDidChange(p)) )
+
+/* MatchFocus
+ * Check that: (a) tag is only for focus change and not selection change, and (b)
+ * that the focus actually changed.
+ */
+#define MatchFocus(tag, p)    \
+( ((tag & TAG_FOCUSCHANGED) && !(tag & TAG_SELECTCHANGED)) && (FocusDidChange(p)) )
+
+
 BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo)
 {
    register LONG i = 0;
@@ -105,79 +130,167 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
       && ( ((message == WM_NOTIFY) && ((ULONG)(((NMHDR *)lparam)->code & m[i].filterL) == m[i].lParam))
          || ((message != WM_NOTIFY) && ( (ULONG)(lparam & m[i].filterL) == m[i].lParam)) ) )
       {
-             if (param || lparam)  /* if one of the params is <> 0, build argument string */
-             {
-                char msgstr[512];
-                CHAR tmp[20];
-                PCHAR np = NULL;
-                ULONG item;
+         if (param || lparam)  /* if one of the params is <> 0, build argument string */
+         {
+            char msgstr[512];
+            CHAR tmp[20];
+            PCHAR np = NULL;
+            ULONG item;
 
-                    /* do we have a notification where we have to extract some information ? */
-                if (message == WM_NOTIFY)
+                /* do we have a notification where we have to extract some information ? */
+            if (message == WM_NOTIFY)
+            {
+                UINT code = ((NMHDR *)lparam)->code;
+
+                /* do we have a left mouse click */
+                if ( code == NM_CLICK )
                 {
-                    /* do we have an end label edit for tree or list view? */
-                    if ((((NMHDR *)lparam)->code == TVN_ENDLABELEDIT) && ((TV_DISPINFO *)lparam)->item.pszText)
+                    /* on a tagged List-View control? */
+                    if ( (m[i].tag & TAG_CTRLMASK) == TAG_LISTVIEW )
                     {
-                        np = ((TV_DISPINFO *)lparam)->item.pszText;
-                        item = (ULONG)((TV_DISPINFO *)lparam)->item.hItem;
-                    }
-                    else if ((((NMHDR *)lparam)->code == LVN_ENDLABELEDIT) && ((LV_DISPINFO *)lparam)->item.pszText)
-                    {
-                        np = ((LV_DISPINFO *)lparam)->item.pszText;
-                        item = ((LV_DISPINFO *)lparam)->item.iItem;
-                    }
-                    /* do we have a tree expand/collapse? */
-                    else if ((((NMHDR *)lparam)->code == TVN_ITEMEXPANDED) || (((NMHDR *)lparam)->code == TVN_ITEMEXPANDING))
-                    {
-                        item = (ULONG)((NM_TREEVIEW *)lparam)->itemNew.hItem;
-                        if (((NM_TREEVIEW *)lparam)->itemNew.state & TVIS_EXPANDED) np = "EXPANDED";
-                        else np = "COLLAPSED";
-                    }
-                    /* do we have a key_down? */
-                    else if ((((NMHDR *)lparam)->code == TVN_KEYDOWN) || (((NMHDR *)lparam)->code == LVN_KEYDOWN)
-                        || (((NMHDR *)lparam)->code == TCN_KEYDOWN))
-                    {
-                        lparam = (ULONG)((TV_KEYDOWN *)lparam)->wVKey;
-                    }
-                    /* do we have a list drag and drop? */
-                    else if ((((NMHDR *)lparam)->code == LVN_BEGINDRAG) || (((NMHDR *)lparam)->code == LVN_BEGINRDRAG))
-                    {
-                        item = (ULONG)((NM_LISTVIEW *)lparam)->iItem;
-                        param = ((NMHDR *)lparam)->idFrom;
-                        sprintf(tmp, "%d %d", ((NM_LISTVIEW *)lparam)->ptAction.x, ((NM_LISTVIEW *)lparam)->ptAction.y);
+                        LPNMITEMACTIVATE pIA = (LPNMITEMACTIVATE)lparam;
+
+                        if ( pIA->uKeyFlags == LVKF_ALT ) strcpy(tmp, "ALT");
+                        else if ( pIA->uKeyFlags == LVKF_CONTROL ) strcpy(tmp, "CONTROL");
+                        else if ( pIA->uKeyFlags == LVKF_SHIFT ) strcpy(tmp, "SHIFT");
+                        else strcpy(tmp, "NONE");
                         np = tmp;
-                    }
-                    /* do we have a tree drag and drop? */
-                    else if ((((NMHDR *)lparam)->code == TVN_BEGINDRAG) || (((NMHDR *)lparam)->code == TVN_BEGINRDRAG))
-                    {
-                        item = (ULONG)((NM_TREEVIEW *)lparam)->itemNew.hItem;
-                        param = ((NMHDR *)lparam)->idFrom;
-                        sprintf(tmp, "%d %d", ((NM_TREEVIEW *)lparam)->ptDrag.x, ((NM_TREEVIEW *)lparam)->ptDrag.y);
-                        np = tmp;
-                    }
-                    /* do we have a column click in a report? */
-                    else if ((((NMHDR *)lparam)->code == LVN_COLUMNCLICK))
-                    {
-                        param = ((NMHDR *)lparam)->idFrom;
-                        lparam = (ULONG)((NM_LISTVIEW *)lparam)->iSubItem;  /* which column is pressed */
+
+                        /* Don't drop through, use AddDialogMessage here and
+                         * return because we need to send 4 args to ooRexx.
+                         */
+
+                        _snprintf(msgstr, 511, "%s(%u,%u,%u,\"%s\")", m[i].rexxProgram,
+                                  pIA->hdr.idFrom, pIA->iItem, pIA->iSubItem, np);
+                        AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                        return 1;
                     }
                 }
+                else if ( code == LVN_ITEMCHANGED )
+                {
+                    if ( (m[i].tag & TAG_CTRLMASK) == TAG_LISTVIEW )
+                    {
+                        LPNMLISTVIEW pLV = (LPNMLISTVIEW)lparam;
 
-                if (np)
-                    _snprintf(msgstr, 511, "%s(%u,%u,\"%s\")", m[i].rexxProgram, param, item, np);
-                else
-                    sprintf(msgstr, "%s(%u,%u)", m[i].rexxProgram, param, lparam);
-                AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
-             }
-             else
-                AddDialogMessage((char *)m[i].rexxProgram, addressedTo->pMessageQueue);
-             return 1;
+                        if ( (m[i].tag & TAG_STATECHANGED) && (pLV->uChanged == LVIF_STATE) )
+                        {
+                            item = pLV->iItem;
+                            param = pLV->hdr.idFrom;
+
+                            if ( (m[i].tag & TAG_CHECKBOXCHANGED) && (pLV->uNewState & LVIS_STATEIMAGEMASK) )
+                            {
+                                np = pLV->uNewState == INDEXTOSTATEIMAGEMASK(2) ? "CHECKED" : "UNCHECKED";
+                            }
+                            else if ( MatchSelectFocus(m[i].tag, pLV) )
+                            {
+                                tmp[0] = '\0';
+
+                                if ( SelectionDidChange(pLV) )
+                                {
+                                    (pLV->uNewState & LVIS_SELECTED) ?
+                                        strcpy(tmp, "SELECTED") : strcpy(tmp, "UNSELECTED");
+                                }
+
+                                if ( FocusDidChange(pLV) )
+                                {
+                                    if ( (pLV->uNewState & LVIS_FOCUSED) )
+                                        tmp[0] == '\0' ? strcpy(tmp, "FOCUSED") : strcat(tmp, " FOCUSED");
+                                    else
+                                        tmp[0] == '\0' ? strcpy(tmp, "UNFOCUSED") : strcat(tmp, " UNFOCUSED");
+                                }
+                                np = tmp;
+                            }
+
+                            /* We continue in the 2 following cases to allow a
+                             * user to have separate method connections for
+                             * selected and focused.
+                             */
+                            else if ( MatchSelect(m[i].tag, pLV) )
+                            {
+                                np = (pLV->uNewState & LVIS_SELECTED) ? "SELECTED" : "UNSELECTED";
+                                _snprintf(msgstr, 511, "%s(%u,%u,\"%s\")", m[i].rexxProgram, param, item, np);
+                                AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                continue;
+                            }
+                            else if ( MatchFocus(m[i].tag, pLV) )
+                            {
+                                np = (pLV->uNewState & LVIS_FOCUSED) ? "FOCUSED" : "UNFOCUSED";
+                                _snprintf(msgstr, 511, "%s(%u,%u,\"%s\")", m[i].rexxProgram, param, item, np);
+                                AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                                continue;
+                            }
+                            else
+                            {
+                                /* This message in the message table does not
+                                 * match, keep searching.
+                                 */
+                                continue;
+                            }
+                        }
+                    }
+                }
+                /* do we have an end label edit for tree or list view? */
+                else if ((code == TVN_ENDLABELEDIT) && ((TV_DISPINFO *)lparam)->item.pszText)
+                {
+                    np = ((TV_DISPINFO *)lparam)->item.pszText;
+                    item = (ULONG)((TV_DISPINFO *)lparam)->item.hItem;
+                }
+                else if ((code == LVN_ENDLABELEDIT) && ((LV_DISPINFO *)lparam)->item.pszText)
+                {
+                    np = ((LV_DISPINFO *)lparam)->item.pszText;
+                    item = ((LV_DISPINFO *)lparam)->item.iItem;
+                }
+                /* do we have a tree expand/collapse? */
+                else if ((code == TVN_ITEMEXPANDED) || (code == TVN_ITEMEXPANDING))
+                {
+                    item = (ULONG)((NM_TREEVIEW *)lparam)->itemNew.hItem;
+                    if (((NM_TREEVIEW *)lparam)->itemNew.state & TVIS_EXPANDED) np = "EXPANDED";
+                    else np = "COLLAPSED";
+                }
+                /* do we have a key_down? */
+                else if ((code == TVN_KEYDOWN) || (code == LVN_KEYDOWN) || (code == TCN_KEYDOWN))
+                {
+                    lparam = (ULONG)((TV_KEYDOWN *)lparam)->wVKey;
+                }
+                /* do we have a list drag and drop? */
+                else if ((code == LVN_BEGINDRAG) || (code == LVN_BEGINRDRAG))
+                {
+                    item = (ULONG)((NM_LISTVIEW *)lparam)->iItem;
+                    param = ((NMHDR *)lparam)->idFrom;
+                    sprintf(tmp, "%d %d", ((NM_LISTVIEW *)lparam)->ptAction.x, ((NM_LISTVIEW *)lparam)->ptAction.y);
+                    np = tmp;
+                }
+                /* do we have a tree drag and drop? */
+                else if ((code == TVN_BEGINDRAG) || (code == TVN_BEGINRDRAG))
+                {
+                    item = (ULONG)((NM_TREEVIEW *)lparam)->itemNew.hItem;
+                    param = ((NMHDR *)lparam)->idFrom;
+                    sprintf(tmp, "%d %d", ((NM_TREEVIEW *)lparam)->ptDrag.x, ((NM_TREEVIEW *)lparam)->ptDrag.y);
+                    np = tmp;
+                }
+                /* do we have a column click in a report? */
+                else if (code == LVN_COLUMNCLICK)
+                {
+                    param = ((NMHDR *)lparam)->idFrom;
+                    lparam = (ULONG)((NM_LISTVIEW *)lparam)->iSubItem;  /* which column is pressed */
+                }
+            }
+
+            if (np)
+                _snprintf(msgstr, 511, "%s(%u,%u,\"%s\")", m[i].rexxProgram, param, item, np);
+            else
+                sprintf(msgstr, "%s(%u,%u)", m[i].rexxProgram, param, lparam);
+            AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+         }
+         else
+            AddDialogMessage((char *)m[i].rexxProgram, addressedTo->pMessageQueue);
+         return 1;
       }
    return 0;
 }
 
 
-BOOL AddTheMessage(DIALOGADMIN * aDlg, ULONG message, ULONG filt1, ULONG param, ULONG filt2, ULONG lparam, ULONG filt3, RXSTRING prog)
+BOOL AddTheMessage(DIALOGADMIN * aDlg, ULONG message, ULONG filt1, ULONG param, ULONG filt2, ULONG lparam, ULONG filt3, RXSTRING prog, ULONG ulTag)
 {
    if (!prog.strlength) return 0;
    if (!(message | param | lparam))
@@ -205,6 +318,7 @@ BOOL AddTheMessage(DIALOGADMIN * aDlg, ULONG message, ULONG filt1, ULONG param, 
       aDlg->MsgTab[aDlg->MT_size].filterP = filt2;
       aDlg->MsgTab[aDlg->MT_size].lParam = lparam;
       aDlg->MsgTab[aDlg->MT_size].filterL = filt3;
+      aDlg->MsgTab[aDlg->MT_size].tag = ulTag;
       aDlg->MsgTab[aDlg->MT_size].rexxProgram = LocalAlloc(LMEM_FIXED, prog.strlength+1);
       if (aDlg->MsgTab[aDlg->MT_size].rexxProgram) rxstrlcpy(aDlg->MsgTab[aDlg->MT_size].rexxProgram, prog);
       aDlg->MT_size ++;
@@ -230,15 +344,15 @@ ULONG APIENTRY AddUserMessage(
   PRXSTRING retstr )
 
 {
-   ULONG n[NARG-1];
+   ULONG n[NARG];
    INT i;
    DEF_ADM;
 
-   CHECKARG(NARG+1);
+   CHECKARGL(NARG+1);
 
    GET_ADM;
 
-   if (!dlgAdm) return 0;
+   if (!dlgAdm) return 1;
 
    for (i=1;i<NARG;i++)
    {
@@ -248,7 +362,17 @@ ULONG APIENTRY AddUserMessage(
          n[i-1] = (ULONG)atol(argv[i].strptr);
    }
 
-   RETC(!AddTheMessage(dlgAdm, n[0], n[1] , n[2], n[3], n[4], n[5], argv[7]))
+   if ( argc == 9 )
+   {
+      if ( ISHEX(argv[8].strptr) )
+         n[NARG-1] = strtoul(argv[8].strptr,'\0',16);
+      else
+         n[NARG-1] = (ULONG)atol(argv[8].strptr);
+   }
+   else
+      n[NARG-1] = 0;
+
+   RETC(!AddTheMessage(dlgAdm, n[0], n[1], n[2], n[3], n[4], n[5], argv[7], n[NARG-1]))
 }
 
 

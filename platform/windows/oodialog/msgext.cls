@@ -121,8 +121,45 @@
        when type = "KEYDOWN" then lp = -155
        otherwise return -1
    end
-   self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
-   return 0
+   return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
+
+
+ -- In the Windows API, when a list-view control sends a notification messsage,
+ -- there is more information delievered than there was when ooDialog was first
+ -- designed.  Use the connectListViewNotify method for method connections that
+ -- can take advantage of this information.  A tag is added to the message to
+ -- signal that the extra information should be processed.  The tag is an
+ -- unsigned long made up of flags which are defined in oovutil.h
+::method connectListViewNotify
+   use arg id, type, msgToRise
+   if id~DataType("W") = 0 then id = self~ResolveSymbolicId(id)
+   if id = -1 then return -1
+   if Arg(3,'o') = 1 then msgToRise = "On" || type
+   type = type~translate
+   select
+      when type = "CLICK" then do
+         lp = -2
+         tag = 0x00000007
+      end
+      when type = "CHECKBOXCHANGED" then do
+         lp = -101
+         tag = 0x00000307
+      end
+      when type = "SELECTCHANGED" then do
+         lp = -101
+         tag = 0x00000507
+      end
+      when type = "FOCUSCHANGED" then do
+         lp = -101
+         tag = 0x00000907
+      end
+      when type = "SELECTFOCUS" then do
+         lp = -101
+         tag = 0x00000D07
+      end
+      otherwise return -1
+   end
+   return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF", tag)
 
 
 ::method ConnectButtonNotify

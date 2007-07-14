@@ -716,6 +716,60 @@
    if Arg(1,'o') = 1 then return 0
    return HandleListCtrl("M","SETSTYLE", self~Hwnd, "R", style)
 
+::method ReplaceExtendedStyle  -- Replace
+   use strict arg oldstyle, newstyle
+   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "R", oldstyle, newstyle)
+
+::method AddExtendedStyle      -- Set
+   use strict arg style
+   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "S", style)
+
+::method RemoveExtendedStyle   -- Clear
+   use strict arg style
+   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "C", style)
+
+::method GetExtendedStyle      -- Get
+   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "G")
+
+::method GetExtendedStyleRaw   -- Long
+   return HandleListCtrlEx(self~Hwnd, "M", "STYLE", "L")
+
+::method SetHoverTime
+   use arg time
+   if Arg(1, 'O') then time = -1
+   if \ time~datatype('W') then raise syntax 93.905 array(1, time)
+   if time < -1 then time = -1
+   return HandleListCtrlEx(self~Hwnd, "M", "HOVER", time)
+
+::method GetHoverTime
+   return HandleListCtrlEx(self~Hwnd, "M", "HOVER")
+
+::method Check
+   use strict arg item
+   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
+   return HandleListCtrlEx(self~Hwnd, "M", "CHK", item, .true)
+
+::method CheckAll
+   return HandleListCtrlEx(self~Hwnd, "M", "CHK", -1, .true)
+
+::method Uncheck
+   use strict arg item
+   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
+   return HandleListCtrlEx(self~Hwnd, "M", "CHK", item, .false)
+
+::method UncheckAll
+   return HandleListCtrlEx(self~Hwnd, "M", "CHK", -1, .false)
+
+::method GetCheck
+   use strict arg item
+   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
+   return HandleListCtrlEx(self~Hwnd, "M", "CHK", item)
+
+::method IsChecked
+   use strict arg item
+   if \ item~datatype('W') then raise syntax 93.905 array(1, item)
+   return (HandleListCtrlEx(self~Hwnd, "M", "CHK", item) == 1)
+
 ::method InsertColumn
    use arg nr, text, width, fmt
    if Arg(1,'o') = 1 then nr = 0

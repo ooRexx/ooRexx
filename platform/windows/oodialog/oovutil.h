@@ -87,6 +87,25 @@ extern LONG HandleError(PRXSTRING r, CHAR * text);
 /* The version of comctl32.dll in use when oodialog.dll is loaded. */
 extern DWORD ComCtl32Version;
 
+/**
+ *  A 'tag' is used in processing the mapping of Windows messages to user
+ *  defined methods.  It allows the user mapping to dictate different processing
+ *  of a Windows message based on the tag.
+ *
+ *  The least significant 2 bytes are used to define the type of control.  These
+ *  bytes can be isolated using TAG_CTRLMASK.
+ */
+#define TAG_TREEVIEW              0x00000006
+#define TAG_LISTVIEW              0x00000007
+#define TAG_TRACKBAR              0x00000008
+#define TAG_TAB                   0x00000009
+#define TAG_CTRLMASK              0x000000FF
+
+#define TAG_STATECHANGED          0x00000100
+#define TAG_CHECKBOXCHANGED       0x00000200
+#define TAG_SELECTCHANGED         0x00000400
+#define TAG_FOCUSCHANGED          0x00000800
+
 /* macros to check the number of arguments */
 #define CHECKARG(argexpct) { \
    if (argc != argexpct) \
@@ -212,6 +231,7 @@ typedef struct {
    ULONG filterP;
    ULONG lParam;
    ULONG filterL;
+   ULONG tag;
    PCHAR rexxProgram;
 } MESSAGETABLEENTRY;
 

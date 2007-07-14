@@ -51,7 +51,7 @@ WORD NumDIBColorEntries(LPBITMAPINFO lpBmpInfo);
 HPALETTE CreateDIBPalette(LPBITMAPINFO lpBmpInfo);
 void SetSysPalColors(HPALETTE hPal);
 HPALETTE CopyPalette(HPALETTE hSrcPal);
-extern BOOL AddTheMessage(DIALOGADMIN *, ULONG, ULONG, WPARAM, WPARAM, LPARAM, LPARAM, RXSTRING);
+extern BOOL AddTheMessage(DIALOGADMIN *, ULONG, ULONG, WPARAM, WPARAM, LPARAM, LPARAM, RXSTRING, ULONG);
 extern BOOL DrawButton(DIALOGADMIN *,INT id);
 extern LRESULT PaletteMessage(DIALOGADMIN * addr, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 extern HWND ScrollingButton;
@@ -669,7 +669,7 @@ ULONG APIENTRY BmpButton(
              dlgAdm->BT_size ++;
              RETC(0)
           } else
-          if (AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, atoi(buffer[0]), 0x0000FFFF, 0, 0, argv[2]))
+          if (AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, atoi(buffer[0]), 0x0000FFFF, 0, 0, argv[2], 0))
           {
              dlgAdm->BT_size ++;
              RETC(0)

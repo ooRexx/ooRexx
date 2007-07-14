@@ -817,7 +817,7 @@ static LONG SetStyle(HWND hwnd, LONG lStyle)
  * Take an edit control's window flags and construct a Rexx string that
  * represents the control's style.
  */
-ULONG EditWindowFlagsToString(LONG lStyle, PRXSTRING retstr)
+ULONG EditStyleToString(LONG lStyle, PRXSTRING retstr)
 {
     if ( lStyle & WS_VISIBLE ) strcpy(retstr->strptr, "VISIBLE");
     else strcpy(retstr->strptr, "HIDDEN");
@@ -877,6 +877,82 @@ LONG ParseEditStyle(CHAR * style)
     return lStyle;
 }
 
+/**
+ * Parse a list-view control extended style string sent from ooDialog into the
+ * corresponding style flags.
+ *
+ * The extended list-view styles are set (and retrieved) in a different manner
+ * than other window styles.  This function is used only to parse those extended
+ * styles.  The normal list-view styles are parsed using EvaluateListStyle.
+ */
+DWORD ParseExtendedListStyle(CHAR * style)
+{
+    DWORD dwStyle = 0;
+
+    if ( strstr(style, "BORDERSELECT"    ) ) dwStyle |= LVS_EX_BORDERSELECT;
+    if ( strstr(style, "CHECKBOXES"      ) ) dwStyle |= LVS_EX_CHECKBOXES;
+    if ( strstr(style, "FLATSB"          ) ) dwStyle |= LVS_EX_FLATSB;
+    if ( strstr(style, "FULLROWSELECT"   ) ) dwStyle |= LVS_EX_FULLROWSELECT;
+    if ( strstr(style, "GRIDLINES"       ) ) dwStyle |= LVS_EX_GRIDLINES;
+    if ( strstr(style, "HEADERDRAGDROP"  ) ) dwStyle |= LVS_EX_HEADERDRAGDROP;
+    if ( strstr(style, "INFOTIP"         ) ) dwStyle |= LVS_EX_INFOTIP;
+    if ( strstr(style, "MULTIWORKAREAS"  ) ) dwStyle |= LVS_EX_MULTIWORKAREAS;
+    if ( strstr(style, "ONECLICKACTIVATE") ) dwStyle |= LVS_EX_ONECLICKACTIVATE;
+    if ( strstr(style, "REGIONAL"        ) ) dwStyle |= LVS_EX_REGIONAL;
+    if ( strstr(style, "SUBITEMIMAGES"   ) ) dwStyle |= LVS_EX_SUBITEMIMAGES;
+    if ( strstr(style, "TRACKSELECT"     ) ) dwStyle |= LVS_EX_TRACKSELECT;
+    if ( strstr(style, "TWOCLICKACTIVATE") ) dwStyle |= LVS_EX_TWOCLICKACTIVATE;
+    if ( strstr(style, "UNDERLINECOLD"   ) ) dwStyle |= LVS_EX_UNDERLINECOLD;
+    if ( strstr(style, "UNDERLINEHOT"    ) ) dwStyle |= LVS_EX_UNDERLINEHOT;
+
+    // Needs Comctl32.dll version 5.8 or higher
+    if ( ComCtl32Version >= COMCTL32_5_8 )
+    {
+      if ( strstr(style, "LABELTIP") ) dwStyle |= LVS_EX_LABELTIP;
+    }
+
+    // Needs Comctl32 version 6.0 or higher
+    if ( ComCtl32Version >= COMCTL32_6_0 )
+    {
+      if ( strstr(style, "DOUBLEBUFFER") ) dwStyle |= LVS_EX_DOUBLEBUFFER;
+      if ( strstr(style, "SIMPLESELECT") ) dwStyle |= LVS_EX_SIMPLESELECT;
+    }
+    return dwStyle;
+}
+
+
+/**
+ * Produce a string representation of a List-View's extended styles.
+ */
+DWORD ListExtendedStyleToString(HWND hList, PRXSTRING retstr)
+{
+    DWORD dwStyle = ListView_GetExtendedListViewStyle(hList);
+    retstr->strptr[0] = '\0';
+
+    if ( dwStyle & LVS_EX_BORDERSELECT )     strcat(retstr->strptr, "BORDERSELECT ");
+    if ( dwStyle & LVS_EX_CHECKBOXES )       strcat(retstr->strptr, "CHECKBOXES ");
+    if ( dwStyle & LVS_EX_FLATSB )           strcat(retstr->strptr, "FLATSB ");
+    if ( dwStyle & LVS_EX_FULLROWSELECT )    strcat(retstr->strptr, "FULLROWSELECT ");
+    if ( dwStyle & LVS_EX_GRIDLINES )        strcat(retstr->strptr, "GRIDLINES ");
+    if ( dwStyle & LVS_EX_HEADERDRAGDROP )   strcat(retstr->strptr, "HEADERDRAGDROP ");
+    if ( dwStyle & LVS_EX_INFOTIP )          strcat(retstr->strptr, "INFOTIP ");
+    if ( dwStyle & LVS_EX_MULTIWORKAREAS )   strcat(retstr->strptr, "MULTIWORKAREAS ");
+    if ( dwStyle & LVS_EX_ONECLICKACTIVATE ) strcat(retstr->strptr, "ONECLICKACTIVATE ");
+    if ( dwStyle & LVS_EX_REGIONAL )         strcat(retstr->strptr, "REGIONAL ");
+    if ( dwStyle & LVS_EX_SUBITEMIMAGES )    strcat(retstr->strptr, "SUBITEMIMAGES ");
+    if ( dwStyle & LVS_EX_TRACKSELECT )      strcat(retstr->strptr, "TRACKSELECT ");
+    if ( dwStyle & LVS_EX_TWOCLICKACTIVATE ) strcat(retstr->strptr, "TWOCLICKACTIVATE ");
+    if ( dwStyle & LVS_EX_UNDERLINECOLD )    strcat(retstr->strptr, "UNDERLINECOLD ");
+    if ( dwStyle & LVS_EX_UNDERLINEHOT )     strcat(retstr->strptr, "UNDERLINEHOT ");
+    if ( dwStyle & LVS_EX_LABELTIP )         strcat(retstr->strptr, "LABELTIP ");
+    if ( dwStyle & LVS_EX_DOUBLEBUFFER )     strcat(retstr->strptr, "DOUBLEBUFFER ");
+    if ( dwStyle & LVS_EX_SIMPLESELECT )     strcat(retstr->strptr, "SIMPLESELECT ");
+
+    if ( retstr->strptr[0] != '\0' ) retstr->strptr[strlen(retstr->strptr) - 1] = '\0';
+
+    retstr->strlength = strlen(retstr->strptr);
+    return 0;
+}
 
 /**
  * Extended Common Control functionality.  This function implements capabilities
@@ -1042,7 +1118,7 @@ ULONG APIENTRY HandleControlEx(
             CHECKARGL(5);
 
             /* If 'G' get the current style and return its string form. */
-            if ( argv[4].strptr[0] == 'G' ) return EditWindowFlagsToString(lStyle, retstr);
+            if ( argv[4].strptr[0] == 'G' ) return EditStyleToString(lStyle, retstr);
 
             CHECKARGL(6);
 
@@ -1089,6 +1165,157 @@ ULONG APIENTRY HandleControlEx(
 
     RETERR
 }
+
+/**
+ * Extended List-View control functionality.  Implements capabilities not
+ * present in the original ooDialog ListControl.  In general, this will be
+ * capabilities that Microsoft has added to the control.
+ *
+ * The parameters sent from ooRexx as an array of RXString:
+ *
+ * argv[0]  Window handle of list-view control.
+ *
+ * argv[1]  Major designator:  M for message, etc..  Only the first letter of
+ *          the string is tested and it must be capitalized.
+ *
+ * argv[2]  Minor designator:  STYLE for (extended) list style, etc..  The whole
+ *          capitalized word is used.
+ *
+ * argv[3]  Dependent on function.
+ *
+ * Return to ooRexx, in general:
+ *  < -4 a negated system error code
+ *    -4 unsupported ComCtl32 Version
+ *    -3 problem with an argument
+ *    -2 operation not supported by this list-view control
+ *    -1 problem with the list control id or handle
+ *     0 the Windows API call succeeds
+ *     1 the Windows API call failed
+ *  >  1 dependent on the function, usually a returned value not a return code
+ */
+ULONG APIENTRY HandleListCtrlEx(
+  PUCHAR funcname,
+  ULONG argc,
+  RXSTRING argv[],
+  PUCHAR qname,
+  PRXSTRING retstr )
+{
+    HWND hList;
+
+    /* Minimum of 3 args. */
+    CHECKARGL(3);
+
+    hList = (HWND) atol(argv[0].strptr);
+    if ( hList == 0 || ! IsWindow(hList) ) RETVAL(-1);
+
+    /* M - window message related function */
+    if ( argv[1].strptr[0] == 'M' )
+    {
+        if ( !strcmp(argv[2].strptr, "STYLE") )     /* work with extended styles */
+        {
+            DWORD dwMask;
+
+            CHECKARGL(4);
+
+            if ( argv[3].strptr[0] == 'G' )         /* Get style, string representation. */
+            {
+                return ListExtendedStyleToString(hList, retstr);
+            }
+            else if ( argv[3].strptr[0] == 'L' )    /* Get style, as a Long. */
+            {
+                RETVAL(ListView_GetExtendedListViewStyle(hList));
+            }
+
+            CHECKARGL(5);
+            dwMask = ParseExtendedListStyle(argv[4].strptr);
+            if ( ! dwMask ) RETVAL(-3);
+
+            /* No return value from this API, so return 0 to ooRexx. */
+
+            if ( argv[3].strptr[0] == 'C' )         /* Clear (remove) style*/
+            {
+                ListView_SetExtendedListViewStyleEx(hList, dwMask, 0);
+            }
+            else if ( argv[3].strptr[0] == 'S' )    /* Set style */
+            {
+                ListView_SetExtendedListViewStyleEx(hList, dwMask, dwMask);
+            }
+            else if ( argv[3].strptr[0] == 'R' )    /* Replace style */
+            {
+                DWORD dwNew;
+
+                CHECKARGL(6);
+                dwNew = ParseExtendedListStyle(argv[5].strptr);
+                if ( ! dwNew ) RETVAL(-3);
+
+                ListView_SetExtendedListViewStyleEx(hList, dwMask, 0);
+                ListView_SetExtendedListViewStyleEx(hList, dwNew, dwNew);
+            }
+            else RETERR;
+
+            RETVAL(0);
+        }
+        else if ( !strcmp(argv[2].strptr, "HOVER") )    /* Set, get hover time */
+        {
+            if ( argc == 3 )
+            {
+                RETVAL(ListView_GetHoverTime(hList));
+            }
+            else if ( argc == 4 )
+            {
+                RETVAL(ListView_SetHoverTime(hList, atol(argv[3].strptr)));
+            }
+            else RETERR;
+        }
+        else if ( !strcmp(argv[2].strptr, "CHK") )    /* Set, get check box state */
+        {
+            LONG item;
+            if ( ! (ListView_GetExtendedListViewStyle(hList) & LVS_EX_CHECKBOXES) )
+                RETVAL(-2)
+
+            CHECKARGL(4)
+
+            item = atol(argv[3].strptr);
+            if ( item < -1 ) RETVAL(-3);
+
+            if ( argc == 4 )
+            {
+                if ( item < 0 || item > (ListView_GetItemCount(hList) - 1) ) RETVAL(-3);
+                RETVAL(!(ListView_GetCheckState(hList, (UINT)item) == 0));
+            }
+            else if ( argc == 5 )
+            {
+                int check = atol(argv[4].strptr);
+                if ( check != 0 && check != 1 ) RETVAL(-3);
+
+                /* No return value with these APIs. */
+                if ( item == -1 )
+                {
+                    ListView_SetItemState(hList, item, INDEXTOSTATEIMAGEMASK(check + 1), LVIS_STATEIMAGEMASK);
+                }
+                else
+                {
+                    ListView_SetCheckState(hList, (UINT)item, (BOOL)check);
+                }
+                RETVAL(0);
+            }
+            else RETERR;
+        }
+        else if ( !strcmp(argv[2].strptr, "TOOL") )     /* Set tool tip text */
+        {
+            /* Place holder. The user will be able to set the tool tip text for
+             * individual list items.  A generic function will display the tool
+             * tip upon receiving a LVN_GETINFOTIP message. (If the user has
+             * enabled tool tips and the list item has tool tip text set for
+             * it.)
+             */
+            RETVAL(1);  // Return 1 (failed) until this is implemented.
+        }
+        else RETERR;
+    }
+    RETERR;
+}
+
 
 ULONG APIENTRY HandleListCtrl(
   PUCHAR funcname,

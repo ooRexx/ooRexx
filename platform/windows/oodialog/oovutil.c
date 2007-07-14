@@ -1229,7 +1229,7 @@ CHAR * FuncTab[FTS] = {\
                      "HandleScrollBar" \
                      };
 
-#define SFTS 18
+#define SFTS 19
 CHAR * SpecialFuncTab[SFTS] = {\
                      "BmpButton", \
                      "DCDraw", \
@@ -1243,6 +1243,7 @@ CHAR * SpecialFuncTab[SFTS] = {\
                      "WriteText", \
                      "HandleTreeCtrl", \
                      "HandleListCtrl", \
+                     "HandleListCtrlEx", \
                      "HandleControlEx", \
                      "HandleOtherNewCtrls", \
                      "DialogMenu", \

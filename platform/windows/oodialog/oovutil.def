@@ -81,6 +81,7 @@ EXPORTS
   BINARYAND             =        BinaryAnd
   HANDLETREECTRL        =        HandleTreeCtrl
   HANDLELISTCTRL        =        HandleListCtrl
+  HANDLELISTCTRLEX      =        HandleListCtrlEx
   HANDLECONTROLEX       =        HandleControlEx
   HANDLEOTHERNEWCTRLS   =        HandleOtherNewCtrls
 
