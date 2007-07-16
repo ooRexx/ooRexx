@@ -1266,8 +1266,8 @@ retc = self~transactsock('QUIT', '2')
 if retc = .true then do
    self~debugsay('Error: QUIT command to' self~rhost 'failed.')
    self~ftperrno = 'FTPCOMMAND'
-   return -1
    end
+else retc = 0
 
 /* be sure to stop tracing if it is active */
 retc = self~FtpTraceLogOff
@@ -1279,7 +1279,7 @@ call SockClose self~csock
 /* reset all the defaults */
 self~setdefaults
 
-return 0
+return retc
 
 
 /*----------------------------------------------------------------------------*/
