@@ -3311,7 +3311,7 @@ RexxObject *RexxSource::subExpression(
             report_error_token(Error_Invalid_expression_general, token);
                                        /* create a new operation            */
           RexxToken *op = popOperator();
-          subexpression = (RexxObject *)new RexxBinaryOperator(op->value, op->subclass, left, right);
+          subexpression = (RexxObject *)new RexxBinaryOperator(op->subclass, left, right);
                                        /* push this back on the term stack  */
           this->pushTerm(subexpression);
         }
@@ -3362,7 +3362,7 @@ RexxObject *RexxSource::subExpression(
                                        /* this is an invalid expression     */
       report_error_token(Error_Invalid_expression_general, token);
                                        /* create a new operation            */
-    subexpression = (RexxObject *)new RexxBinaryOperator (token->value, token->subclass, left, right);
+    subexpression = (RexxObject *)new RexxBinaryOperator(token->subclass, left, right);
     this->pushTerm(subexpression);     /* push this back on the term stack  */
     token = this->popOperator();       /* get top operator token            */
   }
@@ -3670,7 +3670,7 @@ RexxObject *RexxSource::messageSubterm(
                                        /* this is an error                  */
           report_error_token(Error_Invalid_expression_prefix, token);
                                        /* create the new operator term      */
-        term = (RexxObject *)new RexxUnaryOperator(token->value, token->subclass, term);
+        term = (RexxObject *)new RexxUnaryOperator(token->subclass, term);
         break;
 
       default:                         /* other operators not allowed here  */

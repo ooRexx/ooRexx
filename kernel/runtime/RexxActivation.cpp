@@ -2502,6 +2502,90 @@ void RexxActivation::traceTaggedValue(int prefix, stringchar_t *tagPrefix, bool 
 
 
 /**
+ * Trace an entry that's of the form 'tag => "value"'.
+ *
+ * @param prefix    The trace prefix tag to use.
+ * @param tagPrefix Any prefix string added to the tag.  Use mostly for adding
+ *                  the "." to traced environment variables.
+ * @param quoteTag  Indicates whether the tag should be quoted or not.  Operator
+ *                  names are quoted.
+ * @param tag       The tag name.
+ * @param value     The associated trace value.
+ */
+void RexxActivation::traceOperatorValue(int prefix, const char *tag, RexxObject *value)
+{
+    // the trace settings would normally require us to trace this, but there are conditions
+    // where we just skip doing this anyway.
+    if (this->settings.flags&trace_suppress || this->debug_pause || value == OREF_NULL || !source->traceable())
+    {
+        return;
+    }
+
+    // get the string value from the traced object.
+    RexxString *stringValue = value->stringValue();
+    // protect against negative indent values (belt and braces)
+    if (this->settings.traceindent < 0)
+    {
+
+        this->settings.traceindent = 0;
+    }
+
+    // now calculate the length of the traced string
+    stringsize_t outLength = strlen(tag) + stringValue->getLength();
+    // these are fixed overheads
+    outLength += TRACE_OVERHEAD + strlen(VALUE_MARKER);
+    // now the indent spacing
+    outLength += this->settings.traceindent * INDENT_SPACING;
+    // now other conditionals
+    outLength += QUOTES_OVERHEAD;
+
+    // now get a buffer to write this out into
+    RexxString *buffer = raw_string(outLength);
+    save(buffer);
+
+    // get a cursor for filling in the formatted data
+    stringsize_t dataOffset = TRACE_OVERHEAD + this->settings.traceindent * INDENT_SPACING - 2;
+                                       /* insert the leading blanks         */
+    buffer->set(0, ' ', TRACE_OVERHEAD + this->settings.traceindent * INDENT_SPACING);
+                                       /* add the trace prefix              */
+    buffer->put(PREFIX_OFFSET, trace_prefix_table[prefix], PREFIX_LENGTH);
+
+    // operators are quoted.
+    buffer->putChar(dataOffset, '\"');
+    dataOffset++;
+
+    // add in the tag name
+    buffer->put(dataOffset, tag, strlen(tag));
+    dataOffset += strlen(tag);
+
+    // need a closing quote.
+    buffer->putChar(dataOffset, '\"');
+    dataOffset++;
+
+    // now add the data marker
+    buffer->put(dataOffset, VALUE_MARKER, strlen(VALUE_MARKER));
+    dataOffset += strlen(VALUE_MARKER);
+
+    // the leading quote around the value
+    buffer->putChar(dataOffset, '\"');
+    dataOffset++;
+
+    // the traced value
+    buffer->put(dataOffset, stringValue);
+    dataOffset += stringValue->getLength();
+
+    // and finally, the trailing quote
+    buffer->putChar(dataOffset, '\"');
+    dataOffset++;
+
+    buffer->generateHash();              /* done building the string          */
+                                       /* write out the line                */
+    this->activity->traceOutput(this, buffer);
+    discard(buffer);
+}
+
+
+/**
  * Trace a compound variable entry that's of the form 'tag =>
  * "value"'.
  *

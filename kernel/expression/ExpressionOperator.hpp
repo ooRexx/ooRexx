@@ -47,7 +47,7 @@
 class RexxExpressionOperator : public RexxInternalObject {
  public:
   inline RexxExpressionOperator() { ; }
-  RexxExpressionOperator(RexxString *name, INT, RexxObject *, RexxObject *);
+  RexxExpressionOperator(INT, RexxObject *, RexxObject *);
   inline RexxExpressionOperator(RESTORETYPE restoreType) { ; };
   void   live();
   void   liveGeneral();
@@ -56,6 +56,11 @@ class RexxExpressionOperator : public RexxInternalObject {
   inline void  *operator new(size_t size, void *ptr) {return ptr;};
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
 
+  inline const char *operatorName() { return operatorNames[oper - 1]; }
+
+  // table of operator names
+  static const char *operatorNames[];
+
   INT  oper;                           /* operator to perform               */
   RexxObject *right_term;              /* right term of the operator        */
   RexxObject *left_term;               /* left term of the operator         */
@@ -63,8 +68,8 @@ class RexxExpressionOperator : public RexxInternalObject {
 
 class RexxBinaryOperator : public RexxExpressionOperator {
  public:
-  inline RexxBinaryOperator(RexxString *name, INT oper, RexxObject *left, RexxObject *right)
-      : RexxExpressionOperator(name, oper, left, right) { ; }
+  inline RexxBinaryOperator(INT oper, RexxObject *left, RexxObject *right)
+      : RexxExpressionOperator(oper, left, right) { ; }
   inline RexxBinaryOperator(RESTORETYPE restoreType) { ; };
   void  *operator new(size_t);
   inline void  *operator new(size_t size, void *ptr) {return ptr;};
@@ -73,8 +78,8 @@ class RexxBinaryOperator : public RexxExpressionOperator {
 
 class RexxUnaryOperator : public RexxExpressionOperator {
  public:
-  inline RexxUnaryOperator(RexxString *name, INT oper, RexxObject *left)
-      : RexxExpressionOperator(name, oper, left, OREF_NULL) { ; }
+  inline RexxUnaryOperator(INT oper, RexxObject *left)
+      : RexxExpressionOperator(oper, left, OREF_NULL) { ; }
   inline RexxUnaryOperator(RESTORETYPE restoreType) { ; };
   void  *operator new(size_t);
   inline void  *operator new(size_t size, void *ptr) {return ptr;};

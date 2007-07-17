@@ -303,7 +303,7 @@ class RexxStringClass : public RexxClass {
 
    inline size_t  getLength() { return this->length; };
    inline PCHAR getStringData() { return this->stringData; };
-   inline void put(size_t s, const void *b, int l) { memcpy((this->stringData+s),b,(size_t)l); };
+   inline void put(size_t s, const void *b, size_t l) { memcpy((this->stringData+s), b, l); };
    inline void put(size_t s, RexxString *o) { put(s, o->getStringData(), o->getLength()); };
    inline void set(size_t s,int c,int l) { memset((this->stringData+s),c,(size_t)l); };
    inline char getChar(size_t p) { return *(this->stringData+p); };
