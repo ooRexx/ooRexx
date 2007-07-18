@@ -1420,7 +1420,7 @@ bool kernel_setup (void)
                                        /* Add the instance methods to this  */
                                        /* instance behaviour mdict          */
   defineKernelMethod(CHAR_UNKNOWN                      ,TheNumberStringBehaviour, CPPM(RexxObject::unknownRexx), 2);
-  defineKernelMethod(CHAR_ABS                          ,TheNumberStringBehaviour, CPPMNM(RexxNumberString::abs), 1);
+  defineKernelMethod(CHAR_ABS                          ,TheNumberStringBehaviour, CPPMNM(RexxNumberString::abs), 0);
   defineKernelMethod(CHAR_MAX                          ,TheNumberStringBehaviour, CPPMNM(RexxNumberString::Max), A_COUNT);
   defineKernelMethod(CHAR_MIN                          ,TheNumberStringBehaviour, CPPMNM(RexxNumberString::Min), A_COUNT);
   defineKernelMethod(CHAR_SIGN                         ,TheNumberStringBehaviour, CPPMNM(RexxNumberString::Sign), 0);
