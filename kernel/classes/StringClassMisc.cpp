@@ -560,7 +560,7 @@ RexxInteger *RexxString::caselessCompare(RexxString *other, RexxString *pad)
     }
     stringsize_t i = 0;                      /* set the start                     */
     // compare the leading parts
-    for (stringsize_t i = 0; i < lead; i++)
+    for (i = 0; i < lead; i++)
     {
         // have a mismatch?
         if (toupper(string1[i]) != toupper(string2[i]))
@@ -569,7 +569,7 @@ RexxInteger *RexxString::caselessCompare(RexxString *other, RexxString *pad)
         }
     }
     string1 += lead;              // step to the remainder and scan
-    for (stringsize_t i = 0; i < remainder; i++)
+    for (i = 0; i < remainder; i++)
     {
         // mismatch on the pad?
         if (toupper(string1[i]) != padChar)
