@@ -285,9 +285,16 @@ RexxClass *RexxClass::getSuperClass()
 /* Function:  Return the first superclass in the superclass list             */
 /*****************************************************************************/
 {
-                                       /* get the first item from the list   */
-  return (RexxClass *)this->instanceSuperClasses->get(1);
+    // object has no superclasses
+    if (this == TheObjectClass)
+    {
+        return (RexxClass *)TheNilObject;
+    }
+    // get the first item from the immediate list.
+    return (RexxClass *)this->instanceSuperClasses->get(1);
 }
+
+
 RexxArray *RexxClass::getSuperClasses()
 /*****************************************************************************/
 /* Function:  Return an array of the superclasses                            */

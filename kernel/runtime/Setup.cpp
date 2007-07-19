@@ -122,6 +122,7 @@ CPPMC(RexxClass::getMetaClass),
 CPPMC(RexxClass::getSomClass),
 CPPMC(RexxClass::setSomClass),
 CPPMC(RexxClass::getSuperClasses),
+CPPMC(RexxClass::getSuperClass),
 CPPMC(RexxClass::getSubClasses),
 CPPMC(RexxClass::defmeths),
 CPPMC(RexxClass::defineMethod),
@@ -752,6 +753,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_SUBCLASS        ,TheClassBehaviour, CPPMC(RexxClass::subclass), 3);
   defineProtectedKernelMethod(CHAR_SUBCLASSES      ,TheClassBehaviour, CPPMC(RexxClass::getSubClasses), 0);
   defineProtectedKernelMethod(CHAR_SUPERCLASSES    ,TheClassBehaviour, CPPMC(RexxClass::getSuperClasses), 0);
+  defineProtectedKernelMethod(CHAR_SUPERCLASS      ,TheClassBehaviour, CPPMC(RexxClass::getSuperClass), 0);
   defineProtectedKernelMethod(CHAR_UNINHERIT       ,TheClassBehaviour, CPPMC(RexxClass::uninherit), 1);
                                        /* Class operator methods....        */
   defineKernelMethod(CHAR_EQUAL                  ,TheClassBehaviour, CPPMC(RexxClass::equal), 1);
