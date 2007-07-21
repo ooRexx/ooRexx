@@ -1580,8 +1580,9 @@
 ::Method State
     ch = self~Message2Parent(0x00F2, 0, 0)
     st = ""
-    if BinaryAnd(ch,1) \= 0  then st = "CHECKED"; else st = "UNCHECKED"
-    if BinaryAnd(ch,2) \= 0 then st = st || " INDETERMINATE"
+    if BinaryAnd(ch,3) == 0 then st = "UNCHECKED"
+    if BinaryAnd(ch,1) \= 0 then st = "CHECKED"
+    if BinaryAnd(ch,2) \= 0 then st = "INDETERMINATE"
     if BinaryAnd(ch,4) \= 0 then st = st || " PUSHED"
     if BinaryAnd(ch,8) \= 0 then st = st || " FOCUS"
     return st
@@ -1589,12 +1590,34 @@
 ::Method "State="
     use arg sttext
     sttext = sttext~Translate
-    st = 0
-    if sttext~wordpos("CHECKED")>0 then st = 1
-    if sttext~wordpos("INDETERMINATE")>0 then st = st + 2
-    if sttext~wordpos("PUSHED")>0 then st = st + 4
-    if sttext~wordpos("FOCUS")>0 then st = st + 8
-    self~Message2Parent(0x00F3, st, 0)
+    doCheck = .true
+    select
+      when sttext~wordpos("INDETERMINATE")>0 then do
+        numeric digits 11
+        style = BinaryAnd(self~getStyleRaw, 0xF)
+        if style <> 5 & style <> 6 then return
+        st = 2
+      end
+      when sttext~wordpos("UNCHECKED")>0 then st = 0
+      when sttext~wordpos("CHECKED")>0 then st = 1
+      otherwise doCheck = .false
+    end
+    -- End select
+
+    if doCheck then do
+      ret = self~Message2Parent(0x00F1, st, 0x0)
+      if ret <> 0 then return
+    end
+
+    if sttext~wordpos("FOCUS")>0 then self~SetFocus(self~Hwnd)
+
+    if sttext~pos("PUSHED")>0 then do
+      if sttext~wordpos("PUSHED")>0 then st = 1
+      else if sttext~wordpos("NOTPUSHED")>0 then st = 0
+      else return
+      self~Message2Parent(0x00F3, st, 0x0)
+    end
+
 
 ::Method GetImage
     return self~Message2Parent(0x00F6, 0, 0)
