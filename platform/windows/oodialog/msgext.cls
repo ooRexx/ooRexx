@@ -63,8 +63,7 @@
        when type = "LOSTFOCUS" then lp =-8
        otherwise return -1
    end
-   self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
-   return 0
+   return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
 
 ::method ConnectTreeNotify
    use arg id, type, msgToRise
@@ -91,8 +90,7 @@
        when type = "KEYDOWN" then lp = -412
        otherwise return -1
    end
-   self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF", notifySize)
-   return 0
+   return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF", notifySize)
 
 
 ::method ConnectListNotify
@@ -179,8 +177,7 @@
        when type = "LOSTFOCUS"      then lp = 7
        otherwise return -1
    end
-   self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* buttons sends WM_COMMAND when BS_NOTIFY */
-   return 0
+   return self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* buttons sends WM_COMMAND when BS_NOTIFY */
 
 
 ::method ConnectEditNotify
@@ -200,8 +197,7 @@
        when type = "VSCROLL"    then lp = "602"
        otherwise return -1
    end
-   self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp~x2d * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
-   return 0
+   return self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp~x2d * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
 
 
 
@@ -219,13 +215,11 @@
        when type = "LOSTFOCUS"  then lp = 5
        when type = "ERRSPACE"   then lp = -2
        when type = "KEYDOWN" then do   /* can first be called from InitDialog */
-           self~AddUserMsg(msgToRise, 0x0000002E, "0xFFFFFFFF", 0, 0, self~GetItem(id), "0xFFFFFFFF") /* WM_VKEYTOITEM */
-           return 0
+           return self~AddUserMsg(msgToRise, 0x0000002E, "0xFFFFFFFF", 0, 0, self~GetItem(id), "0xFFFFFFFF") /* WM_VKEYTOITEM */
        end
        otherwise return -1
    end
-   self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
-   return 0
+   return self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
 
 
 ::method ConnectComboBoxNotify
@@ -248,8 +242,7 @@
        when type = "ERRSPACE"     then lp = -1
        otherwise return -1
    end
-   self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
-   return 0
+   return self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
 
 
 ::method ConnectScrollBarNotify         /* can only be called in InitDialog */
@@ -273,9 +266,9 @@
        when type = "ENDSCROLL"    then wp = 8
        otherwise return -1
    end
-   self~AddUserMsg(msgToRise, 0x00000114, "0xFFFFFFFF", wp, "0x0000FFFF", hnd, "0xFFFFFFFF") /* WM_HSCROLL */
-   self~AddUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hnd, "0xFFFFFFFF") /* WM_VSCROLL */
-   return 0
+   ret = self~AddUserMsg(msgToRise, 0x00000114, "0xFFFFFFFF", wp, "0x0000FFFF", hnd, "0xFFFFFFFF") /* WM_HSCROLL */
+   if ret <> 0 then return ret
+   return self~AddUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hnd, "0xFFFFFFFF") /* WM_VSCROLL */
 
 
 ::method ConnectTabNotify
@@ -290,8 +283,7 @@
        when type = "SELCHANGING"    then lp = -552
        otherwise return -1
    end
-   self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
-   return 0
+   return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
 
 
 ::method ConnectSliderNotify   /* can only be called in InitDialog */
@@ -315,9 +307,9 @@
        when type = "ENDTRACK"           then wp =8
        otherwise return -1
    end
-   self~AddUserMsg(msgToRise, 0x00000114, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_HSCROLL */
-   self~AddUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_VSCROLL */
-   return 0
+   ret = self~AddUserMsg(msgToRise, 0x00000114, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_HSCROLL */
+   if ret <> 0 then return ret
+   return self~AddUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_VSCROLL */
 
 
 ::method DefTreeEditStarter
