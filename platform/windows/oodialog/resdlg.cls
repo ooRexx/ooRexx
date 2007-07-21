@@ -55,7 +55,7 @@
 
    if Arg(3,'o') = 1 then self~UseStem = 0; else self~UseStem = 1
    if \ Resource~datatype("N") then Resource = self~ResolveSymbolicId(Resource)
-   if Resource < 1 then self~InitCode = -3
+   if Resource < 1 then self~InitCode = -1
 
    return self~InitCode
 
@@ -100,7 +100,10 @@
 
 
 ::method SetMenu
-   use arg id
+   use strict arg id
+   if \ id~DataType("W") then id = self~ResolveSymbolicId(id)
+   if id < 1 then return -1
+
    return DialogMenu("ASSOC", self~DlgHandle, id)
 
 
