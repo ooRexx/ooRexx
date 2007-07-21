@@ -278,14 +278,14 @@
    self~ConstDir["IDI_DLG_DEFAULT"] = 2
 
    if arg(4, 'E') then
-     self~ParseIncludeFile(includeFile);
+     self~ParseIncludeFile(includeFile)
 
    return 0
 
 ::method ParseIncludeFile
-  use arg hFile
+  use strict arg hFile
 
-  if arg(1, 'O')  | hFile == "" then return 1
+  if hFile == "" then return 1
 
   -- Revisit. Should an error msg box be put up if the file is not found?
   hFile = SysSearchPath("PATH", hFile)

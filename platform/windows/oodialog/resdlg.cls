@@ -55,38 +55,39 @@
 
    if Arg(3,'o') = 1 then self~UseStem = 0; else self~UseStem = 1
    if \ Resource~datatype("N") then Resource = self~ResolveSymbolicId(Resource)
-   return ret
+   if Resource < 1 then self~InitCode = -3
+
+   return self~InitCode
 
    /* create a Windows dialog out of the resource stored in Library */
 
 ::method StartIt
    expose Library Resource DlgData.
-   use arg icon, modal
+   use arg icon = 0, modal = 0
 
-   if Arg(1,"o") then icon = 0
-   else do
-     if \ icon~DataType("N") then icon = self~ResolveSymbolicId(icon)
-     if icon < 0 then icon = 0
-   end
-   if Arg(2,"o") = 1 then modal = 0; else if modal~translate = "NOTMODAL" then modal = 1
+   if \ icon~DataType("W") then icon = self~ResolveSymbolicId(icon)
+   if icon < 0 then icon = 0
+
+   if modal~translate = "NOTMODAL" then modal = 1
    self~DlgHandle = StartDialog(self~Adm, Library, Resource, self~AutoDetect, 1, icon, modal)
 
-   /* because of autodetection we have to create attributes automatically */
-   if self~AutoDetect = 1 then
-   do
-      id = 1; i=0
-      do while id > 0
-         parse value DataTable(self~Adm,"GET", i) with id typ cat
-         hnd = self~GetItem(id)
-         if (hnd \= 0) then do
-             txt = Wnd_Desktop("TXT",hnd)
-             self~AddAttribute(id, txt)
+   if self~DlgHandle \= 0 then do
+      /* if autodetection is on, create the data attributes */
+      if self~AutoDetect = 1 then do
+         id = 1; i=0
+         do while id > 0
+            parse value DataTable(self~Adm,"GET", i) with id typ cat
+            hnd = self~GetItem(id)
+            if (hnd \= 0) then do
+                txt = Wnd_Desktop("TXT",hnd)
+                self~AddAttribute(id, txt)
+            end
+            i = i +1
          end
-         i = i +1
       end
+      self~InitDialog
    end
 
-   if self~DlgHandle \= 0 then self~InitDialog
    return self~DlgHandle
 
 
