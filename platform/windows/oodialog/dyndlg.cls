@@ -1030,15 +1030,16 @@
 
 
 ::method StartIt
-   use arg icon, modal
-
-   if Arg(1,"o") then icon = 0
-   else do
-     if \ icon~DataType("N") then icon = self~ResolveSymbolicId(icon)
-     if icon < 0 then icon = 0
-   end
-   if Arg(2,"o") = 1 then modal = 0; else if modal~translate = "NOTMODAL" then modal = 1
+   use arg icon = 0, modal = 0
    if self~BasePtr = 0 then return 0
+
+   if \ icon~DataType("W") then icon = self~ResolveSymbolicId(icon)
+   if icon < 0 then icon = 0
+
+   if modal <> 0 & modal <> 1 then do
+     if modal~translate = "NOTMODAL" then modal = 1
+     else modal = 0
+   end
    self~DlgHandle = UsrCreateDialog(self~Adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, 0 /* no autodetection */, 1, icon, modal)
    self~AktPtr = 0
    if self~DlgHandle = 0 then return 0
