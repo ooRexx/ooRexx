@@ -60,17 +60,9 @@ say ('Adding setlike methods to array, list, and queue')
 .queue~!define_methods(appendMethods)
 
 
-say ('Adding setlike methods to directory, stem, and table')
 set_methods = .table~new               /* get a table directory             */
-                                       /* add the single item methods       */
-set_methods~put(.methods~collection_putall,   'PUTALL')
-
-.directory~!define_methods(set_methods)    -- add to the single-value collections
-.stem~!define_methods(set_methods)
-.table~!define_methods(set_methods)
-
+                                       /* add the many item methods       */
 say ('Adding setlike methods to relation')
-                                       /* now repeat with the many item ones*/
 set_methods~put(.methods~many_union,        'UNION')
 set_methods~put(.methods~many_subset,       'SUBSET')
 set_methods~put(.methods~many_intersection, 'INTERSECTION')
@@ -428,25 +420,6 @@ nomethod:
       -- an unknown method is an argument problem.  report it as such.
   raise syntax 93.948 array(1, "Collection")
 
-
-/*****************************************/
-/* PUTALL        method                  */
-/*****************************************/
-::method collection_putall
-  use strict arg other
-  signal on nomethod
-
-  supplier = other~supplier              /* get an other supplier             */
-
-  do while supplier~available            /* loop over the other collection    */
-    self~put(supplier~item, supplier~index)   -- putting the item using the same index
-    supplier~next
-  end
-  return
-
-nomethod:
-      -- an unknown method is an argument problem.  report it as such.
-  raise syntax 93.948 array(1, "Collection")
 
 /* Unattached methods used by SET and BAG */
 
@@ -856,6 +829,29 @@ nomethod:
 
 
 ::CLASS 'MapCollection' MIXINCLASS Collection
+
+/*****************************************/
+/* PUTALL        method                  */
+/*****************************************/
+::method 'putAll' -- collection_putall
+  use strict arg other
+  signal on nomethod
+
+  supplier = other~supplier              /* get an other supplier             */
+
+  do while supplier~available            /* loop over the other collection    */
+    self~put(supplier~item, supplier~index)   -- putting the item using the same index
+    supplier~next
+  end
+  return
+
+nomethod:
+      -- an unknown method is an argument problem.  report it as such.
+  raise syntax 93.948 array(1, "Collection")
+
+
+
+
 ::CLASS 'SetCollection' MIXINCLASS Collection
 
 -- sort comparison classes.
