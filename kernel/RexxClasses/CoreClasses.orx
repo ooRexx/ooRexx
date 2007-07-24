@@ -811,21 +811,43 @@ use strict arg index, value=(index)    /* get the index                     */
 
 
 -- tagging classes for Collection class types
+-- methods defined for all collection classes, abstract methods must be implemented
+-- by subclasses
 ::CLASS 'Collection' MIXINCLASS Object
-::METHOD 'allIndexes'   ABSTRACT
-::METHOD 'allItems'     ABSTRACT
 ::METHOD 'at'           ABSTRACT
 ::METHOD '[]'           ABSTRACT
-::METHOD 'items'        ABSTRACT
-::METHOD 'hasIndex'     ABSTRACT
-::METHOD 'hasItem'      ABSTRACT
-::METHOD 'makeArray'    ABSTRACT
 ::METHOD 'put'          ABSTRACT
 ::METHOD '[]='          ABSTRACT
 ::METHOD 'supplier'     ABSTRACT
 
 
+::method 'allIndexes'   /* return an 'allIndexes' array */
+  return self~supplier~allIndexes
+
+::method 'allItems'     /* return an 'allItems' array   */
+  return self~supplier~allItems
+
+::method 'hasIndex'
+  use strict arg index
+  return self~supplier~allIndexes~hasItem(index)
+
+::method 'hasItem'
+  use strict arg item
+  return self~supplier~allItems~hasItem(item)
+
+::method 'items'
+  return self~supplier~allIndexes~items
+
+::method 'makeArray'    /* return index array           */
+  return self~supplier~allIndexes
+
+
+-- methods defined for OrderedCollection classes
 ::CLASS 'OrderedCollection' MIXINCLASS Collection
+::method 'makeArray'    /* return item array            */
+  return self~supplier~allItems
+
+
 ::CLASS 'MapCollection' MIXINCLASS Collection
 ::CLASS 'SetCollection' MIXINCLASS Collection
 
