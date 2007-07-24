@@ -111,10 +111,6 @@ server~!rexxdefined                     /* Mark as unchangeable          */
 
 
 .Monitor~!REXXDefined                  /* define this as "unchangeable"     */
-.Set~define('PUT', .methods['PUT'])    /* add common methods to SET and BAG */
-.Set~define('[]=', .methods['PUT'])
-.Bag~define('PUT', .methods['PUT'])
-.Bag~define('[]=', .methods['PUT'])
 .Set~!REXXDefined
 .Bag~!REXXDefined
 .Alarm~!REXXDefined
@@ -394,19 +390,6 @@ nomethod:
 
 
 
-
-/* Unattached methods used by SET and BAG */
-
-/*****************************************/
-/* PUT           method                  */
-/*****************************************/
-::METHOD put                           /* add an entry to the set           */
-use strict arg index, value=(index)    /* get the index                     */
-
-  if index \== value then              /* these must be identical           */
-    raise syntax 93.949                /* this is an error                  */
-  self~put:super(index, index)         /* add to the table                  */
-  return
 
 
 
@@ -848,6 +831,26 @@ nomethod:
 
 
 ::CLASS 'SetCollection' MIXINCLASS Collection
+/*****************************************/
+/* PUT           method                  */
+/*****************************************/
+::METHOD 'put'                         /* add an entry to the set           */
+use strict arg index, value=(index)    /* get the index                     */
+
+  if index \== value then              /* these must be identical           */
+    raise syntax 93.949                /* this is an error                  */
+  self~put:super(index, index)         /* add to the table                  */
+  return
+
+::METHOD '[]='                         /* add an entry to the set           */
+use strict arg index, value=(index)    /* get the index                     */
+
+  if index \== value then              /* these must be identical           */
+    raise syntax 93.949                /* this is an error                  */
+  self~put:super(index, index)         /* add to the table                  */
+  return
+
+
 
 -- sort comparison classes.
 ::CLASS 'Comparable' MIXINCLASS Object
