@@ -50,19 +50,10 @@ say ('creating the system specific methods ...')
 .kernel~objectname = "The kernel directory"
 .nil~objectname = "The NIL object"
 
-say 'Adding appendAll and SET methods to ARRAY, LIST and QUEUE'
-appendMethods = .table~new
-appendMethods~put(.methods~ordered_appendall,    'APPENDALL')
 
-say ('Adding setlike methods to array, list, and queue')
-.array~!define_methods(appendMethods)
-.list~!define_methods(appendMethods)
-.queue~!define_methods(appendMethods)
-
-
+say ('Adding setlike methods to RELATION')
 set_methods = .table~new               /* get a table directory             */
                                        /* add the many item methods       */
-say ('Adding setlike methods to relation')
 set_methods~put(.methods~many_union,        'UNION')
 set_methods~put(.methods~many_subset,       'SUBSET')
 set_methods~put(.methods~many_intersection, 'INTERSECTION')
@@ -403,23 +394,6 @@ nomethod:
 
 
 
-/*****************************************/
-/* APPENDALL     method                  */
-/*****************************************/
-::method ordered_appendall
-  use strict arg other
-
-  signal on nomethod
-
-  do item over other~allItems            /* loop over the other collection    */
-    self~append(item)                    -- appending the item
-  end
-  return
-
-nomethod:
-      -- an unknown method is an argument problem.  report it as such.
-  raise syntax 93.948 array(1, "Collection")
-
 
 /* Unattached methods used by SET and BAG */
 
@@ -673,6 +647,27 @@ nomethod:
 
 -- methods defined for OrderedCollection classes
 ::CLASS 'OrderedCollection' MIXINCLASS Collection
+::method 'append'    ABSTRACT
+
+/*****************************************/
+/* APPENDALL     method                  */
+/*****************************************/
+::method 'appendAll' -- ordered_appendall
+  use strict arg other
+
+  signal on nomethod
+
+  do item over other~allItems            /* loop over the other collection    */
+    self~append(item)                    -- appending the item
+  end
+  return
+
+nomethod:
+      -- an unknown method is an argument problem.  report it as such.
+  raise syntax 93.948 array(1, "Collection")
+
+
+
 ::method 'makeArray'    /* return item array            */
   return self~supplier~allItems
 
