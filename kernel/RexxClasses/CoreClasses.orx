@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2007 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -809,8 +809,22 @@ use strict arg index, value=(index)    /* get the index                     */
 
   .local~setentry('STDQUE',.RexxQueue~new('SESSION'))
 
+
 -- tagging classes for Collection class types
 ::CLASS 'Collection' MIXINCLASS Object
+::METHOD 'allIndexes'   ABSTRACT
+::METHOD 'allItems'     ABSTRACT
+::METHOD 'at'           ABSTRACT
+::METHOD '[]'           ABSTRACT
+::METHOD 'items'        ABSTRACT
+::METHOD 'hasIndex'     ABSTRACT
+::METHOD 'hasItem'      ABSTRACT
+::METHOD 'makeArray'    ABSTRACT
+::METHOD 'put'          ABSTRACT
+::METHOD '[]='          ABSTRACT
+::METHOD 'supplier'     ABSTRACT
+
+
 ::CLASS 'OrderedCollection' MIXINCLASS Collection
 ::CLASS 'MapCollection' MIXINCLASS Collection
 ::CLASS 'SetCollection' MIXINCLASS Collection
