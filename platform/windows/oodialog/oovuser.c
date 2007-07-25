@@ -300,6 +300,7 @@ ULONG APIENTRY UsrDefineDialog(
    if (!strstr(opts, "NOMENU") && !child) lStyle |= WS_SYSMENU;
    if (!strstr(opts, "NOTMODAL") && !child) lStyle |= DS_MODALFRAME;
    if (strstr(opts, "SYSTEMMODAL")) lStyle |= DS_SYSMODAL;
+   if (strstr(opts, "CENTER")) lStyle |= DS_CENTER;
    if (strstr(opts, "THICKFRAME")) lStyle |= WS_THICKFRAME;
    if (strstr(opts, "MINIMIZEBOX")) lStyle |= WS_MINIMIZEBOX;
    if (strstr(opts, "MAXIMIZEBOX")) lStyle |= WS_MAXIMIZEBOX;

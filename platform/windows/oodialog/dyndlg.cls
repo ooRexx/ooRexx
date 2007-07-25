@@ -117,12 +117,14 @@
    arga = Arg(1,"A")
    newarg = .array~new(Arg()+2)
    do i = Arg() to 1 by -1; if arga~hasindex(i) = 1 then newarg[i+2] = arga[i]; end   /* shift arguments up by 2 */
-   parse value GetScreenSize() with sx sy .
-   newarg[1] = (sx - Arg(1)) % 2   /* centered x position */
-   newarg[2] = (sy - Arg(2)) % 2   /* centered y position */
+   -- Let OS center the dialog.
+   if \ newarg~hasindex(6) then newarg[6] = "CENTER"
+   else newarg[6] = newarg[6] || " CENTER"
+   -- When dialog has centered style, the OS will ignore the x, y co-ordinates
+   newarg[1] = 0
+   newarg[2] = 0
    forward message "Create" Arguments (newarg)
 
-   /* This method is privat !!! */
 
 ::method Checkfile private
    use arg f
@@ -171,6 +173,7 @@
    if style~wordpos("WS_DISABLED") > 0 then ret = ret || " DISABLED"
    if style~wordpos("WS_GROUP") > 0 then ret = ret || " GROUP"
    if kind = "DLG" then do
+      if style~wordpos("DS_CENTER") > 0 then ret = ret ||" CENTER"
       if style~wordpos("DS_SYSMODAL") > 0 then ret = ret ||" SYSTEMMODAL"
       if style~wordpos("DS_MODALFRAME") = 0 then ret = ret ||" NOTMODAL"
       if style~wordpos("WS_SYSMENU") = 0 then ret = ret ||" NOMENU"
