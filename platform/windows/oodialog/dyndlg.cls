@@ -371,12 +371,6 @@
    end
    f~close
 
-   if options~wordpos("CENTER") > 0 then
-   do
-      parse value GetScreenSize() with sx sy .
-      dlg.x = (sx - dlg.w) % 2
-      dlg.y = (sy - dlg.h) % 2
-   end
    return self~create(dlg.x, dlg.y, dlg.w, dlg.h, dlg.title, internopts,, dlg.font, dlg.fsize, expected)
 
 
