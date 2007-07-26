@@ -840,7 +840,7 @@ ULONG EditStyleToString(LONG lStyle, PRXSTRING retstr)
     if ( lStyle & ES_AUTOVSCROLL ) strcat(retstr->strptr, " AUTOSCROLLV");
     if ( lStyle & ES_READONLY )    strcat(retstr->strptr, " READONLY");
     if ( lStyle & ES_WANTRETURN )  strcat(retstr->strptr, " WANTRETURN");
-    if ( lStyle & ES_NOHIDESEL )   strcat(retstr->strptr, " WANTRETURN");
+    if ( lStyle & ES_NOHIDESEL )   strcat(retstr->strptr, " KEEPSELECTION");
     if ( lStyle & ES_UPPERCASE )   strcat(retstr->strptr, " UPPER");
     if ( lStyle & ES_LOWERCASE )   strcat(retstr->strptr, " LOWER");
     if ( lStyle & ES_NUMBER )      strcat(retstr->strptr, " NUMBER");

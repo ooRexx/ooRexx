@@ -638,13 +638,17 @@ ULONG APIENTRY UsrAddControl(
 
        lStyle = WS_CHILD;
        if (strstr(argv[7].strptr,"PASSWORD")) lStyle |= ES_PASSWORD;
-       if (strstr(argv[7].strptr,"MULTILINE")) lStyle |= ES_MULTILINE | ES_WANTRETURN | ES_NOHIDESEL;
+       if (strstr(argv[7].strptr,"MULTILINE"))
+       {
+           lStyle |= ES_MULTILINE;
+           if (!strstr(argv[7].strptr,"NOWANTRETURN")) lStyle |= ES_WANTRETURN;
+           if (!strstr(argv[7].strptr,"HIDESELECTION")) lStyle |= ES_NOHIDESEL;
+       }
        if (strstr(argv[7].strptr,"AUTOSCROLLH")) lStyle |= ES_AUTOHSCROLL;
        if (strstr(argv[7].strptr,"AUTOSCROLLV")) lStyle |= ES_AUTOVSCROLL;
        if (strstr(argv[7].strptr,"HSCROLL")) lStyle |= WS_HSCROLL;
        if (strstr(argv[7].strptr,"VSCROLL")) lStyle |= WS_VSCROLL;
        if (strstr(argv[7].strptr,"READONLY")) lStyle |= ES_READONLY;
-       if (strstr(argv[7].strptr,"WANTRETURN")) lStyle |= ES_WANTRETURN;
        if (strstr(argv[7].strptr,"KEEPSELECTION")) lStyle |= ES_NOHIDESEL;
        if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
        if (strstr(argv[7].strptr,"CENTER")) lStyle |= ES_CENTER;
