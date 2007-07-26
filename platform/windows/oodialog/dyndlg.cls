@@ -285,8 +285,8 @@
 ::method LoadFrame protected
    use arg resfile, dialogid, options, expected
    if Arg(4,"o") = 1 | expected = 0 then expected = 200
-   internopts = ""
-   if Arg(3,'o') = 1 then options = ""; else options = options~translate
+   if options~translate~wordpos("CENTER") > 0 then internopts = "CENTER "
+   else internopts = ""
 
    file = SysSearchPath("PATH",resfile)
    f = .stream~new(file)

@@ -47,7 +47,7 @@
 ::class 'RcDialog' subclass UserDialog public
 
 ::method init
-  use arg rcFile, idDlg, initData., includeFile
+  use arg rcFile, idDlg, initData., includeFile, options = "", expected = 200
 
   newArgs = .array~new(2)
   if arg(3, 'E') then newArgs[1] = arg(3)
@@ -55,7 +55,7 @@
   forward class (super) arguments (newArgs) continue
   if result <> 0 then return result
 
-  self~initCode = self~load( rcFile, idDlg )
+  self~initCode = self~load(rcFile, idDlg, options, expected)
 
 return self~initCode
 
