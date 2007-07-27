@@ -111,6 +111,10 @@ server~!rexxdefined                     /* Mark as unchangeable          */
 
 
 .Monitor~!REXXDefined                  /* define this as "unchangeable"     */
+.Set~define('PUT', .methods['PUT'])    /* add common methods to SET and BAG */
+.Set~define('[]=', .methods['PUT'])
+.Bag~define('PUT', .methods['PUT'])
+.Bag~define('[]=', .methods['PUT'])
 .Set~!REXXDefined
 .Bag~!REXXDefined
 .Alarm~!REXXDefined
@@ -180,17 +184,27 @@ exit
   use strict arg
   return self
 
+/* Unattached methods used by SET and BAG */
 
+/*****************************************/
+/* PUT           method                  */
+/*****************************************/
+::METHOD put                           /* add an entry to the set           */
+use arg index, value                   /* get the index                     */
 
+signal on syntax
 
-/*============================================================================*/
-/*    A R R A Y set - ORDERED methods                                                   */
-/*============================================================================*/
+if (arg() < 1)                         /* no index given?                   */
+  then raise syntax 93.901 array (1)   /* raise an error                    */
+if (arg() > 2)                         /* too many arguments?               */
+  then raise syntax 93.902 array (1)   /* raise an error                    */
+if (arg() = 2) then                    /* have the second argument given?   */
+  if index \== value then              /* these must be identical           */
+    raise syntax 93.949                /* this is an error                  */
+self~put:super(index, index)           /* add to the table                  */
+return
 
-
-/*============================================================================*/
-/*    S I N G L E I T E M   M E T H O D S  (For Directory, Table, and Stem)   */
-/*============================================================================*/
+syntax: raise propagate
 
 
 /*============================================================================*/
@@ -426,28 +440,26 @@ nomethod:
 ::METHOD '[]'           ABSTRACT
 ::METHOD 'put'          ABSTRACT
 ::METHOD '[]='          ABSTRACT
-::METHOD 'supplier'     ABSTRACT
+::METHOD index          ABSTRACT
+::METHOD allIndexes     ABSTRACT
+::METHOD allItems       ABSTRACT
 
-
-::method 'allIndexes'   /* return an 'allIndexes' array */
-  return self~supplier~allIndexes
-
-::method 'allItems'     /* return an 'allItems' array   */
-  return self~supplier~allItems
+::METHOD supplier
+  return .supplier~new(self~allItems, self~allIndexes)
 
 ::method 'hasIndex'
   use strict arg index
-  return self~supplier~allIndexes~hasItem(index)
+  return self~~allIndexes~hasItem(index)
 
 ::method 'hasItem'
   use strict arg item
-  return self~supplier~allItems~hasItem(item)
+  return self~allItems~hasItem(item)
 
 ::method 'items'
-  return self~supplier~allIndexes~items
+  return self~allIndexes~items
 
-::method 'makeArray'    /* return index array           */
-  return self~supplier~allIndexes
+::method 'makeArray'
+  return self~allItems
 
 
 
@@ -828,29 +840,7 @@ nomethod:
   raise syntax 93.948 array(1, "Collection")
 
 
-
-
 ::CLASS 'SetCollection' MIXINCLASS Collection
-/*****************************************/
-/* PUT           method                  */
-/*****************************************/
-::METHOD 'put'                         /* add an entry to the set           */
-use strict arg index, value=(index)    /* get the index                     */
-
-  if index \== value then              /* these must be identical           */
-    raise syntax 93.949                /* this is an error                  */
-  self~put:super(index, index)         /* add to the table                  */
-  return
-
-::METHOD '[]='                         /* add an entry to the set           */
-use strict arg index, value=(index)    /* get the index                     */
-
-  if index \== value then              /* these must be identical           */
-    raise syntax 93.949                /* this is an error                  */
-  self~put:super(index, index)         /* add to the table                  */
-  return
-
-
 
 -- sort comparison classes.
 ::CLASS 'Comparable' MIXINCLASS Object
