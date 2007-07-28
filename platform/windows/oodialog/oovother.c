@@ -1019,7 +1019,17 @@ ULONG APIENTRY HandleControlEx(
         {
             CHECKARGL(5);
 
-            if ( !strcmp(argv[4].strptr, "TIP" ) )  /* Show or hide ballon tip */
+            if ( !strcmp(argv[4].strptr, "SEL" ) )       /* Get selection character positions */
+            {
+                DWORD start, end;
+
+                SendMessage(hCtrl, EM_GETSEL, (WPARAM)(LPDWORD)&start, (LPARAM)(LPDWORD)&end);
+
+                sprintf(retstr->strptr, "%u %u", start + 1, end + 1);
+                retstr->strlength = strlen(retstr->strptr);
+                return 0;
+            }
+            else if ( !strcmp(argv[4].strptr, "TIP" ) )  /* Show or hide ballon tip */
             {
                 /* Requires XP Common Controls version 6.0 */
                 if ( ComCtl32Version < COMCTL32_6_0 ) RETVAL(-4)

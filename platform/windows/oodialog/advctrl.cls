@@ -1436,10 +1436,7 @@
 ::class 'EditControl' subclass DialogControl public
 
 ::Method Selected
-    selndx = self~Message2Parent(0x00B0, 0, 0)
-    end = BinaryAnd(selndx, 0xFFFF0000) % X2D("10000")
-    start = BinaryAnd(selndx, 0x0000FFFF)
-    return start+1" "end+1
+    return HandleControlEx(self~hDlg, self~id, "E", "MSG", "SEL")
 
 ::Method Select
     use arg start, end
