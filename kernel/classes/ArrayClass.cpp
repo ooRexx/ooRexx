@@ -2193,6 +2193,11 @@ void RexxArray::quickSort(RexxObject *comparator, size_t left, size_t right)
 wholenumber_t RexxArray::sortCompare(RexxObject *comparator, RexxObject *left, RexxObject *right)
 {
     RexxObject *result = comparator->sendMessage(OREF_COMPARE, left, right);
+    if (result == OREF_NULL)
+    {
+        reportException(Error_No_result_object_message, OREF_COMPARE);
+    }
+
     wholenumber_t comparison = result->longValue(DEFAULT_DIGITS);
     if (comparison == NO_LONG)
     {

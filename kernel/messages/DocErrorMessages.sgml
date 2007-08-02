@@ -2480,7 +2480,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>999</term>
 <listitem>
-<para>Message "<emphasis>message</emphasis>" did not return a result object</para>
+<para>Message "<emphasis>message</emphasis>" did not return a result</para>
 </listitem>
 </varlistentry>
 </variablelist>

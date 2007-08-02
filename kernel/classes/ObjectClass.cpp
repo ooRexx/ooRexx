@@ -157,6 +157,10 @@ BOOL RexxObject::isEqual(
 wholenumber_t RexxObject::compareTo(RexxObject *other )
 {
     RexxObject *result = sendMessage(OREF_COMPARETO, other);
+    if (result == OREF_NULL)
+    {
+        reportException(Error_No_result_object_message, OREF_COMPARETO);
+    }
     wholenumber_t comparison = result->longValue(DEFAULT_DIGITS);
     if (comparison == NO_LONG)
     {

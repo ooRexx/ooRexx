@@ -3342,7 +3342,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_No_result_object_message</SymbolicName>
-        <Text>Message <q><Sub position="1" name="message"/></q> did not return a result object</Text>
+        <Text>Message <q><Sub position="1" name="message"/></q> did not return a result</Text>
       </SubMessage>
     </Subcodes>
   </Message>
