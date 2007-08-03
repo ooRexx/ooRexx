@@ -1533,543 +1533,648 @@ void RexxSource::completeClass()
 #define GUARDED_METHOD   1             /* method is a guarded one           */
 #define UNGUARDED_METHOD 2             /* method is unguarded               */
 
+
+#define DEFAULT_GUARD    0             /* using defualt guarding            */
+#define GUARDED_METHOD   1             /* method is a guarded one           */
+#define UNGUARDED_METHOD 2             /* method is unguarded               */
+
+/**
+ * Process a ::CLASS directive for a source file.
+ */
+void RexxSource::classDirective()
+{
+    RexxToken    *token;                 /* current token under processing    */
+    /* have a class already active?      */
+    if (this->active_class != OREF_NULL)
+    {
+        this->completeClass();         /* go finish this up                 */
+    }
+
+    this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
+    token = nextReal();              /* get the next token                */
+                                     /* not a symbol or a string          */
+    if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+    {
+        /* report an error                   */
+        report_error(Error_Symbol_or_string_class);
+    }
+    RexxString *name = token->value;             /* get the routine name              */
+                                     /* get the exposed name version      */
+    RexxString *public_name = this->commonString(name->upper());
+    /* does this already exist?          */
+    if (this->class_dependencies->entry(public_name) != OREF_NULL)
+    {
+        /* have an error here                */
+        report_error(Error_Translation_duplicate_class);
+    }
+    /* create a dependencies list        */
+    this->class_dependencies->put(new_directory(), public_name);
+    this->flags |= _install;         /* have information to install       */
+                                     /* create the class definition       */
+    OrefSet(this, this->active_class, new_array(CLASS_INFO_SIZE));
+    /* add this to the class table       */
+    ((RexxList *)(this->classes))->addLast(this->active_class);
+    /* add the name to the information   */
+    this->active_class->put(name, CLASS_NAME);
+    /* add the name to the information   */
+    this->active_class->put(public_name, CLASS_PUBLIC_NAME);
+    /* create the method table           */
+    this->active_class->put(new_directory(), CLASS_METHODS);
+    /* and the class method tabel        */
+    this->active_class->put(new_directory(), CLASS_CLASS_METHODS);
+    /* save the ::class location         */
+    this->active_class->put((RexxObject *)new RexxInstruction(this->clause, KEYWORD_CLASS), CLASS_DIRECTIVE);
+    bool Public = false;                  /* haven't seen the keyword yet      */
+    bool subclass = false;                /* no subclass keyword yet           */
+    RexxString *externalname = OREF_NULL; /* no external name yet              */
+    RexxString *metaclass = OREF_NULL;    /* no metaclass yet                  */
+    for (;;)
+    {                       /* now loop on the option keywords   */
+        token = nextReal();            /* get the next token                */
+                                       /* reached the end?                  */
+        if (token->classId == TOKEN_EOC)
+            break;                       /* get out of here                   */
+                                         /* not a symbol token?               */
+        else if (token->classId != TOKEN_SYMBOL)
+            /* report an error                   */
+            report_error_token(Error_Invalid_subkeyword_class, token);
+        else
+        {                         /* have some sort of option keyword  */
+                                  /* get the keyword type              */
+            int type = this->subDirective(token);
+            switch (type)
+            {              /* process each sub keyword          */
+                    /* ::CLASS name METACLASS metaclass  */
+                case SUBDIRECTIVE_METACLASS:
+                    /* already had a METACLASS?          */
+                    if (metaclass != OREF_NULL)
+                        report_error_token(Error_Invalid_subkeyword_class, token);
+                    token = nextReal();      /* get the next token                */
+                                             /* not a symbol or a string          */
+                    if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+                        /* report an error                   */
+                        report_error_token(Error_Symbol_or_string_metaclass, token);
+                    metaclass = token->value;/* external name is token value      */
+                                             /* tag the active class              */
+                    this->active_class->put(metaclass, CLASS_METACLASS);
+                    break;
+
+
+                case SUBDIRECTIVE_PUBLIC:  /* ::CLASS name PUBLIC               */
+                    if (Public)              /* already had one of these?         */
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_class, token);
+                    Public = true;           /* turn on the seen flag             */
+                                             /* just set this as a public object  */
+                    this->active_class->put((RexxObject *)TheTrueObject, CLASS_PUBLIC);
+                    break;
+                    /* ::CLASS name SUBCLASS sclass      */
+                case SUBDIRECTIVE_SUBCLASS:
+                    if (subclass)            /* already had one of these?         */
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_class, token);
+                    subclass = true;         /* turn on the seen flag             */
+                    token = nextReal();      /* get the next token                */
+                                             /* not a symbol or a string          */
+                    if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+                        /* report an error                   */
+                        report_error(Error_Symbol_or_string_subclass);
+                    /* set the subclass information      */
+                    this->active_class->put(token->value, CLASS_SUBCLASS_NAME);
+                    break;
+                    /* ::CLASS name MIXINCLASS mclass    */
+                case SUBDIRECTIVE_MIXINCLASS:
+                    if (subclass)            /* already had one of these?         */
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_class, token);
+                    subclass = true;         /* turn on the seen flag             */
+                    token = nextReal();      /* get the next token                */
+                                             /* not a symbol or a string          */
+                    if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+                        /* report an error                   */
+                        report_error(Error_Symbol_or_string_mixinclass);
+                    /* set the subclass information      */
+                    this->active_class->put(token->value, CLASS_SUBCLASS_NAME);
+                    /* this a mixin?                     */
+                    if (type == SUBDIRECTIVE_MIXINCLASS)
+                        /* just set this as a public object  */
+                        this->active_class->put((RexxObject *)TheTrueObject, CLASS_MIXINCLASS);
+                    break;
+                    /* ::CLASS name INHERIT iclasses     */
+                case SUBDIRECTIVE_INHERIT:
+                    token = nextReal();      /* get the next token                */
+                                             /* nothing after the keyword?        */
+                    if (token->classId == TOKEN_EOC)
+                        /* report an error                   */
+                        report_error_token(Error_Symbol_or_string_inherit, token);
+                    /* add an inherits list              */
+                    this->active_class->put(new_list(), CLASS_INHERIT);
+                    while (token->classId != TOKEN_EOC)
+                    {
+                        /* not a symbol or a string          */
+                        if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+                            /* report an error                   */
+                            report_error_token(Error_Symbol_or_string_inherit, token);
+                        /* add to the inherit list           */
+                        ((RexxList *)(this->active_class->get(CLASS_INHERIT)))->addLast(token->value);
+                        token = nextReal();    /* step to the next token            */
+                    }
+                    previousToken();         /* step back a token                 */
+                    break;
+
+                default:                   /* invalid keyword                   */
+                    /* this is an error                  */
+                    report_error_token(Error_Invalid_subkeyword_class, token);
+                    break;
+            }
+        }
+    }
+}
+
+
+/**
+ * Process a ::METHOD directive in a source file.
+ */
+void RexxSource::methodDirective()
+{
+    this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
+    bool Private = false;            /* this is a public method           */
+    bool Protected = false;          /* and is not protected yet          */
+    int guard = DEFAULT_GUARD;       /* default is guarding               */
+    bool Class = false;              /* default is an instance method     */
+    bool Attribute = false;          /* init Attribute flag               */
+    bool abstractMethod = false;     // this is an abstract method
+    RexxToken *token = nextReal();   /* get the next token                */
+    RexxString *externalname = OREF_NULL;       /* not an external method yet        */
+    RexxVariableBase *retriever = OREF_NULL;    /* no associated retriever yet       */
+
+                                     /* not a symbol or a string          */
+    if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+        /* report an error                   */
+        report_error_token(Error_Symbol_or_string_method, token);
+    RexxString *name = token->value; /* get the string name               */
+                                     /* and the name form also            */
+    RexxString *internalname = this->commonString(name->upper());
+    for (;;)
+    {                       /* now loop on the option keywords   */
+        token = nextReal();            /* get the next token                */
+                                       /* reached the end?                  */
+        if (token->classId == TOKEN_EOC)
+            break;                       /* get out of here                   */
+                                         /* not a symbol token?               */
+        else if (token->classId != TOKEN_SYMBOL)
+            /* report an error                   */
+            report_error_token(Error_Invalid_subkeyword_method, token);
+        else
+        {                         /* have some sort of option keyword  */
+                                  /* process each sub keyword          */
+            switch (this->subDirective(token))
+            {
+                /* ::METHOD name CLASS               */
+                case SUBDIRECTIVE_CLASS:
+                    if (Class)               /* had one of these already?         */
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    Class = true;            /* flag this for later processing    */
+                    break;
+                    /* ::METHOD name EXTERNAL extname    */
+                case SUBDIRECTIVE_EXTERNAL:
+                    /* already had an external?          */
+                    if (externalname != OREF_NULL || abstractMethod || Attribute)
+                        /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    if (Attribute)           /* ATTRIBUTE already specified ?     */
+                                             /* EXTERNAL and ATTRIBUTE are        */
+                                             /* mutually exclusive                */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    token = nextReal();      /* get the next token                */
+                                             /* not a string?                     */
+                    if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+                    {
+                        /* report an error                   */
+                        report_error_token(Error_Symbol_or_string_requires, token);
+                    }
+                    externalname = token->value;
+                    break;
+                    /* ::METHOD name PRIVATE             */
+                case SUBDIRECTIVE_PRIVATE:
+                    if (Private)             /* already seen one of these?        */
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    Private = true;          /* flag for later processing         */
+                    break;
+                    /* ::METHOD name PROTECTED           */
+                case SUBDIRECTIVE_PROTECTED:
+                    if (Protected)           /* already seen one of these?        */
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    Protected = true;        /* flag for later processing         */
+                    break;
+                    /* ::METHOD name UNGUARDED           */
+                case SUBDIRECTIVE_UNGUARDED:
+                    /* already seen one of these?        */
+                    if (guard != DEFAULT_GUARD)
+                        /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    guard = UNGUARDED_METHOD;/* flag for later processing         */
+                    break;
+                    /* ::METHOD name GUARDED             */
+                case SUBDIRECTIVE_GUARDED:
+                    /* already seen one of these?        */
+                    if (guard != DEFAULT_GUARD)
+                        /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    guard = GUARDED_METHOD;  /* flag for later processing         */
+                    break;
+                    /* ::METHOD name ATTRIBUTE           */
+                case SUBDIRECTIVE_ATTRIBUTE:
+
+                    if (Attribute)           /* already seen one of these?        */
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    /* EXTERNAL already specified ?      */
+                    if (externalname != OREF_NULL || abstractMethod)
+                        /* EXTERNAL and ATTRIBUTE are        */
+                        /* mutually exclusive                */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    /* get a retriever for it            */
+                    retriever = this->getRetriever(internalname);
+                    Attribute = true;        /* flag for later processing         */
+                    break;
+
+                                           /* ::METHOD name ABSTRACT            */
+                case SUBDIRECTIVE_ABSTRACT:
+
+                    if (abstractMethod || externalname != OREF_NULL)
+                    {
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    // not compatible with ATTRIBUTE or EXTERNAL
+                    if (externalname != OREF_NULL || Attribute)
+                    {
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    abstractMethod = true;   /* flag for later processing         */
+                    break;
+
+
+                default:                   /* invalid keyword                   */
+                    /* this is an error                  */
+                    report_error_token(Error_Invalid_subkeyword_method, token);
+                    break;
+            }
+        }
+    }
+
+    RexxDirectory *methodsDir;
+    /* no previous ::CLASS directive?    */
+    if (this->active_class == OREF_NULL)
+    {
+        if (Class)                   /* supposed to be a class method?    */
+        {
+                                     /* this is an error                  */
+            report_error(Error_Translation_missing_class);
+        }
+        methodsDir = this->methods;  /* adding to the global set          */
+    }
+    else
+    {                                /* add the method to the active class*/
+        if (Class)                   /* class method?                     */
+        {
+                                     /* add to the class method list      */
+            methodsDir = ((RexxDirectory *)(this->active_class->get(CLASS_CLASS_METHODS)));
+        }
+        else
+        {
+            /* add to the method list            */
+            methodsDir = ((RexxDirectory *)(this->active_class->get(CLASS_METHODS)));
+        }
+    }
+    /* duplicate method name?            */
+    if (methodsDir->entry(internalname) != OREF_NULL)
+    {
+        /* this is an error                  */
+        report_error(Error_Translation_duplicate_method);
+    }
+
+    RexxMethod *method;
+    if (Attribute)
+    {                 /* this an attribute?                */
+                      /* Attribute option is specified.    */
+                      /* duplicate method "name=" ?            */
+        if (methodsDir->entry(this->commonString(internalname->concatWithCstring("="))) != OREF_NULL)
+        {
+            /* this is an error                  */
+            report_error(Error_Translation_duplicate_method);
+        }
+        /* Go check the next clause to make  */
+        this->checkDirective();        /* sure that no code follows         */
+                                       /* create a generic kernel method    */
+                                       /* create a generic kernel method    */
+        method = new_method(getAttributeIndex, CPPM(RexxObject::getAttribute), 0, OREF_NULL);
+    }
+    // abstract method?
+    else if (abstractMethod)
+    {
+                                       /* Go check the next clause to make  */
+        this->checkDirective();        /* sure that no code follows         */
+        method = new_method(abstractIndex, CPPM(RexxObject::abstractMethod), A_COUNT, OREF_NULL);
+    }
+    /* not an external method?           */
+    else if (externalname == OREF_NULL)
+    {
+        /* go do the next block of code      */
+        method = this->translateBlock(OREF_NULL);
+    }
+    else
+    {                           /* have an external method           */
+        /* convert external into words       */
+        RexxArray *words = this->words(externalname);
+        /* not 'LIBRARY library entry' form? */
+        if (((RexxString *)(words->get(1)))->strCompare(CHAR_LIBRARY))
+        {
+            if (words->size() != 3)      /* wrong number of tokens?           */
+            {
+                                         /* this is an error                  */
+                report_error1(Error_Translation_bad_external, externalname);
+            }
+
+            /* go check the next clause to make  */
+            this->checkDirective();      /* sure no code follows              */
+                                         /* create a new native method        */
+            RexxNativeCode *nmethod = new_nmethod((RexxString *)(words->get(3)), (RexxString *)(words->get(2)));
+            /* turn into a real method object    */
+            method = new_method(0, (PCPPM)NULL, 0, (RexxObject *)nmethod);
+        }
+        /* is it 'REXX entry' form?          */
+        else if (((RexxString *)(words->get(1)))->strCompare(CHAR_REXX))
+        {
+            if (words->size() != 2)      /* wrong number of tokens?           */
+            {
+                                         /* this is an error                  */
+                report_error1(Error_Translation_bad_external, externalname);
+            }
+
+            /* go check the next clause to make  */
+            this->checkDirective();      /* sure no code follows              */
+                                         /* point to the entry name           */
+            char *entryName = ((RexxString *)(words->get(2)))->stringData;
+            /* loop through the internal table   */
+            size_t index = 0;
+            for (; internalMethodTable[index].entryName != NULL; index++)
+            {
+                if (strcmp(entryName, internalMethodTable[index].entryName) == 0)
+                {
+                    break;                   /* get out                           */
+                }
+            }
+            /* name not found?                   */
+            if (internalMethodTable[index].entryName == NULL)
+            {
+                /* this is an error                  */
+                report_error1(Error_Translation_bad_external, externalname);
+            }
+            /* create a new native method        */
+            RexxNativeCode *nmethod = new RexxNativeCode(OREF_NULL, OREF_NULL, NULL, index);
+            /* turn into a real method object    */
+            method = new_method(0, (PCPPM)NULL, 0, (RexxObject *)nmethod);
+        }
+        else
+        {
+            /* unknown external type             */
+            report_error1(Error_Translation_bad_external, externalname);
+        }
+    }
+    for (;;)
+    {                       /* process potentially two methods   */
+        if (Private)                   /* is this a private method?         */
+            method->setPrivate();        /* turn on the private attribute     */
+        if (Protected)                 /* is this a protected method?       */
+            method->setProtected();      /* turn on the protected attribute   */
+        if (guard == UNGUARDED_METHOD) /* is this unguarded?                */
+            method->setUnGuarded();      /* turn on the unguarded attribute   */
+                                         /* set any associated attribute      */
+        method->setAttribute(retriever);
+
+        /* add the method to the table       */
+        methodsDir->put(method, internalname);
+        if (Attribute == false)        /* not an attribute?                 */
+            break;                       /* we're finished                    */
+        else
+        {                         /* set up the default 'NAME=' method */
+            internalname = this->commonString(internalname->concatWithCstring("="));
+                                         /* create a generic kernel method    */
+            method = new_method(setAttributeIndex, CPPM(RexxObject::setAttribute), 1, OREF_NULL);
+                                         /* show that we have taken care of   */
+            /* show that we have taken care of   */
+            Attribute = false;           /* the Attribute option              */
+        }
+    }
+}
+
+
+/**
+ * Process a ::routine directive in a source file.
+ */
+void RexxSource::routineDirective()
+{
+    this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
+    RexxToken *token = nextReal();   /* get the next token                */
+                                     /* not a symbol or a string          */
+    if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+                                     /* report an error                   */
+      report_error_token(Error_Symbol_or_string_routine, token);
+    RexxString *name = token->value; /* get the routine name              */
+                                     /* does this already exist?          */
+    if (this->routines->entry(name) != OREF_NULL)
+                                     /* have an error here                */
+      report_error(Error_Translation_duplicate_routine);
+    this->flags |= _install;         /* have information to install       */
+    RexxString *externalname = OREF_NULL;        /* no external name yet              */
+    bool Public = false;             /* not a public routine yet          */
+    for (;;) {                       /* now loop on the option keywords   */
+      token = nextReal();            /* get the next token                */
+                                     /* reached the end?                  */
+      if (token->classId == TOKEN_EOC)
+        break;                       /* get out of here                   */
+                                     /* not a symbol token?               */
+      else if (token->classId != TOKEN_SYMBOL)
+                                     /* report an error                   */
+        report_error_token(Error_Invalid_subkeyword_routine, token);
+                                     /* process each sub keyword          */
+      switch (this->subDirective(token)) {
+#if 0
+                                     /* ::ROUTINE name EXTERNAL []*/
+        case SUBDIRECTIVE_EXTERNAL:
+                                     /* already had an external?          */
+          if (externalname != OREF_NULL)
+                                     /* duplicates are invalid            */
+            report_error_token(Error_Invalid_subkeyword_class, token);
+          token = nextReal();        /* get the next token                */
+                                   /* not a string?                     */
+          if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+          {
+              /* report an error                   */
+              report_error_token(Error_Symbol_or_string_requires, token);
+          }
+                               /* external name is token value      */
+          externalname = token->value;
+          break;
+#endif
+                                     /* ::ROUTINE name PUBLIC             */
+        case SUBDIRECTIVE_PUBLIC:
+          if (Public)                /* already had one of these?         */
+                                     /* duplicates are invalid            */
+            report_error_token(Error_Invalid_subkeyword_routine, token);
+          Public = true;             /* turn on the seen flag             */
+          break;
+
+        default:                     /* invalid keyword                   */
+                                     /* this is an error                  */
+          report_error_token(Error_Invalid_subkeyword_routine, token);
+          break;
+      }
+    }
+    {
+        RexxMethod *method = OREF_NULL;
+
+        this->saveObject(name);          /* protect the name                  */
+
+        if (externalname != OREF_NULL)   /* have an external routine?         */
+        {
+#if 0
+                                    /* convert external into words       */
+            RexxArray *words = this->words(externalname);
+            /* not 'PACKAGE library [entry]' form? */
+            if (((RexxString *)(words->get(1)))->strCompare(CHAR_PACKAGE))
+            {
+                RexxString *package;
+                // the default entry point name is the internal name
+                RexxString *entry = name;
+
+                // full library with entry name version?
+                if (words->size() == 3)
+                {
+                    package = (RexxString *)words->get(2);
+                    entry = (RexxString *)words->get(3);
+                }
+                else if (words->size() == 2)
+                {
+                    package = (RexxString *)words->get(2);
+                }
+                else  // wrong number of tokens
+                {
+                                             /* this is an error                  */
+                    report_error(Error_Translation_bad_external, externalname);
+                }
+
+                /* go check the next clause to make  */
+                this->checkDirective();      /* sure no code follows              */
+                                             /* create a new native method        */
+                RexxNativeCode *nmethod = ThePackageManager->resolveNativeFunction(name, package, entry);
+                // NEED to figure this out....
+                /* turn into a real method object    */
+                method = new RexxMethod(nmethod);
+                // attach this to the source
+                method->setSource(this);
+            }
+            else
+                /* unknown external type             */
+                report_error(Error_Translation_bad_external, externalname);
+#endif
+        }
+        else
+        {
+                                         /* go do the next block of code      */
+          method = this->translateBlock(OREF_NULL);
+                                         /* add to the routine directory      */
+          this->routines->setEntry(name, method);
+          if (Public)                    /* a public routine?                 */
+                                         /* add to the public directory too   */
+            this->public_routines->setEntry(name, method);
+        }
+        this->toss(name);                /* release the "Gary Cole" (GC) lock */
+    }
+}
+
+/**
+ * Process a ::REQUIRES directive.
+ */
+void RexxSource::requiresDirective()
+{
+    /* no longer valid?                  */
+    if (!(this->flags&requires_allowed))
+    {
+        /* this is an error                  */
+        report_error(Error_Translation_requires);
+    }
+    RexxToken *token = nextReal();   /* get the next token                */
+                                     /* not a symbol or a string          */
+    if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+    {
+        /* report an error                   */
+        report_error_token(Error_Symbol_or_string_requires, token);
+    }
+    this->flags |= _install;         /* have information to install       */
+    RexxString *name = token->value; /* get the requires name             */
+    RexxString *internalname = name; /* get the name form                 */
+    token = nextReal();              /* get the next token                */
+    if (token->classId != TOKEN_EOC) /* something appear after this?      */
+    {
+                                     /* this is a syntax error            */
+        report_error_token(Error_Invalid_subkeyword_requires, token);
+    }
+    /* add this name to the table        */
+    ((RexxList *)(this->requires))->addLast(internalname);
+    /* save the ::requires location      */
+    ((RexxList *)(this->requires))->addLast((RexxObject *)new RexxInstruction(this->clause, KEYWORD_REQUIRES));
+}
+
+
 void RexxSource::directive()
 /********************************************************************/
 /* Function:  parse a directive statement                           */
 /********************************************************************/
 {
-  RexxToken    *token;                 /* current token under processing    */
-  RexxMethod   *method;                /* newly created method              */
-  RexxNativeCode *nmethod;             /* converted native method           */
-  RexxString   *name;                  /* name of routine or method         */
-  RexxArray    *words;                 /* list of words for external        */
-  RexxString   *internalname;          /* internal name of routine or method*/
-  RexxString   *externalname;          /* external name of a routine        */
-  RexxString   *metaclass;             /* ::CLASS METACLASS name            */
-  RexxString   *public_name;           /* external (uppercase) name         */
-  RexxDirectory *methodsDir;           /* Methods directory to add new meth */
-  RexxVariableBase *retriever;         /* variable retriever                */
-  INT           guard;                 /* method is unguarded               */
-  BOOL          Private;               /* method is private                 */
-  BOOL          Protected;             /* method is protected               */
-  BOOL          Class;                 /* method is a class method          */
-  BOOL          Public;                /* had a public keyword              */
-  BOOL          Attribute;             /* attribute option is specified     */
-  bool          abstractMethod;        // this is an abstract method
-  BOOL          subclass;              /* had a subclass keyword            */
-  INT           type;                  /* subkeyword type                   */
-  PCHAR         entryName;             /* REXX entry point name             */
-  size_t        index;                 /* internal REXX method index        */
+    RexxToken    *token;                 /* current token under processing    */
 
-  this->nextClause();                  /* get the directive clause          */
-  if (this->flags&no_clause)           /* reached the end?                  */
-    return;                            /* all finished                      */
-  token = nextReal();                  /* skip the leading ::               */
-  if (token->classId != TOKEN_DCOLON)  /* reached the end of a block?       */
-                                       /* have an error here                */
-    report_error(Error_Translation_bad_directive);
-  token = nextReal();                  /* get the keyword token             */
-  if (token->classId != TOKEN_SYMBOL)  /* not a symbol?                     */
-                                       /* have an error here                */
-    report_error(Error_Symbol_expected_directive);
+    this->nextClause();                  /* get the directive clause          */
+    if (this->flags&no_clause)           /* reached the end?                  */
+        return;                          /* all finished                      */
+    token = nextReal();                  /* skip the leading ::               */
+    if (token->classId != TOKEN_DCOLON)  /* reached the end of a block?       */
+                                         /* have an error here                */
+        report_error(Error_Translation_bad_directive);
+    token = nextReal();                  /* get the keyword token             */
+    if (token->classId != TOKEN_SYMBOL)  /* not a symbol?                     */
+                                         /* have an error here                */
+        report_error(Error_Symbol_expected_directive);
 
-  switch (this->keyDirective(token)) { /* match against the directive list  */
+    switch (this->keyDirective(token))
+    { /* match against the directive list  */
 
-    case DIRECTIVE_CLASS:              /* ::CLASS directive                 */
-                                       /* have a class already active?      */
-      if (this->active_class != OREF_NULL)
-        this->completeClass();         /* go finish this up                 */
-
-      this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
-      token = nextReal();              /* get the next token                */
-                                       /* not a symbol or a string          */
-      if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
-                                       /* report an error                   */
-        report_error(Error_Symbol_or_string_class);
-      name = token->value;             /* get the routine name              */
-                                       /* get the exposed name version      */
-      public_name = this->commonString(name->upper());
-                                       /* does this already exist?          */
-      if (this->class_dependencies->entry(public_name) != OREF_NULL)
-                                       /* have an error here                */
-        report_error(Error_Translation_duplicate_class);
-                                       /* create a dependencies list        */
-      this->class_dependencies->put(new_directory(), public_name);
-      this->flags |= _install;         /* have information to install       */
-                                       /* create the class definition       */
-      OrefSet(this, this->active_class, new_array(CLASS_INFO_SIZE));
-                                       /* add this to the class table       */
-      ((RexxList *)(this->classes))->addLast(this->active_class);
-                                       /* add the name to the information   */
-      this->active_class->put(name, CLASS_NAME);
-                                       /* add the name to the information   */
-      this->active_class->put(public_name, CLASS_PUBLIC_NAME);
-                                       /* create the method table           */
-      this->active_class->put(new_directory(), CLASS_METHODS);
-                                       /* and the class method tabel        */
-      this->active_class->put(new_directory(), CLASS_CLASS_METHODS);
-                                       /* save the ::class location         */
-      this->active_class->put((RexxObject *)new RexxInstruction(this->clause, KEYWORD_CLASS), CLASS_DIRECTIVE);
-      Public = FALSE;                  /* haven't seen the keyword yet      */
-      subclass = FALSE;                /* no subclass keyword yet           */
-      externalname = OREF_NULL;        /* no external name yet              */
-      metaclass = OREF_NULL;           /* no metaclass yet                  */
-      for (;;) {                       /* now loop on the option keywords   */
-        token = nextReal();            /* get the next token                */
-                                       /* reached the end?                  */
-        if (token->classId == TOKEN_EOC)
-          break;                       /* get out of here                   */
-                                       /* not a symbol token?               */
-        else if (token->classId != TOKEN_SYMBOL)
-                                       /* report an error                   */
-          report_error_token(Error_Invalid_subkeyword_class, token);
-        else {                         /* have some sort of option keyword  */
-                                       /* get the keyword type              */
-          type = this->subDirective(token);
-          switch (type) {              /* process each sub keyword          */
-
-                                       /* ::CLASS name EXTERNAL ['extnam']  */
-            case SUBDIRECTIVE_EXTERNAL:
-                                       /* already had an external?          */
-              if (externalname != OREF_NULL)
-                                       /* duplicates are invalid            */
-                report_error_token(Error_Invalid_subkeyword_class, token);
-              token = nextReal();      /* get the next token                */
-                                       /* not a string?                     */
-              if (token->classId != TOKEN_LITERAL) {
-                previousToken();       /* push the token back               */
-                externalname = name;   /* internal and external names same  */
-              }
-              else                     /* external name is token value      */
-                externalname = token->value;
-                                       /* tag the active class              */
-              this->active_class->put(externalname, CLASS_EXTERNAL_NAME);
-              break;
-                                       /* ::CLASS name METACLASS metaclass  */
-            case SUBDIRECTIVE_METACLASS:
-                                       /* already had a METACLASS?          */
-              if (metaclass != OREF_NULL)
-                report_error_token(Error_Invalid_subkeyword_class, token);
-              token = nextReal();      /* get the next token                */
-                                       /* not a symbol or a string          */
-              if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
-                                       /* report an error                   */
-                report_error_token(Error_Symbol_or_string_metaclass, token);
-              metaclass = token->value;/* external name is token value      */
-                                       /* tag the active class              */
-              this->active_class->put(metaclass, CLASS_METACLASS);
-              break;
-
-
-            case SUBDIRECTIVE_PUBLIC:  /* ::CLASS name PUBLIC               */
-              if (Public)              /* already had one of these?         */
-                                       /* duplicates are invalid            */
-                report_error_token(Error_Invalid_subkeyword_class, token);
-              Public = TRUE;           /* turn on the seen flag             */
-                                       /* just set this as a public object  */
-              this->active_class->put((RexxObject *)TheTrueObject, CLASS_PUBLIC);
-              break;
-                                       /* ::CLASS name SUBCLASS sclass      */
-            case SUBDIRECTIVE_SUBCLASS:
-              if (subclass)            /* already had one of these?         */
-                                       /* duplicates are invalid            */
-                report_error_token(Error_Invalid_subkeyword_class, token);
-              subclass = TRUE;         /* turn on the seen flag             */
-              token = nextReal();      /* get the next token                */
-                                       /* not a symbol or a string          */
-              if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
-                                       /* report an error                   */
-                report_error(Error_Symbol_or_string_subclass);
-                                       /* set the subclass information      */
-              this->active_class->put(token->value, CLASS_SUBCLASS_NAME);
-              break;
-                                       /* ::CLASS name MIXINCLASS mclass    */
-            case SUBDIRECTIVE_MIXINCLASS:
-              if (subclass)            /* already had one of these?         */
-                                       /* duplicates are invalid            */
-                report_error_token(Error_Invalid_subkeyword_class, token);
-              subclass = TRUE;         /* turn on the seen flag             */
-              token = nextReal();      /* get the next token                */
-                                       /* not a symbol or a string          */
-              if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
-                                       /* report an error                   */
-                report_error(Error_Symbol_or_string_mixinclass);
-                                       /* set the subclass information      */
-              this->active_class->put(token->value, CLASS_SUBCLASS_NAME);
-                                       /* this a mixin?                     */
-              if (type == SUBDIRECTIVE_MIXINCLASS)
-                                       /* just set this as a public object  */
-                this->active_class->put((RexxObject *)TheTrueObject, CLASS_MIXINCLASS);
-              break;
-                                       /* ::CLASS name INHERIT iclasses     */
-            case SUBDIRECTIVE_INHERIT:
-              token = nextReal();      /* get the next token                */
-                                       /* nothing after the keyword?        */
-              if (token->classId == TOKEN_EOC)
-                                       /* report an error                   */
-                report_error_token(Error_Symbol_or_string_inherit, token);
-                                       /* add an inherits list              */
-              this->active_class->put(new_list(), CLASS_INHERIT);
-              while (token->classId != TOKEN_EOC) {
-                                       /* not a symbol or a string          */
-                if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
-                                       /* report an error                   */
-                  report_error_token(Error_Symbol_or_string_inherit, token);
-                                       /* add to the inherit list           */
-                ((RexxList *)(this->active_class->get(CLASS_INHERIT)))->addLast(token->value);
-                token = nextReal();    /* step to the next token            */
-              }
-              previousToken();         /* step back a token                 */
-              break;
-
-            default:                   /* invalid keyword                   */
-                                       /* this is an error                  */
-              report_error_token(Error_Invalid_subkeyword_class, token);
-              break;
-          }
-        }
-      }
-      break;
-
-    case DIRECTIVE_METHOD:             /* ::METHOD directive                */
-      this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
-      Private = FALSE;                 /* this is a public method           */
-      Protected = FALSE;               /* and is not protected yet          */
-      guard = DEFAULT_GUARD;           /* default is guarding               */
-      Class = FALSE;                   /* default is an instance method     */
-      Attribute = FALSE;               /* init Attribute flag               */
-      abstractMethod = false;          // not abstract
-      token = nextReal();              /* get the next token                */
-      externalname = OREF_NULL;        /* not an external method yet        */
-      retriever = OREF_NULL;           /* no associated retriever yet       */
-                                       /* not a symbol or a string          */
-      if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
-                                       /* report an error                   */
-        report_error_token(Error_Symbol_or_string_method, token);
-      name = token->value;             /* get the string name               */
-                                       /* and the name form also            */
-      internalname = this->commonString(name->upper());
-      for (;;) {                       /* now loop on the option keywords   */
-        token = nextReal();            /* get the next token                */
-                                       /* reached the end?                  */
-        if (token->classId == TOKEN_EOC)
-          break;                       /* get out of here                   */
-                                       /* not a symbol token?               */
-        else if (token->classId != TOKEN_SYMBOL)
-                                       /* report an error                   */
-          report_error_token(Error_Invalid_subkeyword_method, token);
-        else {                         /* have some sort of option keyword  */
-                                       /* process each sub keyword          */
-          switch (this->subDirective(token)) {
-                                       /* ::METHOD name CLASS               */
-            case SUBDIRECTIVE_CLASS:
-              if (Class)               /* had one of these already?         */
-                                       /* duplicates are invalid            */
-                report_error_token(Error_Invalid_subkeyword_method, token);
-              Class = TRUE;            /* flag this for later processing    */
-              break;
-                                       /* ::METHOD name EXTERNAL extname    */
-            case SUBDIRECTIVE_EXTERNAL:
-                                       /* already had an external?          */
-              if (externalname != OREF_NULL)
-                                       /* duplicates are invalid            */
-                report_error_token(Error_Invalid_subkeyword_method, token);
-              if (Attribute)           /* ATTRIBUTE already specified ?     */
-                                       /* EXTERNAL and ATTRIBUTE are        */
-                                       /* mutually exclusive                */
-                report_error_token(Error_Invalid_subkeyword_method, token);
-              token = nextReal();      /* get the next token                */
-                                       /* not a string?                     */
-              if (token->classId != TOKEN_LITERAL) {
-                previousToken();       /* push the token back               */
-                externalname = name;   /* internal and external names same  */
-              }
-              else                     /* external name is token value      */
-                externalname = token->value;
-              break;
-                                       /* ::METHOD name PRIVATE             */
-            case SUBDIRECTIVE_PRIVATE:
-              if (Private)             /* already seen one of these?        */
-                                       /* duplicates are invalid            */
-                report_error_token(Error_Invalid_subkeyword_method, token);
-              Private = TRUE;          /* flag for later processing         */
-              break;
-                                       /* ::METHOD name PROTECTED           */
-            case SUBDIRECTIVE_PROTECTED:
-              if (Protected)           /* already seen one of these?        */
-                                       /* duplicates are invalid            */
-                report_error_token(Error_Invalid_subkeyword_method, token);
-              Protected = TRUE;        /* flag for later processing         */
-              break;
-                                       /* ::METHOD name UNGUARDED           */
-            case SUBDIRECTIVE_UNGUARDED:
-                                       /* already seen one of these?        */
-              if (guard != DEFAULT_GUARD)
-                                       /* duplicates are invalid            */
-                report_error_token(Error_Invalid_subkeyword_method, token);
-              guard = UNGUARDED_METHOD;/* flag for later processing         */
-              break;
-                                       /* ::METHOD name GUARDED             */
-            case SUBDIRECTIVE_GUARDED:
-                                       /* already seen one of these?        */
-              if (guard != DEFAULT_GUARD)
-                                       /* duplicates are invalid            */
-                report_error_token(Error_Invalid_subkeyword_method, token);
-              guard = GUARDED_METHOD;  /* flag for later processing         */
-              break;
-                                       /* ::METHOD name ATTRIBUTE           */
-            case SUBDIRECTIVE_ATTRIBUTE:
-
-              if (Attribute)           /* already seen one of these?        */
-                                       /* duplicates are invalid            */
-                report_error_token(Error_Invalid_subkeyword_method, token);
-                                       /* EXTERNAL already specified ?      */
-              if (externalname != OREF_NULL || abstractMethod)
-                                       /* EXTERNAL and ATTRIBUTE are        */
-                                       /* mutually exclusive                */
-                report_error_token(Error_Invalid_subkeyword_method, token);
-                                       /* get a retriever for it            */
-              retriever = this->getRetriever(internalname);
-              Attribute = TRUE;        /* flag for later processing         */
-              break;
-                                       /* ::METHOD name ABSTRACT            */
-            case SUBDIRECTIVE_ABSTRACT:
-
-              if (abstractMethod)
-              {
-                  report_error_token(Error_Invalid_subkeyword_method, token);
-              }
-              // not compatible with ATTRIBUTE or EXTERNAL
-              if (externalname != OREF_NULL || Attribute)
-              {
-                  report_error_token(Error_Invalid_subkeyword_method, token);
-              }
-              abstractMethod = true;   /* flag for later processing         */
-              break;
-
-            default:                   /* invalid keyword                   */
-                                       /* this is an error                  */
-              report_error_token(Error_Invalid_subkeyword_method, token);
-              break;
-          }
-        }
-      }
-
-                                     /* no previous ::CLASS directive?    */
-      if (this->active_class == OREF_NULL) {
-        if (Class)                   /* supposed to be a class method?    */
-                                     /* this is an error                  */
-          report_error(Error_Translation_missing_class);
-        methodsDir = this->methods;  /* adding to the global set          */
-      }
-      else {                         /* add the method to the active class*/
-        if (Class)                   /* class method?                     */
-                                     /* add to the class method list      */
-          methodsDir = ((RexxDirectory *)(this->active_class->get(CLASS_CLASS_METHODS)));
-        else
-                                     /* add to the method list            */
-          methodsDir = ((RexxDirectory *)(this->active_class->get(CLASS_METHODS)));
-      }
-                                     /* duplicate method name?            */
-      if (methodsDir->entry(internalname) != OREF_NULL)
-                                     /* this is an error                  */
-        report_error(Error_Translation_duplicate_method);
-
-      if (Attribute) {                 /* this an attribute?                */
-                                       /* Attribute option is specified.    */
-                                       /* duplicate method "name=" ?            */
-        if (methodsDir->entry(this->commonString(internalname->concatWithCstring("="))) != OREF_NULL)
-                                       /* this is an error                  */
-          report_error(Error_Translation_duplicate_method);
-                                       /* Go check the next clause to make  */
-        this->checkDirective();        /* sure that no code follows         */
-                                       /* create a generic kernel method    */
-        method = new_method(getAttributeIndex, CPPM(RexxObject::getAttribute), 0, OREF_NULL);
-      }
-      // abstract method?
-      else if (abstractMethod)
-      {
-                                         /* Go check the next clause to make  */
-          this->checkDirective();        /* sure that no code follows         */
-          method = new_method(abstractIndex, CPPM(RexxObject::abstractMethod), A_COUNT, OREF_NULL);
-      }
-                                       /* not an external method?           */
-      else if (externalname == OREF_NULL) {
-                                       /* go do the next block of code      */
-        method = this->translateBlock(OREF_NULL);
-        this->holdObject(method);      /* protect this a little longer      */
-      }
-      else {                           /* have an external method           */
-                                       /* convert external into words       */
-        words = this->words(externalname);
-                                       /* not 'LIBRARY library entry' form? */
-        if (((RexxString *)(words->get(1)))->strCompare(CHAR_LIBRARY)) {
-          if (words->size() != 3)      /* wrong number of tokens?           */
-                                       /* this is an error                  */
-            report_error1(Error_Translation_bad_external, externalname);
-
-                                       /* go check the next clause to make  */
-          this->checkDirective();      /* sure no code follows              */
-                                       /* create a new native method        */
-          nmethod = new_nmethod((RexxString *)(words->get(3)), (RexxString *)(words->get(2)));
-                                       /* turn into a real method object    */
-          method = new_method(0, (PCPPM)NULL, 0, (RexxObject *)nmethod);
-        }
-                                       /* is it 'REXX entry' form?          */
-        else if (((RexxString *)(words->get(1)))->strCompare(CHAR_REXX)) {
-          if (words->size() != 2)      /* wrong number of tokens?           */
-                                       /* this is an error                  */
-            report_error1(Error_Translation_bad_external, externalname);
-
-                                       /* go check the next clause to make  */
-          this->checkDirective();      /* sure no code follows              */
-                                       /* point to the entry name           */
-          entryName = ((RexxString *)(words->get(2)))->stringData;
-                                       /* loop through the internal table   */
-          for (index = 0; internalMethodTable[index].entryName != NULL; index++) {
-            if (strcmp(entryName, internalMethodTable[index].entryName) == 0)
-              break;                   /* get out                           */
-          }
-                                       /* name not found?                   */
-          if (internalMethodTable[index].entryName == NULL)
-                                       /* this is an error                  */
-            report_error1(Error_Translation_bad_external, externalname);
-                                       /* create a new native method        */
-          nmethod = new RexxNativeCode(OREF_NULL, OREF_NULL, NULL, index);
-                                       /* turn into a real method object    */
-          method = new_method(0, (PCPPM)NULL, 0, (RexxObject *)nmethod);
-        }
-        else
-                                       /* unknown external type             */
-          report_error1(Error_Translation_bad_external, externalname);
-      }
-      for (;;) {                       /* process potentially two methods   */
-        if (Private)                   /* is this a private method?         */
-          method->setPrivate();        /* turn on the private attribute     */
-        if (Protected)                 /* is this a protected method?       */
-          method->setProtected();      /* turn on the protected attribute   */
-        if (guard == UNGUARDED_METHOD) /* is this unguarded?                */
-          method->setUnGuarded();      /* turn on the unguarded attribute   */
-                                       /* set any associated attribute      */
-        method->setAttribute(retriever);
-
-                                       /* add the method to the table       */
-        methodsDir->put(method, internalname);
-        if (Attribute == FALSE)        /* not an attribute?                 */
-          break;                       /* we're finished                    */
-        else {                         /* set up the default 'NAME=' method */
-          internalname = this->commonString(internalname->concatWithCstring("="));
-                                       /* create a generic kernel method    */
-          method = new_method(setAttributeIndex, CPPM(RexxObject::setAttribute), 1, OREF_NULL);
-                                       /* show that we have taken care of   */
-          Attribute = FALSE;           /* the Attribute option              */
-        }
-      }
-      break;
-
-    case DIRECTIVE_ROUTINE:            /* ::ROUTINE directive               */
-      token = nextReal();              /* get the next token                */
-                                       /* not a symbol or a string          */
-      if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
-                                       /* report an error                   */
-        report_error_token(Error_Symbol_or_string_routine, token);
-      name = token->value;             /* get the routine name              */
-                                       /* does this already exist?          */
-      if (this->routines->entry(name) != OREF_NULL)
-                                       /* have an error here                */
-        report_error(Error_Translation_duplicate_routine);
-      this->flags |= _install;         /* have information to install       */
-      externalname = OREF_NULL;        /* no external name yet              */
-      Public = FALSE;                  /* not a public routine yet          */
-      for (;;) {                       /* now loop on the option keywords   */
-        token = nextReal();            /* get the next token                */
-                                       /* reached the end?                  */
-        if (token->classId == TOKEN_EOC)
-          break;                       /* get out of here                   */
-                                       /* not a symbol token?               */
-        else if (token->classId != TOKEN_SYMBOL)
-                                       /* report an error                   */
-          report_error_token(Error_Invalid_subkeyword_routine, token);
-                                       /* process each sub keyword          */
-        switch (this->subDirective(token)) {
-/* the following has been disabled because we are not sure how we want to   */
-/* define the EXTERNAL routine keyword capability yet                       */
-#if (0)
-                                       /* ::ROUTINE name EXTERNAL ['extnam']*/
-          case SUBDIRECTIVE_EXTERNAL:
-                                       /* already had an external?          */
-            if (externalname != OREF_NULL)
-                                       /* duplicates are invalid            */
-              report_error_token(Error_Invalid_subkeyword_class, token);
-            token = nextReal();        /* get the next token                */
-                                       /* not a string?                     */
-            if (token->classid != TOKEN_LITERAL) {
-              previousToken();         /* push the token back               */
-              externalname = name;     /* internal and external names same  */
-            }
-            else                       /* external name is token value      */
-              externalname = token->value;
-            break;
-#endif
-
-                                       /* ::ROUTINE name PUBLIC             */
-          case SUBDIRECTIVE_PUBLIC:
-            if (Public)                /* already had one of these?         */
-                                       /* duplicates are invalid            */
-              report_error_token(Error_Invalid_subkeyword_routine, token);
-            Public = TRUE;             /* turn on the seen flag             */
+        case DIRECTIVE_CLASS:              /* ::CLASS directive                 */
+            classDirective();
             break;
 
-          default:                     /* invalid keyword                   */
-                                       /* this is an error                  */
-            report_error_token(Error_Invalid_subkeyword_routine, token);
+        case DIRECTIVE_METHOD:             /* ::METHOD directive                */
+            methodDirective();
             break;
-        }
-      }
-      this->saveObject(name);          /* protect the name                  */
-      if (externalname != OREF_NULL)   /* have an external routine?         */
-        this->checkDirective();        /* go check the next clause          */
-      else {
-                                       /* go do the next block of code      */
-        method = this->translateBlock(OREF_NULL);
-                                       /* add to the routine directory      */
-        this->routines->setEntry(name, method);
-        if (Public)                    /* a public routine?                 */
-                                       /* add to the public directory too   */
-          this->public_routines->setEntry(name, method);
-      }
-      this->toss(name);                /* release the "Gary Cole" (GC) lock */
-      this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
-      break;
 
-    case DIRECTIVE_REQUIRES:           /* ::REQUIRES directive              */
-                                       /* no longer valid?                  */
-      if (!(this->flags&requires_allowed))
-                                       /* this is an error                  */
-        report_error(Error_Translation_requires);
-      token = nextReal();              /* get the next token                */
-                                       /* not a symbol or a string          */
-      if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
-                                       /* report an error                   */
-        report_error_token(Error_Symbol_or_string_requires, token);
-      this->flags |= _install;         /* have information to install       */
-      name = token->value;             /* get the requires name             */
-      internalname = name;             /* get the name form                 */
-      token = nextReal();              /* get the next token                */
-      if (token->classId != TOKEN_EOC) /* something appear after this?      */
-                                       /* this is a syntax error            */
-        report_error_token(Error_Invalid_subkeyword_requires, token);
-                                       /* add this name to the table        */
-      ((RexxList *)(this->requires))->addLast(internalname);
-                                       /* save the ::requires location      */
-      ((RexxList *)(this->requires))->addLast((RexxObject *)new RexxInstruction(this->clause, KEYWORD_REQUIRES));
-      break;
+        case DIRECTIVE_ROUTINE:            /* ::ROUTINE directive               */
+            routineDirective();
+            break;
 
-    default:                           /* unknown directive                 */
-      report_error(Error_Translation_bad_directive);
-      break;
-  }
+        case DIRECTIVE_REQUIRES:           /* ::REQUIRES directive              */
+            requiresDirective();
+            break;
+
+        default:                           /* unknown directive                 */
+            report_error(Error_Translation_bad_directive);
+            break;
+    }
 }
+
 
 void RexxSource::flushControl(
     RexxInstruction *instruction)      /* next instruction                  */

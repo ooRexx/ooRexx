@@ -120,6 +120,10 @@ class RexxSource : public RexxInternalObject {
   void        resolveDependencies();
   void        completeClass();
   void        directive();
+  void        routineDirective();
+  void        requiresDirective();
+  void        methodDirective();
+  void        classDirective();
   void        flushControl(RexxInstruction *);
   RexxMethod *translateBlock(RexxDirectory *);
   RexxInstruction *instruction();
