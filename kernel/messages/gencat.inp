@@ -342,7 +342,7 @@ $ Error_Unexpected_end_nodo
 212 END has no corresponding DO or SELECT
 
 $ Error_Unexpected_end_control
-213 Symbol following END ("&1") must either match control variable or LABEL of block specification ("&2" on line &3) or be omitted
+213 Symbol following END ("&1") must match block specification name ("&2") on line &3 or be omitted
 
 $ Error_Unexpected_end_nocontrol
 214 END corresponding to block on line &2 must not have a symbol following it because there is no LABEL or control variable; found "&1"
@@ -354,7 +354,7 @@ $ Error_Unexpected_end_else
 216 END must not immediately follow ELSE
 
 $ Error_Unexpected_end_select
-217 Symbol following END ("&1") must match LABEL of SELECT specification ("&2" on line &3) or be omitted
+217 Symbol following END ("&1") must match LABEL of SELECT specification ("&2") on line &3 or be omitted
 
 $ Error_Control_stack_full
 218 Insufficient control stack space; cannot continue execution
@@ -984,7 +984,7 @@ $ Error_External_name_not_found_routine
 428 Unable to find external routine "&1"
 
 $ Error_No_result_object_message
-429 Message "&1" did not return a result object
+429 Message "&1" did not return a result
 
 $ Error_Incorrect_method_minarg
 431 Not enough arguments in method; &1 expected
@@ -1669,6 +1669,12 @@ $ Error_Invalid_whole_number_compare
 
 $ Error_Execution_sparse_array
 668 Missing array element at position &1
+
+$ Error_Incorrect_method_queue_index
+669 Incorrect queue index "&1"
+
+$ Error_Execution_nostem
+670 Stem object default value cannot be another stem object
 
 
 $ * -------------------------------------------------------------------------- */

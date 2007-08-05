@@ -144,12 +144,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_current}
 %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion}
 %{_prefix}/lib/ooRexx/librexxutil.la
-%{_prefix}/man/man1/rexx.1
-%{_prefix}/man/man1/rexxc.1
-%{_prefix}/man/man1/rxsubcom.1
-%{_prefix}/man/man1/rxqueue.1
-%{_prefix}/man/man1/rxmigrate.1
 %{_prefix}/include/rexx.h
+%{_prefix}/share/man/man1/rexx.1
+%{_prefix}/share/man/man1/rexxc.1
+%{_prefix}/share/man/man1/rxsubcom.1
+%{_prefix}/share/man/man1/rxqueue.1
+%{_prefix}/share/man/man1/rxmigrate.1
 %{_prefix}/share/ooRexx/rexx.sh
 %{_prefix}/share/ooRexx/rexx.csh
 %{_prefix}/share/ooRexx/*.rex
@@ -205,12 +205,12 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so.%{orx_current}
    ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so
    ln -sf %{_prefix}/lib/ooRexx/librexxutil.la            /usr/lib/librexxutil.la
-   ln -sf %{_prefix}/man/man1/rexx.1                      /usr/share/man/man1/rexx.1
-   ln -sf %{_prefix}/man/man1/rexxc.1                     /usr/share/man/man1/rexxc.1
-   ln -sf %{_prefix}/man/man1/rxsubcom.1                  /usr/share/man/man1/rxsubcom.1
-   ln -sf %{_prefix}/man/man1/rxqueue.1                   /usr/share/man/man1/rxqueue.1
-   ln -sf %{_prefix}/man/man1/rxmigrate.1                 /usr/share/man/man1/rxmigrate.1
    ln -sf %{_prefix}/include/rexx.h                       /usr/include/rexx.h
+   ln -sf %{_prefix}/share/man/man1/rexx.1                      /usr/share/man/man1/rexx.1
+   ln -sf %{_prefix}/share/man/man1/rexxc.1                     /usr/share/man/man1/rexxc.1
+   ln -sf %{_prefix}/share/man/man1/rxsubcom.1                  /usr/share/man/man1/rxsubcom.1
+   ln -sf %{_prefix}/share/man/man1/rxqueue.1                   /usr/share/man/man1/rxqueue.1
+   ln -sf %{_prefix}/share/man/man1/rxmigrate.1                 /usr/share/man/man1/rxmigrate.1
    ln -sf %{_prefix}/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
 # allow backwards compatibility to Object REXX 2.x
    ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.2
