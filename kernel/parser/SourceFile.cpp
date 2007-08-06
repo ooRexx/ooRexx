@@ -1533,10 +1533,13 @@ void RexxSource::completeClass()
 #define GUARDED_METHOD   1             /* method is a guarded one           */
 #define UNGUARDED_METHOD 2             /* method is unguarded               */
 
+#define DEFAULT_PROTECTION 0           /* using defualt protection          */
+#define PROTECTED_METHOD   1           /* security manager permission needed*/
+#define UNPROTECTED_METHOD 2           /* no protection.                    */
 
-#define DEFAULT_GUARD    0             /* using defualt guarding            */
-#define GUARDED_METHOD   1             /* method is a guarded one           */
-#define UNGUARDED_METHOD 2             /* method is unguarded               */
+#define DEFAULT_SCOPE      0           /* using defualt scope               */
+#define PUBLIC_SCOPE       1           /* publicly accessible               */
+#define PRIVATE_SCOPE      2           /* private scope                     */
 
 /**
  * Process a ::CLASS directive for a source file.
@@ -1584,7 +1587,7 @@ void RexxSource::classDirective()
     this->active_class->put(new_directory(), CLASS_CLASS_METHODS);
     /* save the ::class location         */
     this->active_class->put((RexxObject *)new RexxInstruction(this->clause, KEYWORD_CLASS), CLASS_DIRECTIVE);
-    bool Public = false;                  /* haven't seen the keyword yet      */
+    int  Public = DEFAULT_SCOPE;          /* haven't seen the keyword yet      */
     bool subclass = false;                /* no subclass keyword yet           */
     RexxString *externalname = OREF_NULL; /* no external name yet              */
     RexxString *metaclass = OREF_NULL;    /* no metaclass yet                  */
@@ -1621,12 +1624,23 @@ void RexxSource::classDirective()
 
 
                 case SUBDIRECTIVE_PUBLIC:  /* ::CLASS name PUBLIC               */
-                    if (Public)              /* already had one of these?         */
+                    if (Public != DEFAULT_SCOPE)  /* already had one of these?         */
+                    {
                                              /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_class, token);
-                    Public = true;           /* turn on the seen flag             */
+                    }
+                    Public = PUBLIC_SCOPE;   /* turn on the seen flag             */
                                              /* just set this as a public object  */
                     this->active_class->put((RexxObject *)TheTrueObject, CLASS_PUBLIC);
+                    break;
+
+                case SUBDIRECTIVE_PRIVATE: /* ::CLASS name PUBLIC               */
+                    if (Public != DEFAULT_SCOPE)  /* already had one of these?         */
+                    {
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_class, token);
+                    }
+                    Public = PRIVATE_SCOPE;  /* turn on the seen flag             */
                     break;
                     /* ::CLASS name SUBCLASS sclass      */
                 case SUBDIRECTIVE_SUBCLASS:
@@ -1698,8 +1712,8 @@ void RexxSource::classDirective()
 void RexxSource::methodDirective()
 {
     this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
-    bool Private = false;            /* this is a public method           */
-    bool Protected = false;          /* and is not protected yet          */
+    int  Private = DEFAULT_SCOPE;    /* this is a public method           */
+    int  Protected = DEFAULT_PROTECTION;  /* and is not protected yet          */
     int guard = DEFAULT_GUARD;       /* default is guarding               */
     bool Class = false;              /* default is an instance method     */
     bool Attribute = false;          /* init Attribute flag               */
@@ -1710,8 +1724,10 @@ void RexxSource::methodDirective()
 
                                      /* not a symbol or a string          */
     if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+    {
         /* report an error                   */
         report_error_token(Error_Symbol_or_string_method, token);
+    }
     RexxString *name = token->value; /* get the string name               */
                                      /* and the name form also            */
     RexxString *internalname = this->commonString(name->upper());
@@ -1720,11 +1736,15 @@ void RexxSource::methodDirective()
         token = nextReal();            /* get the next token                */
                                        /* reached the end?                  */
         if (token->classId == TOKEN_EOC)
+        {
             break;                       /* get out of here                   */
+        }
                                          /* not a symbol token?               */
         else if (token->classId != TOKEN_SYMBOL)
+        {
             /* report an error                   */
             report_error_token(Error_Invalid_subkeyword_method, token);
+        }
         else
         {                         /* have some sort of option keyword  */
                                   /* process each sub keyword          */
@@ -1733,20 +1753,26 @@ void RexxSource::methodDirective()
                 /* ::METHOD name CLASS               */
                 case SUBDIRECTIVE_CLASS:
                     if (Class)               /* had one of these already?         */
+                    {
                                              /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
                     Class = true;            /* flag this for later processing    */
                     break;
                     /* ::METHOD name EXTERNAL extname    */
                 case SUBDIRECTIVE_EXTERNAL:
                     /* already had an external?          */
                     if (externalname != OREF_NULL || abstractMethod || Attribute)
+                    {
                         /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
                     if (Attribute)           /* ATTRIBUTE already specified ?     */
                                              /* EXTERNAL and ATTRIBUTE are        */
                                              /* mutually exclusive                */
+                    {
                         report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
                     token = nextReal();      /* get the next token                */
                                              /* not a string?                     */
                     if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
@@ -1758,45 +1784,66 @@ void RexxSource::methodDirective()
                     break;
                     /* ::METHOD name PRIVATE             */
                 case SUBDIRECTIVE_PRIVATE:
-                    if (Private)             /* already seen one of these?        */
+                    if (Private != DEFAULT_SCOPE)   /* already seen one of these?        */
+                    {
                                              /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_method, token);
-                    Private = true;          /* flag for later processing         */
+                    }
+                    Private = PRIVATE_SCOPE;           /* flag for later processing         */
+                    break;
+                    /* ::METHOD name PUBLIC             */
+                case SUBDIRECTIVE_PUBLIC:
+                    if (Private != DEFAULT_SCOPE)   /* already seen one of these?        */
+                    {
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    Private = PUBLIC_SCOPE;        /* flag for later processing         */
                     break;
                     /* ::METHOD name PROTECTED           */
                 case SUBDIRECTIVE_PROTECTED:
-                    if (Protected)           /* already seen one of these?        */
+                    if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
+                    {
                                              /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_method, token);
-                    Protected = true;        /* flag for later processing         */
+                    }
+                    Protected = PROTECTED_METHOD;        /* flag for later processing         */
                     break;
                     /* ::METHOD name UNGUARDED           */
                 case SUBDIRECTIVE_UNGUARDED:
                     /* already seen one of these?        */
                     if (guard != DEFAULT_GUARD)
+                    {
                         /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
                     guard = UNGUARDED_METHOD;/* flag for later processing         */
                     break;
                     /* ::METHOD name GUARDED             */
                 case SUBDIRECTIVE_GUARDED:
                     /* already seen one of these?        */
                     if (guard != DEFAULT_GUARD)
+                    {
                         /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
                     guard = GUARDED_METHOD;  /* flag for later processing         */
                     break;
                     /* ::METHOD name ATTRIBUTE           */
                 case SUBDIRECTIVE_ATTRIBUTE:
 
                     if (Attribute)           /* already seen one of these?        */
+                    {
                                              /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
                     /* EXTERNAL already specified ?      */
                     if (externalname != OREF_NULL || abstractMethod)
+                    {
                         /* EXTERNAL and ATTRIBUTE are        */
                         /* mutually exclusive                */
                         report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
                     /* get a retriever for it            */
                     retriever = this->getRetriever(internalname);
                     Attribute = true;        /* flag for later processing         */
@@ -1947,19 +1994,27 @@ void RexxSource::methodDirective()
     }
     for (;;)
     {                       /* process potentially two methods   */
-        if (Private)                   /* is this a private method?         */
+        if (Private == PRIVATE_SCOPE)                   /* is this a private method?         */
+        {
             method->setPrivate();        /* turn on the private attribute     */
-        if (Protected)                 /* is this a protected method?       */
+        }
+        if (Protected == PROTECTED_METHOD)   /* is this a protected method?       */
+        {
             method->setProtected();      /* turn on the protected attribute   */
+        }
         if (guard == UNGUARDED_METHOD) /* is this unguarded?                */
+        {
             method->setUnGuarded();      /* turn on the unguarded attribute   */
+        }
                                          /* set any associated attribute      */
         method->setAttribute(retriever);
 
         /* add the method to the table       */
         methodsDir->put(method, internalname);
         if (Attribute == false)        /* not an attribute?                 */
+        {
             break;                       /* we're finished                    */
+        }
         else
         {                         /* set up the default 'NAME=' method */
             internalname = this->commonString(internalname->concatWithCstring("="));
@@ -1991,7 +2046,7 @@ void RexxSource::routineDirective()
       report_error(Error_Translation_duplicate_routine);
     this->flags |= _install;         /* have information to install       */
     RexxString *externalname = OREF_NULL;        /* no external name yet              */
-    bool Public = false;             /* not a public routine yet          */
+    int Public = DEFAULT_SCOPE;      /* not a public routine yet          */
     for (;;) {                       /* now loop on the option keywords   */
       token = nextReal();            /* get the next token                */
                                      /* reached the end?                  */
@@ -2023,10 +2078,23 @@ void RexxSource::routineDirective()
 #endif
                                      /* ::ROUTINE name PUBLIC             */
         case SUBDIRECTIVE_PUBLIC:
-          if (Public)                /* already had one of these?         */
+          if (Public != DEFAULT_SCOPE)   /* already had one of these?         */
+          {
                                      /* duplicates are invalid            */
-            report_error_token(Error_Invalid_subkeyword_routine, token);
-          Public = true;             /* turn on the seen flag             */
+              report_error_token(Error_Invalid_subkeyword_routine, token);
+
+          }
+          Public = PUBLIC_SCOPE;     /* turn on the seen flag             */
+          break;
+                                     /* ::ROUTINE name PUBLIC             */
+        case SUBDIRECTIVE_PRIVATE:
+          if (Public != DEFAULT_SCOPE)   /* already had one of these?         */
+          {
+                                     /* duplicates are invalid            */
+              report_error_token(Error_Invalid_subkeyword_routine, token);
+
+          }
+          Public = PRIVATE_SCOPE;    /* turn on the seen flag             */
           break;
 
         default:                     /* invalid keyword                   */
@@ -2089,9 +2157,12 @@ void RexxSource::routineDirective()
           method = this->translateBlock(OREF_NULL);
                                          /* add to the routine directory      */
           this->routines->setEntry(name, method);
-          if (Public)                    /* a public routine?                 */
+          if (Public == PUBLIC_SCOPE)    /* a public routine?                 */
+          {
                                          /* add to the public directory too   */
-            this->public_routines->setEntry(name, method);
+              this->public_routines->setEntry(name, method);
+
+          }
         }
         this->toss(name);                /* release the "Gary Cole" (GC) lock */
     }

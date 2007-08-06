@@ -322,6 +322,7 @@ KWDTABLE SubDirectives[] = {           /* language directive subkeywords    */
    KWD(CHAR_PUBLIC,      SUBDIRECTIVE_PUBLIC)
    KWD(CHAR_SUBCLASS,    SUBDIRECTIVE_SUBCLASS)
    KWD(CHAR_UNGUARDED,   SUBDIRECTIVE_UNGUARDED)
+   KWD(CHAR_UNPROTECTED, SUBDIRECTIVE_UNPROTECTED)
 };
 
 INT SubDirectivescount =            /* size of function table     */
