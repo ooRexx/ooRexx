@@ -991,6 +991,35 @@ void RexxSource::checkDirective()
   }
 }
 
+
+/**
+ * Test if a directive is followed by a body of Rexx code
+ * instead of another directive or the end of the source.
+ *
+ * @return True if there is a non-directive clause following the current
+ *         clause.
+ */
+bool RexxSource::hasBody()
+{
+    // assume there's no body here
+    bool result = false;
+
+    // if we have anything to look at, see if it is a directive or not.
+    this->nextClause();
+    if (!(this->flags&no_clause))
+    {
+        // we have a clause, now check if this is a directive or not
+        RexxToken *token = nextReal();
+        // not a "::", not a directive, which means we have real code to deal with
+        result = token->classId != TOKEN_DCOLON;
+        // reset this clause entirely so we can start parsing for real.
+        firstToken();
+        this->reclaimClause();
+    }
+    return result;
+}
+
+
 RexxObject *RexxSource::toss(
     RexxObject *object)                /* object to "release"               */
 /******************************************************************************/
@@ -1720,7 +1749,6 @@ void RexxSource::methodDirective()
     bool abstractMethod = false;     // this is an abstract method
     RexxToken *token = nextReal();   /* get the next token                */
     RexxString *externalname = OREF_NULL;       /* not an external method yet        */
-    RexxVariableBase *retriever = OREF_NULL;    /* no associated retriever yet       */
 
                                      /* not a symbol or a string          */
     if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
@@ -1809,6 +1837,15 @@ void RexxSource::methodDirective()
                     }
                     Protected = PROTECTED_METHOD;        /* flag for later processing         */
                     break;
+                    /* ::METHOD name UNPROTECTED           */
+                case SUBDIRECTIVE_UNPROTECTED:
+                    if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
+                    {
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    Protected = UNPROTECTED_METHOD;      /* flag for later processing         */
+                    break;
                     /* ::METHOD name UNGUARDED           */
                 case SUBDIRECTIVE_UNGUARDED:
                     /* already seen one of these?        */
@@ -1844,8 +1881,6 @@ void RexxSource::methodDirective()
                         /* mutually exclusive                */
                         report_error_token(Error_Invalid_subkeyword_method, token);
                     }
-                    /* get a retriever for it            */
-                    retriever = this->getRetriever(internalname);
                     Attribute = true;        /* flag for later processing         */
                     break;
 
@@ -1905,20 +1940,18 @@ void RexxSource::methodDirective()
     }
 
     RexxMethod *method;
+    // is this an attribute method?
     if (Attribute)
-    {                 /* this an attribute?                */
-                      /* Attribute option is specified.    */
-                      /* duplicate method "name=" ?            */
-        if (methodsDir->entry(this->commonString(internalname->concatWithCstring("="))) != OREF_NULL)
-        {
-            /* this is an error                  */
-            report_error(Error_Translation_duplicate_method);
-        }
-        /* Go check the next clause to make  */
-        this->checkDirective();        /* sure that no code follows         */
-                                       /* create a generic kernel method    */
-                                       /* create a generic kernel method    */
-        method = new_method(getAttributeIndex, CPPM(RexxObject::getAttribute), 0, OREF_NULL);
+    {
+        // now get a variable retriever to get the property
+        RexxVariableBase *retriever = this->getRetriever(name);
+
+        // create the method pair and quit.
+        createAttributeGetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+            Protected == PROTECTED_METHOD, guard == GUARDED_METHOD, false);
+        createAttributeSetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+            Protected == PROTECTED_METHOD, guard == GUARDED_METHOD, false);
+        return;
     }
     // abstract method?
     else if (abstractMethod)
@@ -1992,39 +2025,388 @@ void RexxSource::methodDirective()
             report_error1(Error_Translation_bad_external, externalname);
         }
     }
-    for (;;)
-    {                       /* process potentially two methods   */
-        if (Private == PRIVATE_SCOPE)                   /* is this a private method?         */
-        {
-            method->setPrivate();        /* turn on the private attribute     */
-        }
-        if (Protected == PROTECTED_METHOD)   /* is this a protected method?       */
-        {
-            method->setProtected();      /* turn on the protected attribute   */
-        }
-        if (guard == UNGUARDED_METHOD) /* is this unguarded?                */
-        {
-            method->setUnGuarded();      /* turn on the unguarded attribute   */
-        }
-                                         /* set any associated attribute      */
-        method->setAttribute(retriever);
+    if (Private == PRIVATE_SCOPE)                   /* is this a private method?         */
+    {
+        method->setPrivate();        /* turn on the private attribute     */
+    }
+    if (Protected == PROTECTED_METHOD)   /* is this a protected method?       */
+    {
+        method->setProtected();      /* turn on the protected attribute   */
+    }
+    if (guard == UNGUARDED_METHOD) /* is this unguarded?                */
+    {
+        method->setUnGuarded();      /* turn on the unguarded attribute   */
+    }
 
-        /* add the method to the table       */
-        methodsDir->put(method, internalname);
-        if (Attribute == false)        /* not an attribute?                 */
+    /* add the method to the table       */
+    methodsDir->put(method, internalname);
+}
+
+#define ATTRIBUTE_BOTH 0
+#define ATTRIBUTE_GET  1
+#define ATTRIBUTE_SET  2
+
+
+/**
+ * Process a ::ATTRIBUTE directive in a source file.
+ */
+void RexxSource::attributeDirective()
+{
+    this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
+    int  Private = DEFAULT_SCOPE;    /* this is a public method           */
+    int  Protected = DEFAULT_PROTECTION;  /* and is not protected yet          */
+    int  guard = DEFAULT_GUARD;       /* default is guarding               */
+    int  style = ATTRIBUTE_BOTH;      // by default, we create both methods for the attribute.
+    bool Class = false;              /* default is an instance method     */
+    RexxToken *token = nextReal();   /* get the next token                */
+
+                                     /* not a symbol or a string          */
+    if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+    {
+        /* report an error                   */
+        report_error_token(Error_Symbol_or_string_method, token);
+    }
+    RexxString *name = token->value; /* get the string name               */
+                                     /* and the name form also            */
+    RexxString *internalname = this->commonString(name->upper());
+    for (;;)
+    {                       /* now loop on the option keywords   */
+        token = nextReal();            /* get the next token                */
+                                       /* reached the end?                  */
+        if (token->classId == TOKEN_EOC)
         {
-            break;                       /* we're finished                    */
+            break;                       /* get out of here                   */
+        }
+                                         /* not a symbol token?               */
+        else if (token->classId != TOKEN_SYMBOL)
+        {
+            /* report an error                   */
+            report_error_token(Error_Invalid_subkeyword_method, token);
         }
         else
-        {                         /* set up the default 'NAME=' method */
-            internalname = this->commonString(internalname->concatWithCstring("="));
-                                         /* create a generic kernel method    */
-            method = new_method(setAttributeIndex, CPPM(RexxObject::setAttribute), 1, OREF_NULL);
-                                         /* show that we have taken care of   */
-            /* show that we have taken care of   */
-            Attribute = false;           /* the Attribute option              */
+        {                         /* have some sort of option keyword  */
+                                  /* process each sub keyword          */
+            switch (this->subDirective(token))
+            {
+                case SUBDIRECTIVE_GET:
+                    // only one of GET/SET allowed
+                    if (style != ATTRIBUTE_BOTH)
+                    {
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    style = ATTRIBUTE_GET;
+                    break;
+
+                case SUBDIRECTIVE_SET:
+                    // only one of GET/SET allowed
+                    if (style != ATTRIBUTE_BOTH)
+                    {
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    style = ATTRIBUTE_SET;
+                    break;
+
+
+                /* ::ATTRIBUTE name CLASS               */
+                case SUBDIRECTIVE_CLASS:
+                    if (Class)               /* had one of these already?         */
+                    {
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    Class = true;            /* flag this for later processing    */
+                    break;
+                case SUBDIRECTIVE_PRIVATE:
+                    if (Private != DEFAULT_SCOPE)   /* already seen one of these?        */
+                    {
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    Private = PRIVATE_SCOPE;           /* flag for later processing         */
+                    break;
+                    /* ::METHOD name PUBLIC             */
+                case SUBDIRECTIVE_PUBLIC:
+                    if (Private != DEFAULT_SCOPE)   /* already seen one of these?        */
+                    {
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    Private = PUBLIC_SCOPE;        /* flag for later processing         */
+                    break;
+                    /* ::METHOD name PROTECTED           */
+                case SUBDIRECTIVE_PROTECTED:
+                    if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
+                    {
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    Protected = PROTECTED_METHOD;        /* flag for later processing         */
+                    break;
+                case SUBDIRECTIVE_UNPROTECTED:
+                    if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
+                    {
+                                             /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    Protected = UNPROTECTED_METHOD;      /* flag for later processing         */
+                    break;
+                    /* ::METHOD name UNGUARDED           */
+                case SUBDIRECTIVE_UNGUARDED:
+                    /* already seen one of these?        */
+                    if (guard != DEFAULT_GUARD)
+                    {
+                        /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    guard = UNGUARDED_METHOD;/* flag for later processing         */
+                    break;
+                    /* ::METHOD name GUARDED             */
+                case SUBDIRECTIVE_GUARDED:
+                    /* already seen one of these?        */
+                    if (guard != DEFAULT_GUARD)
+                    {
+                        /* duplicates are invalid            */
+                        report_error_token(Error_Invalid_subkeyword_method, token);
+                    }
+                    guard = GUARDED_METHOD;  /* flag for later processing         */
+                    break;
+                    /* ::METHOD name ATTRIBUTE           */
+
+
+                default:                   /* invalid keyword                   */
+                    /* this is an error                  */
+                    report_error_token(Error_Invalid_subkeyword_method, token);
+                    break;
+            }
         }
     }
+
+    RexxDirectory *methodsDir;
+    // now figure out which dictionary we need to add the methods to.
+    if (this->active_class == OREF_NULL)
+    {
+        if (Class)                   /* supposed to be a class method?    */
+        {
+                                     /* this is an error                  */
+            report_error(Error_Translation_missing_class);
+        }
+        methodsDir = this->methods;  /* adding to the global set          */
+    }
+    else
+    {                                /* add the method to the active class*/
+        if (Class)                   /* class method?                     */
+        {
+                                     /* add to the class method list      */
+            methodsDir = ((RexxDirectory *)(this->active_class->get(CLASS_CLASS_METHODS)));
+        }
+        else
+        {
+            /* add to the method list            */
+            methodsDir = ((RexxDirectory *)(this->active_class->get(CLASS_METHODS)));
+        }
+    }
+
+    // both attributes same default properties?
+
+    // now get a variable retriever to get the property (do this before checking the body
+    // so errors get diagnosed on the correct line),
+    RexxVariableBase *retriever = this->getRetriever(name);
+
+    switch (style)
+    {
+        case ATTRIBUTE_BOTH:
+        // create the method pair and quit.
+        createAttributeGetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+            Protected == PROTECTED_METHOD, guard == GUARDED_METHOD, true);
+        createAttributeSetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+            Protected == PROTECTED_METHOD, guard == GUARDED_METHOD, true);
+        break;
+
+        case ATTRIBUTE_GET:       // just the getter method
+        {
+            if (hasBody())
+            {
+                createMethod(methodsDir, internalname, Private == PRIVATE_SCOPE,
+                    Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+            }
+            else
+            {
+                createAttributeGetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+                    Protected == PROTECTED_METHOD, guard == GUARDED_METHOD, true);
+            }
+            break;
+        }
+
+        case ATTRIBUTE_SET:
+        {
+            if (hasBody())        // just the getter method
+            {
+                createMethod(methodsDir, commonString(internalname->concatWithCstring("=")), Private == PRIVATE_SCOPE,
+                    Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+            }
+            else
+            {
+                createAttributeSetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+                    Protected == PROTECTED_METHOD, guard == GUARDED_METHOD, true);
+            }
+            break;
+        }
+    }
+}
+
+
+/**
+ * Create a Rexx method body.
+ *
+ * @param target The target method directory.
+ * @param name   The name of the attribute.
+ * @param privateMethod
+ *               The method's private attribute.
+ * @param protectedMethod
+ *               The method's protected attribute.
+ * @param guardedMethod
+ *               The method's guarded attribute.
+ */
+void RexxSource::createMethod(RexxDirectory *target, RexxString *name,
+    bool privateMethod, bool protectedMethod, bool guardedMethod)
+{
+    // make sure we don't have one of these define already.
+    if (target->entry(name) != OREF_NULL)
+    {
+        /* this is an error                  */
+        report_error(Error_Translation_duplicate_attribute);
+    }
+
+    // translate the method block
+    RexxMethod *method = translateBlock(OREF_NULL);
+
+    // set the method properties
+    if (privateMethod)
+    {
+        method->setPrivate();
+    }
+    if (protectedMethod)
+    {
+        method->setProtected();
+    }
+    if (guardedMethod)
+    {
+        method->setUnGuarded();
+    }
+    // and finally add to the target method directory.
+    target->put(method, name);
+}
+
+
+/**
+ * Create an ATTRIBUTE "get" method.
+ *
+ * @param target The target method directory.
+ * @param name   The name of the attribute.
+ * @param privateMethod
+ *               The method's private attribute.
+ * @param protectedMethod
+ *               The method's protected attribute.
+ * @param guardedMethod
+ *               The method's guarded attribute.
+ */
+void RexxSource::createAttributeGetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever,
+    bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute)
+{
+    // make sure we don't have one of these define already.
+    if (target->entry(name) != OREF_NULL)
+    {
+        /* this is an error                  */
+        if (isAttribute)
+        {
+            report_error(Error_Translation_duplicate_attribute);
+        }
+        else
+        {
+            report_error(Error_Translation_duplicate_method);
+        }
+    }
+
+    // no code can follow the automatically generated methods
+    this->checkDirective();
+
+    // create the kernel method for the accessor
+    RexxMethod *method = new_method(getAttributeIndex, CPPM(RexxObject::getAttribute), 0, OREF_NULL);
+
+    if (privateMethod)
+    {
+        method->setPrivate();
+    }
+    if (protectedMethod)
+    {
+        method->setProtected();
+    }
+    if (guardedMethod)
+    {
+        method->setUnGuarded();
+    }
+    // set the the retriever as the attribute
+    method->setAttribute(retriever);
+
+    // and finally add to the target method directory.
+    target->put(method, name);
+}
+
+
+/**
+ * Create an ATTRIBUTE "set" method.
+ *
+ * @param target The target method directory.
+ * @param name   The name of the attribute.
+ * @param privateMethod
+ *               The method's private attribute.
+ * @param protectedMethod
+ *               The method's protected attribute.
+ * @param guardedMethod
+ *               The method's guarded attribute.
+ */
+void RexxSource::createAttributeSetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever,
+    bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute)
+{
+    // set up the default 'NAME=' method
+    name = this->commonString(name->concatWithCstring("="));
+    // make sure we don't have one of these define already.
+    if (target->entry(name) != OREF_NULL)
+    {
+        /* this is an error                  */
+        if (isAttribute)
+        {
+            report_error(Error_Translation_duplicate_attribute);
+        }
+        else
+        {
+            report_error(Error_Translation_duplicate_method);
+        }
+    }
+
+    // no code can follow the automatically generated methods
+    this->checkDirective();
+
+    // create the kernel method for the accessor
+    RexxMethod *method = new_method(setAttributeIndex, CPPM(RexxObject::setAttribute), 1, OREF_NULL);
+
+    if (privateMethod)
+    {
+        method->setPrivate();
+    }
+    if (protectedMethod)
+    {
+        method->setProtected();
+    }
+    if (guardedMethod)
+    {
+        method->setUnGuarded();
+    }
+    // set the the retriever as the attribute
+    method->setAttribute(retriever);
+
+    // and finally add to the target method directory.
+    target->put(method, name);
 }
 
 
@@ -2238,6 +2620,10 @@ void RexxSource::directive()
 
         case DIRECTIVE_REQUIRES:           /* ::REQUIRES directive              */
             requiresDirective();
+            break;
+
+        case DIRECTIVE_ATTRIBUTE:          /* ::ATTRIBUTE directive             */
+            attributeDirective();
             break;
 
         default:                           /* unknown directive                 */

@@ -110,6 +110,7 @@ class RexxSource : public RexxInternalObject {
   RexxMethod *interpretMethod(RexxDirectory *);
   RexxMethod *interpret(RexxString *, RexxDirectory *, size_t);
   void        checkDirective();
+  bool        hasBody();
   RexxObject *toss(RexxObject *);
   void        cleanup();
   void        mergeRequired(RexxSource *);
@@ -124,6 +125,10 @@ class RexxSource : public RexxInternalObject {
   void        requiresDirective();
   void        methodDirective();
   void        classDirective();
+  void        attributeDirective();
+  void        createMethod(RexxDirectory *target, RexxString *name, bool privateMethod, bool protectedMethod, bool guardedMethod);
+  void        createAttributeGetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever, bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute);
+  void        createAttributeSetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever, bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute);
   void        flushControl(RexxInstruction *);
   RexxMethod *translateBlock(RexxDirectory *);
   RexxInstruction *instruction();

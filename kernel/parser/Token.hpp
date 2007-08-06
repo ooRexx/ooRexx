@@ -249,10 +249,11 @@
 #define CLAUSEEND_NULL        2304
 
 /* directive types */
-#define DIRECTIVE_REQUIRES 2401
-#define DIRECTIVE_CLASS    2402
-#define DIRECTIVE_METHOD   2403
-#define DIRECTIVE_ROUTINE  2404
+#define DIRECTIVE_REQUIRES  2401
+#define DIRECTIVE_CLASS     2402
+#define DIRECTIVE_METHOD    2403
+#define DIRECTIVE_ROUTINE   2404
+#define DIRECTIVE_ATTRIBUTE 2405
 
 /* directive sub-keywords */
 #define SUBDIRECTIVE_PUBLIC      2501
@@ -269,6 +270,8 @@
 #define SUBDIRECTIVE_PROTECTED   2512
 #define SUBDIRECTIVE_ABSTRACT    2513
 #define SUBDIRECTIVE_UNPROTECTED 2514
+#define SUBDIRECTIVE_GET         2515
+#define SUBDIRECTIVE_SET         2516
 
 
 /* condition keywords */

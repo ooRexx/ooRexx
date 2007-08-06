@@ -3498,6 +3498,12 @@ special character (such as a parenthesis).
 <para>The "..." argument marker can only appear at the end of the argument list</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>931</term>
+<listitem>
+<para>Duplicate ::ATTRIBUTE directive instruction</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 </section>
