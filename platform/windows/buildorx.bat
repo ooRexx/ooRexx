@@ -168,8 +168,7 @@ REM
 ECHO Generating security manager code for script engine
 CD %OR_OUTDIR%
 
-CD %SRC_DIR%\platform\windows\orxscrpt
-REXX rexx2inc %OR_ORYXAXSCRIPT%\security.rex %OR_ORYXAXSCRIPT%\security.inc szSecurityCode >>..\rexx2inc.log 2>&1
+REXX %OR_ORYXAXSCRIPT%\rexx2inc.rex %OR_ORYXAXSCRIPT%\security.rex %OR_ORYXAXSCRIPT%\security.inc szSecurityCode >> rexx2inc.log 2>&1
 CD %SRC_DIR%
 
 @ECHO Building ORXSCRPT..
