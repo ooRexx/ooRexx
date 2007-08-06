@@ -127,8 +127,8 @@ class RexxSource : public RexxInternalObject {
   void        classDirective();
   void        attributeDirective();
   void        createMethod(RexxDirectory *target, RexxString *name, bool privateMethod, bool protectedMethod, bool guardedMethod);
-  void        createAttributeGetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever, bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute);
-  void        createAttributeSetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever, bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute);
+  void        createAttributeGetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever, bool privateMethod, bool protectedMethod, bool guardedMethod);
+  void        createAttributeSetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever, bool privateMethod, bool protectedMethod, bool guardedMethod);
   void        flushControl(RexxInstruction *);
   RexxMethod *translateBlock(RexxDirectory *);
   RexxInstruction *instruction();

@@ -1948,9 +1948,17 @@ void RexxSource::methodDirective()
 
         // create the method pair and quit.
         createAttributeGetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
-            Protected == PROTECTED_METHOD, guard == GUARDED_METHOD, false);
+            Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+        // now get this as the setter method.
+        internalname = commonString(internalname->concatWithCstring("="));
+        // make sure we don't have one of these define already.
+        if (methodsDir->entry(internalname) != OREF_NULL)
+        {
+            /* this is an error                  */
+            report_error(Error_Translation_duplicate_method);
+        }
         createAttributeSetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
-            Protected == PROTECTED_METHOD, guard == GUARDED_METHOD, false);
+            Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
         return;
     }
     // abstract method?
@@ -2215,15 +2223,39 @@ void RexxSource::attributeDirective()
     switch (style)
     {
         case ATTRIBUTE_BOTH:
-        // create the method pair and quit.
-        createAttributeGetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
-            Protected == PROTECTED_METHOD, guard == GUARDED_METHOD, true);
-        createAttributeSetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
-            Protected == PROTECTED_METHOD, guard == GUARDED_METHOD, true);
-        break;
+        {
+            // make sure we don't have one of these define already.
+            if (methodsDir->entry(internalname) != OREF_NULL)
+            {
+                /* this is an error                  */
+                report_error(Error_Translation_duplicate_attribute);
+            }
+            // create the method pair and quit.
+            createAttributeGetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+                Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+            // now get this as the setter method.
+            internalname = commonString(internalname->concatWithCstring("="));
+            // make sure we don't have one of these define already.
+            if (methodsDir->entry(internalname) != OREF_NULL)
+            {
+                /* this is an error                  */
+                report_error(Error_Translation_duplicate_attribute);
+            }
+            createAttributeSetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+                Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+            break;
+
+        }
 
         case ATTRIBUTE_GET:       // just the getter method
         {
+            // make sure we don't have one of these define already.
+            if (methodsDir->entry(internalname) != OREF_NULL)
+            {
+                /* this is an error                  */
+                report_error(Error_Translation_duplicate_attribute);
+            }
+
             if (hasBody())
             {
                 createMethod(methodsDir, internalname, Private == PRIVATE_SCOPE,
@@ -2232,22 +2264,30 @@ void RexxSource::attributeDirective()
             else
             {
                 createAttributeGetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard == GUARDED_METHOD, true);
+                    Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
             }
             break;
         }
 
         case ATTRIBUTE_SET:
         {
+            // now get this as the setter method.
+            internalname = commonString(internalname->concatWithCstring("="));
+            // make sure we don't have one of these define already.
+            if (methodsDir->entry(internalname) != OREF_NULL)
+            {
+                /* this is an error                  */
+                report_error(Error_Translation_duplicate_attribute);
+            }
             if (hasBody())        // just the getter method
             {
-                createMethod(methodsDir, commonString(internalname->concatWithCstring("=")), Private == PRIVATE_SCOPE,
+                createMethod(methodsDir, internalname, Private == PRIVATE_SCOPE,
                     Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
             }
             else
             {
                 createAttributeSetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard == GUARDED_METHOD, true);
+                    Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
             }
             break;
         }
@@ -2270,13 +2310,6 @@ void RexxSource::attributeDirective()
 void RexxSource::createMethod(RexxDirectory *target, RexxString *name,
     bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
-    // make sure we don't have one of these define already.
-    if (target->entry(name) != OREF_NULL)
-    {
-        /* this is an error                  */
-        report_error(Error_Translation_duplicate_attribute);
-    }
-
     // translate the method block
     RexxMethod *method = translateBlock(OREF_NULL);
 
@@ -2311,22 +2344,8 @@ void RexxSource::createMethod(RexxDirectory *target, RexxString *name,
  *               The method's guarded attribute.
  */
 void RexxSource::createAttributeGetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever,
-    bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute)
+    bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
-    // make sure we don't have one of these define already.
-    if (target->entry(name) != OREF_NULL)
-    {
-        /* this is an error                  */
-        if (isAttribute)
-        {
-            report_error(Error_Translation_duplicate_attribute);
-        }
-        else
-        {
-            report_error(Error_Translation_duplicate_method);
-        }
-    }
-
     // no code can follow the automatically generated methods
     this->checkDirective();
 
@@ -2366,24 +2385,8 @@ void RexxSource::createAttributeGetterMethod(RexxDirectory *target, RexxString *
  *               The method's guarded attribute.
  */
 void RexxSource::createAttributeSetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever,
-    bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute)
+    bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
-    // set up the default 'NAME=' method
-    name = this->commonString(name->concatWithCstring("="));
-    // make sure we don't have one of these define already.
-    if (target->entry(name) != OREF_NULL)
-    {
-        /* this is an error                  */
-        if (isAttribute)
-        {
-            report_error(Error_Translation_duplicate_attribute);
-        }
-        else
-        {
-            report_error(Error_Translation_duplicate_method);
-        }
-    }
-
     // no code can follow the automatically generated methods
     this->checkDirective();
 
