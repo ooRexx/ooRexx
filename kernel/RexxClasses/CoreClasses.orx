@@ -190,21 +190,13 @@ exit
 /* PUT           method                  */
 /*****************************************/
 ::METHOD put                           /* add an entry to the set           */
-use arg index, value                   /* get the index                     */
+use strict arg index, value=(index)    /* get the index                     */
 
-signal on syntax
-
-if (arg() < 1)                         /* no index given?                   */
-  then raise syntax 93.901 array (1)   /* raise an error                    */
-if (arg() > 2)                         /* too many arguments?               */
-  then raise syntax 93.902 array (1)   /* raise an error                    */
-if (arg() = 2) then                    /* have the second argument given?   */
   if index \== value then              /* these must be identical           */
     raise syntax 93.949                /* this is an error                  */
-self~put:super(index, index)           /* add to the table                  */
-return
+  self~put:super(index, index)         /* add to the table                  */
+  return
 
-syntax: raise propagate
 
 
 /*============================================================================*/
@@ -449,7 +441,7 @@ nomethod:
 
 ::method 'hasIndex'
   use strict arg index
-  return self~~allIndexes~hasItem(index)
+  return self~allIndexes~hasItem(index)
 
 ::method 'hasItem'
   use strict arg item
@@ -662,11 +654,6 @@ nomethod:
   raise syntax 93.948 array(1, "Collection")
 
 
-
-::method 'makeArray'    /* return item array            */
-  return self~supplier~allItems
-
-
 /*****************************************/
 /* DIFFERENCE method                     */
 /*****************************************/
@@ -838,6 +825,10 @@ nomethod:
 nomethod:
       -- an unknown method is an argument problem.  report it as such.
   raise syntax 93.948 array(1, "Collection")
+
+-- MapCollections return all of the indices for makeArray
+::method 'makeArray'
+  return self~allIndexes
 
 
 ::CLASS 'SetCollection' MIXINCLASS Collection
