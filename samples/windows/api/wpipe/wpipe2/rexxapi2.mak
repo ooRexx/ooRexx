@@ -36,6 +36,10 @@
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
 # NMAKE-compatible MAKE file to build the REXX sample program rexxapi2.dll
+#
+# Notes:
+#    Uses /D_CRT_SECURE_NO_DEPRECATE to eliminate deprecation warnings under
+#    MS Visual Studio 2005
 
 rexxapi2.dll:     rexxapi2.obj
     link     rexxapi2.obj \
@@ -44,4 +48,4 @@ rexxapi2.dll:     rexxapi2.obj
 
 
 rexxapi2.obj:     rexxapi2.c
-    cl  rexxapi2.c /nologo /D:_X86_ /DWIN32 /W3 /I. -c -G3
+    cl  rexxapi2.c /nologo /D:_X86_ /DWIN32 /D_CRT_SECURE_NO_DEPRECATE /W3 /I. -c -G3

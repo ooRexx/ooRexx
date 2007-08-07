@@ -42,6 +42,8 @@
 # Notes:
 #  - Make sure the path to rexx.lib and rexxapi.lib is in your LIB environment variable
 #  - Make sure the path to rexx.h is in your INCLUDE environment variable
+#  - Uses /D_CRT_SECURE_NO_DEPRECATE to eliminate deprecation warnings under
+#    MS Visual Studio 2005
 
 callrxnt.exe:     callrxnt.obj
     link     callrxnt.obj \
@@ -51,5 +53,5 @@ callrxnt.exe:     callrxnt.obj
 
 callrxnt.obj:     callrxnt.c
      cl callrxnt.c \
-     /nologo /D:_X86_ /DWIN32 /W3 -c -G3 /I.
+     /nologo /D:_X86_ /DWIN32 /D_CRT_SECURE_NO_DEPRECATE /W3 -c -G3 /I.
 
