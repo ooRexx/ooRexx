@@ -63,12 +63,14 @@ if %2 == PACKAGE (
 
 REM  The package step is being done, check for the docs.
 goto DOC_CHECK
-
 :DOC_CHECK_DONE
 
 REM Check that SRC_DIR and SRC_DRV are set
 IF %SRC_DRV%x == x GOTO HELP_SRC_DRV
 IF %SRC_DIR%x == x GOTO HELP_SRC_DRV
+
+REM  Generate, (or use an existing,) oorexx.ver.incl file.
+goto GENERATE_VERSION_FILE
 
 REM Check for the type of build
 :CHECK_BUILD_TYPE
@@ -158,17 +160,11 @@ REM Check if we still need to build the debug version.
 IF %MKDEBUG% == 1 GOTO BLDDEBUG
 
 REM Check if we are building the installer package.
-IF %DOPACKAGE% == 1 (
-  FOR /F "eol=# delims== tokens=1,2*" %%i IN (oorexx.ver) DO (
-    IF %%i == ORX_MAJOR SET MAJOR_NUM=%%j
-    IF %%i == ORX_MINOR SET MINOR_NUM=%%j
-    IF %%i == ORX_MOD_LVL SET LVL_NUM=%%j
-  )
-) ELSE GOTO ENV_VARS_CLEANUP
+IF %DOPACKAGE% == 0 GOTO ENV_VARS_CLEANUP
 
 IF %MAJOR_NUM%x == x GOTO SET_FAILED
-SET NODOTS=%MAJOR_NUM%%MINOR_NUM%%LVL_NUM%
-SET DOTVER=/DVERSION=%MAJOR_NUM%.%MINOR_NUM%.%LVL_NUM%
+SET NODOTS=%MAJOR_NUM%%MINOR_NUM%%LVL_NUM%_%BLD_NUM%
+SET DOTVER=/DVERSION=%MAJOR_NUM%.%MINOR_NUM%.%LVL_NUM%.%BLD_NUM%
 SET NODOTVER=/DNODOTVER=%NODOTS%
 SET SRCDIR=/DSRCDIR=%SRC_DRV%%SRC_DIR%
 
@@ -203,12 +199,14 @@ SET PACKAGE_DBG=
 SET MAJOR_NUM=
 SET MINOR_NUM=
 SET LVL_NUM=
+SET BLD_NUM=
 SET NODOTS=
 SET DOTVER=
 SET NODOTVER=
 SET SRCDIR=
 SET BINDIR=
 SET MISSING_DOC=
+SET SVN_REV=
 
 GOTO END
 
@@ -228,6 +226,13 @@ REM   Labels below this point handle some of the tedious chores for this
 REM   batch file.  They then use goto to return to a point of execution above.
 REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+REM  :DOC_CHECK
+REM    This section checks for the existence of the PDF doc files. If they are
+REM    missing, it attempts to copy them from a location specified as the 3rd
+REM    argument to this batch file or specified in the environmental variable:
+REM    DOC_LOCATION
+REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 :DOC_CHECK
 if not exist doc\nul md doc
 
@@ -292,3 +297,64 @@ GOTO DOC_CHECK_DONE
 :NO_DOC_ERR
 ECHO Failed to locate some doc file(s) for the package option, aborting.
 GOTO ENV_VARS_CLEANUP
+
+
+REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+REM  :GENERATE_VERSION_FILE
+REM    This section generates, (or uses an existing,) oorexx.ver.incl file.
+REM    If executing in a svn 'working copy' directory, it determines the current
+REM    revision number and includes that information in the generated file.  If
+REM    not a working directory, it checks for an existing oorexx.ver.incl file,
+REM    which may have been included in a source file package when the package
+REM    was created.  If not a svn directory, and no oorexx.ver.incl file, simply
+REM    copy oorexx.ver to oorexx.ver.incl.
+REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+:GENERATE_VERSION_FILE
+
+REM  First parse oorexx.ver to get the existing version numbers.
+for /F "eol=# delims== tokens=1,2*" %%i in (oorexx.ver) do (
+ if %%i == ORX_MAJOR set MAJOR_NUM=%%j
+ if %%i == ORX_MINOR set MINOR_NUM=%%j
+ if %%i == ORX_MOD_LVL set LVL_NUM=%%j
+ if %%i == ORX_BLD_LVL set BLD_NUM=%%j
+)
+
+if not exist .svn\nul goto NOSVN
+
+for /F "usebackq tokens=1,2,3,4*" %%i in (`svn info`) do if (%%i) == (Revision:) set SVN_REV=%%j
+
+if %SVN_REV%x == x (
+  echo Executing in a svn working copy, but could not determine the svn revision
+  echo number.
+  echo Going to abort on error.
+  echo.
+  goto ENV_VARS_CLEANUP
+)
+
+REM Now write out oorexx.ver.incl
+if exist oorexx.ver.incl del /F /Q oorexx.ver.incl
+for /F "delims== tokens=1,2*" %%i in (oorexx.ver) do (
+ if %%i == ORX_BLD_LVL (
+   echo %%i=%SVN_REV% >> oorexx.ver.incl
+   set BLD_NUM=%SVN_REV%
+ ) else (
+   if %%i == ORX_VER_STR (
+     echo %%i="%MAJOR_NUM%.%MINOR_NUM%.%LVL_NUM%.%SVN_REV%" >> oorexx.ver.incl
+   ) else (
+     if %%jx == x (
+       echo %%i >> oorexx.ver.incl
+     ) else (
+       echo %%i=%%j >> oorexx.ver.incl
+     )
+   )
+ )
+)
+echo SVN_REVSION=%SVN_REV% >> oorexx.ver.incl
+
+:NOSVN
+if not exist oorexx.ver.incl (
+  copy oorexx.ver oorexx.ver.incl 1>nul 2>&1
+  echo SVN_REVSION=xxxxx >> oorexx.ver.incl
+)
+
+goto CHECK_BUILD_TYPE

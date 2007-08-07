@@ -430,7 +430,7 @@ BOOL Install()
                              NULL,
                              NULL,
                              NULL);
-    sprintf( szDescription, SERVICEDESCRIPTION, SERVICENAME,  MAJORVERSION, MINORVERSION, SUBVERSION );
+    sprintf( szDescription, SERVICEDESCRIPTION, SERVICENAME,  MAJORVERSION, MINORVERSION, SUBVERSION, BUILDVERSION);
     Info.lpDescription = szDescription ;
 
 
@@ -657,8 +657,8 @@ BOOL ParseStandardArgs( LPSTR lpCmdLine )
       if ( bVersionInfo )
       {
         // Spit out version info
-        sprintf(chString ,"%s Version %d.%d.%d\nThe service is %s installed",
-               SERVICENAME, MAJORVERSION, MINORVERSION, SUBVERSION, IsInstalled() ? "currently" : "not");
+        sprintf(chString ,"%s Version %d.%d.%d.%d\nThe service is %s installed",
+               SERVICENAME, MAJORVERSION, MINORVERSION, SUBVERSION, BUILDVERSION, IsInstalled() ? "currently" : "not");
         MessageBox ( NULL , chString, SERVICENAME , MB_OK | MB_ICONINFORMATION ) ;
         return FALSE ; // say we processed the argument
       } // If CmdLine includes /v

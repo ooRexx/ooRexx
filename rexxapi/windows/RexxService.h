@@ -45,7 +45,8 @@
 #define MAJORVERSION ORX_VER
 #define MINORVERSION ORX_REL
 #define SUBVERSION   ORX_MOD
-#define SERVICEDESCRIPTION "%s Service for Open Object Rexx version %d.%d.%d"
+#define BUILDVERSION OOREXX_BLD
+#define SERVICEDESCRIPTION "%s Service for Open Object Rexx version %d.%d.%d.%d"
 
 
 #define SERVICE_CONTROL_USER 128
