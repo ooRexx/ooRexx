@@ -131,7 +131,8 @@
    if load == 1 & amulti~translate = "MULTI" then amulti = 1; else amulti = 0
 
    if Arg() < 3 then ret = GetFileNameWindow(selfile, parentwnd)
-   else ret = GetFileNameWindow(selfile, parentwnd, Arg(3), load, Arg(5), defextension, amulti, sepchar)
+   else if Arg(3, 'O') then ret = GetFileNameWindow(selfile, parentwnd, Arg(3), load, Arg(5), defextension, amulti, sepchar)
+   else ret = GetFileNameWindow(selfile, parentwnd, Arg(3) || '0'x, load, Arg(5), defextension, amulti, sepchar)
    if installed = 1 then call RxfuncDrop "GetFileNameWindow"
    return ret
 
