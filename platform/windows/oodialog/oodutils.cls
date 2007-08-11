@@ -120,23 +120,16 @@
    return ret
 
 ::routine FileNameDialog public
-   use arg selfile, parentwnd, filter, load, title, defextension, amulti, sepchar
+   use arg selfile = "", parentwnd = 0, filter, load, title, defextension = "TXT", amulti, sepchar = ' '
    installed = 0
    if RxFuncQuery("GetFileNameWindow") \= 0 then do
        call Rxfuncadd "GetFileNameWindow", "oodialog", "GetFileNameWindow"
        installed = 1
    end
-   if Arg(1,'o') = 1 then selfile = ""
-   if Arg(2,'o') = 1 then parentwnd = 0
-   if Arg(4,'o') = 1 then load = 1
-   else do
-       if load~translate = "SAVE" then load = 0
-       else if load~translate = "LOAD" then load = 1
-   end
-   if Arg(6,'o') = 1 then defextension = "TXT"
-   if Arg(7,'o') = 1 then amulti = 0
-   if Arg(8,'o') = 1 then sepchar = ' '
-   else if amulti~translate = "MULTI" then amulti = 1
+
+   if load == 0 | load~left(1)~translate = "S" then load = 0; else load = 1
+   if load == 1 & amulti~translate = "MULTI" then amulti = 1; else amulti = 0
+
    if Arg() < 3 then ret = GetFileNameWindow(selfile, parentwnd)
    else ret = GetFileNameWindow(selfile, parentwnd, Arg(3), load, Arg(5), defextension, amulti, sepchar)
    if installed = 1 then call RxfuncDrop "GetFileNameWindow"

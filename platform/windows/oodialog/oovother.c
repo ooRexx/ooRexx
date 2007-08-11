@@ -241,7 +241,7 @@ ULONG APIENTRY GetFileNameWindow(
     }
     if (VALIDARG(2)) hWnd = (HWND) atol(argv[1].strptr); else hWnd = NULL;
     if (VALIDARG(3)) szFilter= argv[2].strptr;
-    if (VALIDARG(4)) load = IsYes(argv[3].strptr);
+    if (VALIDARG(4)) load = (argv[3].strptr[0] != '0');
     if (VALIDARG(5)) title = argv[4].strptr;
     else {
         if (load) title = "Open a File";
