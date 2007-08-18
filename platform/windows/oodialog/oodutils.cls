@@ -128,7 +128,7 @@
    end
 
    if load == 0 | load~left(1)~translate = "S" then load = 0; else load = 1
-   if load == 1 & amulti~translate = "MULTI" then amulti = 1; else amulti = 0
+   if load == 1 & amulti~left(1)~translate = "M" then amulti = 1; else amulti = 0
 
    if Arg() < 3 then ret = GetFileNameWindow(selfile, parentwnd)
    else if Arg(3, 'O') then ret = GetFileNameWindow(selfile, parentwnd, Arg(3), load, Arg(5), defextension, amulti, sepchar)
