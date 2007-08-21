@@ -201,15 +201,20 @@ ULONG APIENTRY ScrollText(
                  (BOOL)strstr(opts, "STRIKEOUT"), DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, FF_DONTCARE, argv[3].strptr);
 
       oldF = SelectObject(hDC, hFont);
-      if (dlgAdm && dlgAdm->Use3DControls)
+      if (dlgAdm)
+      //if (dlgAdm && dlgAdm->Use3DControls)
       {
+        printf("Using COLOR_BTNFACE pen\n");
          hpen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNFACE));
          hbr = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
          SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
          oP = SelectObject(hDC, hpen);
          oB = SelectObject(hDC, hbr);
-      } else
+      } else {
+        printf("Using WHITE_PEN pen\n");
          oP = SelectObject(hDC, GetStockObject(WHITE_PEN));
+      }
+
 
       if (col > 0) SetTextColor(hDC, PALETTEINDEX(col));
       sl = strlen(text);
@@ -305,7 +310,8 @@ ULONG APIENTRY ScrollText(
 
       SelectObject(hDC, oldF);
       SelectObject(hDC, oP);
-      if (dlgAdm->Use3DControls)
+      if (dlgAdm)
+      //if (dlgAdm->Use3DControls)
       {
          SelectObject(hDC, oB);
          DeleteObject(hpen);

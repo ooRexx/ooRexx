@@ -233,6 +233,7 @@
         if style~wordpos("PBS_VERTICAL") > 0 then ret = ret || " VERTICAL"
         if style~wordpos("PBS_SMOOTH") > 0 then ret = ret || " SMOOTH"
         if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
+        if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
    end
    if style~wordpos("WS_VSCROLL") > 0 then ret = ret || " VSCROLL"
    if style~wordpos("WS_HSCROLL") > 0 then ret = ret || " HSCROLL"
@@ -695,6 +696,21 @@
 ::class 'ListControl' subclass DialogControl public
 
 ::method LastItem attribute
+
+/* DFX TODO implement storing lastitem index in the window words!!
+::method new class
+   use arg pdialog, id, category
+   Forward Class(Super) continue  /* this also calls Init */
+   obj = result
+
+   data = HandleListCtrlEx(obj~hWnd, "M", "USER", "G")
+   say "Got back" data "for USERDATA"
+   data = HandleListCtrlEx(obj~hWnd, "M", "USER", "S", 99)
+   say "Set 99, got back again:" data
+   data = HandleListCtrlEx(obj~hWnd, "M", "USER", "G")
+   say "Now got back" data "for USERDATA"
+   return obj
+*/
 
 ::method Init
    forward class (super) continue

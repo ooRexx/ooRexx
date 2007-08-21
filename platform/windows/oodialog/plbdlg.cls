@@ -966,11 +966,8 @@
    /* The numbers are seperated by spaces. You can parse it using 'parse var' */
 
 ::method GetMultiList unguarded
-   use arg id, category
-   if arg(2, 'E') & self~hasMethod('CATALOG') then
-     return self~InternalGetItemData(id, self~catalog['handles'][category], 4)
-   else
-     return self~InternalGetItemData(id, self~DlgHandle, 4)
+   use arg id
+   return self~InternalGetItemData(id, self~DlgHandle, 4)
 
    /* This method gets the value of a dialog item. You don't have to know */
    /* what kind of item it is when it has been connected before */
