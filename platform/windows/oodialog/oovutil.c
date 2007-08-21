@@ -35,10 +35,6 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#define NTDDI_VERSION   NTDDI_WINXPSP2
-#define _WIN32_WINNT    0x0501
-#define WINVER          0x0501
-
 #include <windows.h>
 #include <mmsystem.h>
 #include <shlwapi.h>
@@ -234,19 +230,6 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
              case WM_USER_GETKEYSTATE:
                 ReplyMessage((LRESULT)GetAsyncKeyState(wParam));
                 return (TRUE);
-
-              case WM_USER_SUBCLASS:
-              {
-                  SUBCLASSDATA * pData = (SUBCLASSDATA *)lParam;
-                  SUBCLASSPROC pfnSubclass = (SUBCLASSPROC) wParam;
-                  BOOL success;
-
-                  if ( pData )
-                  {
-                      success = SetWindowSubclass(pData->hCtrl, pfnSubclass, pData->uID, (DWORD_PTR)pData);
-                      ReplyMessage((LRESULT)success);
-                  }
-              } return (TRUE);
           }
        }
    }
@@ -1246,7 +1229,7 @@ CHAR * FuncTab[FTS] = {\
                      "HandleScrollBar" \
                      };
 
-#define SFTS 20
+#define SFTS 19
 CHAR * SpecialFuncTab[SFTS] = {\
                      "BmpButton", \
                      "DCDraw", \
@@ -1263,7 +1246,6 @@ CHAR * SpecialFuncTab[SFTS] = {\
                      "HandleListCtrlEx", \
                      "HandleControlEx", \
                      "HandleOtherNewCtrls", \
-	                 "GetSysMetrics", \
                      "DialogMenu", \
                      "WinTimer", \
                      "HandleFont", \
@@ -1375,7 +1357,7 @@ BOOL InitForCommonControls(void)
         INITCOMMONCONTROLSEX ctrlex;
 
         ctrlex.dwSize = sizeof(ctrlex);
-        ctrlex.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES;
+        ctrlex.dwICC = ICC_WIN95_CLASSES;
         if ( ! InitCommonControlsEx(&ctrlex) )
         {
             CHAR msg[128];

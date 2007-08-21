@@ -191,11 +191,10 @@
        if style~wordpos("BS_LEFTTEXT") > 0 then ret = ret || " LEFTTEXT"
        if style~wordpos("BS_BITMAP") > 0 then ret = ret || " BITMAP"
        if style~wordpos("BS_ICON") > 0 then ret = ret || " BITMAP"
-       if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
-       if style~wordpos("NOT WS_TABSTOP") > 0 then ret = ret || " NOTAB"
-       if spec_kind == "R" then do  /* radio buttons need explicit WS_TABSTOP to be tab stops */
-           if style~wordpos("WS_TABSTOP") = 0 then ret = ret || " NOTAB"
+       if spec_kind \= "R" then do  /* not a radio button */
+           if style~wordpos("NOT WS_TABSTOP") > 0 then ret = ret || " NOTAB"
        end
+       else if style~wordpos("WS_TABSTOP") = 0 then ret = ret || " NOTAB"
    end
    else if kind = "EDIT" then do
       if style~wordpos("ES_AUTOHSCROLL") > 0 then ret = ret || " AUTOSCROLLH"
@@ -235,17 +234,15 @@
    end
    else if kind = "ST" then do
        if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
-       if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
    end
    else if kind = "SB" then do
       if style~wordpos("SBS_HORZ") > 0 then ret = ret || " HORIZONTAL"
       if style~wordpos("SBS_TOPALIGN") > 0 then ret = ret || " TOPLEFT"
       if style~wordpos("SBS_BOTTOMALIGN") > 0 then ret = ret || " BOTTOMRIGHT"
       if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
-      if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
    end
 
-   if kind = "EDIT" | kind = "LB" | kind = "CB" then
+   if kind = "EDIT" | kind = "LB" then
       if style~wordpos("NOT WS_BORDER") > 0 then ret = ret || " NOBORDER"
    if kind = "EDIT" | kind = "CB" | kind = "LB" | kind = "DLG" then do
       if style~wordpos("WS_VSCROLL") > 0 then ret = ret || " VSCROLL"
