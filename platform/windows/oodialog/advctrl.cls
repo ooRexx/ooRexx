@@ -1815,7 +1815,7 @@
    return self~Message2Parent(0x00000190, 0, 0)
 
 ::method SelectedIndexes
-   return self~oDlg~GetMultiList(self~ID)
+   return self~oDlg~InternalGetItemData(self~id, self~hDlg, 4)
 
 ::method MakeFirstVisible
    use arg ndx
