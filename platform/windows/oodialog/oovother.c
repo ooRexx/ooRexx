@@ -55,6 +55,7 @@ extern LONG SetRexxStem(CHAR * name, INT id, char * secname, CHAR * data);
 WORD NumDIBColorEntries(LPBITMAPINFO lpBmpInfo);
 extern LPBITMAPINFO LoadDIB(LPSTR szFile);
 extern LONG EvaluateListStyle(CHAR * styledesc);
+extern BOOL AddDialogMessage(CHAR *, CHAR *);
 
 /* Local functions */
 static LONG SetStyle(HWND, LONG);
@@ -954,6 +955,69 @@ DWORD ListExtendedStyleToString(HWND hList, PRXSTRING retstr)
     return 0;
 }
 
+/*
+ * Initialize lfHeight to 10 times the desired point size. Pass a HDC to use
+ * to convert to logical units, or NULL to use a screen DC.
+*/
+HFONT CreatePointFontIndirect(const LOGFONT *pLF, HDC hDC)
+{
+             LOGFONT lf = *pLF;
+             POINT pt, ptOrg = {0,0};
+             BOOL bScreenDC = (hDC == NULL);
+
+             if (bScreenDC)
+                         hDC = GetDC(NULL);  /* Get screen DC */
+
+             pt.y = MulDiv(lf.lfHeight, GetDeviceCaps(hDC, LOGPIXELSY), 720);
+             DPtoLP(hDC, &pt, 1);
+             DPtoLP(hDC, &ptOrg, 1);
+             lf.lfHeight = -abs(pt.y - ptOrg.y);
+
+             if (bScreenDC)
+                         ReleaseDC(NULL, hDC);
+
+             return CreateFontIndirect(&lf);
+}
+
+LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam,
+  LPARAM lParam, UINT_PTR id, DWORD_PTR dwData)
+{
+    SUBCLASSDATA * pData = (SUBCLASSDATA *)dwData;
+
+    switch ( msg )
+    {
+        case WM_GETDLGCODE:
+            // Don't do anything for now.
+            break;
+
+        case WM_KEYDOWN:
+        {
+            CHAR oodMsg[256];
+            LRESULT ret = DefSubclassProc(hwnd, msg, wParam, lParam);
+
+            //printf("Key down id: %u dwData: %p method: %s q: %p keyCode: %d\n",
+            //       id, pData, pData->pNotifyMethod, pData->pMessageQueue, wParam);
+
+            sprintf(oodMsg, "%s(%u,%u)", pData->pNotifyMethod, wParam, lParam);
+            AddDialogMessage((char *)oodMsg, pData->pMessageQueue);
+            return ret;
+        }
+
+        case WM_NCDESTROY:
+            if ( pData )
+            {
+                LocalFree(pData->pNotifyMethod);
+                LocalFree(pData);
+            }
+            RemoveWindowSubclass(hwnd, EditSubclassProc, id);
+            break;
+
+    }
+    return DefSubclassProc(hwnd, msg, wParam, lParam);
+}
+
+
+
 /**
  * Extended Common Control functionality.  This function implements capabilities
  * for the common controls that were not available at the time of the original
@@ -1171,6 +1235,98 @@ ULONG APIENTRY HandleControlEx(
             RETVAL(SetWindowLong(hCtrl, GWL_USERDATA, atol(argv[3].strptr)));
         }
         else RETERR
+    }
+    else if ( argv[2].strptr[0] == 'S' ) /* Subclass control */
+    {
+        SUBCLASSDATA * pData;
+        DIALOGADMIN * dlgAdm = (DIALOGADMIN *)atol(argv[3].strptr);
+
+        if ( ! dlgAdm )  RETVAL(-3)
+        if ( argc < 5 )  RETVAL(-3)
+
+        pData = LocalAlloc(LPTR, sizeof(SUBCLASSDATA));
+        if ( ! pData ) RETVAL(-4)
+
+        pData->pNotifyMethod = LocalAlloc(LMEM_FIXED, argv[4].strlength + 1);
+        if ( ! pData->pNotifyMethod ) RETVAL(-4)
+
+        rxstrlcpy(pData->pNotifyMethod, argv[4]);
+        pData->hCtrl = hCtrl;
+        pData->uID = id;
+        pData->pMessageQueue = dlgAdm->pMessageQueue;
+
+        RETVAL(! SendMessage(hDlg, WM_USER_SUBCLASS, (WPARAM)&EditSubclassProc, (LPARAM)pData))
+    }
+    else if ( argv[2].strptr[0] == 'F' )    /* Font */
+    {
+        LOGFONT lf;
+        long    lRet = 0;
+        HFONT   hFont;
+        int     ptSize;
+        //HDC     hdc = GetWindowDC(hCtrl);
+        HDC     hdc = GetDC(NULL);
+        static int ctr = 0;
+
+        CHECKARG(5)
+
+        if ( ctr == 0 )
+        {
+            ctr++;
+            SetLastError(0);
+        }
+        ptSize = atol(argv[4].strptr);
+        strcpy(lf.lfFaceName, argv[3].strptr);
+
+        //hFont = CreatePointFontIndirect(&lf, hdc);
+
+        lf.lfHeight = -MulDiv(ptSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+        ReleaseDC(NULL, hdc);
+        lf.lfHeight = abs(lf.lfHeight);
+        hFont = CreateFontIndirect(&lf);
+
+        //lRet = SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, (LPARAM)TRUE);
+        lRet = SendMessage(hCtrl, WM_SETFONT, (WPARAM)hFont, (LPARAM)TRUE);
+        printf("Font size: %d name: %s hFont: %u ret: %d last: %u\n",
+               lf.lfHeight, lf.lfFaceName, hFont, lRet, GetLastError());
+
+        ultoa((ULONG)hFont, retstr->strptr, 10);
+        retstr->strlength = strlen(retstr->strptr);
+        return 0;
+    }
+    else if ( argv[2].strptr[0] == 'M' )    /* MapDialogRect */
+    {
+        RECT pixel;
+        RECT dtu;
+        double factorX, factorX2, factorY, factorY2;
+
+        CHECKARG(7)
+
+        pixel.left   = atol(argv[3].strptr);
+        pixel.top    = atol(argv[4].strptr);
+        pixel.right  = atol(argv[5].strptr);
+        pixel.bottom = atol(argv[6].strptr);
+
+        dtu.left   = pixel.left;
+        dtu.top    = pixel.top;
+        dtu.right  = pixel.right;
+        dtu.bottom = pixel.bottom;
+
+        if ( MapDialogRect(hDlg, &pixel) )
+        {
+            factorX  = (float)pixel.left / (float)dtu.left;
+            factorY  = (float)pixel.top  / (float)dtu.top;
+            factorX2 = (float)pixel.right / (float)dtu.right;
+            factorY2 = (float)pixel.bottom  / (float)dtu.bottom;
+
+            sprintf(retstr->strptr, "%d %d %d %d %5.3f %5.3f lower right %5.3f %5.3f",
+                    pixel.left, pixel.top, pixel.right, pixel.bottom, factorX, factorY, factorX2, factorY2);
+            retstr->strlength = strlen(retstr->strptr);
+            return 0;
+        }
+        else
+        {
+            RETVAL(GetLastError())
+        }
     }
 
     RETERR
@@ -1475,11 +1631,12 @@ ULONG APIENTRY HandleListCtrl(
        {
            ULONG flag;
            LONG startItem;
+           INT  i;
 
            CHECKARG(5);
 
            startItem = atol(argv[3].strptr);
-
+           printf("List control get next start: %d arg4: %s\n", startItem, argv[4].strptr);
            if (!strcmp(argv[4].strptr, "FIRSTVISIBLE"))
                RETVAL(ListView_GetTopIndex(h))
 
@@ -1495,7 +1652,12 @@ ULONG APIENTRY HandleListCtrl(
            else if (strstr(argv[4].strptr,"FOCUSED")) flag |= LVNI_FOCUSED;
            else if (strstr(argv[4].strptr,"SELECTED")) flag |= LVNI_SELECTED;
 
-           RETVAL(ListView_GetNextItem(h, startItem, flag))
+           //flag = LVNI_ALL;
+           i = ListView_GetNextItem(h, startItem, flag);
+           printf("Got back: %d\n", i);
+
+           RETVAL(i)
+           //RETVAL(ListView_GetNextItem(h, startItem, flag))
        }
        else
        if (!strcmp(argv[1].strptr, "SETIMG"))
