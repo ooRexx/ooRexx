@@ -61,22 +61,6 @@
 #define WM_USER_GETFOCUS            WM_USER + 0x0603
 #define WM_USER_GETSETCAPTURE       WM_USER + 0x0604
 #define WM_USER_GETKEYSTATE         WM_USER + 0x0605
-#define WM_USER_SUBCLASS            WM_USER + 0x0606
-
-
-typedef struct {
-   ULONG msg;
-   ULONG filterM;
-   ULONG wParam;
-   ULONG filterP;
-   ULONG lParam;
-   ULONG filterL;
-   ULONG tag;
-   HWND  hCtrl;
-   UINT  uID;
-   PCHAR pMessageQueue;
-   PCHAR pNotifyMethod;
-} SUBCLASSDATA;
 
 #define VISDLL "OODIALOG.DLL"
 #define DLLVER 2130

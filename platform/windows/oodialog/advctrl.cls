@@ -1511,7 +1511,7 @@
     else return ""
 
 ::Method FirstVisibleLine
-    return self~Message2Parent(0x00CE, 0, 0) + 1
+    return self~Message2Parent(0x00CE, 0, 0)
 
 ::Method SetReadOnly
     use arg bool

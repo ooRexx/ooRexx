@@ -197,52 +197,12 @@ ULONG APIENTRY GetScreenSize(
 }
 
 
-ULONG APIENTRY GetSysMetrics(
-  PUCHAR funcname,
-  ULONG argc,
-  RXSTRING argv[],
-  PUCHAR qname,
-  PRXSTRING retstr )
-{
-    ULONG uVal;
-
-    if ( argc == 1 )
-    {
-        uVal = GetSystemMetrics(atoi(argv[0].strptr));
-
-        sprintf(retstr->strptr, "%d", uVal);
-        retstr->strlength = strlen(retstr->strptr);
-    }
-    else
-    {
-        PSZ token;
-        PSZ str;
-
-        if ( argv[0].strlength == 0 ) RETVAL(-3)
-
-        str = _strdup(argv[0].strptr);
-        printf("Starting string: %s\n", str);
-
-        token = strtok(str, " ");
-        while( token != NULL )
-        {
-           printf(" %s\n", token);
-           token = strtok(NULL, " ");
-        }
-        free(str);
-        RETVAL(0);
-    }
-
-    return 0;
-}
-
-
-void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx, INT cy,
-                CHAR * dlgClass, CHAR * title, CHAR * fontname, INT fontsize, ULONG lStyle)
+void UCreateDlg(WORD ** template, WORD **p, INT NrItems, INT x, INT y, INT cx, INT cy,
+                CHAR * class, CHAR * title, CHAR * fontname, INT fontsize, ULONG lStyle)
 {
    int   nchar;
 
-   *ppTemplate = *p = (PWORD) LocalAlloc(LPTR, (NrItems+3)*256);
+   *template = *p = (PWORD) LocalAlloc(LPTR, (NrItems+3)*256);
 
      /* start to fill in the dlgtemplate information.  addressing by WORDs */
    **p = LOWORD (lStyle);
@@ -270,9 +230,9 @@ void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx,
    (*p)++;
 
    /* copy the class of the dialog */
-   if ( !(lStyle & WS_CHILD) && (dlgClass))
+   if ( !(lStyle & WS_CHILD) && (class))
    {
-      nchar = nCopyAnsiToWideChar (*p, TEXT(dlgClass));
+      nchar = nCopyAnsiToWideChar (*p, TEXT(class));
       (*p) += nchar;
    }
    else
@@ -643,7 +603,7 @@ ULONG APIENTRY UsrAddControl(
    if (!strcmp(argv[0].strptr,"BUT") || !strcmp(argv[0].strptr,"CH") || !strcmp(argv[0].strptr,"RB"))
    {
        CHECKARG(9);
-       printf("UsrAddControl button: %s styles: %s\n",  argv[0].strptr, argv[8].strptr);
+
        for (i=0;i<6;i++) buffer[i] = atoi(argv[i+1].strptr);
 
        p = (WORD *)buffer[0];
@@ -658,11 +618,11 @@ ULONG APIENTRY UsrAddControl(
        if (strstr(argv[8].strptr,"NOTIFY")) lStyle |= BS_NOTIFY;
        if (strstr(argv[8].strptr,"LEFTTEXT")) lStyle |= BS_LEFTTEXT;
        if (strstr(argv[8].strptr,"BITMAP")) lStyle |= BS_BITMAP;
-       if (!strstr(argv[8].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[8].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[8].strptr,"DISABLED")) lStyle |= WS_DISABLED;
        if (strstr(argv[8].strptr,"BORDER")) lStyle |= WS_BORDER;
+       if (strstr(argv[8].strptr,"DISABLED")) lStyle |= WS_DISABLED;
+       if (!strstr(argv[8].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
        if (!strstr(argv[8].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
+       if (strstr(argv[8].strptr,"GROUP")) lStyle |= WS_GROUP;
 
        /*                       id         x           y         cx          cy  */
        UAddControl(&p, 0x0080, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], argv[7].strptr, lStyle);
@@ -690,6 +650,7 @@ ULONG APIENTRY UsrAddControl(
        if (strstr(argv[7].strptr,"VSCROLL")) lStyle |= WS_VSCROLL;
        if (strstr(argv[7].strptr,"READONLY")) lStyle |= ES_READONLY;
        if (strstr(argv[7].strptr,"KEEPSELECTION")) lStyle |= ES_NOHIDESEL;
+       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
        if (strstr(argv[7].strptr,"CENTER")) lStyle |= ES_CENTER;
        else if (strstr(argv[7].strptr,"RIGHT")) lStyle |= ES_RIGHT;
        else lStyle |= ES_LEFT;
@@ -698,10 +659,9 @@ ULONG APIENTRY UsrAddControl(
        if (strstr(argv[7].strptr,"NUMBER")) lStyle |= ES_NUMBER;
        if (strstr(argv[7].strptr,"OEM")) lStyle |= ES_OEMCONVERT;
        if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
        if (!strstr(argv[7].strptr,"NOBORDER")) lStyle |= WS_BORDER;
        if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
+       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
 
        /*                         id          x       y          cx           cy  */
        UAddControl(&p, 0x0081, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
@@ -720,17 +680,16 @@ ULONG APIENTRY UsrAddControl(
        else i = -1;
 
        lStyle = WS_CHILD;
+       if (!strstr(argv[6].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
+       if (strstr(argv[6].strptr,"BORDER")) lStyle |= WS_BORDER;
+       if (strstr(argv[6].strptr,"GROUP")) lStyle |= WS_GROUP;
+       if (strstr(argv[6].strptr,"DISABLED")) lStyle |= WS_DISABLED;
+
        if (strstr(argv[6].strptr,"CENTER")) lStyle |= SS_CENTER;
        else if (strstr(argv[6].strptr,"RIGHT")) lStyle |= SS_RIGHT;
        else if (strstr(argv[6].strptr,"SIMPLE")) lStyle |= SS_SIMPLE;
        else if (strstr(argv[6].strptr,"LEFTNOWRAP")) lStyle |= SS_LEFTNOWORDWRAP;
        else lStyle |= SS_LEFT;
-
-       if (!strstr(argv[6].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[6].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[6].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (strstr(argv[6].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                      id      x         y         cx       cy  */
        UAddControl(&p, 0x0082, i, buffer[1], buffer[2], buffer[3], buffer[4], argv[7].strptr, lStyle);
@@ -745,6 +704,7 @@ ULONG APIENTRY UsrAddControl(
        p = (WORD *)buffer[0];
 
        lStyle = WS_CHILD;
+       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
        if (strstr(argv[7].strptr,"COLUMNS")) lStyle |= LBS_USETABSTOPS;
        if (strstr(argv[7].strptr,"VSCROLL")) lStyle |= WS_VSCROLL;
        if (strstr(argv[7].strptr,"HSCROLL")) lStyle |= WS_HSCROLL;
@@ -756,11 +716,10 @@ ULONG APIENTRY UsrAddControl(
        if (strstr(argv[7].strptr,"SBALWAYS")) lStyle |= LBS_DISABLENOSCROLL;
        if (strstr(argv[7].strptr,"KEYINPUT")) lStyle |= LBS_WANTKEYBOARDINPUT;
        if (strstr(argv[7].strptr,"EXTSEL")) lStyle |= LBS_EXTENDEDSEL;
-       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
        if (!strstr(argv[7].strptr,"NOBORDER")) lStyle |= WS_BORDER;
        if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
+       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
+       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
 
        /*                         id       x          y            cx        cy  */
        UAddControl(&p, 0x0083, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
@@ -776,18 +735,18 @@ ULONG APIENTRY UsrAddControl(
 
        lStyle = WS_CHILD;
 
+       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
        if (!strstr(argv[7].strptr,"NOHSCROLL")) lStyle |= CBS_AUTOHSCROLL;
        if (strstr(argv[7].strptr,"VSCROLL")) lStyle |= WS_VSCROLL;
        if (strstr(argv[7].strptr,"SORT")) lStyle |= CBS_SORT;
        if (strstr(argv[7].strptr,"SIMPLE")) lStyle |= CBS_SIMPLE;
        else if (strstr(argv[7].strptr,"LIST")) lStyle |= CBS_DROPDOWNLIST;
        else lStyle |= CBS_DROPDOWN;
-       if (strstr(argv[7].strptr,"PARTIAL")) lStyle |= CBS_NOINTEGRALHEIGHT;
-       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
        if (!strstr(argv[7].strptr,"NOBORDER")) lStyle |= WS_BORDER;
        if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
+       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
+       if (strstr(argv[7].strptr,"PARTIAL")) lStyle |= CBS_NOINTEGRALHEIGHT;
+       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
 
        /*                         id       x          y            cx        cy  */
        UAddControl(&p, 0x0085, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
@@ -807,10 +766,9 @@ ULONG APIENTRY UsrAddControl(
 
        lStyle = WS_CHILD | BS_GROUPBOX;
        if (!strstr(argv[6].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
+       if (strstr(argv[6].strptr,"BORDER")) lStyle |= WS_BORDER;
        if (strstr(argv[6].strptr,"GROUP")) lStyle |= WS_GROUP;
        if (strstr(argv[6].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (strstr(argv[6].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                      id      x         y        cx        cy  */
        UAddControl(&p, 0x0080, i, buffer[1], buffer[2], buffer[3], buffer[4], argv[7].strptr, lStyle);
@@ -837,10 +795,9 @@ ULONG APIENTRY UsrAddControl(
        if (buffer[6] == 4) lStyle |= SS_GRAYFRAME; else
        lStyle |= SS_BLACKFRAME;
        if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
+       if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
        if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
        if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                     id    x           y          cx         cy  */
        UAddControl(&p, 0x0082, i, buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
@@ -855,14 +812,13 @@ ULONG APIENTRY UsrAddControl(
        p = (WORD *)buffer[0];
 
        lStyle = WS_CHILD;
+       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
        if (strstr(argv[7].strptr,"HORIZONTAL")) lStyle |= SBS_HORZ; else lStyle |= SBS_VERT;
        if (strstr(argv[7].strptr,"TOPLEFT")) lStyle |= SBS_TOPALIGN;
        if (strstr(argv[7].strptr,"BOTTOMRIGHT")) lStyle |= SBS_BOTTOMALIGN;
-       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
+       if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
        if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
        if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                         id       x          y            cx        cy  */
        UAddControl(&p, 0x0084, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
@@ -881,9 +837,9 @@ LONG EvaluateListStyle(CHAR * styledesc)
     LONG lStyle = 0;
 
     if (!strstr(styledesc,"NOBORDER")) lStyle |= WS_BORDER;
-    if (!strstr(styledesc,"NOTAB")) lStyle |= WS_TABSTOP;
     if (strstr(styledesc,"VSCROLL")) lStyle |= WS_VSCROLL;
     if (strstr(styledesc,"HSCROLL")) lStyle |= WS_HSCROLL;
+    if (!strstr(styledesc,"NOTAB")) lStyle |= WS_TABSTOP;
     if (strstr(styledesc,"EDIT")) lStyle |= LVS_EDITLABELS;
     if (strstr(styledesc,"SHOWSELALWAYS")) lStyle |= LVS_SHOWSELALWAYS;
     if (strstr(styledesc,"ALIGNLEFT")) lStyle |= LVS_ALIGNLEFT;
@@ -1033,9 +989,8 @@ ULONG APIENTRY UsrAddNewCtrl(
    else
    if (!strcmp(argv[0].strptr,"PROGRESS"))
    {
-       if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
        if (strstr(argv[7].strptr,"VERTICAL")) lStyle |= PBS_VERTICAL;
+       if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
        if (strstr(argv[7].strptr,"SMOOTH")) lStyle |= PBS_SMOOTH;
         /*                                     id       x          y            cx        cy  */
        UAddNamedControl(&p, PROGRESS_CLASS, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
@@ -1190,7 +1145,7 @@ ULONG APIENTRY UsrMenu(
   PRXSTRING retstr )
 {
    INT i;
-   WORD *p, *pTemplate;
+   WORD *p, *template;
    HANDLE hMem;
 
    CHECKARGL(1);
@@ -1204,7 +1159,7 @@ ULONG APIENTRY UsrMenu(
 
        hMem = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, (i+1)*128);
 
-       pTemplate = p = (PWORD) GlobalLock(hMem);
+       template = p = (PWORD) GlobalLock(hMem);
 
        if (!p) RETC(1)
        /* writing menu header */
@@ -1227,7 +1182,7 @@ ULONG APIENTRY UsrMenu(
        p++;
     #endif
 
-       sprintf(retstr->strptr, "%ld %ld %ld", hMem, pTemplate, p);
+       sprintf(retstr->strptr, "%ld %ld %ld", hMem, template, p);
        retstr->strlength = strlen(retstr->strptr);
        return 0;
    }
