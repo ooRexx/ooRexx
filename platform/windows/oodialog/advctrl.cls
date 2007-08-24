@@ -233,6 +233,7 @@
         if style~wordpos("PBS_VERTICAL") > 0 then ret = ret || " VERTICAL"
         if style~wordpos("PBS_SMOOTH") > 0 then ret = ret || " SMOOTH"
         if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
+        if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
    end
    if style~wordpos("WS_VSCROLL") > 0 then ret = ret || " VSCROLL"
    if style~wordpos("WS_HSCROLL") > 0 then ret = ret || " HSCROLL"
