@@ -197,12 +197,12 @@ ULONG APIENTRY GetScreenSize(
 }
 
 
-void UCreateDlg(WORD ** template, WORD **p, INT NrItems, INT x, INT y, INT cx, INT cy,
-                CHAR * class, CHAR * title, CHAR * fontname, INT fontsize, ULONG lStyle)
+void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx, INT cy,
+                CHAR * dlgClass, CHAR * title, CHAR * fontname, INT fontsize, ULONG lStyle)
 {
    int   nchar;
 
-   *template = *p = (PWORD) LocalAlloc(LPTR, (NrItems+3)*256);
+   *ppTemplate = *p = (PWORD) LocalAlloc(LPTR, (NrItems+3)*256);
 
      /* start to fill in the dlgtemplate information.  addressing by WORDs */
    **p = LOWORD (lStyle);
@@ -230,9 +230,9 @@ void UCreateDlg(WORD ** template, WORD **p, INT NrItems, INT x, INT y, INT cx, I
    (*p)++;
 
    /* copy the class of the dialog */
-   if ( !(lStyle & WS_CHILD) && (class))
+   if ( !(lStyle & WS_CHILD) && (dlgClass))
    {
-      nchar = nCopyAnsiToWideChar (*p, TEXT(class));
+      nchar = nCopyAnsiToWideChar (*p, TEXT(dlgClass));
       (*p) += nchar;
    }
    else
@@ -1150,7 +1150,7 @@ ULONG APIENTRY UsrMenu(
   PRXSTRING retstr )
 {
    INT i;
-   WORD *p, *template;
+   WORD *p, *pTemplate;
    HANDLE hMem;
 
    CHECKARGL(1);
@@ -1164,7 +1164,7 @@ ULONG APIENTRY UsrMenu(
 
        hMem = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, (i+1)*128);
 
-       template = p = (PWORD) GlobalLock(hMem);
+       pTemplate = p = (PWORD) GlobalLock(hMem);
 
        if (!p) RETC(1)
        /* writing menu header */
@@ -1187,7 +1187,7 @@ ULONG APIENTRY UsrMenu(
        p++;
     #endif
 
-       sprintf(retstr->strptr, "%ld %ld %ld", hMem, template, p);
+       sprintf(retstr->strptr, "%ld %ld %ld", hMem, pTemplate, p);
        retstr->strlength = strlen(retstr->strptr);
        return 0;
    }
