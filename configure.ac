@@ -356,6 +356,9 @@ else
    esac
 fi
 
+ORX_SVN_REV
+AC_SUBST(SVN_REV)
+
 AC_LIBTOOL_DLOPEN
 
 dnl remerge the warnings into the FLAGS

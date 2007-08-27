@@ -1403,6 +1403,9 @@ $ Error_Creating_event_direct_parm
 $ Error_Accessing_aete
 571 Error accessing event information in AETE
 
+$ Error_Translation_duplicate_attribute
+571 Duplicate ::ATTRIBUTE directive instruction
+
 $ Error_Launching_app
 572 Error launching application "&1"
 

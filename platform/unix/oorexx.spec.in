@@ -65,7 +65,7 @@
 
 Name: ooRexx
 Version: %{orx_major}.%{orx_minor}.%{orx_mod_lvl}
-Release: 1
+Release: @SVN_REV@
 Summary: Open Object Rexx
 Group: Development/Languages
 License: CPL
