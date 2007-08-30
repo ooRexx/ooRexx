@@ -840,13 +840,10 @@ deb:
 	cp $(top_srcdir)/platform/unix/debian/postrm    ${top_srcdir}/debian
 	cp $(top_srcdir)/platform/unix/debian/prerm     ${top_srcdir}/debian
 	cp $(top_srcdir)/platform/unix/debian/rules     ${top_srcdir}/debian
-	# Make the binaries
 	make all
-	# Install into the Debian package directory.
 	fakeroot dh_clean -k
 	fakeroot dh_installdirs
 	fakeroot make install DESTDIR=${top_srcdir}/debian/oorexx
-	# Do the packaging steps
 	fakeroot dh_installchangelogs CHANGES
 	fakeroot dh_installdocs
 	fakeroot dh_installexamples
