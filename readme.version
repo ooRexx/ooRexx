@@ -9,6 +9,9 @@ platform/unix/rexxc.1
 platform/unix/rxmigrate.1
 platform/unix/rxqueue.1
 platform/unix/rxsubcom.1
+platform/unix/debian/changelog
+platform/unix/debian/postinst
+CHANGES
 
 When the library interface changes you need to modify the oorexx/oorexx.ver
 file. BE CAREFUL!!!!! This info has no relationship to the ooRexx package

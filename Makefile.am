@@ -827,3 +827,37 @@ rpm: dist
 	mkdir rpm/SRPMS
 	rpmbuild -ba platform/unix/oorexx.spec < /dev/null;
 
+deb:
+	rm -fr $(top_srcdir)/debian
+	mkdir $(top_srcdir)/debian
+	cp $(top_srcdir)/platform/unix/debian/changelog ${top_srcdir}/debian
+	cp $(top_srcdir)/platform/unix/debian/compat    ${top_srcdir}/debian
+	cp $(top_srcdir)/platform/unix/debian/control   ${top_srcdir}/debian
+	cp $(top_srcdir)/platform/unix/debian/copyright ${top_srcdir}/debian
+	cp $(top_srcdir)/platform/unix/debian/dirs      ${top_srcdir}/debian
+	cp $(top_srcdir)/platform/unix/debian/docs      ${top_srcdir}/debian
+	cp $(top_srcdir)/platform/unix/debian/postinst  ${top_srcdir}/debian
+	cp $(top_srcdir)/platform/unix/debian/postrm    ${top_srcdir}/debian
+	cp $(top_srcdir)/platform/unix/debian/prerm     ${top_srcdir}/debian
+	cp $(top_srcdir)/platform/unix/debian/rules     ${top_srcdir}/debian
+	# Make the binaries
+	make all
+	# Install into the Debian package directory.
+	fakeroot dh_clean -k
+	fakeroot dh_installdirs
+	fakeroot make install DESTDIR=${top_srcdir}/debian/oorexx
+	# Do the packaging steps
+	fakeroot dh_installchangelogs CHANGES
+	fakeroot dh_installdocs
+	fakeroot dh_installexamples
+	fakeroot dh_installman
+	fakeroot dh_link
+	fakeroot dh_strip
+	fakeroot dh_compress
+	fakeroot dh_fixperms
+	fakeroot dh_installdeb
+	fakeroot dh_shlibdeps
+	fakeroot dh_gencontrol
+	fakeroot dh_md5sums
+	fakeroot dh_builddeb
+
