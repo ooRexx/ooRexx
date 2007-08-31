@@ -787,6 +787,13 @@ dist-hook:
 # be executed by the user
 	touch $(distdir)/kernel/messages/*.h
 	touch $(distdir)/kernel/messages/gencat.inp
+#
+# Add oorexx.ver.incl, a file used by the Windows build, to the source 
+# distribution.
+	sed -e '/ORX_BLD_LVL/s/1$$/$(SVN_REV)/;/ORX_VER_STR/s/\.1\"$$/.$(SVN_REV)\"/' oorexx.ver > oorexx.ver.incl
+	echo 'SVN_REVSION=$(SVN_REV)' >> oorexx.ver.incl
+	cp $(top_srcdir)/oorexx.ver.incl $(distdir)
+	rm -f oorexx.ver.incl
 
 clean-local: am_config_clean-local
 
