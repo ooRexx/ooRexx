@@ -381,6 +381,7 @@ AC_SUBST(TOP_SRCDIR,$top_srcdir)
 AC_CONFIG_FILES([
         Makefile
 	platform/unix/oorexx.spec
+	platform/unix/debian/changelog
         samples/Makefile
         samples/unix/Makefile
         samples/unix/api/Makefile
