@@ -843,7 +843,7 @@ deb:
 	make all
 	fakeroot dh_clean -k
 	fakeroot dh_installdirs
-	fakeroot make install DESTDIR=$(top_srcdir)/debian/oorexx
+	fakeroot make install DESTDIR=`pwd`/debian/oorexx
 	fakeroot dh_installchangelogs CHANGES
 	fakeroot dh_installdocs
 	fakeroot dh_installexamples
