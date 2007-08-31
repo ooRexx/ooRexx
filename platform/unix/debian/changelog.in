@@ -1,4 +1,4 @@
-oorexx (3.2.0-@SVN_REV@) stable; urgency=medium
+oorexx (@PACKAGE_VERSION@-@SVN_REV@) stable; urgency=medium
 
             Fixes in Open Object Rexx 3.1.2
 
