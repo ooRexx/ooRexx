@@ -321,7 +321,7 @@ for /F "eol=# delims== tokens=1,2*" %%i in (oorexx.ver) do (
 
 if not exist .svn\nul goto NOSVN
 
-for /F "usebackq tokens=1,2,3,4,5*" %%i in (`svn info`) do if (%%k) == (Rev:) set SVN_REV=%%l
+for /F "usebackq tokens=1,2,3,4*" %%i in (`svn info`) do if (%%i) == (Revision:) set SVN_REV=%%j
 
 if %SVN_REV%x == x (
   echo Executing in a svn working copy, but could not determine the svn revision
