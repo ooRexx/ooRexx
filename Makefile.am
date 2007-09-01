@@ -251,6 +251,7 @@ windowsDefFiles = $(kernel_dir)/*.def \
                   $(rexutils_dir)/*.def \
                   $(rxregexp_dir)/*.def
 miscFiles = $(top_srcdir)/CPLv1.0.txt \
+            $(top_srcdir)/CHANGES \
             $(top_srcdir)/oorexx.ver \
             $(aixExportFiles) \
             $(platform_unix_dir)/oorexx.spec \
@@ -747,6 +748,8 @@ rexx.img: rexx librexxutil.la
 EXTRA_DIST = $(messages_dir)/RexxMessageNumbers.xsl \
              $(messages_dir)/RexxErrorCodes.xsl \
              $(messages_dir)/RexxMessageTable.xsl \
+             $(messages_dir)/DocBookErrors.xsl \
+             $(messages_dir)/DocErrorMessages.sgml \
              $(messages_dir)/gencat.inp \
              $(messageXML) \
              $(kernel_platform_unix_dir)/UnixGencat.xsl \
@@ -777,6 +780,7 @@ EXTRA_DIST = $(messages_dir)/RexxMessageNumbers.xsl \
              $(windowsDefFiles)
 
 dist-hook:
+	rm -fr `find $(distdir) -name .svn`
 	rm -fr `find $(distdir) -name CVS`
 	rm -fr `find $(distdir) -name "*.bak"`
 	rm -fr `find $(distdir) -name "*.o"`
@@ -786,9 +790,10 @@ dist-hook:
 # to have a later date than the source XML, so Xalan is not needed to
 # be executed by the user
 	touch $(distdir)/kernel/messages/*.h
+	touch $(distdir)/kernel/messages/DocErrorMessages.sgml
 	touch $(distdir)/kernel/messages/gencat.inp
 #
-# Add oorexx.ver.incl, a file used by the Windows build, to the source 
+# Add oorexx.ver.incl, a file used by the Windows build, to the source
 # distribution.
 	sed -e '/ORX_BLD_LVL/s/1$$/$(SVN_REV)/;/ORX_VER_STR/s/\.1\"$$/.$(SVN_REV)\"/' oorexx.ver > oorexx.ver.incl
 	echo 'SVN_REVSION=$(SVN_REV)' >> oorexx.ver.incl
