@@ -92,21 +92,16 @@ if r~open(,"REXXScript\Shell\Open\Command","QUERY WRITE") \= 0 then do
                                BINARY for any data format.
     */
     /* verify, which is the current entry, TRANSLATE it to UPPER CASE */
-    if vals.1.data~TRANSLATE~LASTPOS('ORXWB.EXE') = 0 then do
-      if vals.1.data~TRANSLATE~LASTPOS('REXX.EXE') = 0 then do
-        if vals.1.data~TRANSLATE~LASTPOS('REXXHIDE.EXE') = 0 then do
-          call ErrorMessage vals.1.data 'is incorrect set'
-        end
-        else do /* remember the current entry */
-          was = "rexxhide.exe"
-        end
+    if vals.1.data~TRANSLATE~LASTPOS('REXX.EXE') = 0 then do
+      if vals.1.data~TRANSLATE~LASTPOS('REXXHIDE.EXE') = 0 then do
+        call ErrorMessage 'ftyperex is not prepared to work with this setting:' vals.1.data
       end
       else do /* remember the current entry */
-        was = "rexx.exe"
+        was = "rexxhide.exe"
       end
     end
     else do /* remember the current entry */
-      was = "orxwb.exe"
+      was = "rexx.exe"
     end
   end
   else do
@@ -126,10 +121,8 @@ if r~open(,"REXXScript\Shell\Open\Command","QUERY WRITE") \= 0 then do
     /* Show the curent content */
     say 'Current Ftype Setting is : ' || vals.1.data
     say 'Please enter a number + <Enter> to set it to :'
-    say '1 to start it with orxwb.exe'
-    say '2 to open it with orxwb.exe'
-    say '3 to start it with rexx.exe'
-    say '4 to start it with rexxhide.exe'
+    say '1 to start it with rexx.exe'
+    say '2 to start it with rexxhide.exe'
     say 'Any other entry to leave without changes'
     say
     /* Get selection */
@@ -137,21 +130,11 @@ if r~open(,"REXXScript\Shell\Open\Command","QUERY WRITE") \= 0 then do
   end
   else do
     /* The next lines use an "Single Selection Dialog" as interface to the user */
-    sel.1 = "Start it with orxwb.exe"
-    sel.2 = "Open it with orxwb.exe"
-    sel.3 = "Start it with rexx.exe"
-    sel.4 = "Start it with rexxhide.exe"
+    sel.1 = "Start it with rexx.exe"
+    sel.2 = "Start it with rexxhide.exe"
     /* Get the current state, to make preselection in the dialog */
-    if was = "orxwb.exe" then do
-      if vals.1.data~LASTPOS('/s') > 0 then do
-        answer = '1' ;
-      end
-      else do
-        answer = '2'
-      end
-    end
-    else if was = "rexx.exe" then answer = '3'
-      else if was = "rexxhide.exe" then answer = '4'
+    if was = "rexx.exe" then answer = '1'
+      else if was = "rexxhide.exe" then answer = '2'
 
     dlg = .SingleSelection~new("Please select what to do","Ftype setting for REXXScript",sel.,answer,,answer)
     answer = dlg~execute
@@ -160,20 +143,12 @@ if r~open(,"REXXScript\Shell\Open\Command","QUERY WRITE") \= 0 then do
 
   /* verify what to do */
   select
-    when answer = '1'  then do
-      newval = LEFT(vals.1.data,LASTPOS(was,vals.1.data)-1)|| 'orxwb.exe /s "%1" %*'
+    when answer = '1' then do
+      newval = LEFT(vals.1.data,LASTPOS(was,vals.1.data)-1)|| 'rexx.exe" "%1" %*'
     end
 
-    when answer = '2'  then do
-      newval = LEFT(vals.1.data,LASTPOS(was,vals.1.data)-1)|| 'orxwb.exe "%1" %*'
-    end
-
-    when answer = '3' then do
-      newval = LEFT(vals.1.data,LASTPOS(was,vals.1.data)-1)|| 'rexx.exe "%1" %*'
-    end
-
-    when answer = '4' then do
-      newval = LEFT(vals.1.data,LASTPOS(was,vals.1.data)-1)|| 'rexxhide.exe "%1" %*'
+    when answer = '2' then do
+      newval = LEFT(vals.1.data,LASTPOS(was,vals.1.data)-1)|| 'rexxhide.exe" "%1" %*'
     end
     otherwise exit
   end
