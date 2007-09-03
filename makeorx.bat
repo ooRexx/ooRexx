@@ -350,11 +350,18 @@ for /F "delims== tokens=1,2*" %%i in (oorexx.ver) do (
  )
 )
 echo SVN_REVSION=%SVN_REV% >> oorexx.ver.incl
+goto CHECK_BUILD_TYPE
 
 :NOSVN
-if not exist oorexx.ver.incl (
+if exist oorexx.ver.incl (
+   for /F "eol=# delims== tokens=1,2*" %%i in (oorexx.ver.incl) do (
+    if %%i == ORX_BLD_LVL set BLD_NUM=%%j
+    if %%i == SVN_REVISION set SVN_REV=%%j
+   )
+) else (
   copy oorexx.ver oorexx.ver.incl 1>nul 2>&1
-  echo SVN_REVSION=xxxxx >> oorexx.ver.incl
+  set SVN_REV=%BLD_NUM%
+  echo SVN_REVSION=%SVN_REV% >> oorexx.ver.incl
 )
 
 goto CHECK_BUILD_TYPE
