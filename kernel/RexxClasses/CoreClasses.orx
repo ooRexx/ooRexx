@@ -46,7 +46,7 @@ use arg kernel_methods
 
 say ('creating the system specific methods ...')
                                        /* name the common objects           */
-.environment~objectname = "The environment"
+.environment~objectname = "The Environment Directory"
 .kernel~objectname = "The kernel directory"
 .nil~objectname = "The NIL object"
 
@@ -410,16 +410,21 @@ nomethod:
  /* initialize a server */
   expose localenv savedResults
 
+  .local~objectname = "The Local Directory"  -- give the local environment a nicer descriptive name.
+
   savedResults = .table~new
-  .local~setentry('LOCALSERVER',self)
+  .local~setentry('LOCALSERVER', self)
 
  /* set system objects in the local environment */
   .local~setentry('STDIN',.stream~new('STDIN')~~command('open nobuffer'))
   .local~setentry('INPUT',.monitor~new(.stdin))
+  .input~objectname = "The INPUT monitor"
   .local~setentry('STDOUT',.stream~new('STDOUT')~~command('open nobuffer'))
   .local~setentry('OUTPUT',.monitor~new(.stdout))
+  .output~objectname = "The OUTPUT monitor"
   .local~setentry('STDERR',.stream~new('STDERR')~~command('open nobuffer'))
   .local~setentry('ERROR', .monitor~new(.stderr))
+  .error~objectname = "The ERROR monitor"
 
   .local~setentry('STDQUE',.RexxQueue~new('SESSION'))
 
@@ -439,7 +444,7 @@ nomethod:
 ::METHOD supplier
   return .supplier~new(self~allItems, self~allIndexes)
 
-::method 'hasIndex'
+::method 'hasInbdex'
   use strict arg index
   return self~allIndexes~hasItem(index)
 
