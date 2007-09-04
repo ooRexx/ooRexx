@@ -842,7 +842,11 @@ rpm: dist
 deb:
 	rm -fr $(top_srcdir)/debian
 	mkdir $(top_srcdir)/debian
-	cp $(top_srcdir)/platform/unix/debian/changelog ${top_srcdir}/debian
+# Generate a current change log in the required Debian format
+	sed -n -e '1,2p' $(top_srcdir)/platform/unix/debian/changelog > ${top_srcdir}/debian/changelog
+	sed -e 's/.*/  &/' CHANGES >> ${top_srcdir}/debian/changelog
+	sed -e "1,3d; 4,6s/date/`date -R`/" $(top_srcdir)/platform/unix/debian/changelog >>  ${top_srcdir}/debian/changelog
+# Just copy the rest of the files
 	cp $(top_srcdir)/platform/unix/debian/compat    ${top_srcdir}/debian
 	cp $(top_srcdir)/platform/unix/debian/control   ${top_srcdir}/debian
 	cp $(top_srcdir)/platform/unix/debian/copyright ${top_srcdir}/debian
@@ -852,10 +856,13 @@ deb:
 	cp $(top_srcdir)/platform/unix/debian/postrm    ${top_srcdir}/debian
 	cp $(top_srcdir)/platform/unix/debian/prerm     ${top_srcdir}/debian
 	cp $(top_srcdir)/platform/unix/debian/rules     ${top_srcdir}/debian
+# Make the binaries
 	make all
+# Install into the debian package directory
 	fakeroot dh_clean -k
 	fakeroot dh_installdirs
 	fakeroot make install DESTDIR=`pwd`/debian/oorexx
+# Do the packaging steps
 	fakeroot dh_installchangelogs CHANGES
 	fakeroot dh_installdocs
 	fakeroot dh_installexamples

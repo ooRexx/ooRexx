@@ -13,6 +13,26 @@ AC_MSG_RESULT(Subversion revision: $SVN_REV)
 ])
 
 dnl
+dnl Put the ooRexx version numbers into AC_SUBST
+dnl substitutable variables
+dnl
+AC_DEFUN([ORX_VERSION_CHECK],
+[
+ORX_AC_MAJOR=`sed -n -e '/^ORX_MAJOR=/s/ORX_MAJOR=//p' oorexx.ver`
+ORX_AC_MINOR=`sed -n -e '/^ORX_MINOR=/s/ORX_MINOR=//p' oorexx.ver`
+ORX_AC_MOD_LVL=`sed -n -e '/^ORX_MOD_LVL=/s/ORX_MOD_LVL=//p' oorexx.ver`
+ORX_AC_CURRENT=$ORX_AC_MAJOR
+ORX_AC_REVISION=`sed -n -e '/^ORX_REVISION=/s/ORX_REVISION=//p' oorexx.ver`
+ORX_AC_AGE=`sed -n -e '/^ORX_AGE=/s/ORX_AGE=//p' oorexx.ver`
+AC_MSG_RESULT(ooRexx major number: $ORX_AC_MAJOR)
+AC_MSG_RESULT(ooRexx minor number: $ORX_AC_MINOR)
+AC_MSG_RESULT(ooRexx mod level number: $ORX_AC_MOD_LVL)
+AC_MSG_RESULT(ooRexx current number: $ORX_AC_CURRENT)
+AC_MSG_RESULT(ooRexx revision number: $ORX_AC_REVISION)
+AC_MSG_RESULT(ooRexx age number: $ORX_AC_AGE)
+])
+
+dnl
 dnl Check to see if FILE struct contains _cnt member
 dnl
 AC_DEFUN([ORX_FILE__CNT],

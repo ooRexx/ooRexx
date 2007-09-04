@@ -360,6 +360,13 @@ fi
 
 ORX_SVN_REV
 AC_SUBST(SVN_REV)
+ORX_VERSION_CHECK
+AC_SUBST(ORX_AC_MAJOR)
+AC_SUBST(ORX_AC_MINOR)
+AC_SUBST(ORX_AC_MOD_LVL)
+AC_SUBST(ORX_AC_CURRENT)
+AC_SUBST(ORX_AC_REVISION)
+AC_SUBST(ORX_AC_AGE)
 
 dnl remerge the warnings into the FLAGS
 GENERAL_CXXFLAGS="\
@@ -382,6 +389,7 @@ AC_CONFIG_FILES([
         Makefile
 	platform/unix/oorexx.spec
 	platform/unix/debian/changelog
+	platform/unix/debian/postinst
         samples/Makefile
         samples/unix/Makefile
         samples/unix/api/Makefile

@@ -35,13 +35,11 @@
 #/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
-#
-#
-# The following need to be changed with each new version.
-# If you don't know what you are doing then don't do anything!
-orx_current=3
-orx_revision=4
-orx_age=0
+
+orx_current=@ORX_AC_CURRENT@
+orx_revision=@ORX_AC_REVISION@
+orx_age=@ORX_AC_AGE@
+
 # the order of these looks wrong, but that is how it comes out!
 orx_libversion=${orx_current}.${orx_age}.${orx_revision}
 # We only need to create the links if we are installed in /opt/ooRexx
