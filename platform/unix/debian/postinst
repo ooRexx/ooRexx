@@ -43,7 +43,7 @@ orx_current=3
 orx_revision=4
 orx_age=0
 # the order of these looks wrong, but that is how it comes out!
-orx_libversion=$(orx_current).$(orx_age).$(orx_revision)
+orx_libversion=${orx_current}.${orx_age}.${orx_revision}
 # We only need to create the links if we are installed in /opt/ooRexx
 if [ -d /opt/ooRexx ]; then
    ln -sf /opt/ooRexx/bin/rexx                             /usr/bin/rexx
@@ -58,29 +58,29 @@ if [ -d /opt/ooRexx ]; then
    ln -sf /opt/ooRexx/bin/rxftp.cls                        /usr/bin/rxftp.cls
    ln -sf /opt/ooRexx/bin/oorexx-config                    /usr/bin/oorexx-config
 
-   ln -sf /opt/ooRexx/lib/ooRexx/librexx.so.%(orx_libversion)     /usr/lib/librexx.so.%(orx_libversion)
-   ln -sf /opt/ooRexx/lib/ooRexx/librexx.so.%(orx_libversion)     /usr/lib/librexx.so.%(orx_current)
-   ln -sf /opt/ooRexx/lib/ooRexx/librexx.so.%(orx_libversion)     /usr/lib/librexx.so
+   ln -sf /opt/ooRexx/lib/ooRexx/librexx.so.${orx_libversion}     /usr/lib/librexx.so.${orx_libversion}
+   ln -sf /opt/ooRexx/lib/ooRexx/librexx.so.${orx_libversion}     /usr/lib/librexx.so.${orx_current}
+   ln -sf /opt/ooRexx/lib/ooRexx/librexx.so.${orx_libversion}     /usr/lib/librexx.so
    ln -sf /opt/ooRexx/lib/ooRexx/librexx.la                /usr/lib/librexx.la
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.so.%(orx_libversion)  /usr/lib/librexxapi.so.%(orx_libversion)
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.so.%(orx_libversion)  /usr/lib/librexxapi.so.%(orx_current)
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.so.%(orx_libversion)  /usr/lib/librexxapi.so
+   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.so.${orx_libversion}  /usr/lib/librexxapi.so.${orx_libversion}
+   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.so.${orx_libversion}  /usr/lib/librexxapi.so.${orx_current}
+   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.so.${orx_libversion}  /usr/lib/librexxapi.so
    ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.la             /usr/lib/librexxapi.la
-   ln -sf /opt/ooRexx/lib/ooRexx/librxsock.so.%(orx_libversion)   /usr/lib/librxsock.so.%(orx_libversion)
-   ln -sf /opt/ooRexx/lib/ooRexx/librxsock.so.%(orx_libversion)   /usr/lib/librxsock.so.%(orx_current)
-   ln -sf /opt/ooRexx/lib/ooRexx/librxsock.so.%(orx_libversion)   /usr/lib/librxsock.so
+   ln -sf /opt/ooRexx/lib/ooRexx/librxsock.so.${orx_libversion}   /usr/lib/librxsock.so.${orx_libversion}
+   ln -sf /opt/ooRexx/lib/ooRexx/librxsock.so.${orx_libversion}   /usr/lib/librxsock.so.${orx_current}
+   ln -sf /opt/ooRexx/lib/ooRexx/librxsock.so.${orx_libversion}   /usr/lib/librxsock.so
    ln -sf /opt/ooRexx/lib/ooRexx/librxsock.la              /usr/lib/librxsock.la
-   ln -sf /opt/ooRexx/lib/ooRexx/librxmath.so.%(orx_libversion)   /usr/lib/librxmath.so.%(orx_libversion)
-   ln -sf /opt/ooRexx/lib/ooRexx/librxmath.so.%(orx_libversion)   /usr/lib/librxmath.so.%(orx_current)
-   ln -sf /opt/ooRexx/lib/ooRexx/librxmath.so.%(orx_libversion)   /usr/lib/librxmath.so
+   ln -sf /opt/ooRexx/lib/ooRexx/librxmath.so.${orx_libversion}   /usr/lib/librxmath.so.${orx_libversion}
+   ln -sf /opt/ooRexx/lib/ooRexx/librxmath.so.${orx_libversion}   /usr/lib/librxmath.so.${orx_current}
+   ln -sf /opt/ooRexx/lib/ooRexx/librxmath.so.${orx_libversion}   /usr/lib/librxmath.so
    ln -sf /opt/ooRexx/lib/ooRexx/librxmath.la              /usr/lib/librxmath.la
-   ln -sf /opt/ooRexx/lib/ooRexx/librxregexp.so.%(orx_libversion) /usr/lib/librxregexp.so.%(orx_libversion)
-   ln -sf /opt/ooRexx/lib/ooRexx/librxregexp.so.%(orx_libversion) /usr/lib/librxregexp.so.%(orx_current)
-   ln -sf /opt/ooRexx/lib/ooRexx/librxregexp.so.%(orx_libversion) /usr/lib/librxregexp.so
+   ln -sf /opt/ooRexx/lib/ooRexx/librxregexp.so.${orx_libversion} /usr/lib/librxregexp.so.${orx_libversion}
+   ln -sf /opt/ooRexx/lib/ooRexx/librxregexp.so.${orx_libversion} /usr/lib/librxregexp.so.${orx_current}
+   ln -sf /opt/ooRexx/lib/ooRexx/librxregexp.so.${orx_libversion} /usr/lib/librxregexp.so
    ln -sf /opt/ooRexx/lib/ooRexx/librxregexp.la            /usr/lib/librxregexp.la
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.so.%(orx_libversion) /usr/lib/librexxutil.so.%(orx_libversion)
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.so.%(orx_libversion) /usr/lib/librexxutil.so.%(orx_current)
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.so.%(orx_libversion) /usr/lib/librexxutil.so
+   ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.so.${orx_libversion} /usr/lib/librexxutil.so.${orx_libversion}
+   ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.so.${orx_libversion} /usr/lib/librexxutil.so.${orx_current}
+   ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.so.${orx_libversion} /usr/lib/librexxutil.so
    ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.la            /usr/lib/librexxutil.la
 
    ln -sf /opt/ooRexx/man/man1/rexx.1                      /usr/share/man/man1/rexx.1
