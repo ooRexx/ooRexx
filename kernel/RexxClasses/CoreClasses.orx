@@ -444,7 +444,7 @@ nomethod:
 ::METHOD supplier
   return .supplier~new(self~allItems, self~allIndexes)
 
-::method 'hasInbdex'
+::method 'hasIndex'
   use strict arg index
   return self~allIndexes~hasItem(index)
 
