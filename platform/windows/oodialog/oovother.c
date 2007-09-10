@@ -1091,6 +1091,28 @@ ULONG APIENTRY HandleControlEx(
             }
             else RETERR
         }
+        if ( !strcmp(argv[3].strptr, "TXT") )         /* Get the edit control's text. */
+        {
+            ULONG count = (ULONG)GetWindowTextLength(hCtrl);
+
+            if ( count == 0 )
+            {
+                retstr->strptr[0] = '\0';
+                retstr->strlength = 0;
+            }
+            else
+            {
+                if ( ++count > retstr->strlength )
+                {
+                    PVOID p = GlobalAlloc(GMEM_FIXED, count);
+                    if ( ! p ) return GetLastError();
+                    retstr->strptr = (PCHAR)p;
+                }
+                count = GetWindowText(hCtrl, (LPTSTR)retstr->strptr, count);
+                retstr->strlength = strlen(retstr->strptr);
+            }
+            return 0;
+        }
         else RETERR
     }
     else if ( argv[2].strptr[0] == 'X' ) /* eXtended work with the window style */

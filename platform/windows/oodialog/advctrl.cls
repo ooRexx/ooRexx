@@ -1545,6 +1545,9 @@
     use arg dlgunits
     self~Message2Parent(0x00CB, 1, "L" || dlgunits)
 
+::method GetText
+    return HandleControlEx(self~hDlg, self~id, "E", "TXT")
+
 ::method HideBalloon
     return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP")
 
