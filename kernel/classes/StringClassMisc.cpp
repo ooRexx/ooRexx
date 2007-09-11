@@ -422,11 +422,6 @@ RexxInteger *RexxString::abbrev(
 
 RexxInteger *RexxString::caselessAbbrev(RexxString *info, RexxInteger *length)
 {
-    size_t   Len1;                       /* length of string1                 */
-    size_t   Len2;                       /* length of string1                 */
-    size_t   ChkLen;                     /* required check length             */
-    INT      rc;                         /* compare result                    */
-
     // the info must be a string value
     info = get_string(info, ARG_ONE);
     stringsize_t len2 = info->getLength();
@@ -902,8 +897,7 @@ RexxInteger *RexxString::caselessCountStrRexx(RexxString *needle)
   return new_integer(count);              /* return the count as an object     */
 }
 
-RexxString *RexxString::changeStr(RexxString *needle,
-                                  RexxString *newNeedle)
+RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg)
 /******************************************************************************/
 /* Function:  Change strings into another string.                             */
 /******************************************************************************/
@@ -918,11 +912,20 @@ RexxString *RexxString::changeStr(RexxString *needle,
   PCHAR copy;                          /* current copy position             */
   PCHAR newPtr;                        /* pointer to replacement data       */
   RexxString *result;                  /* returned result string            */
+  size_t i;
+
                                        /* force needle to a string          */
   needle = REQUIRED_STRING(needle, ARG_ONE);
                                        /* newneedle must be a string two    */
   newNeedle = REQUIRED_STRING(newNeedle, ARG_TWO);
+
+  // we'll only change up to a specified count.  If not there, we do everything.
+  size_t count = optional_position(countArg, MAX_WHOLE_NUMBER, ARG_THREE);
   matches = this->countStr(needle);    /* find the number of replacements   */
+  if (matches > count)                 // the matches are bounded by the count
+  {
+      matches = count;
+  }
   needleLength = needle->length;       /* get the length of the needle      */
   newLength = newNeedle->length;       /* and the replacement length        */
                                        /* get a proper sized string         */
@@ -932,7 +935,7 @@ RexxString *RexxString::changeStr(RexxString *needle,
                                        /* and the string to replace         */
   newPtr = newNeedle->stringData;
   start = 0;                           /* set a zero starting point         */
-  for (;;) {                           /* loop forever                      */
+  for (i = 0; i < matches; i++) {      /* until we hit count or run out     */
     match = this->pos(needle, start);  /* look for the next occurrence      */
     if (match == 0)                    /* not found?                        */
       break;                           /* get out of here                   */
@@ -955,8 +958,7 @@ RexxString *RexxString::changeStr(RexxString *needle,
   return result;                       /* finished                          */
 }
 
-RexxString *RexxString::caselessChangeStr(RexxString *needle,
-                                  RexxString *newNeedle)
+RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg)
 /******************************************************************************/
 /* Function:  Change strings into another string.                             */
 /******************************************************************************/
@@ -971,11 +973,20 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle,
   PCHAR copy;                          /* current copy position             */
   PCHAR newPtr;                        /* pointer to replacement data       */
   RexxString *result;                  /* returned result string            */
+  size_t i;
+
                                        /* force needle to a string          */
   needle = REQUIRED_STRING(needle, ARG_ONE);
                                        /* newneedle must be a string two    */
   newNeedle = REQUIRED_STRING(newNeedle, ARG_TWO);
+  // we'll only change up to a specified count.  If not there, we do everything.
+  size_t count = optional_position(countArg, MAX_WHOLE_NUMBER, ARG_THREE);
+
   matches = this->caselessCountStr(needle);    /* find the number of replacements   */
+  if (matches > count)                 // the matches are bounded by the count
+  {
+      matches = count;
+  }
   needleLength = needle->length;       /* get the length of the needle      */
   newLength = newNeedle->length;       /* and the replacement length        */
                                        /* get a proper sized string         */
@@ -985,7 +996,7 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle,
                                        /* and the string to replace         */
   newPtr = newNeedle->stringData;
   start = 0;                           /* set a zero starting point         */
-  for (;;) {                           /* loop forever                      */
+  for (i = 0; i < matches; i++) {      /* until we hit count or run out     */
     match = this->caselessPos(needle, start);  /* look for the next occurrence      */
     if (match == 0)                    /* not found?                        */
       break;                           /* get out of here                   */

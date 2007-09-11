@@ -68,6 +68,8 @@
 
 const int MAX_ERROR_NUMBER = 99999;        /* maximum error code number         */
 const int MAX_SYMBOL_LENGTH = 250;         /* length of a symbol name           */
+const int MAX_WHOLE_NUMBER = 999999999;    // maximum positive whole number
+const int MIN_WHOLE_NUMBER = -999999999;   // minimum negative whole number
 
 /******************************************************************************/
 /* Numeric setting constants                                                  */

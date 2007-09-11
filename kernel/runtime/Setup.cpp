@@ -1224,8 +1224,8 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_WORDS                        ,TheStringBehaviour, CPPMSTR(RexxString::words), 0);
   defineKernelMethod(CHAR_ABBREV                       ,TheStringBehaviour, CPPMSTR(RexxString::abbrev), 2);
   defineKernelMethod(CHAR_CASELESSABBREV               ,TheStringBehaviour, CPPMSTR(RexxString::caselessAbbrev), 2);
-  defineKernelMethod(CHAR_CHANGESTR                    ,TheStringBehaviour, CPPMSTR(RexxString::changeStr), 2);
-  defineKernelMethod(CHAR_CASELESSCHANGESTR            ,TheStringBehaviour, CPPMSTR(RexxString::caselessChangeStr), 2);
+  defineKernelMethod(CHAR_CHANGESTR                    ,TheStringBehaviour, CPPMSTR(RexxString::changeStr), 3);
+  defineKernelMethod(CHAR_CASELESSCHANGESTR            ,TheStringBehaviour, CPPMSTR(RexxString::caselessChangeStr), 3);
   defineKernelMethod(CHAR_COMPARE                      ,TheStringBehaviour, CPPMSTR(RexxString::compare), 2);
   defineKernelMethod(CHAR_CASELESSCOMPARE              ,TheStringBehaviour, CPPMSTR(RexxString::caselessCompare), 2);
   defineKernelMethod(CHAR_COPIES                       ,TheStringBehaviour, CPPMSTR(RexxString::copies), 1);

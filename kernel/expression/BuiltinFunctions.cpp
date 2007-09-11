@@ -3010,15 +3010,17 @@ BUILTIN(CONDITION) {
 }
 
 #define CHANGESTR_MIN 3
-#define CHANGESTR_MAX 3
+#define CHANGESTR_MAX 4
 #define CHANGESTR_needle     1
 #define CHANGESTR_haystack   2
 #define CHANGESTR_newneedle  3
+#define CHANGESTR_count      3
 
 BUILTIN(CHANGESTR) {
   RexxString *needle;                  /* needle to change                  */
   RexxString *haystack;                /* target haystack                   */
   RexxString *newneedle;               /* new, replacement string           */
+  RexxInteger *count;                  // max replacement count
 
   fix_args(CHANGESTR);                 /* check on require number of args   */
                                        /* get string for new                */
@@ -3027,8 +3029,10 @@ BUILTIN(CHANGESTR) {
   haystack = required_string(CHANGESTR, haystack);
                                        /* get string to change to           */
   newneedle = required_string(CHANGESTR, newneedle);
+                                       /* length is optional                */
+  count = optional_integer(CHANGESTR, count);
                                        /* go perform the pos function       */
-  return haystack->changeStr(needle, newneedle);
+  return haystack->changeStr(needle, newneedle, count);
 }
 
 #define COUNTSTR_MIN 2

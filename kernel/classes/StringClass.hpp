@@ -184,8 +184,8 @@ class RexxStringClass : public RexxClass {
    RexxInteger *words();
                                        /* the following methods are in    */
                                        /* OKBMISC                         */
-   RexxString  *changeStr(RexxString *, RexxString *);
-   RexxString  *caselessChangeStr(RexxString *, RexxString *);
+   RexxString  *changeStr(RexxString *, RexxString *, RexxInteger *);
+   RexxString  *caselessChangeStr(RexxString *, RexxString *, RexxInteger *);
    RexxInteger *abbrev(RexxString *, RexxInteger *);
    RexxInteger *caselessAbbrev(RexxString *, RexxInteger *);
    RexxInteger *compare(RexxString *, RexxString *);
