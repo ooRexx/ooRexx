@@ -85,7 +85,7 @@ RexxObject *RexxQueue::append(RexxObject *item)
 {
 
   required_arg(item, ONE);             /* make sure we have an argument     */
-  this->push(item);                    /* push onto the queue               */
+  this->queue(item);                   /* push onto the queue               */
   // the insertion index is the position.
   return new_integer(this->count);
 }
