@@ -2222,12 +2222,19 @@ BUILTIN(VALUE) {
   newvalue = optional_argument(VALUE, newValue);
                                        /* and the selector                  */
   selector = optional_string(VALUE, selector);
+  // get the variable type
+  int variableType = variable->isSymbol();
+  bool assignable = variableType == STRING_NAME || variableType == STRING_STEM || variableType == STRING_COMPOUND_NAME;
+
   if (selector == OREF_NULL) {         /* have a selector?                  */
                                        /* get a variable retriever          */
     retriever = context->getVariableRetriever(variable);
-    if ((retriever == OREF_NULL) ||
-        ((newvalue != OREF_NULL) && (variable->isSymbol() == STRING_NUMERIC)))  /* invalid variable name? */
-      report_exception3(Error_Incorrect_call_symbol, new_cstring(CHAR_VALUE), IntegerOne, variable);
+    // this could an invalid name, or we might be trying to assign a value to a non-variable
+    // symbol.
+    if (retriever == OREF_NULL || (newvalue != OREF_NULL && !assignable))
+    {
+        report_exception3(Error_Incorrect_call_symbol, new_cstring(CHAR_VALUE), IntegerOne, variable);
+    }
     else {                             /* need to perform lookup            */
                                        /* get the variable value            */
       result = retriever->getValue(context);

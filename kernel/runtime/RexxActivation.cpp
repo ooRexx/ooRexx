@@ -67,6 +67,7 @@
 #include "DoBlock.hpp"
 #include "DoInstruction.hpp"
 #include "ExpressionBaseVariable.hpp"
+#include "ExpressionDotVariable.hpp"
 #include "ExpressionVariable.hpp"
 #include "ExpressionStem.hpp"
 #include "ExpressionCompoundVariable.hpp"
@@ -3290,11 +3291,16 @@ RexxVariableBase  *RexxActivation::getVariableRetriever(
       break;
 
     case STRING_LITERAL_DOT:           /* if is is a literal                */
-    case STRING_LITERAL:
     case STRING_NUMERIC:
                                        /* these are literals                */
       retriever = (RexxVariableBase *)variable;
       break;
+
+    // Dot variables retrieve from the environment
+    case STRING_LITERAL:
+      retriever = (RexxVariableBase *)new RexxDotVariable(variable->extract(1, variable->getLength() - 1));
+      break;
+
                                        /* if it is a stem                   */
     case STRING_STEM:
                                        /* create a new stem retriever       */

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ExpressionDotVariable.hpp   */
+/* REXX Kernel                                    ExpressionDotVariable.hpp   */
 /*                                                                            */
 /* Primitive Expression Dot Variable Class Definitions                        */
 /*                                                                            */
@@ -56,6 +56,7 @@ class RexxDotVariable : public RexxVariableBase {
   void liveGeneral();
   void flatten(RexxEnvelope *);
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
+  RexxObject *getValue(RexxActivation *);
 
                                        /* name of the variable is in hash   */
 };

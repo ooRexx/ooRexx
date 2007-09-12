@@ -114,6 +114,27 @@ RexxObject * RexxDotVariable::evaluate(
   return result;                       /* also return the result            */
 }
 
+
+RexxObject * RexxDotVariable::getValue(
+    RexxActivation      *context)
+/****************************************************************************/
+/* Function:  Evaluate a REXX dot variable                                  */
+/****************************************************************************/
+{
+  RexxObject *result;                  /* dot variable value                */
+
+                                       /* get this from the source          */
+  result = context->getSource()->resolveClass(this->variableName, context);
+  if (result == OREF_NULL)             /* not there?                        */
+                                       /* try for a REXX defined name       */
+    result = context->rexxVariable(this->variableName);
+  if (result == OREF_NULL) {           /* not there?                        */
+                                       /* add a period to the name          */
+    result = this->variableName->concatToCstring(CHAR_PERIOD);
+  }
+  return result;                       /* also return the result            */
+}
+
 void * RexxDotVariable::operator new(size_t size)
 /******************************************************************************/
 /* Function:  Create a new translator object                                  */
