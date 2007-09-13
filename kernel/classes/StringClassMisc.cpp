@@ -920,7 +920,7 @@ RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, Rex
   newNeedle = REQUIRED_STRING(newNeedle, ARG_TWO);
 
   // we'll only change up to a specified count.  If not there, we do everything.
-  size_t count = optional_position(countArg, MAX_WHOLE_NUMBER, ARG_THREE);
+  size_t count = optionalPositive(countArg, MAX_WHOLE_NUMBER, ARG_THREE);
   matches = this->countStr(needle);    /* find the number of replacements   */
   if (matches > count)                 // the matches are bounded by the count
   {
@@ -980,7 +980,7 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
                                        /* newneedle must be a string two    */
   newNeedle = REQUIRED_STRING(newNeedle, ARG_TWO);
   // we'll only change up to a specified count.  If not there, we do everything.
-  size_t count = optional_position(countArg, MAX_WHOLE_NUMBER, ARG_THREE);
+  size_t count = optionalPositive(countArg, MAX_WHOLE_NUMBER, ARG_THREE);
 
   matches = this->caselessCountStr(needle);    /* find the number of replacements   */
   if (matches > count)                 // the matches are bounded by the count
