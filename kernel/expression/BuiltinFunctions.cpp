@@ -3021,7 +3021,7 @@ BUILTIN(CONDITION) {
 #define CHANGESTR_needle     1
 #define CHANGESTR_haystack   2
 #define CHANGESTR_newneedle  3
-#define CHANGESTR_count      3
+#define CHANGESTR_count      4
 
 BUILTIN(CHANGESTR) {
   RexxString *needle;                  /* needle to change                  */
