@@ -697,21 +697,6 @@
 
 ::method LastItem attribute
 
-/* DFX TODO implement storing lastitem index in the window words!!
-::method new class
-   use arg pdialog, id, category
-   Forward Class(Super) continue  /* this also calls Init */
-   obj = result
-
-   data = HandleListCtrlEx(obj~hWnd, "M", "USER", "G")
-   say "Got back" data "for USERDATA"
-   data = HandleListCtrlEx(obj~hWnd, "M", "USER", "S", 99)
-   say "Set 99, got back again:" data
-   data = HandleListCtrlEx(obj~hWnd, "M", "USER", "G")
-   say "Now got back" data "for USERDATA"
-   return obj
-*/
-
 ::method Init
    forward class (super) continue
    self~LastItem = -1
@@ -1562,10 +1547,6 @@
 
 ::method GetText
     return HandleControlEx(self~hDlg, self~id, "E", "TXT")
-
-::method SetText
-    use strict arg text
-    return HandleControlEx(self~hDlg, self~id, "E", "TXT", text)
 
 ::method HideBalloon
     return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP")
