@@ -178,8 +178,8 @@
       if style~wordpos("DS_MODALFRAME") = 0 then ret = ret ||" NOTMODAL"
       if style~wordpos("WS_SYSMENU") = 0 then ret = ret ||" NOMENU"
       if style~wordpos("WS_THICKFRAME") > 0 then ret = ret ||" THICKFRAME"
-      if style~wordpos("WS_MINIMIZEBOX") > 0 then ret = ret ||" MINIMIZEBOX"
-      if style~wordpos("WS_MAXIMIZEBOX") > 0 then ret = ret ||" MAXIMIZEBOX"
+      if style~wordpos("WS_MINIMIZEBOX") > 0 | style~wordpos("WS_GROUP") > 0 then ret = ret ||" MINIMIZEBOX"
+      if style~wordpos("WS_MAXIMIZEBOX") > 0 | style~wordpos("WS_TABSTOP") > 0  then ret = ret ||" MAXIMIZEBOX"
       if style~wordpos("WS_OVERLAPPED") > 0 then ret = ret ||" OVERLAPPED"
    end
    else if kind = "BTN" then do

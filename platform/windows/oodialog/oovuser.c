@@ -197,6 +197,46 @@ ULONG APIENTRY GetScreenSize(
 }
 
 
+ULONG APIENTRY GetSysMetrics(
+  PUCHAR funcname,
+  ULONG argc,
+  RXSTRING argv[],
+  PUCHAR qname,
+  PRXSTRING retstr )
+{
+    ULONG uVal;
+
+    if ( argc == 1 )
+    {
+        uVal = GetSystemMetrics(atoi(argv[0].strptr));
+
+        sprintf(retstr->strptr, "%d", uVal);
+        retstr->strlength = strlen(retstr->strptr);
+    }
+    else
+    {
+        PSZ token;
+        PSZ str;
+
+        if ( argv[0].strlength == 0 ) RETVAL(-3)
+
+        str = _strdup(argv[0].strptr);
+        printf("Starting string: %s\n", str);
+
+        token = strtok(str, " ");
+        while( token != NULL )
+        {
+           printf(" %s\n", token);
+           token = strtok(NULL, " ");
+        }
+        free(str);
+        RETVAL(0);
+    }
+
+    return 0;
+}
+
+
 void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx, INT cy,
                 CHAR * dlgClass, CHAR * title, CHAR * fontname, INT fontsize, ULONG lStyle)
 {
@@ -308,7 +348,7 @@ ULONG APIENTRY UsrDefineDialog(
    if (strstr(opts, "HSCROLL")) lStyle |= WS_HSCROLL;
 
    if (strstr(opts, "OVERLAPPED")) lStyle |= WS_OVERLAPPED;
-
+   printf("Create Dlg style opts: %s lStyle: %d\n", opts, lStyle);
    /*                     expected        x          y        cx        cy  */
    UCreateDlg(&pbase, &p, buffer[4], buffer[0], buffer[1], buffer[2], buffer[3],
    /*            class         title            fontname         fontsize */

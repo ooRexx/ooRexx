@@ -216,6 +216,7 @@ ULONG APIENTRY WindowRect(
        else
           RETC(1)
    }
+   RETERR
 }
 
 
@@ -232,8 +233,11 @@ ULONG APIENTRY HandleDC_Obj(
 {
    HDC hDC;
    HWND w;
+   static int tmp = 0;
 
    CHECKARGL(2);
+
+   if ( !tmp++ ) SetLastError(0);
 
    if (argv[0].strptr[0] == 'G')      /* Get a window dc */
    {
@@ -262,7 +266,11 @@ ULONG APIENTRY HandleDC_Obj(
    else
    if (argv[0].strptr[0] == 'D')      /* delete a graphic object (pen, brush, font) */
    {
-       RETC(!DeleteObject((HGDIOBJ)atol(argv[1].strptr)))
+       int ret;
+
+       ret = DeleteObject((HGDIOBJ)strtoul(argv[1].strptr,'\0',10));
+       if ( ret == 0 ) printf("DeleteObject ret: %d last err: %d\n", ret, GetLastError());
+       RETC(!ret)
    }
    else
    if (argv[0].strptr[0] == 'P')      /* Create a pen */
@@ -327,6 +335,8 @@ ULONG APIENTRY HandleDC_Obj(
        }
        else if (argc == 2)                   /* color brush */
           hB = CreateSolidBrush(PALETTEINDEX(atoi(argv[1].strptr)));
+          // hB = GetSysColorBrush(COLOR_BTNFACE);  DFX TODO add createSystemBrush
+          // to ooDialog.
        else hB = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
 
        RETVAL((ULONG)hB)
@@ -577,6 +587,8 @@ ULONG APIENTRY SetBackground(
                dlgAdm->ColorTab[dlgAdm->CT_size].ColorBk = atoi(argv[3].strptr);
                if (argc == 5) dlgAdm->ColorTab[i].ColorFG = atoi(argv[4].strptr); else dlgAdm->ColorTab[i].ColorFG = -1;
                dlgAdm->ColorTab[dlgAdm->CT_size].ColorBrush = (HBRUSH)CreateSolidBrush(PALETTEINDEX(dlgAdm->ColorTab[dlgAdm->CT_size].ColorBk));
+               //dlgAdm->ColorTab[dlgAdm->CT_size].ColorBrush = (HBRUSH)GetSysColorBrush(dlgAdm->ColorTab[dlgAdm->CT_size].ColorBk);
+               // DFX TODO add method for setting colore to system color.
                dlgAdm->CT_size++;
            }
        }
