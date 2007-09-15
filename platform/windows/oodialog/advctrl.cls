@@ -1548,6 +1548,10 @@
 ::method GetText
     return HandleControlEx(self~hDlg, self~id, "E", "TXT")
 
+::method SetText
+    use strict arg text
+    return HandleControlEx(self~hDlg, self~id, "E", "TXT", text)
+
 ::method HideBalloon
     return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP")
 
