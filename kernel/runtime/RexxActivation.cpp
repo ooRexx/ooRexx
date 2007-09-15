@@ -1825,6 +1825,20 @@ RexxObject * RexxActivation::rexxVariable(   /* retrieve a program entry        
     else                               /* just return the name              */
       result = name->concatToCstring(".");
   }
+  else if (name->strCompare(CHAR_LINE))  /* current line (".line")?    */
+  {
+      // if this is an interpret, we need to report the line number of
+      // the context that calls the interpret.
+      if (this->activation_context == INTERPRET)
+      {
+          result = sender->rexxVariable(name);
+      }
+      else
+      {
+
+          result = new_integer(this->current->getLine());
+      }
+  }
   return result;                       /* return the result                 */
 }
 
