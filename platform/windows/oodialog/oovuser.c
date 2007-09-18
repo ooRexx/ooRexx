@@ -615,9 +615,19 @@ ULONG APIENTRY UsrAddControl(
        if (strstr(argv[8].strptr,"DEFAULT")) lStyle |= BS_DEFPUSHBUTTON; else lStyle |= BS_PUSHBUTTON;
 
        if (strstr(argv[8].strptr,"OWNER")) lStyle |= BS_OWNERDRAW;
-       if (strstr(argv[8].strptr,"NOTIFY")) lStyle |= BS_NOTIFY;
        if (strstr(argv[8].strptr,"LEFTTEXT")) lStyle |= BS_LEFTTEXT;
        if (strstr(argv[8].strptr,"BITMAP")) lStyle |= BS_BITMAP;
+       if (strstr(argv[8].strptr,"LEFT")) lStyle |= BS_LEFT;
+       if (strstr(argv[8].strptr,"RIGHT")) lStyle |= BS_RIGHT;
+       if (strstr(argv[8].strptr,"HCENTER")) lStyle |= BS_CENTER;
+       if (strstr(argv[8].strptr,"TOP")) lStyle |= BS_TOP;
+       if (strstr(argv[8].strptr,"BOTTOM")) lStyle |= BS_BOTTOM;
+       if (strstr(argv[8].strptr,"VCENTER")) lStyle |= BS_VCENTER;
+       if (strstr(argv[8].strptr,"PUSHLIKE")) lStyle |= BS_PUSHLIKE;
+       if (strstr(argv[8].strptr,"MULTILINE")) lStyle |= BS_MULTILINE;
+       if (strstr(argv[8].strptr,"NOTIFY")) lStyle |= BS_NOTIFY;
+       if (strstr(argv[8].strptr,"FLAT")) lStyle |= BS_FLAT;
+
        if (!strstr(argv[8].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
        if (strstr(argv[8].strptr,"GROUP")) lStyle |= WS_GROUP;
        if (strstr(argv[8].strptr,"DISABLED")) lStyle |= WS_DISABLED;
