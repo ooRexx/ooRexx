@@ -405,7 +405,7 @@
    if Arg(10, 'o') = 1 then sel = ""
    if Arg(11, 'o') = 1 then disabl = ""
    opts = self~GetDefaultOpts(opts) || " OWNER"
-   if focus = "" & sel = "" & opts~wordpos("FRAME") = 0 then opts = opts || " NOTAB"
+   if focus = "" & sel = "" & opts~wordpos("FRAME") = 0 & opts~wordpos("TAB") = 0 then opts = opts || " NOTAB"
 
    self~DialogItemCount = self~DialogItemCount + 1
    self~AktPtr = UsrAddControl("BUT", self~AktPtr, id, x, y, cx, cy, text, opts)
