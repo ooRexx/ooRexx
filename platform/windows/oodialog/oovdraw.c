@@ -216,6 +216,7 @@ ULONG APIENTRY WindowRect(
        else
           RETC(1)
    }
+   RETERR
 }
 
 
@@ -262,7 +263,7 @@ ULONG APIENTRY HandleDC_Obj(
    else
    if (argv[0].strptr[0] == 'D')      /* delete a graphic object (pen, brush, font) */
    {
-       RETC(!DeleteObject((HGDIOBJ)atol(argv[1].strptr)))
+       RETC(!DeleteObject((HGDIOBJ)strtoul(argv[1].strptr,'\0',10)));
    }
    else
    if (argv[0].strptr[0] == 'P')      /* Create a pen */

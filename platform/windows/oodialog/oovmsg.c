@@ -478,9 +478,9 @@ ULONG APIENTRY SendWinMsg(
        for (i=0; i<4; i++)
        {
           if (ISHEX(argv[i+1].strptr))
-              n[i] = (ULONG)strtol(argv[i+1].strptr,'\0',16);
+              n[i] = strtoul(argv[i+1].strptr,'\0',16);
           else
-              n[i] = atol(argv[i+1].strptr);
+              n[i] = strtoul(argv[i+1].strptr,'\0',10);
        }
 
        ltoa(SendMessage((HWND)n[0], n[1], (WPARAM)n[2], (LPARAM)n[3]), retstr->strptr, 10);
