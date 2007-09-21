@@ -1556,8 +1556,11 @@
     return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP")
 
 ::method ShowBalloon
-    use arg title, text
-    return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP", title, text)
+    use arg title, text, icon
+    if arg(3, 'E') then
+        return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP", title, text, icon~translate)
+    else
+        return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP", title, text)
 
 ::method SetCue
     use arg text

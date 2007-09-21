@@ -1041,7 +1041,7 @@ ULONG APIENTRY HandleControlEx(
                     else
                         RETVAL(1)
                 }
-                else if ( argc == 7 )  /* EM_SHOWBALLONTIP */
+                else if ( argc >= 7 )  /* EM_SHOWBALLONTIP */
                 {
                     EDITBALLOONTIP tip;
                     WCHAR wszTitle[128];
@@ -1062,6 +1062,12 @@ ULONG APIENTRY HandleControlEx(
                     tip.pszTitle = wszTitle;
                     tip.ttiIcon = TTI_INFO;
 
+                    if ( argc > 7 )
+                    {
+                        if ( argv[7].strptr[0] == 'E' ) tip.ttiIcon = TTI_ERROR;
+                        if ( argv[7].strptr[0] == 'N' ) tip.ttiIcon = TTI_NONE;
+                        if ( argv[7].strptr[0] == 'W' ) tip.ttiIcon = TTI_WARNING;
+                    }
                     RETVAL(!Edit_ShowBalloonTip(hCtrl, &tip))
                 }
                 else RETERR
@@ -1098,7 +1104,7 @@ ULONG APIENTRY HandleControlEx(
                 if ( SetWindowText(hCtrl, argv[4].strptr) == 0 )
                     RETVAL(0)
                 else
-                    RETVAL(GetLastError())
+                    RETVAL(-(LONG)GetLastError())
             }
             else
             {
