@@ -135,6 +135,8 @@ class RexxInteger : public RexxObject {
   koper (integer_operator_not)
 
   inline long getVal() {return this->value;}
+  inline wholenumber_t wholeNumber() {return this->value;}
+  inline stringsize_t stringSize() {return (stringsize_t)this->value;}
   inline long incrementValue() {return ++this->value;}
   inline long decrementValue() {return --this->value;}
   inline RexxString *getStringrep() {return this->stringrep;}

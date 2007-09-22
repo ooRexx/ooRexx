@@ -53,6 +53,7 @@
 #include "RexxCore.h"
 #include "IntegerClass.hpp"
 #include "RexxNativeAPI.h"                    /* Method macros */
+#include "RexxDateTime.hpp"
 
 #ifdef AIX
 #include <time.h>
@@ -65,10 +66,8 @@ extern ULONG  RexxTimeSliceTimer;
 extern ULONG  rexxTimeSliceTimerOwner;
 extern RexxInteger * ProcessName;
 
-static INT dayc[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
-
 void SysGetCurrentTime(
-  REXXDATETIME *Date )                 /* returned data structure    */
+  RexxDateTime *Date )                 /* returned data structure    */
 {
 //  time_t Tp;                         /* long int for               */
 //  time_t *Tpnt = NULL;
@@ -89,15 +88,10 @@ void SysGetCurrentTime(
   Date->hours = SystemDate->tm_hour;
   Date->minutes = SystemDate->tm_min;
   Date->seconds = SystemDate->tm_sec;
-  Date->hundredths = tv.tv_usec/10000;
   Date->microseconds = tv.tv_usec;
   Date->day = SystemDate->tm_mday;
   Date->month = ++SystemDate->tm_mon;
   Date->year = SystemDate->tm_year + 1900;
-  Date->weekday = SystemDate->tm_wday;
-  Date->yearday = SystemDate->tm_yday + 1;
-//  if (Date->month > 2 && (!(Date->year % 4)) && ((Date->year % 100) || (! (Date->year % 400))))
-//    Date->yearday++;
 }
 
 /*********************************************************************/

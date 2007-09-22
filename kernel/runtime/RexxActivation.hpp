@@ -48,6 +48,7 @@
 #include "DoBlock.hpp"                /* need do block definition          */
                                        /* various activation settings       */
 #include "RexxLocalVariables.hpp"        /* local variable cache definitions  */
+#include "RexxDateTime.hpp"
 
 #define trace_debug         0x00000001 /* interactive trace mode flag       */
 #define trace_all           0x00000002 /* trace all instructions            */
@@ -130,8 +131,8 @@ class ACTSETTINGS {
       LONG return_status;                  /* command return status             */
       LONG traceindent;                    /* trace indentation                 */
       ACTIVATION_SETTINGS global_settings; /* globally effective settings       */
-      REXXDATETIME elapsed_time;           /* elapsed time clock                */
-      REXXDATETIME timestamp;              /* current timestamp                 */
+      int64_t elapsed_time;                /* elapsed time clock                */
+      RexxDateTime timestamp;              /* current timestamp                 */
       BOOL intermediate_trace;             /* very quick test for intermediate trace */
       RexxLocalVariables local_variables;  /* the local variables for this activation */
 };
@@ -236,8 +237,8 @@ RexxObject * activation_find  (void);
    RexxObject      * internalCall(RexxInstruction *, size_t, RexxExpressionStack *);
    RexxObject      * internalCallTrap(RexxInstruction *, RexxDirectory *);
    RexxObject      * command(RexxString *, RexxString *);
-   void              getElapsed(PVOID);
-   void              getTime(PVOID);
+   int64_t           getElapsed();
+   RexxDateTime      getTime();
    RexxInteger     * random(RexxInteger *, RexxInteger *, RexxInteger *);
    LONG              currentLine();
    void              arguments(RexxObject *);

@@ -211,7 +211,7 @@ RexxNumberString *RexxInteger::numberString()
                                        /* use its numberstring value        */
     return this->stringrep->numberString();
   else                                 /* create a new numberstring         */
-    return (RexxNumberString *)new_numberstringL(this->value);
+    return (RexxNumberString *)new_numberstring(this->value);
 }
 
 long RexxInteger::longValue(

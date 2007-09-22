@@ -199,11 +199,6 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 #define new_method(i,e,a,c)               (new RexxMethod (i, e, a, c))
 #define new_CPPmethod(p,s,c)              (new RexxMethod (p, s, c))
 #define new_nmethod(p,l)                  (TheNativeCodeClass->newClass(p, l))
-#define new_numberstring(s,l)             (TheNumberStringClass->classNew(s, l))
-#define new_numberstringL(l)              (TheNumberStringClass->newLong(l))
-#define new_numberstringUL(l)             (TheNumberStringClass->newULong(l))
-#define new_numberstringF(l)              (TheNumberStringClass->newFloat(l))
-#define new_numberstringD(l)              (TheNumberStringClass->newDouble(l))
 #define new_object(s)                     (memoryObject.newObject((long)(s)))
 #define new_arrayofObject(s,c,b)          (memoryObject.newObjects(s, c, b))
 #define new_pointer(p)                    (TheIntegerClass->newCache((LONG)p))
@@ -753,6 +748,15 @@ EXTERN void *VFTArray[highest_T];      /* table of virtual functions        */
 #define OTYPENUM(t,r) (ObjectTypeNumber(r) == T_##t)
 #define IsSameType(me, you) (ObjectType(me) == ObjectType(you))
 
+                                       /* current object's behaviour        */
+#define objectType(r) (((RexxObject *)(r))->behaviour)
+#define objectTypeNumber(r) (objectType(r)->typenum())
+                                       /* check the object type             */
+#define isOfClass(t,r) (objectType(r) == The##t##Behaviour)
+#define hasTypeNumber(t, r) (objectTypeNumber(r) == T_##t)
+#define isSameType(me, you) (objectType(me) == objectType(you))
+
+
 /* assign a new behaviour */
 #define BehaviourSet(o, b)  (o)->behaviour = (RexxBehaviour *)b
 
@@ -839,7 +843,8 @@ extern double NO_DOUBLE;
 
 #ifndef GDATA_BUILD_BEHAVIOURS
 
- #include "ObjectClass.hpp"               /* get real definition of Object     */
+#include "ObjectClass.hpp"               /* get real definition of Object     */
+
 
 /******************************************************************************/
 /* Method pointer special types                                               */
@@ -1035,6 +1040,19 @@ void process_new_args(RexxObject **, size_t, RexxObject ***, size_t *, size_t, R
 const int POSITIVE    = 1;             /* integer must be positive          */
 const int NONNEGATIVE = 2;             /* integer must be non-negative      */
 const int WHOLE       = 3;             /* integer must be whole             */
+
+
+#ifndef GDATA
+
+// some very common class tests
+inline bool isString(RexxObject *o) { return isOfClass(String, o); }
+inline bool isInteger(RexxObject *o) { return isOfClass(Integer, o); }
+inline bool isArray(RexxObject *o) { return isOfClass(Array, o); }
+inline bool isStem(RexxObject *o) { return isOfClass(Stem, o); }
+inline bool isActivation(RexxObject *o) { return isOfClass(Activation, o); }
+inline bool isMethod(RexxObject *o) { return isOfClass(Method, o); }
+#endif
+
 
 /* The next macro is specifically for REQUESTing a STRING, since there are    */
 /* four primitive classes that are equivalents for strings.  It will trap on  */

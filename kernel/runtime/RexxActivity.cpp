@@ -414,7 +414,7 @@ void RexxActivity::generateRandomNumberSeed()
 /* Function:  Generate a fresh random number seed.                            */
 /******************************************************************************/
 {
-  REXXDATETIME  timestamp;             /* current timestamp                 */
+  RexxDateTime  timestamp;             /* current timestamp                 */
   LONG          i;                     /* loop counter                      */
   static int rnd = 0;
 
@@ -3515,7 +3515,7 @@ void process_message_arguments(
                                        /* get the number                    */
         tempULong = va_arg(*arguments, ULONG);
                                        /* create an integer object          */
-        argument_list->addLast(new_numberstringUL(tempULong));
+        argument_list->addLast(new_numberstring((stringsize_t)tempULong));
         break;
 
       case 'h':                        /* USHORT                            */

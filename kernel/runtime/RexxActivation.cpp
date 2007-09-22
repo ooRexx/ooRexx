@@ -2176,49 +2176,39 @@ void RexxActivation::traceBack(
 }
 
 
-void RexxActivation::getTime(          /* retrieve activation timestamp     */
-    PVOID  outtime )                   /* returned timestamp                */
+RexxDateTime RexxActivation::getTime()
 /******************************************************************************/
 /* Function:  Retrieve the current activation timestamp, retrieving a new     */
 /*            timestamp if this is the first call for a clause                */
 /******************************************************************************/
 {
                                        /* not a valid time stamp?           */
-  if (this->settings.timestamp.valid == FALSE) {
-                                       /* need to reset elapsed time?       */
-    if (this->settings.elapsed_time.valid == TRUE) {
-                                       /* just copy the existing timestamp  */
-      memcpy((PVOID)&this->settings.elapsed_time, (PVOID)&this->settings.timestamp, sizeof(REXXDATETIME));
-                                       /* turn off the reset flag           */
-      this->settings.elapsed_time.valid = FALSE;
-    }
+  if (!this->settings.timestamp.valid)
+  {
                                        /* get a fresh time stamp            */
     SysGetCurrentTime(&this->settings.timestamp);
                                        /* got a new one                     */
-    this->settings.timestamp.valid = TRUE;
+    this->settings.timestamp.valid = true;
   }
                                        /* return the current time           */
-  *((REXXDATETIME *)outtime) = this->settings.timestamp;
+  return this->settings.timestamp;
 }
 
 
-void RexxActivation::getElapsed(       /* retrieve activation elapsed time  */
-    PVOID  outtime )                   /* returned timestamp                */
+int64_t RexxActivation::getElapsed()
 /******************************************************************************/
 /* Function:  Retrieve the current elapsed time counter start time, starting  */
 /*            the counter from the current time stamp if this is the first    */
 /*            call                                                            */
 /******************************************************************************/
 {
-                                       /* no active elapsed time clock yet? */
-  if (this->settings.elapsed_time.year == 0) {
-                                       /* just copy the current timestamp   */
-    memcpy((PVOID)&this->settings.elapsed_time, (PVOID)&this->settings.timestamp, sizeof(REXXDATETIME));
-                                       /* make sure the reset is off        */
-    this->settings.elapsed_time.valid = FALSE;
+  // no active elapsed time clock yet?
+  if (this->settings.elapsed_time == 0)
+  {
+
+      settings.elapsed_time = settings.timestamp.getBaseTime();
   }
-                                       /* return the current time           */
-  *((REXXDATETIME *)outtime) = this->settings.elapsed_time;
+  return settings.elapsed_time;
 }
 
 void RexxActivation::resetElapsed()     /* reset activation elapsed time     */
@@ -2229,7 +2219,7 @@ void RexxActivation::resetElapsed()     /* reset activation elapsed time     */
 /******************************************************************************/
 {
                                        /* turn on the reset flag            */
-  this->settings.elapsed_time.valid = TRUE;
+  this->settings.elapsed_time = settings.timestamp.getBaseTime();
 }
 
 #define DEFAULT_MIN 0                  /* default random minimum value      */

@@ -182,6 +182,10 @@ long number_create_integer(UCHAR *, long, int, int);
         /* check for any required rounding */
         checkPrecision();
     }
+    bool  createUnsignedInt64Value(stringchar_t *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result);
+    bool  checkIntegerDigits(stringsize_t numDigits, stringsize_t &numberLength, wholenumber_t &numberExponent, bool &carry);
+    bool  int64Value(int64_t *result, stringsize_t numDigits);
+    void  formatInt64(int64_t integer);
 
     RexxNumberString *addSub(RexxNumberString *, UINT, size_t);
     RexxNumberString *plus(RexxObject *);
@@ -222,14 +226,45 @@ long number_create_integer(UCHAR *, long, int, int);
 
 class RexxNumberStringClass : public RexxClass {
  public:
-    RexxNumberString *newDouble(PDBL);
-    RexxNumberString *newLong(long);
-    RexxNumberString *newULong(ULONG);
-    RexxNumberString *classNew(PCHAR, size_t);
-    RexxNumberString *newFloat(float);
+    static RexxNumberString *newInstance(double);
+    static RexxNumberString *newInstance(float);
+    static RexxNumberString *newInstance(wholenumber_t);
+    static RexxNumberString *newInstance(int64_t);
+    static RexxNumberString *newInstance(stringsize_t);
+    static RexxNumberString *newInstance(char *, stringsize_t);
 
 };
 
 void AdjustPrecision(RexxNumberString *, UCHAR *, int);
+
+inline RexxNumberString *new_numberstring(char *s, stringsize_t l)
+{
+    return RexxNumberStringClass::newInstance(s, l);
+}
+
+inline RexxNumberString *new_numberstring(wholenumber_t n)
+{
+    return RexxNumberStringClass::newInstance(n);
+}
+
+inline RexxNumberString *new_numberstring(stringsize_t n)
+{
+    return RexxNumberStringClass::newInstance(n);
+}
+
+inline RexxNumberString *new_numberstring(int64_t n)
+{
+    return RexxNumberStringClass::newInstance(n);
+}
+
+inline RexxNumberString *new_numberstring(double n)
+{
+    return RexxNumberStringClass::newInstance(n);
+}
+
+inline RexxNumberString *new_numberstring(float n)
+{
+    return RexxNumberStringClass::newInstance((double)n);
+}
 
 #endif

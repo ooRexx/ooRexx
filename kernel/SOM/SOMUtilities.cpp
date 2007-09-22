@@ -183,10 +183,10 @@ RexxObject *getReturnObject(TypeCode tc, void *bp, Environment *evp)
       returnObject = new_cstring(ULongStr);
       break;
     case tk_float:
-      returnObject = new_numberstringF(*(float*)bp);
+      returnObject = new_numberstring(*(float*)bp);
       break;
     case tk_double:
-      returnObject = new_numberstringD((double *)bp);
+      returnObject = new_numberstring((double *)bp);
       break;
     case tk_boolean:
       tempVal = *(boolean *)bp;

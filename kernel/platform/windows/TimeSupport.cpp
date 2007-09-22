@@ -45,6 +45,7 @@
 #include "RexxCore.h"
 #include "IntegerClass.hpp"
 #include "RexxNativeAPI.h"
+#include "RexxDateTime.hpp"
 
 extern SEV rexxTimeSliceSemaphore;
 extern ULONG  RexxTimeSliceTimer;
@@ -56,7 +57,6 @@ extern BOOL UseMessageLoop;  /* for VAC++ */
 void CALLBACK TimerProc( HWND, UINT, UINT, DWORD);
 void CALLBACK alarmTimerProc( HWND, UINT, UINT, DWORD);
 
-static INT dayc[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 static HANDLE SemHandle = 0;                  /* Event-semaphore handle repository */
 static UINT TimerHandle = 0;                   /* Timer handle                      */
 static TIMERPROC lpTimerProc;
@@ -72,7 +72,7 @@ extern BOOL rexxTimeSliceElapsed;
 #endif
 
 void SysGetCurrentTime(
-  REXXDATETIME *Date )                 /* returned data structure    */
+  RexxDateTime *Date )                 /* returned data structure    */
 /*********************************************************************/
 /* Function:  Return a time stamp to the kernel date/time functions. */
 /*********************************************************************/
@@ -84,15 +84,10 @@ void SysGetCurrentTime(
   Date->hours = SystemDate.wHour;
   Date->minutes = SystemDate.wMinute;
   Date->seconds = SystemDate.wSecond;
-  Date->hundredths = (UINT)SystemDate.wMilliseconds / (UINT )10;
- Date->microseconds = (UINT )SystemDate.wMilliseconds * (UINT )1000;
+  Date->microseconds = SystemDate.wMilliseconds * 1000;
   Date->day = SystemDate.wDay;
   Date->month = SystemDate.wMonth;
   Date->year = SystemDate.wYear;
-  Date->weekday = SystemDate.wDayOfWeek;
-  Date->yearday = (USHORT)(dayc[Date->month - 1] + Date->day);
-  if (Date->month > 2 && (!(Date->year % 4)) && ((Date->year % 100) || (! (Date->year % 400))))
-    Date->yearday++;                   /* adjust for leap year       */
 }
 
 /*********************************************************************/

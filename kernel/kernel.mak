@@ -134,7 +134,8 @@ OKIOBJ1=$(OR_OUTDIR)\RexxActivation.$(OBJ) $(OR_OUTDIR)\RexxActivity.$(OBJ) $(OR
 OKIOBJ2=$(OR_OUTDIR)\RexxHashTable.$(OBJ)   $(OR_OUTDIR)\RexxCode.$(OBJ)  $(OR_OUTDIR)\RexxSOMCode.$(OBJ)  \
         $(OR_OUTDIR)\RexxListTable.$(OBJ) $(OR_OUTDIR)\RexxNativeActivation.$(OBJ) $(OR_OUTDIR)\RexxNativeMethod.$(OBJ)
 OKIOBJ3=$(OR_OUTDIR)\RexxCollection.$(OBJ)   $(OR_OUTDIR)\RexxSmartBuffer.$(OBJ) $(OR_OUTDIR)\StackClass.$(OBJ)  \
-        $(OR_OUTDIR)\RexxVariable.$(OBJ)    $(OR_OUTDIR)\RexxVariableDictionary.$(OBJ)
+        $(OR_OUTDIR)\RexxVariable.$(OBJ)    $(OR_OUTDIR)\RexxVariableDictionary.$(OBJ) $(OR_OUTDIR)\RexxDateTime.$(OBJ) \
+	$(OR_OUTDIR)\Numerics.$(OBJ)
 
 OKPOBJS=$(OKPOBJ1) $(OKPOBJ2) $(OKPOBJ3) $(OKPOBJ4) $(OKPOBJ5)
 OKIOBJS=$(OKIOBJ1) $(OKIOBJ2) $(OKIOBJ3)

@@ -484,7 +484,7 @@ RexxNumberString *RexxNumberString::addSub(
   if (((leftLength == rightLength) && (leftExp == rightExp)) &&
       !(memcmp(left->number, right->number, leftLength)) ) {
 
-    return new_numberstring("0",1L);   /* Yes, return Zero as result.       */
+    return new_numberstring("0", 1);   /* Yes, return Zero as result.       */
   }
   operation = OT_MINUS;                /* We are now doing a subtraction.   */
  }

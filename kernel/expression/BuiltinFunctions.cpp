@@ -54,6 +54,8 @@
 #include "ExpressionBaseVariable.hpp"
 #include "SourceFile.hpp"
 #include "BuiltinFunctions.hpp"
+#include "RexxDateTime.hpp"
+#include "Numerics.hpp"
 
 
 /* checks if pad is a single character string */
@@ -1036,358 +1038,6 @@ BUILTIN(ARG) {
   return result;                       /* all finished                      */
 }
 
- static char *daynames[] = {           /* static data for date/time         */
-    "Sunday",                          /* formatting                        */
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday"
- };
-
- static char *monthnames[] = {
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December"
- };
-
-#define MONTHS  12                     /* months in a year                  */
-
- static ULONG monthstarts[] = {
-     0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365
- };
-
- static ULONG leapmonthstarts[] = {
-     0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366
- };
-
- static ULONG monthdays[] = {
-    31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
- };
-
-#define NextDigit(digit, target) target = target * 10 + (digit - '0')
-#define IsDigit(digit) (digit >= '0' && digit <= '9')
-#define MONTH_SIZE  2                  /* size of a month date field        */
-#define DAY_SIZE    2                  /* size of a day date field          */
-#define SHORT_YEAR  2                  /* size of a 2 digit year field      */
-#define LONG_YEAR   4                  /* size of a 4 digit year field      */
-#define CHAR_MONTH  3                  /* size of the character month field */
-#define HOURS_SIZE  2                  /* size of an hours field            */
-#define MINUTES_SIZE 2                 /* size of a minutes field           */
-#define SECONDS_SIZE 2                 /* size of a seconds field           */
-#define MICRO_SIZE   6                 /* size of micro seconds field       */
-
-#define PAST_THRESHOLD   50            /* past threshold for 2 digit years  */
-#define FUTURE_THRESHOLD 49            /* future threshold for 2 digit years*/
-#define POSTMERIDIAN     "pm"          /* "pm" spec of civil time           */
-#define ANTEMERIDIAN     "am"          /* "am" spec of civil time           */
-                                       /* leap year calculation             */
-#define LeapYear(year) ((!(year % LEAP_CYCLE)) && ((year % CENTURY) || (!(year % OLYMPIAD))))
-
-#define JANUARY     1                  /* positions of the months           */
-#define FEBRUARY    2
-#define MARCH       3
-#define APRIL       4
-#define MAY         5
-#define JUNE        6
-#define JULY        7
-#define AUGUST      8
-#define SEPTEMBER   9
-#define OCTOBER     10
-#define NOVEMBER    11
-#define DECEMBER    12
-
-#define LEAPMONTH       29             /* days in a leap year February      */
-#define MAXCIVILHOURS   12             /* maximum hours in a civil time     */
-#define MAXHOURS        23             /* maximum hours in 24 hour clock    */
-#define MAXSECONDS      60             /* maximum seconds in time           */
-#define MAXMINUTES      60             /* maximum minutes in time           */
-#define HOURS_IN_DAY    24             /* hours in a day                    */
-#define MINUTES_IN_HOUR 60             /* minutes in an hour                */
-#define SECONDS_IN_MINUTE 60           /* second in a minute                */
-                                       /* seconds in an hour                */
-#define SECONDS_IN_HOUR (SECONDS_IN_MINUTE * MINUTES_IN_HOUR)
-                                       /* seconds in a complete day         */
-#define SECONDS_IN_DAY  (SECONDS_IN_HOUR * HOURS_IN_DAY)
-#define MINUTES_IN_DAY  (MINUTES_IN_HOUR * HOURS_IN_DAY)
-#define MICROSECONDS    1000000        /* microseconds in a second          */
-
-                                       /* days in a 400 year olympiad       */
-#define BASE_DAYS(year) (((year) * 365) + ((year) / 4) - ((year) / 100) + ((year) / 400))
-                                       /* days in a 400 year olympiad       */
-#define OLYMPIAD_DAYS BASE_DAYS(400)   /* days in a 400 year Olympiad       */
-#define CENTURY_DAYS  BASE_DAYS(100)   /* days in a 100 year century        */
-#define LEAP_DAYS     BASE_DAYS(4)     /* days in a 4 year leap cycle       */
-#define YEAR_DAYS     365              /* days in a normal year             */
-#define LEAP_CYCLE    4                /* years in a leap cycle             */
-#define CENTURY       100              /* years in a century                */
-#define OLYMPIAD      400              /* years in an Olympiad cycle        */
-
-ULONG GetNumber(                       /* get a number from a date spec     */
-     PCHAR         input,              /* input string                      */
-     INT           length,             /* length of the numeric field       */
-     BOOL         *invalid )           /* output location                   */
-/******************************************************************************/
-/* Function:  Validate and convert a number of the specified length into the  */
-/*            target variable.  Returns TRUE for invalid numbers.             */
-/******************************************************************************/
-{
-  ULONG    value;                      /* returned value                    */
-
-  value = 0;                           /* clear this out                    */
-  *invalid = FALSE;                    /* this is valid so far              */
-  while (length--) {                   /* do for specified length           */
-    if (IsDigit(*input))               /* real digit?                       */
-      NextDigit(*input, value);        /* add in this digit                 */
-    else {                             /* not good digit                    */
-      *invalid = TRUE;                 /* flag it                           */
-      break;                           /* get out of here                   */
-    }
-    input++;                           /* step the input pointer            */
-  }
-  return value;                        /* return the validation flag        */
-}
-
-
-BOOL  ValidateDateFormat(              /* validate the date format          */
-     PCHAR         date,               /* input date                        */
-     PCHAR         format,             /* expected format                   */
-     REXXDATETIME *output,             /* returned date information         */
-     REXXDATETIME *current )           /* current time stamp                */
-/******************************************************************************/
-/* Function:  Validate and reformat an input date according to the specified  */
-/*            format.  Format specifiers are:                                 */
-/*                                                                            */
-/*            ' '   A blank is expected \                                     */
-/*            '/'   A slash is expected |  with feature 476 these separator   */
-/*            '.'   A period is expectd |  characters can be any non-alphanum */
-/*            ':'   A colon is expected /                                     */
-/*            'm'   Start of a month specification                            */
-/*            'd'   Start of a day specification                              */
-/*            'y'   Start of a 2-digit year spec                              */
-/*            'Y'   Start of a 4-digit year spec                              */
-/*            'M'   Start of a "named" 3 character month                      */
-/*            'h'   Start of a 12-hour hour field                             */
-/*            'H'   Start of a 24-hour hour field                             */
-/*            'i'   Start of a mInutes field                                  */
-/*            's'   Start of a seconds field                                  */
-/*            'u'   Start of a microseconds field                             */
-/*            'C'   Start of a Civil time meridian designation                */
-/*            'c'   Start of a Civil time hour (no leading blanks)            */
-/*                                                                            */
-/******************************************************************************/
-{
-  PCHAR     inputscan;                 /* input string scanning pointer     */
-  PCHAR     formatscan;                /* format scanning pointer           */
-  BOOL      invalid;                   /* invalid format found              */
-  INT       i;                         /* loop counter                      */
-
-  output->day = 1;                     /* default day to 1                  */
-  output->month = 1;                   /* default month is january          */
-  output->year = 1;                    /* default year is antiquity         */
-  inputscan = date;                    /* point to the date start           */
-  formatscan = format;                 /* point to the format               */
-  invalid = FALSE;                     /* assume this will be valid         */
-
-  if (strlen(date) > strlen(format))   /* not the right length?             */
-    invalid = TRUE;                    /* this is bad                       */
-  else {                               /* scan through this                 */
-                                       /* while still good and not done     */
-    while (!invalid && *formatscan != '\0') {
-
-      switch (*formatscan) {           /* process each format piece         */
-        case 'm':                      /* month spec                        */
-                                       /* test and convert                  */
-          output->month = (SHORT) GetNumber(inputscan, MONTH_SIZE, &invalid);
-          if (output->month > MONTHS)  /* too big?                          */
-            invalid = TRUE;            /* flag this                         */
-          inputscan += MONTH_SIZE;     /* step both pointers                */
-          formatscan += MONTH_SIZE;
-          break;
-
-        case 'd':                      /* fixed length day spec             */
-                                       /* test and convert                  */
-          output->day = (SHORT) GetNumber(inputscan, DAY_SIZE, &invalid);
-          inputscan += DAY_SIZE;       /* step both pointers                */
-          formatscan += DAY_SIZE;
-          break;
-
-        case 'D':                      /* variable length day spec          */
-          output->day = 0;             /* no days yet                       */
-          if (IsDigit(*inputscan)) {   /* real digit?                       */
-                                       /* pick up the digit                 */
-            NextDigit(*inputscan, output->day);
-            inputscan++;               /* step the pointer                  */
-            if (IsDigit(*inputscan)) { /* real digit?                       */
-                                       /* pick up the digit                 */
-              NextDigit(*inputscan, output->day);
-              inputscan++;             /* step the pointer                  */
-            }
-          }
-          else                         /* not good digit                    */
-            invalid = TRUE;            /* flag it                           */
-          formatscan += DAY_SIZE;      /* skip both format specs            */
-          break;
-
-        case 'h':                      /* 12 hour hours field               */
-                                       /* test and convert                  */
-          output->hours = (SHORT) GetNumber(inputscan, HOURS_SIZE, &invalid);
-                                       /* too big?                          */
-          if (output->hours > MAXCIVILHOURS)
-            invalid = TRUE;            /* flag this                         */
-          inputscan += HOURS_SIZE;     /* step both pointers                */
-          formatscan += HOURS_SIZE;
-          break;
-
-        case 'H':                      /* 24 hour hours field               */
-                                       /* test and convert                  */
-          output->hours = (SHORT) GetNumber(inputscan, HOURS_SIZE, &invalid);
-                                       /* too big?                          */
-          if (output->hours > MAXHOURS)
-            invalid = TRUE;            /* flag this                         */
-          inputscan += HOURS_SIZE;     /* step both pointers                */
-          formatscan += HOURS_SIZE;
-          break;
-
-        case 'i':                      /* Minutes time field                */
-                                       /* test and convert                  */
-          output->minutes = (SHORT) GetNumber(inputscan, MINUTES_SIZE, &invalid);
-                                       /* too big?                          */
-          if (output->minutes >= MAXMINUTES)
-            invalid = TRUE;            /* flag this                         */
-          inputscan += MINUTES_SIZE;   /* step both pointers                */
-          formatscan += MINUTES_SIZE;
-          break;
-
-        case 's':                      /* Seconds time field                */
-                                       /* test and convert                  */
-          output->seconds = (SHORT) GetNumber(inputscan, SECONDS_SIZE, &invalid);
-                                       /* too big?                          */
-          if (output->seconds >= MAXSECONDS)
-            invalid = TRUE;            /* flag this                         */
-          inputscan += SECONDS_SIZE;   /* step both pointers                */
-          formatscan += SECONDS_SIZE;
-          break;
-
-        case 'u':                      /* micro seconds time field          */
-                                       /* test and convert                  */
-          output->microseconds = GetNumber(inputscan, MICRO_SIZE, &invalid);
-          inputscan += MICRO_SIZE;     /* step both pointers                */
-          formatscan += MICRO_SIZE;
-          break;
-
-        case 'y':                      /* two digit year spec               */
-                                       /* test and convert                  */
-          output->year = (SHORT) GetNumber(inputscan, SHORT_YEAR, &invalid);
-                                       /* add in the current century        */
-          output->year += (current->year / 100) * 100;
-                                       /* converted year in the past?       */
-          if (output->year < current->year) {
-                                       /* by more than 50 years?            */
-            if ((current->year - output->year) > PAST_THRESHOLD)
-              output->year += CENTURY; /* move it up a century              */
-          }
-          else {                       /* may be in the future              */
-                                       /* by more than 49 years?            */
-            if ((output->year - current->year ) > FUTURE_THRESHOLD)
-              output->year -= CENTURY; /* move it back a century            */
-
-          }
-          inputscan += SHORT_YEAR;     /* step both pointers                */
-          formatscan += SHORT_YEAR;
-          break;
-
-        case 'Y':                      /* four digit year spec              */
-                                       /* test and convert                  */
-          output->year = (SHORT) GetNumber(inputscan, LONG_YEAR, &invalid);
-          inputscan += LONG_YEAR;      /* step both pointers                */
-          formatscan += LONG_YEAR;
-          break;
-
-        case 'M':                      /* Three character "Mmm" form        */
-
-          invalid = TRUE;              /* default to invalid                */
-                                       /* scan the months table             */
-          for (i = 0; i < MONTHS; i++) {
-                                       /* have a match?                     */
-            if (!memcmp(monthnames[i], inputscan, CHAR_MONTH)) {
-              invalid = FALSE;         /* we're valid again                 */
-              output->month = i + 1;   /* set the month                     */
-              break;                   /* get out of here                   */
-            }
-          }
-          inputscan += CHAR_MONTH;     /* step over the date                */
-          formatscan += CHAR_MONTH;    /* step over the date                */
-          break;
-
-        case 'C':                      /* civil time spec                   */
-                                       /* "am" time                         */
-          if (!memcmp(inputscan, ANTEMERIDIAN, strlen(ANTEMERIDIAN))) {
-            if (output->hours == 12)   /* 12 something in the morning?      */
-              output->hours = 0;       /* convert to 24 hour time           */
-          }
-          else if (!memcmp(inputscan, POSTMERIDIAN, strlen(POSTMERIDIAN))) {
-            if (output->hours == 12)   /* 12 something in the afternoon?    */
-              output->hours = 0;       /* convert to 24 hour time           */
-            output->hours += 12;       /* now make into the post meridian   */
-          }
-          else
-            invalid = TRUE;            /* not proper civil time             */
-                                       /* step over the designator          */
-          inputscan += strlen(ANTEMERIDIAN);
-          formatscan += strlen(ANTEMERIDIAN);
-          break;
-
-        case 'c':                      /* civil time hours spec             */
-          output->hours = 0;           /* no hours yet                      */
-          if (IsDigit(*inputscan)) {   /* real digit?                       */
-                                       /* pick up the digit                 */
-            NextDigit(*inputscan, output->hours);
-            inputscan++;               /* step the pointer                  */
-            if (IsDigit(*inputscan)) { /* real digit?                       */
-                                       /* pick up the digit                 */
-              NextDigit(*inputscan, output->hours);
-              inputscan++;             /* step the pointer                  */
-            }
-          }
-          else                         /* not good digit                    */
-            invalid = TRUE;            /* flag it                           */
-          if (output->hours > MAXHOURS)/* too big?                          */
-            invalid = TRUE;            /* flag this                         */
-          formatscan += HOURS_SIZE;    /* just step the format pointer      */
-          break;
-                                       /* initial cases moved               */
-        default:                       /* separators to skip                */
-                                       /* not the same given?               */
-          if (*inputscan++ != *formatscan++)
-            invalid = TRUE;            /* this is bad                       */
-      }
-    }
-  }
-                                       /* end up with zero for any dates?   */
-  if (output->day == 0 || output->month == 0 || output->year == 0)
-    invalid = TRUE;                    /* this is invalid                   */
-                                       /* have a special leap year check?   */
-  if (output->month == FEBRUARY && LeapYear(output->year)) {
-    if (output->day > LEAPMONTH)       /* too many days?                    */
-      invalid = TRUE;                  /* this is bad also                  */
-  }
-                                       /* too many days for the month       */
-  else if (output->day > monthdays[output->month - 1])
-    invalid = TRUE;                    /* this is bad also                  */
-                                       /* validate the time portion         */
-  return invalid;                      /* return validation state           */
-}
 
 #define DATE_MIN 0
 #define DATE_MAX 5
@@ -1398,476 +1048,265 @@ BOOL  ValidateDateFormat(              /* validate the date format          */
 #define DATE_isep    5
 
 BUILTIN(DATE) {
-  INT   style;                         /* style of DATE output              */
-  INT   style2;                        /* style of DATE input               */
-  RexxString  *option;                 /* function option                   */
-  RexxString  *option2;                /* option string                     */
-  RexxString  *osep;                   /* option string 'osep'              */
-  RexxString  *isep;                   /* option string 'isep'              */
-  RexxString  *indate;                 /* input date                        */
-  RexxString  *month_name;             /* local month name                  */
-  REXXDATETIME timestamp;              /* working time stamp                */
-  REXXDATETIME current;                /* current activation timestamp      */
-  ULONG day;                           /* current day                       */
-  ULONG month;                         /* current month                     */
-  ULONG weekday;                       /* current weekday                   */
-  ULONG year;                          /* current year                      */
-  ULONG basedate;                      /* calculated basedate               */
-  LONG  basedays;                      /* converted base days               */
-  LONG  yearday;                       /* converted day in year             */
-  CHAR  work[80];                      /* temporary work                    */
-  CHAR  formstr[20];                   /* temporary format string           */
-  PCHAR format;                        /* format for conversion             */
-  ULONG *monthtable;                   /* pointer to month days             */
-  INT   i;                             /* loop counter                      */
-  BOOL  invalid;                       /* invalid input date format         */
+    char  work[30];                      /* temporary work                    */
 
-  fix_args(DATE);                      /* expand arguments to full value    */
-                                       /* get the option string             */
-  option = optional_string(DATE, option);
-                                       /* the input date                    */
-  indate = optional_string(DATE, indate);
-                                       /* input date format                 */
-  option2 = optional_string(DATE, option2);
-                                       /* output separator                  */
-  osep = optional_string(DATE, osep);
-                                       /* input separator                   */
-  isep = optional_string(DATE, isep);
+    fix_args(DATE);                      /* expand arguments to full value    */
 
-  context->getTime((PVOID)&current);   /* get the current activation time   */
+    // get the arguments
+    RexxString *option = optional_string(DATE, option);
+    RexxString *indate = optional_string(DATE, indate);
+    RexxString *option2 = optional_string(DATE, option2);
+    RexxString *osep = optional_string(DATE, osep);
+    RexxString *isep = optional_string(DATE, isep);
 
-  if (option == OREF_NULL)             /* just using default format?        */
-    style = 'N';                       /* use the 'Normal form              */
-  else if (option->length == 0)        /* have a null string?               */
-                                       /* this is an error                  */
-    report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerOne, new_string("BDELMNOSUW", 10), option);
-  else                                 /* need to process an option         */
-                                       /* option is first character         */
-    style = toupper(option->getChar(0));
-                                       /* opt2 or isep w/o date?            */
-  if (indate == OREF_NULL && (option2 != OREF_NULL || isep != OREF_NULL))
-                                       /* this is an error                  */
-    report_exception2(Error_Incorrect_call_noarg, new_cstring(CHAR_DATE), IntegerTwo);
+    // get a copy of the current activation time.  This will ensure
+    // a consistent timestamp across calls
+    RexxDateTime current = context->getTime();
+    // by default, we operator off of the current time.  We may end up
+    // overwriting this
+    RexxDateTime timestamp = current;
 
-  if (option2 == OREF_NULL)            /* just using default format?        */
-    style2 = 'N';                      /* use the 'Normal form              */
-  else if (option2->length == 0)       /* have a null string?               */
-                                       /* this is an error                  */
-    report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDENOSU", 7), option2);
-  else                                 /* need to process an option         */
-                                       /* option is first character         */
-    style2 = toupper(option2->getChar(0));
+    // default for both input and output styles is 'N'ormal
+    int style = 'N';
+    int style2 = 'N';
 
-                                       /* begin addition                    */
-  if (osep != OREF_NULL && strchr("BDMWL", style) != NULL)
-    report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerOne, new_string((PCHAR)&style, 1), IntegerFour);
-                                       /* end addition                      */
-
-  if (indate != OREF_NULL) {           /* given a time stamp?               */
-    invalid = FALSE;                   /* assume have a good stamp          */
-
-                                       /* begin addition                    */
-    if (isep != OREF_NULL && strchr("BDMWL", style2) != NULL)
-      report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerThree, new_string((PCHAR)&style2, 1), IntegerFive);
-                                       /* end addition                      */
-                                       /* clear the time stamp              */
-    memset(&timestamp, '\0', sizeof(REXXDATETIME));
-    switch (style2) {                  /* convert to usable form per option2*/
-
-      case 'N':                        /* 'N'ormal: default style           */
-        if (isep == OREF_NULL)         /* begin additions                   */
-          format = "DD MMM YYYY";      /* default: dd Mmm yyyy              */
-        else if (isep->length == 0)
-          format = "DDMMMYYYY";        /* without any separator             */
-        else if (isep->length > 1 || strchr(ALPHANUM, isep->getChar(0)) != NULL)
-          report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFive, new_string(isep->stringData, isep->length));
-        else if (isep->getChar(0) == ' ')
-          format = "DD MMM YYYY";      /* with spaces                       */
-        else {                         /* with user defined separator       */
-          strcpy(formstr, "DD MMM YYYY");
-          formstr[2] = isep->getChar(0);
-          formstr[6] = isep->getChar(0);
-          format = formstr;
-        }                              /* end additions                     */
-        break;
-
-      case 'B':                        /* 'B'asedate                        */
-        format = NULL;                 /* don't use verification routine    */
-                                       /*convert the value                  */
-        basedays = indate->longValue(9);
-                                       /* bad value?                        */
-        if (basedays == NO_LONG || basedays < 0)
-          invalid = TRUE;              /* have a bad value                  */
-        else {                         /* calculate a timestamp             */
-          basedays++;                  /* add one for today                 */
-                                       /* clear the working copy            */
-          memset((PVOID)&timestamp, '\0', sizeof(REXXDATETIME));
-                                       /* get to start of current 400 years */
-          timestamp.year = (USHORT)((basedays / OLYMPIAD_DAYS) * OLYMPIAD);
-                                       /* adjust this downward              */
-          basedays -= BASE_DAYS(timestamp.year);
-          if (basedays == 0)           /* end on a boundary?                */
-            basedays = YEAR_DAYS + 1;  /* last day of a leap year           */
-          else {
-                                       /* get to start of current centry    */
-            timestamp.year += (USHORT)((basedays / CENTURY_DAYS) * CENTURY);
-                                       /* get the remainder portion         */
-            basedays = basedays % CENTURY_DAYS;
-            if (basedays == 0)         /* end on a century boundary?        */
-              basedays = YEAR_DAYS;    /* normal year count - non leap year */
-            else {
-                                       /* now get to start of leap cycle    */
-              timestamp.year += (USHORT)((basedays / LEAP_DAYS) * LEAP_CYCLE);
-                                       /* strip out that part too           */
-              basedays = basedays % LEAP_DAYS;
-              if (basedays == 0)       /* end on a leap cycle?              */
-                                       /* last day of a leap year           */
-                basedays = YEAR_DAYS + 1;
-              else {
-                                       /* get the last few years            */
-                timestamp.year += (USHORT)((basedays / YEAR_DAYS));
-                                       /* down to the actual year day       */
-                basedays = basedays % YEAR_DAYS;
-                if (basedays == 0)     /* end on a year boundary?           */
-                  basedays = YEAR_DAYS;/* end of the year                   */
-                else
-                timestamp.year ++;     /* need to step to the next year     */
-              }
-            }
-          }
-          if (LeapYear(timestamp.year))/* in a leap year                    */
-                                       /* use the leap table                */
-            monthtable = leapmonthstarts;
-          else
-            monthtable = monthstarts;  /* use the standard table            */
-                                       /* find the relevant month           */
-          for (i = 0; ; i++) {
-                                       /* in the proper month yet?          */
-            if (monthtable[i] >= (ULONG) basedays) {
-              timestamp.month = i;     /* this is the proper month          */
-                                       /* finally get the days              */
-              timestamp.day = (USHORT) ((ULONG) basedays - monthtable[i - 1]);
-              break;                   /* finished                          */
-            }
-          }
+    // now process the various option specifiers
+    if (option != OREF_NULL)             /* just using default format?        */
+    {
+        if (option->length == 0)        /* have a null string?               */
+        {
+                                             /* this is an error                  */
+            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerOne, new_string("BDELMNOSUW", 10), option);
         }
-        break;
-
-      case 'D':                        /* 'D'ay of year                     */
-        format = NULL;                 /* don't use verification routine    */
-                                       /*convert the value                  */
-        yearday = indate->longValue(9);
-                                       /* bad value?                        */
-        if (yearday == NO_LONG || yearday < 0 || yearday > YEAR_DAYS + 1 ||
-            (yearday > YEAR_DAYS && !LeapYear(current.year)))
-          invalid = TRUE;              /* have a bad value                  */
-        else {                         /* calculate a timestamp             */
-                                       /* clear the working copy            */
-          memset((PVOID)&timestamp, '\0', sizeof(REXXDATETIME));
-
-          timestamp.year = current.year; /* we always use the current year  */
-
-          if (LeapYear(timestamp.year))/* in a leap year                    */
-                                       /* use the leap table                */
-            monthtable = leapmonthstarts;
-          else
-            monthtable = monthstarts;  /* use the standard table            */
-                                       /* find the relevant month           */
-          for (i = 0; ; i++) {
-                                       /* in the proper month yet?          */
-            if (monthtable[i] >= (ULONG) yearday) {
-              timestamp.month = i;     /* this is the proper month          */
-                                       /* finally get the days              */
-              timestamp.day = (USHORT) ((ULONG) yearday - monthtable[i - 1]);
-              break;                   /* finished                          */
-            }
-          }
+        else                                 /* need to process an option         */
+        {
+                                             /* option is first character         */
+            style = toupper(option->getChar(0));
         }
-        break;
-
-      case 'E':                        /* 'E'uropean format: days-month-year*/
-        if (isep == OREF_NULL)         /* begin additions                   */
-          format = "dd/mm/yy";         /* default: with slashes             */
-        else if (isep->length == 0)
-          format = "ddmmyy";           /* without any separator             */
-        else if (isep->length > 1 || strchr(ALPHANUM, isep->getChar(0)) != NULL)
-          report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFive, new_string(isep->stringData, isep->length));
-        else if (isep->getChar(0) == '/')
-          format = "dd/mm/yy";         /* with slashes                      */
-        else {                         /* with user defined separator       */
-          strcpy(formstr, "dd/mm/yy");
-          formstr[2] = isep->getChar(0);
-          formstr[5] = isep->getChar(0);
-          format = formstr;
-        }
-        break;
-
-      case 'O':                        /* 'O'rdered format: year-month-day  */
-        if (isep == OREF_NULL)
-          format = "yy/mm/dd";         /* default: with slashes             */
-        else if (isep->length == 0)
-          format = "yymmdd";           /* without any separator             */
-        else if (isep->length > 1 || strchr(ALPHANUM, isep->getChar(0)) != NULL)
-          report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFive, new_string(isep->stringData, isep->length));
-        else if (isep->getChar(0) == '/')
-          format = "yy/mm/dd";         /* with slashes                      */
-        else {                         /* with user defined separator       */
-          strcpy(formstr, "yy/mm/dd");
-          formstr[2] = isep->getChar(0);
-          formstr[5] = isep->getChar(0);
-          format = formstr;
-        }
-        break;
-
-      case 'S':                        /* 'S'tandard format (ISO date)      */
-        if (isep == OREF_NULL || isep != OREF_NULL && isep->length == 0 )
-          format = "YYYYmmdd";         /* default: compact format           */
-        else if (isep->length > 1 || strchr(ALPHANUM, isep->getChar(0)) != NULL)
-          report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFive, new_string(isep->stringData, isep->length));
-        else if (isep->getChar(0) == ' ')
-          format = "YYYY mm dd";       /* spread format                     */
-        else {                         /* spread format with separator      */
-          strcpy(formstr, "YYYY mm dd");
-          formstr[4] = isep->getChar(0);
-          formstr[7] = isep->getChar(0);
-          format = formstr;
-        }
-        break;
-
-      case 'U':                        /* 'U'SA format: month-day-year      */
-        if (isep == OREF_NULL)
-          format = "mm/dd/yy";         /* default: with slashes             */
-        else if (isep->length == 0)
-          format = "mmddyy";           /* without any separator             */
-        else if (isep->length > 1 || strchr(ALPHANUM, isep->getChar(0)) != NULL)
-          report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFive, new_string(isep->stringData, isep->length));
-        else if (isep->getChar(0) == '/')
-          format = "mm/dd/yy";         /* with slashes                      */
-        else {                         /* with user defined separator       */
-          strcpy(formstr, "mm/dd/yy");
-          formstr[2] = isep->getChar(0);
-          formstr[5] = isep->getChar(0);
-          format = formstr;
-        }
-        break;
-
-      default:
-//      work[0] = style2;              /* copy over the character           */
-        report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDENOSU", 7), new_string((PCHAR)&style2, 1));
-        break;
     }
-    if (format != NULL)                /* using common formatting?          */
-                                       /* yes, call the verify routine      */
-      invalid = ValidateDateFormat(indate->stringData, format, &timestamp, &current);
-    if (invalid) {                     /* not convert cleanly?              */
-      if (isep != OREF_NULL)
-        report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerTwo, indate, IntegerFive);
-      else
-        report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
+
+    /* opt2 or isep w/o date?            */
+    if (indate == OREF_NULL && (option2 != OREF_NULL || isep != OREF_NULL))
+    {
+        /* this is an error                  */
+        report_exception2(Error_Incorrect_call_noarg, new_cstring(CHAR_DATE), IntegerTwo);
     }
-                                       /* now calculate the yearday         */
-    timestamp.yearday = (USHORT)(monthstarts[timestamp.month - 1] + timestamp.day);
-                                       /* in a leap year?                   */
-    if (timestamp.month > 2 && (!(timestamp.year % 4)) && ((timestamp.year % 100) || (! (timestamp.year % 400))))
-      timestamp.yearday++;             /* adjust for leap year       */
-    year = timestamp.year - 1;         /* get zero based year               */
-                                       /* get the base number of days       */
-    basedate = (year * 365) + (year / 4) - (year / 100) + (year / 400);
-    basedate += timestamp.yearday;     /* add in days for this year         */
-    timestamp.weekday = (USHORT) (basedate % 7);  /* calculate the week day            */
-  }
-  else
-    timestamp = current;               /* just copy the current time stamp  */
 
-  day = (ULONG)timestamp.day;          /* get various date parts            */
-  month = (ULONG)timestamp.month;
-  year = timestamp.year;
-                                       /* 0 = sunday                        */
-  weekday = (ULONG)timestamp.weekday;
+    if (option2 != OREF_NULL)            /* just using default format?        */
+    {
+        if (option2->length == 0)            /* have a null string?               */
+        {
+                                             /* this is an error                  */
+            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDENOSU", 7), option2);
+        }
+        else                                 /* need to process an option         */
+        {
+                                             /* option is first character         */
+            style2 = toupper(option2->getChar(0));
+        }
+    }
 
-  switch (style) {                     /* process the various styles        */
+    char *outputSeparator = NULL;            // each format has it's own default
 
-    case 'B':                          /* 'B'asedate                        */
-      year--;                          /* decrement the year                */
-      basedate = (year * 365) + (year / 4) - (year / 100) + (year / 400);
-                                       /* add in days for this year         */
-      basedate += timestamp.yearday - 1;
-      sprintf(work, "%lu", basedate);  /* format this into the buffer       */
-      break;
+    // validate the output separator is only used with supported styles
+    if (osep != OREF_NULL)
+    {
+        // only certain styles support this option
+        if (strchr("BDMWL", style) != NULL)
+        {
+            report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerOne, new_string((PCHAR)&style, 1), IntegerFour);
+        }
+        if (osep->length > 1 || (osep->length == 1 && strchr(ALPHANUM, osep->getChar(0)) != NULL))
+        {
+            report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFour, new_string(osep->stringData, osep->length));
+        }
+        // string objects are null terminated, so we can point directly at what will
+        // be either 1 or 0 characters of data.
+        outputSeparator = osep->getStringData();
+    }
 
-    case 'D':                          /* 'D'ays                            */
-                                       /* format directly into the buffer   */
-      sprintf(work, "%u", timestamp.yearday);
-      break;
+    if (indate != OREF_NULL)             /* given a time stamp?               */
+    {
+        bool valid = true;                 /* assume have a good stamp          */
 
-    case 'E':                          /* 'E'uropean                        */
-      if (osep == OREF_NULL)
-        format = "%02d/%02d/%02d";     /* default format                    */
-      else if (osep->length == 0 )
-        format = "%02d%02d%02d";       /* compact format                    */
-      else if (osep->length > 1 || strchr(ALPHANUM, osep->getChar(0)) != NULL)
-        report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFour, new_string(osep->stringData, osep->length));
-      else if (osep->getChar(0) == '/')
-        format = "%02d/%02d/%02d";     /* with slashes                      */
-      else {                           /* with user defined separator       */
-        strcpy(formstr, "%02d/%02d/%02d");
-        formstr[4] = osep->getChar(0);
-        formstr[9] = osep->getChar(0);
-        format = formstr;
-      }
-      sprintf(work, format, day, month, year % 100);
-      break;
+        char *separator = NULL;            // different formats will override this
+                                           /* begin addition                    */
+        // if we have a separator, perform validation here
+        if (isep != OREF_NULL)
+        {
+            if (strchr("BDMWL", style2) != NULL)
+            {
+                report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerThree, new_string((PCHAR)&style2, 1), IntegerFive);
+            }
+            // explicitly specified delimiter, we need to validate this first
+            if (isep->length > 1 || (isep->length == 1 && strchr(ALPHANUM, isep->getChar(0)) != NULL))
+            {
+                // the field delimiter must be a single character and NOT
+                // alphanumeric, or a null character
+                report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFive, new_string(isep->stringData, isep->length));
+            }
+            // string objects are null terminated, so we can point directly at what will
+            // be either 1 or 0 characters of data.
+            separator = isep->getStringData();
+        }
 
-    case 'L':                          /* 'L'ocal                           */
-                                       /* get the month name                */
-      month_name = (RexxString *)SysMessageText(Message_Translations_January + month - 1);
-                                       /* format as a date                  */
-      sprintf(work, "%u %s %4.4u", day, month_name->stringData , year);
-      break;
+        /* clear the time stamp              */
+        timestamp.clear();
+        switch (style2)
+        {                  /* convert to usable form per option2*/
 
-    case 'M':                          /* 'M'onth                           */
-                                       /* copy the name into the buffer     */
-      strcpy(work, monthnames[month - 1]);
-      break;
+            case 'N':                        /* 'N'ormal: default style           */
+                valid = timestamp.parseNormalDate(indate->getStringData(), separator);
+                break;
 
-    case 'N':                          /* 'N'ormal -- default format        */
-      if (osep == OREF_NULL)
-        format = "%u %3.3s %4.4u";     /* default format                    */
-      else if (osep->length == 0 )
-        format = "%u%3.3s%4.4u";       /* compact format                    */
-      else if (osep->length > 1 || strchr(ALPHANUM, osep->getChar(0)) != NULL)
-        report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFour, new_string(osep->stringData, osep->length));
-      else if (osep->getChar(0) == ' ')
-        format = "%u %3.3s %4.4u";     /* with blanks                       */
-      else {                           /* with user defined separator       */
-        strcpy(formstr, "%u %3.3s %4.4u");
-        formstr[2] = osep->getChar(0);
-        formstr[8] = osep->getChar(0);
-        format = formstr;
-      }
-      sprintf(work, format, day, monthnames[month-1] , year);
-      break;
+            case 'B':                        /* 'B'asedate                        */
+            {
+                /*convert the value                  */
+                int basedays = indate->longValue(9);
+                /* bad value?                        */
+                if (basedays == NO_LONG || basedays < 0)
+                {
+                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
+                }
+                // the timestamp handles the setting directly
+                timestamp.setBaseDate(basedays);
+                break;
+            }
 
-    case 'O':                          /* 'O'rdered                         */
-      if (osep == OREF_NULL)
-        format = "%02d/%02d/%02d";     /* default format                    */
-      else if (osep->length == 0 )
-        format = "%02d%02d%02d";       /* default: compact format           */
-      else if (osep->length > 1 || strchr(ALPHANUM, osep->getChar(0)) != NULL)
-        report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFour, new_string(osep->stringData, osep->length));
-      else if (osep->getChar(0) == '/')
-        format = "%02d/%02d/%02d";     /* with slashes                      */
-      else {                           /* with user defined separator       */
-        strcpy(formstr, "%02d/%02d/%02d");
-        formstr[4] = osep->getChar(0);
-        formstr[9] = osep->getChar(0);
-        format = formstr;
-      }
-      sprintf(work, format, year % 100, month, day);
-      break;
+            case 'F':                        /* 'F'ull datetime stamp            */
+            {
+                /*convert the value                  */
+                int64_t basetime;
+                if (!Numerics::objectToInt64(indate, basetime) || basetime < 0)
+                {
+                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
+                }
+                // the timestamp handles the setting directly
+                timestamp.setBaseTime(basetime);
+                break;
+            }
 
-    case 'S':                          /* 'S'tandard format (ISO dates)     */
-      if (osep == OREF_NULL || osep != OREF_NULL && osep->length == 0 )
-        format = "%04d%02d%02d";       /* default: compact format           */
-      else if (osep->length > 1 || strchr(ALPHANUM, osep->getChar(0)) != NULL)
-        report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFour, new_string(osep->stringData, osep->length));
-      else if (osep->getChar(0) == ' ')
-        format = "%04d %02d %02d";     /* spread format                     */
-      else {                           /* spread format with separator      */
-        strcpy(formstr, "%04d %02d %02d");
-        formstr[4] = osep->getChar(0);
-        formstr[9] = osep->getChar(0);
-        format = formstr;
-      }
-      sprintf(work, format, year, month, day);
-      break;
+            case 'D':                        /* 'D'ay of year                     */
+            {
+                /*convert the value                  */
+                int yearday = indate->longValue(9);
+                /* bad value?                        */
+                if (yearday == NO_LONG || yearday < 0 || yearday > YEAR_DAYS + 1 ||
+                    (yearday > YEAR_DAYS && !LeapYear(current.year)))
+                {
+                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
+                }
+                // set the date directly
+                timestamp.setDate(current.year, yearday);
+                break;
+            }
 
-    case 'U':                          /* 'U'SA                             */
-      if (osep == OREF_NULL)
-        format = "%02d/%02d/%02d";     /* default format                    */
-      else if (osep->length == 0 )
-        format = "%02d%02d%02d";       /* default: compact format           */
-      else if (osep->length > 1 || strchr(ALPHANUM, osep->getChar(0)) != NULL)
-        report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFour, new_string(osep->stringData, osep->length));
-      else if (osep->getChar(0) == '/')
-        format = "%02d/%02d/%02d";     /* with slashes                      */
-      else {                           /* with user defined separator       */
-        strcpy(formstr, "%02d/%02d/%02d");
-        formstr[4] = osep->getChar(0);
-        formstr[9] = osep->getChar(0);
-        format = formstr;
-      }
-      sprintf(work, format, month, day, year % 100);
-      break;
+            case 'E':                        /* 'E'uropean format: days-month-year*/
+                valid = timestamp.parseEuropeanDate(indate->getStringData(), separator, current.year);
+                break;
 
-    case 'W':                          /* 'W'eekday                         */
-      strcpy(work, daynames[weekday]); /* copy over the text name           */
-      break;
+            case 'O':                        /* 'O'rdered format: year-month-day  */
+                valid = timestamp.parseOrderedDate(indate->getStringData(), separator, current.year);
+                break;
 
-    default:                           /* unrecognized                      */
-      work[0] = style;                 /* copy over the character           */
-      report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerOne, new_string("BDELMNOSUW", 10), new_string(work, 1));
-      break;
-  }
-                                       /* now create a string object        */
-  return new_string(work, strlen(work));
+            case 'S':                        /* 'S'tandard format (ISO date)      */
+                valid = timestamp.parseStandardDate(indate->getStringData(), separator);
+                break;
+
+            case 'U':                        /* 'U'SA format: month-day-year      */
+                valid = timestamp.parseUsaDate(indate->getStringData(), separator, current.year);
+                break;
+
+            default:
+                report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDEFNOSU", 7), new_string((PCHAR)&style2, 1));
+                break;
+        }
+        // if there's a formatting error
+        if (!valid)
+        {
+            // different error message depending on whether a separator was specified, or not.
+            if (isep != OREF_NULL)
+            {
+                report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerTwo, indate, IntegerFive);
+            }
+            else
+            {
+                report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
+            }
+        }
+    }
+    else
+    {
+        // just copy the current time stamp
+        timestamp = current;
+    }
+
+    int day = timestamp.day;          /* get various date parts            */
+    int month = timestamp.month;
+    int year = timestamp.year;
+    int separator = ' ';              // each format with a separator has it's own default
+
+    switch (style)
+    {                     /* process the various styles        */
+
+        case 'B':                          /* 'B'asedate                        */
+            timestamp.formatBaseDate(work);
+            break;
+
+        case 'F':                          /* 'F'asedate                        */
+            timestamp.formatBaseTime(work);
+            break;
+
+        case 'D':                          /* 'D'ays                            */
+            timestamp.formatDays(work);
+            break;
+
+        case 'E':                          /* 'E'uropean                        */
+            timestamp.formatEuropeanDate(work, outputSeparator);
+            break;
+
+        case 'L':                          /* 'L'ocal                           */
+        {
+            /* get the month name                */
+            RexxString *month_name = (RexxString *)SysMessageText(Message_Translations_January + month - 1);
+            /* format as a date                  */
+            sprintf(work, "%u %s %4.4u", day, month_name->getStringData(), year);
+            break;
+
+        }
+
+        case 'M':                          /* 'M'onth                           */
+            timestamp.formatMonthName(work);
+            break;
+
+        case 'N':                          /* 'N'ormal -- default format        */
+            timestamp.formatNormalDate(work, outputSeparator);
+            break;
+
+        case 'O':                          /* 'O'rdered                         */
+            timestamp.formatOrderedDate(work, outputSeparator);
+            break;
+
+        case 'S':                          /* 'S'tandard format (ISO dates)     */
+            timestamp.formatStandardDate(work, outputSeparator);
+            break;
+
+        case 'U':                          /* 'U'SA                             */
+            timestamp.formatUsaDate(work, outputSeparator);
+            break;
+
+        case 'W':                          /* 'W'eekday                         */
+            timestamp.formatWeekDay(work);
+            break;
+
+        default:                           /* unrecognized                      */
+            work[0] = style;                 /* copy over the character           */
+            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerOne, new_string("BDEFLMNOSUW", 10), new_string(work, 1));
+            break;
+    }
+    /* now create a string object        */
+    return new_cstring(work);
 }
-
-#define TIME_LOWER -1                  /* could not subtract times          */
-#define TIME_EQUAL  0                  /* times were exactly equal          */
-#define TIME_HIGHER 1                  /* times were subtractable           */
-
-
-INT  SubtractTimes(                    /* subtract two time stamps          */
-     REXXDATETIME *end,                /* time to subtract from             */
-     REXXDATETIME *start,              /* time to subtract out              */
-     ULONG        *seconds,            /* difference in seconds             */
-     ULONG        *microseconds)       /* difference in microseconds        */
-{
-  ULONG     startdate;                 /* starting date in days             */
-  ULONG     starttime;                 /* starting time in seconds          */
-  ULONG     enddate;                   /* ending time in days               */
-  ULONG     endtime;                   /* ending time in seconds            */
-  INT       result;                    /* subtraction result flag           */
-
-  result = TIME_LOWER;                 /* assume this is bad                */
-                                       /* get the starting date             */
-  startdate = start->yearday + BASE_DAYS(start->year) - 1;
-                                       /* and the ending date               */
-  enddate = end->yearday + BASE_DAYS(end->year) - 1;
-  starttime = (((start->hours * MINUTES_IN_HOUR) + start->minutes) * SECONDS_IN_MINUTE) + start->seconds;
-  endtime = ((end->hours * MINUTES_IN_HOUR + end->minutes) * SECONDS_IN_MINUTE) + end->seconds;
-  *seconds = 0;                        /* set an initial value              */
-  *microseconds = 0;                   /* for both values                   */
-  if (enddate < startdate)             /* ending date problem?              */
-    return TIME_LOWER;                 /* got a problem here                */
-                                       /* adjust the ending time by diff.   */
-  endtime += (enddate - startdate) * SECONDS_IN_DAY;
-  if (endtime == starttime && end->microseconds == start->microseconds)
-    result = TIME_EQUAL;               /* have time equality                */
-  else if (endtime == starttime) {     /* equal except microseconds?        */
-                                       /* not a bad result?                 */
-    if (end->microseconds > start->microseconds) {
-      result = TIME_HIGHER;            /* have a good time value            */
-                                       /* do the subtraction                */
-      *microseconds = end->microseconds - start->microseconds;
-    }
-  }
-  else if (endtime > starttime) {      /* differ by more than microseconds  */
-    result = TIME_HIGHER;              /* have a good time value            */
-                                       /* subracting going to carry?        */
-    if (start->microseconds > end->microseconds) {
-                                       /* borrow from the timestamp         */
-      *microseconds = (end->microseconds + MICROSECONDS) - start->microseconds;
-      endtime--;                       /* reduce ending time by one         */
-    }
-    else                               /* do the subtraction                */
-      *microseconds = end->microseconds - start->microseconds;
-    *seconds = endtime - starttime;    /* calculate the seconds portion     */
-  }
-  return result;                       /* return the subtraction result     */
-}
-
 
 
 #define TIME_MIN 0
@@ -1877,198 +1316,190 @@ INT  SubtractTimes(                    /* subtract two time stamps          */
 #define TIME_option2 3
 
 BUILTIN(TIME) {
-  INT   style;                         /* style of TIME output              */
-  INT   style2;                        /* style of TIME input               */
-  RexxString  *option;                 /* function option                   */
-  RexxString  *option2;                /* option string                     */
-  RexxString  *intime;                 /* input date                        */
-  REXXDATETIME timestamp;              /* working time stamp                */
-  REXXDATETIME current;                /* current activation timestamp      */
-  CHAR  work[30];                      /* temporary work                    */
-  PCHAR format;                        /* format for conversion             */
-  LONG  i;                             /* loop counter (and temporary)      */
-  ULONG hours;                         /* working hours                     */
-  ULONG minutes;                       /* working minutes                   */
-  ULONG seconds;                       /* working seconds                   */
-  ULONG microseconds;                  /* working microseconds              */
-  PCHAR ampm;                          /* am or pm pointer                  */
-  INT   threshold;                     /* time comparison threshold         */
-  BOOL  invalid;                       /* input time validation flag        */
+    char  work[30];                      /* temporary work                    */
 
-  fix_args(TIME);                      /* expand arguments to full value    */
-                                       /* get the option string             */
-  option = optional_string(TIME, option);
-                                       /* the input date                    */
-  intime = optional_string(TIME, intime);
-                                       /* input date format                 */
-  option2 = optional_string(TIME, option2);
-  context->getTime((PVOID)&current);   /* get the current activation time   */
-  if (option == OREF_NULL)             /* just using default format?        */
-    style = 'N';                       /* use the 'Normal form              */
-  else if (option->length == 0)        /* have a null string?               */
-                                       /* this is an error                  */
-    report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerOne, new_string("CEHLMNRS", 8), option);
-  else                                 /* need to process an option         */
-                                       /* option is first character         */
-    style = toupper(option->getChar(0));
-                                       /* second option and no date?        */
-  if (intime == OREF_NULL && option2 != OREF_NULL)
-                                       /* this is an error                  */
-    report_exception2(Error_Incorrect_call_noarg, new_cstring(CHAR_TIME), IntegerTwo);
+    fix_args(TIME);                      /* expand arguments to full value    */
+                                         /* get the option string             */
+    RexxString *option = optional_string(TIME, option);
+    /* the input date                    */
+    RexxString *intime = optional_string(TIME, intime);
+    /* input date format                 */
+    RexxString *option2 = optional_string(TIME, option2);
+    RexxDateTime current = context->getTime();        /* get the current activation time   */
+    RexxDateTime timestamp = current;                 // and by default we work off of that time
+    int style = 'N';                     // get the default style
 
-  if (option2 == OREF_NULL)            /* just using default format?        */
-    style2 = 'N';                      /* use the 'Normal form              */
-  else if (option2->length == 0)       /* have a null string?               */
-                                       /* this is an error                  */
-    report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerThree, new_string("CHLMNS", 6), option2);
-  else                                 /* need to process an option         */
-                                       /* option is first character         */
-    style2 = toupper(option2->getChar(0));
-
-  if (intime != OREF_NULL) {           /* given a time stamp?               */
-    if (style == 'R' || style == 'E')  /* either of the elapsed time options*/
-                                       /* this is an error                  */
-      report_exception2(Error_Incorrect_call_invalid_conversion, new_cstring(CHAR_TIME), new_string((PCHAR)&style, 1));
-    invalid = FALSE;                   /* assume have a good stamp          */
-                                       /* clear the time stamp              */
-    memset(&timestamp, '\0', sizeof(REXXDATETIME));
-    switch (style2) {                  /* convert to usable form per option2*/
-
-      case 'N':                        /* default style                     */
-        format = "HH:ii:ss";           /* 01:23:45 format (24 hour)         */
-        break;
-
-      case 'C':                        /* 'C'ivil time                      */
-        format = "cc:iiCC";            /* 1:23pm format (12-hour, no zero)  */
-        break;
-
-      case 'L':                        /* 'L'ong format                     */
-        format = "HH:ii:ss.uuuuuu";    /* full 24-hour, plus fractional     */
-        break;
-
-      case 'H':                        /* 'H'ours format                    */
-        format = NULL;                 /* don't use verification routine    */
-        i = intime->longValue(9);      /* convert the value                 */
-                                       /* bad value?                        */
-        if (i == NO_LONG || i < 0 || i >= HOURS_IN_DAY)
-          invalid = TRUE;              /* have a bad value                  */
-        else
-          timestamp.hours = (USHORT) i;/* set the hours time (other parts 0)*/
-        break;
-
-      case 'S':                        /* 'S'econds format                  */
-        format = NULL;                 /* don't use verification routine    */
-        i = intime->longValue(9);      /* convert the value                 */
-                                       /* bad value?                        */
-        if (i == NO_LONG || i < 0 || i >= SECONDS_IN_DAY)
-          invalid = TRUE;              /* have a bad value                  */
-        else {                         /* break down into complete time     */
-                                       /* get the hours                     */
-          timestamp.hours = (USHORT)(i / SECONDS_IN_HOUR);
-          i = i % SECONDS_IN_HOUR;     /* subtract out the hours portion    */
-                                       /* pull out the minutes portion      */
-          timestamp.minutes = (USHORT)(i / SECONDS_IN_MINUTE);
-                                       /* again reduce to the remainder     */
-          timestamp.seconds = (USHORT)(i % SECONDS_IN_MINUTE);
+    // do we have a style option specified?  Validate, and retrieve
+    if (option != OREF_NULL)
+    {
+        // null strings not allowed as an option character
+        if (option->length == 0)
+        {
+            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerOne, new_string("CEHLMNRS", 8), option);
         }
-        break;
-
-      case 'M':                        /* 'M'inutes format                  */
-        format = NULL;                 /* don't use verification routine    */
-        i = intime->longValue(9);      /* convert the value                 */
-                                       /* bad value?                        */
-        if (i == NO_LONG || i < 0 || i >= MINUTES_IN_DAY)
-          invalid = TRUE;              /* have a bad value                  */
-        else {                         /* break down into complete time     */
-                                       /* get the hours                     */
-          timestamp.hours = (USHORT)(i / MINUTES_IN_HOUR);
-                                       /* subtract out the hours portion    */
-          timestamp.minutes = (USHORT)(i % MINUTES_IN_HOUR);
-        }
-        break;
-
-      default:
-        work[0] = style2;              /* copy over the character           */
-        report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerThree, new_string("CHLMNS", 6), new_string(work, 1));
-        break;
+        // we only use the first character
+        style = toupper(option->getChar(0));
     }
-    if (format != NULL)                /* using common formatting?          */
-                                       /* yes, call the verify routine      */
-      invalid = ValidateDateFormat(intime->stringData, format, &timestamp, &current);
-    if (invalid)                       /* not convert cleanly?              */
-      report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((PCHAR)&style2, 1) );
-  }
-  else
-    timestamp = current;               /* just copy the current time stamp  */
-  hours = timestamp.hours;             /* copy parts of the timestamp       */
-  minutes = timestamp.minutes;
-  seconds = timestamp.seconds;
-  microseconds = timestamp.microseconds;
 
-  switch (style) {                     /* process the styles                */
+    // now repeat with the second style
+    int style2 = 'N';
 
-     case 'E':                         /* 'E'lapsed time                    */
-     case 'R':                         /* 'R'eset elapsed time              */
+    // has the input style been specified?
+    if (option2 != OREF_NULL)
+    {
+        // the second option requires an input date
+        if (intime == OREF_NULL)
+        {
+            report_exception2(Error_Incorrect_call_noarg, new_cstring(CHAR_TIME), IntegerTwo);
+        }
+        // again, must be at least one character, of which we only use the first
+        if (option2->length == 0)
+        {
+            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerThree, new_string("CHLMNS", 6), option2);
+        }
+        style2 = toupper(option2->getChar(0));
+    }
 
-                                       /* get the current elapsed time      */
-       context->getElapsed((PVOID)&current);
-                                       /* subtract the timestamps           */
-       threshold = SubtractTimes(&timestamp, &current, &seconds, &microseconds);
-       if (threshold == TIME_LOWER) {  /* have a clock reset situation?     */
-         strcpy(work, "0");            /* just return zero                  */
-         context->resetElapsed();      /* reset the clock for next time     */
-       }                               /* times equal?                      */
-       else if (threshold == TIME_EQUAL)
-         strcpy(work, "0");            /* just return zero                  */
-       else
-                                       /* format the result                 */
-         sprintf(work, "%lu.%06lu", seconds, microseconds);
-       if (style == 'R')               /* is this a reset call?             */
-         context->resetElapsed();      /* reset the clock for next time     */
-       break;
 
-     case 'C':                         /* 'C'ivil time                      */
-                                       /* get the am or pm designation      */
-       ampm = (hours >= 12) ? (PCHAR)POSTMERIDIAN : (PCHAR)ANTEMERIDIAN;
-       if (hours == 0)                 /* early morning time stamp?         */
-         hours = 12;                   /* make sure this displays as 12     */
-       else if (hours > 12)            /* afternoon or evening?             */
-         hours = hours - 12;           /* reduce to civil form              */
-                                       /* format the time stamp             */
-       sprintf(work,"%u:%2.2u%s",hours, minutes, ampm);
-       break;
+    if (intime != OREF_NULL)
+    {
+        // the input timestamp is not valid with the elapsed time options
+        if (style == 'R' || style == 'E')
+        {
+            report_exception2(Error_Incorrect_call_invalid_conversion, new_cstring(CHAR_TIME), new_string((PCHAR)&style, 1));
+        }
+        bool valid = true;                 // assume this is a good timestamp
+        timestamp.clear();                 // clear everything out
 
-     case 'H':                         /* 'Hours'                           */
-       sprintf(work,"%u",hours);       /* just format the hours             */
-       break;
+        switch (style2)
+        {
+            // default style, 01:23:45 format (24 hour)
+            case 'N':
+                valid = timestamp.parseNormalTime(intime->getStringData());
+                break;
 
-     case 'L':                         /* 'L'ong format                     */
-                                       /* format the timestamp immediately  */
-       sprintf(work,"%2.2u:%2.2u:%2.2u.%6.6lu", hours, minutes, seconds, microseconds);
-       break;
+            // 'C'ivil time, 1:23pm format (12-hour, no zero)
+            case 'C':
+                valid = timestamp.parseCivilTime(intime->getStringData());
+                break;
 
-     case 'M':                         /* 'M'inutes format                  */
-                                       /* format total number of minutes    */
-       sprintf(work,"%u", hours * MINUTES_IN_HOUR + minutes);
-       break;
+            // 'L'ong time, full 24-hour, plus fractional
+            case 'L':
+                valid = timestamp.parseLongTime(intime->getStringData());
+                break;
 
-     case 'N':                         /* 'N'ormal format...the default     */
-                                       /* just the simple hh:mm:ss form     */
-       sprintf(work, "%2.2u:%2.2u:%2.2u", hours, minutes, seconds);
-       break;
+            case 'H':                        /* 'H'ours format                    */
+            {
+                int i = intime->longValue(9);      /* convert the value                 */
+                valid = i != NO_LONG && timestamp.setHours(i);
+                break;
+            }
 
-     case 'S':                         /* 'S'econds format...total seconds  */
-                                       /* calculate total seconds           */
-       sprintf(work,"%u", (hours * MINUTES_IN_HOUR + minutes) * SECONDS_IN_MINUTE + seconds);
-       break;
+            case 'S':                        /* 'S'econds format                  */
+            {
+                int i = intime->longValue(9);      /* convert the value                 */
+                valid = i != NO_LONG && timestamp.setSeconds(i);
+                break;
+            }
 
-     default:                          /* unknown format                    */
-       work[0] = style;                /* copy over the character           */
-       report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerOne, new_string("CEHLMNRS", 8), new_string(work, 1));
-       break;
-  }
-                                       /* now create a string object        */
-  return new_string(work, strlen(work));
+            case 'M':                        /* 'M'inutes format                  */
+            {
+                int i = intime->longValue(9);      /* convert the value                 */
+                valid = i != NO_LONG && timestamp.setMinutes(i);
+                break;
+            }
+
+            case 'F':                        /* 'F'ull datetime stamp            */
+            {
+                /*convert the value                  */
+                int64_t basetime;
+                if (!Numerics::objectToInt64(intime, basetime) || basetime < 0)
+                {
+                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((PCHAR)&style2, 1));
+                }
+                // the timestamp handles the setting directly
+                timestamp.setBaseTime(basetime);
+                break;
+            }
+
+            default:
+                work[0] = style2;              /* copy over the character           */
+                report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerThree, new_string("CFHLMNS", 6), new_string(work, 1));
+                break;
+        }
+        if (!valid)                        /* not convert cleanly?              */
+        {
+            report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((PCHAR)&style2, 1) );
+        }
+    }
+
+    switch (style)
+    {                     /* process the styles                */
+
+        case 'E':                         /* 'E'lapsed time                    */
+        case 'R':                         /* 'R'eset elapsed time              */
+        {
+            /* get the current elapsed time      */
+            int64_t startTime = context->getElapsed();
+            // substract the time values
+            int64_t threshold = current.getBaseTime() - startTime;
+            if (threshold < 0)
+            {
+                strcpy(work, "0");            /* just return zero                  */
+                context->resetElapsed();      /* reset the clock for next time     */
+            }                                 /* times equal?                      */
+            else if (threshold == 0)
+            {
+                strcpy(work, "0");            /* just return zero                  */
+            }
+            else
+            {
+                // format as a long time
+                sprintf(work, "%lu.%06lu", (int)(threshold / (int64_t)MICROSECONDS), (int)(threshold % (int64_t)MICROSECONDS));
+            }
+                /* format the result                 */
+            if (style == 'R')               /* is this a reset call?             */
+            {
+                context->resetElapsed();      /* reset the clock for next time     */
+            }
+            break;
+        }
+
+        case 'C':                         /* 'C'ivil time                      */
+            timestamp.formatCivilTime(work);
+            break;
+
+        case 'H':                         /* 'Hours'                           */
+            timestamp.formatHours(work);
+            break;
+
+        case 'L':                         /* 'L'ong format                     */
+            timestamp.formatLongTime(work);
+            break;
+
+        case 'M':                         /* 'M'inutes format                  */
+            timestamp.formatMinutes(work);
+            break;
+
+        case 'N':                         /* 'N'ormal format...the default     */
+            timestamp.formatNormalTime(work);
+            break;
+
+        case 'S':                         /* 'S'econds format...total seconds  */
+            timestamp.formatSeconds(work);
+            break;
+
+        case 'F':                          /* 'F'asedate                        */
+            timestamp.formatBaseTime(work);
+            break;
+
+        default:                          /* unknown format                    */
+            work[0] = style;                /* copy over the character           */
+            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerOne, new_string("CEFHLMNRS", 8), new_string(work, 1));
+            break;
+    }
+    /* now create a string object        */
+    return new_cstring(work);
 }
 
 #define RANDOM_MIN 0

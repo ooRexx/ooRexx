@@ -105,6 +105,13 @@
 #define SysCall _cdecl
 #define SysCallV __cdecl
 
+typedef signed __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+
+#define UINT64_MAX (~((uint64_t)0))
+#define INT64_MAX  ((int64_t)(UINT64_MAX >> 1))
+#define INT64_MIN  ((int64_t)UINT64_MAX)
+
 
 /******************************************************************************/
 /* OPTIONAL:  If the implementation is going to support a cross-process       */

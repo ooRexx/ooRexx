@@ -1759,7 +1759,7 @@ RexxString *RexxStringClass::newDouble(PDBL  number)
 {
   RexxNumberString *numberStringDouble;
                                        /* get double as a number string.    */
-  numberStringDouble = (RexxNumberString *)new_numberstringD(number);
+  numberStringDouble = (RexxNumberString *)new_numberstring(*number);
                                        /* now convert to string object      */
   return numberStringDouble->stringValue();
 }

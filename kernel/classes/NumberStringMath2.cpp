@@ -115,7 +115,7 @@ RexxNumberString *RexxNumberString::Multiply(RexxNumberString *other)
  right = other->checkNumber(NumberDigits + 1, NOROUND);
                                        /* either number 0 to begin with?    */
  if (left->sign == 0 || right->sign == 0) {
-    return new_numberstring("0", 1L);  /* Yes, then result is Zero.         */
+    return new_numberstring("0", 1);   /* Yes, then result is Zero.         */
  }
 
  if (left->length > right->length) {   /* Determine the large number        */

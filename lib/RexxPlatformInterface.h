@@ -46,8 +46,10 @@
 #ifndef SYSDEF_H
 #define SYSDEF_H
 
+class RexxDateTime;
+
 #ifndef SysGetCurrentTime
-void SysGetCurrentTime(REXXDATETIME *);/* get the current time              */
+void SysGetCurrentTime(RexxDateTime *);/* get the current time              */
 #endif
 
 #ifndef SysVariablePool

@@ -52,6 +52,7 @@
 #include "RexxActivation.hpp"
 #include "NumberStringMath.hpp"
 #include "RexxBuiltinFunctions.h"                     /* Gneral purpose BIF Header file    */
+#include "Numerics.hpp"
 
                                        /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
@@ -640,6 +641,226 @@ double   RexxNumberString::doubleValue()
  else
    return doubleNumber;                /* return the converted value        */
 }
+
+
+/*********************************************************************/
+/*   Function:  Convert the numberstring to unsigned value           */
+/*********************************************************************/
+bool  RexxNumberString::createUnsignedInt64Value(stringchar_t *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result)
+{
+    // if the exponent multiplier would cause an overflow, there's no point in doing
+    // anything here
+    if (exponent > (wholenumber_t)Numerics::DIGITS64)
+    {
+        return false;
+    }
+
+    // our converted value
+    uint64_t intNumber = 0;
+
+    for (stringsize_t numpos = 1; numpos <= intlength; numpos++ )
+    {
+        // add in the next digit value
+        uint64_t newNumber = (intNumber * 10) + (uint64_t)*thisnum++;
+        // if an overflow occurs, then the new number will wrap around and be
+        // smaller that the starting value.
+        if (newNumber < intNumber)
+        {
+            return false;
+        }
+        // make this the current value and continue
+        intNumber = newNumber;
+    }
+
+    // do we need to add in a carry value because of a rounding situation?
+    if (carry)
+    {
+        // add in the carry bit and check for an overflow, again
+        uint64_t newNumber = intNumber + 1;
+        if (newNumber < intNumber)
+        {
+            return false;
+        }
+        intNumber = newNumber;
+    }
+
+    // have an exponent to process?
+    if (exponent > 0)
+    {
+        // get this as a multipler value
+        uint64_t exponentMultiplier = exponent * 10;
+        uint64_t newNumber = intNumber * exponentMultiplier;
+
+        // did this wrap?  This is a safe test, since we capped
+        // the maximum exponent size we can multiply by.
+        if (newNumber < intNumber)
+        {
+            return false;
+        }
+        intNumber = newNumber;
+    }
+
+    // was ths out of range for this conversion?
+    if (intNumber > maxValue)
+    {
+        return false;
+    }
+
+    result = intNumber;                  /* Assign return value.              */
+    return true;                         /* Indicate sucessfule converison.   */
+}
+
+
+bool RexxNumberString::checkIntegerDigits(stringsize_t numDigits, stringsize_t &numberLength,
+    wholenumber_t &numberExponent, bool &carry)
+/******************************************************************************/
+/* Function:  Check that a numberstring is convertable into an integer value  */
+/******************************************************************************/
+{
+    carry = false;
+    numberExponent = this->exp;
+    numberLength = this->length;
+
+    // is this number longer than the digits value?
+    // this is going to be truncated or rounded, so we
+    // need to see if a carry is required, and also
+    // adjust the exponent value.
+    if (this->length > numDigits)
+    {
+        // adjust the effective exponent up by the difference
+        numberExponent += (this->length - numDigits);
+        // and override the converted length to be just the digits length
+        numberLength = numDigits;
+
+        // now check to see if the first excluded digit will cause rounding
+        // if it does, we need to worry about a carry value when converting
+        if (*(this->number + numberLength) >= 5)
+        {
+            carry = true;
+        }
+    }
+    // if we have a negative exponent, then we need to look at
+    // the values below the decimal point
+    if (numberExponent < 0)
+    {
+        // the position of the decimal is the negation of the exponent
+        stringsize_t decimalPos = (stringsize_t)(-numberExponent);
+        // everything to the right of the decimal must be a zero.
+        stringchar_t compareChar = 0;
+        // if we had a previous carry condition, this changes things a
+        // bit.  Since the carry will add 1 to the right-most digit,
+        // in order for all of the decimals to end up zero, then all of
+        // the digits there must actually be '9's.
+        if (carry)
+        {
+            // if the decimal position will result in at least one padding
+            // zero, then the carry makes it impossible for all of the decimals
+            // to reduce to zero.  This cannot be a whole number.
+            if (decimalPos > numberLength)
+            {
+                return false;
+            }
+            // switch the checking value
+            compareChar = 9;
+        }
+
+        stringchar_t *numberData;
+        if (decimalPos >= numberLength )
+        {
+            // decimal is somewhere to the left of everything...
+            // all of these digits must be checked
+            decimalPos = numberLength;
+            numberData = this->number;
+        }
+        else
+        {
+            // get the exponent adjusted position
+            numberData = this->number + numberLength + numberExponent;
+        }
+
+        for ( ; decimalPos > 0 ; decimalPos--)
+        {
+            // a bad digits data means a conversion failure
+            if ( *numberData++ != compareChar)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
+bool RexxNumberString::int64Value(int64_t *result, stringsize_t numDigits)
+/******************************************************************************/
+/* Function:  Convert a number string to a long value                         */
+/******************************************************************************/
+{
+    // set up the default values
+
+    bool carry = false;
+    wholenumber_t numberExp = this->exp;
+    stringsize_t numberLength = this->length;
+    uint64_t intnum;
+
+    // if the number is exactly zero, then this is easy
+    if (this->sign == 0)
+    {
+        *result = 0;
+        return true;
+    }
+    // is this easily within limits (very common)?
+    if (length <= numDigits && numberExp >= 0)
+    {
+        if (!createUnsignedInt64Value(number, length, false, numberExp, INT64_MAX, intnum))
+        {
+            return false;                   // too big to handle
+        }
+        // adjust for the sign
+        *result = ((int64_t)intnum) * sign;
+        return true;
+    }
+
+    // this number either has decimals, or needs to be truncated/rounded because of
+    // the conversion digits value.  We need to make adjustments.
+
+    checkIntegerDigits(numDigits, numberLength, numberExp, carry);
+
+    // if because of this adjustment, the decimal point lies to the left
+    // of our first digit, then this value truncates to 0 (or 1, if a carry condition
+    // resulted).
+    if (-numberExp>= (wholenumber_t)numberLength)
+    {
+        // since we know a) this number is all decimals, and b) the
+        // remaining decimals are either all 0 or all 9s with a carry,
+        // this result is either 0 or 1.
+        *result = carry ? 1 : 0;
+        return true;
+    }
+
+    // we process different bits depending on whether this is a negative or positive
+    // exponent
+    if (numberExp < 0)
+    {
+        // now convert this into an unsigned value
+        if (!createUnsignedInt64Value(number, numberLength + numberExp, carry, 0, INT64_MAX, intnum))
+        {
+            return false;                   // to big to handle
+        }
+    }
+    else
+    {                             /* straight out number. just compute.*/
+        if (!createUnsignedInt64Value(number, numberLength, carry, numberExp, INT64_MAX, intnum))
+        {
+            return false;                   // to big to handle
+        }
+    }
+
+    // adjust for the sign
+    *result = ((int64_t)intnum) * sign;
+    return true;
+}
+
 
 BOOL  RexxNumberString::truthValue(
     LONG  errorcode )                  /* error to raise if not good        */
@@ -1500,6 +1721,47 @@ void RexxNumberString::formatULong(ULONG integer)
     this->length = current - (PCHAR)this->number;
   }
 }
+
+void RexxNumberString::formatInt64(int64_t integer)
+/******************************************************************************/
+/* Function : Format the integer num into a numberstring.                     */
+/******************************************************************************/
+{
+    if (integer == 0)
+    {                  /* is integer 0?                     */
+                       /* indicate this.                    */
+        this->setZero();
+    }
+    else
+    {                               /* number is non-zero                */
+                                    /* Format the number                 */
+        if (integer < 0 )
+        {                /* Negative integer number?          */
+            this->sign = -1;
+            integer = -integer;              /* take the positive version         */
+        }
+
+        // we convert this directly because A)  we need to post-process the numbers
+        // to make them zero based, and B) portable numeric-to-ascii routines
+        // don't really exist for the various 32/64 bit values.
+        char buffer[32];
+        int index = sizeof(buffer);
+
+        while (integer > 0)
+        {
+            // get the digit and reduce the size of the integer
+            int digit = (int)(integer % 10);
+            integer = integer / 10;
+            // store the digit
+            buffer[--index] = digit;
+        }
+
+        // copy into the buffer and set the length
+        this->length = sizeof(buffer) - index;
+        memcpy(this->number, buffer, this->length);
+    }
+}
+
 
 RexxObject *RexxNumberString::unknown(RexxString *msgname, RexxArray *arguments)
 /******************************************************************************/
@@ -2408,7 +2670,7 @@ void  *RexxNumberString::operator new(size_t size, size_t length)
   return newNumber;                    /* return the new numberstring       */
 }
 
-RexxNumberString *RexxNumberStringClass::classNew(PCHAR number, size_t len)
+RexxNumberString *RexxNumberStringClass::newInstance(char *number, stringsize_t len)
 /******************************************************************************/
 /* Function:  Create a new number string object                               */
 /******************************************************************************/
@@ -2442,7 +2704,7 @@ RexxNumberString *RexxNumberStringClass::classNew(PCHAR number, size_t len)
   return newNumber;
 }
 
-RexxNumberString *RexxNumberStringClass::newFloat(float num)
+RexxNumberString *RexxNumberStringClass::newInstance(float num)
 /******************************************************************************/
 /* Function:  Create a numberstring object from a floating point number       */
 /******************************************************************************/
@@ -2463,7 +2725,7 @@ RexxNumberString *RexxNumberStringClass::newFloat(float num)
   return result;
 }
 
-RexxNumberString *RexxNumberStringClass::newDouble(PDBL number)
+RexxNumberString *RexxNumberStringClass::newInstance(double number)
 /******************************************************************************/
 /* Function:  Create a NumberString from a double value                       */
 /******************************************************************************/
@@ -2475,7 +2737,7 @@ RexxNumberString *RexxNumberStringClass::newDouble(PDBL number)
   char doubleStr[30];
                                        /* get double as a string value.     */
                                        /* Use digits as precision.          */
-  sprintf(doubleStr, "%.*g", number_digits() + 1, *number);
+  sprintf(doubleStr, "%.*g", number_digits() + 1, number);
   resultLen = strlen(doubleStr);       /* Compute length of floatString     */
                                        /* Create new NumberString           */
   result = new (resultLen) RexxNumberString (resultLen);
@@ -2484,7 +2746,7 @@ RexxNumberString *RexxNumberStringClass::newDouble(PDBL number)
   return result;
 }
 
-RexxNumberString *RexxNumberStringClass::newLong(long integer)
+RexxNumberString *RexxNumberStringClass::newInstance(wholenumber_t integer)
 /******************************************************************************/
 /* Function:  Create a NumberString object from a long value                  */
 /******************************************************************************/
@@ -2497,7 +2759,7 @@ RexxNumberString *RexxNumberStringClass::newLong(long integer)
   return newNumber;
 }
 
-RexxNumberString *RexxNumberStringClass::newULong(ULONG integer)
+RexxNumberString *RexxNumberStringClass::newInstance(stringsize_t integer)
 /******************************************************************************/
 /* Function:  Create a NumberString object from an unsigned long value        */
 /******************************************************************************/
@@ -2509,4 +2771,18 @@ RexxNumberString *RexxNumberStringClass::newULong(ULONG integer)
   newNumber = new (10) RexxNumberString (10);
   newNumber->formatULong(integer);     /* format the integer                */
   return newNumber;
+}
+
+
+RexxNumberString *RexxNumberStringClass::newInstance(int64_t integer)
+/******************************************************************************/
+/* Function:  Create a NumberString object from a long value                  */
+/******************************************************************************/
+{
+    RexxNumberString *newNumber;
+    // this give us space for entire binary range of the number.  For 32-bit
+    // systems, this requires 10 digits.  For 64-bit, we need 20 digits.
+    newNumber = new (Numerics::ARGUMENT_DIGITS + 1) RexxNumberString (Numerics::ARGUMENT_DIGITS + 1);
+    newNumber->formatInt64(integer);  /* format the integer                */
+    return newNumber;
 }
