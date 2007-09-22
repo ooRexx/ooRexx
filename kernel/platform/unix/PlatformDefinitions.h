@@ -59,6 +59,8 @@
 #define TOTAL_STACK_SIZE 1024*512
 #define C_STACK_SIZE TOTAL_STACK_SIZE
 
+#include "stdint.h"
+
 
 /******************************************************************************/
 /* REQUIRED:  The following type definitions are used throughout the REXX     */
