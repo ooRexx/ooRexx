@@ -772,6 +772,7 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
 
             // 3 character language form
             case 'M':
+            {
                 month = 0;
                 // can months table for a descriptive match
                 for (int i = 0; i < MONTHS; i++)
@@ -791,6 +792,7 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
                 inputscan += CHAR_MONTH;     /* step over the date                */
                 formatscan += CHAR_MONTH;    /* step over the date                */
                 break;
+            }
 
             // am/pm civil time modifier
             case 'C':
