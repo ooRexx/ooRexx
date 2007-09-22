@@ -59,6 +59,10 @@
 #define TOTAL_STACK_SIZE 1024*512
 #define C_STACK_SIZE TOTAL_STACK_SIZE
 
+// The limit values for the portable int types are only included in C++ if the
+following is defined before including stdint.h.
+#define __STDC_LIMIT_MACROS
+
 #include "stdint.h"
 
 

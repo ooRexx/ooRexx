@@ -64,8 +64,6 @@ stringsize_t Numerics::DEFAULT_DIGITS  = ((stringsize_t)9);
     // for the full binary value range
 stringsize_t Numerics::ARGUMENT_DIGITS  = ((stringsize_t)10);
 #endif
-stringsize_t  Numerics::MAX_STRINGSIZE = SIZE_MAX;
-
     // max numeric digits value for explicit 64-bit conversions
 stringsize_t Numerics::DIGITS64 = ((stringsize_t)20);
 bool Numerics::FORM_SCIENTIFIC    = false;
@@ -128,7 +126,7 @@ RexxObject *Numerics::toObject(wholenumber_t v)
 RexxObject *Numerics::toObject(stringsize_t v)
 {
     // in the range for an integer object?
-    if (v <= (uintptr_t)MAX_WHOLENUMBER)
+    if (v <= (stringsize_t)MAX_WHOLENUMBER)
     {
         return new_integer((stringsize_t)v);
     }
