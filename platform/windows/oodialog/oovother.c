@@ -831,9 +831,6 @@ ULONG EditStyleToString(LONG lStyle, PRXSTRING retstr)
     if ( lStyle & WS_GROUP )       strcat(retstr->strptr, " GROUP");
     if ( lStyle & WS_HSCROLL )     strcat(retstr->strptr, " HSCROLL");
     if ( lStyle & WS_VSCROLL )     strcat(retstr->strptr, " VSCROLL");
-    if ( lStyle & ES_LEFT )        strcat(retstr->strptr, " LEFT");
-    if ( lStyle & ES_RIGHT )       strcat(retstr->strptr, " RIGHT");
-    if ( lStyle & ES_CENTER )      strcat(retstr->strptr, " CENTER");
     if ( lStyle & ES_PASSWORD )    strcat(retstr->strptr, " PASSWORD");
     if ( lStyle & ES_MULTILINE )   strcat(retstr->strptr, " MULTILINE");
     if ( lStyle & ES_AUTOHSCROLL ) strcat(retstr->strptr, " AUTOSCROLLH");
@@ -845,6 +842,10 @@ ULONG EditStyleToString(LONG lStyle, PRXSTRING retstr)
     if ( lStyle & ES_LOWERCASE )   strcat(retstr->strptr, " LOWER");
     if ( lStyle & ES_NUMBER )      strcat(retstr->strptr, " NUMBER");
     if ( lStyle & ES_OEMCONVERT )  strcat(retstr->strptr, " OEM");
+
+    if ( lStyle & ES_RIGHT ) strcat(retstr->strptr, " RIGHT");
+    else if ( lStyle & ES_CENTER ) strcat(retstr->strptr, " CENTER");
+    else strcat(retstr->strptr, " LEFT");
 
     retstr->strlength = strlen(retstr->strptr);
     return 0;
