@@ -194,6 +194,7 @@ runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/MemorySegment.hpp \
                  $(runtime_dir)/MemoryStats.hpp \
                  $(runtime_dir)/NativeMethods.h \
+                 $(runtime_dir)/Numerics.hpp \
                  $(runtime_dir)/PrimitiveClasses.h \
                  $(runtime_dir)/RexxActivation.hpp \
                  $(runtime_dir)/RexxActivationStack.hpp \
@@ -208,6 +209,7 @@ runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/RexxCompoundTail.hpp \
                  $(runtime_dir)/RexxConstants.hpp \
                  $(runtime_dir)/RexxCore.h \
+                 $(runtime_dir)/RexxDateTime.hpp \
                  $(runtime_dir)/RexxEnvelope.hpp \
                  $(runtime_dir)/RexxHashTable.hpp \
                  $(runtime_dir)/RexxInternalStack.hpp \
@@ -455,6 +457,7 @@ runtime_sources  = $(runtime_dir)/DeadObject.cpp \
                    $(runtime_dir)/MemorySegment.cpp \
                    $(runtime_dir)/MemoryStats.cpp \
                    $(runtime_dir)/NativeRoot.cpp \
+                   $(runtime_dir)/Numerics.cpp \
                    $(runtime_dir)/RexxActivation.cpp \
                    $(runtime_dir)/RexxActivationStack.cpp \
                    $(runtime_dir)/RexxActivity.cpp \
@@ -466,6 +469,7 @@ runtime_sources  = $(runtime_dir)/DeadObject.cpp \
                    $(runtime_dir)/RexxCompoundTable.cpp \
                    $(runtime_dir)/RexxCompoundTail.cpp \
                    $(runtime_dir)/RexxConstants.cpp \
+                   $(runtime_dir)/RexxDateTime.cpp \
                    $(runtime_dir)/RexxEnvelope.cpp \
                    $(runtime_dir)/RexxHashTable.cpp \
                    $(runtime_dir)/RexxInternalStack.cpp \
