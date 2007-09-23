@@ -111,6 +111,12 @@ class RexxDateTime                      // ooRexx internal time stamp class
 {
 public:
 
+    RexxDateTime();
+    RexxDateTime(int64_t basetime);
+    RexxDateTime(int basedate);
+    RexxDateTime(int year, int month, int day);
+    RexxDateTime(int year, int month, int day, int hour, int minutes, int seconds, int microseconds);
+
     inline bool isLeapYear() {
         return ((!(year % LEAP_CYCLE)) && ((year % CENTURY) || (!(year % OLYMPIAD))));
     }
@@ -118,12 +124,14 @@ public:
     int getBaseDate();
     int getTimeSeconds();
     int64_t getBaseTime();
+    int64_t getUnixTime();
     int getYearDay();
     int getWeekDay();
     const char *getMonthName();
     const char *getDayName();
-    void setBaseDate(int basedays);
-    void setBaseTime(int64_t basetime);
+    bool setBaseDate(int basedays);
+    bool setBaseTime(int64_t basetime);
+    bool setUnixTime(int64_t basetime);
     void setTimeInSeconds(int basetime);
     void clear();
     void setDate(int newYear, int newDay);
@@ -141,6 +149,7 @@ public:
     bool setMinutes(int m);
     void formatBaseDate(char *buffer);
     void formatBaseTime(char *buffer);
+    void formatUnixTime(char *buffer);
     void formatDays(char *buffer);
     void formatEuropeanDate(char *buffer, const char *sep);
     void formatMonthName(char *buffer);
@@ -177,6 +186,8 @@ protected:
     static int   monthStarts[];         // table of first day of month values for non-leap years
     static int   leapMonthStarts[];     // table of first day of month values for leap years
     static int   monthdays[];           // month number of days mapping table
+    static RexxDateTime unixBaseTime;   // a base time used for Date('T')/Time('T') calculations.
+    static RexxDateTime maxBaseTime;    // the largest possible date we can handle.
 
 };
 

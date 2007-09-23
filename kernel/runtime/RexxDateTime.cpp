@@ -39,6 +39,11 @@
 #include "RexxDateTime.hpp"
 #include "Numerics.hpp"
 
+// the base time used for Time('T');
+RexxDateTime RexxDateTime::unixBaseTime(1970, 1, 1);
+// the largest possible date we can handle
+RexxDateTime RexxDateTime::maxBaseTime(9999, 12, 31, 23, 59, 59, 999999);
+
 // formatting versions of the days
 const char *RexxDateTime::dayNames[] =
 {
@@ -86,6 +91,83 @@ int RexxDateTime::monthdays[] =
 {
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
+
+
+/**
+
+ * Default constructor for a RexxDateTime instance.  This
+ * initializes the time to all zeros.
+ */
+RexxDateTime::RexxDateTime()
+{
+    clear();
+}
+
+
+/**
+ * Create a RexxDateTime instance from a basetime value.
+ *
+ * @param basetime The basetime for this instance.
+ */
+RexxDateTime::RexxDateTime(int64_t basetime)
+{
+    clear();
+    setBaseTime(basetime);
+}
+
+
+
+
+/**
+ * Create a RexxDateTime instance from a baseDate value.
+ *
+ * @param basetime The basedate for this instance.
+ */
+RexxDateTime::RexxDateTime(int basedate)
+{
+    clear();
+    setBaseDate(basedate);
+}
+
+
+/**
+ * Create a RexxDateTime instance from a year/month/day value.
+ *
+ * @param y      The current year.
+ * @param m      The month.
+ * @param d      The day.
+ */
+RexxDateTime::RexxDateTime(int y, int m, int d)
+{
+    clear();
+    year = y;
+    month = m;
+    day = d;
+}
+
+
+/**
+ * Create a RexxDateTime instance from a fully resolved date
+ * time value.
+ *
+ * @param y      The date year.
+ * @param m      The date month.
+ * @param d      The date day.
+ * @param h      The time hour.
+ * @param i      The time minues
+ * @param s      The time secons.
+ * @param u      The time microseconds.
+ */
+RexxDateTime::RexxDateTime(int y, int m, int d, int h, int i, int s, int u)
+{
+    year = y;
+    month = m;
+    day = d;
+    hours = h;
+    minutes = i;
+    seconds = s;
+    microseconds = y;
+}
 
 
 /**
@@ -141,13 +223,35 @@ int64_t RexxDateTime::getBaseTime()
 
 
 /**
+ * Calculate the basetime, returned as the number of seconds
+ * since 00:00:00.000000 on 01 Jan 1970.  The basetime is
+ * calculated using the same Gregorian calendar system used to
+ * calculate the basedate.  Times prior to 01 Jan 1970 are
+ * returned as a negative number.
+ *
+ * @return The unix time as a 64-bit integer value.
+ */
+int64_t RexxDateTime::getUnixTime()
+{
+    // subtract the baseline time and convert to seconds.
+    return (getBaseTime() - unixBaseTime.getBaseTime()) / (int64_t)MICROSECONDS;
+}
+
+
+/**
  * Set the date from a basedate value.  The basedate is the
  * number of days since 01 Jan 0001.
  *
  * @param basedays The basedays value (must be a positive integer).
  */
-void RexxDateTime::setBaseDate(int basedays)
+bool RexxDateTime::setBaseDate(int basedays)
 {
+    // make sure this is in range.
+    if (basedays < 0 || basedays > maxBaseTime.getBaseDate())
+    {
+        return false;
+    }
+
     // reset all of the fields
     clear();
 
@@ -222,6 +326,7 @@ void RexxDateTime::setBaseDate(int basedays)
             break;                   /* finished                          */
         }
     }
+    return true;
 }
 
 
@@ -231,8 +336,14 @@ void RexxDateTime::setBaseDate(int basedays)
  *
  * @param basetime The input timestamp, in microseconds.
  */
-void RexxDateTime::setBaseTime(int64_t basetime)
+bool RexxDateTime::setBaseTime(int64_t basetime)
 {
+    // make sure this is in range
+    if (basetime < 0 || basetime > maxBaseTime.getBaseTime())
+    {
+        return false;
+    }
+
     // first subtract out the date portion and process it
     int64_t basedays = basetime / MICROSECONDS_IN_DAY;
     basetime -= basedays * MICROSECONDS_IN_DAY;
@@ -249,6 +360,24 @@ void RexxDateTime::setBaseTime(int64_t basetime)
     basetime = basetime % SECONDS_IN_HOUR;
     minutes = (int)(basetime / SECONDS_IN_MINUTE);
     seconds = (int)(basetime % SECONDS_IN_MINUTE);
+
+    return true;
+}
+
+
+/**
+ * Set the date and time from a unix time value.  The unix time
+ * is the number of seconds from 00:00:00 on 01 Jan 1970.  The
+ * value may be either positive or negative.
+ *
+ * @param basetime The input timestamp, in seconds.
+ */
+bool RexxDateTime::setUnixTime(int64_t basetime)
+{
+    // calculate this as a base time value.
+    int64_t adjustedTime = (basetime * (int64_t)MICROSECONDS) + unixBaseTime.getBaseTime();
+    // set the value based on the adjustment.
+    return setBaseTime(adjustedTime);
 }
 
 
@@ -979,8 +1108,6 @@ void RexxDateTime::formatBaseDate(char *buffer)
 }
 
 
-
-
 /**
  * Format a base time into human readable form.
  *
@@ -989,6 +1116,17 @@ void RexxDateTime::formatBaseDate(char *buffer)
 void RexxDateTime::formatBaseTime(char *buffer)
 {
     Numerics::formatInt64(getBaseTime(), (stringchar_t *)buffer);
+}
+
+
+/**
+ * Format a unix time into human readable form.
+ *
+ * @param buffer The target buffer for the output.
+ */
+void RexxDateTime::formatUnixTime(char *buffer)
+{
+    Numerics::formatInt64(getUnixTime(), (stringchar_t *)buffer);
 }
 
 

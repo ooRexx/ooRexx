@@ -1076,7 +1076,7 @@ BUILTIN(DATE) {
         if (option->length == 0)        /* have a null string?               */
         {
                                              /* this is an error                  */
-            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerOne, new_string("BDELMNOSUW", 10), option);
+            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerOne, new_string("BDEFLMNOSTUW", 10), option);
         }
         else                                 /* need to process an option         */
         {
@@ -1097,7 +1097,7 @@ BUILTIN(DATE) {
         if (option2->length == 0)            /* have a null string?               */
         {
                                              /* this is an error                  */
-            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDENOSU", 7), option2);
+            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDEFNOSTU", 7), option2);
         }
         else                                 /* need to process an option         */
         {
@@ -1164,12 +1164,10 @@ BUILTIN(DATE) {
                 /*convert the value                  */
                 int basedays = indate->longValue(9);
                 /* bad value?                        */
-                if (basedays == NO_LONG || basedays < 0)
+                if (basedays == NO_LONG || !timestamp.setBaseDate(basedays))
                 {
                     report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
                 }
-                // the timestamp handles the setting directly
-                timestamp.setBaseDate(basedays);
                 break;
             }
 
@@ -1177,12 +1175,21 @@ BUILTIN(DATE) {
             {
                 /*convert the value                  */
                 int64_t basetime;
-                if (!Numerics::objectToInt64(indate, basetime) || basetime < 0)
+                if (!Numerics::objectToInt64(indate, basetime) || !timestamp.setBaseTime(basetime))
                 {
                     report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
                 }
-                // the timestamp handles the setting directly
-                timestamp.setBaseTime(basetime);
+                break;
+            }
+
+            case 'T':                        /* 'T'icks datetime stamp            */
+            {
+                /*convert the value                  */
+                int64_t basetime;
+                if (!Numerics::objectToInt64(indate, basetime) || !timestamp.setUnixTime(basetime))
+                {
+                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
+                }
                 break;
             }
 
@@ -1218,7 +1225,7 @@ BUILTIN(DATE) {
                 break;
 
             default:
-                report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDEFNOSU", 7), new_string((PCHAR)&style2, 1));
+                report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDEFNOTSU", 7), new_string((PCHAR)&style2, 1));
                 break;
         }
         // if there's a formatting error
@@ -1255,6 +1262,10 @@ BUILTIN(DATE) {
 
         case 'F':                          /* 'F'asedate                        */
             timestamp.formatBaseTime(work);
+            break;
+
+        case 'T':                          /* 'F'asedate                        */
+            timestamp.formatUnixTime(work);
             break;
 
         case 'D':                          /* 'D'ays                            */
@@ -1301,7 +1312,7 @@ BUILTIN(DATE) {
 
         default:                           /* unrecognized                      */
             work[0] = style;                 /* copy over the character           */
-            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerOne, new_string("BDEFLMNOSUW", 10), new_string(work, 1));
+            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerOne, new_string("BDEFLMNOSTUW", 10), new_string(work, 1));
             break;
     }
     /* now create a string object        */
@@ -1413,12 +1424,21 @@ BUILTIN(TIME) {
             {
                 /*convert the value                  */
                 int64_t basetime;
-                if (!Numerics::objectToInt64(intime, basetime) || basetime < 0)
+                if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setBaseTime(basetime))
                 {
                     report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((PCHAR)&style2, 1));
                 }
-                // the timestamp handles the setting directly
-                timestamp.setBaseTime(basetime);
+                break;
+            }
+
+            case 'T':                        /* 'T'icks datetime stamp            */
+            {
+                /*convert the value                  */
+                int64_t basetime;
+                if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setUnixTime(basetime))
+                {
+                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((PCHAR)&style2, 1));
+                }
                 break;
             }
 
@@ -1489,13 +1509,17 @@ BUILTIN(TIME) {
             timestamp.formatSeconds(work);
             break;
 
-        case 'F':                          /* 'F'asedate                        */
+        case 'F':                          /* 'F'ull                            */
             timestamp.formatBaseTime(work);
+            break;
+
+        case 'T':                          /* 'T'icks                           */
+            timestamp.formatUnixTime(work);
             break;
 
         default:                          /* unknown format                    */
             work[0] = style;                /* copy over the character           */
-            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerOne, new_string("CEFHLMNRS", 8), new_string(work, 1));
+            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerOne, new_string("CEFHLMNRST", 8), new_string(work, 1));
             break;
     }
     /* now create a string object        */
