@@ -52,6 +52,7 @@
 
 extern CRITICAL_SECTION crit_sec;  /* defined in OOVUTIL.C */
 extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
+extern BOOL AddDialogMessage(CHAR *, CHAR *);
 
 
 BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr)
@@ -130,6 +131,9 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
       && ( ((message == WM_NOTIFY) && ((ULONG)(((NMHDR *)lparam)->code & m[i].filterL) == m[i].lParam))
          || ((message != WM_NOTIFY) && ( (ULONG)(lparam & m[i].filterL) == m[i].lParam)) ) )
       {
+         //if ( message == WM_COMMAND ) printf("WM_COMMAND: wparam: %u lparam: %u lparam low: 0x%08x hi: 0x%08x\n",
+         //                                 param, lparam, (int)(short)LOWORD(lparam), (int)(short)HIWORD(lparam));
+
          if (param || lparam)  /* if one of the params is <> 0, build argument string */
          {
             char msgstr[512];

@@ -328,6 +328,8 @@ ULONG APIENTRY HandleDC_Obj(
        }
        else if (argc == 2)                   /* color brush */
           hB = CreateSolidBrush(PALETTEINDEX(atoi(argv[1].strptr)));
+          // hB = GetSysColorBrush(COLOR_BTNFACE);  DFX TODO add createSystemBrush
+          // to ooDialog.
        else hB = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
 
        RETVAL((ULONG)hB)
@@ -578,6 +580,8 @@ ULONG APIENTRY SetBackground(
                dlgAdm->ColorTab[dlgAdm->CT_size].ColorBk = atoi(argv[3].strptr);
                if (argc == 5) dlgAdm->ColorTab[i].ColorFG = atoi(argv[4].strptr); else dlgAdm->ColorTab[i].ColorFG = -1;
                dlgAdm->ColorTab[dlgAdm->CT_size].ColorBrush = (HBRUSH)CreateSolidBrush(PALETTEINDEX(dlgAdm->ColorTab[dlgAdm->CT_size].ColorBk));
+               //dlgAdm->ColorTab[dlgAdm->CT_size].ColorBrush = (HBRUSH)GetSysColorBrush(dlgAdm->ColorTab[dlgAdm->CT_size].ColorBk);
+               // DFX TODO add method for setting colore to system color.
                dlgAdm->CT_size++;
            }
        }
