@@ -147,16 +147,38 @@
    if installed = 1 then call RxfuncDrop "FindTheWindow"
    return ret
 
+::routine MSSleep public
+   use strict arg ms
+   if RxFuncQuery("SleepMS") \= 0 then do
+      call Rxfuncadd "SleepMS", "oodialog", "SleepMS"
+      installed = 1
+   end
+   ret = SleepMS(ms)
+   return ret
+
+::routine ScreenSize public
+   if RxFuncQuery("GetScreenSize") \= 0 then do
+      call Rxfuncadd "GetScreenSize", "oodialog", "GetScreenSize"
+      installed = 1
+   end
+   parse value GetScreenSize() with dx dy px py
+   ss = .array~of(dx,dy,px,py)
+   if installed = 1 then call RxfuncDrop "GetScreenSize"
+   return ss
+
 
 
 /*-------------------------------- shortcut routines ---------------------------------*/
 
 
 ::routine TimedMessage public
-   use arg msg, title, duration
-   dlg = .TimedMessage~new(msg,title,duration)
+   use arg msg, title, duration, earlyReply = .false
+   if \ duration~datatype('W') then return -1
+   if \ earlyReply~datatype('O') then earlyReply = .false
+   dlg = .TimedMessage~new(msg,title,duration, earlyReply)
    dlg~execute
-   drop dlg
+   if duration < 0 then return dlg
+   if \ earlyReply then drop dlg
    return 0
 
 ::routine InputBox public

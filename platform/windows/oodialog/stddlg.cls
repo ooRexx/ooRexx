@@ -51,8 +51,10 @@
    /* The class' constructor */
 
 ::method init
-   expose message title sleeping
-   use arg message, title, sleeping
+   expose message title sleeping earlyReply
+   use arg message, title, sleeping, earlyReply = .false
+   if \ earlyReply~datatype('O') then earlyReply = .false
+   if \ sleeping~datatype('W') then sleeping = 0
    self~init:super("")
 
 ::method DefineDialog
@@ -63,14 +65,18 @@
    self~NoAutoDetection
 
 ::method execute
-   expose message title sleeping sx sy
+   expose message title sleeping earlyReply sx sy
    parse value GetStdTextSize(message) with sx sy
    parse value GetScreenSize() with scrx scry .
    self~create(trunc((scrx-sx) /2),trunc((scry - sy - 20) /2), sx+20, sy + 20, title,"NOMENU",,,1 )
    self~startit
    self~show("SHOWTOP")
-   ret = sleepms(sleeping)
-   self~stopit
+   if sleeping >= 0 then
+   do
+      if earlyReply then reply
+      ret = sleepms(sleeping)
+      self~stopit
+   end
 
 
 /* This class provides a simple dialog with a titel, a message, one entry line, */
