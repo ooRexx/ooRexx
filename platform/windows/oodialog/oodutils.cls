@@ -154,6 +154,7 @@
       installed = 1
    end
    ret = SleepMS(ms)
+   if installed = 1 then call RxfuncDrop "SleepMS"
    return ret
 
 ::routine ScreenSize public
