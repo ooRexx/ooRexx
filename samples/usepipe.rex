@@ -50,7 +50,7 @@
 /******************************************************************************/
 
 info = .array~of('Tom','Mike','Rick','Steve')  /* Create an array to use      */
-                                               /* filters on (any collection  */
+                                               /* stages on (any collection   */
                                                /* would work).                */
 
 pipe = .sort|.reverse|.displayer               /* Pipe to sort, reverse       */
@@ -68,7 +68,9 @@ say '-----------------------------------'
 array1 = .array~new
 array2 = .array~new
 
--- this hooks filters up to two different output streams
+-- this hooks stagess up to two different output streams
+-- the >> secondary stage must preceed the primary hooked up to the same
+-- stage
 pipe = .all['e'] >> .arraycollector[array2] > .arraycollector[array1]
 
 
