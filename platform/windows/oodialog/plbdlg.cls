@@ -352,15 +352,9 @@
 ::method Run unguarded protected
    use arg sleeptime
    if Arg(1,'o') = 1 then sleeptime = 0
-
-   m = self~start("Bogus")
-   drop m
-
    do while self~finished = 0
       self~HandleMessages(sleeptime)
    end
-
-::method Bogus
 
    /* this method will create the dialog, show it (see method show), start */
    /* automatic methods and destroy the dialog. Data will be set and */

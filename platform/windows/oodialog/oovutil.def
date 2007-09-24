@@ -95,7 +95,6 @@ EXPORTS
   GETSCREENSIZE         =        GetScreenSize
   GETDIALOGFACTOR       =        GetDialogFactor
   GETSTDTEXTSIZE        =        GetStdTextSize
-  GETSYSMETRICS         =        GetSysMetrics
 
   INSTMMFUNCS           =        InstMMFuncs
   REMOVEMMFUNCS         =        RemoveMMFuncs
