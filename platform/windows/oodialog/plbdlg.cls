@@ -138,6 +138,12 @@
 ::method Show unguarded
    return WndShow_Pos("S",self~Hwnd, "NORMAL")
 
+::method IsVisible unguarded
+   return WinAPI32Func("WNDSTATE", "V", self~hwnd)
+
+::method IsEnabled unguarded
+   return WinAPI32Func("WNDSTATE", "E", self~hwnd)
+
 ::method Resize unguarded
    use arg width, hight, showOptions
    if Arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
@@ -479,6 +485,13 @@
 
 ::method ToTheTop unguarded
    return Wnd_Desktop("TOP",self~DlgHandle)
+
+
+::method IsMaximized unguarded
+   return WinAPI32Func("WNDSTATE", "Z", self~hwnd)
+
+::method IsMinimized unguarded
+   return WinAPI32Func("WNDSTATE", "I", self~hwnd)
 
 
 /* The following methods create a connection between a class method */

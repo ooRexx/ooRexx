@@ -781,6 +781,61 @@ HICON GetIconForID(DIALOGADMIN *dlgAdm, UINT id, BOOL fromFile, int cx, int cy)
     return LoadImage(hInst, pName, IMAGE_ICON, cx, cy, loadFlags);
 }
 
+/**
+ * Used to access Win32 API functions not involved with sending window messages
+ * to dialogs or dialog controls.  General purpose functions.
+ *
+ * The parameters sent from ooRexx as an array of RXString:
+ *
+ * argv[0]  Selects specific function.
+ *
+ * argv[2] ... argv[n]  Varies depending on the function.
+ *
+ * Return to ooRexx, in general:
+ *  Nothing to generalize as of yet ...
+ *
+ */
+ULONG APIENTRY WinAPI32Func(
+  PUCHAR funcname,
+  ULONG argc,
+  RXSTRING argv[],
+  PUCHAR qname,
+  PRXSTRING retstr )
+{
+    /* There has to be at least 1 arg. */
+    CHECKARGL(1);
+
+    if ( !strcmp(argv[0].strptr, "WNDSTATE") )      /* Get window state */
+    {
+        HWND hWnd;
+
+        CHECKARGL(3);
+
+        hWnd = (HWND)atol(argv[2].strptr);
+        if ( hWnd == 0 || ! IsWindow(hWnd) ) RETERR
+
+        if ( argv[1].strptr[0] == 'E' )          /* Enabled */
+        {
+            RETVAL((BOOL)IsWindowEnabled(hWnd));
+        }
+        else if ( argv[1].strptr[0] == 'V' )     /* Visible */
+        {
+            RETVAL((BOOL)IsWindowVisible(hWnd));
+        }
+        else if ( argv[1].strptr[0] == 'Z' )     /* Zoomed is Maximized */
+        {
+            RETVAL((BOOL)IsZoomed(hWnd));
+        }
+        else if ( argv[1].strptr[0] == 'I' )     /* Iconic is Minimized */
+        {
+            RETVAL((BOOL)IsIconic(hWnd));
+        }
+    }
+
+    RETERR
+}
+
+
 LONG InternalStopDialog(HWND h)
 {
    ULONG i, ret;
@@ -1196,7 +1251,7 @@ ULONG APIENTRY DumpAdmin(
 
 ****************************************************************************************************/
 
-#define FTS 29
+#define FTS 30
 CHAR * FuncTab[FTS] = {\
                      "GetDlgMsg", \
                      "SendWinMsg", \
@@ -1211,6 +1266,7 @@ CHAR * FuncTab[FTS] = {\
                      "GetStemData",    \
                      "Wnd_Desktop", \
                      "WndShow_Pos", \
+                     "WinAPI32Func", \
                      "InfoMessage", \
                      "ErrorMessage", \
                      "YesNoMessage", \
