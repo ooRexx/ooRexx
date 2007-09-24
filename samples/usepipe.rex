@@ -53,21 +53,44 @@ info = .array~of('Tom','Mike','Rick','Steve')  /* Create an array to use      */
                                                /* filters on (any collection  */
                                                /* would work).                */
 
-pipe = .sorter|.reverser|.displayer            /* Pipe to sort, reverse       */
+pipe = .sort|.reverse|.displayer               /* Pipe to sort, reverse       */
                                                /* elements and display.       */
 
 pipe~go(info)                                  /* Run it                      */
 
 say '-----------------------------------'
 
-pipe = .selector['e']|.displayer               /* Pipe to select elements with*/
+pipe = .all['e']|.displayer                    /* Pipe to select elements with*/
                                                /* 'e' and display.            */
 
 pipe~go(info)                                  /* Run it                      */
+say '-----------------------------------'
+array1 = .array~new
+array2 = .array~new
+
+-- this hooks filters up to two different output streams
+pipe = .all['e'] >> .arraycollector[array2] > .arraycollector[array1]
+
+
+pipe~go(info)                                  /* Run it                      */
+
+
+say 'Items selected by all are'
+
+do item over array1
+   say item
+end
+
+say
+say 'Items not selected by all are'
+
+do item over array2
+   say item
+end
 
 say '-----------------------------------'
 
-pipe = .sorter|.stemcollector[a.]              /* Pipe to sort, put in a.     */
+pipe = .sort|.stemcollector[a.]                /* Pipe to sort, put in a.     */
 
 pipe~go(info)                                  /* Run it                      */
 
