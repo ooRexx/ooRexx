@@ -63,7 +63,7 @@
 // following is defined before including stdint.h.
 #define __STDC_LIMIT_MACROS
 
-#include "stdint.h"
+#include <stdint.h>
 
 
 /******************************************************************************/
