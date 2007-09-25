@@ -222,7 +222,7 @@ forward class(super)                        -- make sure we propagate the done m
 ::class sortWith public subclass pipeStage  -- sort piped data
 ::method init                               -- sorter initialization method
 expose items comparator                     -- list of sorted items
-use strict arg compartor                    -- get the compartor
+use strict arg comparator                   -- get the compartor
 items = .array~new                          -- create a new list
 self~init:super                             -- forward the initialization
 
