@@ -787,10 +787,6 @@ RexxInteger *RexxString::strictEqual(RexxObject *other)
 /*            if sent with no other object                                    */
 /******************************************************************************/
 {
-  if (other == OREF_NULL)              /* asking for the hash value?        */
-                                       /* create a string value             */
-    return (RexxInteger *)new_string((PCHAR)&this->hashvalue, sizeof(this->hashvalue));
-  else
     return this->primitiveIsEqual(other) ? TheTrueObject : TheFalseObject;
 }
 
@@ -1261,6 +1257,7 @@ RexxString *RexxString::lower()
       data++;                          /* step the position                 */
       outdata++;                       /* and the output position           */
     }
+    newstring->generateHash();         /* rebuild the hash value            */
   }
   else
     newstring = this;                  /* return untranslated string        */
