@@ -493,6 +493,9 @@
 ::method IsMinimized unguarded
    return WinAPI32Func("WNDSTATE", "I", self~hwnd)
 
+-- Send the DM_REPOSITION  message to the dialog.
+::method EnsureVisible unguarded
+   return SendWinMsg("ANY", self~DlgHandle, "0x0402", 0, 0)
 
 /* The following methods create a connection between a class method */
 /* and a dialog item (dialog control). The connected method will be */
