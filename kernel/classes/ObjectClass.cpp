@@ -1949,8 +1949,21 @@ RexxObject *RexxObject::newRexx(RexxObject **arguments, size_t argCount)
 }\
 
 
-operatorMethod(operator_plus                      , PLUS)
-operatorMethod(operator_minus                     , SUBTRACT)
+#undef prefixOperatorMethod
+#define prefixOperatorMethod(name, message) RexxObject * RexxObject::name(RexxObject *operand) \
+{\
+  RexxObject *result;                  /* returned result                   */\
+                                       /* do a real message send            */\
+  result = (RexxObject *)this->messageSend(OREF_##message, operand == OREF_NULL ? 0 : 1, &operand); \
+  if (result == OREF_NULL)             /* in an expression and need a result*/ \
+                                       /* need to raise an exception        */ \
+    report_exception1(Error_No_result_object_message, OREF_##message); \
+  return result;                       /* return the final result           */ \
+}\
+
+
+prefixOperatorMethod(operator_plus                , PLUS)
+prefixOperatorMethod(operator_minus               , SUBTRACT)
 operatorMethod(operator_multiply                  , MULTIPLY)
 operatorMethod(operator_divide                    , DIVIDE)
 operatorMethod(operator_integerDivide             , INTDIV)
@@ -1980,7 +1993,7 @@ operatorMethod(operator_greaterThanLessThan       , GREATERTHAN_LESSTHAN)
 operatorMethod(operator_and                       , AND)
 operatorMethod(operator_or                        , OR)
 operatorMethod(operator_xor                       , XOR)
-operatorMethod(operator_not                       , BACKSLASH)
+prefixOperatorMethod(operator_not                 , BACKSLASH)
 
 void *RexxObject::operator new(size_t size, RexxClass *classObject)
 /******************************************************************************/

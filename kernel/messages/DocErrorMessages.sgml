@@ -2577,7 +2577,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>The specified method or built-in or external routine exists, but you used it incorrectly.</para>
+<para>The specified method, built-in function, or external routine exists, but you used it incorrectly.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>

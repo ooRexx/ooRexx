@@ -3485,7 +3485,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Incorrect_method</SymbolicName>
     <Text>Incorrect call to method</Text>
-    <Explanation><para>The specified method or built-in or external routine exists, but you used it incorrectly.</para></Explanation>
+    <Explanation><para>The specified method, built-in function, or external routine exists, but you used it incorrectly.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>93</Code>
