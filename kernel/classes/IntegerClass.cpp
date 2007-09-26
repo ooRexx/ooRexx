@@ -551,6 +551,21 @@ long RexxInteger::strictComp(
     return this->stringValue()->strictComp((RexxString *)other);
 }
 
+
+/**
+ * Exported version of the HASHCODE method for retrieving the
+ * object's hash.
+ *
+ * @return A string version of the hash (generally holds binary characters).
+ */
+RexxObject *RexxInteger::hashCode()
+{
+    // get the hash value, which is actually derived from the integer string value
+    unsigned long hash = this->hash();
+    return new_string((char *)&hash, sizeof(unsigned long));
+}
+
+
 RexxInteger *RexxInteger::strictEqual(
     RexxObject *other)                 /* other comparison value            */
 /******************************************************************************/
@@ -558,16 +573,9 @@ RexxInteger *RexxInteger::strictEqual(
 /*            value processing.                                               */
 /******************************************************************************/
 {
-  LONG    hash;                        /* retrieved hash                    */
-
-  if (other == OREF_NULL) {            /* asking for the hash value?        */
-    hash = this->hash();               /* get the hash value                */
-                                       /* create a string value             */
-    return (RexxInteger *)new_string((PCHAR)&hash, sizeof(LONG));
-  }
-  else
     return this->strictComp(other) == 0 ? TheTrueObject : TheFalseObject;
 }
+
 
 RexxInteger *RexxInteger::strictNotEqual(
     RexxObject *other)                 /* other comparison value            */

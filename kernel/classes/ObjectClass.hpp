@@ -194,11 +194,7 @@ class RexxObject : public RexxInternalObject {
      void liveGeneral();
      void flatten(RexxEnvelope *);
      RexxObject  *copy();
-// see ObjectClass.c for defect description
-#if defined(REXX_DEBUG)
-//     ULONG        hash();
-     ULONG        hash() { fprintf(stderr,"*** RexxObject::hash called ***\n"); }
-#endif
+     ULONG        hash();
      BOOL         truthValue(LONG);
      long         longValue(size_t);
      long         longValueNoNOSTRING(size_t);
@@ -284,6 +280,8 @@ class RexxObject : public RexxInternalObject {
      RexxInteger *strictNotEqual(RexxObject *other);
 
      RexxInteger *identityHashRexx();
+
+     RexxObject  *hashCode();
 
      RexxString  *stringRexx();
      RexxObject  *makeStringRexx();

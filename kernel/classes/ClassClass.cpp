@@ -138,20 +138,27 @@ RexxObject *RexxClass::makeProxy(RexxEnvelope *envelope)
    return new_proxy(this->id->stringData);
 }
 
+
+/**
+ * Hash a class object.  Because behaviors don't always get set
+ * up properly with this, we'll always use the primitive one for
+ * class objects.
+ *
+ * @return A "hashed hash" that can be used by the map collections.
+ */
+ULONG RexxClass::hash()
+{
+    // always, always, always return the hash value
+    return HASHVALUE(this);
+}
+
+
 RexxObject *RexxClass::strictEqual(
     RexxObject *other)                 /* other comparison object           */
 /******************************************************************************/
 /* Function:  Compare two classes                                             */
 /******************************************************************************/
 {
-  LONG    hash;                        /* retrieved hash                  */
-
-  if (other == OREF_NULL) {            /* asking for the hash value?      */
-    hash = this->hashvalue;            /* get the hash value              */
-                                       /* create a string value           */
-    return new_string((PCHAR)&hash, sizeof(LONG));
-  }
-  else
     return this->equal(other);         /* this is direct object equality    */
 }
 

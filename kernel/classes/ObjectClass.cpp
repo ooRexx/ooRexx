@@ -315,20 +315,73 @@ RexxSupplier *RexxObject::instanceMethodsRexx(RexxClass *class_object)
 }
 
 
+/**
+ * Default implementation of the HASHCODE method.
+ *
+ * @return The object's hash code value.
+ */
+RexxObject *RexxObject::hashCode()
+{
+    // get the hash value directly, then turn it into a binary string value
+    unsigned long hash = HASHVALUE(this);
+                                         /* create a string value             */
+    return (RexxObject *)new_string((char *)&hash, sizeof(long));
+}
+
+
+/**
+ * Hash an exported object.  Of we're a non-primitive one, this
+ * will require us to send the HASHCODE message to request a
+ * hash value.
+ *
+ * @return A "hashed hash" that can be used by the map collections.
+ */
+ULONG RexxObject::hash()
+{
+    // if this is a primitive object, we can just return the stored hash code.
+    if (isPrimitive(this))
+    {
+        return HASHVALUE(this);
+    }
+    else
+    {
+        ULONG hash;
+
+        // we have some other type of object, so we need to request a hash code
+        // by sending the HASHCODE() message.
+        RexxString *hashString = this->sendMessage(OREF_HASHCODE)->stringValue();
+
+        // ok, we need to pick this string apart and turn this into a numeric code
+        // a null string is simple.
+        if (hashString->length == 0)
+        {
+            hash = 1;
+        }
+
+        // if we have at least 4 characters, use them as binary, since that's
+        // what is normally returned here.
+        else if (hashString->length >= sizeof(LONG))
+        {
+            hash = *((PULONG)hashString->stringData);
+        }
+
+        else
+        {
+            // either 1 or 2 characters.  Just pick up a short value, which will
+            // also pick up terminating null if only a single character
+            hash = *((PSHORT)hashString->stringData);
+        }
+        return hash;
+  }
+}
+
+
 RexxObject * RexxObject::strictEqual(
     RexxObject * other)                /* other object for comparison       */
 /******************************************************************************/
 /* Function:  Process the default "==" strict comparison operator             */
 /******************************************************************************/
 {
-  LONG    hash;                        /* retrieved hash                    */
-
-  if (other == OREF_NULL) {            /* asking for the hash value?        */
-    hash = HASHVALUE(this);            /* get the hash value                */
-                                       /* create a string value             */
-    return (RexxObject *)new_string((PCHAR)&hash, sizeof(LONG));
-  }
-  else
                                        /* this is direct object equality    */
     return (RexxObject *)((this == other)? TheTrueObject: TheFalseObject);
 }

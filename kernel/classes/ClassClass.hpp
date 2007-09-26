@@ -67,6 +67,7 @@ void class_create (void);
    RexxObject *makeProxy(RexxEnvelope*);
    BOOL        isEqual(RexxObject *);
 
+   ULONG        hash();
    RexxObject * equal(RexxObject *);
    RexxObject * strictEqual(RexxObject *);
    RexxObject * notEqual(RexxObject *);

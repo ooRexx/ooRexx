@@ -2036,20 +2036,26 @@ RexxInteger *RexxNumberString::isLessOrEqual(RexxObject *other)
   return (this->comp(other) <= 0) ? TheTrueObject : TheFalseObject;
 }
 
+
+/**
+ * Exported version of the HASHCODE method for retrieving the
+ * object's hash.
+ *
+ * @return A string version of the hash (generally holds binary characters).
+ */
+RexxObject *RexxNumberString::hashCode()
+{
+    // get the hash value, which is actually derived from the integer string value
+    unsigned long hash = this->hash();
+    return new_string((char *)&hash, sizeof(unsigned long));
+}
+
 RexxInteger *RexxNumberString::strictEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Perform the primitive level "==" compare, including the hash    */
 /*            value processing.                                               */
 /******************************************************************************/
 {
-  LONG    hash;                        /* retrieved hash                    */
-
-  if (other == OREF_NULL) {            /* asking for the hash value?        */
-    hash = this->hash();               /* get the hash value                */
-                                       /* create a string value             */
-    return (RexxInteger *)new_string((PCHAR)&hash, sizeof(LONG));
-  }
-  else                                 /* do the actual comparison          */
     return (this->strictComp(other) == 0) ? TheTrueObject : TheFalseObject;
 }
 

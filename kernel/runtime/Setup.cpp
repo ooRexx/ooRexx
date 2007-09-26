@@ -97,6 +97,7 @@ CPPMIO(RexxInternalObject::hasUninit),
 CPPM(RexxObject::classObject),
 CPPM(RexxObject::equal),
 CPPM(RexxObject::strictEqual),
+CPPM(RexxObject::hashCode),
 CPPM(RexxObject::init),
 CPPM(RexxObject::strictNotEqual),
 CPPM(RexxObject::copyRexx),
@@ -214,6 +215,7 @@ CPPMI(RexxInteger::xorOp),
 CPPMI(RexxInteger::equal),
 CPPMI(RexxInteger::notEqual),
 CPPMI(RexxInteger::strictEqual),
+CPPMI(RexxInteger::hashCode),
 CPPMI(RexxInteger::strictNotEqual),
 CPPMI(RexxInteger::isGreaterThan),
 CPPMI(RexxInteger::isLessThan),
@@ -316,6 +318,7 @@ CPPMNM(RexxNumberString::d2c),
 CPPMNM(RexxNumberString::d2x),
 CPPMNM(RexxNumberString::d2xD2c),
 CPPMNM(RexxNumberString::strictEqual),
+CPPMNM(RexxNumberString::hashCode),
 
 CPPMQ(RexxQueue::supplier),             /* Queue methods                     */
 CPPMQ(RexxQueue::pushRexx),
@@ -765,6 +768,9 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_ISSUBCLASSOF           ,TheClassBehaviour, CPPMC(RexxClass::isSubclassOf), 1);
   defineProtectedKernelMethod(CHAR_SHRIEKREXXDEFINED,TheClassBehaviour, CPPMC(RexxClass::setRexxDefined), 0);
   defineKernelMethod(CHAR_DEFAULTNAME            ,TheClassBehaviour, CPPM(RexxClass::defaultNameRexx), 0);
+  // this is explicitly inserted into the class behaviour because it gets used
+  // prior to the instance behavior merges.
+  defineKernelMethod(CHAR_HASHCODE               ,TheClassBehaviour, CPPM(RexxObject::hashCode), 0);
 
                                        /* set the scope of the methods to   */
                                        /* the CLASS scope                   */
@@ -789,6 +795,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_INIT                   ,TheObjectBehaviour, CPPM(RexxObject::init), 0);
   defineKernelMethod(CHAR_EQUAL                  ,TheObjectBehaviour, CPPM(RexxObject::equal), 1);
   defineKernelMethod(CHAR_STRICT_EQUAL           ,TheObjectBehaviour, CPPM(RexxObject::strictEqual), 1);
+  defineKernelMethod(CHAR_HASHCODE               ,TheObjectBehaviour, CPPM(RexxObject::hashCode), 0);
   defineKernelMethod(CHAR_BACKSLASH_EQUAL        ,TheObjectBehaviour, CPPM(RexxObject::notEqual), 1);
   defineKernelMethod(CHAR_LESSTHAN_GREATERTHAN   ,TheObjectBehaviour, CPPM(RexxObject::notEqual), 1);
   defineKernelMethod(CHAR_GREATERTHAN_LESSTHAN   ,TheObjectBehaviour, CPPM(RexxObject::notEqual), 1);
@@ -1386,6 +1393,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_LESSTHAN_EQUAL               ,TheIntegerBehaviour, CPPMI(RexxInteger::isLessOrEqual), 1);
   defineKernelMethod(CHAR_BACKSLASH_GREATERTHAN        ,TheIntegerBehaviour, CPPMI(RexxInteger::isLessOrEqual), 1);
   defineKernelMethod(CHAR_STRICT_EQUAL                 ,TheIntegerBehaviour, CPPMI(RexxInteger::strictEqual), 1);
+  defineKernelMethod(CHAR_HASHCODE                     ,TheIntegerBehaviour, CPPMI(RexxInteger::hashCode), 1);
   defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL       ,TheIntegerBehaviour, CPPMI(RexxInteger::strictNotEqual), 1);
   defineKernelMethod(CHAR_STRICT_GREATERTHAN           ,TheIntegerBehaviour, CPPMI(RexxInteger::strictGreaterThan), 1);
   defineKernelMethod(CHAR_STRICT_LESSTHAN              ,TheIntegerBehaviour, CPPMI(RexxInteger::strictLessThan), 1);
@@ -1439,6 +1447,7 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_LESSTHAN_EQUAL               ,TheNumberStringBehaviour, CPPMNM(RexxNumberString::isLessOrEqual), 1);
   defineKernelMethod(CHAR_BACKSLASH_GREATERTHAN        ,TheNumberStringBehaviour, CPPMNM(RexxNumberString::isLessOrEqual), 1);
   defineKernelMethod(CHAR_STRICT_EQUAL                 ,TheNumberStringBehaviour, CPPMNM(RexxNumberString::strictEqual), 1);
+  defineKernelMethod(CHAR_HASHCODE                     ,TheNumberStringBehaviour, CPPMNM(RexxNumberString::hashCode), 0);
   defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL       ,TheNumberStringBehaviour, CPPMNM(RexxNumberString::strictNotEqual), 1);
   defineKernelMethod(CHAR_STRICT_GREATERTHAN           ,TheNumberStringBehaviour, CPPMNM(RexxNumberString::strictGreaterThan), 1);
   defineKernelMethod(CHAR_STRICT_LESSTHAN              ,TheNumberStringBehaviour, CPPMNM(RexxNumberString::strictLessThan), 1);
