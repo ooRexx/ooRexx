@@ -2130,9 +2130,9 @@ Output:
 -- private utility method to get a full date value from year/month/day.
 ::METHOD convertDate private
   use arg year, month, day
-  .argUtil~validateWholeRange(year, "year", 1, 9999)
-  .argUtil~validateWholeRange(month, "month", 1, 12)
-  .argUtil~validateWholeRange(day, "day", 1, 31)
+  .argUtil~validateWholeRange("year", year, 1, 9999)
+  .argUtil~validateWholeRange("month", month, 1, 12)
+  .argUtil~validateWholeRange("day", day, 1, 31)
 
   date = year~right(4, '0')month~right(2, '0')day~right(2, '0')
   return date('F', date, 'S')
@@ -2141,10 +2141,10 @@ Output:
 ::METHOD convertTime private
   use arg hours, minutes, seconds, usecs = 0
 
-  .argUtil~validateWholeRange(hours, "hours", 0, 23)
-  .argUtil~validateWholeRange(minutes, "minutes", 0, 59)
-  .argUtil~validateWholeRange(seconds, "seconds", 0, 59)
-  .argUtil~validateWholeRange(microseconds, "microseconds", 0, 999999)
+  .argUtil~validateWholeRange("hours", hours, 0, 23)
+  .argUtil~validateWholeRange("minutes", minutes, 0, 59)
+  .argUtil~validateWholeRange("seconds", seconds, 0, 59)
+  .argUtil~validateWholeRange("microseconds", microseconds, 0, 999999)
 
   time = hours~right(2, '0')':'minutes~right(2, '0')':'seconds~right(2, '0')'.'usecs~right(6, '0')
   return time('f', time, 'l')
@@ -2379,7 +2379,7 @@ Output:
   expose timestamp
   use strict arg years
 
-  .ArgUtil~validateNumber(years, "years")
+  .ArgUtil~validateNumber("years", years)
 
   -- This is easier to deal with if we split the date and time into
   -- two components first
@@ -2416,7 +2416,7 @@ Output:
   expose timestamp
   use strict arg days
 
-  .ArgUtil~validateNumber(days, "days")
+  .ArgUtil~validateNumber("days", days)
 
   numeric digits 18
   -- return a new instance of DateTime
@@ -2428,7 +2428,7 @@ Output:
   expose timestamp
   use strict arg hours
 
-  .ArgUtil~validateNumber(hours, "hours")
+  .ArgUtil~validateNumber("hours", hours)
 
   numeric digits 18
 
@@ -2443,7 +2443,7 @@ Output:
   expose timestamp
   use strict arg minutes
 
-  .ArgUtil~validateNumber(minutes, "minutes")
+  .ArgUtil~validateNumber("minutes", minutes)
 
   numeric digits 18
 
@@ -2458,7 +2458,7 @@ Output:
   expose timestamp
   use strict arg seconds
 
-  .ArgUtil~validateNumber(seconds, "seconds")
+  .ArgUtil~validateNumber("seconds", seconds)
 
   numeric digits 18
 
@@ -2639,25 +2639,25 @@ Output:
 ::METHOD fromDays class
   use strict arg days
 
-  .ArgUtil~validateNumber(days, "days")
+  .ArgUtil~validateNumber("days", days)
   return self~new(days, 0, 0, 0, 0)
 
 -- Create a timespan object representing a number of hours
 ::METHOD fromHours class
   use strict arg hours
-  .ArgUtil~validateNumber(hours, "hours")
+  .ArgUtil~validateNumber("hours", hours)
   return self~new(0, hours, 0, 0, 0)
 
 -- Create a timespan object representing a number of minutes
 ::METHOD fromMinutes class
   use strict arg minutes
-  .ArgUtil~validateNumber(minutes, "minutes")
+  .ArgUtil~validateNumber("minutes", minutes)
   return self~new(0, 0, minutes, 0, 0)
 
 -- Create a timespan object representing a number of seconds
 ::METHOD fromSeconds class
   use strict arg seconds
-  .ArgUtil~validateNumber(seconds, "seconds")
+  .ArgUtil~validateNumber("seconds", seconds)
   return self~new(0, 0, 0, seconds, 0)
 
 -- Create a timespan object representing a number of microseconds
@@ -2704,7 +2704,7 @@ Output:
 
   use strict arg other
 
-  .ArgUtil~validateClass(other, "other". .TimeSpan)
+  .ArgUtil~validateClass("other", other, .TimeSpan)
 
   othertime = other~totalMicroseconds
 
@@ -3019,7 +3019,7 @@ Output:
   expose timestamp
   use strict arg days
 
-  .ArgUtil~validateNumber(days, "days")
+  .ArgUtil~validateNumber("days", days)
 
   numeric digits 18
   -- return a new instance of TimeSpan
@@ -3031,7 +3031,7 @@ Output:
   expose timestamp
   use strict arg hours
 
-  .ArgUtil~validateNumber(hours, "hours")
+  .ArgUtil~validateNumber("hours", hours)
 
   numeric digits 18
 
@@ -3044,7 +3044,7 @@ Output:
   expose timestamp
   use strict arg minutes
 
-  .ArgUtil~validateNumber(minutes, "minutes")
+  .ArgUtil~validateNumber("minutes", minutes)
 
   numeric digits 18
 
@@ -3057,7 +3057,7 @@ Output:
   expose timestamp
   use strict arg seconds
 
-  .ArgUtil~validateNumber(seconds, "seconds")
+  .ArgUtil~validateNumber("seconds", seconds)
 
   numeric digits 18
 
@@ -3106,7 +3106,7 @@ Output:
 
 ::CLASS "ArgUtil" public
 ::METHOD validateNumber class
-  use strict arg number, name
+  use strict arg name, number
   if \number~dataType('Number') then do
       raise syntax 88.902 array(name, number)
   end
@@ -3114,7 +3114,7 @@ Output:
 -- Validates the argument is a number and is in range.  This gives the
 -- 907 message for all error conditions to be most specific.
 ::METHOD validateNumberRange class
-  use strict arg number, name, min, max
+  use strict arg name, number, min, max
   -- validate the numeric part first
   if \number~dataType('Number') then do
       raise syntax 88.907 array(name, number)
@@ -3128,7 +3128,7 @@ Output:
 -- Validates the argument is a whole number and is in range.  This gives the
 -- 907 message for all error conditions to be most specific.
 ::METHOD validateWholeRange class
-  use strict arg number, name, min, max
+  use strict arg name, number, min, max
   -- validate the numeric part first
   if \number~dataType('Whole') then do
       raise syntax 88.907 array(name, number)
@@ -3139,14 +3139,14 @@ Output:
   end
 
 ::METHOD validateWhole class
-  use strict arg number, name
+  use strict arg name, number
   if \number~dataType('Whole') then do
       raise syntax 88.903 array(name, number)
   end
 
 -- Note, this uses the 904 message for both, which is most specific
 ::METHOD validateNonNegative class
-  use strict arg number, name
+  use strict arg name, number
   -- first validate whole number status
   if \number~dataType('Whole') then do
       raise syntax 88.904 array(name, number)
@@ -3157,7 +3157,7 @@ Output:
   end
 
 ::METHOD validatePositive class
-  use strict arg number, name
+  use strict arg name, number
   -- first validate whole number status
   if \number~dataType('Whole') then do
       raise syntax 88.905 array(name, number)
@@ -3170,7 +3170,7 @@ Output:
 -- validate a length parameter.  This is essentially the same
 -- as validateNonNegative, but a more specific message.
 ::METHOD validateLength class
-  use strict arg number, name
+  use strict arg name, number
   -- first validate whole number status
   if \number~dataType('Whole') then do
       raise syntax 88.911 array(name, number)
@@ -3183,7 +3183,7 @@ Output:
 -- validate a position parameter.  This is essentially the same
 -- as validatePosition, but a more specific message.
 ::METHOD validatePosition class
-  use strict arg number, name
+  use strict arg name, number
   -- first validate whole number status
   if \number~dataType('Whole') then do
       raise syntax 88.912 array(name, number)
@@ -3195,7 +3195,7 @@ Output:
 
 -- validate that an argument is an instance of a specific class.
 ::METHOD validateClass class
-  use strict arg obj, class, name
+  use strict arg name, obj, class
 
   if \obj~isa(class) then do
       raise syntax 88.914 array(name, class~id)
