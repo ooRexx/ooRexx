@@ -1363,36 +1363,37 @@ nomethod:
                                        /* have an error                     */
    raise syntax 93.948 array (2,'MESSAGE')
 
- if datatype(atime, 'W') then do       /* just a delta specification?       */
-   if atime < 0 then                   /* got a bad offset?                 */
-     signal invalid_time               /* go issue the error                */
-   alarmtime = atime *1000             /* set alarmtime in milliseconds     */
-   numdays = 0                         /* set date to current date          */
+ current = .DateTime~new               -- get a current time value
+
+ numeric digits 18                     -- we'll be doing math with large numbers potentially
+
+ if atime~isA(.DateTime) then do
+     timespan = atime - current        -- get the interval
+ end
+ else if atime~isA(.TimeSpan) then do  -- already in timespan form?
+     timespan = atime                  -- we can use this directly
+ end
+ else if datatype(atime, 'W') then do  /* just a delta specification?       */
+   -- convert seconds into a timespan
+   timespan = .timespan~fromSeconds(atime)
  end
  else do
    parse var atime intime ' ' indate   /* split into a date and time        */
    SIGNAL ON syntax NAME invalid_time  /* enable a syntax trap              */
-                                       /* get input time in millisecs       */
-   mtime = time('S', intime, 'N') * 1000
-   ctime = time('S') * 1000            /* get current time in millisecs     */
-   dtime = 24 * 60 * 60 * 1000         /* get 24 hrs in a day in millisecs  */
-   dayDelta = 0                        /* default to no day adjustment      */
-   if mtime < ctime then do            /* earlier time?                     */
-     mtime = mtime + dtime             /* add in a day                      */
-     dayDelta = -1                     /* and set an adjustment             */
-   end
 
-   numdays = 0                         /* set default number of days        */
-   if indate \== '' then               /*  Is date specified?               */
-                                       /* calculate number of days from     */
-                                       /*current date                       */
-     numdays = date('B',indate,'N') - date('B') + dayDelta
-   signal off syntax                   /* no longer trapping syntax errors  */
-   signal on syntax
-   if numdays < 0 then                 /* was the date in the past?         */
-     raise syntax 93.951 array (atime) /* Invalid alarmtime                 */
-   alarmtime = mtime - ctime           /* set alarm relative to current time*/
+   timespan = .timespan~fromNormalTime(intime) + .timespan~fromNormalDate(indate)
  end
+
+ if timespan~sign < 0 then do
+    raise syntax 93.951 array (atime~string)
+ end
+
+ -- break this into days an remainder
+ numdays = timespan~days
+ alarmtime = timespan~totalMicroseconds - .TimeSpan~fromDays(numdays)~totalMicroseconds
+
+ -- the remainder needs to be in milliseconds
+ alarmtime %= 1000
 
  guard off                             /* Allow other processess access     */
  reply                                 /* and go concurrent                 */
@@ -3091,6 +3092,15 @@ Output:
 
   -- return a new instance of TimeSpan
   return self~class~new(trunc(timestamp + usecs))
+
+
+-- Return the sign (-1, 0, 1) for this timestamp for easy negative checking
+::METHOD sign
+  expose timestamp
+  use strict arg
+
+  numeric digits 10
+  return timestamp~sign
 
 
 -- format the TimeSpan into string form.  The format is
