@@ -166,7 +166,7 @@ RexxDateTime::RexxDateTime(int y, int m, int d, int h, int i, int s, int u)
     hours = h;
     minutes = i;
     seconds = s;
-    microseconds = y;
+    microseconds = u;
 }
 
 
