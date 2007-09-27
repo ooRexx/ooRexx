@@ -67,7 +67,7 @@ RexxMemory *pMemoryObject = &memoryObject;
 #define SaveStackSize 20             /* newly created objects to save */
 #define SaveStackAllocSize 500       /* pre-allocation for save stack  */
 
-#define MaxImageSize 600000          /* maximum startup image size */
+#define MaxImageSize 800000          /* maximum startup image size */
 
                                        /* Local and global memory Pools     */
                                        /*  last one accessed.               */
