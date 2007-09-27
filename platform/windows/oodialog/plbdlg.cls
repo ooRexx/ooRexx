@@ -475,8 +475,8 @@
    /* This method shows the dialog */
 
 ::method Show unguarded
-   use arg option
-   if Arg(1,"o") = 1 | option = "" then option = "DEFAULT"; else option = option~translate
+   use arg option = "NORMAL"
+   if option = "" then option = "NORMAL"; else option = option~translate
    if option~wordpos("SHOWTOP") > 0 then self~ToTheTop
    return WndShow_Pos("S",self~DlgHandle, option)
 
@@ -487,15 +487,25 @@
    return Wnd_Desktop("TOP",self~DlgHandle)
 
 
+::method Minimize unguarded
+   return WndShow_Pos("S",self~DlgHandle, "MIN")
+
+::method Maximize unguarded
+   return WndShow_Pos("S",self~DlgHandle, "MAX")
+
 ::method IsMaximized unguarded
-   return WinAPI32Func("WNDSTATE", "Z", self~hwnd)
+   return WinAPI32Func("WNDSTATE", "Z", self~DlgHandle)
 
 ::method IsMinimized unguarded
-   return WinAPI32Func("WNDSTATE", "I", self~hwnd)
+   return WinAPI32Func("WNDSTATE", "I", self~DlgHandle)
+
+::method Restore unguarded
+   return WndShow_Pos("S",self~DlgHandle, "RESTORE")
 
 -- Send the DM_REPOSITION  message to the dialog.
 ::method EnsureVisible unguarded
    return SendWinMsg("ANY", self~DlgHandle, "0x0402", 0, 0)
+
 
 /* The following methods create a connection between a class method */
 /* and a dialog item (dialog control). The connected method will be */
@@ -1167,7 +1177,6 @@
    self~SizeY = hight
    return WndShow_Pos("P", self~DlgHandle, 0, 0, width * self~FactorX + diffsx,,
                           hight* self~FactorY + diffsy,"NOMOVE "||showOptions )
-
 
 ::method FocusItem unguarded
    use arg id

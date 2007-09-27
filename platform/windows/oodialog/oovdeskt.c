@@ -401,12 +401,16 @@ ULONG APIENTRY WndShow_Pos(
        }
        else
        {
+           /* SW_SHOWDEFAULT has no meaning here, there is no STARTUPINFO struct
+            * from CreateProcess that relates to ooDialog dialogs or dialog
+            * controls.  For historical reasons, DEFAULT and NORMAL mean the
+            * same thing.
+            */
            if (strstr(argv[2].strptr, "HIDE")) k = SW_HIDE; else
-           if (strstr(argv[2].strptr, "NORMAL")) k = SW_SHOWNORMAL; else
+           if (strstr(argv[2].strptr, "NORMAL") || strstr(argv[2].strptr, "DEFAULT")) k = SW_SHOWNORMAL; else
            if (strstr(argv[2].strptr, "MIN")) k = SW_SHOWMINIMIZED; else
            if (strstr(argv[2].strptr, "MAX")) k = SW_SHOWMAXIMIZED; else
-           if (strstr(argv[2].strptr, "DEFAULT")) k = SW_SHOWDEFAULT; else
-           if (strstr(argv[2].strptr, "RESTORE")) k = SW_SHOWDEFAULT; else
+           if (strstr(argv[2].strptr, "RESTORE")) k = SW_RESTORE; else
            if (strstr(argv[2].strptr, "INACTIVE")) k = SW_SHOWNA; else
            k = SW_SHOW;
 

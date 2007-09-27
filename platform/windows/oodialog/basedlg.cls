@@ -76,7 +76,14 @@
    return WndShow_Pos("S",self~hwnd, "NORMAL FAST")
 
 ::method Display unguarded
-   use arg disptype
+   use arg disptype = "NORMAL"
+   if disptype = "" then disptype = "NORMAL"; else disptype = disptype~translate
+   if self~isA(.DialogControl) & (disptype~wordpos("MIN") <> 0 | disptype~wordpos("MAX") <> 0) then do
+     if self~oDlg~isA(.PlainBaseDialog) then
+       forward to (self~oDlg)
+     else
+       return 1
+   end
    return WndShow_Pos("S",self~hwnd, disptype)
 
 ::method SetFont unguarded
@@ -197,12 +204,6 @@
 ::method DeleteObject unguarded
    use arg obj
    return HandleDC_Obj("D", obj)
-
-::method Minimize unguarded
-   return WndShow_Pos("S",self~hwnd, "MIN")
-
-::method Maximize unguarded
-   return WndShow_Pos("S",self~hwnd, "MAX")
 
    /* This method loads a bitmap from file into memory */
    /* It returns a handle to the bitmap */
