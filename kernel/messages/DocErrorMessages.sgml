@@ -1925,7 +1925,7 @@ special character (such as a parenthesis).
 <term>021</term>
 <listitem>
 <para>
-<emphasis>function_name</emphasis> argument <emphasis>argument_number</emphasis> must not be null</para>
+<emphasis>function_name</emphasis> argument <emphasis>argument_number</emphasis> must not be a null string</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2398,6 +2398,128 @@ special character (such as a parenthesis).
 <listitem>
 <para>
 <emphasis>message</emphasis>
+</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="ERR88">
+<title>Error 88 - Invalid argument</title>
+<para>
+<emphasis role="bold">Explanation:</emphasis>
+</para>
+<para>An argument passed to a method, function, or routine was not valid.</para>
+<para>The associated subcodes are: </para>
+<variablelist>
+<varlistentry>
+<term>900</term>
+<listitem>
+<para>
+<emphasis>message</emphasis>
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>901</term>
+<listitem>
+<para>Missing argument; argument <emphasis>argument</emphasis> is required</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>902</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> must be a number; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>903</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> must be a whole number; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>904</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> must be zero or a positive whole number; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>905</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> must be a positive whole number; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>906</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> must not exceed <emphasis>limit</emphasis>; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>907</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> must be in the range <emphasis>min</emphasis>-<emphasis>max</emphasis>; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>908</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> must not be a null string</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>909</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> must have a string value</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>910</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> is an incorrect pad or character argument; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>911</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> is an incorrect length argument; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>912</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> is an incorrect position argument; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>913</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> must have a single-dimensional array value</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>914</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> must be of the <emphasis>class</emphasis> class</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>915</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> could not be converted to type <emphasis>type</emphasis>
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>916</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> must be one of <emphasis>values</emphasis>; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>917</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> <emphasis>reason</emphasis>
 </para>
 </listitem>
 </varlistentry>

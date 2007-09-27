@@ -2638,7 +2638,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_call_null</SymbolicName>
-        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="argument_number"/> must not be null</Text>
+        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="argument_number"/> must not be a null string</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
@@ -3236,6 +3236,180 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Interpretation_user_defined</SymbolicName>
         <Text><Sub position="1" name="message"/></Text>
       </SubMessage>
+    </Subcodes>
+  </Message>
+  <Message>
+    <Code>88</Code>
+    <Subcode>000</Subcode>
+    <MessageNumber>88</MessageNumber>
+    <Component>Rexx</Component>
+    <Severity>Warning</Severity>
+    <SymbolicName>Error_Invalid_argument</SymbolicName>
+    <Text>Invalid argument</Text>
+    <Explanation><para>An argument passed to a method, function, or routine was not valid.</para></Explanation>
+    <Subcodes>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>900</Subcode>
+          <MessageNumber>671</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_user_defined</SymbolicName>
+          <Text><Sub position="1" name="message"/></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>901</Subcode>
+          <MessageNumber>672</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_noarg</SymbolicName>
+          <Text>Missing argument; argument <Sub position="1" name="argument"/> is required</Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>902</Subcode>
+          <MessageNumber>673</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_number</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must be a number; found <q><Sub position="2" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>903</Subcode>
+          <MessageNumber>674</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_whole</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must be a whole number; found <q><Sub position="2" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>904</Subcode>
+          <MessageNumber>674</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_nonnegative</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must be zero or a positive whole number; found <q><Sub position="2" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>905</Subcode>
+          <MessageNumber>675</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_positive</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must be a positive whole number; found <q><Sub position="2" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>906</Subcode>
+          <MessageNumber>676</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_toobig</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must not exceed <Sub position="2" name="limit"/>; found <q><Sub position="3" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>907</Subcode>
+          <MessageNumber>677</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_range</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must be in the range <Sub position="2" name="min"/>-<Sub position="3" name="max"/>; found <q><Sub position="4" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>908</Subcode>
+          <MessageNumber>678</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_null</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must not be a null string</Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>909</Subcode>
+          <MessageNumber>679</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_string</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must have a string value</Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>910</Subcode>
+          <MessageNumber>680</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_pad</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> is an incorrect pad or character argument; found <q><Sub position="2" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>911</Subcode>
+          <MessageNumber>681</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_length</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> is an incorrect length argument; found <q><Sub position="2" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>912</Subcode>
+          <MessageNumber>682</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_position</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> is an incorrect position argument; found <q><Sub position="2" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>913</Subcode>
+          <MessageNumber>683</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_noarray</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must have a single-dimensional array value</Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>914</Subcode>
+          <MessageNumber>684</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_noclass</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must be of the <Sub position="2" name="class"/> class</Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>915</Subcode>
+          <MessageNumber>685</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_argType</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> could not be converted to type <Sub position="2" name="type"/></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>916</Subcode>
+          <MessageNumber>686</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_list</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must be one of <Sub position="2" name="values"/>; found <q><Sub position="3" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>917</Subcode>
+          <MessageNumber>687</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_general</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> <Sub position="2" name="reason"/></Text>
+        </SubMessage>
     </Subcodes>
   </Message>
   <Message>

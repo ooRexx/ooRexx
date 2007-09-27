@@ -99,6 +99,7 @@
 #define Error_Unexpected_label_msg                                   47
 #define Error_System_service_msg                                     48
 #define Error_Interpretation_msg                                     49
+#define Error_Invalid_argument_msg                                   88
 #define Error_External_name_not_found_msg                            90
 #define Error_No_result_object_msg                                   91
 #define Error_Incorrect_method_msg                                   93
@@ -596,6 +597,24 @@
 #define Error_Execution_sparse_array_msg                             668
 #define Error_Incorrect_method_queue_index_msg                       669
 #define Error_Execution_nostem_msg                                   670
+#define Error_Invalid_argument_user_defined_msg                      671
+#define Error_Invalid_argument_noarg_msg                             672
+#define Error_Invalid_argument_number_msg                            673
+#define Error_Invalid_argument_whole_msg                             674
+#define Error_Invalid_argument_nonnegative_msg                       674
+#define Error_Invalid_argument_positive_msg                          675
+#define Error_Invalid_argument_toobig_msg                            676
+#define Error_Invalid_argument_range_msg                             677
+#define Error_Invalid_argument_null_msg                              678
+#define Error_Invalid_argument_string_msg                            679
+#define Error_Invalid_argument_pad_msg                               680
+#define Error_Invalid_argument_length_msg                            681
+#define Error_Invalid_argument_position_msg                          682
+#define Error_Invalid_argument_noarray_msg                           683
+#define Error_Invalid_argument_noclass_msg                           684
+#define Error_Invalid_argument_argType_msg                           685
+#define Error_Invalid_argument_list_msg                              686
+#define Error_Invalid_argument_general_msg                           687
 
 
 #endif
