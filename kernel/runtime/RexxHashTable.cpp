@@ -650,6 +650,46 @@ RexxObject *RexxHashTable::nextItem(
   return TheNilObject;                 /* item was not found                */
 }
 
+
+RexxObject *RexxHashTable::primitiveNextItem(
+  RexxObject *value,                   /* item to locate                    */
+  RexxObject *index )                  /* index to locate                   */
+/******************************************************************************/
+/* Function:  Return the next item with the key index that follows the        */
+/*            given (value index) pair.  Used only for superscope lookup.     */
+/*            Note:  This routine does the comparisons in as fast as way      */
+/*            as possible, relying solely on object identify for a match.     */
+/******************************************************************************/
+{
+  HashLink position;                   /* target hash position              */
+  RexxObject *scope;                   /* returned scope                    */
+
+  position = hashPrimitiveIndex(index); /* calculate the hash slot           */
+                                       /* have an entry at this slot        */
+  if (this->entries[position].index != OREF_NULL) {
+    do {                               /* while more items in chain         */
+                                       /* get a match?                      */
+      if (this->entries[position].index == index && this->entries[position].value == value) {
+        while ((position = this->entries[position].next) != NO_MORE) {
+                                       /* same index value?                 */
+          if (this->entries[position].index == index)
+                                       /* this is the value we want         */
+            return this->entries[position].value;
+        }
+        return TheNilObject;           /* didn't find what we wanted        */
+      }
+                                       /* step to the next link             */
+    } while ((position = this->entries[position].next) != NO_MORE);
+                                       /* must be added via setmethod, so   */
+    scope = this->primitiveGet(index); /* return first one for this index   */
+                                       /* truely not there?                 */
+    if (scope == (RexxObject *)OREF_NULL)
+      return TheNilObject;             /* return a failure                  */
+    return scope;                      /* return the first scope            */
+  }
+  return TheNilObject;                 /* item was not found                */
+}
+
 RexxArray  *RexxHashTable::getAll(
     RexxObject *index)                 /* target index                      */
 /******************************************************************************/
@@ -942,7 +982,17 @@ RexxHashTable *RexxHashTable::insert(
       discard_hold(newHash);           /* release  again                    */
       break;
   }
-  position = newHash->hashIndex(index);/* calculate the hash slot           */
+
+  // primitive tables require a primitive index.
+  if (type == PRIMITIVE_TABLE)
+  {
+      position = newHash->hashPrimitiveIndex(index);/* calculate the hash slot           */
+  }
+  else
+  {
+
+      position = newHash->hashIndex(index);/* calculate the hash slot           */
+  }
                                        /* if the hash slot is empty         */
   if (newHash->entries[position].index == OREF_NULL) {
                                        /* fill in both the value and index  */

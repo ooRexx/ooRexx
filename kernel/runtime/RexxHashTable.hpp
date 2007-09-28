@@ -114,6 +114,7 @@ typedef unsigned long HashLink;
    void           primitiveMerge(RexxHashTable *target);
    RexxHashTable *insert(RexxObject *value, RexxObject *index, HashLink position, LONG type);
    RexxObject    *nextItem(RexxObject *, RexxObject *);
+   RexxObject    *primitiveNextItem(RexxObject *, RexxObject *);
    inline size_t  mainSlotsSize()  { return this->u_size; };
    inline size_t  totalSlotsSize() { return this->u_size * 2; };
    inline BOOL    available(HashLink position) { return (size_t)position < this->totalSlotsSize(); };
