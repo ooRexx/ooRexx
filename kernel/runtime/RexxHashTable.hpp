@@ -119,7 +119,12 @@ typedef unsigned long HashLink;
    inline size_t  totalSlotsSize() { return this->u_size * 2; };
    inline BOOL    available(HashLink position) { return (size_t)position < this->totalSlotsSize(); };
    inline HashLink hashIndex(RexxObject *obj) { return (HashLink)(obj->hash() % this->mainSlotsSize()); }
-   inline HashLink hashPrimitiveIndex(RexxObject *obj) { return (HashLink)(obj->identityHash() % this->mainSlotsSize()); }
+   // NB:  Ideally, hashPrimitiveIndex() would be best served by using the identityHash().  Unfortunately,
+   // the identity hash value is derived directly from the object reference.  This means that objects that
+   // are in the saved image (or restored as part of saved programs) will have different identity hashes before
+   // and after the store, which will cause hash table lookup failures.  We'll use whatever value is stored
+   // in the hashvalue field.
+   inline HashLink hashPrimitiveIndex(RexxObject *obj) { return (HashLink)(obj->getHashValue() % this->mainSlotsSize()); }
    inline HashLink hashStringIndex(RexxObject *obj) { return (HashLink)(obj->hash() % this->mainSlotsSize()); }
 
    HashLink free;                      /* first free element                */
