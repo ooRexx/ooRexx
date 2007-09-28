@@ -2078,6 +2078,11 @@ Output:
   use strict arg time
   return self~new(time('F', time, 'C'))
 
+-- Create a DateTime object from a Long time string.
+::METHOD fromLongTime class
+  use strict arg time
+  return self~new(time('F', time, 'L'))
+
 
 -- Create a DateTime object from a Iso date/time string.
 ::METHOD fromIsoDate class
@@ -2420,6 +2425,17 @@ Output:
 
   -- and finally recombine with the time to get the adjusted timestamp
   return newDate + dayoffset
+
+-- Add a number of 7-day units to the datetime, returning a new instance
+::METHOD addWeeks
+  expose timestamp
+  use strict arg weeks
+
+  .ArgUtil~validateNumber("weeks", weeks)
+
+  numeric digits 18
+  -- return a new instance of DateTime
+  return self~class~new(trunc(timestamp + weeks * (7 * 24 * 3600 * 1000000)))
 
 
 -- Add a number of days to a datetime, returning a new datetime instance.
@@ -3030,6 +3046,18 @@ Output:
 
   -- do the multiply and create a new interval
   return self~class~new(trunc(timestamp * multiplier))
+
+
+-- Add a number of 7-day units to the datetime, returning a new instance
+::METHOD addWeeks
+  expose timestamp
+  use strict arg weeks
+
+  .ArgUtil~validateNumber("weeks", weeks)
+
+  numeric digits 18
+  -- return a new instance of DateTime
+  return self~class~new(trunc(timestamp + weeks * (7 * 24 * 3600 * 1000000)))
 
 
 -- Add a number of days to a timespan, returning a new timespan instance.

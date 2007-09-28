@@ -118,8 +118,8 @@ typedef unsigned long HashLink;
    inline size_t  totalSlotsSize() { return this->u_size * 2; };
    inline BOOL    available(HashLink position) { return (size_t)position < this->totalSlotsSize(); };
    inline HashLink hashIndex(RexxObject *obj) { return (HashLink)(obj->hash() % this->mainSlotsSize()); }
+   inline HashLink hashPrimitiveIndex(RexxObject *obj) { return (HashLink)(obj->identityHash() % this->mainSlotsSize()); }
    inline HashLink hashStringIndex(RexxObject *obj) { return (HashLink)(obj->hash() % this->mainSlotsSize()); }
-//   inline HashLink hashStringIndex(RexxString *obj) { ULONG hash HASHVALUE((RexxObject *)obj);  size_t slotSize = mainSlotsSize(); return (hash > slotSize) ? hash % slotSize : ~hash % slotSize; }
 
    HashLink free;                      /* first free element                */
    TABENTRY entries[1];                /* hash table entries                */

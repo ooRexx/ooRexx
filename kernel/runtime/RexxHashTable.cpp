@@ -248,7 +248,7 @@ RexxHashTable * RexxHashTable::primitiveAdd(
 {
   HashLink position;                   /* current position                  */
 
-  position = hashIndex(index);         /* calculate the hash slot           */
+  position = hashPrimitiveIndex(index);   /* calculate the hash slot           */
                                        /* if the hash slot is empty         */
   if (this->entries[position].index == OREF_NULL) {
                                        /* fill in both the value and index  */
@@ -333,7 +333,7 @@ RexxObject *RexxHashTable::primitiveRemove(
   HashLink next;                       /* next hash position                */
   RexxObject *removed;                 /* removed item value                */
 
-  position = hashIndex(index);         /* calculate the hash slot           */
+  position = hashPrimitiveIndex(index);  /* calculate the hash slot           */
 
   previous = NO_LINK;                  /* no previous slot yet              */
                                        /* have an entry at this slot        */
@@ -455,7 +455,7 @@ RexxObject *RexxHashTable::primitiveRemoveItem(
   HashLink next;                       /* next hash position                */
   RexxObject * removed;                /* removed item value                */
 
-  position = hashIndex(index);         /* calculate the hash slot           */
+  position = hashPrimitiveIndex(index);  /* calculate the hash slot           */
   previous = NO_LINK;                  /* no previous slot yet              */
                                        /* have an entry at this slot        */
   if (this->entries[position].index != OREF_NULL) {
@@ -508,7 +508,7 @@ RexxObject *RexxHashTable::primitiveHasItem(
 {
   HashLink position;                   /* target hash position              */
 
-  position = hashIndex(index);         /* calculate the hash slot           */
+  position = hashPrimitiveIndex(index);    /* calculate the hash slot           */
                                        /* have an entry at this slot        */
   if (this->entries[position].index != OREF_NULL) {
     do {                               /* while more items in chain         */
@@ -701,7 +701,7 @@ RexxArray  *RexxHashTable::primitiveGetAll(
   size_t i;                            /* loop counter                      */
 
   count = 0L;                          /* no items found yet                */
-  position = hashIndex(index);         /* calculate the hash slot           */
+  position = hashPrimitiveIndex(index);  /* calculate the hash slot           */
                                        /* have an entry at this slot        */
   if (this->entries[position].index != OREF_NULL) {
     do {                               /* while more items in chain         */
@@ -716,8 +716,8 @@ RexxArray  *RexxHashTable::primitiveGetAll(
     return (RexxArray *)TheNullArray->copy();
 
   result = new_array(count);           /* get proper size result array      */
-  i = 1L;                              /* start at the first element        */
-  position = hashIndex(index);         /* calculate the hash slot           */
+  i = 1;                               /* start at the first element        */
+  position = hashPrimitiveIndex(index);  /* calculate the hash slot           */
   do {                                 /* while more items in chain         */
                                        /* if got a match                    */
     if (index == this->entries[position].index)
@@ -873,7 +873,7 @@ RexxObject *RexxHashTable::primitiveGet(
 {
   HashLink position;                   /* current position                  */
 
-  position = hashIndex(index);         /* calculate the hash slot           */
+  position = hashPrimitiveIndex(index);  /* calculate the hash slot           */
                                        /* have an entry at this slot        */
   if (this->entries[position].index != OREF_NULL) {
     do {                               /* while more items in chain         */
@@ -1100,7 +1100,7 @@ RexxHashTable *RexxHashTable::primitivePut(
   HashLink position;                   /* current position                  */
   HashLink front;                      /* starting hash position            */
 
-  position = hashIndex(index);         /* calculate the hash slot           */
+  position = hashPrimitiveIndex(index);  /* calculate the hash slot           */
                                        /* have an entry at this slot        */
   if (this->entries[position].index != OREF_NULL) {
     front = position;                  /* save the starting position        */
