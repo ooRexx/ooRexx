@@ -864,7 +864,7 @@ use strict arg which, value                 -- which is the fiter index, value i
 stages[which]~process(value);               -- have the filter handle this
 
 ::method eof                               -- broadcast a done message down all of the branches
-expose filters
+expose stages
 
 do stage over stages
     stage~eof
