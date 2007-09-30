@@ -163,14 +163,14 @@ ULONG APIENTRY BinaryAnd(
    CHECKARG(2);
 
    if (ISHEX(argv[0].strptr))
-      n = strtoul(argv[0].strptr,'\0',16);
+       n = strtoul(argv[0].strptr,'\0',16);
    else
-      n = atol(argv[0].strptr);
+       n = strtoul(argv[0].strptr,'\0',10);
 
    if (ISHEX(argv[1].strptr))
-      m = strtoul(argv[1].strptr,'\0',16);
+       m = strtoul(argv[1].strptr,'\0',16);
    else
-      m = atol(argv[1].strptr);
+       m = strtoul(argv[1].strptr,'\0',10);
 
    sprintf(retstr->strptr, "%u", n & m);
    retstr->strlength = strlen(retstr->strptr);
