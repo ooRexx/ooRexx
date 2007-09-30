@@ -284,6 +284,8 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *hashCode();
 
      RexxString  *stringRexx();
+     RexxString  *concatRexx(RexxObject *);
+     RexxString  *concatBlank(RexxObject *);
      RexxObject  *makeStringRexx();
      RexxObject  *makeArrayRexx();
      RexxString  *defaultNameRexx();

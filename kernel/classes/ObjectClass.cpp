@@ -2096,6 +2096,39 @@ void RexxObject::operator delete(void *arg)
   ;                                    // no explicit delete
 }
 
+
+/**
+ * Concatentation operation supported by the Object class.  This
+ * converts the object into a string form, then asks the
+ * converted object to perform the concatenaton.
+ *
+ * @param otherObj The object to concatenate.
+ *
+ * @return The concatenation result.
+ */
+RexxString *RexxObject::concatRexx(RexxObject *otherObj)
+{
+    RexxString *alias = (RexxString *)REQUEST_STRING(this);
+    return alias->concatRexx(otherObj);
+}
+
+
+/**
+ * Blank concatentation operation supported by the Object class.
+ * This converts the object into a string form, then asks the
+ * converted object to perform the concatenaton.
+ *
+ * @param otherObj The object to concatenate.
+ *
+ * @return The concatenation result.
+ */
+RexxString *RexxObject::concatBlank(RexxObject *otherObj)
+{
+    RexxString *alias = (RexxString *)REQUEST_STRING(this);
+    return alias->concatBlank(otherObj);
+}
+
+
 RexxString *RexxObject::stringRexx()
 /******************************************************************************/
 /* Function:  Exported access to an object virtual function                   */

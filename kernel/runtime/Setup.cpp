@@ -111,6 +111,8 @@ CPPM(RexxObject::freeSOMObjRexx),
 CPPM(RexxObject::SOMObjRexx),
 CPPM(RexxObject::serverRexx),
 CPPM(RexxObject::identityHashRexx),
+CPPM(RexxObject::concatRexx),
+CPPM(RexxObject::concatBlank),
 
 CPPM(RexxObject::newRexx),
 
@@ -800,6 +802,9 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_LESSTHAN_GREATERTHAN   ,TheObjectBehaviour, CPPM(RexxObject::notEqual), 1);
   defineKernelMethod(CHAR_GREATERTHAN_LESSTHAN   ,TheObjectBehaviour, CPPM(RexxObject::notEqual), 1);
   defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL ,TheObjectBehaviour, CPPM(RexxObject::strictNotEqual), 1);
+  defineKernelMethod(CHAR_NULLSTRING             ,TheObjectBehaviour, CPPM(RexxObject::concatRexx), 1);
+  defineKernelMethod(CHAR_BLANK                  ,TheObjectBehaviour, CPPM(RexxObject::concatBlank), 1);
+  defineKernelMethod(CHAR_CONCATENATE            ,TheObjectBehaviour, CPPM(RexxObject::concatRexx), 1);
   defineKernelMethod(CHAR_COPY                   ,TheObjectBehaviour, CPPM(RexxObject::copyRexx), 0);
   defineKernelMethod(CHAR_CLASS                  ,TheObjectBehaviour, CPPM(RexxObject::classObject), 0);
   defineKernelMethod(CHAR_HASMETHOD              ,TheObjectBehaviour, CPPM(RexxObject::hasMethodRexx), 1);
@@ -1204,8 +1209,8 @@ bool kernel_setup (void)
                                        /* instance behaviour mdict          */
   defineKernelMethod(CHAR_NULLSTRING                   ,TheStringBehaviour, CPPMSTR(RexxString::concatRexx), 1);
   defineKernelMethod(CHAR_BLANK                        ,TheStringBehaviour, CPPMSTR(RexxString::concatBlank), 1);
-  defineKernelMethod(CHAR_LENGTH                       ,TheStringBehaviour, CPPMSTR(RexxString::lengthRexx), 0);
   defineKernelMethod(CHAR_CONCATENATE                  ,TheStringBehaviour, CPPMSTR(RexxString::concatRexx), 1);
+  defineKernelMethod(CHAR_LENGTH                       ,TheStringBehaviour, CPPMSTR(RexxString::lengthRexx), 0);
   defineKernelMethod(CHAR_CENTER                       ,TheStringBehaviour, CPPMSTR(RexxString::center), 2);
   defineKernelMethod(CHAR_CENTRE                       ,TheStringBehaviour, CPPMSTR(RexxString::center), 2);
   defineKernelMethod(CHAR_DATATYPE                     ,TheStringBehaviour, CPPMSTR(RexxString::dataType), 1);
