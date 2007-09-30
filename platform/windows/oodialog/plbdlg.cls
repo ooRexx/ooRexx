@@ -510,7 +510,7 @@
 -- Connect WM_HELP messages (F1) to a method.
 ::method ConnectHelp
    use strict arg msgToRise
-   self~addUserMsg(msgToRise, "0x00000053", "0xFFFFFFFF", 0, 0, 0, 0, 0x00000101)
+   return self~addUserMsg(msgToRise, "0x00000053", "0xFFFFFFFF", 0, 0, 0, 0, 0x00000101)
 
 /* The following methods create a connection between a class method */
 /* and a dialog item (dialog control). The connected method will be */
