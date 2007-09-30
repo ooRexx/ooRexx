@@ -57,7 +57,7 @@ extern LPBITMAPINFO LoadDIB(LPSTR szFile);
 extern LONG EvaluateListStyle(CHAR * styledesc);
 
 /* Local functions */
-static LONG SetStyle(HWND, LONG);
+static ULONG SetStyle(HWND, LONG, PRXSTRING);
 
 ULONG APIENTRY PlaySoundFile(
   PUCHAR funcname,
@@ -789,11 +789,14 @@ ULONG APIENTRY HandleTreeCtrl(
  *
  * @param hwnd    Handle of window having its style changed / set.
  * @param lStyle  The stlye to be set.
+ * @param retstr  The string being returned to ooRexx.
  *
- * @return The previous window style on success, or the negated system error on
- *         failure.
+ * @return The string returned to ooRexx is the previous window style on
+ *         success, or the negated system error on failure.
+ *
+ *         The function itself always returns 0.
  */
-static LONG SetStyle(HWND hwnd, LONG lStyle)
+static ULONG SetStyle(HWND hwnd, LONG lStyle, PRXSTRING retstr)
 {
     LONG lErr;
 
@@ -809,8 +812,15 @@ static LONG SetStyle(HWND hwnd, LONG lStyle)
     {
         lErr = (LONG)GetLastError();
         if ( ! lErr ) lStyle = -lErr;
+        ltoa(lStyle, retstr->strptr, 10);
+        retstr->strlength = strlen(retstr->strptr);
     }
-    return lStyle;
+    else
+    {
+        ultoa((ULONG)lStyle, retstr->strptr, 10);
+        retstr->strlength = strlen(retstr->strptr);
+    }
+    return 0;
 }
 
 /**
@@ -1142,8 +1152,10 @@ ULONG APIENTRY HandleControlEx(
 
         if ( !strcmp(argv[3].strptr, "GET") )         /* Get the window style */
         {
-            /* Return the window style as a long for any dialog control. */
-            RETVAL(lStyle);
+            /* Return the window style as an unsigned long for any dialog control. */
+            ultoa((ULONG)lStyle, retstr->strptr, 10);
+            retstr->strlength = strlen(retstr->strptr);
+            return 0;
         }
          else if ( !strcmp(argv[3].strptr, "TAB") )   /* Set or remove tab stop  style */
         {
@@ -1198,7 +1210,7 @@ ULONG APIENTRY HandleControlEx(
         }
         else RETERR
 
-        RETVAL(SetStyle(hCtrl, lStyle));
+        return SetStyle(hCtrl, lStyle, retstr);
     }
     else if ( argv[2].strptr[0] == 'U' ) /* Get, set 4-byte user data */
     {
