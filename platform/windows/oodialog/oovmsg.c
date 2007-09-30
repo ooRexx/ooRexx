@@ -275,6 +275,27 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                     lparam = (ULONG)((NM_LISTVIEW *)lparam)->iSubItem;  /* which column is pressed */
                 }
             }
+            else if ( m[i].tag )
+            {
+                /* There is only 1 message in this category now, so this could
+                 * have been all one test.
+                 */
+                if ( ((m[i].tag & TAG_CTRLMASK) == TAG_DIALOG) && (m[i].tag & TAG_HELP) && (message == WM_HELP))
+                {
+                    LPHELPINFO phi = (LPHELPINFO)lparam;
+
+                    if ( phi->iContextType == HELPINFO_WINDOW )
+                        np = "WINDOW";
+                    else
+                        np = "MENU";
+
+                    /* Use AddDialogMessage directely to send 4 args to ooRexx. */
+                    _snprintf(msgstr, 511, "%s(%u,\"%s\",%d,%d)", m[i].rexxProgram,
+                              phi->iCtrlId, np, phi->MousePos.x, phi->MousePos.y);
+                    AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                    return 1;
+                }
+            }
 
             if (np)
                 _snprintf(msgstr, 511, "%s(%u,%u,\"%s\")", m[i].rexxProgram, param, item, np);

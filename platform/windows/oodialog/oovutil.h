@@ -95,6 +95,9 @@ extern DWORD ComCtl32Version;
  *  The least significant 2 bytes are used to define the type of control.  These
  *  bytes can be isolated using TAG_CTRLMASK.
  */
+#define TAG_DIALOG                0x00000001
+#define TAG_HELP                  0x00000100
+
 #define TAG_TREEVIEW              0x00000006
 #define TAG_LISTVIEW              0x00000007
 #define TAG_TRACKBAR              0x00000008
