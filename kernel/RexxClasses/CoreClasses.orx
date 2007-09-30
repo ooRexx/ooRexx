@@ -2395,7 +2395,7 @@ Output:
   expose timestamp
   use strict arg years
 
-  .ArgUtil~validateNumber("years", years)
+  .ArgUtil~validateWhole("years", years)
 
   -- This is easier to deal with if we split the date and time into
   -- two components first
@@ -2552,7 +2552,7 @@ Output:
   return date("W", timestamp, "F");
 
 
--- Format the datetime into European format, 1 Sep 2007.  An optional
+-- Format the datetime into Normal format, 1 Sep 2007.  An optional
 -- separator may be specified.
 ::METHOD normalDate
   expose timestamp
@@ -2620,12 +2620,17 @@ Output:
   use strict arg
   return time("T", timestamp, "F")
 
--- Return the timespan value for this DateTime instnace
--- from the "beginning of time" in 1 Jan 0001
-::METHOD timeSpan
-  expose timestamp
+-- Returns a datetime object with a time of day value set to
+-- 00:00:00.000000
+::METHOD date
   use strict arg
-  return .TimeSpan~new(timestamp)
+  return self~class~new(date('F', self~standardDate, 'S'))
+
+-- Returns the time of day as a TimeSpan object with the interval
+-- from 00:00:00.000000 of the datetime day.
+::METHOD timeOfDay
+  use strict arg
+  return .timespan~new(time('F', self~LongTime, 'L'))
 
 -- Returns true if the datetime object year is a leap year.
 ::METHOD isLeapYear
@@ -2646,18 +2651,6 @@ Output:
   else do
       return "31 28 31 30 31 30 31 31 30 31 30 31"~word(month)
   end
-
--- Returns the time of day as a TimeSpan object with the interval
--- from 00:00:00.000000 of the datetime day.
-::METHOD timeOfDay
-  use strict arg
-  return .timespan~new(time('F', self~LongTime, 'L'))
-
--- Returns a datetime object with a time of day value set to
--- 00:00:00.000000
-::METHOD date
-  use strict arg
-  return self~class~new(date('F', self~standardDate, 'S'))
 
 -- Returns a string form for this date time.  The string value
 -- is the ISO date.

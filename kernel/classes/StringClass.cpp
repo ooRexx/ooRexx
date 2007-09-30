@@ -361,6 +361,11 @@ BOOL RexxString::primitiveIsEqual(
   RexxString *other;                   /* converted string object           */
 
   required_arg(otherObj, ONE);         /* this is required.                 */
+  if (otherObj == TheNilObject)        // strings never compare equal to the NIL object
+  {
+      return FALSE;
+  }
+
   other = REQUEST_STRING(otherObj);    /* force into string form            */
   if (DBCS_MODE) {                     /* need to use DBCS?                 */
     ValidDBCS(this);                   /* validate the string               */
@@ -803,6 +808,11 @@ RexxInteger *RexxString::equal(RexxObject *other)
 /* Function:  Non-strict ("=") string equality operator                       */
 /******************************************************************************/
 {
+  // Strings never compare equal to the .nil object
+  if (other == TheNilObject)
+  {
+      return TheFalseObject;
+  }
   return ((this->comp(other) == 0) ? TheTrueObject : TheFalseObject);
 }
 
@@ -811,6 +821,11 @@ RexxInteger *RexxString::notEqual(RexxObject *other)
 /* Function:  Non-Strict ("\=") string inequality operator                    */
 /******************************************************************************/
 {
+  // Strings never compare equal to the .nil object
+  if (other == TheNilObject)
+  {
+      return TheTrueObject;
+  }
   return ((this->comp(other) != 0) ? TheTrueObject : TheFalseObject);
 }
 
