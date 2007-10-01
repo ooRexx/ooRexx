@@ -1913,6 +1913,7 @@ Output:
   if output~isInstanceOf(.string) then  -- if a string use it as a filename
   do
      stream=.stream~new(output)     -- create stream object
+     stream~open("WRITE REPLACE")   -- make sure we open in replace mode
      self~save(stream)              -- load its properties
      stream~close                   -- close stream
      return
