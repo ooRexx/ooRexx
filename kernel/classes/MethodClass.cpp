@@ -439,6 +439,36 @@ RexxObject *RexxMethod::setProtectedRexx()
   return OREF_NULL;                    /* always return nothing             */
 }
 
+/**
+ * Return the Guarded setting for a method object.
+ *
+ * @return .true if the method is guarded.  .false otherwise.
+ */
+RexxObject *RexxMethod::isGuardedRexx( )
+{
+    return isGuarded() ? TheTrueObject : TheFalseObject;
+}
+
+/**
+ * Return the Private setting for a method object.
+ *
+ * @return .true if the method is private.  .false otherwise.
+ */
+RexxObject *RexxMethod::isPrivateRexx( )
+{
+    return isPrivate() ? TheTrueObject : TheFalseObject;
+}
+
+/**
+ * Return the Protected setting for a method object.
+ *
+ * @return .true if the method is protected.  .false otherwise.
+ */
+RexxObject *RexxMethod::isProtectedRexx( )
+{
+    return isProtected() ? TheTrueObject : TheFalseObject;
+}
+
 RexxSmartBuffer *RexxMethod::saveMethod()
 /******************************************************************************/
 /* Function: Flatten translated method into a buffer for storage into EA's etc*/

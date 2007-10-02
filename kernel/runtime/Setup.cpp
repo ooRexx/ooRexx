@@ -283,6 +283,9 @@ CPPMTD(RexxMethod::source),
 CPPMTD(RexxMethod::setPrivateRexx),
 CPPMTD(RexxMethod::setProtectedRexx),
 CPPMTD(RexxMethod::setSecurityManager),
+CPPMTD(RexxMethod::isGuardedRexx),
+CPPMTD(RexxMethod::isPrivateRexx),
+CPPMTD(RexxMethod::isProtectedRexx),
 
 CPPMTDC(RexxMethodClass::newFileRexx),
 CPPMTDC(RexxMethodClass::newRexx),
@@ -1040,6 +1043,9 @@ bool kernel_setup (void)
   defineKernelMethod(CHAR_SETUNGUARDED ,TheMethodBehaviour, CPPMTD(RexxMethod::setUnGuardedRexx), 0);
   defineKernelMethod(CHAR_SETGUARDED   ,TheMethodBehaviour, CPPMTD(RexxMethod::setGuardedRexx), 0);
   defineKernelMethod(CHAR_SETPRIVATE   ,TheMethodBehaviour, CPPMTD(RexxMethod::setPrivateRexx), 0);
+  defineKernelMethod(CHAR_ISGUARDED    ,TheMethodBehaviour, CPPMTD(RexxMethod::isGuardedRexx), 0);
+  defineKernelMethod(CHAR_ISPRIVATE    ,TheMethodBehaviour, CPPMTD(RexxMethod::isPrivateRexx), 0);
+  defineKernelMethod(CHAR_ISPROTECTED  ,TheMethodBehaviour, CPPMTD(RexxMethod::isProtectedRexx), 0);
   defineProtectedKernelMethod(CHAR_SETPROTECTED ,TheMethodBehaviour, CPPMTD(RexxMethod::setProtectedRexx), 0);
   defineProtectedKernelMethod(CHAR_SETSECURITYMANAGER ,TheMethodBehaviour, CPPMTD(RexxMethod::setSecurityManager), 1);
   defineKernelMethod(CHAR_SOURCE       ,TheMethodBehaviour, CPPMTD(RexxMethod::source), 0);

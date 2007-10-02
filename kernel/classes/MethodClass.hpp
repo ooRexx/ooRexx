@@ -80,6 +80,10 @@
   RexxObject  *setProtectedRexx();
   RexxObject  *setSecurityManager(RexxObject *);
 
+  RexxObject  *isGuardedRexx();
+  RexxObject  *isPrivateRexx();
+  RexxObject  *isProtectedRexx();
+
    inline USHORT methnum() {return this->methodInfo.methnum; };
    inline UCHAR  arguments() {return this->methodInfo.arguments; };
    inline UCHAR  flags() {return this->methodInfo.flags; };

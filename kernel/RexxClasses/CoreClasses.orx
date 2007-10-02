@@ -2678,6 +2678,15 @@ Output:
 -- two DateTime objects.  They also can added to DateTime objects.
 ::CLASS 'TimeSpan' public inherit Comparable
 
+::METHOD zeroSpan class
+  return self~new(0)
+
+::METHOD maxSpan class
+  return .DateTime~maxDate - .DateTime~minDate
+
+::METHOD minSpan class
+  return .DateTime~minDate - .DateTime~maxDate
+
 -- Create a timespan object representing a number of days
 ::METHOD fromDays class
   use strict arg days
