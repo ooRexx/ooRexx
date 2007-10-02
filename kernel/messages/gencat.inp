@@ -188,6 +188,9 @@ $ Error_System_service
 $ Error_Interpretation
 49 Interpretation error
 
+$ Error_Invalid_argument
+88 Invalid argument
+
 $ Error_External_name_not_found
 90 External name not found
 
@@ -852,7 +855,7 @@ $ Error_Incorrect_call_range
 382 &1 argument &2 must be in the range 0-99; found "&3"
 
 $ Error_Incorrect_call_null
-383 &1 argument &2 must not be null
+383 &1 argument &2 must not be a null string
 
 $ Error_Incorrect_call_option
 384 &1 argument &2 must be a single character or null; found "&3"
@@ -1678,6 +1681,60 @@ $ Error_Incorrect_method_queue_index
 
 $ Error_Execution_nostem
 670 Stem object default value cannot be another stem object
+
+$ Error_Invalid_argument_user_defined
+671 &1
+
+$ Error_Invalid_argument_noarg
+672 Missing argument; argument &1 is required
+
+$ Error_Invalid_argument_number
+673 Argument &1 must be a number; found "&2"
+
+$ Error_Invalid_argument_whole
+674 Argument &1 must be a whole number; found "&2"
+
+$ Error_Invalid_argument_nonnegative
+674 Argument &1 must be zero or a positive whole number; found "&2"
+
+$ Error_Invalid_argument_positive
+675 Argument &1 must be a positive whole number; found "&2"
+
+$ Error_Invalid_argument_toobig
+676 Argument &1 must not exceed &2; found "&3"
+
+$ Error_Invalid_argument_range
+677 Argument &1 must be in the range &2-&3; found "&4"
+
+$ Error_Invalid_argument_null
+678 Argument &1 must not be a null string
+
+$ Error_Invalid_argument_string
+679 Argument &1 must have a string value
+
+$ Error_Invalid_argument_pad
+680 Argument &1 is an incorrect pad or character argument; found "&2"
+
+$ Error_Invalid_argument_length
+681 Argument &1 is an incorrect length argument; found "&2"
+
+$ Error_Invalid_argument_position
+682 Argument &1 is an incorrect position argument; found "&2"
+
+$ Error_Invalid_argument_noarray
+683 Argument &1 must have a single-dimensional array value
+
+$ Error_Invalid_argument_noclass
+684 Argument &1 must be of the &2 class
+
+$ Error_Invalid_argument_argType
+685 Argument &1 could not be converted to type &2
+
+$ Error_Invalid_argument_list
+686 Argument &1 must be one of &2; found "&3"
+
+$ Error_Invalid_argument_general
+687 Argument &1 &2
 
 
 $ * -------------------------------------------------------------------------- */

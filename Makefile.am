@@ -501,6 +501,11 @@ librexx_la_SOURCES = $(SOM_sources) \
                      $(runtime_sources) \
                      $(streamlibrary_sources) \
                      $(lib_sources)
+core_classes = $(rexxclasses_dir)/CoreClasses.orx \
+               $(rexxclasses_dir)/StreamClasses.orx \
+	       $(rexxclasses_dir)/SystemMethods.orx
+core_platform_classes = $(kernel_platform_unix_dir)/PlatformObjects.orx \
+                        $(kernel_platform_unix_dir)/UnixMethods.orx
 #
 # Preprocessor flags for librexx.so
 #
@@ -740,7 +745,7 @@ $(messages_dir)/RexxMessageTable.h: $(messages_dir)/RexxMessageTable.xsl $(messa
 $(messages_dir)/gencat.inp: $(kernel_platform_unix_dir)/UnixGencat.xsl $(messageXML)
 	sh ./xsl.sh $(@) $(messageXML) $(kernel_platform_unix_dir)/UnixGencat.xsl
 
-rexx.img: rexx librexxutil.la
+rexx.img: rexx librexxutil.la $(core_classes) $(core_platform_classes)
 	cp $(rexxclasses_dir)/*.orx .
 	cp $(kernel_platform_unix_dir)/*.orx .
 	./rexx -i
