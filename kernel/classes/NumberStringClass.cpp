@@ -688,7 +688,14 @@ bool  RexxNumberString::createUnsignedInt64Value(stringchar_t *thisnum, stringsi
     if (exponent > 0)
     {
         // get this as a multipler value
-        uint64_t exponentMultiplier = exponent * 10;
+        uint64_t exponentMultiplier = 1;
+        while (exponent > 0)
+        {
+            exponentMultiplier *= 10;
+            exponent--;
+        }
+
+
         uint64_t newNumber = intNumber * exponentMultiplier;
 
         // did this wrap?  This is a safe test, since we capped

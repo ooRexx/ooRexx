@@ -2678,15 +2678,6 @@ Output:
 -- two DateTime objects.  They also can added to DateTime objects.
 ::CLASS 'TimeSpan' public inherit Comparable
 
-::METHOD zeroSpan class
-  return self~new(0)
-
-::METHOD maxSpan class
-  return .DateTime~maxDate - .DateTime~minDate
-
-::METHOD minSpan class
-  return .DateTime~minDate - .DateTime~maxDate
-
 -- Create a timespan object representing a number of days
 ::METHOD fromDays class
   use strict arg days
@@ -2765,7 +2756,6 @@ Output:
   -- this will validate the timestamp value
   timestamp = date('f', abs(timestamp), 'f') * sign(timestamp)
 
-
 -- perform a sort comparison of two timespans
 ::METHOD compareTo
   expose timestamp
@@ -2798,7 +2788,7 @@ Output:
 ::METHOD days
   expose timestamp
   numeric digits 18
-  return timestamp % (24 * 3600 * 1000000)
+  return abs(timestamp) % (24 * 3600 * 1000000)
 
 
 -- return the hours component of the timespan
@@ -2807,7 +2797,7 @@ Output:
 
   numeric digits 18
   -- subtract out the higher components
-  remainder = timestamp // (24 * 3600 * 1000000)
+  remainder = abs(timestamp) // (24 * 3600 * 1000000)
   -- and return the number full units remaining
   return remainder % (3600 * 1000000)
 
@@ -2818,7 +2808,7 @@ Output:
 
   numeric digits 18
   -- subtract out the higher components
-  remainder = timestamp // (3600 * 1000000)
+  remainder = abs(timestamp) // (3600 * 1000000)
   -- and return the number full units remaining
   return remainder % (60 * 1000000)
 
@@ -2829,7 +2819,7 @@ Output:
 
   numeric digits 18
   -- subtract out the higher components
-  remainder = timestamp // (60 * 1000000)
+  remainder = abs(timestamp) // (60 * 1000000)
   -- and return the number full units remaining
   return remainder % (1000000)
 
@@ -2839,7 +2829,7 @@ Output:
 
   numeric digits 18
   -- subtract out the higher components
-  remainder = timestamp // 1000000
+  remainder = abs(timestamp) // 1000000
   -- and return the number full units remaining
   return remainder
 
