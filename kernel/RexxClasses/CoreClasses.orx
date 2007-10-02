@@ -3162,11 +3162,11 @@ Output:
   expose timestamp
   use strict arg
 
-  days = abs(self~days)
-  hours = abs(self~hours)
-  minutes = abs(self~minutes)
-  seconds = abs(self~seconds)
-  microseconds = abs(self~microseconds)
+  days = self~days
+  hours = self~hours
+  minutes = self~minutes
+  seconds = self~seconds
+  microseconds = self~microseconds
 
   sign = ""
 
