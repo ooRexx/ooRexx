@@ -2598,12 +2598,13 @@ Output:
   use strict arg sep = ("/")
   return date("U", timestamp, "F", sep);
 
--- Return the day of the week as an integer.  0 = Monday,
--- 1 - Tuesday, etc.
+-- Return the day of the week as an integer.  1 = Monday,
+-- 2 = Tuesday, etc.  These are the ISO definitions for the
+-- day numbers.
 ::METHOD weekDay
   expose timestamp
   use strict arg
-  return date("B", timestamp, "F") // 7
+  return (date("B", timestamp, "F") // 7) + 1
 
 -- Format the datetime into Civil format, hh:mmam/pm.
 ::METHOD civilTime
