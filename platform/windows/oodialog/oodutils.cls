@@ -256,14 +256,17 @@
    return ret
 
 ::routine CheckList public
-   use arg msg, title, labels, lx, max
-   if Arg(4,"o") = 1 then lx = 0
-   if Arg(5,"o") = 1 then max= 0
+   use arg msg, title, labels, checks, lx = 0, max = 0
+   if Arg(4,"o") then checks = .array~new
    num = labels~items
    do i=1 to num
       j = i+100
       lab.i = labels[i]
-      dat.j = 0
+      if checks~hasIndex(i) then do
+         if checks[i]~datatype('O') then dat.j = checks[i]
+         else dat.j = 0
+      end
+      else dat.j = 0
    end
    dlg = .CheckList~new(msg, title, lab., dat., lx, max)
    if dlg~execute \= 1 then do; drop dlg; return .NIL; end
