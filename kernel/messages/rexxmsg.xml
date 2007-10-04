@@ -3287,7 +3287,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>904</Subcode>
-          <MessageNumber>674</MessageNumber>
+          <MessageNumber>675</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_nonnegative</SymbolicName>
@@ -3296,7 +3296,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>905</Subcode>
-          <MessageNumber>675</MessageNumber>
+          <MessageNumber>676</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_positive</SymbolicName>
@@ -3305,7 +3305,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>906</Subcode>
-          <MessageNumber>676</MessageNumber>
+          <MessageNumber>677</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_toobig</SymbolicName>
@@ -3314,7 +3314,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>907</Subcode>
-          <MessageNumber>677</MessageNumber>
+          <MessageNumber>678</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_range</SymbolicName>
@@ -3323,7 +3323,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>908</Subcode>
-          <MessageNumber>678</MessageNumber>
+          <MessageNumber>679</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_null</SymbolicName>
@@ -3332,7 +3332,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>909</Subcode>
-          <MessageNumber>679</MessageNumber>
+          <MessageNumber>680</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_string</SymbolicName>
@@ -3341,7 +3341,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>910</Subcode>
-          <MessageNumber>680</MessageNumber>
+          <MessageNumber>681</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_pad</SymbolicName>
@@ -3350,7 +3350,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>911</Subcode>
-          <MessageNumber>681</MessageNumber>
+          <MessageNumber>682</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_length</SymbolicName>
@@ -3359,7 +3359,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>912</Subcode>
-          <MessageNumber>682</MessageNumber>
+          <MessageNumber>683</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_position</SymbolicName>
@@ -3368,7 +3368,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>913</Subcode>
-          <MessageNumber>683</MessageNumber>
+          <MessageNumber>684</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_noarray</SymbolicName>
@@ -3377,7 +3377,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>914</Subcode>
-          <MessageNumber>684</MessageNumber>
+          <MessageNumber>685</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_noclass</SymbolicName>
@@ -3386,7 +3386,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>915</Subcode>
-          <MessageNumber>685</MessageNumber>
+          <MessageNumber>686</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_argType</SymbolicName>
@@ -3395,7 +3395,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>916</Subcode>
-          <MessageNumber>686</MessageNumber>
+          <MessageNumber>687</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_list</SymbolicName>
@@ -3404,7 +3404,7 @@ special character (such as a parenthesis).
         <SubMessage>
           <Code>88</Code>
           <Subcode>917</Subcode>
-          <MessageNumber>687</MessageNumber>
+          <MessageNumber>688</MessageNumber>
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_general</SymbolicName>
@@ -5005,7 +5005,7 @@ special character (such as a parenthesis).
       <SubMessage>
         <Code>99</Code>
         <Subcode>931</Subcode>
-        <MessageNumber>688</MessageNumber>
+        <MessageNumber>689</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_duplicate_attribute</SymbolicName>
