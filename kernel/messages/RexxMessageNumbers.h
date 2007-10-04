@@ -505,7 +505,6 @@
 #define Error_Creating_event_msg                                     569
 #define Error_Creating_event_direct_parm_msg                         570
 #define Error_Accessing_aete_msg                                     571
-#define Error_Translation_duplicate_attribute_msg                    571
 #define Error_Launching_app_msg                                      572
 #define Error_Invalid_event_additional_parm_msg                      573
 #define Error_Creating_event_additional_parm_msg                     574
@@ -615,6 +614,7 @@
 #define Error_Invalid_argument_argType_msg                           685
 #define Error_Invalid_argument_list_msg                              686
 #define Error_Invalid_argument_general_msg                           687
+#define Error_Translation_duplicate_attribute_msg                    688
 
 
 #endif

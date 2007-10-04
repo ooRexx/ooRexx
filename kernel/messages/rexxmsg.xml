@@ -5005,7 +5005,7 @@ special character (such as a parenthesis).
       <SubMessage>
         <Code>99</Code>
         <Subcode>931</Subcode>
-        <MessageNumber>571</MessageNumber>
+        <MessageNumber>688</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_duplicate_attribute</SymbolicName>
