@@ -326,9 +326,9 @@ for /F "usebackq tokens=1,2,3,4*" %%i in (`svn info`) do if (%%i) == (Revision:)
 if %SVN_REV%x == x (
   echo Executing in a svn working copy, but could not determine the svn revision
   echo number.
-  echo Going to abort on error.
+  echo Do NOT use this environment for a release build.
   echo.
-  goto ENV_VARS_CLEANUP
+  goto NOSVN
 )
 
 REM Now write out oorexx.ver.incl
