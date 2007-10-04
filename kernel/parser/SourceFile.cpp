@@ -1566,7 +1566,7 @@ void RexxSource::completeClass()
 #define PROTECTED_METHOD   1           /* security manager permission needed*/
 #define UNPROTECTED_METHOD 2           /* no protection.                    */
 
-#define DEFAULT_SCOPE      0           /* using defualt scope               */
+#define DEFAULT_ACCESS_SCOPE      0    /* using defualt scope               */
 #define PUBLIC_SCOPE       1           /* publicly accessible               */
 #define PRIVATE_SCOPE      2           /* private scope                     */
 
@@ -1616,7 +1616,7 @@ void RexxSource::classDirective()
     this->active_class->put(new_directory(), CLASS_CLASS_METHODS);
     /* save the ::class location         */
     this->active_class->put((RexxObject *)new RexxInstruction(this->clause, KEYWORD_CLASS), CLASS_DIRECTIVE);
-    int  Public = DEFAULT_SCOPE;          /* haven't seen the keyword yet      */
+    int  Public = DEFAULT_ACCESS_SCOPE;          /* haven't seen the keyword yet      */
     bool subclass = false;                /* no subclass keyword yet           */
     RexxString *externalname = OREF_NULL; /* no external name yet              */
     RexxString *metaclass = OREF_NULL;    /* no metaclass yet                  */
@@ -1653,7 +1653,7 @@ void RexxSource::classDirective()
 
 
                 case SUBDIRECTIVE_PUBLIC:  /* ::CLASS name PUBLIC               */
-                    if (Public != DEFAULT_SCOPE)  /* already had one of these?         */
+                    if (Public != DEFAULT_ACCESS_SCOPE)  /* already had one of these?         */
                     {
                                              /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_class, token);
@@ -1664,7 +1664,7 @@ void RexxSource::classDirective()
                     break;
 
                 case SUBDIRECTIVE_PRIVATE: /* ::CLASS name PUBLIC               */
-                    if (Public != DEFAULT_SCOPE)  /* already had one of these?         */
+                    if (Public != DEFAULT_ACCESS_SCOPE)  /* already had one of these?         */
                     {
                                              /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_class, token);
@@ -1741,7 +1741,7 @@ void RexxSource::classDirective()
 void RexxSource::methodDirective()
 {
     this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
-    int  Private = DEFAULT_SCOPE;    /* this is a public method           */
+    int  Private = DEFAULT_ACCESS_SCOPE;    /* this is a public method           */
     int  Protected = DEFAULT_PROTECTION;  /* and is not protected yet          */
     int guard = DEFAULT_GUARD;       /* default is guarding               */
     bool Class = false;              /* default is an instance method     */
@@ -1812,7 +1812,7 @@ void RexxSource::methodDirective()
                     break;
                     /* ::METHOD name PRIVATE             */
                 case SUBDIRECTIVE_PRIVATE:
-                    if (Private != DEFAULT_SCOPE)   /* already seen one of these?        */
+                    if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_method, token);
@@ -1821,7 +1821,7 @@ void RexxSource::methodDirective()
                     break;
                     /* ::METHOD name PUBLIC             */
                 case SUBDIRECTIVE_PUBLIC:
-                    if (Private != DEFAULT_SCOPE)   /* already seen one of these?        */
+                    if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_method, token);
@@ -2061,7 +2061,7 @@ void RexxSource::methodDirective()
 void RexxSource::attributeDirective()
 {
     this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
-    int  Private = DEFAULT_SCOPE;    /* this is a public method           */
+    int  Private = DEFAULT_ACCESS_SCOPE;    /* this is a public method           */
     int  Protected = DEFAULT_PROTECTION;  /* and is not protected yet          */
     int  guard = DEFAULT_GUARD;       /* default is guarding               */
     int  style = ATTRIBUTE_BOTH;      // by default, we create both methods for the attribute.
@@ -2125,7 +2125,7 @@ void RexxSource::attributeDirective()
                     Class = true;            /* flag this for later processing    */
                     break;
                 case SUBDIRECTIVE_PRIVATE:
-                    if (Private != DEFAULT_SCOPE)   /* already seen one of these?        */
+                    if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_method, token);
@@ -2134,7 +2134,7 @@ void RexxSource::attributeDirective()
                     break;
                     /* ::METHOD name PUBLIC             */
                 case SUBDIRECTIVE_PUBLIC:
-                    if (Private != DEFAULT_SCOPE)   /* already seen one of these?        */
+                    if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
                         report_error_token(Error_Invalid_subkeyword_method, token);
@@ -2431,7 +2431,7 @@ void RexxSource::routineDirective()
       report_error(Error_Translation_duplicate_routine);
     this->flags |= _install;         /* have information to install       */
     RexxString *externalname = OREF_NULL;        /* no external name yet              */
-    int Public = DEFAULT_SCOPE;      /* not a public routine yet          */
+    int Public = DEFAULT_ACCESS_SCOPE;      /* not a public routine yet          */
     for (;;) {                       /* now loop on the option keywords   */
       token = nextReal();            /* get the next token                */
                                      /* reached the end?                  */
@@ -2463,7 +2463,7 @@ void RexxSource::routineDirective()
 #endif
                                      /* ::ROUTINE name PUBLIC             */
         case SUBDIRECTIVE_PUBLIC:
-          if (Public != DEFAULT_SCOPE)   /* already had one of these?         */
+          if (Public != DEFAULT_ACCESS_SCOPE)   /* already had one of these?         */
           {
                                      /* duplicates are invalid            */
               report_error_token(Error_Invalid_subkeyword_routine, token);
@@ -2473,7 +2473,7 @@ void RexxSource::routineDirective()
           break;
                                      /* ::ROUTINE name PUBLIC             */
         case SUBDIRECTIVE_PRIVATE:
-          if (Public != DEFAULT_SCOPE)   /* already had one of these?         */
+          if (Public != DEFAULT_ACCESS_SCOPE)   /* already had one of these?         */
           {
                                      /* duplicates are invalid            */
               report_error_token(Error_Invalid_subkeyword_routine, token);
