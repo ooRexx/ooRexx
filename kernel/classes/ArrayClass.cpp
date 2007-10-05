@@ -1086,10 +1086,8 @@ RexxString *RexxArray::toString(       /* concatenate array elements to create s
 
   if (format != OREF_NULL)
   {
-     if (REQUEST_STRING(format) == OREF_NULL)
-     {
-       report_exception1(Error_Incorrect_method_nostring, IntegerOne);
-     }
+     // a string value is required here
+     format = REQUIRED_STRING(format, ARG_ONE);
   }
 
   if (format == OREF_NULL)
@@ -1126,11 +1124,7 @@ RexxString *RexxArray::toString(       /* concatenate array elements to create s
   {
       if (separator != OREF_NULL)
       {
-         line_end_string = REQUEST_STRING(separator);
-         if (line_end_string == OREF_NULL)
-         {
-            report_exception1(Error_Incorrect_method_nostring, IntegerTwo);
-         }
+         line_end_string = REQUIRED_STRING(separator, ARG_TWO);
       }
       else
          line_end_string = new_cstring(line_end);
