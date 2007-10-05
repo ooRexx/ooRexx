@@ -1055,12 +1055,14 @@ RexxString  *RexxArray::primitiveMakeString()
 }
 #endif
 
-RexxString *RexxArray::makeString(RexxString *format)
+RexxString *RexxArray::makeString(RexxString *format, RexxString *separator)
 {
-    return toString(format);
+    return toString(format, separator);
 }
 
-RexxString *RexxArray::toString(RexxString *format)
+RexxString *RexxArray::toString(       /* concatenate array elements to create string object */
+     RexxString *format,               /* format of concatenation (one of: "C", "L")         */
+     RexxString *separator)            /* separator to use if "S" is specified for format    */
 /******************************************************************************/
 /* Function:  Make a string out of an array                                   */
 /******************************************************************************/
@@ -1073,8 +1075,6 @@ RexxString *RexxArray::toString(RexxString *format)
   RexxMutableBuffer *mutbuffer;
   RexxObject *item;                     /* inserted value item               */
   int i_form;                           /* 1 == line, 2 == char              */
-  line_end_string = new_cstring(line_end);
-  save(line_end_string);
 
   mutbuffer = ((RexxMutableBufferClass*) TheMutableBufferClass)->newRexx(NULL, 0);
   save(mutbuffer);
@@ -1086,7 +1086,7 @@ RexxString *RexxArray::toString(RexxString *format)
 
   if (format != OREF_NULL)
   {
-     if (!OTYPE(String, format))
+     if (REQUEST_STRING(format) == OREF_NULL)
      {
        report_exception1(Error_Incorrect_method_nostring, IntegerOne);
      }
@@ -1099,10 +1099,16 @@ RexxString *RexxArray::toString(RexxString *format)
   else if (toupper((format->stringData[0])) == 'L')
      i_form = 2;
   else
-     report_exception(Error_Incorrect_method);
+     report_exception2(Error_Incorrect_method_option, new_cstring("CL"), format);
 
   if (i_form == 1)                       /* character oriented processing    */
   {
+    if (separator != OREF_NULL)
+    {
+        report_exception1(Error_Incorrect_method_maxarg, IntegerOne);
+
+    }
+
     for (i = 1; i <=items ; i++)         /* loop through the array           */
     {
       item = newArray->get(i);           /* get the next item                */
@@ -1114,6 +1120,18 @@ RexxString *RexxArray::toString(RexxString *format)
   }
   else if (i_form == 2)                 /* line oriented processing          */
   {
+      if (separator != OREF_NULL)
+      {
+         line_end_string = REQUEST_STRING(separator);
+         if (line_end_string == OREF_NULL)
+         {
+            report_exception1(Error_Incorrect_method_nostring, IntegerTwo);
+         }
+      }
+      else
+         line_end_string = new_cstring(line_end);
+
+      save(line_end_string);
       bool first = true;
 
       for (i = 1; i <= items; i++)         /* loop through the array            */
@@ -1134,12 +1152,13 @@ RexxString *RexxArray::toString(RexxString *format)
               first = false;
           }
       }
+
+      discard(line_end_string);
   }
 
   newString = mutbuffer->requestString();
   discard(newArray);
   discard(mutbuffer);
-  discard(line_end_string);
   return newString;
 }
 

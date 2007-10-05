@@ -2791,7 +2791,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>915</term>
 <listitem>
-<para>Method option must be one of <emphasis>arguments</emphasis>; found "<emphasis>value</emphasis>"</para>
+<para>Method option must be one of "<emphasis>arguments</emphasis>"; found "<emphasis>value</emphasis>"</para>
 </listitem>
 </varlistentry>
 <varlistentry>

@@ -93,8 +93,8 @@ typedef struct copyElelmentParm {
    RexxArray   *makeArray();
    RexxArray   *allItems();
    RexxArray   *allIndexes();
-   RexxString  *toString(RexxString *);
-   RexxString  *makeString(RexxString *);
+   RexxString  *toString(RexxString *, RexxString *);
+   RexxString  *makeString(RexxString *, RexxString *);
 // Temporary bypass for BUG #1700606
 #if 0
    RexxString  *primitiveMakeString();

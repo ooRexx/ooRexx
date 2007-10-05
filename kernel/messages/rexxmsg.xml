@@ -3803,7 +3803,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_option</SymbolicName>
-        <Text>Method option must be one of <Sub position="1" name="arguments"/>; found <q><Sub position="2" name="value"/></q></Text>
+        <Text>Method option must be one of <q><Sub position="1" name="arguments"/></q>; found <q><Sub position="2" name="value"/></q></Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
