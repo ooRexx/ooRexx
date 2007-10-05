@@ -1114,7 +1114,11 @@ RexxString *RexxArray::toString(       /* concatenate array elements to create s
       item = newArray->get(i);           /* get the next item                */
       if (item != OREF_NULL)
       {
-          mutbuffer->append(item);
+          RexxObject *stringValue = item->requiredString();
+          if (stringValue != TheNilObject)
+          {
+              mutbuffer->append(stringValue);
+          }
       }
     }
   }
