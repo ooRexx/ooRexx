@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -1062,7 +1062,7 @@ RexxString *RexxArray::makeString(RexxString *format, RexxString *separator)
 
 RexxString *RexxArray::toString(       /* concatenate array elements to create string object */
      RexxString *format,               /* format of concatenation (one of: "C", "L")         */
-     RexxString *separator)            /* separator to use if "S" is specified for format    */
+     RexxString *separator)            /* separator to use if "L" is specified for format    */
 /******************************************************************************/
 /* Function:  Make a string out of an array                                   */
 /******************************************************************************/
