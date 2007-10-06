@@ -61,6 +61,9 @@
 #define WM_USER_GETFOCUS            WM_USER + 0x0603
 #define WM_USER_GETSETCAPTURE       WM_USER + 0x0604
 #define WM_USER_GETKEYSTATE         WM_USER + 0x0605
+#define WM_USER_SUBCLASS            WM_USER + 0x0606
+#define WM_USER_SUBCLASS_REMOVE     WM_USER + 0x0607
+#define WM_USER_HOOK                WM_USER + 0x0608
 
 #define VISDLL "OODIALOG.DLL"
 #define DLLVER 2130
@@ -269,6 +272,85 @@ typedef struct {
    PCHAR fileName;
 } ICONTABLEENTRY;
 
+/* Stuff for key press subclassing and keyboard hooks */
+#define MAX_KEYPRESS_METHODS  63
+#define COUNT_KEYPRESS_KEYS   256
+#define CCH_METHOD_NAME       197
+
+#define KEY_REALEASE          0x80000000
+#define KEY_WASDOWN           0x40000000
+#define KEY_TOGGLED           0x00000001
+#define ISDOWN                    0x8000
+
+/* Microsoft does not define these, just has this note:
+ *
+ * VK_0 - VK_9 are the same as ASCII '0' - '9' (0x30 - 0x39)
+ * 0x40 : unassigned
+ * VK_A - VK_Z are the same as ASCII 'A' - 'Z' (0x41 - 0x5A)
+ */
+#define VK_0   0x30
+#define VK_1   0x31
+#define VK_2   0x32
+#define VK_3   0x33
+#define VK_4   0x34
+#define VK_5   0x35
+#define VK_6   0x36
+#define VK_7   0x37
+#define VK_8   0x38
+#define VK_9   0x39
+
+#define VK_A   0x41
+#define VK_B   0x42
+#define VK_C   0x43
+#define VK_D   0x44
+#define VK_E   0x45
+#define VK_F   0x46
+#define VK_G   0x47
+#define VK_H   0x48
+#define VK_I   0x49
+#define VK_J   0x4A
+#define VK_K   0x4B
+#define VK_L   0x4C
+#define VK_M   0x4D
+#define VK_N   0x4E
+#define VK_O   0x4F
+#define VK_P   0x50
+#define VK_Q   0x51
+#define VK_R   0x52
+#define VK_S   0x53
+#define VK_T   0x54
+#define VK_U   0x55
+#define VK_V   0x56
+#define VK_W   0x57
+#define VK_X   0x58
+#define VK_Y   0x59
+#define VK_Z   0x5A
+
+typedef struct {
+    BOOL none;          /* If none, neither of shift, control, or alt can be pressed */
+    BOOL shift;
+    BOOL alt;
+    BOOL control;
+    BOOL and;           /* If 'and' is false, filter is 'or' */
+} KEYFILTER, *PKEYFILTER;
+
+typedef struct {
+    BYTE       key[COUNT_KEYPRESS_KEYS];            /* Value of key[x] is index to pMethods[]   */
+    UINT       usedMethods;                         /* Count of used slots in  pMethods[]       */
+    UINT       topOfQ;                              /* Top of next free queue, 0 if empty       */
+    PCHAR      pMethods[MAX_KEYPRESS_METHODS + 1];  /* Index 0 intentionally left empty         */
+    KEYFILTER *pFilters[MAX_KEYPRESS_METHODS + 1];  /* If null, no filter                       */
+    UINT       nextFreeQ[MAX_KEYPRESS_METHODS];     /* Used only if existing connection removed */
+} KEYPRESSDATA;
+
+typedef struct {
+    UINT          uID;
+    HWND          hCtrl;
+    PCHAR         pMessageQueue;
+    KEYPRESSDATA *pKeyPressData;
+} SUBCLASSDATA;
+
+
 typedef struct
 {
    void * previous;
@@ -299,6 +381,9 @@ typedef struct
    HICON TitleBarIcon;
    BOOL  SharedIcon;
    BOOL  DidChangeIcon;
+   HHOOK hHook;
+   KEYPRESSDATA * pKeyPressData;
+   DWORD threadID;
    WPARAM StopScroll;
    CHAR * pMessageQueue;
 } DIALOGADMIN;

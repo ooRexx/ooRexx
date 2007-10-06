@@ -412,7 +412,7 @@
    if \ wantGroup~datatype('O')then return -3
    return HandleControlEx(self~hDlg, self~id, "X", "GROUP", wantGroup)
 
-::method GetStyleRaw     -- Get the control's current style as a GWL_STYLE long
+::method GetStyleRaw     -- Get the control's current GWL_STYLE style
    return HandleControlEx(self~hDlg, self~id, "X", "GET")
 
 ::method Clear
@@ -441,6 +441,29 @@
 
 ::method IsMouseButtonDown
    forward to (self~oDlg)
+
+::method ConnectFKeyPress unguarded
+   use strict arg msgToRaise
+   if \ msgToRaise~isA(.String) then return -1
+   return HandleControlEx(self~hDlg, self~id, 'K', 'C', self~oDlg~adm, msgToRaise~translate, "FKEYS", "NONE")
+
+::method ConnectKeyPress unguarded
+   use strict arg msgToRaise, keys, filter = ""
+   if \ msgToRaise~isA(.String) | \ keys~isA(.String) | \ filter~isA(.String) then return -1
+   if filter == "" then return HandleControlEx(self~hDlg, self~id, 'K', 'C', self~oDlg~adm, msgToRaise~translate, keys~space(0))
+   return HandleControlEx(self~hDlg, self~id, 'K', 'C', self~oDlg~adm, msgToRaise~translate, keys~space(0), filter~translate)
+
+::method DisconnectKeyPress unguarded
+   use arg msgToRaise
+   if arg(1, 'O') then return HandleControlEx(self~hDlg, self~id, 'K', 'R')
+   if \ msgToRaise~isA(.String) then return -1
+   return HandleControlEx(self~hDlg, self~id, 'K', 'R', msgToRaise~translate)
+
+::method HaveKeyPressConnection unguarded
+   use arg msgToRaise
+   if arg(1, 'O') then return HandleControlEx(self~hDlg, self~id, 'K', 'Q')
+   if \ msgToRaise~isA(.String) then return -1
+   return HandleControlEx(self~hDlg, self~id, 'K', 'Q', msgToRaise~translate)
 
    /* Redraws the given rectangle */
 ::method RedrawRect unguarded

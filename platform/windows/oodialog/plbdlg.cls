@@ -570,8 +570,28 @@
    if Arg(8, 'o') = 1 then return AddUserMessage(self~Adm, msgWindows, filt1, wP, filt2, lP, filt3, msgToRise)
    else return AddUserMessage(self~Adm, msgWindows, filt1, wP, filt2, lP, filt3, msgToRise, tag)
 
+::method ConnectFKeyPress unguarded
+   use strict arg msgToRaise
+   if \ msgToRaise~isA(.String) then return -1
+   return WinAPI32Func("KBHOOK", 'C', self~adm, self~dlgHandle, msgToRaise~translate, "FKEYS", "NONE")
 
+::method ConnectKeyPress unguarded
+   use strict arg msgToRaise, keys, filter = ""
+   if \ msgToRaise~isA(.String) | \ keys~isA(.String) | \ filter~isA(.String) then return -1
+   if filter == "" then return WinAPI32Func("KBHOOK", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0))
+   return WinAPI32Func("KBHOOK", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0), filter~translate)
 
+::method DisconnectKeyPress unguarded
+   use arg msgToRaise
+   if arg(1, 'O') then return WinAPI32Func("KBHOOK", 'R', self~adm)
+   if \ msgToRaise~isA(.String) then return -1
+   return WinAPI32Func("KBHOOK", 'R', self~adm, self~dlgHandle, msgToRaise~translate)
+
+::method HaveKeyPressConnection unguarded
+   use arg msgToRaise
+   if arg(1, 'O') then return WinAPI32Func("KBHOOK", 'Q', self~adm)
+   if \ msgToRaise~isA(.String) then return -1
+   return WinAPI32Func("KBHOOK", 'Q', self~adm, msgToRaise~translate)
 
 /* The following methods are to connect an item of the data stem with */
 /* a data field of the dialog. The data stem will start with number 1 */
