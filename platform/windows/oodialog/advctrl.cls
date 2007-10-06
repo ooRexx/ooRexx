@@ -459,7 +459,7 @@
    if \ msgToRaise~isA(.String) then return -1
    return HandleControlEx(self~hDlg, self~id, 'K', 'R', msgToRaise~translate)
 
-::method HaveKeyPressConnection unguarded
+::method HasKeyPressConnection unguarded
    use arg msgToRaise
    if arg(1, 'O') then return HandleControlEx(self~hDlg, self~id, 'K', 'Q')
    if \ msgToRaise~isA(.String) then return -1

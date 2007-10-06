@@ -587,7 +587,7 @@
    if \ msgToRaise~isA(.String) then return -1
    return WinAPI32Func("KBHOOK", 'R', self~adm, self~dlgHandle, msgToRaise~translate)
 
-::method HaveKeyPressConnection unguarded
+::method HasKeyPressConnection unguarded
    use arg msgToRaise
    if arg(1, 'O') then return WinAPI32Func("KBHOOK", 'Q', self~adm)
    if \ msgToRaise~isA(.String) then return -1
