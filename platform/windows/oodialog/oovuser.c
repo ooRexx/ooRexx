@@ -454,6 +454,7 @@ ULONG APIENTRY UsrCreateDialog(
            {
               SetThreadPriority(dlgAdm->TheThread, THREAD_PRIORITY_ABOVE_NORMAL);   /* for a faster drawing */
               dlgAdm->OnTheTop = TRUE;
+              dlgAdm->threadID = thID;
 
               if ((argc < 9) || !IsYes(argv[8].strptr))  /* do we have a modal dialog? */
               {
