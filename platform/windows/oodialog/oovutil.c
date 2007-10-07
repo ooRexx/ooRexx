@@ -827,7 +827,9 @@ HICON GetIconForID(DIALOGADMIN *dlgAdm, UINT id, BOOL fromFile, int cx, int cy)
  *
  * The parameters sent from ooRexx as an array of RXString:
  *
- * argv[0]  Selects specific function.
+ * argv[0]  Selects general category.
+ *
+ * argv[1]  Picks specific function.
  *
  * argv[2] ... argv[n]  Varies depending on the function.
  *
@@ -842,36 +844,56 @@ ULONG APIENTRY WinAPI32Func(
   PUCHAR qname,
   PRXSTRING retstr )
 {
-    /* There has to be at least 1 arg. */
-    CHECKARGL(1);
+    /* There has to be at least 2 args. */
+    CHECKARGL(2);
 
-    if ( !strcmp(argv[0].strptr, "WNDSTATE") )      /* Get window state */
+    if ( argv[0].strptr[0] == 'G' )         /* Get something                  */
     {
-        HWND hWnd;
+        if ( !strcmp(argv[1].strptr, "WNDSTATE") )   /* get Window state      */
+        {
+            HWND hWnd;
 
-        CHECKARGL(3);
+            CHECKARGL(4);
 
-        hWnd = (HWND)atol(argv[2].strptr);
-        if ( hWnd == 0 || ! IsWindow(hWnd) ) RETERR
+            hWnd = (HWND)atol(argv[3].strptr);
+            if ( hWnd == 0 || ! IsWindow(hWnd) ) RETERR
 
-        if ( argv[1].strptr[0] == 'E' )          /* Enabled */
-        {
-            RETVAL((BOOL)IsWindowEnabled(hWnd));
+            if ( argv[2].strptr[0] == 'E' )          /* Enabled */
+            {
+                RETVAL((BOOL)IsWindowEnabled(hWnd));
+            }
+            else if ( argv[2].strptr[0] == 'V' )     /* Visible */
+            {
+                RETVAL((BOOL)IsWindowVisible(hWnd));
+            }
+            else if ( argv[2].strptr[0] == 'Z' )     /* Zoomed is Maximized */
+            {
+                RETVAL((BOOL)IsZoomed(hWnd));
+            }
+            else if ( argv[2].strptr[0] == 'I' )     /* Iconic is Minimized */
+            {
+                RETVAL((BOOL)IsIconic(hWnd));
+            }
         }
-        else if ( argv[1].strptr[0] == 'V' )     /* Visible */
+        else if ( !strcmp(argv[1].strptr, "ID") )    /* get dialog control ID */
         {
-            RETVAL((BOOL)IsWindowVisible(hWnd));
-        }
-        else if ( argv[1].strptr[0] == 'Z' )     /* Zoomed is Maximized */
-        {
-            RETVAL((BOOL)IsZoomed(hWnd));
-        }
-        else if ( argv[1].strptr[0] == 'I' )     /* Iconic is Minimized */
-        {
-            RETVAL((BOOL)IsIconic(hWnd));
+            HWND hWnd;
+            INT  id;
+
+            CHECKARGL(3);
+
+            hWnd = (HWND)atol(argv[2].strptr);
+            if ( hWnd == 0 || ! IsWindow(hWnd) ) RETVAL(-1)
+
+            SetLastError(0);
+            id = GetDlgCtrlID(hWnd);
+            if ( ! id )
+                id = -(INT)GetLastError();
+
+            RETVAL(id);
         }
     }
-    else if ( !strcmp(argv[0].strptr, "KBHOOK") )   /* Work with Keyboard Hook */
+    else if ( argv[0].strptr[0] == 'K' )    /* work with Keyboard hook */
     {
         DIALOGADMIN *dlgAdm = NULL;
         HWND         hDlg;

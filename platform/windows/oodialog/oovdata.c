@@ -42,12 +42,12 @@
 #include <rexx.h>
 #include <stdio.h>
 #include <dlgs.h>
+#include <commctrl.h>
 #ifdef __CTL3D
 #include <ctl3d.h>
 #endif
 #define EXTERNALFUNCS
 #include "oovutil.h"
-#include <commctrl.h>
 
 
 /* I do most of the radio button handling myself now so I know it works */

@@ -139,10 +139,10 @@
    return WndShow_Pos("S",self~Hwnd, "NORMAL")
 
 ::method IsVisible unguarded
-   return WinAPI32Func("WNDSTATE", "V", self~hwnd)
+   return WinAPI32Func("G", "WNDSTATE", "V", self~hwnd)
 
 ::method IsEnabled unguarded
-   return WinAPI32Func("WNDSTATE", "E", self~hwnd)
+   return WinAPI32Func("G", "WNDSTATE", "E", self~hwnd)
 
 ::method Resize unguarded
    use arg width, hight, showOptions
@@ -471,6 +471,9 @@
    if Arg(2,'o') = 1 then hDlg = self~DlgHandle
    return HandleDlg("ITEM",id, hDlg)
 
+::method GetControlID unguarded
+   use strict arg hWnd
+   return WinAPI32Func("G", "ID", hWnd)
 
    /* This method shows the dialog */
 
@@ -494,10 +497,10 @@
    return WndShow_Pos("S",self~DlgHandle, "MAX")
 
 ::method IsMaximized unguarded
-   return WinAPI32Func("WNDSTATE", "Z", self~DlgHandle)
+   return WinAPI32Func("G", "WNDSTATE", "Z", self~DlgHandle)
 
 ::method IsMinimized unguarded
-   return WinAPI32Func("WNDSTATE", "I", self~DlgHandle)
+   return WinAPI32Func("G", "WNDSTATE", "I", self~DlgHandle)
 
 ::method Restore unguarded
    return WndShow_Pos("S",self~DlgHandle, "RESTORE")
@@ -573,25 +576,25 @@
 ::method ConnectFKeyPress unguarded
    use strict arg msgToRaise
    if \ msgToRaise~isA(.String) then return -1
-   return WinAPI32Func("KBHOOK", 'C', self~adm, self~dlgHandle, msgToRaise~translate, "FKEYS", "NONE")
+   return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, "FKEYS", "NONE")
 
 ::method ConnectKeyPress unguarded
    use strict arg msgToRaise, keys, filter = ""
    if \ msgToRaise~isA(.String) | \ keys~isA(.String) | \ filter~isA(.String) then return -1
-   if filter == "" then return WinAPI32Func("KBHOOK", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0))
-   return WinAPI32Func("KBHOOK", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0), filter~translate)
+   if filter == "" then return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0))
+   return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0), filter~translate)
 
 ::method DisconnectKeyPress unguarded
    use arg msgToRaise
-   if arg(1, 'O') then return WinAPI32Func("KBHOOK", 'R', self~adm)
+   if arg(1, 'O') then return WinAPI32Func("K", 'R', self~adm)
    if \ msgToRaise~isA(.String) then return -1
-   return WinAPI32Func("KBHOOK", 'R', self~adm, self~dlgHandle, msgToRaise~translate)
+   return WinAPI32Func("K", 'R', self~adm, self~dlgHandle, msgToRaise~translate)
 
 ::method HasKeyPressConnection unguarded
    use arg msgToRaise
-   if arg(1, 'O') then return WinAPI32Func("KBHOOK", 'Q', self~adm)
+   if arg(1, 'O') then return WinAPI32Func("K", 'Q', self~adm)
    if \ msgToRaise~isA(.String) then return -1
-   return WinAPI32Func("KBHOOK", 'Q', self~adm, msgToRaise~translate)
+   return WinAPI32Func("K", 'Q', self~adm, msgToRaise~translate)
 
 /* The following methods are to connect an item of the data stem with */
 /* a data field of the dialog. The data stem will start with number 1 */
