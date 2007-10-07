@@ -1732,7 +1732,7 @@ extern _declspec(dllexport) PCHAR RexxGetVersionInformation(void);
 PCHAR RexxGetVersionInformation(void)
 {
     char ver[20];
-    sprintf( ver, " %d.%d.%d", ORX_VER, ORX_REL, ORX_MOD );
+    sprintf( ver, " %d.%d.%d.%d", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD );
     char vbuf0[] = "Open Object Rexx %s Version";
   #ifdef _DEBUG
     char vbuf1[] = " - Internal Test Version\nBuild date: ";

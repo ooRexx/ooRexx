@@ -241,8 +241,8 @@ ULONG APIENTRY MATHLOADFUNCS (
 
    if (argc)
    {
-      fprintf(stdout, "%s %d.%d.%d - %s\n",
-              PROG_NAME, ORX_VER, ORX_REL, ORX_MOD, PROG_DESC);
+      fprintf(stdout, "%s %d.%d.%d.%d - %s\n",
+              PROG_NAME, ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD, PROG_DESC);
       fprintf(stdout, "%s\n",PROG_COPY);
       fprintf(stdout, "%s\n",PROG_ALRR);
       fprintf(stdout, "\n");

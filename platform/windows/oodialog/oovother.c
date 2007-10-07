@@ -1399,7 +1399,7 @@ ULONG APIENTRY HandleControlEx(
                 success = FALSE;  /* Reuse the success variable. */
 
                 /* If no method name, remove the whole thing. */
-                if ( argc == 4 ) RETVAL(removeKeyPressSubclass(pData, hDlg, id))
+                if ( argc == 4 ) RETVAL(! removeKeyPressSubclass(pData, hDlg, id))
 
                 CHECKARGL(5)
 
