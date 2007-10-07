@@ -991,7 +991,7 @@ ULONG APIENTRY SockVersion(
    PRXSTRING  retStr
    )
    {
-   sprintf(retStr->strptr, "%d.%d.%d.%d", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
+   sprintf(retStr->strptr, "%d.%d.%d", ORX_VER, ORX_REL, ORX_MOD);
    retStr->strlength = strlen(retStr->strptr);
    return 0;
    }
