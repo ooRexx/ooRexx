@@ -493,6 +493,8 @@
 
 ::method SetItemColor
    use arg id, colorbk, colorfg
+   if \ id~DataType("W") then id = self~ResolveSymbolicId(id)
+   if id = -1 then return -1
    if Arg(3,'o') = 1 then
        return SetBackground(self~Adm, "COL", id, colorbk)  /* creates an entry in the dialogs color table */
    else
