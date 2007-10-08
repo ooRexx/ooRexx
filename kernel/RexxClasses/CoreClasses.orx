@@ -2066,7 +2066,7 @@ Output:
 -- separator character can be specified.
 ::METHOD fromOrderedDate class
   use strict arg date, sep = ("/")
-  return self~new(date('F', date, 'E', , sep))
+  return self~new(date('F', date, 'O', , sep))
 
 
 -- Create a DateTime object from a Standard date string.  An optional
