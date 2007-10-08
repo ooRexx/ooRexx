@@ -2103,7 +2103,7 @@ Output:
 -- Create a DateTime object from a Iso date/time string.
 ::METHOD fromIsoDate class
   use strict arg time
-  parse var time with date 'T' time
+  parse var time date 'T' time
   numeric digits 18
   return self~new(date('F', date, 'S',,"-") + time("F", time, "L"))
 
