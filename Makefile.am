@@ -254,6 +254,7 @@ windowsDefFiles = $(kernel_dir)/*.def \
                   $(rxregexp_dir)/*.def
 miscFiles = $(top_srcdir)/CPLv1.0.txt \
             $(top_srcdir)/CHANGES \
+            $(top_srcdir)/CONTRIBUTORS \
             $(top_srcdir)/oorexx.ver \
             $(aixExportFiles) \
             $(platform_unix_dir)/oorexx.spec \
