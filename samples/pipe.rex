@@ -875,7 +875,7 @@ expose stages
 use strict arg value
 
 do stage over stages                        -- send this down all of the branches
-    stages~process(value)
+    stage~process(value)
 end
 
 
