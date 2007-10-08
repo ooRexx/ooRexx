@@ -1097,9 +1097,9 @@ void processKeyPress(KEYPRESSDATA *pKeyData, WPARAM wParam, LPARAM lParam, PCHAR
         CHAR info[64] = {'\0'};
 
         if ( GetKeyState(VK_NUMLOCK) & KEY_TOGGLED )
-            strcpy(info, "numOn ");
+            strcpy(info, "numOn");
         else
-            strcpy(info, "numOff ");
+            strcpy(info, "numOff");
 
         if ( GetKeyState(VK_CAPITAL) & KEY_TOGGLED )
             strcat(info, " capsOn");
