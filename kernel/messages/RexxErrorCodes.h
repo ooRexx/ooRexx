@@ -406,6 +406,7 @@
 #define Error_Invalid_argument_argType                     88915
 #define Error_Invalid_argument_list                        88916
 #define Error_Invalid_argument_general                     88917
+#define Error_Invalid_argument_format                      88918
 #define Error_Variable_expected                            89000
 #define Error_Variable_expected_USE                        89001
 #define Error_Variable_expected_PARSE                      89002

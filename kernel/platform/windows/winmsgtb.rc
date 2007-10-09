@@ -615,6 +615,7 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Invalid_argument_list    "Argument &1 must be one of &2; found ""&3"""
    Error_Invalid_argument_general    "Argument &1 &2"
    Error_Translation_duplicate_attribute    "Duplicate ::ATTRIBUTE directive instruction"
+   Error_Invalid_argument_format    "Argument &1 is not in a valid format; found ""&2"""
    
 END
 

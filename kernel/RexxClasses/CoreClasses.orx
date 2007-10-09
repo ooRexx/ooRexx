@@ -2052,52 +2052,85 @@ Output:
 -- separator character can be specified.
 ::METHOD fromNormalDate class
   use strict arg date, sep = (" ")
+
+  signal on syntax
   return self~new(date('F', date, 'N', , sep))
+
+  syntax:
+  raise syntax 88.918 array("date", date)
 
 
 -- Create a DateTime object from a European date string.  An optional
 -- separator character can be specified.
 ::METHOD fromEuropeanDate class
   use strict arg date, sep = ("/")
+  signal on syntax
   return self~new(date('F', date, 'E', , sep))
+
+  syntax:
+  raise syntax 88.918 array("date", date)
 
 
 -- Create a DateTime object from an Ordered date string.  An optional
 -- separator character can be specified.
 ::METHOD fromOrderedDate class
   use strict arg date, sep = ("/")
+  signal on syntax
   return self~new(date('F', date, 'O', , sep))
+
+  syntax:
+  raise syntax 88.918 array("date", date)
 
 
 -- Create a DateTime object from a Standard date string.  An optional
 -- separator character can be specified.
 ::METHOD fromStandardDate class
   use strict arg date, sep = ("")
+  signal on syntax
   return self~new(date('F', date, 'S', , sep))
+
+  syntax:
+  raise syntax 88.918 array("date", date)
 
 
 -- Create a DateTime object from a Usa date string.  An optional
 -- separator character can be specified.
 ::METHOD fromUsaDate class
   use strict arg date, sep = ("/")
+  signal on syntax
   return self~new(date('F', date, 'U', , sep))
+
+  syntax:
+  raise syntax 88.918 array("date", date)
 
 
 -- Create a DateTime object from a Normal time string.
 ::METHOD fromNormalTime class
   use strict arg time
+  signal on syntax
   return self~new(time('F', time, 'N'))
+
+  syntax:
+  raise syntax 88.918 array("time", time)
 
 
 -- Create a DateTime object from a Civil time string.
 ::METHOD fromCivilTime class
   use strict arg time
+  signal on syntax
   return self~new(time('F', time, 'C'))
+
+  syntax:
+  raise syntax 88.918 array("time", time)
 
 -- Create a DateTime object from a Long time string.
 ::METHOD fromLongTime class
   use strict arg time
+  signal on syntax
   return self~new(time('F', time, 'L'))
+
+  syntax:
+  raise syntax 88.918 array("time", time)
 
 
 -- Create a DateTime object from a Iso date/time string.
@@ -2105,19 +2138,32 @@ Output:
   use strict arg time
   parse var time date 'T' time
   numeric digits 18
+
+  signal on syntax
   return self~new(date('F', date, 'S',,"-") + time("F", time, "L"))
+
+  syntax:
+  raise syntax 88.918 array("date", date)
 
 
 -- Create a DateTime object from Unix Ticks value
 ::METHOD fromTicks class
   use strict arg date
+  signal on syntax
   return self~new(date('F', date, 'T'))
+
+  syntax:
+  raise syntax 88.918 array("ticks", date)
 
 
 -- Create a DateTime object from a basedate value
 ::METHOD fromBaseDate class
   use strict arg date
+  signal on syntax
   return self~new(date('F', date, 'B'))
+
+  syntax:
+  raise syntax 88.918 array("date", date)
 
 
 -- initialize a DateTime instance.  There are multiple forms of this:
@@ -2712,17 +2758,29 @@ Output:
 -- Create a timespan object representing the interval from a Civil time
 ::METHOD fromCivilTime class
   use strict arg time
+  signal on syntax
   return self~new(Time('F', time, 'C'))
+
+  syntax:
+  raise syntax 88.918 array("time", time)
 
 -- Create a timespan object representing the interval from a Normal time
 ::METHOD fromNormalTime class
   use strict arg time
+  signal on syntax
   return self~new(Time('F', time, 'N'))
+
+  syntax:
+  raise syntax 88.918 array("time", time)
 
 -- Create a timespan object representing the interval from a Long time
 ::METHOD fromLongTime class
   use strict arg time
+  signal on syntax
   return self~new(Time('F', time, 'L'))
+
+  syntax:
+  raise syntax 88.918 array("time", time)
 
 
 -- Initialize a timespan object

@@ -3410,6 +3410,15 @@ special character (such as a parenthesis).
           <SymbolicName>Error_Invalid_argument_general</SymbolicName>
           <Text>Argument <Sub position="1" name="argument"/> <Sub position="2" name="reason"/></Text>
         </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>918</Subcode>
+          <MessageNumber>690</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_format</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> is not in a valid format; found <q><Sub position="2" name="value"/></q></Text>
+        </SubMessage>
     </Subcodes>
   </Message>
   <Message>

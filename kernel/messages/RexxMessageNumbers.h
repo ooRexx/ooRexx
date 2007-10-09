@@ -615,6 +615,7 @@
 #define Error_Invalid_argument_list_msg                              687
 #define Error_Invalid_argument_general_msg                           688
 #define Error_Translation_duplicate_attribute_msg                    689
+#define Error_Invalid_argument_format_msg                            690
 
 
 #endif

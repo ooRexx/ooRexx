@@ -2523,6 +2523,12 @@ special character (such as a parenthesis).
 </para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>918</term>
+<listitem>
+<para>Argument <emphasis>argument</emphasis> is not in a valid format; found "<emphasis>value</emphasis>"</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR89">
