@@ -2715,6 +2715,18 @@ Output:
       return "31 28 31 30 31 30 31 31 30 31 30 31"~word(month)
   end
 
+-- Returns the number of days in the current year.  This accounts
+-- for leap years.
+::METHOD daysInYear
+  use strict arg
+
+  if self~isLeapYear then do
+      return 366
+  end
+  else do
+      return 365
+  end
+
 -- Returns a string form for this date time.  The string value
 -- is the ISO date.
 ::METHOD string      -- return a formatted string value
