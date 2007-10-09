@@ -2695,6 +2695,14 @@ Output:
   use strict arg
   return .timespan~new(time('F', self~LongTime, 'L'))
 
+-- Returns the difference between the current time and the receiver object.
+::METHOD elapsed
+  expose timestamp
+  use strict arg
+
+  numeric digits 18
+  return .timespan~new(time('F') - timestamp)
+
 -- Returns true if the datetime object year is a leap year.
 ::METHOD isLeapYear
   use strict arg
