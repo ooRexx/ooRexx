@@ -183,7 +183,8 @@ RexxObject  *RexxArray::putRexx(RexxObject **arguments, size_t argCount)
   size_t position;                     /* array position                    */
 
   value = arguments[0];                /* get the value to assign           */
-  if (value == OREF_NULL)              /* no real value?                    */
+                                       /* no real value?                    */
+  if (argCount == 0 || value == OREF_NULL)
                                        /* this is an error                  */
     missing_argument(ARG_ONE);         /* this is an error                  */
                                        /* go validate the index             */
