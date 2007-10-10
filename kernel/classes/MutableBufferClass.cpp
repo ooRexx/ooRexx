@@ -48,7 +48,11 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "MutableBufferClass.hpp"
+#include "RexxBuiltinFunctions.h"                          /* Gneral purpose BIF Header file       */
+
 #define CRIT_SIZE 0x400000
+
+#define DEFAULT_BUFFER_LENGTH 256
 static int        counter = 0;        /* is counting memory                */
 
 RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t argc)
@@ -58,12 +62,12 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
 {
   RexxString        *string;
   RexxMutableBuffer *newBuffer;         /* new mutable buffer object         */
-  size_t            bufferLength;
+  size_t            bufferLength = DEFAULT_BUFFER_LENGTH;
   size_t            defaultSize;
   if (argc >= 1) {
     if (args[0] != NULL) {
                                         /* force argument to string value    */
-      string = (RexxString *)REQUIRED_STRING(args[0], ARG_ONE);
+      string = (RexxString *)get_string(args[0], ARG_ONE);
     }
     else
     {
@@ -76,13 +80,9 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
   }
 
   if (argc >= 2) {
-    bufferLength = REQUIRED_LONG(args[1], DEFAULT_DIGITS, ARG_TWO);
-    if ((int) bufferLength < 1) {
-      report_exception2(Error_Incorrect_method_whole, IntegerTwo, args[1]);
-    }
-  } else {
-    bufferLength = 256;                 /* default buffer length             */
+    bufferLength = optional_length(args[1], DEFAULT_BUFFER_LENGTH, ARG_TWO);
   }
+
   defaultSize = bufferLength;           /* remember initial default size     */
 
                                         /* input string longer than demanded */
@@ -233,13 +233,8 @@ RexxMutableBuffer *RexxMutableBuffer::append(RexxObject *obj)
 /******************************************************************************/
 {
 
-  RexxString *string;
-  if (obj == OREF_NULL) {
-    report_exception1(Error_Incorrect_method_noarg, IntegerOne);
-  } else {
-    string = REQUEST_STRING(obj);
-    save(string);
-  }
+  RexxString *string = get_string(obj, ARG_ONE);
+  save(string);
 
   size_t      resultLength = this->data->length + string->length;
 
@@ -278,40 +273,12 @@ RexxMutableBuffer *RexxMutableBuffer::insert(RexxObject *str, RexxObject *pos, R
   RexxString *string;
   char   padChar = ' ';
 
-  if (str == OREF_NULL) {
-    report_exception1(Error_Incorrect_method_noarg, IntegerOne);
-  } else {
-    string = REQUEST_STRING(str);
-  }
+  string = get_string(str, ARG_ONE);
 
-  if (pos != OREF_NULL) {
-    begin = REQUIRED_LONG(pos, DEFAULT_DIGITS, ARG_TWO);
-    if ((int) begin < 0) {
-      report_exception2(Error_Incorrect_method_positive, IntegerTwo, pos);
-    }
-  }
+  begin = optional_length(pos, 0, ARG_TWO);
+  insertLength = optional_length(len, string->getLength(), ARG_THREE);
 
-                                              /* get insertion length         */
-  if (len != OREF_NULL) {
-    insertLength = REQUIRED_LONG(len, DEFAULT_DIGITS, ARG_THREE);
-    if ((int) insertLength < 0) {
-      report_exception2(Error_Incorrect_method_nonnegative, IntegerThree, len);
-    }
-    if (insertLength == 0) {
-      return this;                            /* do nothing                   */
-    }
-  } else {
-    insertLength = string->length;            /* default: length of string    */
-  }
-
-  if (pad != OREF_NULL) {                     /* non-default pad character?   */
-    RexxString *padTemp = REQUEST_STRING(pad);
-    if (padTemp->length != 1) {
-      report_exception1(Error_Incorrect_method_pad, pad);
-    }
-    padChar = padTemp->stringData[0];
-  }
-
+  padChar = get_pad(pad, ' ', ARG_FOUR);
                                               /* does it fit into buffer?     */
   if (bufferLength < this->data->length + insertLength) {
                                               /* no, then enlarge buffer      */
@@ -357,39 +324,12 @@ RexxMutableBuffer *RexxMutableBuffer::overlay(RexxObject *str, RexxObject *pos, 
   RexxString *string;
   char   padChar = ' ';
 
-  if (str == OREF_NULL) {
-    report_exception1(Error_Incorrect_method_noarg, IntegerOne);
-  } else {
-    string = REQUEST_STRING(str);
-  }
+  string = get_string(str, ARG_ONE);
+  begin = optional_length(pos, 0, ARG_TWO);
+  replaceLength = optional_length(len, string->getLength(), ARG_THREE);
 
-  if (pos != OREF_NULL) {
-    begin = REQUIRED_LONG(pos, DEFAULT_DIGITS, ARG_TWO) - 1;
-    if ((int) begin < 0) {
-      report_exception2(Error_Incorrect_method_positive, IntegerTwo, pos);
-    }
-  }
+  padChar = get_pad(pad, ' ', ARG_FOUR);
 
-                                               /* get replace length          */
-  if (len != OREF_NULL) {
-    replaceLength = REQUIRED_LONG(len, DEFAULT_DIGITS, ARG_THREE);
-    if ((int) replaceLength < 0) {
-      report_exception2(Error_Incorrect_method_nonnegative, IntegerThree, len);
-    }
-    if (replaceLength == 0) {
-      return this;                             /* do nothing                  */
-    }
-  } else {
-    replaceLength = string->length;            /* default: length of string   */
-  }
-
-  if (pad != OREF_NULL) {                      /* non-default pad character?  */
-    RexxString *padTemp = REQUEST_STRING(pad);
-    if (padTemp->length != 1) {
-      report_exception1(Error_Incorrect_method_pad, pad);
-    }
-    padChar = padTemp->stringData[0];
-  }
                                               /* does it fit into buffer?     */
   if (begin + replaceLength > bufferLength) {
                                               /* no, then enlarge buffer      */
@@ -429,20 +369,9 @@ RexxMutableBuffer *RexxMutableBuffer::mydelete(RexxObject *start, RexxObject *le
 /******************************************************************************/
 {
   // WARNING: not DBCS enabled, works only on 8-bit data
-  size_t begin = REQUIRED_LONG(start, DEFAULT_DIGITS, ARG_ONE);
-  size_t range = this->data->length;
+  size_t begin = get_position(start, ARG_ONE) - 1;
+  size_t range = optional_length(len, this->data->length - begin, ARG_TWO);
 
-  if (begin == 0) {
-    report_exception2(Error_Incorrect_method_whole, IntegerOne, start);
-  } else {
-    begin--;
-  }
-  if (len != NULL) {
-    range = REQUIRED_LONG(len, DEFAULT_DIGITS, ARG_TWO);
-  }
-  if ((int) range < 0) {
-    report_exception2(Error_Incorrect_method_nonnegative, IntegerTwo, len);
-  }
 
   if (begin < this->data->length) {           /* got some work to do?         */
     if (begin + range < this->data->length) { /* delete in the middle?        */
@@ -462,11 +391,8 @@ RexxObject *RexxMutableBuffer::setBufferSize(RexxInteger *start)
 /* Function:  set the size of the buffer                                      */
 /******************************************************************************/
 {
-  size_t newsize = REQUIRED_LONG(start, DEFAULT_DIGITS, ARG_ONE);
+  size_t newsize = get_position(start, ARG_ONE);
 
-  if ((int) newsize < 0) {
-    report_exception2(Error_Incorrect_method_nonnegative, IntegerOne, start);
-  }
   if (newsize == 0) {                       /* reset contents?                      */
     bufferLength = defaultSize;
     free(this->data);                       /* see the comments in ::newRexx()!!!   */

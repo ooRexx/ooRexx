@@ -2228,15 +2228,13 @@ Output:
   return time('f', time, 'l')
 
 
--- perform a sort comparison of two timespans
+-- perform a sort comparison of two datetimes
 ::METHOD compareTo
   expose timestamp
 
   use strict arg other
 
-  if \other~isa(.datetime) then do
-      raise syntax 93.948 array(1, "TimeSpan")
-  end
+  .ArgUtil~validateClass("other", other, .DateTime)
 
   othertime = other~fullDate
 
