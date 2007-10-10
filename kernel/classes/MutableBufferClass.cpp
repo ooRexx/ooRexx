@@ -325,7 +325,7 @@ RexxMutableBuffer *RexxMutableBuffer::overlay(RexxObject *str, RexxObject *pos, 
   char   padChar = ' ';
 
   string = get_string(str, ARG_ONE);
-  begin = optional_length(pos, 0, ARG_TWO);
+  begin = optional_position(pos, 1, ARG_TWO) - 1;
   replaceLength = optional_length(len, string->getLength(), ARG_THREE);
 
   padChar = get_pad(pad, ' ', ARG_FOUR);
