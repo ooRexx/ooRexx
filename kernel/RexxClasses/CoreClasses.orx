@@ -2800,6 +2800,37 @@ Output:
   syntax:
   raise syntax 88.918 array("time", time)
 
+-- create a TimeSpan object from the string format
+::METHOD fromStringFormat class
+  use strict arg time
+
+  numeric digits 18
+  signal on syntax   -- trap any errors and give the format error message
+  parse var time days "." hours ":" minutes ":" seconds "." microseconds
+  sign = 1
+
+  if minutes \= "" then do  -- if minutes got something, then we have leading days
+     if days < 0 then do
+        days = -days
+        sign = -1
+     end
+     timestamp = (((days * 24 * 3600) + (hours * 3600) + (minutes * 60) + seconds) * 1000000) + microseconds
+     return .timespan~new(sign * timestamp)
+  end
+  else do
+     -- form with no days in front
+     parse var time hours ":" minutes ":" seconds "." microseconds
+     if hours < 0 then do
+        hours = -hours
+        sign = -1
+     end
+     timestamp = (((hours * 3600) + (minutes * 60) + seconds) * 1000000) + microseconds
+     return .timespan~new(sign * timestamp)
+  end
+
+  syntax:
+  raise syntax 88.918 array("time", time)
+
 
 -- Initialize a timespan object
 -- initialize a TimeSpan instance.  There are multiple forms of this:
