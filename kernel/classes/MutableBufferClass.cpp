@@ -391,7 +391,7 @@ RexxObject *RexxMutableBuffer::setBufferSize(RexxInteger *start)
 /* Function:  set the size of the buffer                                      */
 /******************************************************************************/
 {
-  size_t newsize = get_position(start, ARG_ONE);
+  size_t newsize = get_length(start, ARG_ONE);
 
   if (newsize == 0) {                       /* reset contents?                      */
     bufferLength = defaultSize;
