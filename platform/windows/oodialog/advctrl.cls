@@ -461,9 +461,13 @@
 
 ::method HasKeyPressConnection unguarded
    use arg msgToRaise
-   if arg(1, 'O') then return HandleControlEx(self~hDlg, self~id, 'K', 'Q')
-   if \ msgToRaise~isA(.String) then return -1
-   return HandleControlEx(self~hDlg, self~id, 'K', 'Q', msgToRaise~translate)
+   if arg(1, 'O') then ret = HandleControlEx(self~hDlg, self~id, 'K', 'Q')
+   else do
+      if \ msgToRaise~isA(.String) then ret = .false
+      else ret = HandleControlEx(self~hDlg, self~id, 'K', 'Q', msgToRaise~translate)
+   end
+   if \ ret~datatype('O') then return .false
+   else return ret
 
    /* Redraws the given rectangle */
 ::method RedrawRect unguarded

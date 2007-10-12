@@ -592,9 +592,13 @@
 
 ::method HasKeyPressConnection unguarded
    use arg msgToRaise
-   if arg(1, 'O') then return WinAPI32Func("K", 'Q', self~adm)
-   if \ msgToRaise~isA(.String) then return -1
-   return WinAPI32Func("K", 'Q', self~adm, msgToRaise~translate)
+   if arg(1, 'O') then ret = WinAPI32Func("K", 'Q', self~adm)
+   else do
+      if \ msgToRaise~isA(.String) then ret = .false
+      else ret = WinAPI32Func("K", 'Q', self~adm, msgToRaise~translate)
+   end
+   if \ ret~datatype('O') then return .false
+   else return ret
 
 /* The following methods are to connect an item of the data stem with */
 /* a data field of the dialog. The data stem will start with number 1 */
