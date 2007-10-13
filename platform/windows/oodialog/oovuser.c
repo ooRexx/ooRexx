@@ -197,6 +197,37 @@ ULONG APIENTRY GetScreenSize(
 }
 
 
+ULONG APIENTRY GetSysMetrics(
+  PUCHAR funcname,
+  ULONG argc,
+  RXSTRING argv[],
+  PUCHAR qname,
+  PRXSTRING retstr )
+{
+    ULONG uVal;
+
+    /* The intent is to extend this function in the future to get multiple, and
+     * perhaps all, values at once.
+     */
+    if ( argc == 1 )
+    {
+        INT index = atoi(argv[0].strptr);
+        if ( index < 1 ) RETVAL(-1)
+
+        /* GetSystemMetrics returns 0 on error, however it also returns 0 as a
+         * valid value for some indexes.
+         */
+        uVal = GetSystemMetrics(index);
+
+        sprintf(retstr->strptr, "%d", uVal);
+        retstr->strlength = strlen(retstr->strptr);
+        return 0;
+    }
+
+    RETERR
+}
+
+
 void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx, INT cy,
                 CHAR * dlgClass, CHAR * title, CHAR * fontname, INT fontsize, ULONG lStyle)
 {

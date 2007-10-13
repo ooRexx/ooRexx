@@ -1888,7 +1888,7 @@ ULONG APIENTRY DumpAdmin(
 
 ****************************************************************************************************/
 
-#define FTS 30
+#define FTS 31
 CHAR * FuncTab[FTS] = {\
                      "GetDlgMsg", \
                      "SendWinMsg", \
@@ -1914,6 +1914,7 @@ CHAR * FuncTab[FTS] = {\
                      "SetLBTabStops", \
                      "BinaryAnd", \
                      "GetScreenSize", \
+                     "GetSysMetrics", \
                      "GetDialogFactor", \
                      "SleepMS", \
                      "PlaySoundFile", \

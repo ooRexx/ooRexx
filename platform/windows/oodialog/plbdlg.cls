@@ -183,6 +183,10 @@
     if Arg(4,'o') = 1 then hwnd = self~hwnd
     return GetStdTextSize(text, fontname, fontsize, hwnd)
 
+::method GetSystemMetrics unguarded
+   use strict arg index
+   return GetSysMetrics(index)
+
 
 /******************************************************************************/
 /* The class PlainBaseDialog implements methods that are common to a dialog   */

@@ -167,6 +167,15 @@
    if installed = 1 then call RxfuncDrop "GetScreenSize"
    return ss
 
+::routine SystemMetrics public
+   use strict arg index
+   if RxFuncQuery("GetSysMetrics") \= 0 then do
+      call Rxfuncadd "GetSysMetrics", "oodialog", "GetSysMetrics"
+      installed = 1
+   end
+   ret = GetSysMetrics(index)
+   if installed = 1 then call RxfuncDrop "GetSysMetrics"
+   return ret
 
 
 /*-------------------------------- shortcut routines ---------------------------------*/
