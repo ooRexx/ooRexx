@@ -2081,7 +2081,7 @@ special character (such as a parenthesis).
 <term>915</term>
 <listitem>
 <para>
-<emphasis>funtion_name</emphasis> cannot be used with QUEUE:</para>
+<emphasis>function_name</emphasis> cannot be used with QUEUE:</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2628,7 +2628,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>An unknown OLE error occured (HRESULT=<emphasis>hresult</emphasis>).</para>
+<para>An unknown OLE error occurred (HRESULT=<emphasis>hresult</emphasis>).</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -3718,7 +3718,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>RXSUBCOM LOAD requires thatn the subcommand handler name be specified.
+<para>RXSUBCOM LOAD requires that the subcommand handler name be specified.
             <variablelist>
                 <title>RXSUBCOM LOAD Environment_Name [Dll_Name]</title>
                 <varlistentry>

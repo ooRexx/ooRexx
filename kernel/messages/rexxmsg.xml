@@ -2827,7 +2827,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_Incorrect_call_queue_no_char</SymbolicName>
-        <Text><Sub position="1" name="funtion_name"/> cannot be used with QUEUE:</Text>
+        <Text><Sub position="1" name="function_name"/> cannot be used with QUEUE:</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
@@ -3554,7 +3554,7 @@ special character (such as a parenthesis).
         <Component>OLE</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_Unknown_OLE_Error</SymbolicName>
-        <Text>An unknown OLE error occured (HRESULT=<Sub position="1" name="hresult"/>).</Text>
+        <Text>An unknown OLE error occurred (HRESULT=<Sub position="1" name="hresult"/>).</Text>
         <Explanation><para>An unexpected OLE error occurred.  HRESULT contains the original error code provided by OLE.</para></Explanation>
       </SubMessage>
       <SubMessage>
@@ -5298,7 +5298,7 @@ special character (such as a parenthesis).
         <SymbolicName>Error_RXSUBC_load</SymbolicName>
         <Text>The RXSUBCOM parameter LOAD is incorrect.</Text>
         <Explanation>
-        <para>RXSUBCOM LOAD requires thatn the subcommand handler name be specified.
+        <para>RXSUBCOM LOAD requires that the subcommand handler name be specified.
             <variablelist>
                 <title>RXSUBCOM LOAD Environment_Name [Dll_Name]</title>
                 <varlistentry>
