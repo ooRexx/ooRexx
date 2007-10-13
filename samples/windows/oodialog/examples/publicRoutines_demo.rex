@@ -1,0 +1,277 @@
+/* publicRoutines_demo.rex */
+
+/*
+Purpose.:   Demonstrate each of the ooDialog Public Routines
+Who.....:   Lee Peedin
+When....:   August 14, 2007
+*/
+
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 2007 Rexx Language Association. All rights reserved.         */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+/*
+This demo incorporates the following "features of ooRexx 3.2
+24 September 2007
+    .endOfLine is used instead of '0d0a'x
+    ScreenSize
+    MSSleep
+    Variations of TimedMessage
+    time('t')
+*/
+
+-- Define a path most likely to be common to anyone using this demo - change as necessary
+    ooRexxHome = value("REXX_HOME", , 'ENVIRONMENT' )
+    if ooRexxHome~length == 0 then
+        path = 'C:\Program Files\ooRexx\'
+    else
+        path = ooRexxHome || '\'
+
+-- Define a couple of variables to use in the code, including a global used for
+-- a helper dialog.
+    delimiter = '0'x
+    .local~helperDlgTitle = "The publicRoutines_Demo Helper Dialog"
+
+-- Provide a menu of different examples - use the built in SingleSelection dialog
+    preselect = 1
+    do until op = ''
+        option.1  = 'Play an audio file 1 time - application will not return until play is complete'
+        option.2  = 'Play an audio file 1 time - application will return during play (asynchronously)'
+        option.3  = 'Play an audio file multiple times - application will return during play (loop)'
+        option.4  = 'Stop playing the audio file'
+        option.5  = 'Show an InfoDialog'
+        option.6  = 'Show an ErrorDialog'
+        option.7  = 'Show a multi-line InfoDialog'
+        option.8  = 'Show an AskDialog with the Yes button as the default'
+        option.9  = 'Show an AskDialog with the No button as the default'
+        option.10 = 'Show a FileNameDialog'
+        option.11 = 'Retrieve the handle to a window'
+        option.12 = 'Use ScreenSize To Return Screen Resolution'
+        option.13 = 'A Standard Timed Message (5 Seconds)'
+        option.14 = 'An unTimed Message'
+        option.15 = 'Stop The unTimed Message'
+        option.16 = 'An Early Reply Timed Message'
+
+        max = 16
+        ssdlg = .SingleSelection~new('Select A Demonstration','Public Routines Demonstration',option.,preselect,,max)
+        op = ssdlg~execute
+        if op \= '' then
+            do
+                preselect = op + 1
+                if preselect > max then preselect = 1
+                interpret 'call option'op
+            end
+    end
+exit
+
+Option1:
+    fileName = path||'samples\oodialog\wav\gotcha.wav'
+    wstream = .stream~new(filename)
+    if wstream~query('exists') = '' then
+        call errorDialog('The expected audio file' filename 'does not exist')
+    else
+        call Play fileName
+return
+----------------------------------------------------------------------------------------------------------------
+Option2:
+    fileName = path||'samples\oodialog\wav\gotcha.wav'
+    wstream = .stream~new(filename)
+    if wstream~query('exists') = '' then
+        call errorDialog('The expected audio file' filename 'does not exist')
+    else
+        call Play fileName,'YES'
+return
+----------------------------------------------------------------------------------------------------------------
+Option3:
+    fileName = path||'samples\oodialog\wav\gotcha.wav'
+    wstream = .stream~new(filename)
+    if wstream~query('exists') = '' then
+        call errorDialog('The expected audio file' filename 'does not exist')
+    else
+        call Play fileName,'LOOP'
+return
+----------------------------------------------------------------------------------------------------------------
+Option4:
+    call Play fileName
+return
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+Option5:
+    call InfoDialog 'This is an InfoDialog - note the icon used & the tone played'
+return
+----------------------------------------------------------------------------------------------------------------
+Option6:
+    call ErrorDialog 'This is an ErrorDialog - note the icon used & the tone played'
+return
+----------------------------------------------------------------------------------------------------------------
+Option7:
+    msg = 'This is line1'||.endOfLine||-
+          'This is line2'||.endOfLine||-
+          'This is line3 - note that the dialog is "stretched" to accomodate the longest line'
+    call InfoDialog msg
+return
+----------------------------------------------------------------------------------------------------------------
+Option8:
+    rv = AskDialog('Do you like this demonstration? (Yes button is pre-selected)')
+    if rv = 1 then
+        call InfoDialog('You selected "Yes" - glad you like it')
+    else
+        call InfoDialog('You selected "No" - mind sharing what you think would improve the demonstration?')
+
+return
+----------------------------------------------------------------------------------------------------------------
+Option9:
+    rv = AskDialog('Do you like this demonstration? (No button is pre-selected)','n')
+    if rv = 1 then
+        call InfoDialog('You selected "Yes" - glad you like it')
+    else
+        call InfoDialog('You selected "No" - you must be hard to please')
+
+return
+----------------------------------------------------------------------------------------------------------------
+Option10:
+    selfile       = path
+    parent        = ''                      -- don't need this in this example - just a place holder
+    filemask      = 'All Files (*.*)'delimiter'*.*'delimiter
+    loadorsave    = ''                      -- Load is the default
+    title         = ''                      -- See documentation for default
+    defExtension  = ''                      -- don't need this in this example - just a place holder
+    multiSelect   = ''                      -- don't need this in this example - just a place holder
+    sepChar       = ''                      -- don't need this in this example - just a place holder
+
+    a_file = FileNameDialog(selfile,parent,filemask,loadorsave,title,defExtension,multiSelect,sepChar)
+    if a_file = 0 then
+        call ErrorDialog 'You Did Not Select A File'
+    else
+        call InfoDialog 'You Selected' a_file
+
+    call InfoDialog 'For additional FileNameDialog examples, see the sample titled "fileNameDialog_demo.rex"'
+return
+----------------------------------------------------------------------------------------------------------------
+Option11:
+
+    call InfoMessage 'This program will open a dialog window in the'||.endOfLine||-
+                     'upper left corner of your screen named:'||.endOfLine||.endOfLine||-
+                     '"'.helperDlgTitle'"'||.endOfLine||.endOfLine||-
+                     'and will return its handle.  After finding the window, the'||.endOfLine||-
+                     'handle value will be added to the dialog window title.'
+
+    -- The public routine FindWindow locates a window by its title.  Since this
+    -- example should run for anyone, and there is no way of guaranteeing what
+    -- window might be open on anyone's desktop, the example creates its own
+    -- simple dialog window.  That way it ensures that there is a known window
+    -- to find.
+
+    aWindow = .SimpleDialog~new()
+    if aWindow~initCode = 0 then
+        do
+            -- Start the dialog concurrently, so this example program can
+            -- continue to run.  Note, it takes some finite amount of time for
+            -- the OS to create and start up the underlying dialog.  The example
+            -- sleeps a short time to give the OS time to get the dialog going.
+            aWindow~start("Execute")
+            call SysSleep(.01)
+
+            hWnd = FindWindow(.helperDlgTitle)
+            if hWnd = 0 then
+                call ErrorDialog 'Window could not be found'
+            else
+                do
+                    -- The window handle can now be used to change the title of
+                    -- the helper dialog, which demonstrates that the handle is
+                    -- correct.
+                    aWindow~SetWindowTitle(hWnd,.helperDlgTitle '- My handle is.:' hWnd)
+                    call InfoDialog 'The handle to the "'.helperDlgTitle'" window is:' hWnd
+                end
+
+            -- Now close the helper dialog.
+            aWindow~cancel
+        end
+    else
+        do
+            call ErrorDialog('Sorry, the dialog creation failed')
+        end
+return
+----------------------------------------------------------------------------------------------------------------
+Option12:
+    ss = ScreenSize()
+    msg = 'Width In Dialog Units.:' ss[1]||.endOfLine||-
+          'Height In Dialog Units.:' ss[2]||.endOfLine||-
+          'Width In Pixels.:' ss[3]||.endOfLine||-
+          'Height In Pixels.:' ss[4]
+    call InfoDialog msg
+return
+----------------------------------------------------------------------------------------------------------------
+Option13:
+    msg = 'This Message Will Remain On The Screen For 5000 milliSeconds'
+    ret = timedMessage(msg,'A Standard TimedMessage', 5000)
+return
+----------------------------------------------------------------------------------------------------------------
+Option14:
+    msg = "Hey, I'm Back Here - Frozen In Time! This Message Will Remain On The Screen Until The Program Calls For It To Be Stopped"
+    tdlg = timedMessage(msg,'An unTimedMessage', -1)
+return
+----------------------------------------------------------------------------------------------------------------
+Option15:
+    if symbol('tdlg') = 'VAR' then
+        do
+            tdlg~stopit
+            drop tdlg
+        end
+    else
+        call errorDialog('There Is Not unTimed Message To Stop')
+return
+----------------------------------------------------------------------------------------------------------------
+Option16:
+-- Total time will be the duration of the MSSleep - The TimeMessage will last only half the total duration
+--    call time('r')
+    start_timeT = time('t')
+    msg = 'Processing Occurring - Please Wait - Processing Will Take Longer Than This Message'
+    ret = timedMessage(msg,'A TimedMessage Early Reply', 5000, .true)
+    ret = MSSleep(10000)
+    end_timeT = time('t')
+    call infoDialog('Start TimeT..:' start_timeT '- End TimeT..:' end_timeT '- Duration..:' end_TimeT - start_TimeT 'Seconds')
+--    call infoDialog('Total Elasped Time..:' time('e')~trunc 'Seconds')
+return
+----------------------------------------------------------------------------------------------------------------
+
+-- Requires directive to use the Public Routines
+::requires 'oodplain.cls'
+
+::class SimpleDialog subclass PlainUserDialog public
+::method Execute
+    self~Create(0,0,290,40, .helperDlgTitle)
+    self~execute:super("SHOWTOP")
