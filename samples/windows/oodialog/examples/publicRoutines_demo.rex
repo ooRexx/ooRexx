@@ -68,15 +68,15 @@ This demo incorporates the following "features of ooRexx 3.2
 -- Provide a menu of different examples - use the built in SingleSelection dialog
     preselect = 1
     do until op = ''
-        option.1  = 'Play an audio file 1 time - application will not return until play is complete'
-        option.2  = 'Play an audio file 1 time - application will return during play (asynchronously)'
-        option.3  = 'Play an audio file multiple times - application will return during play (loop)'
+        option.1  = 'Play an audio file 1 time - (synchronously)'
+        option.2  = 'Play an audio file 1 time - (asynchronously)'
+        option.3  = 'Play an audio file multiple times - (loop)'
         option.4  = 'Stop playing the audio file'
         option.5  = 'Show an InfoDialog'
         option.6  = 'Show an ErrorDialog'
         option.7  = 'Show a multi-line InfoDialog'
-        option.8  = 'Show an AskDialog with the Yes button as the default'
-        option.9  = 'Show an AskDialog with the No button as the default'
+        option.8  = 'Show an AskDialog - Yes button as the default'
+        option.9  = 'Show an AskDialog - No button as the default'
         option.10 = 'Show a FileNameDialog'
         option.11 = 'Retrieve the handle to a window'
         option.12 = 'Use ScreenSize To Return Screen Resolution'
@@ -84,15 +84,16 @@ This demo incorporates the following "features of ooRexx 3.2
         option.14 = 'An unTimed Message'
         option.15 = 'Stop The unTimed Message'
         option.16 = 'An Early Reply Timed Message'
+        option.17 = 'Query System Metrics'
 
-        max = 16
-        ssdlg = .SingleSelection~new('Select A Demonstration','Public Routines Demonstration',option.,preselect,,max)
+        max = 17
+        ssdlg = .SingleSelection~new('Select A Demonstration','Public Routines Demonstration',option.,preselect,,max%2+1)
         op = ssdlg~execute
         if op \= '' then
             do
                 preselect = op + 1
                 if preselect > max then preselect = 1
-                interpret 'call option'op
+                call ('OPTION'op)
             end
     end
 exit
@@ -103,7 +104,14 @@ Option1:
     if wstream~query('exists') = '' then
         call errorDialog('The expected audio file' filename 'does not exist')
     else
-        call Play fileName
+        do
+            msg = "When you close this message box, a *.wav file will"||.endOfLine||-
+                  "play synchronously.  You will return to the demo progam"||.endOfLine||-
+                  "when the *.wav file is ended."
+            call InfoDialog msg
+
+            call Play fileName
+        end
 return
 ----------------------------------------------------------------------------------------------------------------
 Option2:
@@ -112,7 +120,14 @@ Option2:
     if wstream~query('exists') = '' then
         call errorDialog('The expected audio file' filename 'does not exist')
     else
-        call Play fileName,'YES'
+        do
+            msg = "When you close this message box, a *.wav file will"||.endOfLine||-
+                  "play asynchronously.  You will return to the demo progam"||.endOfLine||-
+                  "immediately, while the *.wav file continues to play."
+            call InfoDialog msg
+
+            call Play fileName,'YES'
+        end
 return
 ----------------------------------------------------------------------------------------------------------------
 Option3:
@@ -121,7 +136,16 @@ Option3:
     if wstream~query('exists') = '' then
         call errorDialog('The expected audio file' filename 'does not exist')
     else
-        call Play fileName,'LOOP'
+        do
+            msg = "When you close this message box, a *.wav file will"||.endOfLine||-
+                  "play asynchronously in a continuous loop.  You will"||.endOfLine||-
+                  "return to the demo progam immediately. The *.wav"||.endOfLine||-
+                  "file will continue to play until you stop it using"||.endOfLine||-
+                  "the 'Stop playing the audio file' option."
+            call InfoDialog msg
+
+            call Play fileName,'LOOP'
+        end
 return
 ----------------------------------------------------------------------------------------------------------------
 Option4:
@@ -265,6 +289,71 @@ Option16:
     end_timeT = time('t')
     call infoDialog('Start TimeT..:' start_timeT '- End TimeT..:' end_timeT '- Duration..:' end_TimeT - start_TimeT 'Seconds')
 --    call infoDialog('Total Elasped Time..:' time('e')~trunc 'Seconds')
+return
+----------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------
+Option17:
+
+  tab = '09'x
+
+  -- There are a large number of system metric values.  You query the value you
+  -- are interested in by numeric index.  The GetSystemMetrics Windows API is
+  -- documented in the MSDN Library, which Microsoft makes available online.
+  -- The numeric values of the possible indexes and their meanings are all
+  -- documented there.  Use a Google search of "GetSystemMetrics MSDN Library"
+  -- to locate the documentation.
+
+  SM_CMONITORS         = 80
+  SM_CMOUSEBUTTONS     = 43
+  SM_MOUSEWHEELPRESENT = 19
+
+  countMonitors = SystemMetrics(SM_CMONITORS)
+  countMouseButtons = SystemMetrics(SM_CMOUSEBUTTONS)
+  haveMouseWheel = SystemMetrics(SM_MOUSEWHEELPRESENT)
+
+  if countMonitors <> -1 then
+      l1 = "Attached Monitors:" tab || countMonitors"."      ||.endOfLine
+  else
+      l1 = "SystemMetrics error."                            ||.endOfLine
+
+  select
+    when countMouseButtons == 0 then
+      l2 = "Mouse:" tab || tab || "no mouse attached."              ||.endOfLine
+    when countMouseButtons > 0 then
+      l2 = "Mouse:" tab || tab || countMouseButtons "button mouse." ||.endOfLine
+    otherwise
+      l2 = "SystemMetrics error."                                   ||.endOfLine
+  end
+  -- End select
+
+  select
+    when countMouseButtons == 0 then
+      l3 = "Mouse wheel:" tab || "no mouse attached."        ||.endOfLine
+    when haveMouseWheel then
+      l3 = "Mouse wheel:" tab || "present."                  ||.endOfLine
+    when \ haveMouseWheel then
+      l3 = "Mouse wheel:" tab || "none."                     ||.endOfLine
+    otherwise
+      l3 = "SystemMetrics error."                            ||.endOfLine
+  end
+  -- End select
+
+  l4 = .endOfLine||.endOfLine||"  ---------------------------  "||.endOfLine||.endOfLine
+
+  SM_CXSIZE    = 30
+  SM_CXVSCROLL = 20
+  SM_CYHSCROLL =  3
+  SM_CYMENU    = 15
+
+  l5 = "Height of single line menu bar in pixels:"  tab SystemMetrics(SM_CYMENU)    || ".   " ||.endOfLine
+  l6 = "Width of title bar button in pixels:"       tab SystemMetrics(SM_CXSIZE)    || ".   " ||.endOfLine
+  l7 = "Width of vertical scroll bar in pixels:"    tab SystemMetrics(SM_CXVSCROLL) || ".   " ||.endOfLine
+  l8 = "Height of horizontal scroll bar in pixels:" tab SystemMetrics(SM_CYHSCROLL) || ".   " ||.endOfLine
+
+  msg = l1 || l2 || l3 || l4 || l5 || l6 || l7 || l8
+  j = infoDialog(msg)
+
 return
 ----------------------------------------------------------------------------------------------------------------
 

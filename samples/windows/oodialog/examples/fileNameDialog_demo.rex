@@ -78,7 +78,7 @@ When....:   August 13, 2007
             do
                 preselect = op + 1
                 if preselect > max then preselect = 1
-                interpret 'call option'op
+                call ('OPTION'op)
             end
     end
 
