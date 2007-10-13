@@ -59,6 +59,7 @@
         - usecomp.rex    program that uses complex number class: complex.rex
         - usepipe.rex    program that uses pipeline implementation: pip.rex
         - makestring.rex program that uses makestring method
+        - properties.rex an example of the Properties class
 
       These programs are executable without any change on all supported
       platforms.

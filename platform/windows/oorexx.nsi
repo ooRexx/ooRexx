@@ -217,6 +217,7 @@ Section "${LONGNAME} Samples" SecDemo
   File "${SRCDIR}\samples\month.rex"
   File "${SRCDIR}\samples\windows\philfork.rex"
   File "${SRCDIR}\samples\pipe.rex"
+  File "${SRCDIR}\samples\properties.rex"
   File "${SRCDIR}\samples\qdate.rex"
   File "${SRCDIR}\samples\qtime.rex"
   File "${SRCDIR}\samples\semcls.rex"
