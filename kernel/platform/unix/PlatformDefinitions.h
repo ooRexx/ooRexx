@@ -64,6 +64,10 @@
 #define __STDC_LIMIT_MACROS
 
 #include <stdint.h>
+// this does not always end up getting defined on all platforms (e.g, the Mac).
+#ifndef INT64_MAX
+#define INT64_MAX        9223372036854775807LL
+#endif
 
 
 /******************************************************************************/
