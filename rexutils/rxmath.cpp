@@ -407,11 +407,7 @@ LONG MathFormatResult(
   else if (result == 0)                /* zero result?               */
     strcpy(retstr->strptr, "0");       /* make exactly 0             */
   else
-#if defined( HAVE_GCVT )
-    gcvt(result, precision, retstr->strptr);
-#else
-    sprintf( retstr->strptr, "%g", result ); /* TODO - use correct precision */
-#endif
+    sprintf(retstr->strptr, "%.*g", precision, result);
                                        /* set the length             */
   retstr->strlength = strlen(retstr->strptr);
                                        /* end in a period?           */
