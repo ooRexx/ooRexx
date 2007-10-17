@@ -350,7 +350,7 @@ else
          xsl="$xsl -o \$1 \$2 \$3"
          ;;
       *xalan)
-         xsl="$xsl -OUT \$1 -IN \$2 -XSL \$3"
+         xsl="$xsl -out \$1 -in \$2 -xsl \$3"
          ;;
       *)
          xsl="echo Cannot transform XSL as Xalan not installed;exit 1"
