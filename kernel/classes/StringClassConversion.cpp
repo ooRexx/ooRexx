@@ -171,16 +171,16 @@ UCHAR PackByte2(
 /*********************************************************************/
 
 INT ValidateSet(
-  PCHAR     String,                    /* string to validate                */
-  UINT      Length,                    /* string length                     */
-  PSZ       Set,                       /* character set                     */
+  const char *String,                  /* string to validate                */
+  size_t    Length,                    /* string length                     */
+  const char *Set,                     /* character set                     */
   INT       Modulus,                   /* smallest group size               */
   BOOL      Hex )                      /* HEX or BIN flag                   */
 {
   UCHAR    c;                          /* current character                 */
   size_t   Count;                      /* # set members found               */
-  PCHAR    Current;                    /* current location                  */
-  PCHAR    SpaceLocation;              /* location of last space            */
+  const char *Current;                 /* current location                  */
+  const char *SpaceLocation;           /* location of last space            */
   INT      SpaceFound;                 /* space found yet?                  */
   size_t   Residue;                    /* if space_found, # set             */
                                        /* members                           */
@@ -248,15 +248,15 @@ INT ValidateSet(
 /*                                                                   */
 /*********************************************************************/
 size_t  ChGetSm(
-  PCHAR     Destination,               /* destination string         */
-  PCHAR     Source,                    /* source string              */
+  char     *Destination,               /* destination string         */
+  const char *Source,                  /* source string              */
   size_t    Length,                    /* length of string           */
   size_t    Count,                     /* size of string             */
-  PCHAR     Set,                       /* allowed set of chars       */
+  const char *Set,                     /* allowed set of chars       */
   size_t   *ScannedSize)               /* size scanned off           */
 {
-  UCHAR     c;                         /* current scanned character  */
-  PCHAR     Current;                   /* current scan pointer       */
+  char      c;                         /* current scanned character  */
+  const char *Current;                 /* current scan pointer       */
   size_t    Found;                     /* number of characters found */
   size_t    Scanned;                   /* number of character scanned*/
 
@@ -287,15 +287,15 @@ size_t  ChGetSm(
 /*********************************************************************/
 
 RexxString *PackHex(
-  PCHAR     String,                    /* packed string                     */
+  const char *String,                  /* packed string                     */
   size_t    StringLength )             /* packed string                     */
 {
   size_t   Nibbles;                    /* count of nibbles to pack          */
   size_t   n;
-  PCHAR    Source;                     /* pack source                       */
-  PCHAR    Destination;                /* packing destination               */
+  const char *Source;                  /* pack source                       */
+  char *    Destination;               /* packing destination               */
   size_t   b;                          /* nibble odd count                  */
-  CHAR     Buf[8];                     /* temp pack buffer                  */
+  char     Buf[8];                     /* temp pack buffer                  */
   size_t   jjj;                        /* copies nibbles                    */
   RexxString *Retval;                  /* result value                      */
 
@@ -306,7 +306,7 @@ RexxString *PackHex(
                                        /* get a result string               */
     Retval = raw_string((Nibbles + 1) / 2);
                                        /* initialize destination            */
-    Destination = Retval->stringData;
+    Destination = Retval->getWritableData();
 
     while (Nibbles > 0) {              /* while chars to process            */
 
@@ -381,9 +381,9 @@ RexxString *RexxString::encodeBase64()
     }
     /* allocate output string */
     RexxString *retval = raw_string(outputLength);
-    char *source = this->getStringData();  /* point to converted string         */
+    const char *source = this->getStringData();  /* point to converted string         */
     /* point to output area              */
-    char *destination = retval->getStringData();
+    char *destination = retval->getWritableData();
     while (inputLength > 0)
     {              /* while more string                 */
         int buflen = 0;
@@ -454,7 +454,7 @@ RexxString *RexxString::decodeBase64()
     /* allocate output string */
     RexxString *retval = raw_string(outputLength);
     /* point to output area              */
-    char *destination = retval->getStringData();
+    char *destination = retval->getWritableData();
     while (inputLength)
     {              /* while more string                 */
         for (i = 0; i < 4; i++)
@@ -595,7 +595,7 @@ RexxString *RexxString::x2c()
 
   else                                 /* real data to convert       */
                                        /* try to pack the data       */
-    Retval = PackHex((PCHAR)this->stringData, InputLength);
+    Retval = PackHex(this->stringData, InputLength);
   return Retval;                       /* return the packed string   */
 }
 
@@ -817,7 +817,7 @@ RexxString *RexxString::b2x()
     Retval = OREF_NULLSTRING;          /* return null                       */
   else {                               /* need to do conversion             */
                                        /* validate the string               */
-    Bits = ValidateSet((PCHAR)this->stringData, this->length, "01", 4, FALSE);
+    Bits = ValidateSet(this->getStringData(), this->getLength(), "01", 4, FALSE);
                                        /* allocate space for result         */
     Retval = raw_string((Bits + 3) / 4);
                                        /* point to the data                 */
@@ -860,21 +860,21 @@ RexxString *RexxString::x2b()
 {
   RexxString *Retval;                  /* function result                   */
   size_t   Nibbles;                    /* nibbles in hex string             */
-  PCHAR    Source;                     /* current source pointer            */
-  PCHAR    Destination;                /* destination pointer               */
-  CHAR     Nibble[4];                  /* current nibble string             */
-  UCHAR    ch;                         /* current string character          */
+  const char *Source;                  /* current source pointer            */
+  char    *Destination;                /* destination pointer               */
+  char     Nibble[4];                  /* current nibble string             */
+  char     ch;                         /* current string character          */
   INT      Val;                        /* converted nible                   */
 
   if (this->length == 0)               /* null input, i.e. zerolength       */
                                        /* string                            */
     Retval = OREF_NULLSTRING;          /* return null                       */
   else {                               /* have real data to pack            */
-    Nibbles = ValidateSet((PCHAR)this->stringData, this->length, "0123456789ABCDEFabcdef", 2, TRUE);
+    Nibbles = ValidateSet(this->getStringData(), this->getLength(), "0123456789ABCDEFabcdef", 2, TRUE);
     Retval = raw_string(Nibbles * 4);  /* allocate result string            */
                                        /* point to the data                 */
-    Destination = Retval->stringData;
-    Source = (PCHAR)this->stringData;  /* point to the source               */
+    Destination = Retval->getWritableData();
+    Source = this->getStringData();    /* point to the source               */
 
     while (Nibbles > 0) {              /* while still string to pack        */
       ch = *Source++;                  /* get current char and bump         */
@@ -884,7 +884,7 @@ RexxString *RexxString::x2b()
         UnpackNibble(Val, Nibble);     /* then convert to binary            */
                                        /* digits                            */
                                        /* copy to the destination           */
-        memcpy(Destination, (PCHAR)Nibble, 4);
+        memcpy(Destination, (const char *)Nibble, 4);
         Destination += 4;              /* bump destination pointer          */
         Nibbles--;                     /* Reduce nibbles count              */
       }

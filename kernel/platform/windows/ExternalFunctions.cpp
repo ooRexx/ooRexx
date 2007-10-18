@@ -193,11 +193,11 @@ RexxMethod1(REXXOBJECT, sysDirectory, CSTRING, dir)
 /********************************************************************************************/
 RexxMethod2 (REXXOBJECT, sysFilespec, CSTRING, Option, CSTRING, Name)
 {
-  LONG       NameLength;               /* file name length                  */
-  PCHAR      ScanPtr;                  /* scanning pointer                  */
-  PCHAR      EndPtr;                   /* end of string                     */
-  PCHAR      PathPtr;                  /* path pointer                      */
-  PCHAR      PathEnd;                  /* path end pointer                  */
+  size_t     NameLength;               /* file name length                  */
+  const char *ScanPtr;                 /* scanning pointer                  */
+  const char *EndPtr;                  /* end of string                     */
+  const char *PathPtr;                 /* path pointer                      */
+  const char *PathEnd;                 /* path end pointer                  */
   REXXOBJECT Retval;                   /* return value                      */
 
                                        /* required arguments missing?       */
@@ -215,7 +215,7 @@ RexxMethod2 (REXXOBJECT, sysFilespec, CSTRING, Option, CSTRING, Name)
     case FILESPEC_DRIVE:               /* extract the drive                 */
       if (NameLength) {                /* have a real string?               */
                                        /* scan for the character            */
-        ScanPtr = (char *)memchr(Name, ':', NameLength);
+        ScanPtr = (const char *)memchr(Name, ':', NameLength);
         if (ScanPtr)                   /* found one?                        */
                                        /* create result string              */
           Retval = RexxStringL(Name, ScanPtr - Name + 1);
@@ -412,18 +412,18 @@ BOOL MacroSpaceSearch(
 {
 
   USHORT     Position;                 /* located macro search position     */
-  PCHAR      MacroName;                /* ASCII-Z name version              */
+  const char *MacroName;               /* ASCII-Z name version              */
   RXSTRING   MacroImage;               /* target macro image                */
   RexxMethod * Routine;                /* method to execute                 */
 
-  MacroName = target->stringData;      /* point to the string data          */
+  MacroName = target->getStringData();  /* point to the string data          */
                                        /* did we find this one?             */
   if (RexxQueryMacro(MacroName, &Position) == 0) {
                                        /* but not at the right time?        */
     if (order == MS_PREORDER && Position == RXMACRO_SEARCH_AFTER)
       return FALSE;                    /* didn't really find this           */
                                        /* get image of function             */
-    if (RexxExecuteMacroFunction(MacroName, &MacroImage) != 0)
+    if (RexxExecuteMacroFunction(const_cast<PSZ>(MacroName), &MacroImage) != 0)
         return FALSE;
                                        /* unflatten the method now          */
     Routine = SysRestoreProgramBuffer(&MacroImage, target);
@@ -469,8 +469,8 @@ BOOL RegExternalFunction(
   RexxString     * calltype,           /* Type of call                      */
   RexxObject    ** result )            /* Result of function call           */
 {
-  PCHAR     funcname;                  /* Pointer to function name          */
-  PCHAR     queuename;                 /* Pointer to active queue name      */
+  const char *funcname;                /* Pointer to function name          */
+  const char *queuename;               /* Pointer to active queue name      */
   long      rc;                        /* RexxCallFunction return code      */
   size_t    argindex;                  /* Index into arg array              */
   PRXSTRING argrxarray;                /* Array of args in PRXSTRING form   */
@@ -482,7 +482,7 @@ BOOL RegExternalFunction(
 
 // retrofit by IH
 
-  funcname = target->stringData;       /* point to the function name        */
+  funcname = target->getStringData();   /* point to the function name        */
   if (RexxQueryFunction(funcname) != 0) {  /* is the function registered ?  */
 
                                        /* this a system routine?            */
@@ -539,9 +539,9 @@ BOOL RegExternalFunction(
       /* something that will still be required */
       arguments[argindex] = argument;
                                        /* set the RXSTRING length           */
-      argrxarray[argindex].strlength = argument->length;
+      argrxarray[argindex].strlength = argument->getLength();
                                        /* and pointer                       */
-      argrxarray[argindex].strptr = argument->stringData;
+      argrxarray[argindex].strptr = argument->getWritableData();
     }
     else {                           /* have an omitted argument          */
                                        /* give it zero length               */
@@ -551,7 +551,7 @@ BOOL RegExternalFunction(
     }
   }
                                        /* get the current queue name        */
-  queuename = SysGetCurrentQueue()->stringData;
+  queuename = SysGetCurrentQueue()->getStringData();
                                        /* make the RXSTRING result          */
   MAKERXSTRING(funcresult, default_return_buffer, sizeof(default_return_buffer));
 
@@ -560,7 +560,7 @@ BOOL RegExternalFunction(
                                        /* get ready to call the function    */
   activity->exitKernel(activation, OREF_SYSEXTERNALFUNCTION, TRUE);
                                        /* now call the external function    */
-  rc = RexxCallFunction(funcname, argcount, argrxarray, &functionrc, &funcresult, queuename);
+  rc = RexxCallFunction(const_cast<PSZ>(funcname), argcount, argrxarray, &functionrc, &funcresult, const_cast<PSZ>(queuename));
   activity->enterKernel();           /* now re-enter the kernel           */
 
 /* END CRITICAL window here -->>  kernel calls now allowed again            */
@@ -653,7 +653,7 @@ RexxMethod * SysGetMacroCode(
   RexxMethod   * method = OREF_NULL;
 
   MacroImage.strptr = NULL;
-  if (RexxExecuteMacroFunction(MacroName->stringData, &MacroImage) == 0)
+  if (RexxExecuteMacroFunction(const_cast<PSZ>(MacroName->getStringData()), &MacroImage) == 0)
     method = SysRestoreProgramBuffer(&MacroImage, MacroName);
 
   /* On Windows we need to free the allocated buffer for the macro */

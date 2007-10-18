@@ -65,7 +65,7 @@ extern  _declspec(dllimport) HANDLE RexxTerminated;           /* Termination com
 int __cdecl main(int argc, char *argv[]);  /* main entry point           */
 LONG APIENTRY MY_IOEXIT( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock);
 
-extern _declspec(dllimport) PCHAR RexxGetVersionInformation(void);
+extern "C" char *APIENTRY RexxGetVersionInformation(void);
 
 #include "ArgumentParser.h"  /* defines getArguments and freeArguments */
 

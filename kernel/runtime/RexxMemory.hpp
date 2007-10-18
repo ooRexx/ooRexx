@@ -290,7 +290,7 @@ class RexxMemory : public RexxObject {
   void        markObjectsMain(RexxObject *);
   void        killOrphans(RexxObject *);
   void        mark(RexxObject *);
-  void        markGeneral(RexxObject **);
+  void        markGeneral(void *);
   void        collect();
   inline RexxObject *saveObject(RexxInternalObject *saveObj) {this->saveTable->add((RexxObject *)saveObj, (RexxObject *)saveObj); return (RexxObject *)saveObj;}
   inline void        discardObject(RexxInternalObject *obj) {this->saveTable->remove((RexxObject *)obj);};
@@ -309,7 +309,7 @@ class RexxMemory : public RexxObject {
   inline void        setMarkTable(RexxTable *marktable) {this->markTable = marktable;};
   inline void        setOrphanCheck(BOOL orphancheck) {this->orphanCheck = orphancheck; };
   RexxObject *checkSetOref(RexxObject *, RexxObject **, RexxObject *, char *, long);
-  RexxObject *setOref(RexxObject **index, RexxObject *value);
+  RexxObject *setOref(void *index, RexxObject *value);
   RexxStack  *getFlattenStack();
   void        returnFlattenStack();
   RexxObject *reclaim();

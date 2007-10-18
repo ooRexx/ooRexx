@@ -84,8 +84,8 @@ static BOOL ExplicitConsole;
 #define SHOWWINDOWFLAGS SW_HIDE        // determines visibility of cmd
                                        // window SHOW, HIDE etc...
                                        // function prototypes
-LONG sys_command(char *cmd, RexxString ** error_failure);
-LONG sysCommandNT(char *cmd, RexxString ** error_failure, BOOL direct);
+LONG sys_command(const char *cmd, RexxString ** error_failure);
+LONG sysCommandNT(const char *cmd, RexxString ** error_failure, BOOL direct);
 // LONG sysCommand32s(char *cmd, RexxString ** error_failure);
 
 /******************************************************************************/
@@ -111,9 +111,9 @@ BOOL SysExitHandler(
   BOOL  enable )                       /* enable variable pool                */
 {
   int   rc;                            /* exit return code                    */
-  PCHAR handler_name;                  /* ASCII-Z handler name                */
+  const char *handler_name;            /* ASCII-Z handler name                */
 
-  handler_name = exitname->stringData; /* point to the handler name           */
+  handler_name = exitname->getStringData(); /* point to the handler name           */
   activity->setCurrentExit(exitname);  /* save the exitname                   */
 /* CRITICAL window here -->>  ABSOLUTELY NO KERNEL CALLS ALLOWED              */
 
@@ -121,7 +121,7 @@ BOOL SysExitHandler(
   activity->exitKernel(activation, OREF_SYSEXITHANDLER, enable);
 
                                        /* go call the handler                 */
-  rc = RexxCallExit((PSZ)handler_name, NULL, function, subfunction, (PEXIT)exitbuffer);
+  rc = RexxCallExit(const_cast<PSZ>(handler_name), NULL, function, subfunction, (PEXIT)exitbuffer);
                                        /* now re-enter the kernel             */
   activity->enterKernel();
 
@@ -171,7 +171,7 @@ RexxObject * SysCommand(
   RexxString       ** error_failure )  /* error or failure flags              */
 {
   INT      rc    = 0;                  /* Return code from call               */
-  PCHAR    current_address;            /* Subcom handler that gets cmd        */
+  const char *current_address;         /* Subcom handler that gets cmd        */
   RXSTRING rxstrcmd;                   /* Command to be executed              */
   USHORT   flags = 0;                  /* Subcom error flags                  */
   SHORT    sbrc  = 0;                  /* Subcom return code                  */
@@ -184,10 +184,10 @@ RexxObject * SysCommand(
                                        /* set up the RC buffer                */
   MAKERXSTRING(retstr, default_return_buffer, DEFRXSTRING);
                                        /* set up the command RXSTRING         */
-  MAKERXSTRING(rxstrcmd, command->stringData, command->length);
+  MAKERXSTRING(rxstrcmd, command->getStringData(), command->getLength());
                                        /* get the current environment         */
-  current_address = environment->stringData;
-  if (environment->length == 0)        /* null string command?                */
+  current_address = environment->getStringData();
+  if (environment->getLength() == 0)   /* null string command?                */
     current_address = SYSENV;          /* null string is same as CMD          */
   sbrc = 0;                            /* set initial return code             */
 
@@ -195,7 +195,7 @@ RexxObject * SysCommand(
 
                                        /* get ready to call the function      */
   activity->exitKernel(activation, OREF_COMMAND, TRUE);
-  rc=RexxCallSubcom( current_address, NULL, &rxstrcmd, &flags, (PUSHORT)&sbrc, (PRXSTRING)&retstr);
+  rc=RexxCallSubcom(const_cast<PSZ>(current_address), NULL, &rxstrcmd, &flags, (PUSHORT)&sbrc, (PRXSTRING)&retstr);
   activity->enterKernel();             /* now re-enter the kernel           */
 
 /* END CRITICAL window here -->>  kernel calls now allowed again              */
@@ -208,7 +208,7 @@ RexxObject * SysCommand(
     if ((stricmp((PCHAR)current_address,SYSENV))==0) {
       ReleaseKernelAccess(activity);   /* unlock the kernel                   */
                                        /* issue the command                   */
-      rc = sys_command(command->stringData, error_failure);
+      rc = sys_command(command->getStringData(), error_failure);
       RequestKernelAccess(activity);   /* reacquire the kernel lock           */
       result = new_integer(rc);        /* get the command return code         */
 
@@ -281,9 +281,10 @@ RexxObject * SysCommand(
 
 
 /* Handle "SET XX=YYY" command in same process */
-BOOL sys_process_set(char * cmd, LONG * rc)
+BOOL sys_process_set(const char * cmd, LONG * rc)
 {
-    char * eqsign, * st;
+    const char * eqsign;
+    const char * st;
     char name[256];
     char value[4096];
     eqsign = strchr(cmd, '=');
@@ -302,9 +303,9 @@ BOOL sys_process_set(char * cmd, LONG * rc)
 
 
 /* Handle "CD XXX" command in same process */
-BOOL sys_process_cd(char * cmd, LONG * rc)
+BOOL sys_process_cd(const char * cmd, LONG * rc)
 {
-    char * st;
+    const char * st;
 
     st = &cmd[3];
     while ((*st) && (*st == ' ')) st++;
@@ -335,22 +336,22 @@ BOOL sys_process_cd(char * cmd, LONG * rc)
 /*             command handler with the command to be executed                */
 /*                                                                            */
 /******************************************************************************/
-LONG sys_command(char *cmd, RexxString **error_failure)
+LONG sys_command(const char *cmd, RexxString **error_failure)
 {
-  PCHAR       cl_opt = " /c ";         /* "/c" opt for sys cmd handler      */
-  PCHAR       cmdstring_ptr;           /* Command string pointer            */
-  CHAR        cmdstring[CMDBUFSIZENT]; /* Largest cmd we can give system    */
-  PCHAR       sys_cmd_handler;         /* Pointer to system cmd handler     */
+  const char *cl_opt = " /c ";         /* "/c" opt for sys cmd handler      */
+        char *cmdstring_ptr;           /* Command string pointer            */
+  char        cmdstring[CMDBUFSIZENT]; /* Largest cmd we can give system    */
+  const char *sys_cmd_handler;         /* Pointer to system cmd handler     */
   ULONG       length_cmd_handler;      /* Length of cmd handler path/name   */
   ULONG       max_cmd_length;          /* Maximum size of command           */
   LONG        rc;                      /* Return code                       */
-  CHAR       *interncmd;
+  const char *interncmd;
 
   ULONG       uMaxStringLength;        // max length of string (system
                                        // specific)
-  CHAR        tmp[8];
+  char        tmp[8];
   size_t      j = 0, i = 0;
-  PCHAR       filepart;
+  const char *filepart;
   BOOL        fileFound, searchFile;
   BOOL        NoDirectInvoc;
   BOOL        fInQuotes = FALSE;
@@ -432,8 +433,11 @@ LONG sys_command(char *cmd, RexxString **error_failure)
                    strlen(cl_opt) -         /* Minus length of cmd line option*/
                    1;                       /* Minus length of terminating \0 */
 
+// handle truncation...this is altering the original RexxString!!!!!!!!!!!
+#if 0
   if (max_cmd_length < strlen(interncmd))   /* If command is too long...      */
     *(interncmd+max_cmd_length) = '\0';     /*  truncate it                   */
+#endif
   ExceptionConsole = FALSE;
   ExplicitConsole = FALSE;
 
@@ -461,9 +465,9 @@ LONG sys_command(char *cmd, RexxString **error_failure)
       }
 
       if (!RUNNING_95)
-          fileFound = SearchPath(NULL, cmdstring_ptr, ".EXE", CMDBUFSIZENT-1, cmdstring, &filepart);
+          fileFound = SearchPath(NULL, cmdstring_ptr, ".EXE", CMDBUFSIZENT-1, cmdstring, (LPSTR *)&filepart);
       else
-          fileFound = SearchPath(NULL, cmdstring_ptr, ".COM", CMDBUFSIZENT-1, cmdstring, &filepart);
+          fileFound = SearchPath(NULL, cmdstring_ptr, ".COM", CMDBUFSIZENT-1, cmdstring, (LPSTR *)&filepart);
       cmdstring_ptr = cmdstring;           /* Set pointer again to cmd buffer (might have been increased) */
 
       if (fileFound && !stricmp(sys_cmd_handler, cmdstring_ptr))
@@ -526,7 +530,7 @@ LONG sys_command(char *cmd, RexxString **error_failure)
  | Notes:      Handles processing of a system command on a Windows NT system  |
  |                                                                      |
   ----------------------------------------------------------------------------*/
-LONG sysCommandNT(char *cmdstring_ptr, RexxString  **error_failure, BOOL direct)
+LONG sysCommandNT(const char *cmdstring_ptr, RexxString  **error_failure, BOOL direct)
 {
   DWORD rc;
   STARTUPINFO siStartInfo;                  // process startup info
@@ -549,7 +553,7 @@ LONG sysCommandNT(char *cmdstring_ptr, RexxString  **error_failure, BOOL direct)
   siStartInfo.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   siStartInfo.hStdError = GetStdHandle(STD_ERROR_HANDLE);
   titleChanged = GetConsoleTitle(ctitle, 255);
-  siStartInfo.lpTitle = cmdstring_ptr;
+  siStartInfo.lpTitle = (LPSTR)cmdstring_ptr;
   creationFlags = GetPriorityClass(GetCurrentProcess()) | CREATE_NEW_PROCESS_GROUP;
   if (!siStartInfo.hStdInput && !siStartInfo.hStdOutput && !titleChanged)  /* is REXXHIDE running without console */
   {
@@ -567,7 +571,7 @@ LONG sysCommandNT(char *cmdstring_ptr, RexxString  **error_failure, BOOL direct)
   }
 
   if ( CreateProcess ( NULL,           // address of module name
-                  cmdstring_ptr,       // address of command line
+                  (LPSTR)cmdstring_ptr,// address of command line
                   NULL,                // address of process security attrs
                   NULL,                // address of thread security attrs
                   TRUE,                // new process inherits handles?

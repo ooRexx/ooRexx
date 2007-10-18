@@ -247,8 +247,8 @@ int __stdcall toNewMeta(FILE_CONTROL *fileControl)
 
 void __stdcall createNewHash(RexxString *candidate)
 {
-  char *stringData = candidate->stringData;
-  int stringLength = candidate->length;
+  const char *stringData = candidate->getStringData();
+  int stringLength = candidate->getLength();
   unsigned int oldHash;
   unsigned int newHash;
 
@@ -267,8 +267,8 @@ void __stdcall createNewHash(RexxString *candidate)
 
 void __stdcall createOldHash(RexxString *candidate)
 {
-  char *stringData = candidate->stringData;
-  int stringLength = candidate->length;
+  const char *stringData = candidate->getStringData();
+  int stringLength = candidate->getLength();
   unsigned int oldHash;
   unsigned int newHash;
 

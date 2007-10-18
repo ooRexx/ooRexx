@@ -61,14 +61,14 @@ RexxBuffer *RexxBuffer::expand(
                                        /* buffer, or this size of           */
                                        /* current(this)buffer + requested   */
                                        /* minimum length.                   */
-  if (length > this->length())         /* need more than double?            */
+  if (length > this->getLength())      /* need more than double?            */
                                        /* increase by the requested amount  */
-    newBuffer = new_buffer(this->length() + length);
+    newBuffer = new_buffer(this->getLength() + length);
   else                                 /* just double the existing length   */
-    newBuffer = new_buffer(this->length() * 2);
+    newBuffer = new_buffer(this->getLength() * 2);
                                        /* have new buffer, so copy data from*/
                                        /* current buffer into new buffer.   */
-  memcpy(newBuffer->address(), this->data, this->length());
+  memcpy(newBuffer->address(), this->data, this->getLength());
   return newBuffer;                    /* all done, return new buffer       */
 
 }
@@ -114,7 +114,7 @@ native0 (size_t, BUFFER_LENGTH)
 /******************************************************************************/
 /* NOTE:  This method does not reaquire kernel access                         */
 /******************************************************************************/
-  return this->length();               /* just return this directly         */
+  return this->getLength();               /* just return this directly         */
 }
 
 native1 (REXXOBJECT, BUFFER_EXTEND,

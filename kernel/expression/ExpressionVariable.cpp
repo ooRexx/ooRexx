@@ -120,7 +120,7 @@ RexxObject  *RexxParseVariable::evaluate(
         // in an ActiveX Script-Engine context:
         RexxActivity *save = CurrentActivity;  // save current activity
 
-        value = NovalueCallback((void*) this->variableName->stringData);
+        value = NovalueCallback(this->variableName->getStringData());
 
         CurrentActivity = save;  // restore current activity
 

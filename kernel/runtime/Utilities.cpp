@@ -51,7 +51,7 @@
 #include "ArrayClass.hpp"
 #include "RexxNativeActivation.hpp"
 
-void logic_error (char *desc)
+void logic_error (const char *desc)
 /******************************************************************************/
 /* Function:  Raise a fatal logic error                                       */
 /******************************************************************************/
@@ -91,7 +91,7 @@ long message_number(
 /* Function:  Parse out the error code string into the messagecode valuey     */
 /******************************************************************************/
 {
-  char *decimalPoint;                  /* location of decimalPoint in errorcode*/
+  const char *decimalPoint;            /* location of decimalPoint in errorcode*/
   long primary;                        /* Primary part of error code, major */
   long secondary;                      /* Secondary protion (minor code)    */
   long count;
@@ -100,9 +100,9 @@ long message_number(
   errorcode = (RexxString *)errorcode->stringValue();
                                        /* scan to decimal Point or end of   */
                                        /* error code.                       */
-  for (decimalPoint = errorcode->stringData, count = 0; *decimalPoint && *decimalPoint != '.'; decimalPoint++, count++);
+  for (decimalPoint = errorcode->getStringData(), count = 0; *decimalPoint && *decimalPoint != '.'; decimalPoint++, count++);
                                        /* get the primary portion of code   */
-  primary = (new_string(errorcode->stringData, count)->longValue(9)) * 1000;
+  primary = (new_string(errorcode->getStringData(), count)->longValue(9)) * 1000;
                                        /* did major code compute to long    */
                                        /* and within range                  */
   if (primary == NO_LONG || primary < 1 || primary >= 100000) {
@@ -112,7 +112,7 @@ long message_number(
 
   if (*decimalPoint) {                 /* Was there a decimal point specified?*/
                                        /* Yes, compute its decimal value.   */
-    secondary = new_string(decimalPoint + 1, errorcode->length - count -1)->longValue(9);
+    secondary = new_string(decimalPoint + 1, errorcode->getLength() - count -1)->longValue(9);
                                        /* is the subcode invalid or too big?*/
     if (secondary == NO_LONG || secondary < 0  || secondary >= 1000) {
                                        /* Yes, raise an error.              */
@@ -169,16 +169,16 @@ void missing_argument(
   report_exception1(Error_Incorrect_method_noarg, new_integer(argumentPosition));
 }
 
-INT  CaselessCompare(                  /* do a caseless memory comparison   */
-     PUCHAR    string1,                /* first compare string              */
-     PUCHAR    string2,                /* second compare string             */
-     LONG      length)                 /* comparison length                 */
+int  CaselessCompare(                  /* do a caseless memory comparison   */
+     const char *string1,              /* first compare string              */
+     const char *string2,              /* second compare string             */
+     size_t      length)               /* comparison length                 */
 /******************************************************************************/
 /* Function:  Compare two strings, ignoring differences in case               */
 /******************************************************************************/
 {
                                        /* totally equal?                    */
-  if (!memcmp((PCHAR)string1, (PCHAR)string2, length))
+  if (!memcmp(string1, string2, length))
     return 0;                          /* return equality indicator         */
 
   while (length--) {                   /* need to do it the hardway         */
@@ -196,15 +196,15 @@ INT  CaselessCompare(                  /* do a caseless memory comparison   */
   return 0;                            /* fall through, these are equal     */
 }
 
-PCHAR mempbrk(
-  PCHAR     String,                    /* search string                     */
-  PCHAR     Set,                       /* reference set                     */
-  LONG      Length )                   /* size of string                    */
+const char *mempbrk(
+  const char *String,                  /* search string                     */
+  const char *Set,                     /* reference set                     */
+  size_t      Length )                 /* size of string                    */
 /*********************************************************************/
 /*  Function:  Find first occurence of set member in memory          */
 /*********************************************************************/
 {
-  PCHAR    Retval;                     /* returned value                    */
+  const char *    Retval;              /* returned value                    */
 
   Retval = NULL;                       /* nothing found yet                 */
   while (Length-- > 0) {               /* search through string             */

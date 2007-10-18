@@ -135,7 +135,7 @@ RexxObject *RexxClass::makeProxy(RexxEnvelope *envelope)
                                        /*  object_primitive, to get class id*/
                                        /*  as a string object.              */
                                        /* get the class id                  */
-   return new_proxy(this->id->stringData);
+   return new_proxy(this->id->getStringData());
 }
 
 
@@ -1448,7 +1448,7 @@ RexxObject *RexxClass::importMethod()
   ReleaseKernelAccess(myActivity);
                                        /* for all the methods of this SOM   */
                                        /*class                              */
-  classId = somIdFromString(this->id->stringData);
+  classId = somIdFromString(this->id->getStringData());
                                        /* lookup and get access to the SOM  */
                                        /* class we want to import           */
   classobj = SOMClassMgrObject->somFindClass(classId, 0, 0);
@@ -1567,10 +1567,9 @@ RexxObject *RexxClass::exportMethod(
 #endif
   somId dispatch = somIdFromString("somDispatch");
   somId classDispatch = somIdFromString("somClassDispatch");
-  char *id, *superId;
 
-  id = REQUIRED_STRING(cid, ARG_ONE)->stringData;
-  superId = REQUIRED_STRING(sId, ARG_TWO)->stringData;
+  const char *id = REQUIRED_STRING(cid, ARG_ONE)->getStringData();
+  const char *superId = REQUIRED_STRING(sId, ARG_TWO)->getStringData();
 
   myActivity = CurrentActivity;
   /****************************************/

@@ -353,23 +353,23 @@ ULONG RexxObject::hash()
 
         // ok, we need to pick this string apart and turn this into a numeric code
         // a null string is simple.
-        if (hashString->length == 0)
+        if (hashString->getLength() == 0)
         {
             hash = 1;
         }
 
         // if we have at least 4 characters, use them as binary, since that's
         // what is normally returned here.
-        else if (hashString->length >= sizeof(LONG))
+        else if (hashString->getLength() >= sizeof(LONG))
         {
-            hash = *((PULONG)hashString->stringData);
+            hash = *((PULONG)hashString->getStringData());
         }
 
         else
         {
             // either 1 or 2 characters.  Just pick up a short value, which will
             // also pick up terminating null if only a single character
-            hash = *((PSHORT)hashString->stringData);
+            hash = *((PSHORT)hashString->getStringData());
         }
         return hash;
   }
@@ -465,17 +465,17 @@ ULONG RexxObject::hash()
                                        /* in string_class_new function.  Any*/
                                        /* changes to the hashing must be    */
                                        /* reflected in both locations       */
-    if (hashString->length == 0)       /* nullstring?                       */
+    if (hashString->getLength() == 0)       /* nullstring?                       */
       hash = 1;                        /* use 1 for the hash value          */
                                        /* got a long string?                */
-    else if (hashString->length >= sizeof(LONG))
+    else if (hashString->getLength() >= sizeof(LONG))
                                        /* just pick up the first 4 bytes    */
-      hash = *((PULONG)hashString->stringData);
+      hash = *((PULONG)hashString->getStringData());
     else
                                        /* just pick up the first 2 bytes    */
                                        /* (this may pick up the trailing    */
                                        /* NULL if only one character long   */
-      hash = *((PSHORT)hashString->stringData);
+      hash = *((PSHORT)hashString->getStringData());
     return hash;                       /* return the hash value             */
   }
 }
@@ -1399,9 +1399,9 @@ RexxObject  *RexxObject::setMethod(
   msgname = REQUIRED_STRING(msgname, ARG_ONE)->upper();
   if (option) {
     option = REQUIRED_STRING(option, ARG_THREE);
-    if (!stricmp("OBJECT",option->stringData)) {
+    if (!stricmp("OBJECT",option->getStringData())) {
       // do nothing if OBJECT
-    } else if (!stricmp("FLOAT",option->stringData))
+    } else if (!stricmp("FLOAT",option->getStringData()))
       // "FLOAT" makes option a NULL pointer, causing the old default behaviour on setMethod...
       option = OREF_NULL;
     else
@@ -1773,7 +1773,7 @@ RexxObject  *RexxObject::defMethod(
   if (methobj != TheNilObject) {       /* not a removal?                    */
                                        /* got an option? */
     if (option) {
-      if (!stricmp("OBJECT",option->stringData))
+      if (!stricmp("OBJECT",option->getStringData()))
         targetClass = this->behaviour->getCreateClass();
       else
         report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_SETMETHOD), IntegerThree, new_cstring("\"FLOAT\", \"OBJECT\""), option);
@@ -1912,7 +1912,7 @@ RexxVariableDictionary * RexxObject::getObjectVariables(
   return dictionary;                   /* return the correct ovd            */
 }
 
-char *RexxObject::idString(void)
+const char *RexxObject::idString(void)
 /******************************************************************************/
 /* Function:  Return a pointer to the object's string value                   */
 /******************************************************************************/
@@ -1923,7 +1923,7 @@ char *RexxObject::idString(void)
   if (classId == OREF_NULL)            /* internal class?                   */
     return "unknown Class";            /* return an unknown identifier      */
   else
-    return classId->stringData;        /* return the actual class ID        */
+    return classId->getStringData();        /* return the actual class ID        */
 }
 
 RexxString *RexxObject::id(void)

@@ -56,9 +56,9 @@ extern INT  lookup[];
 extern ACTIVATION_SETTINGS *current_settings;
 
 INT DBCS_MemiCmp(
-  PUCHAR    DBCS_Table,                /* DBCS validation table             */
-  PUCHAR    String1,                   /* first memory location             */
-  PUCHAR    String2,                   /* second memory location            */
+  const char *    DBCS_Table,                /* DBCS validation table             */
+  const char *    String1,                   /* first memory location             */
+  const char *    String2,                   /* second memory location            */
   size_t    Length )                   /* length of comparison              */
 /*********************************************************************/
 /*  Function:  Case insensitive DBCS memory compare                  */
@@ -108,8 +108,8 @@ UCHAR DBCS_Type(
 /* Function: Do DBCS string type validation                          */
 /*********************************************************************/
 {
-  PUCHAR   CStr;                       /* current scan location             */
-  PUCHAR   EndStr;                     /* end location                      */
+  const char *CStr;                    /* current scan location             */
+  const char *EndStr;                  /* end location                      */
   CHAR     rc;                         /* Function return code.             */
   BOOL     ChkFlag;                    /* Invalid string flag.              */
   size_t   StrLen;                     /* Input String length.              */
@@ -153,8 +153,8 @@ size_t RexxString::validDBCS()
 /*                   in logical characters                           */
 /*********************************************************************/
 {
-  PUCHAR   EndStr;                     /* end location                      */
-  PUCHAR   String;                     /* string scan pointer               */
+  const char *EndStr;                  /* end location                      */
+  const char *String;                  /* string scan pointer               */
   size_t   Length;                     /* byte length of the string         */
   size_t   CharLength;                 /* Input HugeString length.          */
   CHAR     BadChar[4];                 /* working buffer for errors         */
@@ -192,14 +192,14 @@ size_t RexxString::validDBCS()
 }
 
 size_t DBCS_CharacterCount(
-  PUCHAR   String,                     /* string scan pointer               */
+  const char *String,                  /* string scan pointer               */
   size_t   Length )                    /* string byte length                */
 /*********************************************************************/
 /* Function:         Counts logical characters in a section of a     */
 /*                   string                                          */
 /*********************************************************************/
 {
-  PUCHAR   EndStr;                     /* end location                      */
+  const char *EndStr;                  /* end location                      */
   size_t   CharLength;                 /* Input HugeString length.          */
 
   EndStr = String + Length;            /* point to end of string            */
@@ -243,7 +243,7 @@ RexxString *OptionalArg(
     if (Default == OREF_NULL)
       *Length = 0l;
     else
-      *Length = Default->length;
+      *Length = Default->getLength();
     return Default;                    /* give back the default string      */
   }                                    /* get the string value              */
   ArgString = optional_string(ArgString, Default, Position);
@@ -251,16 +251,16 @@ RexxString *OptionalArg(
   return ArgString;                    /* return the string value           */
 }
 
-PUCHAR ValidatePad(
+const char *ValidatePad(
   RexxString *PadString,               /* validated argument string         */
-  const PUCHAR Default )               /* default padding character         */
+  const char * Default )               /* default padding character         */
 /*********************************************************************/
 /* Function:         Validate a a padding character, returning length*/
 /*                   in logical characters.                          */
 /*********************************************************************/
 {
   if (PadString == OREF_NULL)          /* no pad given?                     */
-    return (PUCHAR)Default;            /* just give back the default        */
+    return Default;                    /* just give back the default        */
                                        /* validate the string               */
   if (ValidDBCS(PadString) != 1)
     report_exception1(Error_Incorrect_method_pad, PadString);
@@ -268,7 +268,7 @@ PUCHAR ValidatePad(
 }
 
 void DBCS_IncChar(
-  PUCHAR   *String,                    /* Input string.                     */
+  const char **String,                 /* Input string.                     */
   size_t   *Length,                    /* length of string                  */
   size_t   *CharLen )                  /* Extract length.                   */
 /*********************************************************************/
@@ -276,8 +276,8 @@ void DBCS_IncChar(
 /*              of characters                                        */
 /*********************************************************************/
 {
-  PUCHAR    CStr;                      /* current string location           */
-  PUCHAR    EndStr;                    /* end of string                     */
+  const char *CStr;                    /* current string location           */
+  const char *EndStr;                  /* end of string                     */
 
   CStr = *String;                      /* point to the string               */
   EndStr = CStr + *Length;             /* point to the end of string        */
@@ -300,7 +300,7 @@ void DBCS_IncChar(
 }
 
 void DBCS_IncByte(
-  PUCHAR   *String,                    /* Input string.                     */
+  const char **String,                 /* Input string.                     */
   size_t   *Length,                    /* length of string                  */
   size_t   *ByteLen )                  /* Extract length.                   */
 /*********************************************************************/
@@ -308,8 +308,8 @@ void DBCS_IncByte(
 /*              of bytes.  Will not split a DBCS character           */
 /*********************************************************************/
 {
-  PUCHAR    CStr;                      /* current string location           */
-  PUCHAR    EndStr;                    /* end of string                     */
+  const char *CStr;                    /* current string location           */
+  const char *EndStr;                  /* end of string                     */
 
   CStr = *String;                      /* copy the pointer                  */
   EndStr = CStr + *Length;             /* point to the end of string        */
@@ -335,14 +335,14 @@ void DBCS_IncByte(
 }
 
 void DBCS_SkipBlanks(
-  PUCHAR   *String,                    /* point to advance                  */
+  const char **String,                 /* point to advance                  */
   size_t   *StringLength )             /* string length                     */
 /*********************************************************************/
 /*   Function:          Skip leading SBCS/DBCS blanks and decrement  */
 /*                      count.                                       */
 /*********************************************************************/
 {
-  PUCHAR   Scan;                       /* scan pointer                      */
+  const char *Scan;                    /* scan pointer                      */
   size_t   Length;                     /* length to scan                    */
 
   Scan = *String;                      /* point to data                     */
@@ -366,13 +366,13 @@ void DBCS_SkipBlanks(
 }
 
 void DBCS_SkipNonBlanks(
-  PUCHAR   *String,                    /* point to advance                  */
+  const char **String,                 /* point to advance                  */
   size_t   *StringLength )             /* string length                     */
 /*********************************************************************/
 /*   Function:          Skip SBCS/DBCS non-blanks and decrement size.*/
 /*********************************************************************/
 {
-  PUCHAR   Scan;                       /* scan pointer                      */
+  const char *Scan;                    /* scan pointer                      */
   size_t   Length;                     /* length to scan                    */
 
   Scan = *String;                      /* point to data                     */
@@ -397,15 +397,15 @@ void DBCS_SkipNonBlanks(
 }
 
 void DBCS_StripBlanks(
-  PUCHAR    *String,                   /* point to advance                  */
+  const char **String,                 /* point to advance                  */
   size_t    *StringLength )            /* string length                     */
 /*********************************************************************/
 /*   Function:          Adjust string length, removing blanks        */
 /*********************************************************************/
 {
   size_t   Count;                      /* size to scan                      */
-  PUCHAR   BlankStr;                   /* start of last blank part          */
-  PUCHAR   Scan;                       /* scan pointer                      */
+  const char *BlankStr;                /* start of last blank part          */
+  const char *Scan;                    /* scan pointer                      */
 
   BlankStr = NULL;                     /* null the pointer                  */
   Scan = *String;                      /* copy the pointer                  */
@@ -442,8 +442,8 @@ void DBCS_StripBlanks(
 }
 
 INT  DBCS_CaselessCompare(
-  PUCHAR    Str1,                      /* String to be compared.            */
-  PUCHAR    Str2,                      /* String to be compared.            */
+  const char *Str1,                    /* String to be compared.            */
+  const char *Str2,                    /* String to be compared.            */
   size_t    Length )                   /* String2 length                    */
 /*********************************************************************/
 /* Function:    Compare the two strings, ignoring the case.          */
@@ -485,11 +485,11 @@ INT  DBCS_CaselessCompare(
 }
 
 INT  DBCS_CharCompare(
-  PUCHAR    Str1,                      /* String to be compared.            */
+  const char *Str1,                    /* String to be compared.            */
   size_t    Len1,                      /* String1 length                    */
-  PUCHAR    Str2,                      /* String to be compared.            */
+  const char *Str2,                    /* String to be compared.            */
   size_t    Len2,                      /* String2 length                    */
-  PUCHAR    Pad,                       /* Padding character.                */
+  const char *Pad,                     /* Padding character.                */
   size_t   *Diff )                     /* Unmatched position, 0 origin      */
 /*********************************************************************/
 /* Function:    Compare the two strings and return the result and the*/
@@ -500,8 +500,8 @@ INT  DBCS_CharCompare(
   size_t    PadSize;                   /* pad character length              */
   size_t    Cnt1;                      /* Str1 compare length               */
   size_t    Cnt2;                      /* Str2 compare length               */
-  PUCHAR    Comp1;                     /* compare position 1                */
-  PUCHAR    Comp2;                     /* compare position 2                */
+  const char *Comp1;                   /* compare position 1                */
+  const char *Comp2;                   /* compare position 2                */
 
   *Diff = 0L;                          /* Different position                */
   rc = COMP_EQUAL;                     /* Comparison default.               */
@@ -509,7 +509,7 @@ INT  DBCS_CharCompare(
   if (!Pad)                            /* if no pad, length is 0            */
     PadSize = 0;
   else
-    PadSize = strlen((PCHAR)Pad);      /* get pad size                      */
+    PadSize = strlen(Pad);             /* get pad size                      */
                                        /* while still characters            */
                                        /* left and they still compare       */
   while (((Len1) || (Len2)) && (rc == COMP_EQUAL)) {
@@ -582,10 +582,10 @@ INT  DBCS_CharCompare(
   return  rc;                          /* Return the result.                */
 }
 
-PUCHAR DBCS_StrStr(
-  PUCHAR    Haystack,                  /* haystack pointer                  */
+const char * DBCS_StrStr(
+  const char *Haystack,                /* haystack pointer                  */
   size_t    HaystackLen,               /* length of haystack                */
-  PUCHAR    Needle,                    /* needle pointer                    */
+  const char *Needle,                  /* needle pointer                    */
   size_t    NeedleLen )                /* lengthy of needle                 */
 /*********************************************************************/
 /*  Function:                   A pointer to the beginning           */
@@ -595,8 +595,8 @@ PUCHAR DBCS_StrStr(
 /*                              returned                             */
 /*********************************************************************/
 {
-  PUCHAR   End;                        /* end of string                     */
-  PUCHAR   Retval;                     /* return value                      */
+  const char *End;                     /* end of string                     */
+  const char *Retval;                  /* return value                      */
 
   Retval = NULL;                       /* set default return value          */
   if (NeedleLen <= HaystackLen) {      /* short enough to search?           */
@@ -618,14 +618,14 @@ PUCHAR DBCS_StrStr(
 }
 
 size_t DBCS_ByteLen(
-  PUCHAR    String,                    /* Input string.                     */
+  const char *String,                  /* Input string.                     */
   size_t    Length,                    /* string length                     */
   size_t    CharLen )                  /* Extract length.                   */
 /*********************************************************************/
 /* Function:    Return the byte length for a set of characters       */
 /*********************************************************************/
 {
-  PUCHAR    Temp;                      /* temporary pointer                 */
+  const char *Temp;                    /* temporary pointer                 */
 
   Temp = String;                       /* copy the pointer                  */
                                        /* step forward chars                */
@@ -642,11 +642,11 @@ size_t DBCS_ByteLen(
 /*********************************************************************/
 
 size_t  DBCS_MemChar(
-  PUCHAR    ch,                        /* search character                  */
-  PUCHAR    String,                    /* searched string                   */
+  const char *ch,                      /* search character                  */
+  const char *String,                  /* searched string                   */
   size_t    Length )                   /* size to search                    */
 {
-  PUCHAR    EndStr;                    /* search end position               */
+  const char *EndStr;                  /* search end position               */
   size_t    Position;                  /* located position                  */
   size_t    Count;                     /* character count                   */
 
@@ -690,7 +690,7 @@ size_t  DBCS_MemChar(
 /*********************************************************************/
 
 size_t  DBCS_WordLen(
-  PUCHAR    String,                    /* Input string.                     */
+  const char *String,                  /* Input string.                     */
   size_t    Length )                   /* input length                      */
 {
   size_t   Count;                      /* Current count of words            */
@@ -722,9 +722,9 @@ size_t  DBCS_WordLen(
 /*********************************************************************/
 
 size_t  DBCS_NextWord(
-  PUCHAR    *String,                   /* input string                      */
+  const char **String,                 /* input string                      */
   size_t    *StringLength,             /* string length                     */
-  PUCHAR    *NextString )              /* next word position                */
+  const char **NextString )            /* next word position                */
 {
   size_t     WordStart;                /* Starting point of word            */
 
@@ -749,7 +749,7 @@ size_t  DBCS_NextWord(
 /*********************************************************************/
 
 void DBCS_MemUpper(
-  PUCHAR     String,                   /* input string                      */
+  char *String,                        /* input string                      */
   size_t     Length )                  /* string length                     */
 {
   while (Length) {                     /* While string                      */
@@ -770,7 +770,7 @@ void DBCS_MemUpper(
 /*********************************************************************/
 
 void DBCS_MemLower(
-  PUCHAR     String,                   /* input string                      */
+  char *String,                        /* input string                      */
   size_t     Length )                  /* string length                     */
 {
   while (Length) {                     /* While string                      */
@@ -792,14 +792,14 @@ void DBCS_MemLower(
 /*********************************************************************/
 
 void DBCS_SetPadChar(
-  PUCHAR    String,                    /* Input string.                     */
+  char *String,                        /* Input string.                     */
   size_t    NumPad,                    /* Number of pad characters          */
-  PUCHAR    PadChar )                  /* Pad character                     */
+  const char *PadChar )                /* Pad character                     */
 {
   size_t    i;                         /* loop counter                      */
   size_t    PadSize;                   /* size of padding character         */
 
-  PadSize = strlen((PCHAR)PadChar);    /* get the pad size                  */
+  PadSize = strlen(PadChar);           /* get the pad size                  */
   if (PadSize == SBCS_BYTELEN)         /* if padding with singles           */
                                        /* add space characters              */
     memset(String, *PadChar, NumPad);
@@ -1186,10 +1186,10 @@ static USHORT *dbcstable[]=
 /*********************************************************************/
 
 void DBCS_ConvToDBCS(
-  PUCHAR    input,                     /* Converted DBCS.                   */
-  PUCHAR   *output )                   /* Target SBCS.                      */
+  const char *input,                   /* Converted DBCS.                   */
+  char **output )                      /* Target SBCS.                      */
 {
-  PUCHAR    outspot;                   /* output spot                       */
+  char *outspot;                       /* output spot                       */
   union convert {                      /* Use to get DBCS bytes             */
     USHORT convchar;                   /* From USHORT DBCS code.            */
     UCHAR conv[2];                     /* DBCS 1ST and 2ND byte.            */
@@ -1255,10 +1255,10 @@ void DBCS_ConvToDBCS(
 /*********************************************************************/
 
 void DBCS_ConvToSBCS(
-  PUCHAR    input,                     /* Converted DBCS.                   */
-  PUCHAR   *output )                   /* Target SBCS.                      */
+  const char *input,                   /* Converted DBCS.                   */
+  char **output )                      /* Target SBCS.                      */
 {
-  PUCHAR    outspot;                   /* output spot                       */
+  char *outspot;                       /* output spot                       */
   size_t i;                            /* Use for index of table.           */
   union convert {                      /* Use to get DBCS bytes             */
     USHORT convchar;                   /* From unsigned int DBCS            */
@@ -1331,7 +1331,7 @@ size_t RexxString::DBCSmovePointer(size_t   Start,
 {
   size_t    BaseLen;                   /* length of base string             */
   size_t    TailLen;                   /* length of tail string             */
-  PUCHAR    Cpos;                      /* character position                */
+  const char *Cpos;                    /* character position                */
   size_t    Result;                    /* final resulting offset            */
 
   if (CharLen >= 1) {                  /* If Charlen is zero or             */
@@ -1373,12 +1373,12 @@ size_t RexxString::DBCSmovePointer(size_t   Start,
 /*   string2.                                                        */
 /*********************************************************************/
 
-PUCHAR DBCS_strpbrk(
-  PUCHAR    String,                    /* searched string                   */
+const char * DBCS_strpbrk(
+  const char *String,                  /* searched string                   */
   size_t    StringLength,              /* length of searched string         */
-  PCHAR     Reference )                /* set of reference characters       */
+  const char *Reference )              /* set of reference characters       */
 {
-  PUCHAR    Match;                     /* match location                    */
+  const char *Match;                   /* match location                    */
 
   Match = NULL;                        /* no hits yet                       */
   while (StringLength--) {             /* loop through string one           */
@@ -1402,12 +1402,12 @@ PUCHAR DBCS_strpbrk(
 /* DESCRIPTION : Find last occurence of SBCS character in DBCS string*/
 /*********************************************************************/
 
-PUCHAR DBCS_strrchr(
-  PUCHAR    String,                    /* searched string                   */
+const char * DBCS_strrchr(
+  const char *String,                  /* searched string                   */
   size_t    Length,                    /* string length                     */
   UCHAR     ch )                       /* searched character                */
 {
-  PUCHAR    Match;                     /* match location                    */
+  const char *    Match;                     /* match location                    */
 
   Match = NULL;                        /* no match yet                      */
 
@@ -1431,12 +1431,12 @@ PUCHAR DBCS_strrchr(
 /*   string2.                                                        */
 /*********************************************************************/
 
-PUCHAR DBCS_strspn(
-  PUCHAR    String,                    /* searched string                   */
+const char * DBCS_strspn(
+  const char *String,                  /* searched string                   */
   size_t    StringLength,              /* length of searched string         */
-  PCHAR     Reference )                /* set of reference characters       */
+  const char *Reference )              /* set of reference characters       */
 {
-  PUCHAR    Match;                     /* match location                    */
+  const char *Match;                   /* match location                    */
 
   Match = NULL;                        /* no hits yet                       */
   while (StringLength--) {             /* loop through string one           */
@@ -1465,8 +1465,8 @@ INT RexxString::DBCSstringCompare(RexxString *Right )
   size_t    CharNum;                   /* Number of character.              */
   size_t    LeftLength;                /* left string length                */
   size_t    RightLength;               /* right string length               */
-  PUCHAR    LeftPtr;                   /* left string pointer               */
-  PUCHAR    RightPtr;                  /* right string pointer              */
+  const char *LeftPtr;                 /* left string pointer               */
+  const char *RightPtr;                /* right string pointer              */
 
   ValidDBCS(this);                     /* validate both strings             */
   ValidDBCS(Right);
@@ -1486,7 +1486,7 @@ INT RexxString::DBCSstringCompare(RexxString *Right )
                                        /* do the compare                    */
   return DBCS_CharCompare(LeftPtr, LeftLength,
                           RightPtr, RightLength,
-                          (PUCHAR)" ", &CharNum);
+                          " ", &CharNum);
 }
 
 /*********************************************************************/
@@ -1495,16 +1495,16 @@ INT RexxString::DBCSstringCompare(RexxString *Right )
 
 RexxString *RexxString::DBCSreverse()
 {
-  PUCHAR Sptr;                         /* Map of current bytes.             */
-  PUCHAR Dptr;                         /* Map of buffer bytes.              */
-  PUCHAR Endptr;                       /* End position for reverse          */
+  const char * Sptr;                   /* Map of current bytes.             */
+  char * Dptr;                         /* Map of buffer bytes.              */
+  const char * Endptr;                 /* End position for reverse          */
   RexxString *Retval;                  /* return value                      */
 
   ValidDBCS(this);                     /* validate input string             */
   Retval = raw_string(this->length);   /* get an output string              */
   Sptr = STRPTR(this);                 /* start of input                    */
                                        /* point to output location          */
-  Dptr = STRPTR(Retval) + STRLEN(Retval);
+  Dptr = DATAPTR(Retval) + STRLEN(Retval);
   Endptr = Sptr + STRLEN(this);        /* get an end position also          */
 
   while (Sptr < Endptr) {              /* Do Reverse HugeString             */
@@ -1532,9 +1532,9 @@ RexxString *RexxString::DBCSsubstr(RexxInteger *position,
   size_t   StartPos;                   /* substr start position             */
   size_t   SubstrSize;                 /* size of substring                 */
   size_t   PadSize;                    /* size of pad character             */
-  PUCHAR   PadChar;                    /* pointer to pad                    */
-  PUCHAR   SubPtr;                     /* pointer to substring              */
-  PUCHAR   EndPtr;                     /* pointer to substring end          */
+  const char *PadChar;                 /* pointer to pad                    */
+  const char *SubPtr;                  /* pointer to substring              */
+  const char *EndPtr;                  /* pointer to substring end          */
   size_t   StringLength;               /* byte length of input string       */
   size_t   RealSubLen;                 /* byte length of substring          */
   size_t   Length;                     /* requested length                  */
@@ -1551,8 +1551,8 @@ RexxString *RexxString::DBCSsubstr(RexxInteger *position,
                                        /* get the result length             */
   SubstrSize = optional_length(strLength, Length, ARG_TWO);
                                        /* validate the pad character        */
-  PadChar = ValidatePad(pad, (const PUCHAR)" ");
-  PadSize = strlen((PCHAR)PadChar);    /* get the pad size too              */
+  PadChar = ValidatePad(pad, " ");
+  PadSize = strlen(PadChar);           /* get the pad size too              */
   if (!SubstrSize)                     /* zero bytes requested?             */
     Retval = OREF_NULLSTRING;          /* this is a null string             */
   else {
@@ -1564,7 +1564,7 @@ RexxString *RexxString::DBCSsubstr(RexxInteger *position,
                                        /* get padded string                 */
       Retval = raw_string(SubstrSize * PadSize);
                                        /* pad to the length                 */
-      DBCS_SetPadChar(STRPTR(Retval), SubstrSize, PadChar);
+      DBCS_SetPadChar(DATAPTR(Retval), SubstrSize, PadChar);
       Retval->generateHash();          /* done building the string          */
     }
     else {
@@ -1573,16 +1573,16 @@ RexxString *RexxString::DBCSsubstr(RexxInteger *position,
       DBCS_IncChar(&EndPtr, &StringLength, &SubstrSize);
       if (!SubstrSize)                 /* get it all?                       */
                                        /* just extract the piece            */
-        Retval = new_string((PCHAR)SubPtr, EndPtr - SubPtr);
+        Retval = new_string(SubPtr, EndPtr - SubPtr);
       else {                           /* need to pad                       */
                                        /* get length of substring           */
         RealSubLen = EndPtr - SubPtr;
                                        /* allocate a buffer                 */
         Retval = raw_string((SubstrSize * PadSize) + RealSubLen);
                                        /* copy string piece                 */
-        memcpy(STRPTR(Retval), SubPtr, RealSubLen);
+        memcpy(DATAPTR(Retval), SubPtr, RealSubLen);
                                        /* pad to the length                 */
-        DBCS_SetPadChar(STRPTR(Retval) + RealSubLen, SubstrSize, PadChar);
+        DBCS_SetPadChar(DATAPTR(Retval) + RealSubLen, SubstrSize, PadChar);
         Retval->generateHash();        /* done building the string          */
       }
     }
@@ -1603,9 +1603,9 @@ RexxString *RexxString::DBCSdelstr(RexxInteger *position,
   size_t   StringLength;               /* length of input string            */
   size_t   FrontLength;                /* length of front part              */
   size_t   BackLength;                 /* length of back part               */
-  PUCHAR   FrontEnd;                   /* end of front part                 */
-  PUCHAR   BackEnd;                    /* end of back part                  */
-  PUCHAR   BackStart;                  /* start of back part                */
+  const char *FrontEnd;                /* end of front part                 */
+  const char *BackEnd;                 /* end of back part                  */
+  const char *BackStart;               /* start of back part                */
   RexxString *Retval;                  /* return string                     */
 
   StringChar = ValidDBCS(this);        /* get string length                 */
@@ -1627,7 +1627,7 @@ RexxString *RexxString::DBCSdelstr(RexxInteger *position,
     DBCS_IncChar(&BackStart, &StringLength, &DeleteSize);
     if (DeleteSize) {                  /* used it up?                       */
                                        /* just copy the front               */
-      Retval = new_string((PCHAR)STRPTR(this), FrontEnd - STRPTR(this));
+      Retval = new_string(STRPTR(this), FrontEnd - STRPTR(this));
     }
     else {
                                        /* point to the end                  */
@@ -1639,8 +1639,8 @@ RexxString *RexxString::DBCSdelstr(RexxInteger *position,
                                        /* allocate the return string        */
       Retval = raw_string(BackLength + FrontLength);
                                        /* copy the front and back           */
-      memcpy(STRPTR(Retval), STRPTR(this), FrontLength);
-      memcpy(STRPTR(Retval) + FrontLength, BackStart, BackLength);
+      memcpy(DATAPTR(Retval), STRPTR(this), FrontLength);
+      memcpy(DATAPTR(Retval) + FrontLength, BackStart, BackLength);
       Retval->generateHash();          /* done building the string          */
     }
   }
@@ -1658,9 +1658,9 @@ RexxString *RexxString::DBCSsubWord(RexxInteger *position,
   size_t   StartPos;                   /* substr start position             */
   size_t   SubwordSize;                /* size of substring                 */
   size_t   StringLength;               /* byte length of input string       */
-  PUCHAR   Scan;                       /* scan pointer                      */
-  PUCHAR   SubwordPtr;                 /* pointer to subword part           */
-  PUCHAR   WordPtr;                    /* pointer to word end               */
+  const char *Scan;                    /* scan pointer                      */
+  const char *SubwordPtr;              /* pointer to subword part           */
+  const char *WordPtr;                 /* pointer to word end               */
   size_t   WordLength;                 /* length of word start              */
   RexxString *Retval;                  /* return string                     */
 
@@ -1704,7 +1704,7 @@ RexxString *RexxString::DBCSsubWord(RexxInteger *position,
                                        /* get substring size                */
       WordLength = (WordPtr - SubwordPtr);
                                        /* allocate output string            */
-      Retval = new_string((PCHAR)SubwordPtr, WordLength);
+      Retval = new_string(SubwordPtr, WordLength);
     }
     else
       Retval = OREF_NULLSTRING;        /* start is past end--NULL           */
@@ -1724,10 +1724,10 @@ RexxString *RexxString::DBCSdelWord(RexxInteger *position,
   size_t   DeleteSize;                 /* size of deletion                  */
   size_t   StringLength;               /* length of input string            */
   size_t   FrontLength;                /* length of front part              */
-  PUCHAR   BackStart;                  /* start of back part                */
-  PUCHAR   FrontPtr;                   /* start of front part               */
-  PUCHAR   Scan;                       /* scanning pointer                  */
-  PUCHAR   CopyPtr;                    /* pointer for copying strings       */
+  const char *BackStart;               /* start of back part                */
+  const char *FrontPtr;                /* start of front part               */
+  const char *Scan;                    /* scanning pointer                  */
+  char *CopyPtr;                       /* pointer for copying strings       */
   RexxString *Retval;                  /* return string                     */
 
   StringChar = ValidDBCS(this);        /* get string length                 */
@@ -1772,7 +1772,7 @@ RexxString *RexxString::DBCSdelWord(RexxInteger *position,
                                        /* allocate output string            */
       BackStart = Scan;                /* save end position                 */
       Retval = raw_string(FrontLength + StringLength);
-      CopyPtr = STRPTR(Retval);        /* get string start                  */
+      CopyPtr = DATAPTR(Retval);       /* get string start                  */
       if (FrontLength) {               /* have a front part?                */
                                        /* copy the front                    */
         memcpy(CopyPtr, FrontPtr, FrontLength);
@@ -1796,18 +1796,18 @@ RexxString *RexxString::DBCSdelWord(RexxInteger *position,
 RexxString *RexxString::DBCSstrip(RexxString *option,
                                   RexxString *stripchar)
 {
-  PUCHAR   CStr;                       /* scan string                       */
-  PUCHAR   EndStr;                     /* end of string                     */
-  PUCHAR   CStr2;                      /* second scan string                */
-  PUCHAR   StripStart;                 /* start of stripped field           */
-  UCHAR    Option;                     /* Strip option.                     */
+  const char *CStr;                    /* scan string                       */
+  const char *EndStr;                  /* end of string                     */
+  const char *CStr2;                   /* second scan string                */
+  const char *StripStart;              /* start of stripped field           */
+  char     Option;                     /* Strip option.                     */
   size_t   RemSize;                    /* size of removed character         */
-  PUCHAR   RemChar;                    /* Removed character                 */
+  const char *RemChar;                 /* Removed character                 */
 
   ValidDBCS(this);                     /* validate the string               */
                                        /* and the pad character             */
-  RemChar = ValidatePad(stripchar, (const PUCHAR)" ");
-  RemSize = strlen((PCHAR)RemChar);    /* get the character size            */
+  RemChar = ValidatePad(stripchar, " ");
+  RemSize = strlen(RemChar);           /* get the character size            */
                                        /* get the option character          */
   Option = option_character(option, STRIP_BOTH, ARG_ONE);
                                        /* must be a valid option            */
@@ -1882,7 +1882,7 @@ RexxString *RexxString::DBCSstrip(RexxString *option,
   if (!StripStart)                     /* nothing to strip                  */
     StripStart = EndStr;               /* take to the end                   */
                                        /* copy the result part              */
-  return new_string((PCHAR)CStr, (StripStart - CStr));
+  return new_string(CStr, (StripStart - CStr));
 }
 
 /*********************************************************************/
@@ -1904,10 +1904,10 @@ RexxInteger *RexxString::DBCSwordPos(RexxString *phrase,
                                     RexxInteger *pstart)
 {
   RexxInteger *Retval;                 /* return value                      */
-  PUCHAR   Needle;                     /* start of needle string            */
-  PUCHAR   Haystack;                   /* current haystack positon          */
-  PUCHAR   NextNeedle;                 /* next search position              */
-  PUCHAR   NextHaystack;               /* next search position              */
+  const char *   Needle;               /* start of needle string            */
+  const char *   Haystack;             /* current haystack positon          */
+  const char *   NextNeedle;           /* next search position              */
+  const char *   NextHaystack;         /* next search position              */
   size_t   Count;                      /* current haystack word pos         */
   size_t   NeedleWords;                /* needle word count                 */
   size_t   HaystackWords;              /* haystack word count               */
@@ -1919,10 +1919,10 @@ RexxInteger *RexxString::DBCSwordPos(RexxString *phrase,
   size_t   HaystackWordLength;         /* length of haystack word           */
   size_t   NeedleScanLength;           /* temporary scan length             */
   size_t   HaystackScanLength;         /* temporary scan length             */
-  PUCHAR   NeedlePosition;             /* temporary pointers for            */
-  PUCHAR   HaystackPosition;           /* the searches                      */
-  PUCHAR   NextHaystackPtr;            /* pointer to next word              */
-  PUCHAR   NextNeedlePtr;              /* pointer to next word              */
+  const char *   NeedlePosition;       /* temporary pointers for            */
+  const char *   HaystackPosition;     /* the searches                      */
+  const char *   NextHaystackPtr;      /* pointer to next word              */
+  const char *   NextNeedlePtr;        /* pointer to next word              */
   size_t   i;                          /* loop counter                      */
   ValidDBCS(this);                     /* validate haystack                 */
                                        /* get nuber of words in haystack    */
@@ -2049,14 +2049,14 @@ RexxInteger *RexxString::DBCSdatatype(INT  DataType )
 RexxInteger *RexxString::DBCScompare(RexxString *string2,
                                      RexxString *pad)
 {
-  PUCHAR   PadChar;                    /* Padding char for CharComp.        */
+  const char *   PadChar;              /* Padding char for CharComp.        */
   size_t   CharNum;                    /* Difference char position.         */
 
   ValidDBCS(this);                     /* validate first string             */
                                        /* validate second string            */
   string2 = RequiredArg(string2, &CharNum, ARG_ONE);
                                        /* validate the pad character        */
-  PadChar = ValidatePad(pad, (const PUCHAR)" ");
+  PadChar = ValidatePad(pad, " ");
                                        /* pass to character compare         */
   DBCS_CharCompare(STRDESC(this), STRDESC(string2), PadChar, &CharNum);
   return new_integer(CharNum);         /* format the result                 */
@@ -2115,11 +2115,11 @@ RexxString *RexxString::DBCSspace(RexxInteger *space_count,
                                   RexxString *pad)
 {
   size_t      Spaces;                  /* requested spacing                 */
-  PUCHAR      PadChar;                 /* pad character                     */
+  const char *PadChar;                 /* pad character                     */
   size_t      PadSize;                 /* size of the pad character         */
-  PUCHAR      Current;                 /* current pointer position          */
-  PUCHAR      Word;                    /* current word pointer              */
-  PUCHAR      NextSite;                /* next word                         */
+  char *Current;                       /* current pointer position          */
+  const char *Word;                    /* current word pointer              */
+  const char *NextSite;                /* next word                         */
   size_t      Count;                   /* count of words                    */
   size_t      Length;                  /* remaining length                  */
   size_t      WordLength;              /* word size                         */
@@ -2130,8 +2130,8 @@ RexxString *RexxString::DBCSspace(RexxInteger *space_count,
                                        /* get the spacing count             */
   Spaces = optional_length(space_count, 1, ARG_ONE);
                                        /* get the padding character         */
-  PadChar = ValidatePad(pad, (const PUCHAR)" ");
-  PadSize = strlen((PCHAR)PadChar);    /* get the pad size also             */
+  PadChar = ValidatePad(pad, " ");
+  PadSize = strlen(PadChar);           /* get the pad size also             */
 
   Length = STRLEN(this);               /* get the string length             */
   Count = 0;                           /* no words yet                      */
@@ -2153,7 +2153,7 @@ RexxString *RexxString::DBCSspace(RexxInteger *space_count,
     Count--;                           /* step back one                     */
                                        /* get space for output              */
     Retval = raw_string(WordSize + Count * (Spaces * PadSize));
-    Current = STRPTR(Retval);          /* point to output area              */
+    Current = DATAPTR(Retval);         /* point to output area              */
 
     Length = STRLEN(this);             /* recover the length                */
     Word = STRPTR(this);               /* point to the string               */
@@ -2187,20 +2187,20 @@ RexxString *RexxString::DBCSspace(RexxInteger *space_count,
 RexxString *RexxString::DBCSleft(RexxInteger *plength,
                                  RexxString *pad)
 {
-  PUCHAR   Scan;                       /* scanning pointer                  */
-  PUCHAR   StringPtr;                  /* scanning pointer                  */
+  const char *Scan;                    /* scanning pointer                  */
+  const char *StringPtr;               /* scanning pointer                  */
   size_t   Length;                     /* input string length               */
   size_t   ReqCharLen;                 /* Length of padded new.             */
   size_t   PadSize;                    /* size of pad character             */
-  PUCHAR   PadChar;                    /* pad character pointer             */
+  const char *   PadChar;                    /* pad character pointer             */
   RexxString *Retval;                  /* return value                      */
 
   ValidDBCS(this);                     /* validate first argument           */
                                        /* get the substring length          */
   ReqCharLen = get_length(plength, ARG_ONE);
                                        /* get the padding character         */
-  PadChar = ValidatePad(pad, (const PUCHAR)" ");
-  PadSize = strlen((PCHAR)PadChar);    /* get the pad size too              */
+  PadChar = ValidatePad(pad, " ");
+  PadSize = strlen(PadChar);           /* get the pad size too              */
 
   if (!ReqCharLen)                     /* request zero characters?          */
     Retval = OREF_NULLSTRING;          /* this is a null string             */
@@ -2212,15 +2212,15 @@ RexxString *RexxString::DBCSleft(RexxInteger *plength,
     DBCS_IncChar(&Scan, &Length, &ReqCharLen);
     if (!ReqCharLen)                   /* that many available?              */
                                        /* copy the string part              */
-      Retval = new_string((PCHAR)StringPtr, (Scan - StringPtr));
+      Retval = new_string(StringPtr, (Scan - StringPtr));
     else {                             /* need to pad                       */
       Length = STRLEN(this);           /* get string length                 */
                                        /* allocate the return area          */
       Retval = raw_string(Length + (ReqCharLen * PadSize));
                                        /* copy string part                  */
-      memcpy(STRPTR(Retval), StringPtr, Length);
+      memcpy(DATAPTR(Retval), StringPtr, Length);
                                        /* fill pad characters               */
-      DBCS_SetPadChar(STRPTR(Retval) + Length, ReqCharLen, PadChar);
+      DBCS_SetPadChar(DATAPTR(Retval) + Length, ReqCharLen, PadChar);
       Retval->generateHash();          /* done building the string          */
     }
   }
@@ -2234,12 +2234,12 @@ RexxString *RexxString::DBCSleft(RexxInteger *plength,
 RexxString *RexxString::DBCSright(RexxInteger *plength,
                                   RexxString *pad)
 {
-  PUCHAR   Scan;                       /* scanning pointer                  */
+  const char *   Scan;                 /* scanning pointer                  */
   size_t   Length;                     /* input string length               */
   size_t   ReqCharLen;                 /* Length of padded new.             */
   size_t   PadSize;                    /* size of pad character             */
   size_t   CharSize;                   /* character size of input           */
-  PUCHAR   PadChar;                    /* pad character pointer             */
+  const char *   PadChar;              /* pad character pointer             */
   RexxString *Retval;                  /* return value                      */
   size_t   Remain;                     /* remainder size                    */
 
@@ -2248,8 +2248,8 @@ RexxString *RexxString::DBCSright(RexxInteger *plength,
                                        /* get the substring length          */
   ReqCharLen = get_length(plength, ARG_ONE);
                                        /* get the padding character         */
-  PadChar = ValidatePad(pad, (const PUCHAR)" ");
-  PadSize = strlen((PCHAR)PadChar);    /* get the pad size too              */
+  PadChar = ValidatePad(pad, " ");
+  PadSize = strlen(PadChar);           /* get the pad size too              */
 
   if (!ReqCharLen)                     /* request zero characters?          */
     Retval = OREF_NULLSTRING;          /* this is a null string             */
@@ -2263,7 +2263,7 @@ RexxString *RexxString::DBCSright(RexxInteger *plength,
                                        /* step to string start              */
       DBCS_IncChar(&Scan, &Length, &Remain);
                                        /* copy remaining portion            */
-      Retval = new_string((PCHAR)Scan, Length);
+      Retval = new_string(Scan, Length);
     }
     else {                             /* need to pad                       */
       Length = STRLEN(this);           /* get input size                    */
@@ -2271,9 +2271,9 @@ RexxString *RexxString::DBCSright(RexxInteger *plength,
                                        /* allocate the return               */
       Retval = raw_string(Length + Remain * PadSize);
                                        /* fill pad characters               */
-      DBCS_SetPadChar(STRPTR(Retval), Remain, PadChar);
+      DBCS_SetPadChar(DATAPTR(Retval), Remain, PadChar);
                                        /* copy string part                  */
-      memcpy(STRPTR(Retval) + (Remain * PadSize), STRPTR(this), Length);
+      memcpy(DATAPTR(Retval) + (Remain * PadSize), STRPTR(this), Length);
       Retval->generateHash();          /* done building the string          */
     }
   }
@@ -2288,12 +2288,12 @@ RexxString *RexxString::DBCScenter(RexxInteger *plength,
                                    RexxString *pad)
 {
   size_t   MainCharLen;                /* Character Length of main.         */
-  PUCHAR   Scan;                       /* scanning pointer                  */
-  PUCHAR   StringPtr;                  /* pointer to string start           */
+  const char *   Scan;                 /* scanning pointer                  */
+  const char *   StringPtr;            /* pointer to string start           */
   size_t   Length;                     /* input string length               */
   size_t   ReqCharLen;                 /* Length of padded new.             */
   size_t   PadSize;                    /* size of pad character             */
-  PUCHAR   PadChar;                    /* pad character pointer             */
+  const char *   PadChar;              /* pad character pointer             */
   RexxString *Retval;                  /* return value                      */
   size_t   Rlen;                       /* right pad size                    */
   size_t   Llen;                       /* left pad size                     */
@@ -2302,8 +2302,8 @@ RexxString *RexxString::DBCScenter(RexxInteger *plength,
                                        /* get the substring length          */
   ReqCharLen = get_length(plength, ARG_ONE);
                                        /* get the padding character         */
-  PadChar = ValidatePad(pad, (const PUCHAR)" ");
-  PadSize = strlen((PCHAR)PadChar);    /* get the pad size too              */
+  PadChar = ValidatePad(pad, " ");
+  PadSize = strlen(PadChar);           /* get the pad size too              */
                                        /* validate first argument           */
   if (!ReqCharLen)                     /* centered in 0 chars?              */
     Retval = OREF_NULLSTRING;          /* this is a null string             */
@@ -2319,15 +2319,15 @@ RexxString *RexxString::DBCScenter(RexxInteger *plength,
       Length = STRLEN(this);           /* calculate result size             */
                                        /* allocate result string            */
       Retval = raw_string((Llen + Rlen) * PadSize + Length);
-      Scan = STRPTR(Retval);           /* copy the pointer                  */
+      char *Out = DATAPTR(Retval);     /* copy the pointer                  */
                                        /* fill leading pad characters       */
-      DBCS_SetPadChar(Scan, Llen, PadChar);
-      Scan += Llen * PadSize;          /* step over pads                    */
+      DBCS_SetPadChar(Out, Llen, PadChar);
+      Out += Llen * PadSize;           /* step over pads                    */
                                        /* copy input string                 */
-      memcpy(Scan, STRPTR(this), Length);
-      Scan += Length;                  /* step to last pad location         */
-                                       /* fill trailing pad chars           */
-      DBCS_SetPadChar(Scan, Rlen, PadChar);
+      memcpy(Out, STRPTR(this), Length);
+      Out += Length;                  /* step to last pad location         */
+                                      /* fill trailing pad chars           */
+      DBCS_SetPadChar(Out, Rlen, PadChar);
       Retval->generateHash();          /* done building the string          */
     }
     else {                             /* needs truncation                  */
@@ -2344,7 +2344,7 @@ RexxString *RexxString::DBCScenter(RexxInteger *plength,
                                        /* step over middle part             */
       DBCS_IncChar(&Scan, &Length, &Rlen);
                                        /* copy the middle portion           */
-      Retval = new_string((PCHAR)StringPtr, (Scan - StringPtr));
+      Retval = new_string(StringPtr, (Scan - StringPtr));
     }
   }
   return Retval;                       /* Return centered string            */
@@ -2362,12 +2362,12 @@ RexxString *RexxString::DBCSinsert(RexxString *newStr,
   size_t   MainCharLen;                /* Character Length of main.         */
   size_t   NewCharLen;                 /* Character Length of new           */
   size_t   StartPos;                   /* Character Length of new           */
-  PUCHAR   Scan;                       /* scanning pointer                  */
-  PUCHAR   Target;                     /* pointer to string start           */
+  char *   Scan;                       /* scanning pointer                  */
+  const char *   Target;               /* pointer to string start           */
   size_t   Length;                     /* input string length               */
   size_t   ReqCharLen;                 /* Length of padded new.             */
   size_t   PadSize;                    /* size of pad character             */
-  PUCHAR   PadChar;                    /* pad character pointer             */
+  const char *   PadChar;              /* pad character pointer             */
   RexxString *Retval;                  /* return value                      */
   size_t   TargetSize;                 /* size of target string             */
   size_t   NewSize;                    /* size of new string                */
@@ -2388,8 +2388,8 @@ RexxString *RexxString::DBCSinsert(RexxString *newStr,
                                        /* needle length as the defaul       */
   ReqCharLen = optional_length(plength, NewCharLen, ARG_THREE);
                                        /* get the padding character         */
-  PadChar = ValidatePad(pad, (const PUCHAR)" ");
-  PadSize = strlen((PCHAR)PadChar);    /* get the pad size too              */
+  PadChar = ValidatePad(pad, " ");
+  PadSize = strlen(PadChar);           /* get the pad size too              */
   TargetSize = STRLEN(this);           /* get target byte size              */
 
   if (StartPos == 0) {                 /* inserting at the front?           */
@@ -2417,7 +2417,7 @@ RexxString *RexxString::DBCSinsert(RexxString *newStr,
   BuffSize = NewSize + TargetSize + ((ReqPadChar + ReqLeadPad) * PadSize);
   Retval = raw_string(BuffSize);       /* allocate the result               */
 
-  Scan = STRPTR(Retval);               /* point to start                    */
+  Scan = DATAPTR(Retval);              /* point to start                    */
   Target = STRPTR(this);               /* point to target start             */
 
   if (FCharLen) {                      /* have leading chars                */
@@ -2466,10 +2466,10 @@ RexxString *RexxString::DBCSoverlay(RexxString *newStr,
   size_t   MainCharLen;                /* Character Length of main.         */
   size_t   NewCharLen;                 /* Character Length of new           */
   size_t   StartPos;                   /* Character Length of new           */
-  PUCHAR   Scan;                       /* scanning pointer                  */
+  char *   Scan;                       /* scanning pointer                  */
   size_t   ReqCharLen;                 /* Length of padded new.             */
   size_t   PadSize;                    /* size of pad character             */
-  PUCHAR   PadChar;                    /* pad character pointer             */
+  const char *   PadChar;              /* pad character pointer             */
   RexxString *Retval;                  /* return value                      */
   size_t   NewSize;                    /* size of new string                */
   size_t   PadFNum;                    /* leading pad characters            */
@@ -2477,7 +2477,7 @@ RexxString *RexxString::DBCSoverlay(RexxString *newStr,
   size_t   FCharLen;                   /* front character length            */
   size_t   BCharLen;                   /* back character length             */
   size_t   BuffSize;                   /* size of return string             */
-  PUCHAR   BackPtr;                    /* point to back part                */
+  const char *   BackPtr;              /* point to back part                */
   size_t   FrontSize;                  /* byte size of front part           */
   size_t   BackSize;                   /* byte length of back part          */
 
@@ -2492,8 +2492,8 @@ RexxString *RexxString::DBCSoverlay(RexxString *newStr,
                                        /* needle length as the default      */
   ReqCharLen = optional_length(plength, NewCharLen, ARG_THREE);
                                        /* get the padding character         */
-  PadChar = ValidatePad(pad, (const PUCHAR)" ");
-  PadSize = strlen((PCHAR)PadChar);    /* get the pad size too              */
+  PadChar = ValidatePad(pad, " ");
+  PadSize = strlen(PadChar);           /* get the pad size too              */
                                        /* now truncate NCharLen             */
   NewCharLen = min(NewCharLen, ReqCharLen);
                                        /* number of front chars             */
@@ -2532,7 +2532,7 @@ RexxString *RexxString::DBCSoverlay(RexxString *newStr,
   BuffSize = NewSize + FrontSize + BackSize + ((PadFNum + PadBNum) * PadSize);
   Retval = raw_string(BuffSize);       /* allocate the result string        */
 
-  Scan = STRPTR(Retval);               /* point to start                    */
+  Scan = DATAPTR(Retval);               /* point to start                    */
 
   if (FCharLen) {                      /* have leading chars                */
                                        /* copy the front part               */
@@ -2573,8 +2573,8 @@ RexxInteger *RexxString::DBCSverify(RexxString *ref,
                                     RexxInteger *pstart)
 {
   size_t   CPos;                       /* Character position.               */
-  PUCHAR   CStr;                       /* scan pointer                      */
-  PUCHAR   EndStr;                     /* end pointer                       */
+  const char *   CStr;                 /* scan pointer                      */
+  const char *   EndStr;               /* end pointer                       */
   size_t   StartPos;                   /* Start position.                   */
   size_t   Length;                     /* string length                     */
   RexxInteger *Retval;                 /* returned value                    */
@@ -2651,13 +2651,13 @@ RexxInteger *RexxString::DBCSwords()
 size_t RexxString::DBCSpos(RexxString *needle,
                          size_t      StartPos)
 {
-  PUCHAR   Haystack;                   /* haystack pointer                  */
-  PUCHAR   Needle;                     /* needle pointer                    */
+  const char *Haystack;                /* haystack pointer                  */
+  const char *Needle;                  /* needle pointer                    */
   size_t   CharStart;                  /* Start position.                   */
   size_t   Position;                   /* current search position           */
   size_t   NeedleLength;               /* length of needle                  */
   size_t   HaystackLength;             /* length of haystack                */
-  PUCHAR   End;                        /* Last end position                 */
+  const char *   End;                  /* Last end position                 */
 
   ValidDBCS(this);                     /* validate both haystack...         */
                                        /* and the needle                    */
@@ -2707,13 +2707,13 @@ size_t RexxString::DBCSpos(RexxString *needle,
 size_t RexxString::DBCScaselessPos(RexxString *needle,
                                  size_t      StartPos)
 {
-  PUCHAR   Haystack;                   /* haystack pointer                  */
-  PUCHAR   Needle;                     /* needle pointer                    */
+  const char *   Haystack;             /* haystack pointer                  */
+  const char *   Needle;               /* needle pointer                    */
   size_t   CharStart;                  /* Start position.                   */
   size_t   Position;                   /* current search position           */
   size_t   NeedleLength;               /* length of needle                  */
   size_t   HaystackLength;             /* length of haystack                */
-  PUCHAR   End;                        /* Last end position                 */
+  const char *   End;                  /* Last end position                 */
 
   ValidDBCS(this);                     /* validate both haystack...         */
                                        /* and the needle                    */
@@ -2764,16 +2764,16 @@ size_t RexxString::DBCScaselessPos(RexxString *needle,
 RexxInteger *RexxString::DBCSlastPos(RexxString *needle,
                                     RexxInteger *pstart)
 {
-  PUCHAR   Haystack;                   /* pointer for haystack              */
+  const char *   Haystack;             /* pointer for haystack              */
   size_t   LastMatched;                /* last match position               */
   size_t   CharStart;                  /* Start position.                   */
   size_t   EndOffSet;                  /* Last possible match pos           */
   size_t   Position;                   /* current search position           */
   size_t   NeedleLength;               /* length of needle                  */
   size_t   HaystackLength;             /* length of haystack                */
-  PUCHAR   Needle;                     /* needle value                      */
-  PUCHAR   Current;                    /* current compare location          */
-  PUCHAR   End;                        /* Last end position                 */
+  const char *   Needle;               /* needle value                      */
+  const char *   Current;              /* current compare location          */
+  const char *   End;                  /* Last end position                 */
   RexxInteger *Retval;                 /* function return value             */
 
   HaystackLength = ValidDBCS(this);    /* validate both haystack...         */
@@ -2826,8 +2826,8 @@ RexxInteger *RexxString::DBCSwordIndex(RexxInteger *position)
 {
   size_t     Length;                   /* length of the string              */
   size_t     Count;                    /* required word count               */
-  PUCHAR     NextSite;                 /* next word                         */
-  PUCHAR     Word;                     /* word pointer                      */
+  const char *     NextSite;           /* next word                         */
+  const char *     Word;               /* word pointer                      */
   size_t     WordLength;               /* length of word                    */
   RexxInteger *Retval;                 /* function return value             */
   size_t     tempCount;
@@ -2868,8 +2868,8 @@ RexxInteger *RexxString::DBCSwordLength(RexxInteger *position)
 {
   size_t     Length;                   /* length of the string              */
   size_t     Count;                    /* required word count               */
-  PUCHAR     NextSite;                 /* next word                         */
-  PUCHAR     Word;                     /* word pointer                      */
+  const char *     NextSite;           /* next word                         */
+  const char *     Word;               /* word pointer                      */
   size_t     WordLength;               /* length of word                    */
   RexxInteger *Retval;                 /* function return value             */
   size_t     tempCount;
@@ -2908,8 +2908,8 @@ RexxInteger *RexxString::DBCSwordLength(RexxInteger *position)
 
 RexxString *RexxString::DBCSword(RexxInteger *position)
 {
-  PUCHAR      Word;                    /* current word pointer              */
-  PUCHAR      NextSite;                /* next word                         */
+  const char *      Word;              /* current word pointer              */
+  const char *      NextSite;          /* next word                         */
   size_t      Count;                   /* needed word position              */
   size_t      Length;                  /* remaining length                  */
   size_t      WordLength;              /* word size                         */
@@ -2933,7 +2933,7 @@ RexxString *RexxString::DBCSword(RexxInteger *position)
     }
     if (WordLength)                    /* have a word                       */
                                        /* extract the string                */
-      Retval = new_string((PCHAR)Word, WordLength);
+      Retval = new_string(Word, WordLength);
     else
       Retval = OREF_NULLSTRING;        /* no word, return a null            */
   }
@@ -2948,18 +2948,18 @@ RexxString *RexxString::DBCStranslate(RexxString *tableo,
                                       RexxString *tablei,
                                       RexxString *pad)
 {
-  PUCHAR   PadChar;                    /* Padding character                 */
-  PUCHAR   OutTable;                   /* Output table.                     */
-  PUCHAR   InTable;                    /* Input table.                      */
+  const char *   PadChar;              /* Padding character                 */
+  const char *   OutTable;             /* Output table.                     */
+  const char *   InTable;              /* Input table.                      */
   size_t   PadSize;                    /* size of pad character             */
-  PUCHAR   InputStr;                   /* input pointer                     */
-  PUCHAR   EndStr;                     /* end of input string               */
+  const char *   InputStr;             /* input pointer                     */
+  const char *   EndStr;               /* end of input string               */
   size_t   InputLength;                /* length of input string            */
   RexxString *Retval;                  /* returned string                   */
-  PUCHAR   CStr;                       /* output pointer                    */
+  char *   CStr;                       /* output pointer                    */
   size_t   OldCharLen;                 /* length of translated char         */
   size_t   BPos;                       /* position in translate table       */
-  PUCHAR   OutPtr;                     /* output table position             */
+  const char *   OutPtr;               /* output table position             */
   size_t   OutByteLength;              /* output byte length                */
   size_t   TempLength;                 /* temporary output length           */
   size_t   InByteLength;               /* input byte length                 */
@@ -2973,7 +2973,7 @@ RexxString *RexxString::DBCStranslate(RexxString *tableo,
                                        /* copy the argument                 */
     Retval = (RexxString *)this->copy();
                                        /* uppercase the string              */
-    DBCS_MemUpper(STRPTR(Retval), STRLEN(Retval));
+    DBCS_MemUpper(DATAPTR(Retval), STRLEN(Retval));
   }
   else {                               /* translation to perform            */
                                        /* validate the tables               */
@@ -2984,8 +2984,8 @@ RexxString *RexxString::DBCStranslate(RexxString *tableo,
     OutTable = STRPTR(tableo);         /* copy the pointer                  */
     InTable = STRPTR(tablei);          /* copy the pointer                  */
                                        /* get the padding character         */
-    PadChar = ValidatePad(pad, (const PUCHAR)" ");
-    PadSize = strlen((PCHAR)PadChar);  /* get the pad size too              */
+    PadChar = ValidatePad(pad, " ");
+    PadSize = strlen(PadChar);         /* get the pad size too              */
     InputStr = STRPTR(this);           /* copy the pointer                  */
     InputLength = STRLEN(this);        /* get the length                    */
     EndStr = InputStr + InputLength;   /* set the end pointer               */
@@ -2996,7 +2996,7 @@ RexxString *RexxString::DBCStranslate(RexxString *tableo,
                                        /* allow for worst case, each        */
                                        /* byte increased to 2 bytes         */
       Retval = raw_string(InputLength * 2);
-      CStr = STRPTR(Retval);           /* get the copy location             */
+      CStr = DATAPTR(Retval);          /* get the copy location             */
 
       while (InputStr < EndStr) {      /* Loop through input string         */
         if (IsDBCS(*InputStr))         /* is first character DBCS?          */
@@ -3050,7 +3050,7 @@ RexxString *RexxString::DBCStranslate(RexxString *tableo,
       }
       Retval->generateHash();          /* done building the string          */
                                        /* produce final result string       */
-      Retval = new_string((PCHAR)STRPTR(Retval), CStr - STRPTR(Retval));
+      Retval = new_string(STRPTR(Retval), CStr - DATAPTR(Retval));
     }
   }
   return Retval;                       /* Return translated string          */
@@ -3064,14 +3064,14 @@ RexxString *RexxString::dbLeft(RexxInteger *plength,
                                RexxString *pad,
                                RexxString *option)
 {
-  PUCHAR       PadChar;                /* pad character                     */
+  const char *       PadChar;          /* pad character                     */
   size_t       PadSize;                /* size of pad character             */
-  PUCHAR       DBCSPad;                /* DBCS pad character                */
-  PUCHAR       SBCSPad;                /* SBCS pad character                */
+  const char *       DBCSPad = NULL;   /* DBCS pad character                */
+  const char *       SBCSPad;          /* SBCS pad character                */
   size_t       DBCSPadNum;             /* number of DBCS pads               */
   size_t       SBCSPadNum;             /* number of SBCS pads               */
   size_t       ReqBytes;               /* requested bytes                   */
-  PUCHAR       String;                 /* input string pointer              */
+  const char *       String;           /* input string pointer              */
   size_t       Length;                 /* string length                     */
   UCHAR        Option;                 /* specified option                  */
   size_t       RemBytes;               /* remainder bytes                   */
@@ -3081,8 +3081,8 @@ RexxString *RexxString::dbLeft(RexxInteger *plength,
                                        /* get the substring length          */
   ReqBytes = get_length(plength, ARG_ONE);
                                        /* get the padding character         */
-  PadChar = ValidatePad(pad, (const PUCHAR)" ");
-  PadSize = strlen((PCHAR)PadChar);    /* get the pad size too              */
+  PadChar = ValidatePad(pad, " ");
+  PadSize = strlen(PadChar);           /* get the pad size too              */
                                        /* get the option character          */
   Option = option_character(option, DBCS_YES, ARG_THREE);
                                        /* must be a valid option            */
@@ -3093,7 +3093,7 @@ RexxString *RexxString::dbLeft(RexxInteger *plength,
     SBCSPad = PadChar;                 /* set SBCS pad.                     */
   else {                               /* Padding char is DBCS,             */
     DBCSPad = PadChar;                 /* Set DBCS padd.                    */
-    SBCSPad = (PUCHAR)" ";             /* Set Default pad as SBCS           */
+    SBCSPad = " ";                     /* Set Default pad as SBCS           */
   }
   if (ReqBytes == 0)                   /* requested null?                   */
     Retval = OREF_NULLSTRING;          /* this is easy                      */
@@ -3124,14 +3124,14 @@ RexxString *RexxString::dbLeft(RexxInteger *plength,
                                        /* get the return value              */
     Retval = raw_string(ReqBytes + RemBytes);
                                        /* copy string part                  */
-    memcpy(STRPTR(Retval), STRPTR(this), ReqBytes);
+    memcpy(DATAPTR(Retval), STRPTR(this), ReqBytes);
 
     if (DBCSPadNum > 0)                /* DBCS padding?                     */
                                        /* add them                          */
-      DBCS_SetPadChar(STRPTR(Retval) + ReqBytes, DBCSPadNum, DBCSPad);
+      DBCS_SetPadChar(DATAPTR(Retval) + ReqBytes, DBCSPadNum, DBCSPad);
 
     if (SBCSPadNum > 0)                /* SBCS padding?                     */
-      DBCS_SetPadChar(STRPTR(Retval) + ReqBytes + (DBCSPadNum * DBCS_BYTELEN), SBCSPadNum, SBCSPad);
+      DBCS_SetPadChar(DATAPTR(Retval) + ReqBytes + (DBCSPadNum * DBCS_BYTELEN), SBCSPadNum, SBCSPad);
     Retval->generateHash();            /* done building the string          */
   }
   return Retval;                       /* return extracted string           */
@@ -3145,14 +3145,14 @@ RexxString *RexxString::dbRight(RexxInteger *plength,
                                 RexxString *pad,
                                 RexxString *option)
 {
-  PUCHAR       PadChar;                /* pad character                     */
-  PUCHAR       DBCSPad;                /* DBCS pad character                */
-  PUCHAR       SBCSPad;                /* SBCS pad character                */
+  const char *       PadChar;          /* pad character                     */
+  const char *       DBCSPad = NULL;   /* DBCS pad character                */
+  const char *       SBCSPad;          /* SBCS pad character                */
   size_t       DBCSPadNum;             /* number of DBCS pads               */
   size_t       SBCSPadNum;             /* number of SBCS pads               */
   size_t       ReqBytes;               /* requested bytes                   */
   size_t       PadSize;                /* size of pad character             */
-  PUCHAR       String;                 /* input string pointer              */
+  const char * String;                 /* input string pointer              */
   size_t       Length;                 /* string length                     */
   UCHAR        Option;                 /* specified option                  */
   size_t       RemBytes;               /* remainder bytes                   */
@@ -3162,8 +3162,8 @@ RexxString *RexxString::dbRight(RexxInteger *plength,
                                        /* get the substring length          */
   ReqBytes = get_length(plength, ARG_ONE);
                                        /* get the padding character         */
-  PadChar = ValidatePad(pad, (const PUCHAR)" ");
-  PadSize = strlen((PCHAR)PadChar);    /* get the pad size too              */
+  PadChar = ValidatePad(pad, " ");
+  PadSize = strlen(PadChar);           /* get the pad size too              */
                                        /* get the option character          */
   Option = option_character(option, DBCS_YES, ARG_THREE);
                                        /* must be a valid option            */
@@ -3174,7 +3174,7 @@ RexxString *RexxString::dbRight(RexxInteger *plength,
     SBCSPad = PadChar;                 /* set SBCS pad.                     */
   else {                               /* Padding char is DBCS,             */
     DBCSPad = PadChar;                 /* Set DBCS padd.                    */
-    SBCSPad = (PUCHAR)" ";             /* Set Default pad as SBCS           */
+    SBCSPad = " ";                     /* Set Default pad as SBCS           */
   }
   if (ReqBytes == 0)                   /* requested null?                   */
     Retval = OREF_NULLSTRING;          /* this is easy                      */
@@ -3215,12 +3215,12 @@ RexxString *RexxString::dbRight(RexxInteger *plength,
     Retval = raw_string(ReqBytes + RemBytes);
     if (SBCSPadNum)                    /* SBCS padding?                     */
                                        /* fill in SBCS padding              */
-      DBCS_SetPadChar(STRPTR(Retval), SBCSPadNum, SBCSPad);
+      DBCS_SetPadChar(DATAPTR(Retval), SBCSPadNum, SBCSPad);
     if (DBCSPadNum)                    /* DBCS padding?                     */
                                        /* fill in DBCS padding              */
-      DBCS_SetPadChar(STRPTR(Retval) + SBCSPadNum, DBCSPadNum, DBCSPad);
+      DBCS_SetPadChar(DATAPTR(Retval) + SBCSPadNum, DBCSPadNum, DBCSPad);
                                        /* now copy string part              */
-    memcpy(STRPTR(Retval) + SBCSPadNum + (DBCSPadNum * DBCS_BYTELEN), String, ReqBytes);
+    memcpy(DATAPTR(Retval) + SBCSPadNum + (DBCSPadNum * DBCS_BYTELEN), String, ReqBytes);
     Retval->generateHash();            /* done building the string          */
   }
   return Retval;                       /* return extracted string           */
@@ -3234,7 +3234,7 @@ RexxString *RexxString::dbCenter(RexxInteger *plength,
                                  RexxString *pad,
                                  RexxString *option)
 {
-  PUCHAR   PadChar;                    /* Pad character                     */
+  const char *   PadChar;              /* Pad character                     */
   size_t   PadSize;                    /* size of pad character             */
   size_t   DBCSLPadNum;                /* left side DBCS padding            */
   size_t   SBCSLPadNum;                /* left side DBCS padding            */
@@ -3243,12 +3243,12 @@ RexxString *RexxString::dbCenter(RexxInteger *plength,
   size_t   LeftPad;                    /* left padding                      */
   size_t   RightPad;                   /* right padding                     */
   size_t   Length;                     /* length of input string            */
-  PUCHAR   String;                     /* pointer to string                 */
-  PUCHAR   End;                        /* end string pointer                */
+  const char *   String;               /* pointer to string                 */
+  const char *   End;                  /* end string pointer                */
   RexxString *Retval;                  /* result copy pointer               */
-  PUCHAR   CStr;                       /* string pointer                    */
-  PUCHAR   SBCSPad;                    /* SBCSPad character                 */
-  PUCHAR   DBCSPad;                    /* DBCSPad character                 */
+  char *   CStr;                       /* string pointer                    */
+  const char *   SBCSPad;              /* SBCSPad character                 */
+  const char *   DBCSPad = NULL;       /* DBCSPad character                 */
   UCHAR    Option;                     /* SO/SI counting option             */
   size_t   ReqBytes;                   /* requested bytes                   */
 
@@ -3256,8 +3256,8 @@ RexxString *RexxString::dbCenter(RexxInteger *plength,
                                        /* get the substring length          */
   ReqBytes = get_length(plength, ARG_ONE);
                                        /* get the padding character         */
-  PadChar = ValidatePad(pad, (const PUCHAR)" ");
-  PadSize = strlen((PCHAR)PadChar);    /* get the pad size too              */
+  PadChar = ValidatePad(pad, " ");
+  PadSize = strlen(PadChar);           /* get the pad size too              */
                                        /* get the option character          */
   Option = option_character(option, DBCS_YES, ARG_THREE);
                                        /* must be a valid option            */
@@ -3268,7 +3268,7 @@ RexxString *RexxString::dbCenter(RexxInteger *plength,
     SBCSPad = PadChar;                 /* set SBCS pad.                     */
   else {                               /* Padding char is DBCS,             */
     DBCSPad = PadChar;                 /* Set DBCS padd.                    */
-    SBCSPad = (PUCHAR)" ";             /* Set Default pad as SBCS           */
+    SBCSPad = " ";                     /* Set Default pad as SBCS           */
   }
   Length = STRLEN(this);               /* get argument length               */
   String = STRPTR(this);               /* get data pointer                  */
@@ -3286,7 +3286,7 @@ RexxString *RexxString::dbCenter(RexxInteger *plength,
                                        /* and right pad count               */
       RightPad = (ReqBytes - Length) - LeftPad;
       Retval = raw_string(ReqBytes);   /* allocate space                    */
-      CStr = STRPTR(Retval);           /* get pointer                       */
+      CStr = DATAPTR(Retval);           /* get pointer                       */
       if (PadSize == SBCS_BYTELEN) {
         SBCSLPadNum = LeftPad;         /* Set SBCS pad length.              */
         DBCSLPadNum = 0;               /* And DBCS is zero.                 */
@@ -3329,7 +3329,7 @@ RexxString *RexxString::dbCenter(RexxInteger *plength,
     else {                             /* requested smaller than            */
                                        /* input                             */
       Retval = raw_string(ReqBytes);   /* allocate space                    */
-      CStr = STRPTR(Retval);           /* copy the pointer                  */
+      CStr = DATAPTR(Retval);          /* copy the pointer                  */
       LeftPad = (Length - ReqBytes)/2; /* get left truncate count           */
                                        /* move requested bytes              */
       DBCS_IncByte(&String, &Length, &LeftPad);
@@ -3364,7 +3364,7 @@ RexxString *RexxString::dbRleft(RexxInteger *plength,
                                 RexxString *option)
 {
   size_t   Length;                     /* length of input string            */
-  PUCHAR   String;                     /* pointer to string                 */
+  const char *   String;               /* pointer to string                 */
   RexxString *Retval;                  /* result copy pointer               */
   UCHAR    Option;                     /* SO/SI counting option             */
   size_t   ReqBytes;                   /* requested bytes                   */
@@ -3386,7 +3386,7 @@ RexxString *RexxString::dbRleft(RexxInteger *plength,
                                        /* move requested bytes              */
     DBCS_IncByte(&String, &Length, &ReqBytes);
                                        /* copy the remainder                */
-    Retval = new_string((PCHAR)String, Length);
+    Retval = new_string(String, Length);
   }
   return Retval;                       /* return remainder string           */
 }
@@ -3399,7 +3399,7 @@ RexxString *RexxString::dbRright(RexxInteger *plength,
                                  RexxString *option)
 {
   size_t   Length;                     /* length of input string            */
-  PUCHAR   String;                     /* pointer to string                 */
+  const char *   String;               /* pointer to string                 */
   RexxString *Retval;                  /* result copy pointer               */
   UCHAR    Option;                     /* SO/SI counting option             */
   size_t   ReqBytes;                   /* requested bytes                   */
@@ -3432,7 +3432,7 @@ RexxString *RexxString::dbRright(RexxInteger *plength,
         String += DBCS_BYTELEN;        /* step over DBCS character          */
       }
                                        /* extract string part               */
-      Retval = new_string((PCHAR)STRPTR(this), (String - STRPTR(this)));
+      Retval = new_string(STRPTR(this), (String - STRPTR(this)));
     }
   }
   return Retval;                       /* return extracted string           */
@@ -3444,9 +3444,9 @@ RexxString *RexxString::dbRright(RexxInteger *plength,
 
 RexxString *RexxString::dbToDbcs()
 {
-  PUCHAR   CStr;                       /* output string                     */
-  PUCHAR   IStr;                       /* input string                      */
-  PUCHAR   EndStr;                     /* end of input string               */
+  char *CStr;                          /* output string                     */
+  const char *   IStr;                 /* input string                      */
+  const char *   EndStr;               /* end of input string               */
   size_t   InLen;                      /* input length                      */
   RexxString *Retval;                  /* function return value             */
 
@@ -3458,7 +3458,7 @@ RexxString *RexxString::dbToDbcs()
     Retval = raw_string(InLen * 2);    /* get largest needed string         */
     IStr = STRPTR(this);               /* point to input string             */
     EndStr = IStr + InLen;             /* set input end point               */
-    CStr = STRPTR(Retval);             /* set output location               */
+    CStr = DATAPTR(Retval);            /* set output location               */
 
     while (IStr < EndStr) {            /* Do until end of string            */
       if (IsDBCS(*IStr)) {             /* DBCS character?                   */
@@ -3474,7 +3474,7 @@ RexxString *RexxString::dbToDbcs()
       }
     }
                                        /* resize the string                 */
-    Retval = new_string((PCHAR)STRPTR(Retval), CStr - STRPTR(Retval));
+    Retval = new_string(STRPTR(Retval), CStr - DATAPTR(Retval));
   }
   return Retval;                       /* return converted string           */
 }
@@ -3485,9 +3485,9 @@ RexxString *RexxString::dbToDbcs()
 
 RexxString *RexxString::dbToSbcs()
 {
-  PUCHAR   CStr;                       /* output string                     */
-  PUCHAR   IStr;                       /* input string                      */
-  PUCHAR   EndStr;                     /* end of input string               */
+  char *   CStr;                       /* output string                     */
+  const char *   IStr;                 /* input string                      */
+  const char *   EndStr;               /* end of input string               */
   size_t   InLen;                      /* input length                      */
   RexxString *Retval;                  /* function return value             */
 
@@ -3499,7 +3499,7 @@ RexxString *RexxString::dbToSbcs()
     Retval = raw_string(InLen);        /* get largest needed string         */
     IStr = STRPTR(this);               /* point to input string             */
     EndStr = IStr + InLen;             /* set input end point               */
-    CStr = STRPTR(Retval);             /* set output location               */
+    CStr = DATAPTR(Retval);            /* set output location               */
 
     while (IStr < EndStr) {            /* Do until end of string            */
       if (IsDBCS(*IStr)) {             /* DBCS character?                   */
@@ -3510,7 +3510,7 @@ RexxString *RexxString::dbToSbcs()
         *CStr++ = *IStr++;             /* copy the single character         */
     }
                                        /* shorten the string                */
-    Retval = new_string((PCHAR)STRPTR(Retval), CStr - STRPTR(Retval));
+    Retval = new_string(STRPTR(Retval), CStr - STRPTR(Retval));
   }
   return Retval;                       /* return converted string           */
 }

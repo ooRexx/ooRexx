@@ -175,14 +175,14 @@ PFN SysLoadProcedure(
 {
   PFN     Function;                    /* resolved function address         */
   HMODULE Handle;                      /* DLL module handle                 */
-  PSZ     Name;                        /* pointer to the module name        */
+  const char *Name;                    /* pointer to the module name        */
 
 
-  Name = Procedure->stringData;        /* use the ASCII-Z form of this      */
+  Name = Procedure->getStringData();   /* use the ASCII-Z form of this      */
                                        /* get the module handle             */
   Handle = (HMODULE)LibraryHandle->value;
                                        /* try to get the function address   */
-  if ( !(Function =(PFN)GetProcAddress(Handle,Name)) )
+  if ( !(Function =(PFN)GetProcAddress(Handle, Name)) )
                                        /* report an exception               */
     report_exception1(Error_External_name_not_found_method, Procedure);
   return Function;                     /* return the pointer information    */
@@ -195,9 +195,9 @@ RexxInteger * SysLoadLibrary(
 /******************************************************************************/
 {
   HMODULE Handle;                      /* DLL module handle                 */
-  PSZ     Name;                        /* pointer to the module name        */
+  const char *Name;                    /* pointer to the module name        */
 
-  Name = Library->stringData;          /* use the ASCII-Z form of this      */
+  Name = Library->getStringData();     /* use the ASCII-Z form of this      */
                                        /* get the module handle             */
   if ( Handle = GetModuleHandle( (LPCTSTR) Name) ) {
                                        /* got it?  Now get ordinal 1        */
@@ -296,23 +296,24 @@ RexxString * SysSourceString(
 
   RexxString * source_string;          /* final source string               */
 
-  PCHAR        outPtr, chSysName;       /* copy pointer                     */
+        char  *outPtr;                  /* copy pointer                     */
+  const char  *chSysName;               /* copy pointer                     */
 
   rsSysName = SysName();               /* start with the system stuff       */
-  chSysName= rsSysName->stringData;
+  chSysName= rsSysName->getStringData();
 
-  source_string = raw_string(rsSysName->length + 2 + callType->length + programName->length);
+  source_string = raw_string(rsSysName->getLength() + 2 + callType->getLength() + programName->getLength());
 
-  outPtr = source_string->stringData;  /* point to the result data          */
+  outPtr = source_string->getWritableData();  /* point to the result data          */
   strcpy(outPtr, chSysName);           /* copy the system name              */
-  outPtr +=rsSysName->length;          /* step past the name                */
+  outPtr +=rsSysName->getLength();     /* step past the name                */
   *outPtr++ = ' ';                     /* put a blank between               */
                                        /* copy the call type                */
-  memcpy(outPtr, callType->stringData, callType->length);
-  outPtr += callType->length;          /* step over the call type           */
+  memcpy(outPtr, callType->getStringData(), callType->getLength());
+  outPtr += callType->getLength();     /* step over the call type           */
   *outPtr++ = ' ';                     /* put a blank between               */
                                        /* copy the system name              */
-  memcpy(outPtr, programName->stringData, programName->length);
+  memcpy(outPtr, programName->getStringData(), programName->getLength());
   source_string->generateHash();       /* now create the hash value         */
   return source_string;                /* return the source string          */
 }

@@ -109,7 +109,7 @@ enum InsertionPoint{Beginning,End};
  *
  *******************************************************************************/
   ListItem *FindItem(
-    /*  in   */ char *Name);
+    /*  in   */ const char *Name);
 
   ListItem *FindItem(
     /*  in   */ int Index);
@@ -127,7 +127,7 @@ enum InsertionPoint{Beginning,End};
  *
  *******************************************************************************/
   void *FindContent(
-    /*  in   */ char *Name);
+    /*  in   */ const char *Name);
 
   void *FindContent(
     /*  in   */ int Index);
@@ -180,7 +180,7 @@ enum InsertionPoint{Beginning,End};
 private:
   /*  Helper methods      */
   void InitList(void);
-  ListItem *NameSearch(char *Name);
+  ListItem *NameSearch(const char *Name);
   ListItem *IndexIncrement(void);
   ListItem *IndexSearch(int Index);
 

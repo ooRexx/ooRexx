@@ -287,7 +287,7 @@ class OrxScript : public LLLContent,
   void ReleaseCallBack(void) { if(EventState == NoProperties) EventState = Abstain; }
 
 STDMETHODIMP LocalParseProcedureText(
-  /* in  */ char       *Name,
+  /* in  */ const char *Name,
   /* in  */ DWORD       Flags,
   /* out */ IDispatch **pbOurIDispatch);
 

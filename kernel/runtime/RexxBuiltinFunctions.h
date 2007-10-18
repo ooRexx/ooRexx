@@ -67,7 +67,7 @@ CHAR get_option_character(OREF, size_t);
 #define optionalPositionArgument(o, d, p) optional_position(o, d, p)
 
 
-RexxString *PackHex(PCHAR String, size_t StringLength);
+RexxString *PackHex(const char *String, size_t StringLength);
 
 #define ch_SPACE ' '
 #define ch_NULL  '\0'

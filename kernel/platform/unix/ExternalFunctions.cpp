@@ -126,7 +126,7 @@ typedef struct _ENVENTRY {                  /* setlocal/endlocal structure    */
   ULONG    size;                            /* size of the saved memory       */
 } ENVENTRY;
 
-INT putflag = NULL;                         /* static or dynamic env memory   */
+INT putflag = 0;                            /* static or dynamic env memory   */
 
 REXXOBJECT BuildEnvlist(void);
 RexxMethod *SysRestoreProgramBuffer(PRXSTRING, RexxString *);
@@ -216,85 +216,85 @@ RexxMethod0(REXXOBJECT, sysEndLocal)
 * RC:        Returns the absolute path in new allocated space.      *
 *                                                                   *
 *********************************************************************/
-PCHAR resolve_tilde(PCHAR path)
+char *resolve_tilde(const char *path)
 {
-    char * st;
-    PCHAR  home_dir = NULL;            /* home directory path        */
-    PCHAR  dir_buf = NULL;             /* full directory path        */
-    PCHAR  slash;
-    CHAR   username[100];
+    const char * st;
+    const char *home_dir = NULL;            /* home directory path        */
+    char  *dir_buf = NULL;             /* full directory path        */
+    const char * slash;
+    char   username[100];
     struct passwd *ppwd;
-    INT alloc_flag = 0;
 
     st = path;
-                                       /* if no user name            */
-    if(*(st) == '~' && (*(st+1) == '\0' || *(st+1) == '/'|| *(st+1) == ' ' )){
-      if(*(st+1) == '/'){              /* if there is a path         */
-        st +=2;                        /* jump over '~/'             */
-                                       /* get home directory path    */
-        home_dir = getenv("HOME");     /* from the environment       */
-        if(!home_dir)                  /* if no home dir info        */
-          return (0);
-                                       /* get space for the buf      */
-        dir_buf = (PCHAR)malloc(strlen(home_dir)+strlen(st)+2);
-        if(!dir_buf)
-          return (0);
-                               /* merge the strings          */
-        sprintf(dir_buf, "%s/%s", home_dir, st);
-        st = dir_buf;                  /* directory change to        */
-        alloc_flag = 1;
-      }
-      else{
-                                       /* get home directory path    */
-        home_dir = getenv("HOME");     /* from the environment       */
-                                       /* get space for the buf      */
-        dir_buf = (PCHAR)malloc(strlen(home_dir)+2);
-        if(!dir_buf)
-          return (0);
-        sprintf(dir_buf, "%s/", home_dir);
-        st = dir_buf;                  /* directory change to        */
-        alloc_flag = 1;
-      }
+    /* if no user name            */
+    if (*(st) == '~' && (*(st+1) == '\0' || *(st+1) == '/'|| *(st+1) == ' ' ))
+    {
+        if (*(st+1) == '/')
+        {              /* if there is a path         */
+            st +=2;                        /* jump over '~/'             */
+                                           /* get home directory path    */
+            home_dir = getenv("HOME");     /* from the environment       */
+            if (!home_dir)                  /* if no home dir info        */
+                return(0);
+            /* get space for the buf      */
+            dir_buf = (char *)malloc(strlen(home_dir)+strlen(st)+2);
+            if (!dir_buf)
+                return(0);
+            /* merge the strings          */
+            sprintf(dir_buf, "%s/%s", home_dir, st);
+            return dir_buf; 
+        }
+        else
+        {
+            /* get home directory path    */
+            home_dir = getenv("HOME");     /* from the environment       */
+                                           /* get space for the buf      */
+            dir_buf = (char *)malloc(strlen(home_dir)+2);
+            if (!dir_buf)
+                return(0);
+            sprintf(dir_buf, "%s/", home_dir);
+            return dir_buf; 
+        }
     }
-    else if(*(st) == '~'){             /* cmd is '~username...'      */
-      st++;                            /* jump over '~'              */
-      slash = strchr(st,'/');          /* search for '/'             */
-      if(!slash){                      /* if no '/'                  */
-                                       /* rest of string is username */
-        ppwd = getpwnam(st);           /* get info about the user    */
-                                       /* get space for the buf      */
-    if(ppwd == NULL){                  /* no user                    */
-      return 0;                        /* nothing happend            */
+    else if (*(st) == '~')
+    {             /* cmd is '~username...'      */
+        st++;                            /* jump over '~'              */
+        slash = strchr(st,'/');          /* search for '/'             */
+        if (!slash)
+        {                      /* if no '/'                  */
+                               /* rest of string is username */
+            ppwd = getpwnam(st);           /* get info about the user    */
+                                           /* get space for the buf      */
+            if (ppwd == NULL)
+            {                  /* no user                    */
+                return NULL;                     /* nothing happend            */
+            }
+            dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+2);
+            if (!dir_buf)
+                return NULL;
+            /* merge the strings          */
+            sprintf(dir_buf, "%s/", ppwd->pw_dir);
+        }
+        else
+        {                            /* there is a slash           */
+                                     /* copy the username into a   */
+                                     /* local buffer; 100 bytes    */
+                                     /* should be big enough       */
+                                     /* fixes bug 1695834          */
+            memcpy(username, st, slash-st);
+            username[slash-st] = '\0';
+            ppwd = getpwnam(username);     /* get info about the user    */
+            slash++;                       /* step over the slash        */
+                                           /* get space for the buf      */
+            dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+strlen(slash)+2);
+            if (!dir_buf)
+                return NULL; 
+            /* merge the strings          */
+            sprintf(dir_buf, "%s/%s", ppwd->pw_dir, slash);
+        }
+        return dir_buf;                  /* directory change to        */
     }
-        dir_buf = (PCHAR)malloc(strlen(ppwd->pw_dir)+2);
-        if(!dir_buf)
-          return (0);
-                                       /* merge the strings          */
-        sprintf(dir_buf, "%s/", ppwd->pw_dir);
-        alloc_flag = 1;
-      }
-      else{                            /* there is a slash           */
-                                       /* copy the username into a   */
-                                       /* local buffer; 100 bytes    */
-                                       /* should be big enough       */
-                                       /* fixes bug 1695834          */
-        memcpy(username, st, slash-st);
-        username[slash-st] = '\0';
-        ppwd = getpwnam(username);     /* get info about the user    */
-        slash++;                       /* step over the slash        */
-                                       /* get space for the buf      */
-        dir_buf = (PCHAR)malloc(strlen(ppwd->pw_dir)+strlen(slash)+2);
-        if(!dir_buf)
-          return (0);
-                                       /* merge the strings          */
-        sprintf(dir_buf, "%s/%s", ppwd->pw_dir, slash);
-        alloc_flag = 1;
-      }
-      st = dir_buf;                    /* directory change to        */
-    }
-    if(!alloc_flag)
-      return 0;                        /* nothing happend            */
-    return st;
+    return NULL;   
 }
 
 /****************************************************************************/
@@ -335,11 +335,9 @@ RexxMethod1(REXXOBJECT, sysDirectory, CSTRING, dir)
 /*****************************************************************************/
 RexxMethod2 (REXXOBJECT, sysFilespec, CSTRING, Option, CSTRING, Name)
 {
-  LONG       NameLength;               /* file name length                  */
-  PCHAR      ScanPtr;                  /* scanning pointer                  */
-  PCHAR      EndPtr;                   /* end of string                     */
-  PCHAR      PathPtr;                  /* path pointer                      */
-  PCHAR      PathEnd;                  /* path end pointer                  */
+  size_t     NameLength;               /* file name length                  */
+  const char *EndPtr;                  /* end of string                     */
+  const char *PathEnd;                 /* path end pointer                  */
   REXXOBJECT Retval;                   /* return value                      */
 
                                        /* required arguments missing?       */
@@ -396,7 +394,7 @@ RexxMethod3(REXXOBJECT,sysRxfuncadd,CSTRING,name,CSTRING,module,CSTRING,proc)
     proc = name;                       /* use the defined name              */
                                        /* try to register the function      */
 
-  if ((RexxRegisterFunctionDll((PSZ)name, (PSZ)module, (PSZ)proc)) == RXFUNC_NOTREG){
+  if ((RexxRegisterFunctionDll(const_cast<PSZ>(name), const_cast<PSZ>(module), const_cast<PSZ>(proc))) == RXFUNC_NOTREG){
     return TheTrueObject;              /* this failed                       */
   } else {
     return TheFalseObject;             /* this worked ok                    */
@@ -413,7 +411,7 @@ RexxMethod1(REXXOBJECT,sysRxfuncdrop,CSTRING,name)
                                        /* raise an error                    */
     send_exception(Error_Incorrect_call);
                                        /* try to drop the function          */
-  if (!RexxDeregisterFunction((PSZ)name))
+  if (!RexxDeregisterFunction(const_cast<PSZ>(name)))
     return TheFalseObject;
   else
     return TheTrueObject;
@@ -429,7 +427,7 @@ RexxMethod1(REXXOBJECT,sysRxfuncquery,CSTRING,name)
   if (name == NO_CSTRING)              /* must have a name                  */
                                        /* raise an error                    */
     send_exception(Error_Incorrect_call);
-    if (!RexxQueryFunction((PSZ)name)) /* is it not there?                  */
+    if (!RexxQueryFunction(const_cast<PSZ>(name))) /* is it not there?                  */
     return TheFalseObject;             /* this failed  (function found!)    */
     else
       return TheTrueObject;            /* this worked ok  (no function!)    */
@@ -486,13 +484,13 @@ BOOL MacroSpaceSearch(
   RexxObject    ** result )            /* Result of function call           */
 {
   USHORT       Position;               /* located macro search position     */
-  PCHAR        MacroName;              /* ASCII-Z name version              */
+  CONST CHAR  *MacroName;              /* ASCII-Z name version              */
   RXSTRING     MacroImage;             /* target macro image                */
   RexxMethod * Routine;                /* method to execute                 */
 
-  MacroName = target->stringData;      /* point to the string data          */
+  MacroName = target->getStringData(); /* point to the string data          */
                                        /* did we find this one?             */
-  if (RexxQueryMacro(MacroName, &Position) == 0) {
+  if (RexxQueryMacro(const_cast<PSZ>(MacroName), &Position) == 0) {
                                        /* but not at the right time?        */
     if (order == MS_PREORDER && Position == RXMACRO_SEARCH_AFTER)
       return FALSE;                    /* didn't really find this           */
@@ -501,7 +499,7 @@ BOOL MacroSpaceSearch(
       /* call APISTARTUP to be sure that the ptr remains valid.             */
       APISTARTUP(MACROCHAIN);
 
-      if (RexxExecuteMacroFunction(MacroName, &MacroImage) != 0)
+      if (RexxExecuteMacroFunction(const_cast<PSZ>(MacroName), &MacroImage) != 0)
       {
          APICLEANUP(MACROCHAIN);
          return FALSE;
@@ -548,11 +546,9 @@ BOOL RegExternalFunction(
   RexxString     * calltype,           /* Type of call                      */
   RexxObject    ** result )            /* Result of function call           */
 {
-  PCHAR         funcname;              /* Pointer to function name          */
-  PCHAR         queuename;             /* Pointer to active queue name      */
+  const char   *funcname;              /* Pointer to function name          */
+  const char   *queuename;             /* Pointer to active queue name      */
   long          rc;                    /* RexxCallFunction return code      */
-//long          argcount;              /* Number of args in arg array       */
-//long          argindex;              /* Index into arg array              */
   size_t    argindex;                  /* Index into arg array              */
   PRXSTRING     argrxarray;            /* Array of args in PRXSTRING form   */
   RXSTRING      funcresult;            /* Function result                   */
@@ -562,23 +558,23 @@ BOOL RegExternalFunction(
                                        /* default return code buffer        */
   CHAR      default_return_buffer[DEFRXSTRING];
 
-  funcname = target->stringData;       /* point to the function name        */
+  funcname = target->getStringData();  /* point to the function name        */
                                        /* Do we have the function?          */
-  if (RexxQueryFunction(funcname) != 0) {
+  if (RexxQueryFunction(const_cast<char *>(funcname)) != 0) {
                                        /* this a system routine?            */
     if (memicmp(funcname, "SYS", 3) == 0) {
                                        /* try to register SysLoadFuncs      */
-      if (RexxRegisterFunctionDll((PSZ)"SYSLOADFUNCS", (PSZ)"rexxutil", (PSZ)"SysLoadFuncs") == 0) {
+      if (RexxRegisterFunctionDll(const_cast<char *>("SYSLOADFUNCS"), const_cast<char *>("rexxutil"), const_cast<char *>("SysLoadFuncs")) == 0) {
                                        /* first registration?               */
                                        /* set up an result RXSTRING         */
         MAKERXSTRING(funcresult, default_return_buffer, sizeof(default_return_buffer));
                                        /* call the function loader          */
-        RexxCallFunction("SYSLOADFUNCS", 0, (PRXSTRING)NULL, &functionrc, &funcresult, "");
+        RexxCallFunction(const_cast<char *>("SYSLOADFUNCS"), 0, (PRXSTRING)NULL, &functionrc, &funcresult, const_cast<char *>(""));
 
       }
     }
                                        /* Do we have the function?          */
-    if (RexxQueryFunction(funcname) != 0)
+    if (RexxQueryFunction(const_cast<char *>(funcname)) != 0)
       return FALSE;                    /* truely not found                  */
   }
 
@@ -604,9 +600,9 @@ BOOL RegExternalFunction(
 //    argarray->put((RexxObject *)argument, argindex+1);
       arguments[argindex] = argument;
                                        /* set the RXSTRING length           */
-      argrxarray[argindex].strlength = argument->length;
+      argrxarray[argindex].strlength = argument->getLength();
                                        /* and pointer                       */
-      argrxarray[argindex].strptr = argument->stringData;
+      argrxarray[argindex].strptr = argument->getWritableData();
     }
     else {                             /* have an omitted argument          */
                                        /* give it zero length               */
@@ -616,7 +612,7 @@ BOOL RegExternalFunction(
     }
   }
                                        /* get the current queue name        */
-  queuename = SysGetCurrentQueue()->stringData;
+  queuename = SysGetCurrentQueue()->getStringData();
                                        /* make the RXSTRING result          */
   MAKERXSTRING(funcresult, default_return_buffer, sizeof(default_return_buffer));
 
@@ -625,7 +621,7 @@ BOOL RegExternalFunction(
                                        /* get ready to call the function    */
   activity->exitKernel(activation, OREF_SYSEXTERNALFUNCTION, TRUE);
                                        /* now call the external function    */
-  rc = RexxCallFunction(funcname, argcount, argrxarray, &functionrc, &funcresult, queuename);
+  rc = RexxCallFunction(const_cast<char *>(funcname), argcount, argrxarray, &functionrc, &funcresult, const_cast<char *>(queuename));
   activity->enterKernel();             /* now re-enter the kernel           */
 
 /* END CRITICAL window here -->>  kernel calls now allowed again            */
@@ -678,25 +674,17 @@ RexxObject * SysExternalFunction(
   BOOL           * foundFnc)
 {
   RexxObject * result;                 /* Init function result to null      */
-  RXSTRING     funcresult;             /* Function result                   */
-  USHORT       functionrc;             /* Return code from function         */
-  CHAR      default_return_buffer[10]; /* default return code buffer        */
 
   *foundFnc = TRUE;
                                        /* check for macrospace first        */
-//if (!MacroSpaceSearch(activation, activity, target, argarray, calltype, MS_PREORDER, &result)) { MICMICD
   if (!MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_PREORDER, &result)) {
                                        /* no luck try for a registered func */
-//  if (!RegExternalFunction(activation, activity, target, argarray, calltype, &result)) {
     if (!RegExternalFunction(activation, activity, target, arguments, argcount, calltype, &result)) {
                                        /* no go for an external file        */
-//    if (!ExecExternalSearch(activation, activity, target, parent, argarray, calltype, &result)) {
       if (!ExecExternalSearch(activation, activity, target, parent, arguments, argcount, calltype, &result)) {
                                        /* last shot, post-order macro space */
                                        /* function.  If still not found,    */
                                        /* then raise an error               */
-//      if (!MacroSpaceSearch(activation, activity, target, argarray, calltype, MS_POSTORDER, &result)) {
-//          report_exception1(Error_Routine_not_found_name, target);
         if (!MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_POSTORDER, &result)) {
           *foundFnc = FALSE;
         }
@@ -724,7 +712,7 @@ RexxMethod * SysGetMacroCode(
   /* call APISTARTUP to be sure that the ptr remains valid.             */
   APISTARTUP(MACROCHAIN);
 
-  if (RexxExecuteMacroFunction(MacroName->stringData, &MacroImage) == 0)
+  if (RexxExecuteMacroFunction(const_cast<char *>(MacroName->getStringData()), &MacroImage) == 0)
     method = SysRestoreProgramBuffer(&MacroImage, MacroName);
 
   APICLEANUP(MACROCHAIN);          /* now we have a copy of the routine */
@@ -815,16 +803,16 @@ void RestoreEnvironment(
   void *CurrentEnv)                    /* saved environment          */
 {
   PSZ  current;                        /* ptr to saved environment   */
-  ULONG size;                          /* size of the saved space    */
-  ULONG length;                        /* string length              */
+  size_t size;                         /* size of the saved space    */
+  size_t length;                       /* string length              */
   PSZ begin;                           /* begin of saved space       */
-  PCHAR      * Environment;            /* environment pointer        */
+  char      ** Environment;            /* environment pointer        */
 
-  PCHAR  del = NULL;                   /* ptr to old unused memory   */
-  PCHAR Env_Var_String;                /* enviornment entry          */
-  CHAR   namebufsave[256],namebufcurr[256];
-  PCHAR  np;
-  INT i;
+  char  *del = NULL;                   /* ptr to old unused memory   */
+  char  *Env_Var_String;               /* enviornment entry          */
+  char   namebufsave[256],namebufcurr[256];
+  char  *np;
+  int i;
 
     Environment = environ;             /* get the current environment*/
 

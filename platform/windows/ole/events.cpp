@@ -225,7 +225,7 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
             } else if (fIsRexxArray(rxResult)) {
               RexxArray  *rxArray = (RexxArray*) rxResult;
               RexxObject *RexxStr = NULL;
-              char       *pString = NULL;
+              const char *pString = NULL;
               char        szBuff[8];
               int         k;
 

@@ -1168,12 +1168,13 @@ RexxObject *RexxMemory::temporaryObject(size_t requestLength)
   return newObject;                    /* and return it                     */
 }
 
-void RexxMemory::markGeneral(RexxObject **pMarkObject)
+void RexxMemory::markGeneral(void *obj)
 /******************************************************************************/
 /* Function:  Perform various general marking functions such as image save,   */
 /*            image restore, object unflatten, and debug garbage collection   */
 /******************************************************************************/
 {
+  RexxObject **pMarkObject = (RexxObject **)obj;
   RexxObject *markObject = *pMarkObject;
 
 
@@ -1290,7 +1291,7 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
     FILE *outfile;
     BOOL firstnode;
     RexxString *className;
-    CHAR *objectClassName;
+    const char *objectClassName;
 
     /* check for invalid objects         */
     if (!objectReferenceOK(markObject)) {
@@ -1719,7 +1720,7 @@ void      RexxMemory::setEnvelope(RexxEnvelope *envelope)
 }
 
 
-RexxObject *RexxMemory::setOref(RexxObject **index, RexxObject *value)
+RexxObject *RexxMemory::setOref(void *oldValue, RexxObject *value)
 /******************************************************************************/
 /* Arguments:  index-- OREF to set;  value--OREF to which objr is set         */
 /*                                                                            */
@@ -1728,11 +1729,14 @@ RexxObject *RexxMemory::setOref(RexxObject **index, RexxObject *value)
 /******************************************************************************/
 {
   RexxInteger *refcount;
+  RexxObject **oldValueLoc = (RexxObject **)oldValue;
+  RexxObject *index = *oldValueLoc;
+
   if (old2new != OREF_NULL) {
-    if (!NullOrOld(*index)) {
+    if (!NullOrOld(index)) {
                                        /* decrement reference count for     */
                                        /**index                             */
-      refcount = (RexxInteger *)this->old2new->get(*index);
+      refcount = (RexxInteger *)this->old2new->get(index);
       if (refcount != OREF_NULL) {
                                        /* found a value for refcount, now   */
                                        /*decrement the count                */
@@ -1741,14 +1745,14 @@ RexxObject *RexxMemory::setOref(RexxObject **index, RexxObject *value)
                                        /*no longer ref'ed from oldspace     */
         if (refcount->value == 0) {
                                        /* delete the entry for *index       */
-          this->old2new->remove(*index);
+          this->old2new->remove(index);
         }
       } else {
         /* naughty, naughty, someone didn't use SetOref */
         printf("******** error in memory_setoref, unable to decrement refcount\n");
-        printf("Naughty object reference is from:  %p\n", index);
-        printf("Naughty object reference is at:  %p\n", *index);
-        printf("Naughty object reference type is:  %d\n", (*index)->behaviour->typenum());
+        printf("Naughty object reference is from:  %p\n", oldValueLoc);
+        printf("Naughty object reference is at:  %p\n", index);
+        printf("Naughty object reference type is:  %d\n", (index)->behaviour->typenum());
       }
     }
     if (!NullOrOld(value)) {
@@ -1770,7 +1774,7 @@ RexxObject *RexxMemory::setOref(RexxObject **index, RexxObject *value)
   }
                                        /* now make the assignment, just     */
                                        /*like all this stuff never happened!*/
-  return *index = value;
+  return *oldValueLoc = value;
 }
 
 

@@ -113,7 +113,7 @@ LONG APIENTRY RexxCatchExit(LONG ExitNumber, LONG Subfunction, PEXIT parmblock)
 
    // get LISTOFNAMES, containing a pointer to the list that will
    // store all names we find out here...
-   sscanf(((RexxString*) REXX_GETVAR("LISTOFNAMES"))->stringData,"%p",&myList);
+   sscanf(string_data(REXX_GETVAR("LISTOFNAMES")),"%p",&myList);
 
    if (myList) {
 
@@ -566,18 +566,18 @@ RexxObject* __stdcall propertyChange(RexxString* name,RexxObject* newvalue,int S
     *RetCode = 1;
     return result;
     }
-  if(name->stringData == NULL  || name->length == 0) {
+  if(name->getStringData() == NULL  || name->getLength() == 0) {
     *RetCode = 2;
     return result;
     }
 
-  if((name->length + 1) <= sizeof(tBuffer)) PropName = &tBuffer[0];
-  else if(!(PropName = (char *)malloc(name->length+1))) {
+  if((name->getLength() + 1) <= sizeof(tBuffer)) PropName = &tBuffer[0];
+  else if(!(PropName = (char *)malloc(name->getLength()+1))) {
     *RetCode = 3;
     return result;
     }
   memcpy(PropName,name->getStringData(),name->getLength());
-  PropName[name->length] = '\0';
+  PropName[name->getLength()] = '\0';
 
   // if we set a new value, we must return the old one...
   // Either way, first find the old one.
@@ -683,7 +683,7 @@ RexxObject* __stdcall propertyChange(RexxString* name,RexxObject* newvalue,int S
         // a name must be given
         if (name) {
           // it must be "NAMEDITEMS"
-          if (!strcmp(name->stringData, "NAMEDITEMS")) {
+          if (!strcmp(name->getStringData(), "NAMEDITEMS")) {
             // retrieve the NamedItem list of the engine
             OrxNamedItem* pItemList = engine->getNamedItems();
             if (pItemList) {
@@ -749,9 +749,9 @@ RexxObject* __stdcall propertyChange(RexxString* name,RexxObject* newvalue,int S
 /* unknown callback                                                     */
 /* this will deal with objects that REXX is unaware of, but the engine  */
 /* is...                                                                */
-RexxObject* __stdcall engineDispatch(void *arguments)
+RexxObject* __stdcall engineDispatch(const char *arguments)
 {
-  char       *objname = (char*) arguments;
+  const char *objname = arguments;
   RexxObject *result = NULL; // NULL indicates error
   OrxScript  *engine = findEngineForThread(GetCurrentThreadId());
   HRESULT    hResult;

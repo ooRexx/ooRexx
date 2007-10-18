@@ -167,7 +167,7 @@ FPRINTF2(logfile,"OrxNamedItem::AddItem(DISPID) Leaving with a HRESULT of %08x\n
 
 //  >>> ??? <<<  Why didn't I want flags passed in for comparison purposes?
 STDMETHODIMP OrxNamedItem::WhoKnows(
-  /* in  */ char      *pName,          // SubItem name
+  /* in  */ const char *pName,         // SubItem name
   /* in  */ LCID      Lang,            // User Language code (English, Deutsch, etc.)
   /* out */ DISPID    *pbDispID,       // DispID of the SubItem
   /* out */ DWORD     *pbFlags,        // Flags stored with the Item, or SubItem

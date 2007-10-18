@@ -446,7 +446,7 @@ RexxObject *RexxDirectory::unknown(
   message_value = REQUIRED_STRING(msgname, ARG_ONE);
   required_arg(arguments, TWO);        /* need an argument array            */
                                        /* get the length                    */
-  message_length = message_value->length;
+  message_length = message_value->getLength();
                                        /* assignment form of access?        */
   if (message_length > 0 && message_value->getChar(message_length - 1) == '=') {
                                        /* get this as an array              */

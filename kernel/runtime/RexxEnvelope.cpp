@@ -168,13 +168,16 @@ RexxObject *RexxEnvelope::unflatten(RexxEnvelope * envelope)
 }
 
 void RexxEnvelope::flattenReference(
-    RexxObject **newThis,              /* current pointer to flattening obj */
+    void        *newThisVoid,          /* current pointer to flattening obj */
     LONG         newSelf,              /* offset of the flattening object   */
-    RexxObject **objRef)               /* object to process                 */
+    void        *objRefVoid)           /* object to process                 */
 /******************************************************************************/
 /* Function: This method does the copy buffer,                                */
 /******************************************************************************/
 {
+ RexxObject **newThis = (RexxObject **)newThisVoid;
+ RexxObject **objRef  = (RexxObject **)objRefVoid;
+
  RexxObject *newObj;                   /* new object in buffer              */
  RexxObject *obj = *objRef;            /* get working pointer to object     */
  RexxObject *proxyObj;                 /* proxy of the flattened object     */

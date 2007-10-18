@@ -157,7 +157,7 @@ void RexxString::copyIntoTail(RexxCompoundTail *tail)
 /******************************************************************************/
 {
                                        /* copy this directly into the tail */
-    tail->append((UCHAR *)this->stringData, this->length);
+    tail->append(this->getStringData(), this->length);
 }
 
 
@@ -402,7 +402,7 @@ bool RexxString::primitiveCaselessIsEqual(RexxObject *otherObj)
         return false;
     }
     // do the actual string compare
-    return CaselessCompare((PUCHAR)this->getStringData(), (PUCHAR)other->getStringData(), otherLen) == 0;
+    return CaselessCompare(this->getStringData(), other->getStringData(), otherLen) == 0;
 }
 
 
@@ -973,7 +973,7 @@ RexxString *RexxString::concatRexx(RexxObject *otherObj)
   return result;                       /* return the result                 */
 }
 
-RexxString *RexxString::concatToCstring(PCHAR  other)
+RexxString *RexxString::concatToCstring(const char *other)
 /******************************************************************************/
 /* Function:  Concatenate a string object onto an ASCII-Z string              */
 /******************************************************************************/
@@ -994,7 +994,7 @@ RexxString *RexxString::concatToCstring(PCHAR  other)
   return result;
 }
 
-RexxString *RexxString::concatWithCstring(PCHAR  other)
+RexxString *RexxString::concatWithCstring(const char *other)
 /******************************************************************************/
 /* Function:  Concatenate an ASCII-Z string onto a string object              */
 /******************************************************************************/
@@ -1132,7 +1132,7 @@ RexxString *RexxString::upper()
                                        /* create a new string               */
       newstring = new_string((PCHAR)this->stringData, this->length);
                                        /* do DBCS uppercasing               */
-      DBCS_MemUpper(STRPTR(newstring), STRLEN(newstring));
+      DBCS_MemUpper(DATAPTR(newstring), STRLEN(newstring));
                                        /* rebuild the hash value            */
       newstring->generateHash();
                                        /* flag the string as uppercased     */
@@ -1242,9 +1242,9 @@ RexxString *RexxString::lower()
                                        /* create a new string               */
       newstring = (RexxString *)raw_string(this->getLength());
                                        /* copy the data                     */
-      memcpy(STRPTR(newstring), STRPTR(this), STRLEN(this));
+      memcpy(DATAPTR(newstring), STRPTR(this), STRLEN(this));
                                        /* do DBCS lowercasing               */
-      DBCS_MemLower(STRPTR(newstring), STRLEN(newstring));
+      DBCS_MemLower(DATAPTR(newstring), STRLEN(newstring));
                                        /* rebuild the hash value            */
       return newstring;                /* return the new string             */
     }                                  /* (single byte only falls through)  */
@@ -1686,7 +1686,7 @@ RexxObject *RexxString::evaluate(
   return this;                         /* also return the result            */
 }
 
-RexxString *RexxStringClass::newString(const PCHAR string, size_t length)
+RexxString *RexxStringClass::newString(const char *string, size_t length)
 /******************************************************************************/
 /* Function:  Allocate (and initialize) a string object                       */
 /******************************************************************************/
@@ -1707,12 +1707,12 @@ RexxString *RexxStringClass::newString(const PCHAR string, size_t length)
   setVirtualFunctions(newString, T_string);
                                        /* clear the front part              */
   ClearObjectLength(newString, sizeof(RexxString));
-  newString->length = length;          /* save the length                   */
+  newString->setLength(length);        /* save the length                   */
                                        /* Null terminate, allows faster     */
                                        /* conversion to ASCII-Z string      */
-  *(newString->stringData + length) = '\0';
+  newString->putChar(length, '\0');
                                        /* copy it over                      */
-  memcpy(newString->stringData,string,(size_t)length);
+  newString->put(0, string, length);
   newString->generateHash();           /* generate the hash value           */
                                        /* by  default, we don't need Live   */
   SetObjectHasNoReferences(newString); /*sent                               */
@@ -1743,10 +1743,10 @@ RexxString *RexxStringClass::rawString(size_t length)
   setVirtualFunctions(newString, T_string);
                                        /* clear the front part              */
   ClearObjectLength(newString, sizeof(RexxString));
-  newString->length = length;          /* save the length                   */
+  newString->setLength(length);        /* save the length                   */
                                        /* Null terminate, allows faster     */
                                        /* conversion to ASCII-Z string      */
-  *(newString->stringData + length) = '\0';
+  newString->putChar(length, '\0');
                                        /* by  default, we don't need Live   */
   SetObjectHasNoReferences(newString); /*sent                               */
                                        /* NOTE: That if we can set          */
@@ -1755,7 +1755,7 @@ RexxString *RexxStringClass::rawString(size_t length)
   return newString;                    /*having OREFs                       */
 }
 
-RexxString *RexxStringClass::newCstring(const PCHAR string)
+RexxString *RexxStringClass::newCstring(const char *string)
 /******************************************************************************/
 /* Function:  Create a new string object from a CSTRING                       */
 /******************************************************************************/
@@ -1776,7 +1776,7 @@ RexxString *RexxStringClass::newDouble(PDBL  number)
   return numberStringDouble->stringValue();
 }
 
-RexxString *RexxStringClass::newProxy(const PCHAR  string)
+RexxString *RexxStringClass::newProxy(const char *string)
 /******************************************************************************/
 /* Function:  Create a proxy object from this string                          */
 /******************************************************************************/
@@ -1807,7 +1807,7 @@ RexxString *RexxStringClass::newRexx(RexxObject **init_args, size_t argCount)
                                        /* force argument to string value    */
   string = (RexxString *)REQUIRED_STRING(string, ARG_ONE);
                                        /* create a new string object        */
-  string = new_string(string->stringData, string->length);
+  string = new_string(string->getStringData(), string->getLength());
   BehaviourSet(string, this->instanceBehaviour);
   if (((RexxClass *)this)->uninitDefined()) {
     string->hasUninit();
@@ -1830,10 +1830,10 @@ native0 (size_t, STRING_LENGTH)
 /* NOTE:  This method does not reaquire kernel access                         */
 /******************************************************************************/
                                        /* forward the method                */
-  return this->length;
+  return this->getLength();
 }
 
-native0 (PCHAR, STRING_DATA)
+native0 (CSTRING, STRING_DATA)
 /******************************************************************************/
 /* Function:  External interface to the object method                         */
 /******************************************************************************/
@@ -1842,7 +1842,7 @@ native0 (PCHAR, STRING_DATA)
 /* NOTE:  This method does not reaquire kernel access                         */
 /******************************************************************************/
                                        /* forward the method                */
-  return this->stringData;
+  return this->getStringData();
 }
 
 nativei1 (REXXOBJECT, STRING_NEWD, PDBL, number)
@@ -1855,7 +1855,7 @@ nativei1 (REXXOBJECT, STRING_NEWD, PDBL, number)
   return_oref(new_stringd(number));
 }
 
-nativei1 (REXXOBJECT, STRING_NEW_UPPER, PCHAR, string)
+nativei1 (REXXOBJECT, STRING_NEW_UPPER, CSTRING, string)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
@@ -1865,7 +1865,7 @@ nativei1 (REXXOBJECT, STRING_NEW_UPPER, PCHAR, string)
   return_oref(((RexxString *)new_cstring(string))->upper());
 }
 
-nativei2 (REXXOBJECT, STRING_NEW, PCHAR, string, size_t, length)
+nativei2 (REXXOBJECT, STRING_NEW, CSTRING, string, size_t, length)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/

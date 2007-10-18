@@ -64,10 +64,10 @@ extern ACTIVATION_SETTINGS *current_settings;
 /*********************************************************************/
 
 void SkipBlanks(
-  PCHAR    *String,                    /* point to advance           */
-  size_t   *StringLength )             /* string length              */
+  const char **String,                 /* point to advance           */
+  size_t      *StringLength )          /* string length              */
 {
-  PCHAR    Scan;                       /* scan pointer               */
+  const char *Scan;                    /* scan pointer               */
   size_t   Length;                     /* length to scan             */
 
   Scan = *String;                      /* point to data              */
@@ -93,10 +93,10 @@ void SkipBlanks(
 /*********************************************************************/
 
 void SkipNonBlanks(
-  PCHAR    *String,                    /* point to advance           */
+  const char **String,                 /* point to advance           */
   size_t   *StringLength )             /* string length              */
 {
-  PCHAR    Scan;                       /* scan pointer               */
+  const char *Scan;                    /* scan pointer               */
   size_t   Length;                     /* length to scan             */
 
   Scan = *String;                      /* point to data              */
@@ -125,7 +125,7 @@ void SkipNonBlanks(
 /*********************************************************************/
 
 size_t  WordCount(
-  PCHAR    String,                     /* string of words            */
+  const char *String,                  /* string of words            */
   size_t   StringLength )              /* string length              */
 {
   size_t   Count;                      /* Current count of words     */
@@ -165,9 +165,9 @@ size_t  WordCount(
 /*********************************************************************/
 
 size_t  NextWord(
-  PCHAR  *String,                      /* input string               */
+  const char **String,                 /* input string               */
   size_t *StringLength,                /* string length              */
-  PCHAR  *NextString )                 /* next word position         */
+  const char **NextString )            /* next word position         */
 {
   size_t   WordStart;                  /* Starting point of word     */
 
@@ -196,9 +196,9 @@ size_t  NextWord(
 RexxString *RexxString::delWord(RexxInteger *position,
                                 RexxInteger *plength)
 {
-  PCHAR       Current;                 /* current pointer position          */
-  PCHAR       Word;                    /* current word pointer              */
-  PCHAR       NextSite;                /* next word                         */
+  char       *Current;                 /* current pointer position          */
+  const char *Word;                    /* current word pointer              */
+  const char *NextSite;                /* next word                         */
   size_t      WordPos;                 /* needed word position              */
   size_t      Count;                   /* count of words                    */
   size_t      Length;                  /* remaining length                  */
@@ -216,13 +216,13 @@ RexxString *RexxString::delWord(RexxInteger *position,
                                        /* default is "a very large number"  */
   Count = optional_length(plength, MAXNUM, ARG_TWO);
 
-  Length = this->length;               /* get string length                 */
+  Length = this->getLength();               /* get string length                 */
   if (!Length)                         /* null string?                      */
     Retval = OREF_NULLSTRING;          /* result is null also               */
   else if (!Count)                     /* deleting zero words?              */
     Retval = this;                     /* just use this string              */
   else {
-    Word = (PCHAR)this->stringData;    /* point to the string               */
+    Word = this->getStringData();      /* point to the string               */
                                        /* get the first word                */
     WordLength = NextWord(&Word, &Length, &NextSite);
     while (--WordPos && WordLength) {  /* loop until we reach tArget        */
@@ -234,7 +234,7 @@ RexxString *RexxString::delWord(RexxInteger *position,
       Retval = this;                   /* return entire string              */
     else {                             /* count off number of words         */
                                        /* calculate front length            */
-      FrontLength = (UINT)(Word - (PCHAR)this->stringData);
+      FrontLength = (size_t)(Word - this->getStringData());
       while (--Count && WordLength) {  /* loop until we reach tArget        */
         Word = NextSite;               /* copy the start pointer            */
                                        /* get the next word                 */
@@ -245,10 +245,10 @@ RexxString *RexxString::delWord(RexxInteger *position,
                                        /* allocate return string            */
       Retval = raw_string(FrontLength + Length);
                                        /* point to data portion             */
-      Current = Retval->stringData;
+      Current = Retval->getWritableData();
       if (FrontLength) {               /* have a leading portion?           */
                                        /* copy into the result              */
-        memcpy(Current, (PCHAR)this->stringData, FrontLength);
+        memcpy(Current, this->getStringData(), FrontLength);
         Current += FrontLength;        /* step output position              */
       }
       if (Length)                      /* any string left?                  */
@@ -272,10 +272,10 @@ RexxString *RexxString::space(RexxInteger *space_count,
                               RexxString  *pad)
 {
   size_t      Spaces;                  /* requested spacing                 */
-  UCHAR       PadChar;                 /* pad character                     */
-  PCHAR       Current;                 /* current pointer position          */
-  PCHAR       Word;                    /* current word pointer              */
-  PCHAR       NextSite;                /* next word                         */
+  char        PadChar;                 /* pad character                     */
+  char       *Current;                 /* current pointer position          */
+  const char *Word;                    /* current word pointer              */
+  const char *NextSite;                /* next word                         */
   size_t      Count;                   /* count of words                    */
   size_t      WordSize;                /* size of words                     */
   size_t      Length;                  /* remaining length                  */
@@ -292,10 +292,10 @@ RexxString *RexxString::space(RexxInteger *space_count,
                                        /* get the pad character             */
   PadChar = get_pad(pad, ' ', ARG_TWO);
 
-  Length = this->length;               /* get the string length             */
+  Length = this->getLength();               /* get the string length             */
   Count = 0;                           /* no words yet                      */
   WordSize = 0;                        /* no characters either              */
-  Word = (PCHAR)this->stringData;      /* point to the string               */
+  Word = this->getStringData();        /* point to the string               */
                                        /* get the first word                */
   WordLength = NextWord(&Word, &Length, &NextSite);
 
@@ -313,10 +313,10 @@ RexxString *RexxString::space(RexxInteger *space_count,
                                        /* get space for output              */
     Retval = raw_string(WordSize + Count * Spaces);
                                        /* point to output area              */
-    Current = Retval->stringData;
+    Current = Retval->getWritableData();
 
-    Length = this->length;             /* recover the length                */
-    Word = (PCHAR)this->stringData;    /* point to the string               */
+    Length = this->getLength();             /* recover the length                */
+    Word = this->getStringData();      /* point to the string               */
                                        /* get the first word                */
     WordLength = NextWord(&Word, &Length, &NextSite);
 
@@ -351,10 +351,10 @@ RexxString *RexxString::space(RexxInteger *space_count,
 RexxString *RexxString::subWord(RexxInteger *position,
                                 RexxInteger *plength)
 {
-  PCHAR       Word;                    /* current word pointer              */
-  PCHAR       WordStart;               /* start of substring                */
-  PCHAR       WordEnd;                 /* end of the substring              */
-  PCHAR       NextSite;                /* next word                         */
+  const char *Word;                    /* current word pointer              */
+  const char *WordStart;               /* start of substring                */
+  const char *WordEnd;                 /* end of the substring              */
+  const char *NextSite;                /* next word                         */
   size_t      WordPos;                 /* needed word position              */
   size_t      Count;                   /* count of words                    */
   size_t      Length;                  /* remaining length                  */
@@ -371,11 +371,11 @@ RexxString *RexxString::subWord(RexxInteger *position,
                                        /* default is "a very large number"  */
   Count = optional_length(plength, MAXNUM, ARG_TWO);
 
-  Length = this->length;               /* get Argument length               */
+  Length = this->getLength();               /* get Argument length               */
   if (!Length || !Count)               /* null string?                      */
     Retval = OREF_NULLSTRING;          /* result is null also               */
   else {
-    Word = (PCHAR)this->stringData;    /* point to the string               */
+    Word = this->getStringData();      /* point to the string               */
                                        /* get the first word                */
     WordLength = NextWord(&Word, &Length, &NextSite);
     while (--WordPos && WordLength) {  /* loop until we reach tArget        */
@@ -410,8 +410,8 @@ RexxString *RexxString::subWord(RexxInteger *position,
 /******************************************************************************/
 RexxString *RexxString::word(RexxInteger *position)
 {
-  PCHAR       Word;                    /* current word pointer              */
-  PCHAR       NextSite;                /* next word                         */
+  const char *Word;                    /* current word pointer              */
+  const char *NextSite;                /* next word                         */
   size_t      WordPos;                 /* needed word position              */
   size_t      Length;                  /* remaining length                  */
   size_t      WordLength;              /* word size                         */
@@ -424,11 +424,11 @@ RexxString *RexxString::word(RexxInteger *position)
                                        /* convert position to binary        */
   WordPos = get_position(position, ARG_ONE);
 
-  Length = this->length;               /* get Argument length               */
-  if (!Length)                         /* null string?                      */
+  Length = this->getLength();          /* get Argument length               */
+  if (Length == 0)                     /* null string?                      */
     Retval = OREF_NULLSTRING;          /* result is null also               */
   else {
-    Word = (PCHAR)this->stringData;    /* point to the string               */
+    Word = this->getStringData();      /* point to the string               */
                                        /* get the first word                */
     WordLength = NextWord(&Word, &Length, &NextSite);
     while (--WordPos && WordLength) {  /* loop until we reach target        */
@@ -453,8 +453,8 @@ RexxString *RexxString::word(RexxInteger *position)
 /******************************************************************************/
 RexxInteger *RexxString::wordIndex(RexxInteger *position)
 {
-  PCHAR       Word;                    /* current word pointer              */
-  PCHAR       NextSite;                /* next word                         */
+  const char *Word;                    /* current word pointer              */
+  const char *NextSite;                /* next word                         */
   size_t      Length;                  /* string length                     */
   size_t      WordLength;              /* word length                       */
   size_t      WordPos;                 /* desired word position             */
@@ -465,10 +465,10 @@ RexxInteger *RexxString::wordIndex(RexxInteger *position)
                                        /* do the DBCS version               */
     return this->DBCSwordIndex(position);
 
-  Length = this->length;               /* get the string length             */
+  Length = this->getLength();          /* get the string length             */
                                        /* convert count to binary           */
   WordPos = get_position(position, ARG_ONE);
-  Word = this->stringData;             /* point to word data                */
+  Word = this->getStringData();        /* point to word data                */
 
                                        /* get the first word                */
   WordLength = NextWord(&Word, &Length, &NextSite);
@@ -480,7 +480,7 @@ RexxInteger *RexxString::wordIndex(RexxInteger *position)
   if (WordLength == 0)                 /* ran out of string                 */
     Retval = IntegerZero;              /* no index                          */
   else {                               /* calc the word index               */
-    tempIndex = Word - this->stringData + 1;
+    tempIndex = Word - this->getStringData() + 1;
     Retval = new_integer(tempIndex);
   }
   return Retval;                       /* return appopriate position        */
@@ -494,8 +494,8 @@ RexxInteger *RexxString::wordIndex(RexxInteger *position)
 /******************************************************************************/
 RexxInteger *RexxString::wordLength(RexxInteger *position)
 {
-  PCHAR       Word;                    /* current word pointer              */
-  PCHAR       NextSite;                /* next word                         */
+  const char *Word;                    /* current word pointer              */
+  const char *NextSite;                /* next word                         */
   size_t      Length;                  /* string length                     */
   size_t      WordLength;              /* word length                       */
   size_t      WordPos;                 /* desired word position             */
@@ -504,10 +504,10 @@ RexxInteger *RexxString::wordLength(RexxInteger *position)
                                        /* do the DBCS version               */
     return this->DBCSwordLength(position);
 
-  Length = this->length;               /* get the string length             */
+  Length = this->getLength();               /* get the string length             */
                                        /* convert count to binary           */
   WordPos = get_position(position , ARG_ONE);
-  Word = this->stringData;             /* point to word data                */
+  Word = this->getStringData();             /* point to word data                */
 
                                        /* get the first word                */
   WordLength = NextWord(&Word, &Length, &NextSite);
@@ -530,10 +530,10 @@ RexxInteger *RexxString::wordPos(RexxString  *phrase,
                                  RexxInteger *pstart)
 {
   RexxInteger *Retval;                 /* return value                      */
-  PCHAR    Needle;                     /* start of needle string            */
-  PCHAR    Haystack;                   /* current haystack positon          */
-  PCHAR    NextNeedle;                 /* next search position              */
-  PCHAR    NextHaystack;               /* next search position              */
+  const char *Needle;                  /* start of needle string            */
+  const char *Haystack;                /* current haystack positon          */
+  const char *NextNeedle;              /* next search position              */
+  const char *NextHaystack;            /* next search position              */
   size_t   Count;                      /* current haystack word pos         */
   size_t   NeedleWords;                /* needle word count                 */
   size_t   HaystackWords;              /* haystack word count               */
@@ -545,10 +545,10 @@ RexxInteger *RexxString::wordPos(RexxString  *phrase,
   size_t   FirstNeedle;                /* length of first needle word       */
   size_t   NeedleLength;               /* length of needle                  */
   size_t   HaystackLength;             /* length of haystack                */
-  PCHAR    NeedlePosition;             /* temporary pointers for            */
-  PCHAR    HaystackPosition;           /* the searches                      */
-  PCHAR    NextHaystackPtr;            /* pointer to next word              */
-  PCHAR    NextNeedlePtr;              /* pointer to next word              */
+  const char *NeedlePosition;          /* temporary pointers for            */
+  const char *HaystackPosition;        /* the searches                      */
+  const char *NextHaystackPtr;         /* pointer to next word              */
+  const char *NextNeedlePtr;           /* pointer to next word              */
   size_t   i;                          /* loop counter                      */
 
   if (DBCS_MODE)                       /* need to use DBCS?                 */
@@ -556,14 +556,14 @@ RexxInteger *RexxString::wordPos(RexxString  *phrase,
     return this->DBCSwordPos(phrase, pstart);
 
   phrase = get_string(phrase, ARG_ONE);/* get the phrase we are looking for */
-  NeedleLength = phrase->length;       /* get the length also               */
+  NeedleLength = phrase->getLength();       /* get the length also               */
                                        /* get starting position, the default*/
                                        /* is the first word                 */
   Count = optional_position(pstart, 1, ARG_TWO);
 
-  Needle = phrase->stringData;         /* get friendly pointer              */
-  Haystack = (PCHAR)this->stringData;  /* and the second also               */
-  HaystackLength = this->length;       /* get the haystack length           */
+  Needle = phrase->getStringData();    /* get friendly pointer              */
+  Haystack = this->getStringData();    /* and the second also               */
+  HaystackLength = this->getLength();  /* get the haystack length           */
                                        /* count the words in needle         */
   NeedleWords = WordCount(Needle, NeedleLength);
                                        /* and haystack                      */
@@ -639,9 +639,9 @@ RexxInteger *RexxString::wordPos(RexxString  *phrase,
       Count++;                         /* remember the word position        */
     }
 
-    if (SearchCount)                   /* if we haven't scanned the         */
+    if (SearchCount != 0)              /* if we haven't scanned the         */
                                        /* entire string                     */
-    Retval = new_integer(Count);       /* return the position               */
+      Retval = new_integer(Count);     /* return the position               */
 
     else                               /* it wasn't found, just             */
       Retval = IntegerZero;            /* return a zero.                    */
@@ -653,18 +653,18 @@ RexxInteger *RexxString::wordPos(RexxString  *phrase,
 RexxInteger *RexxString::caselessWordPos(RexxString  *phrase, RexxInteger *pstart)
 {
     phrase = get_string(phrase, ARG_ONE);/* get the phrase we are looking for */
-    stringsize_t needleLength = phrase->length;       /* get the length also               */
+    stringsize_t needleLength = phrase->getLength();       /* get the length also               */
                                          /* get starting position, the default*/
                                          /* is the first word                 */
     stringsize_t count = optional_position(pstart, 1, ARG_TWO);
 
-    stringchar_t *needle = (stringchar_t *)phrase->getStringData();  /* get friendly pointer              */
-    stringchar_t *haystack = (stringchar_t *)this->getStringData();  /* and the second also               */
-    stringsize_t haystackLength = this->length;  /* get the haystack length           */
+    const char *needle = phrase->getStringData();  /* get friendly pointer              */
+    const char *haystack = this->getStringData();  /* and the second also               */
+    stringsize_t haystackLength = this->getLength();  /* get the haystack length           */
                                                  /* count the words in needle         */
-    stringsize_t needleWords = WordCount((PCHAR)needle, needleLength);
+    stringsize_t needleWords = WordCount(needle, needleLength);
                                          /* and haystack                      */
-    stringsize_t haystackWords = WordCount((PCHAR)haystack, haystackLength);
+    stringsize_t haystackWords = WordCount(haystack, haystackLength);
                                          /* if search string is longer        */
                                          /* or no words in search             */
                                          /* or count is longer than           */
@@ -674,30 +674,30 @@ RexxInteger *RexxString::caselessWordPos(RexxString  *phrase, RexxInteger *pstar
         return IntegerZero;
     }
 
-    stringchar_t *nextHaystack;
-    stringchar_t *nextNeedle;
+    const char *nextHaystack;
+    const char *nextNeedle;
                                        /* point at first word               */
-    stringsize_t haystackWordLength = NextWord((PCHAR *)&haystack, &haystackLength, (PCHAR *)&nextHaystack);
+    stringsize_t haystackWordLength = NextWord(&haystack, &haystackLength, &nextHaystack);
                                        /* now skip over count-1             */
     for (stringsize_t i = count - 1; i && haystackWordLength != 0; i--)
     {
         haystack = nextHaystack;         /* step past current word            */
                                        /* find the next word                */
-        haystackWordLength = NextWord((PCHAR *)&haystack, &haystackLength, (PCHAR *)&nextHaystack);
+        haystackWordLength = NextWord(&haystack, &haystackLength, &nextHaystack);
     }
                                        /* get number of searches            */
     stringsize_t searchCount = (haystackWords - needleWords - count) + 2;
                                        /* position at first needle          */
-    stringsize_t firstNeedle = NextWord((PCHAR *)&needle, &needleLength, (PCHAR *)&nextNeedle);
+    stringsize_t firstNeedle = NextWord(&needle, &needleLength, &nextNeedle);
                                        /* loop for the possible times       */
     for (; searchCount; searchCount--)
     {
         stringsize_t needleWordLength = firstNeedle;   /* set the length                    */
-        stringchar_t *needlePosition = needle;         /* get the start of phrase           */
-        stringchar_t *haystackPosition = haystack;     /* and the target string loop        */
+        const char *needlePosition = needle;         /* get the start of phrase           */
+        const char *haystackPosition = haystack;     /* and the target string loop        */
                                          /* for needlewords                   */
-        stringchar_t *nextHaystackPtr = nextHaystack;  /* copy nextword information         */
-        stringchar_t *nextNeedlePtr = nextNeedle;
+        const char *nextHaystackPtr = nextHaystack;  /* copy nextword information         */
+        const char *nextNeedlePtr = nextNeedle;
                                          /* including the lengths             */
         stringsize_t haystackScanLength = haystackLength;
         stringsize_t needleScanLength = needleLength;
@@ -727,9 +727,9 @@ RexxInteger *RexxString::caselessWordPos(RexxString  *phrase, RexxInteger *pstar
             haystackPosition = nextHaystackPtr;
             needlePosition = nextNeedlePtr;
                                            /* Scan off the next word            */
-            haystackWordLength = NextWord((PCHAR *)&haystackPosition, &haystackScanLength, (PCHAR *)&nextHaystackPtr);
+            haystackWordLength = NextWord(&haystackPosition, &haystackScanLength, &nextHaystackPtr);
                                            /* repeat for the needle             */
-            needleWordLength = NextWord((PCHAR *)&needlePosition, &needleScanLength, (PCHAR *)&nextNeedlePtr);
+            needleWordLength = NextWord(&needlePosition, &needleScanLength, &nextNeedlePtr);
         }
 
         if (i == 0)                      /* all words matched, we             */
@@ -738,7 +738,7 @@ RexxInteger *RexxString::caselessWordPos(RexxString  *phrase, RexxInteger *pstar
         }
         haystack = nextHaystack;         /* set the search position           */
                                          /* step to next haytack pos          */
-        haystackWordLength = NextWord((PCHAR *)&haystack, &haystackLength, (PCHAR *)&nextHaystack);
+        haystackWordLength = NextWord(&haystack, &haystackLength, &nextHaystack);
         count++;                         /* remember the word position        */
     }
 
@@ -759,7 +759,7 @@ RexxInteger *RexxString::words()
     return this->DBCSwords();
 
                                        /* return count of words      */
-  tempCount = WordCount((PCHAR)this->stringData, this->length);
+  tempCount = WordCount(this->getStringData(), this->getLength());
   return new_integer(tempCount);
 }
 

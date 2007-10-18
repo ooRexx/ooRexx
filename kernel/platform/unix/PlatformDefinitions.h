@@ -480,7 +480,7 @@ typedef PVOID SYSWINDOWINFO;
 /******************************************************************************/
 /* REQUIRED:  Name of the file used to store the external message repository  */
 /******************************************************************************/
-#define REXXMESSAGEFILE    ((PSZ)"rexx.cat")
+#define REXXMESSAGEFILE    "rexx.cat"
 
 /******************************************************************************/
 /* REQUIRED:  Define any additional native methods that are to be accessed as */
@@ -605,7 +605,7 @@ extern ULONG ProcessMustCompleteNest;  /* The must complete nest            */
 #ifdef __cplusplus
 extern "C" {
 #endif
-PSZ APIENTRY RexxGetVersionInformation(void);
+char * APIENTRY RexxGetVersionInformation(void);
 //void SysResetEventSem (SEV *psem);     /* reset an event semaphore          */
 //void SysCreateMutexSem (SMTX *psem);   /* create/open a mutex semaphore     */
 #ifdef SEMAPHORE_DEBUG
@@ -616,7 +616,7 @@ LONG SysRequestImmediateMutexSem (SMTX psem);
 #endif
                                        /* moved from olcrtmis.h             */
 #define stricmp(s1, s2) strcasecmp(s1, s2)
-#define memicmp(s1, s2, l) strncasecmp((char *)s1, (char *)s2, l)
+#define memicmp(s1, s2, l) strncasecmp(s1, s2, l)
                                        /* both functions can only be used   */
                                        /* without a return value & radix=10 */
 #define _ltoa(val, str, radix)  sprintf(str, "%d", val)

@@ -48,8 +48,6 @@
 #include <pthread.h>
 #include <stdlib.h>
 
-void SysThreadInit(void);
-int SysQueryThreadID();
 #ifdef AIX
 void RxLumCntl( long * result );
 #endif

@@ -112,11 +112,11 @@ APIRET REXXENTRY RexxSetYield(PID procid, TID threadid);
 
 extern RexxObject *ProcessLocalServer; /* current local server              */
 extern RexxActivity *CurrentActivity;  /* current active activity           */
-PCHAR SysFileExtension(PCHAR);
+const char *SysFileExtension(const char *);
 RexxMethod *SysRestoreProgramBuffer(PRXSTRING, RexxString *);
 void SysSaveProgramBuffer(PRXSTRING, RexxMethod *);
-void SysSaveTranslatedProgram(PCHAR, RexxMethod *);
-PCHAR SearchFileName(PCHAR, char);
+void SysSaveTranslatedProgram(const char *, RexxMethod *);
+const char *SearchFileName(const char *, char);
 extern ActivityTable * ProcessLocalActs;
 extern BOOL RexxStartedByApplication;
 
@@ -151,7 +151,6 @@ void SearchPrecision(
   PULONG    precision)                 /* required precision         */
 {
   RexxActivity        *activity;
-  RexxExpressionStack *activations;
   RexxActivation      *activation;
   int i, thread_id,threadid;
 
@@ -476,10 +475,10 @@ void translateSource(
 {
   RexxString * fullName;               /* fully resolved input name         */
   RexxMethod * method;                 /* created method                    */
-  PCHAR        pszName;
+  const char *pszName;
 
                                        /* go resolve the name               */
-  pszName = SearchFileName(inputName->stringData, 'P'); /* PATH search      */
+  pszName = SearchFileName(inputName->getStringData(), 'P'); /* PATH search      */
   if (pszName != OREF_NULL) fullName = new_cstring(pszName);
   else
 //  if (fullName == OREF_NULL)           /* not found?                        */
@@ -492,7 +491,7 @@ void translateSource(
   if (outputName != NULL) {            /* want to save this to a file?      */
     newNativeAct->saveObject(method);  /* protect from garbage collect      */
                                        /* go save this method               */
-    SysSaveTranslatedProgram((PCHAR)outputName, method);
+    SysSaveTranslatedProgram(outputName, method);
   }
 }
 
@@ -511,12 +510,12 @@ RexxMethod * process_instore(
 
   if (instore[0].strptr == NULL && instore[1].strptr == NULL) {
                                        /* see if this exists                */
-    if (!RexxQueryMacro(name->stringData, (PUSHORT)&temp)) {
+    if (!RexxQueryMacro(const_cast<char *>(name->getStringData()), (PUSHORT)&temp)) {
       /* The ExecMacro func returns a ptr to the shared memory. So we must  */
       /* call APISTARTUP to be sure that the ptr remains valid.             */
       APISTARTUP(MACROCHAIN);
                                        /* get the image of function         */
-      RexxExecuteMacroFunction(name->stringData, &buffer);
+      RexxExecuteMacroFunction(const_cast<char *>(name->getStringData()), &buffer);
                                        /* unflatten the method now          */
       Routine = SysRestoreProgramBuffer(&buffer, name);
       APICLEANUP(MACROCHAIN);
@@ -575,11 +574,11 @@ void  SysRunProgram(
   RexxString  * source_calltype;       /* parse source call type            */
   BOOL          tokenize_only;         /* don't actually execute program    */
   RexxString  * initial_address;       /* initial address setting           */
-  PCHAR         file_extension;        /* potential file extension          */
+  const char  * file_extension;        /* potential file extension          */
   RexxString  * program_result;        /* returned program result           */
   RexxNativeActivation * newNativeAct; /* Native Activation to run on       */
-  LONG          length;                /* return result length              */
-  LONG          return_code;           /* converted return code info        */
+  size_t        length;                /* return result length              */
+  int           return_code;           /* converted return code info        */
 
   tokenize_only = FALSE;               /* default is to run the program     */
                                        /* create the native method to be run*/
@@ -680,7 +679,7 @@ void  SysRunProgram(
     initial_address = new_cstring(self->envname);
   else {
                                        /* check for a file extension        */
-    file_extension = SysFileExtension((PCHAR)fullname->stringData);
+    file_extension = SysFileExtension(fullname->getStringData());
     if (file_extension != NULL)      /* have a real one?                  */
                                        /* use extension as the environment  */
       initial_address = new_cstring(file_extension + 1);
@@ -703,7 +702,7 @@ void  SysRunProgram(
                                        /* force to a string value           */
         program_result = program_result->stringValue();
                                        /* get the result length             */
-        length = program_result->length + 1;
+        length = program_result->getLength() + 1;
                                        /* buffer too short or no return?    */
         if (length > self->result->strlength || self->result->strptr == NULL)
         {
@@ -717,7 +716,7 @@ void  SysRunProgram(
                                        /* yes, copy the data (including the */
                                        /* terminating null implied by the   */
                                        /* use of length + 1                 */
-        memcpy(self->result->strptr, program_result->stringData, length);
+        memcpy(self->result->strptr, program_result->getStringData(), length);
                                        /* give the true data length         */
         self->result->strlength = length - 1;
       }
@@ -819,7 +818,8 @@ APIRET APIENTRY RexxDidRexxTerminate(void)
 /*                                                                   */
 /*********************************************************************/
 
-PSZ RexxGetVersionInformation(void)
+extern "C" {
+char *APIENTRY RexxGetVersionInformation(void)
 {
   void *    pVersionString = NULL;
 
@@ -829,4 +829,5 @@ PSZ RexxGetVersionInformation(void)
     strcat((char *)pVersionString , COPYRIGHT);
   }
   return (char *)pVersionString;
+}
 }

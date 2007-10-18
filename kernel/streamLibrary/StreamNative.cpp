@@ -913,7 +913,7 @@ void write_setup(                      /* setup for a write operation       */
 
 LONG write_stream_line(                /* write a line to an I/O stream     */
     STREAM_INFO *stream_info,          /* current stream information        */
-    CHAR        *buffer,               /* buffer to write                   */
+    const char  *buffer,               /* buffer to write                   */
     LONG         length )              /* length to write                   */
 /******************************************************************************/
 /* Function:   write a line to a stream                                       */
@@ -1052,7 +1052,7 @@ void complete_line(
 long write_fixed_line(
     REXXOBJECT   self,                 /* target stream object              */
     STREAM_INFO *stream_info,          /* current stream information        */
-    CHAR        *data,                 /* data to write out                 */
+    const char  *data,                 /* data to write out                 */
     LONG         length )              /* length to read                    */
 /******************************************************************************/
 /* Function:   write out a fixed length record                                */
@@ -1269,12 +1269,12 @@ LONG scan_forward_lines(               /* move forward a number of lines    */
 /* Function: move forward a number of lines in a buffer                       */
 /******************************************************************************/
 {
-  PCHAR   scan_pointer;                /* scanning pointer                  */
-  PCHAR   last_scan;                   /* last scan position                */
-  PCHAR   endptr;                      /* end of the buffer                 */
+  const char *scan_pointer;                /* scanning pointer                  */
+  const char *last_scan;                   /* last scan position                */
+  const char *endptr;                      /* end of the buffer                 */
 //CHAR    delimiters[4];               /* search delimiters                 */
 //CHAR    delimiters[] = { ctrl_z, nl, '\0' };  /* delimiters               */
-  CHAR    delimiters[] = { nl, '\0' }; /* delimiters                        */
+  char    delimiters[] = { nl, '\0' }; /* delimiters                        */
   LONG    buffer_index;                /* current buffer position           */
 
   buffer_index = 0;                    /* get the buffer index              */
@@ -1350,13 +1350,13 @@ LONG count_stream_lines(               /* count lines in a buffer           */
 /* Function: Return count of lines found in a buffer                          */
 /******************************************************************************/
 {
-  PCHAR   scan_pointer;                /* scanning pointer                  */
-  PCHAR   last_scan;                   /* last scan position                */
-  PCHAR   endptr;                      /* end of the buffer                 */
+  const char *scan_pointer;            /* scanning pointer                  */
+  const char *last_scan;               /* last scan position                */
+  const char *endptr;                  /* end of the buffer                 */
   LONG    linecount;                   /* current linecount                 */
 //CHAR    delimiters[4];               /* search delimiters                 */
 //CHAR    delimiters[] = { ctrl_z, nl, '\0' };  /* delimiters               */
-  CHAR    delimiters[] = { nl, '\0' }; /* delimiters                        */
+  char    delimiters[] = { nl, '\0' }; /* delimiters                        */
 
 //delimiters[0] = ctrl_z;              /* fill in the EOF character         */
 //delimiters[1] = end_char[0];         /* fill in first line_end character  */
@@ -1424,14 +1424,14 @@ REXXOBJECT read_variable_line(
 {
    PCHAR   read_buffer;                /* buffer used for reading           */
    PCHAR   new_buffer;                 /* extended buffer allocation        */
-   PCHAR   scan_pointer;               /* location of a delimiter character */
+   const char *scan_pointer;           /* location of a delimiter character */
    LONG    read_count;                 /* count of characters read          */
    LONG    read_index;                 /* location of the next read         */
    LONG    line_length;                /* current line_length               */
    LONG    buffer_length;              /* current length of the buffer      */
    LONG    buffer_index;               /* index within the buffer           */
    LONG    current_buffer_size;        /* current buffer size               */
-   CHAR    delimiters[4];              /* search delimiters                 */
+   char    delimiters[4];              /* search delimiters                 */
    long    read_buffer_size;           /* buffer size                       */
    long    delimiterLength;            /* length of the delimiter           */
 
@@ -1657,7 +1657,7 @@ RexxMethod4(long, stream_charout,
    STREAM_INFO *stream_info;           /* stream information                */
    long result;                        /* read result                       */
    long  slength = 0;                  /* string length                     */
-   PCHAR sdata;                        /* string data pointer               */
+   const char *sdata;                  /* string data pointer               */
 
    stream_info = get_stream_info();    /* get the stream block              */
 
@@ -1990,7 +1990,7 @@ RexxMethod4(long, stream_lineout,
 {
    STREAM_INFO *stream_info;           /* stream information                */
    long  slength = 0;                  /* string length                     */
-   PCHAR sdata;                        /* string data pointer               */
+   const char *sdata;                  /* string data pointer               */
    LONG  result;                       /* returned result                   */
 
    stream_info = get_stream_info();    /* get the stream block              */
@@ -3402,16 +3402,16 @@ RexxMethod1(CSTRING, query_exists,
                                        /* opened as a stream?               */
      if (stream_info->flags.handle_stream)
                                        /* just return the name              */
-       return (PCHAR)&stream_info->name_parameter;
+       return (CSTRING)&stream_info->name_parameter;
      else                              /* give the fully expanded name      */
-       return (PCHAR)&stream_info->full_name_parameter;
+       return (CSTRING)&stream_info->full_name_parameter;
    }
    else
    if (!stream_info->flags.handle_stream &&
        ((strchr(stream_info->full_name_parameter,'*') != NULL) || (strchr(stream_info->full_name_parameter,'?') != NULL)))
    {
       if (SearchFirstFile(stream_info->full_name_parameter))
-             return (PCHAR)&stream_info->full_name_parameter;
+             return (CSTRING)&stream_info->full_name_parameter;
           else
              return "";
    }

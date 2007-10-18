@@ -100,7 +100,7 @@ RexxMethod1(REXXOBJECT,                // Return type
             OSELF, self)               // Pointer to self
 {
   automaton  *pAutomaton = NULL;
-  char       *pszString;
+  const char *pszString;
 
   pszString = string_data( (RexxString*) REXX_GETVAR("!AUTOMATON") );
   if (*pszString != '!')
@@ -117,7 +117,7 @@ RexxMethod3(REXXOBJECT,                // Return type
             REXXOBJECT, matchtype)     // optional match type (MAXIMAL (def.) or MINIMAL)
 {
   automaton  *pAutomaton = NULL;
-  char       *pszString;
+  const char *pszString;
   char        szBuffer[32];
   RexxString *result;
 
@@ -137,7 +137,7 @@ RexxMethod3(REXXOBJECT,                // Return type
     sscanf(pszString, "%p", &pAutomaton);
 
   if (pAutomaton) {
-    pszString = string_data(pArgString);
+    const char *pszString = string_data(pArgString);
     // moved some ptrs to re-use variables
     // optional matchtype given?
     if (matchtype) {
@@ -169,7 +169,7 @@ RexxMethod2(REXXOBJECT,                // Return type
             REXXOBJECT, string)        // string to match
 {
   automaton  *pAutomaton = NULL;
-  char       *pszString;
+  const char *pszString;
   char        szBuffer[32];
   RexxString *result;
 
@@ -207,7 +207,7 @@ RexxMethod2(REXXOBJECT,                // Return type
 {
   automaton  *pAutomaton = NULL;
   bool        fOldState;
-  char       *pszString;
+  const char *pszString;
   size_t      strlength;
   char        szBuffer[32];
   RexxString *result;

@@ -102,10 +102,10 @@ RexxMethod *SysRestoreTranslatedProgram(RexxString *,FILE *);
 RexxMethod *SysRestoreProgram(
   RexxString *FileName )               /* name of file to process           */
 {
-  PCHAR         File;                  /* ASCII-Z file name                 */
+  const char   *File;                  /* ASCII-Z file name                 */
   FILE         *Handle;                /* file handle                       */
   RexxMethod   *Method;                /* unflattened method                */
-  CHAR          fileTag[sizeof(magicNumber)];
+  char          fileTag[sizeof(magicNumber)];
   LONG          buffersize,            /* size of the buffer                */
                 position;              /* Temp file location                */
   RexxBuffer  * buffer;                /* Buffer to unflatten               */
@@ -113,7 +113,7 @@ RexxMethod *SysRestoreProgram(
 
   if (ProcessSaveImage)                /* doing save image?                 */
     return OREF_NULL;                  /* never restore during image build  */
-  File = FileName->stringData;         /* get the file name pointer         */
+  File = FileName->getStringData();    /* get the file name pointer         */
   Handle = fopen(File, "rb");          /* open the file                     */
   if (Handle == NULL)                  /* get anything?                     */
     return OREF_NULL;                  /* no restored image                 */
@@ -263,7 +263,7 @@ void SysSaveProgramBuffer(
   memcpy(Control->RexxVersion, VERPRE, LENPRE);
   Version = version_number();          /* get the version string            */
                                        /* copy in the version string        */
-  memcpy((Control->RexxVersion) + LENPRE, Version->stringData, Version->length + 1);
+  memcpy((Control->RexxVersion) + LENPRE, Version->getStringData(), Version->getLength() + 1);
 
   Control->MetaVersion = METAVERSION;  /* current meta version              */
   Control->Magic = MAGIC;              /* magic signature number            */
@@ -282,7 +282,7 @@ void SysSaveProgramBuffer(
 /*********************************************************************/
 
 void SysSaveTranslatedProgram(
-  PCHAR        File,                   /* name of file to process           */
+  const char  *File,                   /* name of file to process           */
   RexxMethod * Method )                /* method to save                    */
 {
   FILE         *Handle;                /* output file handle                */
@@ -310,9 +310,8 @@ void SysSaveTranslatedProgram(
                                        /* fill in version info              */
   memcpy(Control.RexxVersion, VERPRE, LENPRE);
   Version = version_number();          /* get the version string            */
-//strcpy((PCHAR)Control.RexxVersion + LENPRE, Version->stringData);
-  memcpy((PCHAR)Control.RexxVersion + LENPRE, Version->stringData,
-               Version->length>40-LENPRE?40-LENPRE:Version->length);
+  memcpy((PCHAR)Control.RexxVersion + LENPRE, Version->getStringData(),
+               Version->getLength()>40-LENPRE?40-LENPRE:Version->getLength());
   Control.MetaVersion = METAVERSION;   /* current meta version              */
   Control.Magic = MAGIC;               /* magic signature number            */
   Control.ImageSize = BufferLength;    /* add the buffer length             */

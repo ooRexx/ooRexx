@@ -56,15 +56,15 @@ extern INT  lookup[];
                                        /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
 
-PCHAR Memcpbrk(
-  PCHAR    String,                     /* search string                     */
-  PCHAR    Set,                        /* reference set                     */
+const char *Memcpbrk(
+  const char *String,                  /* search string                     */
+  const char *Set,                     /* reference set                     */
   size_t   Length )                    /* size of string                    */
 /*********************************************************************/
 /*  Function:  Find first occurence of set nonmember in block        */
 /*********************************************************************/
 {
-  PCHAR    Retval;                     /* returned value                    */
+  const char *Retval;                  /* returned value                    */
 
   Retval = NULL;                       /* nothing found yet                 */
   while (Length--) {                   /* search through string             */
@@ -79,9 +79,9 @@ PCHAR Memcpbrk(
 }
 
 INT ValSet(
-  PCHAR    String,                     /* string to validate                */
+  const char *String,                  /* string to validate                */
   size_t    Length,                    /* string length                     */
-  PCHAR     Set,                       /* character set                     */
+  const char *Set,                     /* character set                     */
   INT       Modulus,                   /* smallest group size               */
   size_t   *PackedSize )               /* total packed size                 */
 /*********************************************************************/
@@ -98,7 +98,7 @@ INT ValSet(
 {
   UCHAR    c;                          /* current character                 */
   size_t   Count;                      /* # set members found               */
-  PUCHAR   Current;                    /* current location                  */
+  const char *Current;                 /* current location                  */
   INT      SpaceFound;                 /* space found yet?                  */
   size_t   Residue;                    /* if space_found, # set members     */
   INT      rc;                         /* return code                       */
@@ -107,7 +107,7 @@ INT ValSet(
   if (*String != ' ' && *String != '\t') {    /* if no leading blank               */
     SpaceFound = 0;                    /* set initial space flag            */
     Count = 0;                         /* start count with zero             */
-    Current = (PUCHAR)String;          /* point to start                    */
+    Current = String;                  /* point to start                    */
 
     rc = TRUE;                         /* default to good now               */
     for (; Length; Length--) {         /* process entire string             */
@@ -155,10 +155,10 @@ int RexxString::isSymbol()
 /*                                                                   */
 /*********************************************************************/
 {
-  PUCHAR     Scan;                     /* string scan pointer               */
+  const char *Scan;                    /* string scan pointer               */
   size_t     Compound;                 /* count of periods                  */
   size_t     i;                        /* loop counter                      */
-  PUCHAR     Linend;                   /* end of line                       */
+  const char *Linend;                  /* end of line                       */
   INT        Type;                     /* return type                       */
 
                                        /* name too long                     */
@@ -167,10 +167,10 @@ int RexxString::isSymbol()
     return STRING_BAD_VARIABLE;        /* set a bad type                    */
 
                                        /* step to end                       */
-  Linend = (PUCHAR)this->stringData + this->length;
+  Linend = this->getStringData() + this->length;
 
   Compound = 0;                        /* set compound name is no           */
-  Scan = (PUCHAR)this->stringData;     /* save start position               */
+  Scan = this->getStringData();        /* save start position               */
                                        /* while still part of symbol        */
   while (Scan < Linend && lookup[*Scan]) {
 
@@ -205,7 +205,7 @@ int RexxString::isSymbol()
       Type = STRING_LITERAL;           /* yes, just a literal token         */
     else {                             /* check for a real number           */
       Type = STRING_NUMERIC;           /* assume numeric for now            */
-      Scan = (PUCHAR)this->stringData; /* point to symbol                   */
+      Scan = this->getStringData();    /* point to symbol                   */
                                        /* scan symbol, validating           */
       for (i = this->length ; i; i-- ) {
         if (!isdigit(*Scan) &&         /* if not a digit and                */
@@ -255,18 +255,18 @@ RexxObject *DataType(
   size_t      Len;                     /* validated string length           */
   RexxObject *Answer;                  /* validation result                 */
   RexxObject *Temp;                    /* temporary value                   */
-  PCHAR       Scanp;                   /* string data pointer               */
+  const char *Scanp;                   /* string data pointer               */
   size_t      Count;                   /* hex nibble count                  */
   INT         Type;                    /* validated symbol type             */
   RexxNumberString *TempNum;
 
-  Len = String->length;                /* get validated string len          */
+  Len = String->getLength();           /* get validated string len          */
   Option = toupper(Option);            /* get the first character           */
 
                                        /* assume failure on checking        */
   Answer = (RexxObject *)TheFalseObject;
                                        /* get a scan pointer                */
-  Scanp = (PCHAR)String->stringData;
+  Scanp = String->getStringData();
 
   switch (Option) {                    /* based on type to confirm          */
 
@@ -279,7 +279,7 @@ RexxObject *DataType(
 
     case DATATYPE_BINARY:              /* Binary string                     */
                                        /* validate the string               */
-      if (Len == 0 || ValSet(Scanp, Len, (PCHAR)BINARI, 4, &Count))
+      if (Len == 0 || ValSet(Scanp, Len, BINARI, 4, &Count))
                                        /* this is a good string             */
         Answer = (RexxObject *)TheTrueObject;
       break;
@@ -340,7 +340,7 @@ RexxObject *DataType(
 
     case DATATYPE_HEX:                 /* heXadecimal                       */
                                        /* validate the string               */
-      if (Len == 0 || ValSet(Scanp, Len, (PCHAR)HEX_CHAR_STR, 2, &Count))
+      if (Len == 0 || ValSet(Scanp, Len, HEX_CHAR_STR, 2, &Count))
                                        /* valid hexadecimal                 */
         Answer = (RexxObject *)TheTrueObject;
       break;
@@ -377,7 +377,7 @@ RexxObject *DataType(
           break;
 
     default  :                         /* unsupported option                */
-      report_exception2(Error_Incorrect_method_option, new_cstring("ABCDLMNOSUVWX9"), new_string((PCHAR)&Option,1));
+      report_exception2(Error_Incorrect_method_option, new_cstring("ABCDLMNOSUVWX9"), new_string((const char *)&Option,1));
   }
   return Answer;                       /* return validation answer          */
 }
@@ -414,7 +414,7 @@ RexxInteger *RexxString::abbrev(
 
   else                                 /* now we have to check it           */
                                        /* do the comparison                 */
-    rc = !(memcmp((PCHAR)this->stringData, info->stringData, Len2));
+    rc = !(memcmp(this->getStringData(), info->getStringData(), Len2));
                                        /* return proper string value        */
   return (rc) ? IntegerOne : IntegerZero;
 }
@@ -444,7 +444,7 @@ RexxInteger *RexxString::caselessAbbrev(RexxString *info, RexxInteger *length)
         return TheFalseObject;
     }
     /* do the comparison                 */
-    return(CaselessCompare((PUCHAR)this->getStringData(), (PUCHAR)info->getStringData(), len2) == 0) ? TheTrueObject : TheFalseObject;
+    return(CaselessCompare(this->getStringData(), info->getStringData(), len2) == 0) ? TheTrueObject : TheFalseObject;
 }
 
 
@@ -455,11 +455,11 @@ RexxInteger *RexxString::compare(
 /*  Function:  String class COMPARE method/function.                          */
 /******************************************************************************/
 {
-  UCHAR    PadChar;                    /* pad character                     */
+  char     PadChar;                    /* pad character                     */
   size_t   MisMatch;                   /* mismatch location                 */
   RexxInteger *Retval;                 /* returned result                   */
-  PCHAR    String1;                    /* string 1 pointer                  */
-  PCHAR    String2;                    /* string 2 pointer                  */
+  const char *String1;                 /* string 1 pointer                  */
+  const char *String2;                 /* string 2 pointer                  */
   size_t   Lead;                       /* leading length                    */
   size_t   Remainder;                  /* trailing length                   */
   size_t   i;                          /* loop index                        */
@@ -476,15 +476,15 @@ RexxInteger *RexxString::compare(
   Length2 = string2->length;           /* get the length also               */
   PadChar = get_pad(pad, ' ', ARG_TWO);/* get the pad character             */
   if (Length1 > Length2) {             /* first longer?                     */
-    String1 = (PCHAR)this->stringData;     /* make arg 1 first string           */
+    String1 = this->getStringData();   /* make arg 1 first string           */
                                        /* arg 2 is second string            */
-    String2 = string2->stringData;
+    String2 = string2->getStringData();
     Lead = Length2;                    /* get shorter length                */
     Remainder = Length1 - Lead;        /* get trailing size                 */
   }
   else {                               /* make arg 2 first string           */
-    String1 = string2->stringData;
-    String2 = (PCHAR)this->stringData; /* arg 1 is second string            */
+    String1 = string2->getStringData();
+    String2 = this->getStringData();   /* arg 1 is second string            */
     Lead = Length1;                    /* get shorter length                */
     Remainder = Length2 - Lead;        /* get trailing size                 */
   }
@@ -585,7 +585,7 @@ RexxString *RexxString::copies(RexxInteger *copies)
   size_t   Count;                      /* copies count                      */
   RexxString *Retval;                  /* return value                      */
   size_t   Len;                        /* copy string length                */
-  PCHAR    Temp;                       /* copy location                     */
+  char    *Temp;                       /* copy location                     */
 
   if (DBCS_SELF)                       /* need to use DBCS?                 */
     ValidDBCS(this);                   /* validate the DBCS string          */
@@ -604,15 +604,15 @@ RexxString *RexxString::copies(RexxInteger *copies)
 
     if (Len == 1) {                    /* if only 1 char long               */
                                        /* just do this with memset          */
-      memset(Retval->stringData, this->stringData[0], Count);
+      memset(Retval->getWritableData(), this->getChar(0), Count);
     }
                                        /* if any copies                     */
     else {
                                        /* point to the string               */
-      Temp = Retval->stringData;
+      Temp = Retval->getWritableData();
       while (Count--) {                /* copy 2 thru n copies              */
                                        /* copy the string                   */
-        memcpy(Temp, (PCHAR)this->stringData, Len);
+        memcpy(Temp, this->getStringData(), Len);
         Temp += Len;
       }
     }
@@ -696,14 +696,14 @@ size_t RexxString::lastPos(RexxString  *needle, size_t start)
         // get the start position for the search.
         haystackLen = min(start, haystackLen);
                                          /* do the search                     */
-        PUCHAR matchLocation = lastPos((PUCHAR)needle->getStringData(), needleLen, (PUCHAR )this->getStringData(), haystackLen);
+        const char *matchLocation = lastPos(needle->getStringData(), needleLen, this->getStringData(), haystackLen);
         if (matchLocation == NULL)
         {
             return 0;
         }
         else
         {
-            return matchLocation - (PUCHAR)this->getStringData() + 1;
+            return matchLocation - this->getStringData() + 1;
         }
     }
 }
@@ -735,14 +735,14 @@ size_t RexxString::caselessLastPos(RexxString *needle, size_t start)
         // get the start position for the search.
         haystackLen = min(start, haystackLen);
                                          /* do the search                     */
-        PUCHAR matchLocation = caselessLastPos((PUCHAR)needle->getStringData(), needleLen, (PUCHAR )this->getStringData(), haystackLen);
+        const char *matchLocation = caselessLastPos(needle->getStringData(), needleLen, this->getStringData(), haystackLen);
         if (matchLocation == NULL)
         {
             return 0;
         }
         else
         {
-            return matchLocation - (PUCHAR)this->getStringData() + 1;
+            return matchLocation - this->getStringData() + 1;
         }
     }
 }
@@ -761,7 +761,7 @@ size_t RexxString::caselessLastPos(RexxString *needle, size_t start)
  *
  * @return A pointer to the match location or NULL if there is no match.
  */
-PUCHAR RexxString::lastPos(PUCHAR needle, size_t needleLen, PUCHAR  haystack, size_t haystackLen)
+const char *RexxString::lastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen)
 {
     // if the needle's longer than the haystack, no chance of a match
     if (needleLen > haystackLen)
@@ -801,7 +801,7 @@ PUCHAR RexxString::lastPos(PUCHAR needle, size_t needleLen, PUCHAR  haystack, si
  *
  * @return A pointer to the match location or NULL if there is no match.
  */
-PUCHAR RexxString::caselessLastPos(PUCHAR needle, size_t needleLen, PUCHAR  haystack, size_t haystackLen)
+const char *RexxString::caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen)
 {
     // if the needle's longer than the haystack, no chance of a match
     if (needleLen > haystackLen)
@@ -908,9 +908,9 @@ RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, Rex
   size_t newLength;                    /* length of the replacement string  */
   size_t matches;                      /* number of replacements            */
   size_t copyLength;                   /* length to copy                    */
-  PCHAR source;                        /* point to the string source        */
-  PCHAR copy;                          /* current copy position             */
-  PCHAR newPtr;                        /* pointer to replacement data       */
+  const char *source;                  /* point to the string source        */
+  char *copy;                          /* current copy position             */
+  const char *newPtr;                  /* pointer to replacement data       */
   RexxString *result;                  /* returned result string            */
   size_t i;
 
@@ -930,10 +930,10 @@ RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, Rex
   newLength = newNeedle->length;       /* and the replacement length        */
                                        /* get a proper sized string         */
   result = (RexxString *)raw_string(this->length - (matches * needleLength) + (matches * newLength));
-  copy = result->stringData;           /* point to the copy location        */
-  source = this->stringData;           /* and out own data                  */
+  copy = result->getWritableData();    /* point to the copy location        */
+  source = this->getStringData();      /* and out own data                  */
                                        /* and the string to replace         */
-  newPtr = newNeedle->stringData;
+  newPtr = newNeedle->getStringData();
   start = 0;                           /* set a zero starting point         */
   for (i = 0; i < matches; i++) {      /* until we hit count or run out     */
     match = this->pos(needle, start);  /* look for the next occurrence      */
@@ -969,9 +969,9 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
   size_t newLength;                    /* length of the replacement string  */
   size_t matches;                      /* number of replacements            */
   size_t copyLength;                   /* length to copy                    */
-  PCHAR source;                        /* point to the string source        */
-  PCHAR copy;                          /* current copy position             */
-  PCHAR newPtr;                        /* pointer to replacement data       */
+  const char *source;                  /* point to the string source        */
+  char * copy;                         /* current copy position             */
+  const char *newPtr;                  /* pointer to replacement data       */
   RexxString *result;                  /* returned result string            */
   size_t i;
 
@@ -991,10 +991,10 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
   newLength = newNeedle->length;       /* and the replacement length        */
                                        /* get a proper sized string         */
   result = (RexxString *)raw_string(this->length - (matches * needleLength) + (matches * newLength));
-  copy = result->stringData;           /* point to the copy location        */
-  source = this->stringData;           /* and out own data                  */
+  copy = result->getWritableData();    /* point to the copy location        */
+  source = this->getStringData();      /* and out own data                  */
                                        /* and the string to replace         */
-  newPtr = newNeedle->stringData;
+  newPtr = newNeedle->getStringData();
   start = 0;                           /* set a zero starting point         */
   for (i = 0; i < matches; i++) {      /* until we hit count or run out     */
     match = this->caselessPos(needle, start);  /* look for the next occurrence      */
@@ -1080,8 +1080,8 @@ size_t RexxString::pos(RexxString *needle, size_t start)
     }
 
     // address the string value
-    PUCHAR haypointer = (PUCHAR)getStringData() + start;
-    PUCHAR needlepointer = (PUCHAR)needle->getStringData();
+    const char *haypointer = getStringData() + start;
+    const char *needlepointer = needle->getStringData();
     size_t location = start + 1;         // this is the match location as an index
     // calculate the number of probes we can make in this string
     size_t count = (haystack_length - start) - needle_length + 1;
@@ -1090,7 +1090,7 @@ size_t RexxString::pos(RexxString *needle, size_t start)
     while (count--)
     {
                                            /* get a hit?                        */
-        if (memcmp((PCHAR)haypointer, (PCHAR)needlepointer, needle_length) == 0)
+        if (memcmp(haypointer, needlepointer, needle_length) == 0)
         {
             return location;
         }
@@ -1124,8 +1124,8 @@ size_t RexxString::caselessPos(RexxString *needle, size_t start)
     }
 
     // address the string value
-    PUCHAR haypointer = (PUCHAR)getStringData() + start;
-    PUCHAR needlepointer = (PUCHAR)needle->getStringData();
+    const char *haypointer = getStringData() + start;
+    const char *needlepointer = needle->getStringData();
     size_t location = start + 1;         // this is the match location as an index
     // calculate the number of probes we can make in this string
     size_t count = (haystack_length - start) - needle_length + 1;
@@ -1146,14 +1146,14 @@ size_t RexxString::caselessPos(RexxString *needle, size_t start)
 }
 
 size_t MemPos(
-  PUCHAR  String,                      /* search string                     */
+  const char *String,                  /* search string                     */
   size_t Length,                       /* string length                     */
-  UCHAR  Char )                        /* target character                  */
+  char   Char )                        /* target character                  */
 /*********************************************************************/
 /*  Function:  offset of first occurrence of char in string          */
 /*********************************************************************/
 {
-  PUCHAR  Scan;                        /* scan location                     */
+  const char *Scan;                    /* scan location                     */
   size_t Position;                     /* matched position                  */
 
   Position = -1;                       /* default to no match               */
@@ -1177,14 +1177,14 @@ RexxString *RexxString::translate(
 /******************************************************************************/
 {
   RexxString *Retval;                  /* return value                      */
-  PUCHAR    OutTable;                  /* output table                      */
+  const char *OutTable;                /* output table                      */
   size_t    OutTableLength;            /* length of output table            */
-  PUCHAR    InTable;                   /* input table                       */
-  PUCHAR    ScanPtr;                   /* scanning pointer                  */
+  const char *InTable;                 /* input table                       */
+  char       *ScanPtr;                 /* scanning pointer                  */
   size_t    ScanLength;                /* scanning length                   */
   size_t    InTableLength;             /* length of input table             */
-  UCHAR     PadChar;                   /* pad character                     */
-  UCHAR     ch;                        /* current character                 */
+  char      PadChar;                   /* pad character                     */
+  char      ch;                        /* current character                 */
   size_t    Position;                  /* table position                    */
 
   if (DBCS_MODE)                       /* need to use DBCS?                 */
@@ -1202,18 +1202,18 @@ RexxString *RexxString::translate(
                                        /* input table too                   */
  tablei = optional_string(tablei, OREF_NULLSTRING, ARG_TWO);
  InTableLength = tablei->length;       /* get the table length              */
- InTable = (PUCHAR)tablei->stringData; /* point at the input table          */
- OutTable = (PUCHAR)tableo->stringData;/* and the output table              */
+ InTable = tablei->getStringData();    /* point at the input table          */
+ OutTable = tableo->getStringData();   /* and the output table              */
                                        /* get the pad character             */
   PadChar = get_pad(pad, ' ', ARG_THREE);
                                        /* allocate space for answer         */
                                        /* and copy the string               */
- Retval = new_string((PCHAR)this->stringData, this->length);
- ScanPtr = (PUCHAR)Retval->stringData; /* point to data                     */
+ Retval = new_string(this->getStringData(), this->getLength());
+ ScanPtr = Retval->getWritableData();  /* point to data                     */
  ScanLength = this->length;            /* get the length too                */
 
  while (ScanLength--) {                /* spin thru input                   */
-   ch = (UCHAR)*ScanPtr;               /* get a character                   */
+   ch = *ScanPtr;                      /* get a character                   */
 
    if (tablei != OREF_NULLSTRING)      /* input table specified?            */
                                        /* search for the character          */
@@ -1247,18 +1247,18 @@ RexxInteger *RexxString::verify(
   size_t    ReferenceLen;              /* length of reference set           */
   size_t    Temp;                      /* temporary scan length             */
   RexxInteger *Retval;                 /* return value                      */
-  CHAR      Option;                    /* verify option                     */
-  PCHAR     Reference;                 /* reference pointer                 */
-  PCHAR     Current;                   /* current scan position             */
-  CHAR      ch;                        /* scan character                    */
-  BOOL      Match;                     /* found a match                     */
+  char      Option;                    /* verify option                     */
+  const char *Reference;               /* reference pointer                 */
+  const char *Current;                 /* current scan position             */
+  char      ch;                        /* scan character                    */
+  bool      Match;                     /* found a match                     */
 
   if (DBCS_MODE)                       /* need to use DBCS?                 */
                                        /* do the DBCS version               */
     return this->DBCSverify(ref, option, start);
 
   ref = get_string(ref, ARG_ONE);      /* get the reference string          */
-  ReferenceLen = ref->length;          /* get a length also                 */
+  ReferenceLen = ref->getLength();     /* get a length also                 */
                                        /* get the option, default 'Nomatch' */
   Option = option_character(option, VERIFY_NOMATCH, ARG_TWO);
   if (Option != VERIFY_MATCH &&        /* options are 'Match' and           */
@@ -1268,12 +1268,12 @@ RexxInteger *RexxString::verify(
 
                                        /* get starting position             */
   StartPos = optional_position(start, 1, ARG_THREE);
-  StringLen = this->length;            /* get the string length             */
+  StringLen = this->getLength();       /* get the string length             */
   if (StartPos > StringLen)            /* beyond end of string?             */
     Retval = IntegerZero;              /* couldn't find it                  */
   else {
                                        /* point at start position           */
-    Current = (PCHAR)this->stringData + StartPos - 1;
+    Current = this->getStringData() + StartPos - 1;
     StringLen -= (StartPos - 1);       /* reduce the length                 */
     Position = 0;                      /* haven't found it yet              */
 
@@ -1301,7 +1301,7 @@ RexxInteger *RexxString::verify(
         if ((Match && Option == VERIFY_MATCH) ||
             (!Match && Option == VERIFY_NOMATCH)) {
                                        /* calculate the position            */
-          Position = Current - (PCHAR)this->stringData;
+          Position = Current - this->getStringData();
           break;                       /* done searching                    */
         }
       }
@@ -1448,7 +1448,7 @@ bool RexxString::primitiveCaselessMatch(stringsize_t start, RexxString *other, s
         return false;
     }
 
-    return CaselessCompare((PUCHAR)(getStringData() + start), (PUCHAR)(other->getStringData() + offset), len) == 0;
+    return CaselessCompare(getStringData() + start, other->getStringData() + offset, len) == 0;
 }
 
 
@@ -1668,7 +1668,7 @@ RexxInteger *RexxString::primitiveCaselessCompareTo(RexxString *other, stringsiz
 
     len = min(myLength, otherLength);
 
-    wholenumber_t result = CaselessCompare((PUCHAR)getStringData() + start, (PUCHAR)other->getStringData() + start, len);
+    wholenumber_t result = CaselessCompare(getStringData() + start, other->getStringData() + start, len);
 
     // if they compare equal, then they are only
     if (result == 0)

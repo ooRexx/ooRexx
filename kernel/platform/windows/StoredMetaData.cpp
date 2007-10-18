@@ -131,25 +131,25 @@ RexxMethod *SysRestoreProgram(
 
 {
   FILE         *Handle;                /* output file handle                */
-  PCHAR         File;                  /* ASCII-Z file name                 */
+  const char   *File;                  /* ASCII-Z file name                 */
 
   RexxMethod  * Method;                /* unflattened method                */
   FILE_CONTROL  Control;               /* control information               */
-  PCHAR         StartPointer;          /* start of buffered method          */
+  char        * StartPointer;          /* start of buffered method          */
   RexxBuffer  * Buffer;                /* Buffer to unflatten               */
-  LONG          BufferSize;            /* size of the buffer                */
-  ULONG         BytesRead;             /* actual bytes read                 */
+  size_t        BufferSize;            /* size of the buffer                */
+  size_t        BytesRead;             /* actual bytes read                 */
   RexxCode    * Code;                  /* parent rexx method                */
   RexxSource  * Source;                /* REXX source object                */
   RexxActivity *activity;              /* the current activity              */
-  PVOID         MethodInfo;
+  void         *MethodInfo;
                                        /* temporary read buffer             */
-  CHAR          fileTag[sizeof(compiledHeader)];
+  char          fileTag[sizeof(compiledHeader)];
 
   if (ProcessSaveImage)                /* doing save image?                 */
     return OREF_NULL;                  /* never restore during image build  */
 
-  File = FileName->stringData;         /* get the file name pointer         */
+  File = FileName->getStringData();    /* get the file name pointer         */
 
   Handle = fopen(File, "rb");          /* open the input file               */
   if (Handle == NULL)                  /* get an open error?                */
@@ -245,13 +245,13 @@ void SysSaveProgram(
   FILE_CONTROL  Control;               /* control information               */
   RexxBuffer *  MethodBuffer;          /* flattened method                  */
   RexxSmartBuffer *FlatBuffer;         /* fully flattened buffer            */
-  PCHAR         BufferAddress;         /* address of flattened method data  */
+  char         *BufferAddress;         /* address of flattened method data  */
   LONG          BufferLength;          /* length of the flattened method    */
   RexxString *  Version;               /* REXX version string               */
   ULONG         BytesRead;             /* actual bytes read                 */
-  PCHAR         File;                  /* ASCII-Z file name                 */
+  const char   *File;                  /* ASCII-Z file name                 */
   RexxActivity *activity;              /* current activity                  */
-  CHAR          savetok[65];
+  char          savetok[65];
 
   if (ProcessSaveImage)                /* doing save image                  */
     return;                            /* never save during image build     */
@@ -262,7 +262,7 @@ void SysSaveProgram(
 
   save(FileName);                      /* protect the file name             */
   save(Method);                        /* and the method too                */
-  File = FileName->stringData;         /* get the file name pointer         */
+  File = FileName->getStringData();    /* get the file name pointer         */
                                        /* open the file                     */
   activity = CurrentActivity;          /* save the activity                 */
 
@@ -282,7 +282,7 @@ void SysSaveProgram(
                                        /* fill in version info              */
   memcpy(Control.RexxVersion, VERPRE, LENPRE);
   Version = version_number();          /* get the version string            */
-  memcpy((PCHAR)Control.RexxVersion + LENPRE, Version->stringData, Version->length>(40-LENPRE)?(40-LENPRE):Version->length);
+  memcpy((char *)Control.RexxVersion + LENPRE, Version->getStringData(), Version->getLength() > (40-LENPRE)?(40-LENPRE):Version->getLength());
   Control.MetaVersion = METAVERSION;   /* current meta version              */
   Control.Magic = MAGIC;               /* magic signature number            */
   Control.ImageSize = BufferLength;    /* add the buffer length             */
@@ -419,7 +419,7 @@ void SysSaveProgramBuffer(
   memcpy(Control->RexxVersion, VERPRE, LENPRE);
   Version = version_number();          /* get the version string            */
                                        /* copy in the version string        */
-  memcpy((Control->RexxVersion) + LENPRE, Version->stringData, Version->length + 1);
+  memcpy((Control->RexxVersion) + LENPRE, Version->getStringData(), Version->getLength() + 1);
 
   Control->MetaVersion = METAVERSION;  /* current meta version              */
   Control->Magic = MAGIC;              /* magic signature number            */
@@ -439,7 +439,7 @@ void SysSaveProgramBuffer(
 
 // retrofit by IH
 void SysSaveTranslatedProgram(
-  PCHAR        File,                   /* name of file to process           */
+  const char  *File,                   /* name of file to process           */
   RexxMethod * Method )                /* method to save                    */
 {
   FILE         *Handle;                /* output file handle                */
@@ -467,7 +467,7 @@ void SysSaveTranslatedProgram(
                                        /* fill in version info              */
   memcpy(Control.RexxVersion, VERPRE, LENPRE);
   Version = version_number();          /* get the version string            */
-  strcpy((PCHAR)Control.RexxVersion + LENPRE, Version->stringData);
+  strcpy((char *)Control.RexxVersion + LENPRE, Version->getStringData());
   Control.MetaVersion = METAVERSION;   /* current meta version              */
   Control.Magic = MAGIC;               /* magic signature number            */
   Control.ImageSize = BufferLength;    /* add the buffer length             */

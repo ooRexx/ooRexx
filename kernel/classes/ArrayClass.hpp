@@ -165,6 +165,9 @@ typedef struct copyElelmentParm {
    RexxObject *        indexToArray(size_t idx);
    RexxObject *        convertIndex(size_t idx);
 
+
+ protected:
+
    size_t arraySize;                   /* current size of array         */
    size_t maximumSize;                 /* Maximum size array can grow   */
    RexxArray *dimensions;              /* Array containing dimensions - null if 1-dimensional */

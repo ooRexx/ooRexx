@@ -52,9 +52,9 @@
   inline RexxBuffer(RESTORETYPE restoreType) { ; };
   RexxBuffer *expand(size_t);
 
-  inline size_t length(void) { return this->u_size; };
-  inline PCHAR address(void) {return (PCHAR)this->data; }
-  inline void copyData(size_t offset, PCHAR string, size_t length) { memcpy((PCHAR)(this->data) + offset, string, length); }
+  inline size_t getLength(void) { return this->u_size; };
+  inline char *address(void) {return this->data; }
+  inline void copyData(size_t offset, const char *string, size_t length) { memcpy(this->data + offset, string, length); }
 
    char data[4];                       /* actual data length                */
  };

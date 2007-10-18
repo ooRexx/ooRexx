@@ -779,12 +779,12 @@ RexxArray *RexxHashTable::stringGetAll(
   size_t count;                        /* count of items to return          */
   RexxArray *result;                   /* returned result                   */
   size_t i;                            /* loop counter                      */
-  PCHAR data;                          /* string data                       */
+  const char *data;                    /* string data                       */
   size_t length;                       /* string length                     */
   RexxString *entry;                   /* current compare entry             */
 
-  data = index->stringData;            /* get the string data               */
-  length = index->length;              /* and the length also               */
+  data = index->getStringData();            /* get the string data               */
+  length = index->getLength();              /* and the length also               */
   count = 0L;                          /* no items found yet                */
   position = hashStringIndex(index);   /* calculate the hash slot           */
                                        /* have an entry at this slot        */
@@ -1034,13 +1034,13 @@ RexxObject *RexxHashTable::stringGet(
 /******************************************************************************/
 {
   HashLink position;                   /* current position                  */
-  PCHAR data;                          /* string data                       */
+  const char *data;                    /* string data                       */
   size_t length;                       /* string length                     */
   RexxString *entry;                   /* current table entry               */
   int depth = 0;
 
-  data = index->stringData;            /* get the string data               */
-  length = index->length;              /* and the length also               */
+  data = index->getStringData();            /* get the string data               */
+  length = index->getLength();              /* and the length also               */
 
   position = hashStringIndex(index);   /* calculate the hash slot           */
   ULONG indexHash = HASHVALUE(index);  /* save the index                    */
@@ -1069,13 +1069,13 @@ RexxHashTable *RexxHashTable::stringPut(
 /******************************************************************************/
 {
   HashLink position;                   /* current position                  */
-  PCHAR data;                          /* string data                       */
+  const char *data;                    /* string data                       */
   size_t length;                       /* string length                     */
   HashLink front;                      /* starting location                 */
   RexxString *entry;                   /* current table entry               */
 
-  data = index->stringData;            /* get the string data               */
-  length = index->length;              /* and the length also               */
+  data = index->getStringData();            /* get the string data               */
+  length = index->getLength();              /* and the length also               */
   ULONG indexHash = HASHVALUE(index);  /* save the index                    */
 
   position = hashStringIndex(index);   /* calculate the hash slot           */

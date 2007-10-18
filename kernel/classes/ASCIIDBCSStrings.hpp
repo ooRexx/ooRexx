@@ -58,7 +58,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-#define STRLEN(x) ((x)->length)
+#define STRLEN(x) ((x)->getLength())
 
 /*********************************************************************/
 /*                                                                   */
@@ -78,11 +78,12 @@
 
 /*********************************************************************/
 /*                                                                   */
-/* point to the data part of a string                                */
+/* point to the data part of a string (as a constant)                */
 /*                                                                   */
 /*********************************************************************/
 
-#define STRPTR(x) ((PUCHAR)(x)->stringData)
+#define STRPTR(x) ((x)->getStringData())
+#define DATAPTR(x) ((x)->getWritableData())
 
 /*********************************************************************/
 /*                                                                   */
@@ -168,10 +169,10 @@
 #define INCREMENT       1L             /* Increment.                        */
 #define DECREMENT       (-1L)          /* Decrement.                        */
 
-void DBCS_MemUpper(PUCHAR, size_t);
-void DBCS_MemLower(PUCHAR, size_t);
-void DBCS_SkipNonBlanks(PUCHAR *, size_t *);
-void DBCS_SkipBlanks(PUCHAR *, size_t *);
-size_t DBCS_CharacterCount(PUCHAR, size_t);
+void DBCS_MemUpper(char *, size_t);
+void DBCS_MemLower(char *, size_t);
+void DBCS_SkipNonBlanks(const char **, size_t *);
+void DBCS_SkipBlanks(const char **, size_t *);
+size_t DBCS_CharacterCount(const char *, size_t);
 
 #endif

@@ -128,7 +128,7 @@ extern INT      SubDirectivescount;    /* language directive         */
 /*********************************************************************/
 
 INT resolve_keyword(
-  PCHAR     Name,                      /* name to search                    */
+  const char *Name,                    /* name to search                    */
   size_t    Length,                    /* length of the name                */
   KWDTABLE *Table,                     /* keyword table to use              */
   INT       Table_Size )               /* size of keyword table             */
@@ -187,7 +187,7 @@ int RexxSource::subKeyword(
   else {
     value = token->value;              /* get the token's value             */
                                        /* perform keyword table search      */
-    return resolve_keyword((PCHAR)value->stringData, value->length, SubKeywords, SubKeywordscount);
+    return resolve_keyword(value->getStringData(), value->getLength(), SubKeywords, SubKeywordscount);
   }
 }
 
@@ -204,7 +204,7 @@ int RexxSource::keyword(
   else {
     value = token->value;              /* get the token's value             */
                                        /* perform keyword table search      */
-    return resolve_keyword((PCHAR)value->stringData, value->length, KeywordInstructions, KeywordInstructionscount);
+    return resolve_keyword(value->getStringData(), value->getLength(), KeywordInstructions, KeywordInstructionscount);
   }
 }
 
@@ -218,7 +218,7 @@ int RexxSource::builtin(
 
   value = token->value;                /* get the token's value             */
                                        /* perform keyword table search      */
-  return resolve_keyword((PCHAR)value->stringData, value->length, BuiltinFunctions, BuiltinFunctionscount);
+  return resolve_keyword(value->getStringData(), value->getLength(), BuiltinFunctions, BuiltinFunctionscount);
 }
 
 
@@ -229,7 +229,7 @@ int RexxSource::resolveBuiltin(
 /******************************************************************************/
 {
                                        /* perform keyword table search      */
-  return resolve_keyword(value->stringData, value->length, BuiltinFunctions, BuiltinFunctionscount);
+  return resolve_keyword(value->getStringData(), value->getLength(), BuiltinFunctions, BuiltinFunctionscount);
 }
 
 int RexxSource::condition(
@@ -245,7 +245,7 @@ int RexxSource::condition(
   else {
     value = token->value;              /* get the token's value             */
                                        /* perform keyword table search      */
-    return resolve_keyword((PCHAR)value->stringData, value->length, ConditionKeywords, ConditionKeywordscount);
+    return resolve_keyword(value->getStringData(), value->getLength(), ConditionKeywords, ConditionKeywordscount);
   }
 }
 
@@ -262,7 +262,7 @@ int RexxSource::parseOption(
   else {
     value = token->value;              /* get the token's value             */
                                        /* perform keyword table search      */
-    return resolve_keyword((PCHAR)value->stringData, value->length, ParseOptions, ParseOptionscount);
+    return resolve_keyword(value->getStringData(), value->getLength(), ParseOptions, ParseOptionscount);
   }
 }
 
@@ -279,7 +279,7 @@ int RexxSource::keyDirective(
   else {
     value = token->value;              /* get the token's value             */
                                        /* perform keyword table search      */
-    return resolve_keyword((PCHAR)value->stringData, value->length, Directives, Directivescount);
+    return resolve_keyword(value->getStringData(), value->getLength(), Directives, Directivescount);
   }
 }
 
@@ -296,7 +296,7 @@ int RexxSource::subDirective(
   else {
     value = token->value;              /* get the token's value             */
                                        /* perform keyword table search      */
-    return resolve_keyword((PCHAR)value->stringData, value->length, SubDirectives, SubDirectivescount);
+    return resolve_keyword(value->getStringData(), value->getLength(), SubDirectives, SubDirectivescount);
   }
 }
 

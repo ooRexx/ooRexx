@@ -144,6 +144,7 @@ RexxExecutionLineInfo         @111        ; for feature 249
 REXX_EXECUTIONINFO            @112        ; for feature 249
 
 REXX_SETVAR2                  @113        ; CHM for feature 595
+RexxGetVersionInformation     @114        ; MAE for feature 594
 REXX_SETFUNC                  @115        ; ENG for feature 855
 REXX_GETFUNCTIONNAMES         @116        ; ENG for feature 855 (additional)
 SearchPrecision               @117        ; DOE for feature 883

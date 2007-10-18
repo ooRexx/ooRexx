@@ -104,7 +104,7 @@ public:
   //  IDispatch interface.  Therefore, only Items, not SubItems are queried
   //  to see if a name is known.
   STDMETHODIMP WhoKnows(
-    /* in  */ char     *pName,         // Item/SubItem name
+    /* in  */ const char *pName,       // Item/SubItem name
     /* in  */ LCID      Lang,          // User Language code (English, Deutsch, etc.)
     /* out */ DISPID    *pbDispID,     // DispID of the SubItem
     /* out */ DWORD     *pbFlags,      // Flags stored with the Item, or SubItem

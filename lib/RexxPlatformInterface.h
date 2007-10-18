@@ -156,6 +156,10 @@ BOOL SysExitHandler(RexxActivity *, RexxActivation *, RexxString *, LONG, LONG, 
 void SysThreadYield(void);             /* yield thread control              */
 #endif
 
+#ifndef SysThreadInit
+void SysThreadInit(void);              /* do system thread initialization   */
+#endif
+
 #ifndef SysQueryThreadID
 INT SysQueryThreadID(void);            /* query the current thread          */
 #endif
@@ -193,7 +197,7 @@ RexxString *SysMessageHeader (INT);    /* get the header for an error msg   */
 #endif
 
 #ifndef SysReadProgram
-RexxBuffer *SysReadProgram (PCHAR);    /* read a program into storage       */
+RexxBuffer *SysReadProgram (const char *); /* read a program into storage       */
 #endif
 
 #ifndef SysInitializeWindowEnv

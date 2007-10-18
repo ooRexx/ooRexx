@@ -61,11 +61,11 @@
 #define WANT_GETLONGPATHNAME_WRAPPER   /* NT and Windows 95                 */
 #include <NewAPIs.h>
 
-PCHAR SysFileExtension(PCHAR);
-RexxString * LocateProgram(RexxString *, PCHAR[], LONG);
-BOOL  SearchFileName(PCHAR, PCHAR);
-void GetLongName(PCHAR, DWORD);
-BOOL FindFirstFile(PCHAR Name);
+const char *SysFileExtension(const char *);
+RexxString * LocateProgram(RexxString *, const char *[], int);
+BOOL  SearchFileName(const char *, char *);
+void GetLongName(char *, DWORD);
+BOOL FindFirstFile(const char *Name);
 FILE * SysBinaryFilemode(FILE *, BOOL);
 INT SysFFlush(FILE *);
 BOOL SysFileIsDevice(int fhandle);
@@ -86,14 +86,14 @@ RexxString * SysResolveProgramName(
    RexxString * Name,                  /* starting filename                 */
    RexxString * Parent )               /* parent program                    */
 {
-  PCHAR     Extension;                 /* parent file extensions            */
-  PCHAR     ExtensionArray[3];         /* array of extensions to check      */
+  const char *Extension;               /* parent file extensions            */
+  const char *ExtensionArray[3];       /* array of extensions to check      */
   LONG      ExtensionCount;            /* count of extensions               */
 
   ExtensionCount = 0;                  /* Count of extensions               */
   if (Parent != OREF_NULL) {           /* have one from a parent activation?*/
                        /* check for a file extension        */
-    Extension = SysFileExtension(Parent->stringData);
+    Extension = SysFileExtension(Parent->getStringData());
     if (Extension != NULL)             /* have an extension?                */
                        /* record this                       */
       ExtensionArray[ExtensionCount++] = Extension;
@@ -116,11 +116,11 @@ RexxString * SysResolveProgramName(
 /*                                                                   */
 /*********************************************************************/
 
-PCHAR SysFileExtension(
-  PCHAR     Name )                     /* file name                         */
+const char *SysFileExtension(
+  const char *Name )                   /* file name                         */
 {
-  PCHAR     Scan;                      /* scanning pointer                  */
-  INT       Length;                    /* extension length                  */
+  const char *Scan;                    /* scanning pointer                  */
+  int       Length;                    /* extension length                  */
 
   Scan = strrchr(Name, '\\');          /* have a path?                      */
   if (Scan)                            /* find one?                         */
@@ -153,16 +153,16 @@ PCHAR SysFileExtension(
 /*********************************************************************/
 RexxString * LocateProgram(
   RexxString * InName,                 /* name of rexx proc to check        */
-  PCHAR        Extensions[],           /* array of extensions to check      */
-  LONG         ExtensionCount )        /* count of extensions               */
+  const char  *Extensions[],           /* array of extensions to check      */
+  int          ExtensionCount )        /* count of extensions               */
 {
-  UCHAR      TempName[CCHMAXPATH + 2]; /* temporary name buffer             */
-  UCHAR      FullName[CCHMAXPATH + 2]; /* temporary name buffer             */
-  PCHAR        Name;                   /* ASCII-Z version of the name       */
-  PCHAR        Extension;              /* start of file extension           */
+  char       TempName[CCHMAXPATH + 2]; /* temporary name buffer             */
+  char       FullName[CCHMAXPATH + 2]; /* temporary name buffer             */
+  const char  *Name;                   /* ASCII-Z version of the name       */
+  const char  *Extension;              /* start of file extension           */
   RexxString * Result;                 /* returned name                     */
-  LONG         i;                      /* loop counter                      */
-  LONG         ExtensionSpace;         /* room for an extension             */
+  int          i;                      /* loop counter                      */
+  int          ExtensionSpace;         /* room for an extension             */
 
   // retrofit by IH
   BOOL         Found;                  /* found the file                    */
@@ -171,7 +171,7 @@ RexxString * LocateProgram(
   activity = CurrentActivity;          /* save the activity                 */
   ReleaseKernelAccess(activity);       /* release the kernel access         */
 
-  Name = InName->stringData;           /* point to the string data          */
+  Name = InName->getStringData();      /* point to the string data          */
   Found = FALSE;                       /* no name found yet                 */
   Extension = SysFileExtension(Name);  /* locate the file extension start   */
 
@@ -181,20 +181,20 @@ RexxString * LocateProgram(
                        /* loop through the extensions list  */
     for (i = 0; !Found && i < ExtensionCount; i++) {
                        /* copy over the name                */
-      strncpy((PCHAR)TempName, Name, sizeof(TempName));
+      strncpy(TempName, Name, sizeof(TempName));
                        /* copy over the extension           */
-      strncat((PCHAR)TempName, (PCHAR)Extensions[i], ExtensionSpace);
+      strncat(TempName, Extensions[i], ExtensionSpace);
                        /* check this version of the name    */
-      Found = SearchFileName((PCHAR)TempName, (PCHAR)FullName);
+      Found = SearchFileName(TempName, FullName);
     }
   }
   if (!Found)                          /* not found?  try without extensions*/
                        /* check on the "raw" name last      */
-    Found = SearchFileName(Name, (PCHAR)FullName);
+    Found = SearchFileName(Name, FullName);
   RequestKernelAccess(activity);       /* get the semaphore back            */
   if (Found)                           /* got one?                          */
                        /* get as a string object            */
-    Result = new_cstring((PCHAR)FullName);
+    Result = new_cstring(FullName);
   else
     Result = OREF_NULL;                /* this wasn't found                 */
   return Result;                       /* return the name                   */
@@ -210,10 +210,10 @@ RexxString * LocateProgram(
 /*********************************************************************/
 
 BOOL SearchFileName(
-  PCHAR      Name,                     /* name of rexx proc to check        */
-  PCHAR      FullName )                /* fully resolved name               */
+  const char *Name,                    /* name of rexx proc to check        */
+  char       *FullName )               /* fully resolved name               */
 {
-  LONG       NameLength;               /* length of name                    */
+  size_t     NameLength;               /* length of name                    */
 
   DWORD dwFileAttrib;             // file attributes
   LPTSTR ppszFilePart=NULL;            // file name only in buffer
@@ -269,7 +269,7 @@ BOOL SearchFileName(
 /*        error occurs, the buffer remains unchanged.                       */
 /****************************************************************************/
 void GetLongName(
-  PCHAR      FullName,    /* buffer containing a fully resolved path name   */
+  char      *FullName,    /* buffer containing a fully resolved path name   */
   DWORD      nSize )      /* size of FullName buffer must be >= CCHMAXPATH  */
 {
   DWORD           length;
@@ -302,7 +302,7 @@ void SysLoadImage(
 /* Function:  Load the image into storage                          */
 /*******************************************************************/
 {
-  CHAR      FullName[CCHMAXPATH + 2];  /* temporary name buffer             */
+  char      FullName[CCHMAXPATH + 2];  /* temporary name buffer             */
   HANDLE    fileHandle;                /* open file access handle           */
   ULONG     bytesRead;                 /* number of bytes read              */
 
@@ -332,7 +332,7 @@ void SysLoadImage(
 
 // retrofit by IH
 RexxBuffer *SysReadProgram(
-  PCHAR file_name)                     /* program file name                 */
+  const char *file_name)               /* program file name                 */
 /*******************************************************************/
 /* Function:  Read a program into a buffer                         */
 /*******************************************************************/
@@ -429,7 +429,7 @@ RexxString *SysQualifyFileSystemName(
                        /* clear out the block               */
    memset(&stream_info, 0, sizeof(STREAM_INFO));
                        /* initialize stream info structure  */
-   strncpy(stream_info.name_parameter, name->stringData, path_length+10);
+   strncpy(stream_info.name_parameter, name->getStringData(), path_length+10);
    strcpy(&stream_info.name_parameter[path_length+11], "\0");
    SysQualifyStreamName(&stream_info); /* expand the full name              */
                        /* uppercase this                    */
@@ -440,7 +440,7 @@ RexxString *SysQualifyFileSystemName(
 
 
 BOOL SearchFirstFile(
-  PCHAR      Name)                     /* name of file with wildcards       */
+  const char *Name)                     /* name of file with wildcards       */
 {
    HANDLE FindHandle;
    WIN32_FIND_DATA FindData;
@@ -513,7 +513,7 @@ LONG SysTellPosition(STREAM_INFO * stream_info)
 }
 
 /* strem_info->stream_file -> sfile, tesul != length */
-LONG line_write_check(char * buffer, LONG length, FILE * sfile)
+LONG line_write_check(const char * buffer, LONG length, FILE * sfile)
 {
    LONG result;
    result = fwrite(buffer,1,length,sfile);
@@ -521,7 +521,7 @@ LONG line_write_check(char * buffer, LONG length, FILE * sfile)
    {
      ULONG ulMod;
      LONG ulTempValue;
-     char *pTemp = buffer;
+     const char *pTemp = buffer;
      clearerr(sfile);  /* clear memory err, give a new chance */
      ulTempValue  = length / MAX_STDOUT_LENGTH;
      ulMod        = length % MAX_STDOUT_LENGTH;

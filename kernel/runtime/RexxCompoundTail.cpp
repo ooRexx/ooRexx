@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                      RexxCompoundTail.c  */
+/* REXX Kernel                                            RexxCompoundTail.c  */
 /*                                                                            */
 /* Support class for building a compound variable tail.                       */
 /*                                                                            */
@@ -66,8 +66,8 @@ void RexxCompoundTail::buildTail(
           if (rep != OREF_NULL) {
               /* point directly to the value       */
               /* and the length */
-              this->tail = (UCHAR *)rep->stringData;
-              length = rep->length;
+              this->tail = rep->getWritableData();
+              length = rep->getLength();
               remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
               value = rep;                         /* save this reference in case we're asked for it later */
               return;
@@ -77,8 +77,8 @@ void RexxCompoundTail::buildTail(
       if (OTYPE(String, tail)) {
           /* point directly to the value       */
           /* and the length */
-          this->tail = (UCHAR *)((RexxString *)tail)->stringData;
-          length = ((RexxString *)tail)->length;
+          this->tail = ((RexxString *)tail)->getWritableData();
+          length = ((RexxString *)tail)->getLength();
           remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
           value = (RexxString *)tail;          /* save this reference in case we're asked for it later */
           return;
@@ -120,8 +120,8 @@ void RexxCompoundTail::buildTail(
           if (rep != OREF_NULL) {
               /* point directly to the value       */
               /* and the length */
-              this->tail = (UCHAR *)rep->stringData;
-              length = rep->length;
+              this->tail = rep->getWritableData();
+              length = rep->getLength();
               remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
               value = rep;                         /* save this reference in case we're asked for it later */
               return;
@@ -131,8 +131,8 @@ void RexxCompoundTail::buildTail(
       if (OTYPE(String, tail)) {
           /* point directly to the value       */
           /* and the length */
-          this->tail = (UCHAR *)((RexxString *)tail)->stringData;
-          length = ((RexxString *)tail)->length;
+          this->tail = ((RexxString *)tail)->getWritableData();
+          length = ((RexxString *)tail)->getLength();
           remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
           value = (RexxString *)tail;          /* save this reference in case we're asked for it later */
           return;
@@ -224,8 +224,8 @@ void RexxCompoundTail::buildTail(
 /******************************************************************************/
 {
   /* point directly to the value       */
-  this->tail = (UCHAR *)tail->stringData;
-  length = tail->length;               /* and the length */
+  this->tail = tail->getWritableData();
+  length = tail->getLength();               /* and the length */
   remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
   value = tail;                        /* save this reference in case we're asked for it later */
 }
@@ -236,11 +236,11 @@ void RexxCompoundTail::buildTail(
 /******************************************************************************/
 {
   /* point directly to the value       */
-  if (tail->stringData != OREF_NULL)
+  if (tail->getWritableData() != OREF_NULL)
   {
     tail->copyIntoTail(this);        /* add this to our tail              */
   }
-  length = length + tail->length;
+  length = length + tail->getLength();
   _ltoa((long)index, (char *)current, 10);
   length = length + strlen((char *)current);
   current += length;
@@ -271,7 +271,7 @@ void RexxCompoundTail::expandCapacity(
     if (temp != OREF_NULL) {             /* have we already allocated a buffer? */
                                          /* expand the size of our existing buffer  */
         temp->expand(needed + ALLOCATION_PAD);
-        tail = (UCHAR *)temp->address();
+        tail = temp->address();
         current = tail + length;
         remainder += needed + ALLOCATION_PAD;
     }
@@ -280,7 +280,7 @@ void RexxCompoundTail::expandCapacity(
         INT newLength = length + needed + ALLOCATION_PAD;
         temp = (RexxBuffer *)new_buffer(newLength);
         save(temp);                      /* this is protected until the destructor releases it */
-        tail = (UCHAR *)temp->address();
+        tail = temp->address();
         current = tail + length;
         memcpy(tail, buffer, length);    /* make sure we copy the old data */
         remainder = newLength - length;  /* set the new remainder       */
@@ -297,13 +297,13 @@ RexxString *RexxCompoundTail::createCompoundName(RexxString *stem)
   RexxString *result;                  /* result string                     */
   PCHAR data;                          /* character pointer                 */
 
-  len1 = stem->length;                 /* get the stem length               */
+  len1 = stem->getLength();                 /* get the stem length               */
                                        /* create a new string               */
   result = (RexxString *)raw_string(len1 + length);
-  data = result->stringData;           /* point to the string data          */
+  data = result->getWritableData();    /* point to the string data          */
   if (len1 != 0) {                     /* have real data?                   */
                                        /* copy the front part               */
-    memcpy(data, stem->stringData, len1);
+    memcpy(data, stem->getStringData(), len1);
     data += len1;                      /* step past the length              */
   }
   if (length != 0)                     /* have a second length              */

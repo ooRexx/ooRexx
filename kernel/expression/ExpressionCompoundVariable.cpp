@@ -84,11 +84,11 @@ RexxObject * build(
   RexxString *   tail;                 /* tail section string value         */
   RexxQueue  *   tails;                /* tail elements                     */
   RexxObject *   tailPart;             /* tail element retriever            */
-  INT     position;                    /* scan position within compound name*/
-  INT     start;                       /* starting scan position            */
-  INT     length;                      /* length of tail section            */
+  size_t  position;                    /* scan position within compound name*/
+  size_t  start;                       /* starting scan position            */
+  size_t  length;                      /* length of tail section            */
 
-  length = variable_name->length;      /* get the string length             */
+  length = variable_name->getLength(); /* get the string length             */
   position = 0;                        /* start scanning at first character */
                                        /* scan to the first period          */
   while (variable_name->getChar(position) != '.') {
@@ -124,7 +124,7 @@ RexxObject * build(
                                        /* section begin with a digit?       */
       /* CHM - defect 87: change index start to 0 and compare for range     */
       /* ASCII '0' to '9' to recognize a digit                              */
-      if (tail->length == 0 || (tail->getChar(0) >= '0' && tail->getChar(0) <= '9'))
+      if (tail->getLength() == 0 || (tail->getChar(0) >= '0' && tail->getChar(0) <= '9'))
         tailPart = (RexxObject *)tail; /* this is a literal piece           */
       else {
                                        /* create a new variable retriever   */

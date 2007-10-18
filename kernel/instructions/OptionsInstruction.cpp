@@ -76,7 +76,7 @@ void RexxInstructionOptions::execute(
   for (i = 1; ;i++) {                  /* now process each word             */
                                        /* get the next word                 */
     word = (RexxString *)(stringValue->word(new_integer(i)));
-    if (word->length == 0)             /* get the length of the word        */
+    if (word->getLength() == 0)        /* get the length of the word        */
       break;                           /* if length of word = 0 then stop   */
 
     if (word->strICompare(CHAR_EXMODE)) /* is this EXMODE?                  */

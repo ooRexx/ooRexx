@@ -243,7 +243,7 @@ void SysQualifyStreamName(STREAM_INFO *);
 #endif
 
 #ifndef SearchFirstFile
-BOOL SearchFirstFile(PCHAR name);
+BOOL SearchFirstFile(const char *name);
 #endif
 
 #ifndef SysBinaryFilemode

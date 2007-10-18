@@ -70,11 +70,11 @@ class RexxStringClass : public RexxClass {
  public:
    RexxStringClass(RESTORETYPE restoreType) { ; };
    void *operator new(size_t size, void *ptr) {return ptr;};
-   RexxString *newString(const PCHAR, size_t);
+   RexxString *newString(const char *, size_t);
    RexxString *rawString(size_t);
-   RexxString *newCstring(const PCHAR);
+   RexxString *newCstring(const char *);
    RexxString *newDouble(PDBL);
-   RexxString *newProxy(const PCHAR);
+   RexxString *newProxy(const char *);
    RexxString *newRexx(RexxObject **, size_t);
 };
 
@@ -119,12 +119,12 @@ class RexxStringClass : public RexxClass {
    RexxInteger *strictGreaterOrEqual(RexxObject *);
    RexxInteger *strictLessOrEqual(RexxObject *);
 
-   size_t      get(size_t, PCHAR, size_t);
+   size_t      get(size_t, char *, size_t);
    RexxObject *lengthRexx();
    RexxString *concatRexx(RexxObject *);
    RexxString *concat(RexxString *);
-   RexxString *concatToCstring(PCHAR);
-   RexxString *concatWithCstring(PCHAR);
+   RexxString *concatToCstring(const char *);
+   RexxString *concatWithCstring(const char *);
    RexxString *concatBlank(RexxObject *);
    BOOL        checkLower();
    RexxString *upper();
@@ -197,8 +197,8 @@ class RexxStringClass : public RexxClass {
    RexxInteger *caselessLastPosRexx(RexxString *, RexxInteger *);
    size_t       lastPos(RexxString  *needle, size_t start);
    size_t       caselessLastPos(RexxString  *needle, size_t start);
-   PUCHAR       lastPos(PUCHAR needle, size_t needleLen, PUCHAR  haystack, size_t haystackLen);
-   PUCHAR       caselessLastPos(PUCHAR needle, size_t needleLen, PUCHAR  haystack, size_t haystackLen);
+   const char * lastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
+   const char * caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
 
    RexxInteger *posRexx(RexxString *, RexxInteger *);
    RexxInteger *caselessPosRexx(RexxString *, RexxInteger *);
@@ -302,23 +302,25 @@ class RexxStringClass : public RexxClass {
 /* Inline_functions */
 
    inline size_t  getLength() { return this->length; };
-   inline PCHAR getStringData() { return this->stringData; };
+   inline void    setLength(size_t l) { this->length = l; };
+   inline const char *getStringData() { return this->stringData; };
+   inline char *getWritableData() { return this->stringData; };
    inline void put(size_t s, const void *b, size_t l) { memcpy((this->stringData+s), b, l); };
    inline void put(size_t s, RexxString *o) { put(s, o->getStringData(), o->getLength()); };
    inline void set(size_t s,int c,int l) { memset((this->stringData+s),c,(size_t)l); };
    inline char getChar(size_t p) { return *(this->stringData+p); };
    inline char putChar(size_t p,char c) { return *(this->stringData+p) = c; };
-   inline UCHAR upperOnly() {return (UCHAR)this->Attributes&STRING_NOLOWER;};
-   inline UCHAR hasLower() {return (UCHAR)this->Attributes&STRING_HASLOWER;};
-   inline UCHAR setUpperOnly() {return (UCHAR)(this->Attributes |= STRING_NOLOWER);};
-   inline UCHAR setHasLower() {return (UCHAR)(this->Attributes |= STRING_HASLOWER);};
-   inline UCHAR nonNumeric() {return (UCHAR)(this->Attributes&STRING_NONNUMERIC);};
-   inline UCHAR setNonNumeric() {return (UCHAR)(this->Attributes |= STRING_NONNUMERIC);};
-   inline BOOL  strCompare(PCHAR s) {return this->memCompare((s), strlen(s));};
-   inline BOOL  strICompare(PCHAR s) { return (size_t)this->length == strlen(s) && stricmp(s, this->stringData) == 0;}
-   inline BOOL  memCompare(PCHAR s, size_t l) { return l == this->length && !memcmp(s, this->stringData, l); }
-   inline BOOL  memCompare(RexxString *other) { return other->length == this->length && !memcmp(other->stringData, this->stringData, length); }
-   inline void  memCopy(PCHAR s) { memcpy(s, stringData, length); }
+   inline bool upperOnly() {return (this->Attributes&STRING_NOLOWER) != 0;};
+   inline bool hasLower() {return (this->Attributes&STRING_HASLOWER) != 0;};
+   inline void  setUpperOnly() { this->Attributes |= STRING_NOLOWER;};
+   inline void  setHasLower() { this->Attributes |= STRING_HASLOWER;};
+   inline bool  nonNumeric() {return (this->Attributes&STRING_NONNUMERIC) != 0;};
+   inline void  setNonNumeric() { this->Attributes |= STRING_NONNUMERIC;};
+   inline bool  strCompare(const char * s) {return this->memCompare((s), strlen(s));};
+   inline bool  strICompare(const char * s) { return (size_t)this->length == strlen(s) && stricmp(s, this->stringData) == 0;}
+   inline bool  memCompare(const char * s, size_t l) { return l == this->length && memcmp(s, this->stringData, l) == 0; }
+   inline bool  memCompare(RexxString *other) { return other->length == this->length && memcmp(other->stringData, this->stringData, length) == 0; }
+   inline void  memCopy(char * s) { memcpy(s, stringData, length); }
    inline void  generateHash() {
                                        /* the following logic is duplicated */
                                        /* in the operator new function.  Any*/
@@ -452,6 +454,8 @@ class RexxStringClass : public RexxClass {
        }
        return result;
    }
+
+ protected:
 
    size_t length;                      /* string length                   */
    RexxNumberString *NumberString;     /* lookaside information           */

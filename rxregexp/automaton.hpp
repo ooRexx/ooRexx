@@ -51,8 +51,8 @@ class automaton {
   public:
     automaton();              // CTOR
     ~automaton();             // DTOR
-    int parse(char*);         // parse regular expression
-    int match(char*, int);    // match a string
+    int parse(const char*);         // parse regular expression
+    int match(const char*, int);    // match a string
 
     // in case of a parsing error, this can be used
     // to detect the position at which the error
@@ -84,7 +84,7 @@ class automaton {
 
     int  final;     // the final state position
 
-    char *regexp;   // pointer to regular expression
+    const char *regexp;  // pointer to regular expression
 
     int **setArray; // pointer to array of sets
     int setSize;    // number of sets

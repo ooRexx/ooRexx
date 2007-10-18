@@ -114,12 +114,12 @@ char get_pad_character(
                                        /* convert parameter to a string     */
  parameter = (RexxString *)REQUIRED_STRING(argument, position);
                                        /* is the string only 1 character?   */
- if (parameter->length != 1)
+ if (parameter->getLength() != 1)
                                        /* argument not good, so raise an    */
                                        /*error                              */
    report_exception1(Error_Incorrect_method_pad, argument);
                                        /* yes, return the character.        */
- return (CHAR)*(parameter->stringData);
+ return parameter->getChar(0);
 }
 
 /******************************************************************************/
@@ -136,5 +136,5 @@ CHAR get_option_character(
                                        /* force option to string            */
  parameter = (RexxString *)REQUIRED_STRING(argument, position);
                                        /* return the first character        */
- return toupper(*parameter->stringData);
+ return toupper(parameter->getChar(0));
 }

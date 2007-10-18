@@ -236,6 +236,8 @@ class MemorySegmentSet {
           /* The link to the memory object will need to be established later */
           memory = NULL;
       }
+
+      virtual ~MemorySegmentSet() { ; }
       inline void *operator new(size_t size, void *segment) { return segment; };
       /* Following is a static constructor, called during */
       /* RexxMemeory initialization */
@@ -375,6 +377,7 @@ class NormalSegmentSet : public MemorySegmentSet
     /* the default constructor */
     NormalSegmentSet()  { ; }
     NormalSegmentSet(RexxMemory *memory);
+    virtual ~NormalSegmentSet() { ; }
     virtual void   dumpMemoryProfile(FILE *outfile);
     inline  RexxObject *allocateObject(size_t allocationLength)
     {
@@ -534,6 +537,7 @@ class LargeSegmentSet : public MemorySegmentSet
     /* the default constructor */
     LargeSegmentSet()  { ; }
     LargeSegmentSet(RexxMemory *memory);
+    virtual ~LargeSegmentSet() { ; }
     virtual void   dumpMemoryProfile(FILE *outfile);
     RexxObject *handleAllocationFailure(size_t allocationLength);
     inline RexxObject *allocateObject(size_t allocationLength)
@@ -584,6 +588,7 @@ class OldSpaceSegmentSet : public MemorySegmentSet
     /* the default constructor */
     OldSpaceSegmentSet()  { ; }
     OldSpaceSegmentSet(RexxMemory *memory);
+    virtual ~OldSpaceSegmentSet() { ; }
             RexxObject *allocateObject(size_t allocationLength);
 
     void markOldSpaceObjects();

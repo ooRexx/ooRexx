@@ -784,7 +784,7 @@ size_t NormalSegmentSet::suggestMemoryExpansion()
 {
     float freePercent = freeMemoryPercentage();
 
-    memory->verboseMessage("Normal segment set free memory percentage is %d\%\n", freePercent * 100.0);
+    memory->verboseMessage("Normal segment set free memory percentage is %d\n", (int)(freePercent * 100.0));
 
     /* if we are less than 30% full, we should try to expand to the */
     /* 30% mark. */

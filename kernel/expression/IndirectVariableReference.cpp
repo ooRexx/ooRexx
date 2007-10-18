@@ -122,7 +122,7 @@ RexxList *RexxVariableReference::list(
                                        /* get the next variable             */
   variable_name = (RexxString *)name_string->word(new_integer(i));
   i++;                                 /* step the index                    */
-  while (variable_name->length != 0) {
+  while (variable_name->getLength() != 0) {
                                        /* get the first character           */
     character = variable_name->getChar(0);
     if (character == '.')              /* start with a period?              */

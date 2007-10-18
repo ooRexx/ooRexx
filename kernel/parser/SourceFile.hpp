@@ -267,7 +267,7 @@ class RexxSource : public RexxInternalObject {
   RexxArray  *sourceArray;             /* source lines for this code        */
   RexxString *programName;             /* name of the source program        */
   RexxObject *securityManager;         /* source execution time security    */
-  PCHAR current;                       /* current working line              */
+  const char *current;                 /* current working line              */
   RexxClause *clause;                  /* current clause being created      */
   RexxBuffer *sourceBuffer;            /* contiguous buffered source        */
   RexxBuffer *sourceIndices;           /* line locations within buffer      */

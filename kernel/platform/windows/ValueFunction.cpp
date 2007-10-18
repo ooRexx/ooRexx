@@ -88,12 +88,12 @@ RexxObject * SysValue(
   if (Selector->strCompare(SELECTOR)) {/* selector ENVIRONMENT?             */
 
     /* get the size of the environment variable and allocate buffer         */
-    dwSize = GetEnvironmentVariable(Name->stringData, NULL, 0);
+    dwSize = GetEnvironmentVariable(Name->getStringData(), NULL, 0);
     if (dwSize)
     {
       OldValue = (CHAR *) SysAllocateResultMemory(dwSize);
                                          /* scan for the variable           */
-      if (OldValue && GetEnvironmentVariable(Name->stringData,OldValue,dwSize) )
+      if (OldValue && GetEnvironmentVariable(Name->getStringData(),OldValue,dwSize) )
       {
                                          /* have a value already?           */
         Retval = (RexxObject*) new_cstring(OldValue);
@@ -108,10 +108,10 @@ RexxObject * SysValue(
     if (NewValue != OREF_NULL)           /* have a new value?                 */
     {
        if (NewValue == (RexxString *) TheNilObject)
-            SetEnvironmentVariable((LPCTSTR)Name->stringData, NULL);
+            SetEnvironmentVariable((LPCTSTR)Name->getStringData(), NULL);
        else
-            SetEnvironmentVariable((LPCTSTR)Name->stringData,
-                             (LPCTSTR)REQUIRED_STRING(NewValue,ARG_TWO)->stringData);
+            SetEnvironmentVariable((LPCTSTR)Name->getStringData(),
+                             (LPCTSTR)REQUIRED_STRING(NewValue,ARG_TWO)->getStringData());
     }
   } else if (WSHPropertyChange != NULL) {     /* in engine environment?       */
     SelectorType = 0;

@@ -612,4 +612,3 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
 /* --            DO NOT CHANGE THIS FILE, ALL CHANGES WILL BE LOST!        -- */
 /* --            ==================================================        -- */
 /* -------------------------------------------------------------------------- */
-   

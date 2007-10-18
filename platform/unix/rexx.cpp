@@ -100,7 +100,7 @@ int main (int argc, char **argv)
   char *cp;                            /* option character pointer          */
   RXSTRING argument;                   /* rexxstart argument                */
   LONG  argCount;
-  PCHAR ptr;
+  char *ptr;
   SHORT rexxrc = 0;                    /* exit List array                   */
   BOOL from_string = FALSE;            /* running from command line string? */
   BOOL real_argument = TRUE;           /* running from command line string? */

@@ -154,7 +154,7 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 
 /* Object Reference Assignment */
 #ifndef CHECKOREFS
-#define OrefSet(o,r,v) (OldSpace(o) ? memoryObject.setOref((RexxObject **)&(r),(RexxObject *)v) : (RexxObject *)(r=v))
+#define OrefSet(o,r,v) (OldSpace(o) ? memoryObject.setOref((void *)&(r),(RexxObject *)v) : (RexxObject *)(r=v))
 #else
 #define OrefSet(o,r,v) memoryObject.checkSetOref((RexxObject *)o, (RexxObject **)&(r), (RexxObject *)v, __FILE__, __LINE__)
 #endif
@@ -360,7 +360,7 @@ typedef enum {RESTOREIMAGE, MOBILEUNFLATTEN, METHODUNFLATTEN} RESTORETYPE;
 EXTERN RexxActivityClass  * TheActivityClass INITGLOBALPTR;
 EXTERN RexxActivity * CurrentActivity INITGLOBALPTR; /* current active activity           */
 #ifdef SCRIPTING
-EXTERN RexxObject* (__stdcall *NovalueCallback)(void*) INITGLOBALPTR;
+EXTERN RexxObject* (__stdcall *NovalueCallback)(const char *) INITGLOBALPTR;
 #endif
 
 EXTERN RexxClass  * TheArrayClass INITGLOBALPTR;     /* array class                       */
@@ -765,16 +765,16 @@ EXTERN void *VFTArray[highest_T];      /* table of virtual functions        */
                                        /* access an object's hash value     */
 #define HASHVALUE(r) ((ULONG)((r)->hashvalue))
                                        /* generate hash value from OREF     */
-#define HASHOREF(r) ((long)((ULONG)r>>2))
+#define HASHOREF(r) ((long)((ULONG)r>>3))
 
 /******************************************************************************/
 /* Utility Functions                                                          */
 /******************************************************************************/
 
-void logic_error (char *desc);
+void logic_error (const char *desc);
                                        /* do a case insensitive compare     */
-INT  CaselessCompare(PUCHAR, PUCHAR, LONG);
-PCHAR mempbrk(PCHAR, PCHAR, LONG);     /* search for characters             */
+int  CaselessCompare(const char *, const char *, size_t);
+const char *mempbrk(const char *, const char *, size_t);     /* search for characters             */
 
                                        /* find an environment symbol        */
 #define env_find(s) (TheEnvironment->entry(s))
@@ -1140,10 +1140,10 @@ RexxString *version_number (void);
 
 #define ObjectNeedsMarking(oref) ((oref) != OREF_NULL && !ObjectIsMarked(oref))
 #define memory_mark(oref)  if (ObjectNeedsMarking(oref)) memoryObject.mark((RexxObject *)(oref))
-#define memory_mark_general(oref) (memoryObject.markGeneral((RexxObject **)&(oref)))
+#define memory_mark_general(oref) (memoryObject.markGeneral((void *)&(oref)))
 
 /* Following macros are for Flattening and unflattening of objects  */
-#define flatten_reference(oref,envel)  if (oref) envel->flattenReference((RexxObject **)&newThis, newSelf, (RexxObject **)&(oref))
+#define flatten_reference(oref,envel)  if (oref) envel->flattenReference((void *)&newThis, newSelf, (void *)&(oref))
 
 /******************************************************************************/
 /* Typed method invocation macros                                             */

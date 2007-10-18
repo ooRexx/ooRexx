@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  NumberStringClass.c    */
+/* REXX Kernel                                         NumberStringClass.c    */
 /*                                                                            */
 /* Primitive NumberString Class                                               */
 /*                                                                            */
@@ -634,7 +634,7 @@ double   RexxNumberString::doubleValue()
 
  string = this->stringValue();         /* get the string value              */
                                        /* convert the number                */
- doubleNumber = strtod(string->stringData, NULL);
+ doubleNumber = strtod(string->getStringData(), NULL);
                                        /* out of range?                     */
  if (doubleNumber == +HUGE_VAL || doubleNumber == -HUGE_VAL)
    return NO_DOUBLE;                   /* got a bad value                   */
@@ -1015,7 +1015,7 @@ RexxObject *RexxNumberString::truncInternal(
   long    integer_digits;              /* leading integer digits            */
   size_t  size;                        /* total size of the result          */
   LONG    sign;                        /* current sign indicator            */
-  PCHAR   resultPtr;                   /* result pointer                    */
+  char   *resultPtr;                   /* result pointer                    */
 
   if (this->sign == 0) {               /* is the number zero?               */
     if (needed_digits == 0)            /* no decimals requested?            */
@@ -1025,7 +1025,7 @@ RexxObject *RexxNumberString::truncInternal(
                                        /* get an empty string               */
       result = (RexxString *)raw_string(needed_digits + 2);
                                        /* get a data pointer                */
-      resultPtr = result->stringData;
+      resultPtr = result->getWritableData();
       strcpy(resultPtr, "0.");         /* copy the leading part             */
                                        /* fill in the trailing zeros        */
       memset(resultPtr + 2, '0', needed_digits);
@@ -1071,7 +1071,7 @@ RexxObject *RexxNumberString::truncInternal(
                                        /* get an empty pointer              */
     result = (RexxString *)raw_string(size);
                                        /* point to the data part            */
-    resultPtr = result->stringData;
+    resultPtr = result->getWritableData();
     if (sign < 0)                      /* negative number?                  */
       *resultPtr++ = '-';              /* start with a sign                 */
                                        /* calculate the leading part        */
@@ -1392,7 +1392,7 @@ RexxString *RexxNumberString::formatInternal(
     size += mathexp + 2;               /* add on the spaces needed          */
   result = raw_string(size);           /* get an empty string to start      */
 
-  resultPtr = result->stringData;
+  resultPtr = result->getWritableData();
   temp = this->exp + this->length;     /* get adjusted length               */
   if (leadingSpaces != 0) {            /* need leading spaces?              */
                                        /* fill them in                      */

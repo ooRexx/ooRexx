@@ -1335,7 +1335,7 @@ STDMETHODIMP OrxScript::ParseProcedureText(
 
 
 STDMETHODIMP OrxScript::LocalParseProcedureText(
-  /* in  */ char       *Name,
+  /* in  */ const char *Name,
   /* in  */ DWORD       Flags,
   /* out */ IDispatch **pbOurIDispatch) {
   HRESULT    RetCode=S_OK;

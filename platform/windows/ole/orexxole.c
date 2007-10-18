@@ -80,9 +80,9 @@ LPOLESTR lpAnsiToUnicode(LPCSTR pszA, int length);
 LPOLESTR lpAnsiToUnicodeLength(LPCSTR pszA, int length, int *outLength);
 PSZ pszUnicodeToAnsi(LPOLESTR pszU);
 
-PSZ pszStringDupe(PSZ pszOrig);
+PSZ pszStringDupe(const char *pszOrig);
 
-POLECLASSINFO psFindClassInfo(PSZ pszCLSId, ITypeInfo *pTypeInfo);
+POLECLASSINFO psFindClassInfo(const char *pszCLSId, ITypeInfo *pTypeInfo);
 VOID ClearClassInfoBlock( POLECLASSINFO pClsInfo );
 POLEFUNCINFO AddFuncInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId,
                                INVOKEKIND invKind, VARTYPE funcVT,
@@ -90,10 +90,10 @@ POLEFUNCINFO AddFuncInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId,
 POLECONSTINFO AddConstInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId,
                                  PSZ pszConstName, VARIANT *pValue);
 
-BOOL fFindFunction(PSZ pszFunction, IDispatch *pDispatch, IDispatchEx *pDispatchEx,
+BOOL fFindFunction(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *pDispatchEx,
                    ITypeInfo *pTypeInfo, POLECLASSINFO pClsInfo, unsigned short wFlags,
                    PPOLEFUNCINFO ppFuncInfo, MEMBERID *pMemId, int expectedArgCount );
-BOOL fFindConstant(PSZ pszConstName, POLECLASSINFO pClsInfo, PPOLECONSTINFO ppConstInfo );
+BOOL fFindConstant(const char *pszConstName, POLECLASSINFO pClsInfo, PPOLECONSTINFO ppConstInfo );
 
 RexxObject *Variant2Rexx(VARIANT *pVariant);
 VOID Rexx2Variant(RexxObject *RxObject, VARIANT *pVariant, VARTYPE DestVt, INT iArgPos);
@@ -649,7 +649,7 @@ PSZ pszUnicodeToAnsi(LPOLESTR pszU)
 }
 
 
-PSZ pszStringDupe(PSZ pszOrig)
+PSZ pszStringDupe(const char *pszOrig)
 {
   PSZ   pszCopy = NULL;
 
@@ -666,7 +666,7 @@ PSZ pszStringDupe(PSZ pszOrig)
 }
 
 
-PSZ prxStringDupe(PSZ pszOrig, int length)
+char *prxStringDupe(const char * pszOrig, int length)
 {
   PSZ   pszCopy = NULL;
 
@@ -682,7 +682,7 @@ PSZ prxStringDupe(PSZ pszOrig, int length)
   return pszCopy;
 }
 
-POLECLASSINFO psFindClassInfo(PSZ pszCLSId, ITypeInfo *pTypeInfo)
+POLECLASSINFO psFindClassInfo(const char *pszCLSId, ITypeInfo *pTypeInfo)
 {
   int iIdx;
   int iFound = -1;
@@ -927,7 +927,7 @@ POLECONSTINFO AddConstInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId, PSZ psz
 }
 
 
-BOOL fFindFunction(PSZ pszFunction, IDispatch *pDispatch, IDispatchEx *pDispatchEx,
+BOOL fFindFunction(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *pDispatchEx,
                    ITypeInfo *pTypeInfo, POLECLASSINFO pClsInfo, unsigned short wFlags,
                    PPOLEFUNCINFO ppFuncInfo, MEMBERID *pMemId, int expectedArgCount )
 {
@@ -1041,7 +1041,7 @@ BOOL fFindFunction(PSZ pszFunction, IDispatch *pDispatch, IDispatchEx *pDispatch
 }
 
 
-BOOL fFindConstant(PSZ pszConstName, POLECLASSINFO pClsInfo, PPOLECONSTINFO ppConstInfo )
+BOOL fFindConstant(const char * pszConstName, POLECLASSINFO pClsInfo, PPOLECONSTINFO ppConstInfo )
 {
   BOOL            fFound = FALSE;
   POLECONSTINFO   pConstInfo = NULL;
@@ -1383,7 +1383,7 @@ VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT
 {
   BOOL         fDone = FALSE;
   BOOL         fByRef = FALSE;
-  PSZ          pszRxString;
+  const char  *pszRxString;
   RexxString  *RxString;
   VARIANT      sVariant;
   HRESULT      hResult;
@@ -1625,7 +1625,7 @@ BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, INT iArgPo
   RexxObject     *RexxStr;
   RexxObject     *RexxItem;
   RexxObject     *argArray = NULL;        // argument array for access to multidimensional array
-  PSZ             pString;
+  const char     *pString;
   char            szBuffer[32];
   SAFEARRAY      *pSafeArray;             // the safearray
   SAFEARRAYBOUND *pArrayBounds;           // bounds for each dimension
@@ -2174,7 +2174,7 @@ RexxMethod4(REXXOBJECT,                // Return type
   RexxString *eventString = NULL;
   CLSID       clsID;
   HRESULT     hResult;
-  CHAR        *pszArg;
+  const char  *pszArg;
   CHAR        szBuffer[200];
   LPOLESTR    lpUniBuffer = NULL;
   OLECHAR     OleBuffer[100];
@@ -2504,7 +2504,7 @@ RexxMethod1(REXXOBJECT,                // Return type
             OSELF, self)               // Pointer to self
 {
   RexxString       *RxString;
-  CHAR             *pszRxString;
+  const char       *pszRxString;
   IDispatch        *pDispatch = NULL;
   ITypeInfo        *pTypeInfo = NULL;
   POLECLASSINFO     pClsInfo = NULL;
@@ -2798,7 +2798,7 @@ RexxMethod3(REXXOBJECT,                // Return type
   HRESULT         hResult;
   CHAR            szBuffer[2048];
   CHAR           *pszFunction;
-  CHAR           *pszRxString;
+  const char     *pszRxString;
   RexxString     *RxString;
   RexxObject     *arrItem;
   IDispatch      *pDispatch = NULL;
@@ -3415,7 +3415,7 @@ RexxMethod2(REXXOBJECT,                // Return type
             REXXOBJECT, classID)       // Name of OSA event to be sent
 {
   HRESULT         hResult;
-  CHAR           *pszRxString;
+  const char     *pszRxString;
   RexxString     *RxString;
   RexxObject     *ResultObj = RexxNil;
   RexxObject     *RxItem;
@@ -3680,7 +3680,7 @@ RexxMethod2(REXXOBJECT,                // Return type
             CSTRING, constName)        // string defining constant to query
 {
   RexxString      *RxString;
-  CHAR            *pszRxString;
+  const char      *pszRxString;
   IDispatch       *pDispatch = NULL;     // IDispatch is not NEEDED !!! remove!
   ITypeInfo       *pTypeInfo = NULL;
   POLECLASSINFO   pClsInfo = NULL;
@@ -3939,7 +3939,7 @@ RexxMethod1(REXXOBJECT,                // Return type
   ITypeLib        *pTypeLib = NULL;
   TYPEATTR        *pTypeAttr = NULL;
   UINT             iTypeInfoCount;
-  CHAR            *pszRxString;
+  const char      *pszRxString;
   HRESULT          hResult;
   INT              iCount = 0;
   UINT             iTypeIndex;
@@ -4204,7 +4204,7 @@ RexxMethod1(REXXOBJECT,                // Return type
 {
   RexxString     *RxString;
   RexxObject     *RxResult = RexxNil;
-  CHAR           *pszRxString;
+  const char     *pszRxString;
 //  HRESULT         hResult;
   INT             iCount = 0;
   INT             j;

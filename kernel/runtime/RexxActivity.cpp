@@ -792,7 +792,7 @@ RexxString *RexxActivity::messageSubstitution(
                                        /* get the leading part              */
     front = message->extract(0, subposition - 1);
                                        /* pull off the remainder            */
-    back = message->extract(subposition + 1, message->length - (subposition + 1));
+    back = message->extract(subposition + 1, message->getLength() - (subposition + 1));
                                        /* get the descriptor position       */
     selector = message->getChar(subposition);
                                        /* not a good number?                */
@@ -1669,7 +1669,7 @@ BOOL  RexxActivity::sysExitSioSay(
   exitname = this->querySysExits(RXSIO);
   if (exitname != OREF_NULL) {         /* exit enabled?                     */
                                        /* make into RXSTRING form           */
-    MAKERXSTRING(exit_parm.rxsio_string, sayoutput->stringData,  sayoutput->length);
+    MAKERXSTRING(exit_parm.rxsio_string, sayoutput->getStringData(),  sayoutput->getLength());
                                        /* call the handler                  */
     return SysExitHandler(this, activation, exitname, RXSIO, RXSIOSAY, (PVOID)&exit_parm, FALSE);
   }
@@ -1691,7 +1691,7 @@ BOOL RexxActivity::sysExitSioTrc(
   exitname = this->querySysExits(RXSIO);
   if (exitname != OREF_NULL) {         /* exit enabled?                     */
                                        /* make into RXSTRING form           */
-    MAKERXSTRING(exit_parm.rxsio_string, traceoutput->stringData, traceoutput->length);
+    MAKERXSTRING(exit_parm.rxsio_string, traceoutput->getStringData(), traceoutput->getLength());
                                        /* call the handler                  */
     return SysExitHandler(this, activation, exitname, RXSIO, RXSIOTRC, (PVOID)&exit_parm, FALSE);
   }
@@ -1820,10 +1820,10 @@ BOOL RexxActivity::sysExitFunc(
   exitname = this->querySysExits(RXFNC);
 #ifdef SCRIPTING
   if (exitname == OREF_NULL) {
-    char *data = ((RexxString*) calltype)->stringData;
+    const char *data = ((RexxString*) calltype)->getStringData();
     // special "calltype"? make a real one out of it and check
     if (data[0] == 'A' && data[1] == 'X') {
-      sscanf(((RexxString*) calltype)->stringData+2,"%p",&calltype);
+      sscanf(((RexxString*) calltype)->getStringData()+2,"%p",&calltype);
       if (calltype)
         exitname = this->querySysExits(RXEXF); // external call (Script Engine?)
     }
@@ -1840,15 +1840,15 @@ BOOL RexxActivity::sysExitFunc(
                                        /* this is the CALL instruction      */
       exit_parm.rxfnc_flags.rxffsub = 1;
                                        /* fill in the name parameter        */
-    exit_parm.rxfnc_namel = rname->length;
-    exit_parm.rxfnc_name = (PUCHAR)rname->stringData;
+    exit_parm.rxfnc_namel = rname->getLength();
+    exit_parm.rxfnc_name = (PUCHAR)rname->getStringData();
 
                                        /* Get current active queue name     */
     stdqueue = (RexxString *)SysGetCurrentQueue();
                                        /* fill in the name                  */
-    exit_parm.rxfnc_que = (PUCHAR)stdqueue->stringData;
+    exit_parm.rxfnc_que = (PUCHAR)stdqueue->getStringData();
                                        /* and the length                    */
-    exit_parm.rxfnc_quel = stdqueue->length;
+    exit_parm.rxfnc_quel = stdqueue->getLength();
                                        /* Build arg array of RXSTRINGs      */
                                        /* get number of args                */
     exit_parm.rxfnc_argc = argcount;
@@ -1878,8 +1878,8 @@ BOOL RexxActivity::sysExitFunc(
                                          /* force the argument to a string    */
           temp = (RexxString *)REQUEST_STRING(temp);
                                          /* point to the string               */
-          argrxarray[argindex].strlength = temp->length;
-          argrxarray[argindex].strptr = (PCHAR)temp->stringData;
+          argrxarray[argindex].strlength = temp->getLength();
+          argrxarray[argindex].strptr = (PCHAR)temp->getStringData();
         }
         else {
                                          /* empty argument                    */
@@ -1994,10 +1994,10 @@ BOOL RexxActivity::sysExitCmd(
     exit_parm.rxcmd_flags.rxfcfail = 0;/* Initialize failure/error to zero  */
     exit_parm.rxcmd_flags.rxfcerr = 0;
                                        /* fill in the environment parm      */
-    exit_parm.rxcmd_addressl = environment->length;
-    exit_parm.rxcmd_address = (PUCHAR)environment->stringData;
+    exit_parm.rxcmd_addressl = environment->getLength();
+    exit_parm.rxcmd_address = (PUCHAR)environment->getStringData();
                                        /* make cmdaname into RXSTRING form  */
-    MAKERXSTRING(exit_parm.rxcmd_command, cmdname->stringData, cmdname->length);
+    MAKERXSTRING(exit_parm.rxcmd_command, cmdname->getStringData(), cmdname->getLength());
 
     exit_parm.rxcmd_dll = NULL;        /* Currently no DLL support          */
     exit_parm.rxcmd_dll_len = 0;       /* 0 means .EXE style                */
@@ -2099,7 +2099,7 @@ BOOL  RexxActivity::sysExitMsqPsh(
                                        /* this is a FIFO request            */
       exit_parm.rxmsq_flags.rxfmlifo = 0;
                                        /* make into RXSTRING form           */
-    MAKERXSTRING(exit_parm.rxmsq_value, inputstring->stringData, inputstring->length);
+    MAKERXSTRING(exit_parm.rxmsq_value, inputstring->getStringData(), inputstring->getLength());
                                        /* call the handler                  */
     if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQPSH, (PVOID)&exit_parm, FALSE))
       return TRUE;                     /* this wasn't handled               */
@@ -2152,7 +2152,7 @@ BOOL  RexxActivity::sysExitMsqNam(
   exitname = this->querySysExits(RXMSQ);
   if (exitname != OREF_NULL) {         /* exit enabled?                     */
                                        /* make into RXSTRING form           */
-    MAKERXSTRING(exit_parm.rxmsq_name, (*inputstring)->stringData, (*inputstring)->length);
+    MAKERXSTRING(exit_parm.rxmsq_name, (*inputstring)->getStringData(), (*inputstring)->getLength());
                                        /* call the handler                  */
     if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQNAM, (PVOID)&exit_parm, FALSE))
       return TRUE;                     /* this wasn't handled               */
@@ -2288,7 +2288,7 @@ BOOL  RexxActivity::sysExitDbgTst(
         exit_parm.rxdbg_flags.rxftrace = (currentsetting != 0);
 
     filename = activation->code->getProgramName();
-    MAKERXSTRING(exit_parm.rxdbg_filename, filename->stringData, filename->length);
+    MAKERXSTRING(exit_parm.rxdbg_filename, filename->getStringData(), filename->getLength());
     if (activation->getCurrent() != OREF_NULL)
         exit_parm.rxdbg_line = activation->getCurrent()->lineNumber;
     else
@@ -2424,12 +2424,12 @@ RexxObject *RexxActivity::lineOut(
 /* Function:  Write a line out to the real default I/O stream                 */
 /******************************************************************************/
 {
-  LONG  length;                        /* length to write out               */
-  PCHAR data;                          /* data pointer                      */
+  size_t  length;                      /* length to write out               */
+  const char *data;                    /* data pointer                      */
 
-  length = line->length;               /* get the string length and the     */
-  data = line->stringData;             /* data pointer                      */
-  printf("%.*s\n",(int)length, data);  /* print it                          */
+  length = line->getLength();          /* get the string length and the     */
+  data = line->getStringData();        /* data pointer                      */
+  printf("%.*s\n",length, data);       /* print it                          */
   return (RexxObject *)IntegerZero;    /* return on residual count          */
 }
 
@@ -3450,7 +3450,7 @@ RexxActivity *RexxActivityClass::getActivity(void)
 
 void process_message_arguments(
   va_list  *arguments,                 /* variable argument list pointer    */
-  PCHAR     interfacedefn,             /* interface definition              */
+  const char *interfacedefn,           /* interface definition              */
   RexxList *argument_list )            /* returned list of arguments        */
 /******************************************************************************/
 /* Function:  Send a message to an object on behalf of an outside agent.      */
@@ -3467,14 +3467,14 @@ void process_message_arguments(
   CHAR     tempChar;                   /* temp character value              */
   double   tempDouble;                 /* temp double value                 */
   va_list *subArguments;               /* indirect argument descriptor      */
-  PCHAR    subInterface;               /* indirect interface definition     */
+  const char *subInterface;            /* indirect interface definition     */
 
   while (*interfacedefn) {             /* process each argument             */
     switch (*interfacedefn++) {        /* process the next argument         */
 
       case '*':                        /* indirect reference                */
                                        /* get the real interface pointer    */
-        subInterface = va_arg(*arguments, PCHAR);
+        subInterface = va_arg(*arguments, const char *);
                                        /* get the indirect pointer          */
         subArguments = va_arg(*arguments, va_list *);
                                        /* go process recursively            */
@@ -3686,7 +3686,7 @@ void process_message_result(
       case 'z':                        /* ASCII-Z string                    */
                                        /* Force to a string.                */
         value = value->stringValue();
-        (*((char **)return_pointer)) = ((RexxString *)value)->stringData;
+        (*((const char **)return_pointer)) = ((RexxString *)value)->getStringData();
         break;
 #ifdef SOM
       case 'Z':                        /* ASCII-Z string - for SOM          */
@@ -3697,9 +3697,9 @@ void process_message_result(
         RexxString *stringValue;
         stringValue = value->stringValue();
                                        /* SOMMalloc storgae we need         */
-        (*((char **)return_pointer)) = (char *)SOMMalloc(stringValue->length);
+        (*((char **)return_pointer)) = (char *)SOMMalloc(stringValue->getLength());
                                        /* copy the string data into new buff*/
-        strcpy((*((char **)return_pointer)), stringValue->stringData);
+        strcpy((*((char **)return_pointer)), stringValue->getStringData());
        }
         break;
 #endif
@@ -3764,9 +3764,9 @@ LONG RexxActivity::messageSend(
 
 LONG VLAREXXENTRY RexxSendMessage (
   REXXOBJECT  receiver,                /* receiving object                  */
-  PCHAR msgname,                       /* message to send                   */
+  const char *msgname,                 /* message to send                   */
   REXXOBJECT  start_class,             /* lookup starting class             */
-  PCHAR interfacedefn,                 /* argument, return value definition */
+  const char *interfacedefn,           /* argument, return value definition */
   void *result_pointer,                /* pointer to returned result        */
   ... )                                /* variable number of arguments      */
 /******************************************************************************/
@@ -3894,6 +3894,6 @@ REXXOBJECT REXXENTRY RexxDispatch (
   args     = (RexxArray *)((RexxArray *)argList)->get(3);
   MTXRL(kernel_semaphore);             /* release kernel lock.              */
                                        /* process the message               */
-  RexxSendMessage(receiver, message->stringData, OREF_NULL, "oA", &result, (RexxObject *)args);
+  RexxSendMessage(receiver, message->getStringData(), OREF_NULL, "oA", &result, (RexxObject *)args);
   return result;                       /* return the message result         */
 }

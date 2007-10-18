@@ -591,7 +591,7 @@ RexxMethod *RexxMethodClass::newRexxCode(
         report_exception2(Error_Incorrect_method_argType, IntegerThree, new_cstring("Method/String object") );
       else {
         // default given? set option to NULL (see code below)
-        if (!stricmp("PROGRAMSCOPE",((RexxString*) option)->stringData))
+        if (!stricmp("PROGRAMSCOPE",((RexxString*) option)->getStringData()))
           option = NULL;
         else
           report_exception4(Error_Incorrect_call_list, new_cstring("NEW"), IntegerThree, new_cstring("\"PROGRAMSCOPE\", Method object"), option);

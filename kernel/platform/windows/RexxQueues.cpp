@@ -152,10 +152,10 @@ long rexx_add_queue(
    queue_name = RexxVarValue("NAMED_QUEUE");
    REXX_GUARD_OFF();                   /* turn off the guard lock           */
                                        /*  move the info to rxstring        */
-   rx_string.strptr = string_data(queue_line);
+   rx_string.strptr = const_cast<char *>(string_data(queue_line));
    rx_string.strlength = string_length(queue_line);
                                        /*  move the line to the queue       */
-   rc = RexxAddQueue((PSZ)string_data(queue_name), &rx_string, order);
+   rc = RexxAddQueue(const_cast<PSZ>(string_data(queue_name)), &rx_string, order);
    if (rc != 0)                        /* stream error?                     */
      send_exception1(Error_System_service_service, RexxArray1(RexxString("SYSTEM QUEUE")));
    return rc;                          /* return the result                 */

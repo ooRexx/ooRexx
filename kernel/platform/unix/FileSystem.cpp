@@ -74,9 +74,9 @@
 
 extern char achRexxCurDir[ CCHMAXPATH+2 ];    /* Save current working direct */
 
-PCHAR SysFileExtension(PCHAR);
-RexxString * LocateProgram(RexxString *, PCHAR[], LONG);
-char * SearchFileName(PCHAR, char);
+const char *SysFileExtension(const char *);
+RexxString * LocateProgram(RexxString *, const char *[], int);
+const char * SearchFileName(const char *, char);
 FILE * SysBinaryFilemode(FILE *);
 
 /*********************************************************************/
@@ -91,14 +91,14 @@ RexxString *  SysResolveProgramName(
    RexxString * Name,                  /* starting filename                 */
    RexxString * Parent )               /* parent program                    */
 {
-  PCHAR     Extension;                 /* parent file extensions            */
-  PCHAR     ExtensionArray[3];         /* array of extensions to check      */
-  LONG      ExtensionCount;            /* count of extensions               */
+  const char *Extension;               /* parent file extensions            */
+  const char *ExtensionArray[3];       /* array of extensions to check      */
+  int       ExtensionCount;            /* count of extensions               */
 
   ExtensionCount = 0;                  /* Count of extensions               */
   if (Parent != OREF_NULL) {           /* have one from a parent activation?*/
                                        /* check for a file extension        */
-    Extension = SysFileExtension(Parent->stringData);
+    Extension = SysFileExtension(Parent->getStringData());
     if (Extension != NULL)             /* have an extension?                */
                                        /* record this                       */
       ExtensionArray[ExtensionCount++] = Extension;
@@ -122,11 +122,11 @@ RexxString *  SysResolveProgramName(
 /*                                                                   */
 /*********************************************************************/
 
-PCHAR SysFileExtension(
-  PCHAR     Name )                     /* file name                         */
+const char *SysFileExtension(
+  const char *Name )                   /* file name                         */
 {
-  PCHAR     Scan;                      /* scanning pointer                  */
-  INT       Length;                    /* extension length                  */
+  const char *Scan;                    /* scanning pointer                  */
+  size_t    Length;                    /* extension length                  */
 
   Scan = strrchr(Name, '/');           /* have a path?                      */
   if (Scan)                            /* find one?                         */
@@ -179,17 +179,17 @@ void strlower(char *str)
 
 RexxString *  LocateProgram(
   RexxString * InName,                 /* name of rexx proc to check        */
-  PCHAR      Extensions[],             /* array of extensions to check      */
-  LONG       ExtensionCount )          /* count of extensions               */
+  const char *Extensions[],            /* array of extensions to check      */
+  int        ExtensionCount )          /* count of extensions               */
 {
-  UCHAR      TempName[CCHMAXPATH + 2]; /* temporary name buffer             */
-  PCHAR      Name;                     /* ASCII-Z version of the name       */
-  PCHAR      Extension;                /* start of file extension           */
-  PCHAR      Result;                   /* returned name                     */
-  LONG       i;                        /* loop counter                      */
-  LONG       ExtensionSpace;           /* room for an extension             */
+  char       TempName[CCHMAXPATH + 2]; /* temporary name buffer             */
+  const char *Name;                    /* ASCII-Z version of the name       */
+  const char *Extension;               /* start of file extension           */
+  const char *Result;                  /* returned name                     */
+  int        i;                        /* loop counter                      */
+  size_t     ExtensionSpace;           /* room for an extension             */
 
-  Name = InName->stringData;           /* point to the string data          */
+  Name = InName->getStringData();      /* point to the string data          */
 
                                        /* extract extension from name       */
   Extension = SysFileExtension(Name);  /* locate the file extension start   */
@@ -206,19 +206,19 @@ RexxString *  LocateProgram(
                                      /* loop through the extensions list  */
   for (i = 0; i < ExtensionCount; i++) {
                                        /* copy over the name                */
-      strncpy((PCHAR)TempName, Name, sizeof(TempName));
+      strncpy(TempName, Name, sizeof(TempName));
                                        /* copy over the extension           */
-      strncat((PCHAR)TempName, (PCHAR)Extensions[i], ExtensionSpace);
+      strncat(TempName, Extensions[i], ExtensionSpace);
                                        /* check on the "raw" name first     */
-      Result = SearchFileName((PCHAR)TempName, 'P'); /* PATH search         */
+      Result = SearchFileName(TempName, 'P'); /* PATH search         */
       if (Result != NULL)                      /* not found?  try adding extensions */
       {
           return new_cstring(Result);
       }
       // try again in lower case
-      strlower((char *)TempName);
+      strlower(TempName);
                                        /* check on the "raw" name first     */
-      Result = SearchFileName((PCHAR)TempName, 'P'); /* PATH search         */
+      Result = SearchFileName(TempName, 'P'); /* PATH search         */
       if (Result != NULL)                      /* not found?  try adding extensions */
       {
           return new_cstring(Result);
@@ -238,176 +238,182 @@ RexxString *  LocateProgram(
 /*                                                                          */
 /****************************************************************************/
 
-char *SearchFileName(
-  PCHAR      Name,                     /* name of rexx proc to check         */
+const char *SearchFileName(
+  const char *Name,                    /* name of rexx proc to check         */
   char       chCont )                  /* Control char for search and output */
 {
-  static CHAR       achFullName[CCHMAXPATH + 2]; /* temporary name buffer           */
-  CHAR       achTempName[CCHMAXPATH + 2]; /* temporary name buffer           */
-  PSZ        p;
-  PSZ        q;
-  PSZ        enddir;
-  PSZ        pszPath;
+    static char       achFullName[CCHMAXPATH + 2]; /* temporary name buffer           */
+    char       achTempName[CCHMAXPATH + 2]; /* temporary name buffer           */
+    char *     p;
+    char *     q;
+    char *     enddir;
+    char *     pszPath;
 
-  LONG       NameLength;               /* length of name                    */
-  struct stat dummy;                   /* structure for stat system calls   */
-  BOOL       found=0;
+    size_t     NameLength;               /* length of name                    */
+    struct stat dummy;                   /* structure for stat system calls   */
+    BOOL       found=0;
 
-  NameLength = strlen(Name);           /* get length of incoming name       */
-                                       /* if name is too small or big       */
-  if (NameLength < 1 || NameLength > CCHMAXPATH)
-    return OREF_NULL;                  /* then Not a rexx proc name         */
+    NameLength = strlen(Name);           /* get length of incoming name       */
+                                         /* if name is too small or big       */
+    if (NameLength < 1 || NameLength > CCHMAXPATH)
+        return OREF_NULL;                  /* then Not a rexx proc name         */
 
-  /* If the name contains a '/', then there is directory info in the name.  */
-  /* Get the absolute directory name not via chdir and getcwd, because of   */
-  /* performance problems (lines, linein and lineout directory resolution). */
+    /* If the name contains a '/', then there is directory info in the name.  */
+    /* Get the absolute directory name not via chdir and getcwd, because of   */
+    /* performance problems (lines, linein and lineout directory resolution). */
 
-  if ((enddir=strrchr(Name,'/')))      /* If there's directory info, enddir */
-  {                                    /* points to end of directory name   */
-    p = &achTempName[0];
-    memcpy(p, Name, enddir-Name);      /* Copy path from name to p          */
-    *(p+(enddir-Name))   = '\0';       /* Null-terminate it                 */
-    *(p+(enddir-Name)+1) = '\0';       /* Null-terminate the search of >.<  */
-    achFullName[0] = '\0';             /* Reset                             */
-
-    switch(*p)
+    if ((enddir=strrchr(Name,'/')))      /* If there's directory info, enddir */
     {
-      case '~':
-           if ( *(p+1) == '\0' )
-           {
-              strcpy( achFullName, getenv("HOME"));
-              strncat( achFullName, Name+1,
-                                         ( CCHMAXPATH - strlen(achFullName)) );
-              break;
-           }
-           if ( *(p+1) == '/' )
-           {
-              strcpy( achFullName, getenv("HOME"));
-              p = p + 2;
-           }
-      case '.':
-           if ( *(p+1) == '\0' )
-           {
-              strcpy(achFullName, achRexxCurDir);
-              strncat( achFullName, (Name+1),
-                                         ( CCHMAXPATH - strlen(achFullName)) );
-              break;
-           }
-           if ( *(p+1) == '/' )
-           {
-              strcpy(achFullName, achRexxCurDir);
-              p = p + 2;
-           }
-           if ( ( *(p+1) == '.' ) && ( *(p+2) == '\0' ) )
-           {
-              p = p + 2;
-              if ( achFullName[0] == '\0' )
-              {
-                enddir=strrchr(achRexxCurDir,'/');              /* Copy path */
-                memcpy(achFullName, achRexxCurDir, enddir-(&achRexxCurDir[0]));
-                achFullName[enddir-(&achRexxCurDir[0])] = '\0'; /* Terminate */
-              } else {
-                enddir=strrchr(achFullName,'/');              /* Copy path */
-                achFullName[enddir-(&achFullName[0])] = '\0'; /* Terminate */
-              }
-              strncat( achFullName, (Name+(p-(&achTempName[0]))),
-                                         ( CCHMAXPATH - strlen(achFullName)) );
-              break;
-           }
-           if ( ( *(p+1) == '.' ) && ( *(p+2) == '/' ) )
-           {
-              p = p + 3;
-              if ( achFullName[0] == '\0' )
-              {
-                enddir=strrchr(achRexxCurDir,'/');              /* Copy path */
-                memcpy(achFullName, achRexxCurDir, enddir-(&achRexxCurDir[0]));
-                achFullName[enddir-(&achRexxCurDir[0])] = '\0'; /* Terminate */
-              } else {
-                enddir=strrchr(achFullName,'/');              /* Copy path */
-                achFullName[enddir-(&achFullName[0])] = '\0'; /* Terminate */
-              }
-              for ( ;
-                   ( ( *p == '.' ) && ( *(p+1) == '.' ) );
-                   p = p + 3)
-              {
-                 if (enddir=strrchr(achFullName,'/'))            /* Copy path */
-                   achFullName[enddir-(&achFullName[0])] = '\0'; /* Terminate */
-              }
-           }
-           strncat( achFullName, (Name+(p-(&achTempName[0]))-1),
-                                         ( CCHMAXPATH - strlen(achFullName)) );
-        break;
-      default:
-              strcpy(achFullName, Name);
-    }  /* endswitch */
+        /* points to end of directory name   */
+        p = &achTempName[0];
+        memcpy(p, Name, enddir-Name);      /* Copy path from name to p          */
+        *(p+(enddir-Name))   = '\0';       /* Null-terminate it                 */
+        *(p+(enddir-Name)+1) = '\0';       /* Null-terminate the search of >.<  */
+        achFullName[0] = '\0';             /* Reset                             */
 
-    if (stat(achFullName,&dummy))             /* look for file              */
-      found = 0;                              /* Give up - we can't find it */
-    else                                      /*                            */
-      found = 1;                              /* Tell user we found it      */
+        switch (*p)
+        {
+            case '~':
+                if ( *(p+1) == '\0' )
+                {
+                    strcpy( achFullName, getenv("HOME"));
+                    strncat( achFullName, Name+1,
+                             ( CCHMAXPATH - strlen(achFullName)) );
+                    break;
+                }
+                if ( *(p+1) == '/' )
+                {
+                    strcpy( achFullName, getenv("HOME"));
+                    p = p + 2;
+                }
+            case '.':
+                if ( *(p+1) == '\0' )
+                {
+                    strcpy(achFullName, achRexxCurDir);
+                    strncat( achFullName, (Name+1),
+                             ( CCHMAXPATH - strlen(achFullName)) );
+                    break;
+                }
+                if ( *(p+1) == '/' )
+                {
+                    strcpy(achFullName, achRexxCurDir);
+                    p = p + 2;
+                }
+                if ( ( *(p+1) == '.' ) && ( *(p+2) == '\0' ) )
+                {
+                    p = p + 2;
+                    if ( achFullName[0] == '\0' )
+                    {
+                        enddir=strrchr(achRexxCurDir,'/');              /* Copy path */
+                        memcpy(achFullName, achRexxCurDir, enddir-(&achRexxCurDir[0]));
+                        achFullName[enddir-(&achRexxCurDir[0])] = '\0'; /* Terminate */
+                    }
+                    else
+                    {
+                        enddir=strrchr(achFullName,'/');              /* Copy path */
+                        achFullName[enddir-(&achFullName[0])] = '\0'; /* Terminate */
+                    }
+                    strncat( achFullName, (Name+(p-(&achTempName[0]))),
+                             ( CCHMAXPATH - strlen(achFullName)) );
+                    break;
+                }
+                if ( ( *(p+1) == '.' ) && ( *(p+2) == '/' ) )
+                {
+                    p = p + 3;
+                    if ( achFullName[0] == '\0' )
+                    {
+                        enddir=strrchr(achRexxCurDir,'/');              /* Copy path */
+                        memcpy(achFullName, achRexxCurDir, enddir-(&achRexxCurDir[0]));
+                        achFullName[enddir-(&achRexxCurDir[0])] = '\0'; /* Terminate */
+                    }
+                    else
+                    {
+                        enddir=strrchr(achFullName,'/');              /* Copy path */
+                        achFullName[enddir-(&achFullName[0])] = '\0'; /* Terminate */
+                    }
+                    for ( ;
+                        ( ( *p == '.' ) && ( *(p+1) == '.' ) );
+                        p = p + 3)
+                    {
+                        enddir=strrchr(achFullName,'/');
+                        if (enddir != NULL)            /* Copy path */
+                            achFullName[enddir-(&achFullName[0])] = '\0'; /* Terminate */
+                    }
+                }
+                strncat( achFullName, (Name+(p-(&achTempName[0]))-1),
+                         ( CCHMAXPATH - strlen(achFullName)) );
+                break;
+            default:
+                strcpy(achFullName, Name);
+        }  /* endswitch */
 
-    if (found || (chCont == 'A'))
-      return (PCHAR)achFullName;
-    else
-      return OREF_NULL;
+        if (stat(achFullName,&dummy))             /* look for file              */
+            found = 0;                              /* Give up - we can't find it */
+        else                                      /*                            */
+            found = 1;                              /* Tell user we found it      */
 
-  }                                       /* End if dir info present    */
+        if (found || (chCont == 'A'))
+            return achFullName;
+        else
+            return OREF_NULL;
+    }                                       /* End if dir info present    */
 
-  /* Otherwise, there's no directory info, so we must use the PATH      */
-  /*             environment variables to find the file.                */
+    /* Otherwise, there's no directory info, so we must use the PATH      */
+    /*             environment variables to find the file.                */
 
-  if ((!stat(Name, &dummy)) || (chCont == 'A'))  /* First try current dir      */
-  {
-    strcpy(achFullName, achRexxCurDir);   /* Copy current directory in  */
-    strcat(achFullName,"/");              /* Put in a final slash       */
-    strcat(achFullName, Name);            /* Now add name to end        */
-    found = 1;                            /* Tell caller we found it    */
-  }
-  if (!found && (chCont == 'P' ))         /* Not in current dir         */
-  {
-    pszPath = getenv("PATH");             /* Get PATH                   */
-    if (!pszPath)                         /* No PATH or REXXPATH?       */
+    if ((!stat(Name, &dummy)) || (chCont == 'A'))  /* First try current dir      */
     {
-      return OREF_NULL;                   /* Didn't find the file       */
+        strcpy(achFullName, achRexxCurDir);   /* Copy current directory in  */
+        strcat(achFullName,"/");              /* Put in a final slash       */
+        strcat(achFullName, Name);            /* Now add name to end        */
+        found = 1;                            /* Tell caller we found it    */
     }
-    /* Now we have one contiguous string with all the directories       */
-    /* that must be searched listed in order.                           */
-    NameLength = strlen(pszPath);
-    found = 0;
-                                          /* For every dir in searchpath*/
-    for (p=pszPath, q = strchr(p,':');
-         p < pszPath+NameLength;
-         p = q+1, q = strchr(p,':')) {
-      if (!q)                             /* Is there a terminating ':'?*/
-        q = p + strlen(p);                /* Make q point to \0         */
-      memcpy(achTempName, p, q-p);        /* Copy this dir to tempname  */
-      achTempName[q-p] = '/';             /* End dir with slash         */
-      strcpy(&achTempName[q-p+1], Name);  /* Append name                */
+    if (!found && (chCont == 'P' ))         /* Not in current dir         */
+    {
+        pszPath = getenv("PATH");             /* Get PATH                   */
+        if (!pszPath)                         /* No PATH or REXXPATH?       */
+        {
+            return OREF_NULL;                   /* Didn't find the file       */
+        }
+        /* Now we have one contiguous string with all the directories       */
+        /* that must be searched listed in order.                           */
+        NameLength = strlen(pszPath);
+        found = 0;
+        /* For every dir in searchpath*/
+        for (p=pszPath, q = strchr(p,':');
+            p < pszPath+NameLength;
+            p = q+1, q = strchr(p,':'))
+        {
+            if (!q)                             /* Is there a terminating ':'?*/
+                q = p + strlen(p);                /* Make q point to \0         */
+            memcpy(achTempName, p, q-p);        /* Copy this dir to tempname  */
+            achTempName[q-p] = '/';             /* End dir with slash         */
+            strcpy(&achTempName[q-p+1], Name);  /* Append name                */
 
-      /* If we do find this file, it's possible that the directory      */
-      /* that we used may not have been a complete directory            */
-      /* specification from the root.  If so, as above, we must         */
-      /* get the full directory.                                        */
-      if ( achTempName[0] == '~' )
-      {
-          strcpy( achFullName, getenv("HOME"));
-          strcat( achFullName, &achTempName[1]);
-      }
-      else
-         strcpy(achFullName, achTempName);
+            /* If we do find this file, it's possible that the directory      */
+            /* that we used may not have been a complete directory            */
+            /* specification from the root.  If so, as above, we must         */
+            /* get the full directory.                                        */
+            if ( achTempName[0] == '~' )
+            {
+                strcpy( achFullName, getenv("HOME"));
+                strcat( achFullName, &achTempName[1]);
+            }
+            else
+                strcpy(achFullName, achTempName);
 
-      if (!stat(achFullName, &dummy))     /* If file is found,          */
-      {
-        found = 1;                        /* Tell user we found it      */
-        break;                            /* Break out of loop          */
-      }  /* endif */
-    }  /* endfor */
-  } /* endif */
+            if (!stat(achFullName, &dummy))     /* If file is found,          */
+            {
+                found = 1;                        /* Tell user we found it      */
+                break;                            /* Break out of loop          */
+            }  /* endif */
+        }  /* endfor */
+    } /* endif */
 
-  if (found)
-    return (PCHAR)achFullName;
-  else
-    return OREF_NULL;
+    if (found)
+        return achFullName;
+    else
+        return OREF_NULL;
 
 }
 
@@ -442,10 +448,10 @@ void SysLoadImage(char **imageBuffer, long *imageSize)
 /*******************************************************************/
 {
   FILE *image = NULL;
-  PCHAR      fullname;
+  const char *fullname;
 //RexxString * imgpath;
 
-  fullname = SearchFileName((PCHAR)BASEIMAGE, 'P');  /* PATH search         */
+  fullname = SearchFileName(BASEIMAGE, 'P');  /* PATH search         */
 
 #ifdef ORX_CATDIR
   if( fullname == OREF_NULL ) {
@@ -457,7 +463,7 @@ void SysLoadImage(char **imageBuffer, long *imageSize)
 
 //if ( imgpath && fullname )                         /* seg faultn          */
   if ( fullname != OREF_NULL )
-    image = fopen((PSZ)fullname, "rb");/* try to open the file              */
+    image = fopen(fullname, "rb");/* try to open the file              */
   else
     logic_error("no startup image");   /* open failure                      */
 
@@ -484,7 +490,7 @@ void SysLoadImage(char **imageBuffer, long *imageSize)
 
 
 RexxBuffer *SysReadProgram(
-  PCHAR file_name)                     /* program file name                 */
+  const char *file_name)               /* program file name                 */
 /*******************************************************************/
 /* Function:  Read a program into a buffer                         */
 /*******************************************************************/
@@ -532,7 +538,7 @@ void SysQualifyStreamName(
 /*******************************************************************/
 {
 //  RexxString *something;               /* place to save RexxString from the */
-  char *something;               /* place to save RexxString from the */
+  const char *something;               /* place to save RexxString from the */
                                        /* call to SearchFileName()          */
 
                                        /* already expanded?                 */
@@ -550,7 +556,7 @@ void SysQualifyStreamName(
                                        /* get Always the fully expanded name */
 //  something = SearchFileName(stream_info->name_parameter, 'A'); /* returns RexxString * */
   something = SearchFileName(stream_info->name_parameter, 'A'); /* returns RexxString * */
-  if (something != OREF_NULL)
+  if (something != NULL)
   {                           // copy expanded name to stream_info structure
     strncpy(stream_info->full_name_parameter, something, strlen(something));
                               //  insert a null at end
@@ -571,7 +577,7 @@ RexxString *SysQualifyFileSystemName(
    memset(&stream_info, 0, sizeof(STREAM_INFO));
 
                                        /* initialize stream info structure  */
-   strncpy(stream_info.name_parameter, name->stringData, path_length+10);
+   strncpy(stream_info.name_parameter, name->getStringData(), path_length+10);
    strcpy(&stream_info.name_parameter[path_length+11], "\0");
    SysQualifyStreamName(&stream_info); /* expand the full name              */
 
@@ -580,7 +586,7 @@ RexxString *SysQualifyFileSystemName(
 }
 
 BOOL SearchFirstFile(
-  PCHAR Name)                     /* name of file with wildcards       */
+  const char *Name)                     /* name of file with wildcards       */
 {
 
 
@@ -647,7 +653,6 @@ int SysPeekKeyboard(void)
 int SysPeekSTD(STREAM_INFO *stream_info)
 {
   int c;
-  int rc;
 
   /* ioctl returns number of fully received bytes from keyboard, after        */
   /* the Enter key has been hit. After the first byte has been read with      */

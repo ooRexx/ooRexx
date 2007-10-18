@@ -56,7 +56,7 @@
 #define BUFFERLEN         256          /* Length of message bufs used       */
 
 extern "C" APIRET APIENTRY RexxTranslateProgram(PSZ, PSZ, PRXSYSEXIT);
-extern _declspec(dllimport) PCHAR RexxGetVersionInformation(void);
+extern "C" char * APIENTRY RexxGetVersionInformation();
 
 void DisplayError(HINSTANCE hDll, INT err_no)
 {
@@ -85,7 +85,7 @@ int SysCallV main(int argc, char **argv)
   }
   if (!silent)
   {
-      PCHAR ptr = RexxGetVersionInformation();
+      char *ptr = RexxGetVersionInformation();
       if (ptr) {
           printf(ptr, "Tokenizer");
           printf("\n");

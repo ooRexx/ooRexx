@@ -79,7 +79,7 @@
 
 typedef struct  tokenstruct{                      /* single token structure */
                                                   /* pointer to the single token parsed from input */
-    char *string;
+    const char *string;
                                                   /* length of the single token */
     size_t length;
                                                   /* offset into input for the single token */
@@ -97,7 +97,7 @@ typedef void *userparms;
                     /***********************************************************************/
 
 typedef struct tokentablestruct {
-  char *token;
+  const char *token;
   size_t minlength;           /* minimum length for token to be a valid match with the input token */
   void *ATSP;                 /* this is a pointer to void to get past c's limitations */
                               /* of not being able to specify control blocks that point to each other */

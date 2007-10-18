@@ -81,12 +81,12 @@ int gettoken(const char *TokenString,TOKENSTRUCT *tsp)
      case '-':                         /* minus token                       */
      case '<':                         /* less than sign                    */
                                        /* point to the token start          */
-       tsp->string = (char *)&TokenString[tsp->offset];
+       tsp->string = &TokenString[tsp->offset];
        tsp->length = 1;                /* single character token found      */
        return 0;                       /* had success                       */
    }
                                        /* set the token start position      */
-   tsp->string = (char *)&TokenString[tsp->offset];
+   tsp->string = &TokenString[tsp->offset];
                                        /* else count the number of          */
                                        /*characters in next token           */
    for (tsp->length = 0 ; (TokenString[tsp->offset + tsp->length] != ' ') &&
@@ -136,7 +136,7 @@ long parser(TTS *ttsp, const char *TokenString, void *userparms)
    while ((result = gettoken(TokenString,tsp)) == 0) {
      for (work_ttsp = ttsp;            /* check against the table           */
          (*(work_ttsp->token)) &&
-         (memicmp((void *)(work_ttsp->token),(void *)(tsp->string),tsp->length));
+         (memicmp(work_ttsp->token, tsp->string, tsp->length));
        work_ttsp++ ) {
      }
      if (!*(work_ttsp->token)) {       /* no token found?                   */

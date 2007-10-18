@@ -113,7 +113,7 @@ void automaton::setMinimal(bool f)
 /* and the automaton will match any pattern.                 */
 /* parsing is recursive.                                     */
 /*************************************************************/
-int automaton::parse(char *regexp)
+int automaton::parse(const char *regexp)
 {
   int temp;
   this->regexp = regexp;
@@ -412,7 +412,7 @@ int automaton::set()
   int transition = SET;
   int length = 256;                 // pre-allocation length is 256 bytes
                                     // if more are need, reallocation is used
-  char *ptr = regexp+currentPos;
+  const char *ptr = regexp+currentPos;
   char *range = (char*) malloc(sizeof(char)*length);
 #ifdef WIN32
   int (__cdecl *func)(int) = NULL;     // function pointer for symbolic names
@@ -646,7 +646,7 @@ int automaton::insertSet(char *range)
 /* matching is non-recursively done with a queue */
 /* that has a push, put and pop method.          */
 /*************************************************/
-int automaton::match(char *a, int N)  // string length passed in
+int automaton::match(const char *a, int N)  // string length passed in
                                       // instead of strlen
 {
   int n1, n2;

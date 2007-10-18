@@ -63,7 +63,7 @@
    void liveGeneral();
    void flatten(RexxEnvelope*);
    RexxObject *unflatten(RexxEnvelope *);
-   void flattenReference(RexxObject **, LONG, RexxObject **);
+   void flattenReference(void *, LONG, void *);
    RexxEnvelope *pack(RexxString *, RexxObject *, RexxString *, RexxArray *);
    RexxObject *unpack();
    void        puff(RexxBuffer *, PCHAR);

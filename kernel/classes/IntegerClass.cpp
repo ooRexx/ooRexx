@@ -186,12 +186,12 @@ void RexxInteger::copyIntoTail(RexxCompoundTail *tail)
   if (this->stringrep != OREF_NULL) {  /* have a string already?            */
       /* copying directly from an existing string rep is faster */
       /* than formatting a new value and copying. */
-      tail->append((PUCHAR)stringrep->stringData, stringrep->length);
+      tail->append(stringrep->getStringData(), stringrep->getLength());
       return;
   }
   _ltoa((long)this->value, stringBuffer, 10);
                                        /* append this to the buffer         */
-  tail->append((UCHAR *)stringBuffer, strlen(stringBuffer));
+  tail->append(stringBuffer, strlen(stringBuffer));
 }
 
 double  RexxInteger::doubleValue()

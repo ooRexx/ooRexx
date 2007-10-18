@@ -59,7 +59,7 @@ class RexxNativeActivation : public RexxActivationBase {
   RexxObject *saveObject(RexxObject *);
   RexxVariableDictionary *methodVariables();
   long   isInteger(RexxObject *);
-  PCHAR  cstring(RexxObject *);
+  const char *cstring(RexxObject *);
   double getDoubleValue(RexxObject *);
   long   isDouble(RexxObject *);
   PVOID  cself();

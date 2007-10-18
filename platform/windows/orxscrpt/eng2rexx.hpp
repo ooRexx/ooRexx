@@ -68,7 +68,7 @@ extern Index *thread2EngineList;
 
 LONG APIENTRY RexxCatchExit(LONG, LONG, PEXIT);
 LONG APIENTRY RexxCatchExternalFunc(LONG, LONG, PEXIT);
-RexxObject* __stdcall engineDispatch(void*);
+RexxObject* __stdcall engineDispatch(const char *);
 RexxObject* __stdcall propertyChange(RexxString*,RexxObject*,int,int*);
 int __stdcall scriptSecurity(CLSID,IUnknown*);
 RexxObject* Create_securityObject(OrxScript *, FILE *);
@@ -78,18 +78,18 @@ void __stdcall runMethod(void*);
 
 // these functions are not documented to the outside world,
 // so we have to give the prototypes here, they're not in rexx.h:
-void REXXENTRY RexxCreateDirectory(PCHAR);
-void REXXENTRY RexxRemoveDirectory(PCHAR);
-APIRET REXXENTRY RexxCreateMethod(PCHAR, PRXSTRING, RexxObject **, ConditionData *);
-APIRET REXXENTRY RexxLoadMethod(PCHAR, PRXSTRING, RexxObject **);
+void REXXENTRY RexxCreateDirectory(const char *);
+void REXXENTRY RexxRemoveDirectory(const char *);
+APIRET REXXENTRY RexxCreateMethod(const char *, PRXSTRING, RexxObject **, ConditionData *);
+APIRET REXXENTRY RexxLoadMethod(const char *, PRXSTRING, RexxObject **);
 APIRET REXXENTRY RexxStoreMethod(RexxObject*, PRXSTRING);
 void WinGetVariables(void (__stdcall *callback)(void*));
 void WinEnterKernel(bool);
 void WinLeaveKernel(bool);
 extern "C" {
-APIRET REXXENTRY RexxRunMethod(PCHAR, RexxObject *, void *, RexxArray* (__stdcall *)(void*), PRXSYSEXIT, RexxObject * *, RexxObject *, ConditionData *);
+APIRET REXXENTRY RexxRunMethod(const char *, RexxObject *, void *, RexxArray* (__stdcall *)(void*), PRXSYSEXIT, RexxObject * *, RexxObject *, ConditionData *);
 
-void REXXENTRY SetNovalueCallback( RexxObject* (__stdcall *f)(void*) );
+void REXXENTRY SetNovalueCallback( RexxObject* (__stdcall *f)(const char *) );
 void REXXENTRY SetWSHPropertyChange( RexxObject* (__stdcall *f)(RexxString*,RexxObject*,int,int*) );
 }
 // these three come from orexxole.c

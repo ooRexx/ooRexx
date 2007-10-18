@@ -1989,7 +1989,7 @@ RexxObject * RexxActivation::loadRequired(
   }
 
   /* check to see whether a macro exists */
-  fMacroExists = (RexxQueryMacro(target->stringData, &usMacroPosition) == 0);
+  fMacroExists = (RexxQueryMacro(const_cast<char *>(target->getStringData()), &usMacroPosition) == 0);
   if (fMacroExists && (usMacroPosition == RXMACRO_SEARCH_BEFORE))
     fullname = target; /* use target name for references because macro will be used */
 
@@ -2387,7 +2387,7 @@ void RexxActivation::traceValue(       /* trace an intermediate value       */
   if (this->settings.traceindent < 0)  /* indentation go negative somehow?  */
     this->settings.traceindent = 0;    /* reset to zero                     */
                                        /* get a string large enough to      */
-  outlength = stringvalue->length + TRACE_OVERHEAD + this->settings.traceindent * INDENT_SPACING;
+  outlength = stringvalue->getLength() + TRACE_OVERHEAD + this->settings.traceindent * INDENT_SPACING;
   buffer = raw_string(outlength);      /* get an output string              */
   save(buffer);                        /* needs protection, as a following clone can force GC THU021A*/
                                        /* insert the leading blanks         */
@@ -2397,7 +2397,7 @@ void RexxActivation::traceValue(       /* trace an intermediate value       */
                                        /* add a quotation mark              */
   buffer->putChar(TRACE_OVERHEAD - 2 + this->settings.traceindent * INDENT_SPACING, '\"');
                                        /* copy the string value             */
-  buffer->put(TRACE_OVERHEAD - 1 + this->settings.traceindent * INDENT_SPACING, stringvalue->stringData, stringvalue->length);
+  buffer->put(TRACE_OVERHEAD - 1 + this->settings.traceindent * INDENT_SPACING, stringvalue->getStringData(), stringvalue->getLength());
   buffer->putChar(outlength - 1, '\"');/* add the trailing quotation mark   */
   buffer->generateHash();              /* done building the string          */
                                        /* write out the line                */
@@ -2695,7 +2695,7 @@ void RexxActivation::traceSourceString()
                                        /* get the string version            */
   string = this->sourceString();       /* get the source string             */
                                        /* get a string large enough to      */
-  outlength = string->length + INSTRUCTION_OVERHEAD + 2;
+  outlength = string->getLength() + INSTRUCTION_OVERHEAD + 2;
   buffer = raw_string(outlength);      /* get an output string              */
                                        /* insert the leading blanks         */
   buffer->set(0, ' ', INSTRUCTION_OVERHEAD);
@@ -2704,7 +2704,7 @@ void RexxActivation::traceSourceString()
                                        /* add a quotation mark              */
   buffer->putChar(INSTRUCTION_OVERHEAD, '\"');
                                        /* copy the string value             */
-  buffer->put(INSTRUCTION_OVERHEAD + 1, string->stringData, string->length);
+  buffer->put(INSTRUCTION_OVERHEAD + 1, string->getStringData(), string->getLength());
   buffer->putChar(outlength - 1, '\"');/* add the trailing quotation mark   */
   buffer->generateHash();              /* done building the string          */
                                        /* write out the line                */
@@ -2914,10 +2914,10 @@ BOOL RexxActivation::debugPause(RexxInstruction * instr)
       /* dbg_stepagain is set, when a tracepoint is set immediately after a step_out/step_over */
 
 
-      if (response->length == 0)       /* just a "null" line entered?       */
+      if (response->getLength() == 0)       /* just a "null" line entered?       */
         break;                         /* just end the pausing              */
                                        /* a re-execute request?             */
-      else if (response->length == 1 && response->getChar(0) == '=') {
+      else if (response->getLength() == 1 && response->getChar(0) == '=') {
         this->next = this->current;    /* reset the execution pointer       */
         return TRUE;                   /* finished (inform block instrs)    */
       }
@@ -3197,13 +3197,13 @@ void RexxActivation::sysDbgSubroutineCall(BOOL enter)
 
     exit_parm.rxdbg_flags.rxftrace = 0;
     filename = this->code->getProgramName();
-        MAKERXSTRING(exit_parm.rxdbg_filename, filename->stringData, filename->length);
+        MAKERXSTRING(exit_parm.rxdbg_filename, filename->getStringData(), filename->getLength());
     exit_parm.rxdbg_line = this->getCurrent()->lineNumber;
     this->getCurrent()->getLocation(&location); /* get the instruction location      */
     if (this->source)
     {
         routine = this->source->extract(&location);
-        MAKERXSTRING(exit_parm.rxdbg_routine, routine->stringData, routine->length);
+        MAKERXSTRING(exit_parm.rxdbg_routine, routine->getStringData(), routine->getLength());
     }
     else
         MAKERXSTRING(exit_parm.rxdbg_routine, "no info available", 17);
@@ -3230,7 +3230,7 @@ void RexxActivation::sysDbgLineLocate(RexxInstruction * instr)
         || (this->code->u_source->sourceBuffer == OREF_NULL)) return;
     exit_parm.rxdbg_flags.rxftrace = 0;
     filename = this->code->getProgramName();
-        MAKERXSTRING(exit_parm.rxdbg_filename, filename->stringData, filename->length);
+        MAKERXSTRING(exit_parm.rxdbg_filename, filename->getStringData(), filename->getLength());
     if (instr == OREF_NULL) instr = this->getCurrent();
     exit_parm.rxdbg_line = instr->lineNumber;
                                        /* call the handler                  */
@@ -3346,7 +3346,7 @@ RexxVariableBase  *RexxActivation::getDirectVariableRetriever(
   INT         compound;                /* count of period characters        */
 
   retriever = OREF_NULL;               /* return NULL for all errors        */
-  length = variable->length;           /* get the name length               */
+  length = variable->getLength();           /* get the name length               */
                                        /* get the first character           */
   character = (UCHAR)variable->getChar(0);
                                        /* constant symbol?                  */
@@ -3426,7 +3426,7 @@ RexxObject *buildCompoundVariable(
   INT     start;                       /* starting scan position            */
   INT     length;                      /* length of tail section            */
 
-  length = variable_name->length;      /* get the string length             */
+  length = variable_name->getLength();      /* get the string length             */
   position = 0;                        /* start scanning at first character */
                                        /* scan to the first period          */
   while (variable_name->getChar(position) != '.') {
@@ -3461,7 +3461,7 @@ RexxObject *buildCompoundVariable(
                                        /* have a null tail piece or         */
                                        /* section begin with a digit?       */
       /* ASCII '0' to '9' to recognize a digit                              */
-      if (tail->length == 0 || (tail->getChar(0) >= '0' && tail->getChar(0) <= '9'))
+      if (tail->getLength() == 0 || (tail->getChar(0) >= '0' && tail->getChar(0) <= '9'))
         tailPart = (RexxObject *)tail; /* this is a literal piece           */
       else {
                                        /* create a new variable retriever   */

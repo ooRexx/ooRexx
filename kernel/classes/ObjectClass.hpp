@@ -67,6 +67,7 @@
                                        /* different locations.  This forces */
                                        /* to the front location             */
   protected:
+     virtual ~RexxVirtualBase() { ; }
      virtual void      baseVirtual() {;}
   };
                                        /* Base Object REXX class            */
@@ -270,7 +271,7 @@ class RexxObject : public RexxInternalObject {
      inline RexxBehaviour *behaviourObject() { return this->behaviour; }
 
      short        ptype();
-     char        *idString();
+     const char  *idString();
      RexxString  *id();
      RexxMethod  *methodLookup(RexxString *name );
      RexxVariableDictionary *getObjectVariables(RexxObject *);

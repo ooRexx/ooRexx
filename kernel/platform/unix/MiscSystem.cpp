@@ -183,9 +183,8 @@ PFN SysLoadProcedure(
 /* Function:  Resolve a named procedure in a library                          */
 /******************************************************************************/
 {
- //  return (PFN) dld_get_func(Procedure->stringData);
    PFN load_address;
-   load_address = dlsym((PVOID) LibraryHandle->value, Procedure->stringData);
+   load_address = dlsym((PVOID) LibraryHandle->value, Procedure->getStringData());
    if (!load_address)
    {
       report_exception1(Error_External_name_not_found_method, Procedure);
@@ -207,15 +206,15 @@ RexxInteger * SysLoadLibrary(
   LONG plib;
 
   result = (RexxString*) new_cstring("lib");
-  result = result->concatWithCstring(Library->stringData);
+  result = result->concatWithCstring(Library->getStringData());
   result = result->concatWithCstring(ORX_SHARED_LIBRARY_EXT);
   tempresult = (RexxString *)result->copy();
 
-  if (!(plib = (LONG) dlopen(result->stringData, RTLD_LAZY )))
+  if (!(plib = (LONG) dlopen(result->getStringData(), RTLD_LAZY )))
   {
 //     result = result->concatToCstring("/usr/lib/");
 
-     if (!(plib = (LONG) dlopen(result->stringData, RTLD_LAZY )))
+     if (!(plib = (LONG) dlopen(result->getStringData(), RTLD_LAZY )))
      {
         fprintf(stderr, " *** Error dlopen: %s\n", dlerror());
         report_exception1(Error_Execution_library, tempresult);
@@ -233,7 +232,7 @@ void SysValidateAddressName(
 /******************************************************************************/
 {
                                        /* name too long?                    */
-  if (Name->length > MAX_ADDRESS_NAME_LENGTH)
+  if (Name->getLength() > MAX_ADDRESS_NAME_LENGTH)
                                        /* go report an error                */
     report_exception2(Error_Environment_name_name, new_integer(MAX_ADDRESS_NAME_LENGTH), Name);
 }
@@ -286,22 +285,20 @@ RexxString * SysSourceString(
 /* Function:  Produce a system specific source string                         */
 /******************************************************************************/
 {
-  RexxString * rsSysName;              // buffer for version
-
   RexxString * source_string;          /* final source string               */
   char       * outPtr;
-  source_string = raw_string(1+sizeof(ORX_SYS_STR)+callType->length+programName->length);
-  outPtr = source_string->stringData;  /* point to result Data.             */
+  source_string = raw_string(1+sizeof(ORX_SYS_STR)+callType->getLength()+programName->getLength());
+  outPtr = source_string->getWritableData();  /* point to result Data.             */
 
   strcpy(outPtr, ORX_SYS_STR);          /* copy the system name              */
   outPtr +=sizeof(ORX_SYS_STR) - 1;     /* step past the name                */
   *outPtr++ = ' ';                     /* put a blank between               */
                                        /* copy the call type                */
-  memcpy(outPtr, callType->stringData, callType->length);
-  outPtr += callType->length;          /* step over the call type           */
+  memcpy(outPtr, callType->getStringData(), callType->getLength());
+  outPtr += callType->getLength();     /* step over the call type           */
   *outPtr++ = ' ';                     /* put a blank between               */
                                        /* copy the system name              */
-  memcpy(outPtr, programName->stringData, programName->length);
+  memcpy(outPtr, programName->getStringData(), programName->getLength());
   source_string->generateHash();       /* now create the hash value         */
   return source_string;                /* return the source string          */
 }

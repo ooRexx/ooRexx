@@ -299,7 +299,7 @@ RexxObject *RexxNativeActivation::run(
               break;
 
             case REXXD_CSTRING:        /* ASCII-Z string value              */
-              *((CSTRING *)*ivalp) = this->cstring(argument);
+              *((const char **)*ivalp) = this->cstring(argument);
               break;
 
             case REXXD_somRef:         /* a SOM reference                   */
@@ -547,7 +547,7 @@ long RexxNativeActivation::isInteger(
     return FALSE;                      /* must not be an integer            */
 }
 
-PCHAR RexxNativeActivation::cstring(
+const char *RexxNativeActivation::cstring(
     RexxObject *object)                /* object to convert                 */
 /******************************************************************************/
 /* Function:  Return an object as a CSTRING                                   */
@@ -560,7 +560,7 @@ PCHAR RexxNativeActivation::cstring(
   if (string != object)                /* different value?                  */
                                        /* make it safe                      */
     this->saveObject((RexxObject *)string);
-  return string->stringData;           /* just point to the string data     */
+  return string->getStringData();           /* just point to the string data     */
 }
 
 double RexxNativeActivation::getDoubleValue(
@@ -1057,12 +1057,12 @@ nativei1 (BOOL, ISASTRING,
   return_value(result);                /* return indicator                  */
 }
 
-nativei1 (PCHAR, STRING, REXXOBJECT, object)
+nativei1 (CSTRING, STRING, REXXOBJECT, object)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  PCHAR   result;                      /* returned result                   */
+  const char *result;                  /* returned result                   */
   RexxNativeActivation * self;         /* current native activation         */
 
   native_entry;                        /* synchronize access                */
@@ -1107,7 +1107,7 @@ nativei1 (BOOL, ISDOUBLE, REXXOBJECT, object)
 
 nativei3 (REXXOBJECT, SEND,
      REXXOBJECT,  receiver,            /* receiver of the message           */
-     PCHAR,       msgname,             /* the name of the message           */
+     CSTRING,     msgname,             /* the name of the message           */
      REXXOBJECT,  arguments)           /* message arguments                 */
 /******************************************************************************/
 /* Function:  Issue a full scale send_message from native code                */
@@ -1142,7 +1142,7 @@ nativei2 (REXXOBJECT, SUPER,
 }
 
 nativei2 (REXXOBJECT, SETVAR,
-     PCHAR, name,                      /* variable name                     */
+     CSTRING, name,                    /* variable name                     */
      REXXOBJECT,  value )              /* new variable value                */
 /******************************************************************************/
 /* Function:  Set the value of an object variable                             */
@@ -1258,9 +1258,9 @@ nativei2 (REXXOBJECT, GETFUNCTIONNAMES,
       *names = (char**) SysAllocateExternalMemory(sizeof(char*)*j);
       for (i=0;i<j;i++) {
         name = ((RexxString*) funcArray->get(i+1));
-        (*names)[i] = (char*) SysAllocateExternalMemory(1+sizeof(char)*name->length);
-        memcpy((*names)[i], name->stringData, name->length);
-        (*names)[i][name->length] = 0; // zero-terminate
+        (*names)[i] = (char*) SysAllocateExternalMemory(1+sizeof(char)*name->getLength());
+        memcpy((*names)[i], name->getStringData(), name->getLength());
+        (*names)[i][name->getLength()] = 0; // zero-terminate
       }
     }
   }
@@ -1269,7 +1269,7 @@ nativei2 (REXXOBJECT, GETFUNCTIONNAMES,
 }
 
 nativei1 (REXXOBJECT, GETVAR,
-    PCHAR, name )                      /* variable name                     */
+    CSTRING, name )                      /* variable name                     */
 /******************************************************************************/
 /* Function:  Retrieve the value of an object variable                        */
 /******************************************************************************/
@@ -1312,7 +1312,7 @@ nativei2 (void, EXCEPT,
 }
 
 nativei4 (void, RAISE,
-     PCHAR, condition,                 /* name of the condition             */
+     CSTRING, condition,               /* name of the condition             */
      REXXOBJECT,  description,         /* description object                */
      REXXOBJECT,  additional,          /* additional information            */
      REXXOBJECT,  result )             /* optional result                   */
@@ -1513,7 +1513,7 @@ REXXOBJECT REXXENTRY REXX_ENVIRONMENT(void)
 /* HOL001A begin */
 nativei3(ULONG, EXECUTIONINFO,
      PULONG, line,
-    PSZ, fname,
+    PCHAR, fname,
     BOOL, next)/* chain of variable request blocks  */
 /******************************************************************************/
 /* Function:  If variable pool is enabled, return result from SysVariablePool */
@@ -1559,7 +1559,7 @@ nativei3(ULONG, EXECUTIONINFO,
 }
 
 nativei7 (ULONG, STEMSORT,
-     PCHAR, stemname, INT, order, INT, type, size_t, start, size_t, end,
+     CSTRING, stemname, INT, order, INT, type, size_t, start, size_t, end,
      size_t, firstcol, size_t, lastcol)
 /******************************************************************************/
 /* Function:  Perform a sort on stem data.  If everything works correctly,    */
@@ -1606,7 +1606,7 @@ nativei7 (ULONG, STEMSORT,
 
   if (OTYPE(CompoundVariable, retriever))
   {
-    length = variable->length;      /* get the string length             */
+    length = variable->getLength();      /* get the string length             */
     position = 0;                        /* start scanning at first character */
                                        /* scan to the first period          */
     while (variable->getChar(position) != '.')

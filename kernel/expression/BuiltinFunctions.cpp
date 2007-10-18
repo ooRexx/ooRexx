@@ -62,7 +62,7 @@
 void checkPadArgument(char *pFuncName, RexxObject *position, RexxString *pad)
 {
   if (pad == OREF_NULL) return;
-  if (pad->length != 1)
+  if (pad->getLength() != 1)
     report_exception3(Error_Incorrect_call_pad, new_cstring(pFuncName), position, pad);
 }
 
@@ -972,7 +972,7 @@ BUILTIN(ARG) {
     }
   }
                                        /* have a null string?               */
-  else if (option->length == 0)
+  else if (option->getLength() == 0)
                                        /* this is an error                  */
     report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_ARG), IntegerTwo, new_string("AENO", 4), option);
   else {                               /* need to process an option         */
@@ -1073,7 +1073,7 @@ BUILTIN(DATE) {
     // now process the various option specifiers
     if (option != OREF_NULL)             /* just using default format?        */
     {
-        if (option->length == 0)        /* have a null string?               */
+        if (option->getLength() == 0)        /* have a null string?               */
         {
                                              /* this is an error                  */
             report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerOne, new_string("BDEFLMNOSTUW", 10), option);
@@ -1094,7 +1094,7 @@ BUILTIN(DATE) {
 
     if (option2 != OREF_NULL)            /* just using default format?        */
     {
-        if (option2->length == 0)            /* have a null string?               */
+        if (option2->getLength() == 0)       /* have a null string?               */
         {
                                              /* this is an error                  */
             report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDEFNOSTU", 7), option2);
@@ -1106,7 +1106,7 @@ BUILTIN(DATE) {
         }
     }
 
-    char *outputSeparator = NULL;            // each format has it's own default
+    const char *outputSeparator = NULL;      // each format has it's own default
 
     // validate the output separator is only used with supported styles
     if (osep != OREF_NULL)
@@ -1116,9 +1116,9 @@ BUILTIN(DATE) {
         {
             report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerOne, new_string((PCHAR)&style, 1), IntegerFour);
         }
-        if (osep->length > 1 || (osep->length == 1 && strchr(ALPHANUM, osep->getChar(0)) != NULL))
+        if (osep->getLength() > 1 || (osep->getLength() == 1 && strchr(ALPHANUM, osep->getChar(0)) != NULL))
         {
-            report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFour, new_string(osep->stringData, osep->length));
+            report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFour, osep);
         }
         // string objects are null terminated, so we can point directly at what will
         // be either 1 or 0 characters of data.
@@ -1129,7 +1129,7 @@ BUILTIN(DATE) {
     {
         bool valid = true;                 /* assume have a good stamp          */
 
-        char *separator = NULL;            // different formats will override this
+        const char *separator = NULL;      // different formats will override this
                                            /* begin addition                    */
         // if we have a separator, perform validation here
         if (isep != OREF_NULL)
@@ -1139,11 +1139,11 @@ BUILTIN(DATE) {
                 report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerThree, new_string((PCHAR)&style2, 1), IntegerFive);
             }
             // explicitly specified delimiter, we need to validate this first
-            if (isep->length > 1 || (isep->length == 1 && strchr(ALPHANUM, isep->getChar(0)) != NULL))
+            if (isep->getLength() > 1 || (isep->getLength() == 1 && strchr(ALPHANUM, isep->getChar(0)) != NULL))
             {
                 // the field delimiter must be a single character and NOT
                 // alphanumeric, or a null character
-                report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFive, new_string(isep->stringData, isep->length));
+                report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFive, isep);
             }
             // string objects are null terminated, so we can point directly at what will
             // be either 1 or 0 characters of data.
@@ -1344,7 +1344,7 @@ BUILTIN(TIME) {
     if (option != OREF_NULL)
     {
         // null strings not allowed as an option character
-        if (option->length == 0)
+        if (option->getLength() == 0)
         {
             report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerOne, new_string("CEHLMNRS", 8), option);
         }
@@ -1364,7 +1364,7 @@ BUILTIN(TIME) {
             report_exception2(Error_Incorrect_call_noarg, new_cstring(CHAR_TIME), IntegerTwo);
         }
         // again, must be at least one character, of which we only use the first
-        if (option2->length == 0)
+        if (option2->getLength() == 0)
         {
             report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerThree, new_string("CHLMNS", 6), option2);
         }
@@ -1581,13 +1581,13 @@ BUILTIN(XRANGE) {
   end = optional_string(XRANGE, end);  /* get the ending string             */
 
   if (start != OREF_NULL) {            /* have a start position             */
-    if (start->length != 1)            /* not a single character?           */
+    if (start->getLength() != 1)            /* not a single character?           */
                                        /* have an error                     */
       report_exception3(Error_Incorrect_call_pad, new_cstring(CHAR_XRANGE), IntegerOne, start);
     startchar = start->getChar(0);     /* get the new start position        */
   }
   if (end != OREF_NULL) {              /* have an end position              */
-    if (end->length != 1)              /* not a single character?           */
+    if (end->getLength() != 1)         /* not a single character?           */
                                        /* have an error                     */
       report_exception3(Error_Incorrect_call_pad, new_cstring(CHAR_XRANGE), IntegerTwo, end);
     endchar = end->getChar(0);         /* get the new end position          */
@@ -1698,7 +1698,7 @@ BUILTIN(VALUE) {
         retriever->assign(context, stack, newvalue);
     }
   }
-  else if (selector->length == 0) {    /* null string selector?             */
+  else if (selector->getLength() == 0) { /* null string selector?             */
                                        /* get the existing value            */
     result = TheEnvironment->entry(variable);
     if (result == OREF_NULL)           /* not in the environment?           */
@@ -1897,7 +1897,7 @@ RexxObject *resolve_stream(            /* resolve a stream name             */
   if (fullName)                        /* fullName requested?               */
     *fullName = name;                  /* initialize to name                */
   /* if length of name is 0, then it's the same as omitted */
-  if (name == OREF_NULL || name->length == 0) { /* no name?                 */
+  if (name == OREF_NULL || name->getLength() == 0) { /* no name?                 */
     if (input) {                       /* input operation?                  */
                                        /* get the default output stream     */
       stream = CurrentActivity->local->at(OREF_INPUT);
@@ -2274,7 +2274,7 @@ BUILTIN(STREAM) {
   fix_args(STREAM);                    /* check required arguments          */
                                        /* get the string name               */
   name = required_string(STREAM, name);
-  if (name->length == 0)               /* check name validity               */
+  if (name->getLength() == 0)          /* check name validity               */
                                        /* raise an error                    */
     report_exception2(Error_Incorrect_call_stream_name, OREF_STREAM, name);
                                        /* get any operation                 */
@@ -2289,7 +2289,7 @@ BUILTIN(STREAM) {
     action_char = STREAM_STATUS;       /* this is a status attempt          */
   }
   else {
-    if (action->length == 0) {         /* get a null string?                */
+    if (action->getLength() == 0) {    /* get a null string?                */
                                        /* this is an error                  */
       report_exception4(Error_Incorrect_call_list, OREF_STREAM, IntegerTwo, new_string("SDC", 3), action);
     }
@@ -2354,7 +2354,8 @@ BUILTIN(STREAM) {
         context->getStreams()->remove(fullName);
       } else if (added && fOpen) {
         /* if open failed, remove the stream object from stream table again */
-        if (memcmp("READY:", ((RexxString*) result)->stringData, 6) != 0) {
+        if (((RexxString *)result)->strCompare("READY:"))
+        {
           context->getStreams()->remove(fullName);
         }
       }
@@ -2404,7 +2405,7 @@ BUILTIN(CONDITION) {
   option = optional_string(CONDITION, option);
   if (option == OREF_NULL)             /* just using default format?        */
     style = 'I';                       /* use the 'Normal form              */
-  else if (option->length == 0)        /* have a null string?               */
+  else if (option->getLength() == 0)   /* have a null string?               */
                                        /* this is an error                  */
     report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_CONDITION), IntegerOne, new_string("ACDIOS", 6), option);
   else                                 /* need to process an option         */

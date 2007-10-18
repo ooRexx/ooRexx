@@ -104,17 +104,18 @@ extern BOOL UseMessageLoop;  /* speciality for VAC++ */
 extern RexxDirectory *ProcessLocalEnv; /* process local environment (.local)*/
 extern RexxObject *ProcessLocalServer; /* current local server              */
 extern RexxActivity *CurrentActivity;  /* current active activity           */
-PCHAR SysFileExtension(PCHAR);
+const char * SysFileExtension(const char *);
 RexxMethod *SysRestoreProgramBuffer(PRXSTRING, RexxString *);
 RexxMethod *SysRestoreInstoreProgram(PRXSTRING, RexxString *);
 void SysSaveProgramBuffer(PRXSTRING, RexxMethod *);
-void SysSaveTranslatedProgram(PCHAR, RexxMethod *);
-BOOL SearchFileName(PCHAR, PCHAR);
+void SysSaveTranslatedProgram(const char *, RexxMethod *);
+BOOL SearchFileName(const char *, char *);
 RexxActivity *activity_getActivity(BOOL *nested);
 extern BOOL RexxStartedByApplication;
 
 extern "C" {
 APIRET REXXENTRY RexxTranslateProgram( PSZ, PSZ, PRXSYSEXIT);
+char *REXXENTRY RexxGetVersionInformation();
 }
 
 // SIGHANDLER * oldSigIntHandler, * oldSigBreakHandler;
@@ -129,7 +130,7 @@ APIRET REXXENTRY RexxTranslateProgram( PSZ, PSZ, PRXSYSEXIT);
 
 typedef struct _RexxScriptInfo {       /* Control info used by various API's*/
   SHORT runtype;
-  PSZ index;                           /* index to directory which contains */
+  const char *index;                   /* index to directory which contains */
                                        /* objects being kept for process.   */
 
   PRXSTRING ProgramBuffer;             /* Data Buffer                       */
@@ -156,20 +157,20 @@ typedef struct _RexxStartInfo {
   SHORT runtype;                       /* How source should be handled      */
   LONG       argcount;                 /* Number of args in arglist         */
   PRXSTRING  arglist;                  /* Array of args                     */
-  PSZ        programname;              /* REXX program to run               */
+  const char*programname;              /* REXX program to run               */
   PRXSTRING  instore;                  /* Instore array                     */
-  PSZ        envname;                  /* Initial cmd environment           */
+  const char*envname;                  /* Initial cmd environment           */
   SHORT      calltype;                 /* How the program is called         */
   PRXSYSEXIT exits;                    /* Array of system exit names        */
   PSHORT     retcode;                  /* Integer form of result            */
   PRXSTRING  result;                   /* Result returned from program      */
-  PSZ        outputName;               /* compilation output file           */
+  const char*outputName;               /* compilation output file           */
 } RexxStartInfo;
 
 BOOL HandleException = TRUE;           /* Global switch for Exception Handling */
 extern CRITICAL_SECTION waitProtect;
 
-void REXXENTRY RexxCreateDirectory(PCHAR dirname)
+void REXXENTRY RexxCreateDirectory(const char * dirname)
 {
 
   RexxString  *index;
@@ -238,7 +239,7 @@ void WinGetVariables(void (__stdcall *f)(void*))
     result = RunActivity->currentActivation->getAllLocalVariables();
     for (size_t i=result->size(); i>0; i--) {
         RexxVariable *variable = (RexxVariable *)result->get(i);
-        args[0] = (void *) variable->getName()->stringData;
+        args[0] = (void *) variable->getName()->getStringData();
         args[1] = (void*) variable->getResolvedValue();
         f(args);
     }
@@ -280,7 +281,7 @@ void WinLeaveKernel(bool execute)
 /* Notes: Remove directory object from local environment.                     */
 /******************************************************************************/
 
-void REXXENTRY RexxRemoveDirectory(PCHAR dirname)
+void REXXENTRY RexxRemoveDirectory(const char *dirname)
 {
   RexxString  *index;
   RexxActivity *activity;              /* target activity                   */
@@ -309,7 +310,7 @@ void REXXENTRY RexxRemoveDirectory(PCHAR dirname)
 /*             FALSE - Invalid REXX object                                    */
 /******************************************************************************/
 
-BOOL REXXENTRY RexxDispose(PCHAR dirname, RexxObject *RexxObj)
+BOOL REXXENTRY RexxDispose(const char *dirname, RexxObject *RexxObj)
 {
   RexxDirectory *locked_objects;       /* directory used to keep objects    */
   RexxString  *index;
@@ -324,7 +325,7 @@ BOOL REXXENTRY RexxDispose(PCHAR dirname, RexxObject *RexxObj)
                                        /* Get directory of locked objects   */
   locked_objects = (RexxDirectory *)ProcessLocalEnv->at(index);
                                        /* Remove object                     */
-  RexxObj = locked_objects->remove(new_string((PCHAR)&RexxObj, sizeof(LONG)));
+  RexxObj = locked_objects->remove(new_string((const char *)&RexxObj, sizeof(RexxObject *)));
                                        /* release the kernel semaphore      */
   TheActivityClass->returnActivity(CurrentActivity);
   if (RexxObj == TheNilObject)
@@ -358,7 +359,7 @@ APIRET REXXENTRY RexxResultString(RexxObject * result, PRXSTRING pResultBuffer)
   string_result = result->stringValue();
   if (string_result != NULL) {                /* didn't convert?                   */
                                        /* get the result length             */
-    length = string_result->length +1;
+    length = string_result->getLength() +1;
                                        /* allocate a new RXSTRING buffer    */
     pResultBuffer->strptr = (char *)SysAllocateResultMemory(length);
     if (pResultBuffer->strptr) {       /* Got storage ok ?                  */
@@ -366,7 +367,7 @@ APIRET REXXENTRY RexxResultString(RexxObject * result, PRXSTRING pResultBuffer)
                                        /* yes, copy the data (including the */
                                        /* terminating null implied by the   */
                                        /* use of length + 1                 */
-      memcpy(pResultBuffer->strptr, string_result->stringData, length);
+      memcpy(pResultBuffer->strptr, string_result->getStringData(), length);
                                        /* give the true data length         */
       pResultBuffer->strlength = length - 1;
     } else
@@ -401,7 +402,7 @@ APIRET REXXENTRY RexxSetOSAInfo(RexxObject * method, ULONG selector, LONG value)
   if (OTYPENUM(method, method)) {      /* Make sure this is a method object  */
     OSAinfoDir = ((RexxMethod *)method)->getInterface();
                                          /* save value in directory          */
-    OSAinfoDir->put(new_integer(value), new_string((PCHAR)&selector, sizeof(ULONG)));
+    OSAinfoDir->put(new_integer(value), new_string((const char *)&selector, sizeof(ULONG)));
   } else
     rc = -1;
 
@@ -436,7 +437,7 @@ APIRET REXXENTRY RexxGetOSAInfo(RexxObject * method, ULONG selector, LONG * valu
   if (OTYPENUM(method, method)) {      /* Make sure this is a method object */
     OSAinfoDir = ((RexxMethod *)method)->getInterface();
                                        /* Get value                         */
-    selected = (RexxInteger *)OSAinfoDir->at(new_string((PCHAR)&selector, sizeof(ULONG)));
+    selected = (RexxInteger *)OSAinfoDir->at(new_string((const char *)&selector, sizeof(ULONG)));
     if (selected  != OREF_NULL) {      /* Have a value ?                    */
                                        /* Yes, Get value from integer object*/
       *value = selected->value;
@@ -477,14 +478,14 @@ APIRET REXXENTRY RexxGetSource(RexxObject * method, PRXSTRING pSourceBuffer)
     OSAinfoDir = ((RexxMethod *)method)->getInterface();
     source = (RexxString *)OSAinfoDir->at(new_cstring("SOURCE"));
 
-    length = source->length +1;
+    length = source->getLength() +1;
                                        /* allocate a new RXSTRING buffer    */
     pSourceBuffer->strptr = (char *)SysAllocateResultMemory(length);
     if (pSourceBuffer->strptr) {       /* Got storage ok ?                  */
                                        /* yes, copy the data (including the */
                                        /* terminating null implied by the   */
                                        /* use of length + 1                 */
-      memcpy(pSourceBuffer->strptr, source->stringData, length);
+      memcpy(pSourceBuffer->strptr, source->getStringData(), length);
                                        /* give the true data length         */
       pSourceBuffer->strlength = length - 1;
     } else
@@ -510,7 +511,7 @@ APIRET REXXENTRY RexxGetSource(RexxObject * method, PRXSTRING pSourceBuffer)
 /*                                                                            */
 /******************************************************************************/
 
-APIRET REXXENTRY RexxCopyMethod(PCHAR dirname, RexxObject * method, RexxObject * *pmethod)
+APIRET REXXENTRY RexxCopyMethod(const char *dirname, RexxObject * method, RexxObject * *pmethod)
 {
   RexxDirectory *locked_objects;
   RexxActivity *activity;              /* target activity                   */
@@ -527,7 +528,7 @@ APIRET REXXENTRY RexxCopyMethod(PCHAR dirname, RexxObject * method, RexxObject *
                                        /* Need to keep around for process   */
                                        /* duration.                         */
       locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_cstring(dirname));
-      locked_objects->put(*pmethod, new_string((PCHAR)pmethod, sizeof(LONG)));
+      locked_objects->put(*pmethod, new_string((const char *)pmethod, sizeof(RexxObject *)));
     } else
       rc = 1;
   } else
@@ -552,7 +553,7 @@ APIRET REXXENTRY RexxCopyMethod(PCHAR dirname, RexxObject * method, RexxObject *
 /*                                                                            */
 /******************************************************************************/
 
-BOOL REXXENTRY RexxValidObject(PCHAR dirname, RexxObject * object)
+BOOL REXXENTRY RexxValidObject(const char *dirname, RexxObject * object)
 {
   RexxDirectory *locked_objects;       /* directory used to keep objects    */
   RexxActivity *activity;              /* target activity                   */
@@ -564,7 +565,7 @@ BOOL REXXENTRY RexxValidObject(PCHAR dirname, RexxObject * object)
                                        /* Get directory of locked objects   */
   locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_cstring(dirname));
                                        /* See if object exists              */
-  object = locked_objects->at(new_string((PCHAR)&object, sizeof(LONG)));
+  object = locked_objects->at(new_string((const char *)&object, sizeof(RexxObject *)));
                                        /* release the kernel semaphore      */
   TheActivityClass->returnActivity(CurrentActivity);
   if (object == OREF_NULL)             /* Was the object in the directory ? */
@@ -701,26 +702,26 @@ void CreateRexxCondData(
   message = (RexxString *)conditionobj->at(OREF_NAME_MESSAGE);
   if ( (RexxObject*) message != RexxNil) {
                                        /* get the length                    */
-    length = message->length + 1;
+    length = message->getLength() + 1;
                                        /* allocate a new RXSTRING buffer    */
     pRexxCondData->message.strptr = (char *)SysAllocateResultMemory(length);
                                        /* yes, copy the data (including the */
                                        /* terminating null implied by the   */
                                        /* use of length + 1                 */
-    memcpy(pRexxCondData->message.strptr, message->stringData, length);
+    memcpy(pRexxCondData->message.strptr, message->getStringData(), length);
                                        /* give the true data length         */
     pRexxCondData->message.strlength = length - 1;
   }
 
   errortext = (RexxString *)conditionobj->at(OREF_ERRORTEXT);
                                        /* get the result length             */
-  length = errortext->length +1;
+  length = errortext->getLength() +1;
                                        /* allocate a new RXSTRING buffer    */
   pRexxCondData->errortext.strptr = (char *)SysAllocateResultMemory(length);
                                        /* yes, copy the data (including the */
                                        /* terminating null implied by the   */
                                        /* use of length + 1                 */
-  memcpy(pRexxCondData->errortext.strptr, errortext->stringData, length);
+  memcpy(pRexxCondData->errortext.strptr, errortext->getStringData(), length);
                                        /* give the true data length         */
   pRexxCondData->errortext.strlength = length - 1;
 
@@ -728,13 +729,13 @@ void CreateRexxCondData(
 
   program = (RexxString *)conditionobj->at(OREF_PROGRAM);
                                        /* get the result length             */
-  length = program->length +1;
+  length = program->getLength() +1;
                                        /* allocate a new RXSTRING buffer    */
   pRexxCondData->program.strptr = (char *)SysAllocateResultMemory(length);
                                        /* yes, copy the data (including the */
                                        /* terminating null implied by the   */
                                        /* use of length + 1                 */
-  memcpy(pRexxCondData->program.strptr, program->stringData, length);
+  memcpy(pRexxCondData->program.strptr, program->getStringData(), length);
                                        /* give the true data length         */
   pRexxCondData->program.strlength = length - 1;
 }
@@ -820,7 +821,7 @@ BOOL APIENTRY RexxSetProcessMessages(BOOL onoff)
 /******************************************************************************/
 
 APIRET REXXENTRY RexxCreateMethod(
-  PCHAR dirname,                       /* directory name to save new method */
+  const char *dirname,                 /* directory name to save new method */
   PRXSTRING sourceData,                /* Buffer with Rexx source code      */
   RexxObject * *pmethod,               /* returned method object            */
   ConditionData *pRexxCondData)        /* returned condition data           */
@@ -868,7 +869,7 @@ APIRET REXXENTRY RexxCreateMethod(
  RexxObject* (__stdcall *WSHPropertyChange)(RexxString*,RexxObject*,int,int*) = NULL;
 
 extern "C" {
-void REXXENTRY SetNovalueCallback( RexxObject* (__stdcall *f)(void*) )
+void REXXENTRY SetNovalueCallback( RexxObject* (__stdcall *f)(const char *) )
 {
   NovalueCallback = f;
 }
@@ -897,7 +898,7 @@ void REXXENTRY SetWSHPropertyChange( RexxObject* (__stdcall *f)(RexxString*,Rexx
 /******************************************************************************/
 extern "C" {
 APIRET REXXENTRY RexxRunMethod(
-  PCHAR dirname,
+  const char * dirname,
   RexxObject * method,
   void * args,
   RexxArray* (__stdcall *f)(void*),
@@ -1018,7 +1019,7 @@ APIRET REXXENTRY RexxStoreMethod(RexxObject * method, PRXSTRING scriptData)
 /*                                                                            */
 /******************************************************************************/
 
-APIRET REXXENTRY RexxLoadMethod(PCHAR dirname, PRXSTRING scriptData, RexxObject * *pmethod)
+APIRET REXXENTRY RexxLoadMethod(const char *dirname, PRXSTRING scriptData, RexxObject * *pmethod)
 
 {
   LONG     rc;                         /* RexxStart return code             */
@@ -1275,7 +1276,7 @@ VOID REXXENTRY RexxBreakCleanup(VOID){}
 void translateSource(
    RexxString           * inputName,   /* input program name                */
    RexxNativeActivation * newNativeAct,/* base activation                   */
-   PSZ                    outputName ) /* output file name                  */
+   const char           * outputName ) /* output file name                  */
 /******************************************************************************/
 /* Function:  Process instorage execution arguments                           */
 /******************************************************************************/
@@ -1289,7 +1290,7 @@ void translateSource(
   activity = CurrentActivity;          /* save the current activity         */
   ReleaseKernelAccess(activity);       /* release the kernel access         */
                                        /* go resolve the name               */
-  fileFound = SearchFileName(inputName->stringData, name);
+  fileFound = SearchFileName(inputName->getStringData(), name);
   RequestKernelAccess(activity);       /* get the semaphore back            */
 
   if (!fileFound)
@@ -1303,7 +1304,7 @@ void translateSource(
   if (outputName != NULL) {            /* want to save this to a file?      */
     newNativeAct->saveObject(method);  /* protect from garbage collect      */
                                        /* go save this method               */
-    SysSaveTranslatedProgram((PCHAR)outputName, method);
+    SysSaveTranslatedProgram(outputName, method);
   }
 }
 
@@ -1321,9 +1322,9 @@ RexxMethod * process_instore(
 
   if (instore[0].strptr == NULL && instore[1].strptr == NULL) {
                                        /* see if this exists                */
-    if (!RexxQueryMacro(name->stringData, (PUSHORT)&temp)) {
+    if (!RexxQueryMacro(name->getStringData(), (PUSHORT)&temp)) {
                                        /* get image of function             */
-      RexxExecuteMacroFunction(name->stringData, &buffer);
+      RexxExecuteMacroFunction(const_cast<PSZ>(name->getStringData()), &buffer);
                                        /* go convert into a method          */
       method = SysRestoreProgramBuffer(&buffer, name);
 
@@ -1394,7 +1395,7 @@ void CreateMethod(
                                        /* Need to keep around for process   */
                                        /* duration.                         */
    locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_cstring(pRexxScriptArgs->index));
-   locked_objects->put(*pRexxScriptArgs->pmethod, new_string((PCHAR)pRexxScriptArgs->pmethod, sizeof(LONG)));
+   locked_objects->put(*pRexxScriptArgs->pmethod, new_string((const char *)pRexxScriptArgs->pmethod, sizeof(RexxObject *)));
  }
                                        /* Create directory object that will */
                                        /* contain OSAinfo.                  */
@@ -1426,8 +1427,8 @@ void RunMethod(
                                        /* around for process duration.      */
   ULONG argcount=1;
   ULONG arglength=0;
-  PCHAR rexxargument="";
-  PCHAR envname="CMD";                 /* ADDRESS environment name          */
+  const char *rexxargument="";
+  const char *envname="CMD";           /* ADDRESS environment name          */
   int i;                               // for exit installation
   RexxString *fullname;
 
@@ -1483,7 +1484,7 @@ void RunMethod(
                                        /* Need to keep around for process   */
                                        /* duration.                         */
    locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_cstring(pRexxScriptArgs->index));
-   locked_objects->put(*pRexxScriptArgs->presult, new_string((PCHAR)pRexxScriptArgs->presult, sizeof(LONG)));
+   locked_objects->put(*pRexxScriptArgs->presult, new_string((const char *)pRexxScriptArgs->presult, sizeof(RexxObject *)));
  }
 
                                        /* finally, discard our activation   */
@@ -1510,7 +1511,7 @@ void LoadMethod(
                                        /* Need to keep around for process   */
                                        /* duration.                         */
    locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_cstring(pRexxScriptArgs->index));
-   locked_objects->put(*pRexxScriptArgs->pmethod, new_string((PCHAR)pRexxScriptArgs->pmethod, sizeof(LONG)));
+   locked_objects->put(*pRexxScriptArgs->pmethod, new_string((const char *)pRexxScriptArgs->pmethod, sizeof(RexxObject *)));
  }
 
                                        /* finally, discard our activation   */
@@ -1534,7 +1535,7 @@ void  SysRunProgram(
   RexxString  * source_calltype;       /* parse source call type            */
   BOOL          tokenize_only;         /* don't actually execute program    */
   RexxString  * initial_address;       /* initial address setting           */
-  PCHAR         file_extension;        /* potential file extension          */
+  const char  * file_extension;        /* potential file extension          */
   RexxString  * program_result;        /* returned program result           */
   RexxNativeActivation * newNativeAct; /* Native Activation to run on       */
   size_t        length;                /* return result length              */
@@ -1671,7 +1672,7 @@ void  SysRunProgram(
     initial_address = new_cstring(self->envname);
   else {
                                        /* check for a file extension        */
-    file_extension = SysFileExtension((PCHAR)fullname->stringData);
+    file_extension = SysFileExtension(fullname->getStringData());
     if (file_extension != NULL)      /* have a real one?                  */
                                        /* use extension as the environment  */
       initial_address = new_cstring(file_extension + 1);
@@ -1693,7 +1694,7 @@ void  SysRunProgram(
                                        /* force to a string value           */
         program_result = program_result->stringValue();
                                        /* get the result length             */
-        length = (LONG)program_result->length + 1;
+        length = (LONG)program_result->getLength() + 1;
                                        /* buffer too short or no return?    */
         if (length > self->result->strlength || self->result->strptr == NULL)
                                        /* allocate a new RXSTRING buffer    */
@@ -1701,7 +1702,7 @@ void  SysRunProgram(
                                        /* yes, copy the data (including the */
                                        /* terminating null implied by the   */
                                        /* use of length + 1                 */
-        memcpy(self->result->strptr, program_result->stringData, length);
+        memcpy(self->result->strptr, program_result->getStringData(), length);
                                        /* give the true data length         */
         self->result->strlength = length - 1;
       }
@@ -1726,10 +1727,7 @@ void  SysRunProgram(
   CurrentActivity->pop(FALSE);         /* finally, discard our activation   */
 }
 
-
-extern _declspec(dllexport) PCHAR RexxGetVersionInformation(void);
-
-PCHAR RexxGetVersionInformation(void)
+char *REXXENTRY RexxGetVersionInformation()
 {
     char ver[20];
     sprintf( ver, " %d.%d.%d", ORX_VER, ORX_REL, ORX_MOD );
@@ -1753,7 +1751,7 @@ PCHAR RexxGetVersionInformation(void)
     INT s6 = strlen(vbuf6);
     INT sd = strlen(__DATE__);
     INT sv = strlen(ver);
-    PCHAR ptr = (PCHAR) GlobalAlloc(GMEM_FIXED, sv+s0+s1+s2+s3+s4+s5+s6+sd+1);
+    char *ptr = (char *)GlobalAlloc(GMEM_FIXED, sv+s0+s1+s2+s3+s4+s5+s6+sd+1);
     if (ptr)
     {
         memcpy(ptr, vbuf0, s0);

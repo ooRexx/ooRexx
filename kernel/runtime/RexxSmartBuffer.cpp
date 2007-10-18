@@ -131,6 +131,6 @@ size_t RexxSmartBuffer::space()
 /* Function:  Return the space remaining in the buffer                        */
 /******************************************************************************/
 {
-  return this->buffer->length() - this->current;
+  return this->buffer->getLength() - this->current;
 }
 

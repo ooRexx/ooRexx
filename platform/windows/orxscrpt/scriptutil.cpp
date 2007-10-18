@@ -129,7 +129,7 @@ LinkedList::~LinkedList(){
 
 
 ListItem *LinkedList::FindItem(
-  /*  in   */ char *Name) {
+  /*  in   */ const char *Name) {
 
   return NameSearch(Name);
   }
@@ -163,7 +163,7 @@ char *LinkedList::GetName(
 
 
 void *LinkedList::FindContent(
-  /*  in   */ char *Name) {
+  /*  in   */ const char *Name) {
   ListItem *Item;
 
 
@@ -375,7 +375,7 @@ void LinkedList::InitList(void){
  *
  *
  *******************************************************************************/
-ListItem *LinkedList::NameSearch(char *Name){
+ListItem *LinkedList::NameSearch(const char *Name){
   ListItem *Current;
   int CIndex = 0;
 

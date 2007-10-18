@@ -103,14 +103,14 @@
 
    inline void ensureCapacity(size_t needed) { if (remainder < needed) expandCapacity(needed); }
    void expandCapacity(size_t needed);
-   inline void append(UCHAR *newData, size_t stringLen)
+   inline void append(const char *newData, size_t stringLen)
     {
         ensureCapacity(stringLen);               /* make sure have have space */
         memcpy(current, newData, stringLen);     /* copy this into the buffer */
         current += stringLen;                    /* step the pointer          */
         remainder -= stringLen;                  /* adjust the lengths        */
     }
-   inline void append(UCHAR newData) {
+   inline void append(char newData) {
        ensureCapacity(1);                       /* make sure have have space */
        *current = newData;                      /* store the character       */
        current++;                               /* step the pointer          */
@@ -128,7 +128,7 @@
        length = 0;                              /* set the initial lengths */
        remainder = MAX_SYMBOL_LENGTH;
        tail = buffer;                           /* the default tail is the buffer */
-       current = tail;                          /* the current pointer is the beginning */
+       current = buffer;                        /* the current pointer is the beginning */
        temp = OREF_NULL;                        /* we don't have a temporary here */
        value = OREF_NULL;                       /* and no string value yet */
    }
@@ -142,22 +142,22 @@
 
    inline void addDot() { append('.'); }
    inline INT compare(RexxString *name) {
-       INT rc = (INT)length - (INT)name->length;
+       INT rc = (INT)length - (INT)name->getLength();
        if (rc == 0) {
-           rc = memcmp(tail, name->stringData, length);
+           rc = memcmp(tail, name->getStringData(), length);
        }
        return rc;
    }
 
    inline size_t getLength() { return length; }
-   inline UCHAR *getTail()  { return tail; }
+   inline const char *getTail()  { return tail; }
 
    size_t       length;                      /* length of the buffer (current) */
    size_t       remainder;                   /* remaining length in the buffer */
-   UCHAR       *tail;                        /* the start of the tail buffer   */
-   UCHAR       *current;                     /* current write position         */
+   char        *tail;                        /* the start of the tail buffer   */
+   char        *current;                     /* current write position         */
    RexxBuffer  *temp;                        /* a buffer used for real long tails */
-   UCHAR        buffer[MAX_SYMBOL_LENGTH];   /* the default buffer             */
+   char         buffer[MAX_SYMBOL_LENGTH];   /* the default buffer             */
    RexxString  *value;                       /* a created string value         */
  };
 #endif

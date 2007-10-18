@@ -142,7 +142,7 @@ static ULONG copy_value(
    rc = 0;                             /* default to success                */
                                        /* get the string value              */
    stringValue = value->stringValue();
-   string_length = stringValue->length;/* get the string length             */
+   string_length = stringValue->getLength();/* get the string length             */
    if (rxstring->strptr == NULL) {          /* no target buffer?            */
                                             /* allocate a new one           */
 //   if (NULL == (rxstring->strptr = (PCH)malloc((ULONG) string_length + 1)) )
@@ -155,11 +155,11 @@ static ULONG copy_value(
    if (string_length > rxstring->strlength){
      rc = RXSHV_TRUNC;                      /* set truncated return code      */
                                             /* copy the short piece           */
-     memcpy(rxstring->strptr, stringValue->stringData, rxstring->strlength);
+     memcpy(rxstring->strptr, stringValue->getStringData(), rxstring->strlength);
    }
    else {
                                             /* copy entire string             */
-     memcpy(rxstring->strptr, stringValue->stringData, string_length);
+     memcpy(rxstring->strptr, stringValue->getStringData(), string_length);
                                             /* room for a null?               */
      if (rxstring->strlength > string_length)
                                             /* yes, add one                   */
@@ -346,9 +346,9 @@ ULONG SysVariablePool(
         pshvblock->shvret |= copy_value(value, &pshvblock->shvvalue, &pshvblock->shvvaluelen);
       }
                                        /* some other parm form              */
-      else if (!memcmp(variable->stringData, "PARM.", sizeof("PARM.") - 1)) {
+      else if (!memcmp(variable->getStringData(), "PARM.", sizeof("PARM.") - 1)) {
                                        /* extract the numeric piece         */
-        value = variable->extract(strlen("PARM."), variable->length - strlen("PARM."));
+        value = variable->extract(strlen("PARM."), variable->getLength() - strlen("PARM."));
                                        /* get the binary value              */
         arg_position = value->longValue(DEFAULT_DIGITS);
                                        /* not a good number?                */
@@ -373,7 +373,7 @@ ULONG SysVariablePool(
                                        /* external function or sys exit     */
 
                                        /* Set ret value in the activity     */
-     self->activity->setShvVal(new_string((PCHAR)pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
+     self->activity->setShvVal(new_string(pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
   }
   else if (enabled)                    /* if get here and VP is enabled     */
     pshvblock->shvret |= RXSHV_BADF;   /* bad function                      */

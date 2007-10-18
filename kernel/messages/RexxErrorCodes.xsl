@@ -78,7 +78,7 @@
 /* --            DO NOT CHANGE THIS FILE, ALL CHANGES WILL BE LOST!        -- */
 /* --            ==================================================        -- */
 /* -------------------------------------------------------------------------- */
-   </xsl:text>
+</xsl:text>
    </xsl:template>
 
 </xsl:stylesheet>

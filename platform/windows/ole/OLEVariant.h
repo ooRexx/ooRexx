@@ -57,7 +57,7 @@ static __inline BOOL areValidVTs( VARENUM, VARENUM );
 static __inline int  findFlag( PSZ );
 
 // Some functions borrowed from orexxole.c
-extern PSZ pszStringDupe( PSZ );
+extern PSZ pszStringDupe( const char * );
 extern VOID ORexxOleFree( PVOID );
 
 // Global data
