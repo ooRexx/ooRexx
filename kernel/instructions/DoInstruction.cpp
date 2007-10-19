@@ -299,7 +299,7 @@ void RexxInstructionDo::execute(
                                        /* NUMERIC DIGITS setting            */
         if (OTYPE(Integer, result) && context->digits() >= DEFAULT_DIGITS) {
                                        /* get the value directly            */
-          count = ((RexxInteger *)result)->value;
+          count = ((RexxInteger *)result)->getValue();
           context->traceResult(result);/* trace if necessary                */
         }
         else {
@@ -332,7 +332,7 @@ void RexxInstructionDo::execute(
                                        /* NUMERIC DIGITS setting            */
         if (OTYPE(Integer, result) && context->digits() >= DEFAULT_DIGITS) {
                                        /* get the value directly            */
-          count = ((RexxInteger *)result)->value;
+          count = ((RexxInteger *)result)->getValue();
           context->traceResult(result);/* trace if necessary                */
         }
         else {
@@ -480,7 +480,7 @@ void RexxInstructionDo::controlSetup(
         if (OTYPE(Integer, result) && context->digits() >= DEFAULT_DIGITS)
           {
                                        /* get the value directly            */
-          count = ((RexxInteger *)result)->value;
+          count = ((RexxInteger *)result)->getValue();
           context->traceResult(result);/* trace if necessary                */
         }
         else {

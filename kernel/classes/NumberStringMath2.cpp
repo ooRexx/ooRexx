@@ -56,10 +56,10 @@
                                        /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
 
-PUCHAR AddMultiplier(
-    UCHAR *top,                        /* data pointer of "top" number      */
+char * AddMultiplier(
+    char *top,                        /* data pointer of "top" number      */
     size_t topLen,                     /* length of the top number          */
-    UCHAR *AccumPtr,                   /* output accumulator location       */
+    char *AccumPtr,                   /* output accumulator location       */
     int MultChar)                      /* multiplier value                  */
 /*********************************************************************/
 /* Function:  Multiply current digit through "top" number and add    */
@@ -90,7 +90,7 @@ PUCHAR AddMultiplier(
                                        /* and point accum to next position. */
   }
   if (carry) {                         /* still room to put a digit         */
-    *AccumPtr-- = (UCHAR)carry;        /* yes, put carry into next pos.     */
+    *AccumPtr-- = (char)carry;        /* yes, put carry into next pos.     */
   }
  return ++AccumPtr;                    /* return pointer to start of Accum. */
 }
@@ -101,12 +101,12 @@ RexxNumberString *RexxNumberString::Multiply(RexxNumberString *other)
 /*********************************************************************/
 {
  RexxNumberString *left, *right, *result, *LargeNum, *SmallNum;
- UCHAR *ResultPtr, *AccumPtr, *Current, *OutPtr;
- UCHAR MultChar;
+ char *ResultPtr, *AccumPtr, *Current, *OutPtr;
+ char MultChar;
  size_t AccumLen;
  size_t i;
  size_t NumberDigits, TotalDigits, ExtraDigit;
- UCHAR resultBufFast[FASTDIGITS];      /* fast allocation if default digits */
+ char resultBufFast[FASTDIGITS];      /* fast allocation if default digits */
 
  NumberDigits = number_digits();       /* Get the current Numeric Digits    */
 
@@ -131,9 +131,9 @@ RexxNumberString *RexxNumberString::Multiply(RexxNumberString *other)
                                        /* working with large numbers?       */
  if (TotalDigits > FASTDIGITS)
                                        /* get a work are for result digits. */
-   OutPtr = (PUCHAR)buffer_alloc(TotalDigits);
+   OutPtr = buffer_alloc(TotalDigits);
  else
-   OutPtr = (PUCHAR)resultBufFast;     /* use the local version             */
+   OutPtr = resultBufFast;             /* use the local version             */
  memset(OutPtr,'\0',TotalDigits);      /* Make sure work area is zero       */
 
  AccumPtr = OutPtr;                    /* Set up our acummulator            */
@@ -185,14 +185,14 @@ RexxNumberString *RexxNumberString::Multiply(RexxNumberString *other)
  return result;                        /* return computed value.            */
 }                                      /* All done,                         */
 
-PUCHAR SubtractDivisor(UCHAR *data1, size_t length1,
-                       UCHAR *data2, size_t length2,
-                       UCHAR *result, int Mult)
+char * SubtractDivisor(char *data1, size_t length1,
+                       char *data2, size_t length2,
+                       char *result, int Mult)
 /*********************************************************************/
 /* Function:  Subtraction routine for division                       */
 /*********************************************************************/
 {
-  UCHAR *OutPtr;
+  char *OutPtr;
   int   carry, DivChar;
   UINT  extra;
                         /* This rountine actually does the divide of the Best Guess */
@@ -231,13 +231,13 @@ PUCHAR SubtractDivisor(UCHAR *data1, size_t length1,
    }
    else                                /* div value is not negative.        */
     carry = 0;                         /* clear out carry value.            */
-   *--OutPtr = (UCHAR)DivChar;         /* set this digit in output          */
+   *--OutPtr = (char)DivChar;         /* set this digit in output          */
   }                                    /* go back and do next divide.       */
 
   if (extra) {                         /* is ther more to process?          */
    if (!carry) {                       /* is there a carry left over?       */
     while (extra--)                    /*  no, just copy each remaining     */
-     *--OutPtr = (UCHAR)*data1--;      /*   digit from data1.               */
+     *--OutPtr = (char)*data1--;      /*   digit from data1.               */
    }
    else {
     while (extra--) {                  /* carry left over, do for all extra */
@@ -245,10 +245,10 @@ PUCHAR SubtractDivisor(UCHAR *data1, size_t length1,
      if (DivChar < 0) {                /* is result negative?               */
       DivChar += 10;                   /* add 10(borrow) to digit value     */
       carry = -1;                      /* have another carry.               */
-      *--OutPtr = (UCHAR)DivChar;      /* put digit into result             */
+      *--OutPtr = (char)DivChar;      /* put digit into result             */
      }
      else {
-      *--OutPtr = (UCHAR)DivChar;      /* finished w/ carry place in result */
+      *--OutPtr = (char)DivChar;      /* finished w/ carry place in result */
       while (extra--)                  /* now just copy rest of digits      */
        *--OutPtr = *data1--;           /*  and adjust for next digit.       */
       break;                           /* all done, break out of loop       */
@@ -274,17 +274,17 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, UINT DivOP
  CHAR SaveLeftBuffer[sizeof(RexxNumberStringBase)];
  CHAR SaveRightBuffer[sizeof(RexxNumberStringBase)];
  RexxNumberString   *result;
- UCHAR *Num1, *Num2;
- UCHAR *resultPtr, *Output, *rightPtr, *leftPtr, *SaveLeftPtr, *SaveRightPtr;
+ char *Num1, *Num2;
+ char *resultPtr, *Output, *rightPtr, *leftPtr, *SaveLeftPtr, *SaveRightPtr;
  int   multiplier, rc;
  int   DivChar, thisDigit;
  long  CalcExp;
 
  size_t  NumberDigits, totalDigits, resultDigits;
  ULONG adjustNum1;
- UCHAR leftBufFast[FASTDIGITS];        /* fast allocation if default        */
- UCHAR rightBufFast[FASTDIGITS];       /* fast allocation if default        */
- UCHAR outBufFast[FASTDIGITS];         /* fast allocation if default        */
+ char leftBufFast[FASTDIGITS];        /* fast allocation if default        */
+ char rightBufFast[FASTDIGITS];       /* fast allocation if default        */
+ char outBufFast[FASTDIGITS];         /* fast allocation if default        */
  size_t  rightPadding;                 /* amount right side is padded by    */
 
                         /* NOTE: this routine if very similiar to the PowerDivide   */
@@ -332,16 +332,16 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, UINT DivOP
  if (totalDigits > FASTDIGITS) {       /* working with large numbers?       */
                                        /* No fast path here, do Division    */
                                        /* get buffer for left digit data.   */
-   leftPtr  = (PUCHAR)buffer_alloc(totalDigits);
+   leftPtr  = buffer_alloc(totalDigits);
                                        /* and right digit data              */
-   rightPtr  = (PUCHAR)buffer_alloc(totalDigits);
+   rightPtr  = buffer_alloc(totalDigits);
                                        /* get buffer for result digit data. */
-   Output   = (PUCHAR)buffer_alloc(totalDigits);
+   Output   = buffer_alloc(totalDigits);
  }
  else {
-   leftPtr  = (PUCHAR)leftBufFast;     /* use non-allocated version for the */
-   rightPtr = (PUCHAR)rightBufFast;
-   Output   = (PUCHAR)outBufFast;
+   leftPtr  = leftBufFast;             /* use non-allocated version for the */
+   rightPtr = rightBufFast;
+   Output   = outBufFast;
  }
                                        /* now copy the data itself into     */
                                        /*  the temp data buffers.           */
@@ -433,7 +433,7 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, UINT DivOP
                                        /* doing //                          */
      else if (rc == 0 && DivOP != OT_REMAINDER) {
                                        /* yes, done with Division, cleanup  */
-      *resultPtr++ = (UCHAR)(thisDigit + 1);
+      *resultPtr++ = (char)(thisDigit + 1);
       resultDigits++;                  /* one more digit in result          */
       goto PowerDivideDone;            /* break out of both loops.          */
      }
@@ -479,7 +479,7 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, UINT DivOP
                                        /* guess again !!                     */
    }
    if (resultDigits || thisDigit) {    /* Have a digit for result?          */
-    *resultPtr++ = (UCHAR) thisDigit;  /* yes, place digit in result.       */
+    *resultPtr++ = (char) thisDigit;  /* yes, place digit in result.       */
     thisDigit = 0;                     /* reset digit value to zero;        */
     resultDigits++;                    /* one more digit in result;         */
 
@@ -600,7 +600,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
 
  long    power, extra, OldNorm;
  size_t  NumberDigits;
- UCHAR   *Accum, *AccumPtr, *OutPtr, *TempPtr;
+ char   *Accum, *AccumPtr, *OutPtr, *TempPtr;
  BOOL    NegativePower;
  RexxNumberStringBase *AccumObj;
  RexxNumberString     *left;
@@ -668,9 +668,9 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
                                        /*multiplication                     */
    AccumLen = (2 * (NumberDigits+1)) + 1;
                                        /* get storage for Output data       */
-   OutPtr = (PUCHAR)buffer_alloc(AccumLen);
+   OutPtr = buffer_alloc(AccumLen);
                                        /* get storage for Accumulator Data  */
-   Accum = (PUCHAR)buffer_alloc(AccumLen);
+   Accum = buffer_alloc(AccumLen);
    AccumPtr = Accum;                   /* Accum will point to start of      */
                                        /* storage block that AccumPtr is in.*/
 
@@ -762,15 +762,15 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
   return result;                       /* return our result object.         */
 }
 
-PUCHAR MultiplyPower(UCHAR *leftPtr, RexxNumberStringBase *left,
-                     UCHAR *rightPtr, RexxNumberStringBase *right,
-                     UCHAR *OutPtr, size_t OutLen, size_t NumberDigits)
+char * MultiplyPower(char *leftPtr, RexxNumberStringBase *left,
+                     char *rightPtr, RexxNumberStringBase *right,
+                     char *OutPtr, size_t OutLen, size_t NumberDigits)
 /*********************************************************************/
 /*   Function:  Multiply numbers for the power operation             */
 /*********************************************************************/
 {
- UCHAR *current, *resultPtr, *AccumPtr;
- UCHAR MultChar;
+ char *current, *resultPtr, *AccumPtr;
+ char MultChar;
  size_t  AccumLen;
  size_t  i;
  size_t ExtraDigit;
@@ -816,15 +816,15 @@ PUCHAR MultiplyPower(UCHAR *leftPtr, RexxNumberStringBase *left,
  return AccumPtr;                      /* return Pointer to result digits.  */
 }                                      /* All done,                         */
 
-PUCHAR DividePower(UCHAR *AccumPtr, RexxNumberStringBase *Accum, UCHAR *Output, size_t NumberDigits)
+char * DividePower(char *AccumPtr, RexxNumberStringBase *Accum, char *Output, size_t NumberDigits)
 /*********************************************************************/
 /*   Function:  Invert number from the power operation               */
 /*********************************************************************/
 {
  RexxNumberStringBase *left;
  CHAR leftBuffer[sizeof(RexxNumberStringBase)];
- UCHAR *Num1, *Num2;
- UCHAR *resultPtr, *leftPtr, *result;
+ char *Num1, *Num2;
+ char *resultPtr, *leftPtr, *result;
  int   multiplier, rc;
  int   DivChar, thisDigit;
  long  CalcExp;
@@ -840,9 +840,9 @@ PUCHAR DividePower(UCHAR *AccumPtr, RexxNumberStringBase *Accum, UCHAR *Output, 
 
  totalDigits = ((NumberDigits + 1) * 2) + 1;
                                        /* get buffer for left digit data.   */
- leftPtr = (PUCHAR)buffer_alloc(totalDigits);
+ leftPtr = buffer_alloc(totalDigits);
                                        /* get buffer for result digit data. */
- result  = (PUCHAR)buffer_alloc(totalDigits);
+ result  = buffer_alloc(totalDigits);
  resultPtr = result;                   /* Set up the result, point to end of*/
                                        /*  data.                            */
                                        /* address the static part           */
@@ -911,7 +911,7 @@ PUCHAR DividePower(UCHAR *AccumPtr, RexxNumberStringBase *Accum, UCHAR *Output, 
 
      else if (rc == 0) {               /* are the two numebrs equal         */
                                        /* yes, done with Division, cleanup  */
-      *resultPtr++ = (UCHAR)(thisDigit + 1);
+      *resultPtr++ = (char)(thisDigit + 1);
       resultDigits++;                  /* one more digit in result          */
       goto PowerDivideDone;            /* break out of both loops.          */
      }
@@ -939,7 +939,7 @@ PUCHAR DividePower(UCHAR *AccumPtr, RexxNumberStringBase *Accum, UCHAR *Output, 
    }                                   /* end of inner loop                 */
 
    if (resultDigits || thisDigit) {    /* Have a digit for result?          */
-    *resultPtr++ = (UCHAR) thisDigit;  /* yes, place digit in result.       */
+    *resultPtr++ = (char) thisDigit;  /* yes, place digit in result.       */
     thisDigit = 0;                     /* reset digit value to zero;        */
     resultDigits++;                    /* one more digit in result;         */
 
@@ -957,7 +957,7 @@ PUCHAR DividePower(UCHAR *AccumPtr, RexxNumberStringBase *Accum, UCHAR *Output, 
 
                                        /* reset the number ptr to beginning */
                                        /* of the buffer.                    */
-   Num1 = (PUCHAR)memmove(leftPtr, Num1, left->length);
+   Num1 = (char *)memmove(leftPtr, Num1, left->length);
                                        /* make sure traling end of buffer   */
                                        /* is reset to 0's.                  */
    memset(Num1 + left->length, '\0', totalDigits - left->length);

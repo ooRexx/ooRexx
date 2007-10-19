@@ -59,24 +59,24 @@
 /* Function prototypes for NumberStringClass/StringClass */
 
 ULONG HighBits(ULONG number);
-void Subtract_Numbers( RexxNumberString *larger, UCHAR *largerPtr, long aLargerExp,
-                       RexxNumberString *smaller, UCHAR *smallerPtr, long aSmallerExp,
-                       RexxNumberString *result, PUCHAR *resultPtr);
+void Subtract_Numbers( RexxNumberString *larger, const char *largerPtr, long aLargerExp,
+                       RexxNumberString *smaller, const char *smallerPtr, long aSmallerExp,
+                       RexxNumberString *result, char **resultPtr);
                                             /* ************************************ */
                                             /* Following functions are in oemath2.c */
                                             /* ************************************ */
-PUCHAR AddMultiplier( UCHAR *, long, UCHAR *, int);
-PUCHAR SubtractDivisor(UCHAR *data1, size_t length1,
-                       UCHAR *data2, size_t length2,
-                       UCHAR *result, int Mult);
-PUCHAR MultiplyPower(UCHAR *leftPtr, RexxNumberStringBase *left,
-                     UCHAR *rightPtr, RexxNumberStringBase *right,
-                     UCHAR *OutPtr, size_t OutLen, size_t NumberDigits);
-PUCHAR DividePower(UCHAR *AccumPtr, RexxNumberStringBase *Accum, UCHAR *Output, size_t NumberDigits);
-PCHAR AddToBaseSixteen(INT, PCHAR, PCHAR);
-PCHAR AddToBaseTen(INT, PCHAR, PCHAR);
-PCHAR MultiplyBaseSixteen(PCHAR, PCHAR);
-PCHAR MultiplyBaseTen(PCHAR, PCHAR);
+char *AddMultiplier( char *, long, char *, int);
+char * SubtractDivisor(char *data1, size_t length1,
+                       char *data2, size_t length2,
+                       char *result, int Mult);
+char *MultiplyPower(char *leftPtr, RexxNumberStringBase *left,
+                     char *rightPtr, RexxNumberStringBase *right,
+                     char *OutPtr, size_t OutLen, size_t NumberDigits);
+char *DividePower(char *AccumPtr, RexxNumberStringBase *Accum, char *Output, size_t NumberDigits);
+char * AddToBaseSixteen(INT, char *, char *);
+char * AddToBaseTen(INT, char *, char *);
+char * MultiplyBaseSixteen(char *, char *);
+char * MultiplyBaseTen(char *, char *);
 
 #ifndef ORDCOMP
 #define ORDCOMP

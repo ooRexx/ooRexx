@@ -52,8 +52,6 @@
 
 #include "NumberStringMath.hpp"
 
-extern INT  lookup[];
-                                       /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
                                        /* create a hex table                */
 static char hextab[] = "0123456789ABCDEF";

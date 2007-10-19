@@ -66,7 +66,7 @@ size_t get_length(
    missing_argument(position);         /* raise an error                    */
  if (OTYPE(Integer, argument))         /* already an integer?               */
                                        /* get this directly                 */
-   value = ((RexxInteger *)argument)->value;
+   value = ((RexxInteger *)argument)->getValue();
  else
                                        /* convert the length                */
    value = REQUIRED_LONG(argument, DEFAULT_DIGITS, position);
@@ -91,7 +91,7 @@ size_t get_position(
    missing_argument(position);         /* raise an error                    */
  if (OTYPE(Integer, argument))         /* already an integer?               */
                                        /* get this directly                 */
-   value = ((RexxInteger *)argument)->value;
+   value = ((RexxInteger *)argument)->getValue();
  else
                                        /* convert the length                */
    value = REQUIRED_LONG(argument, DEFAULT_DIGITS, position);

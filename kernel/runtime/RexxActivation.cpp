@@ -98,8 +98,6 @@ void RestoreEnvironment(void *);
                                        /* changes                           */
 static ACTSETTINGS activationSettingsTemplate;
 
-extern INT  lookup[];
-
 
 void * RexxActivation::operator new(size_t size)
 /******************************************************************************/
@@ -1286,7 +1284,7 @@ void RexxActivation::raise(
     }
     else
                                        /* go raise the error                */
-      CurrentActivity->raiseException(((RexxInteger *)rc)->value, NULL, OREF_NULL, description, (RexxArray *)additional, result);
+      CurrentActivity->raiseException(((RexxInteger *)rc)->getValue(), NULL, OREF_NULL, description, (RexxArray *)additional, result);
   }
   else {                               /* normal condition trapping         */
                                        /* get the sender object (if any)    */
@@ -2243,7 +2241,7 @@ ULONG RexxActivation::getRandomSeed(
     return this->sender->getRandomSeed(seed);
 
   if (seed != OREF_NULL) {             /* have a seed supplied?             */
-    seed_value = seed->value;          /* get the value                     */
+    seed_value = seed->getValue();     /* get the value                     */
     if (seed_value < 0)                /* negative value?                   */
                                        /* got an error                      */
       report_exception3(Error_Incorrect_call_nonnegative, new_cstring(CHAR_RANDOM), IntegerThree, seed);
@@ -2287,18 +2285,18 @@ RexxInteger * RexxActivation::random(
    if (randmin != OREF_NULL) {         /* minimum specified?                */
      if ((randmax == OREF_NULL) &&     /* no maximum value specified        */
         (randseed == OREF_NULL))       /* and no seed specified             */
-       maximum = randmin->value;       /* this is actually a max value      */
+       maximum = randmin->getValue();  /* this is actually a max value      */
      else if ((randmin != OREF_NULL) &&/* minimum value specified           */
               (randmax == OREF_NULL) &&/* maximum value not specified       */
               (randseed != OREF_NULL)) /* seed specified                    */
-       minimum = randmin->value;
+       minimum = randmin->getValue();
      else {
-       minimum = randmin->value;       /* give both max and min values      */
-       maximum = randmax->value;
+       minimum = randmin->getValue();  /* give both max and min values      */
+       maximum = randmax->getValue();
      }
    }
    else if (randmax != OREF_NULL)      /* only given a maximum?             */
-     maximum = randmax->value;         /* use the supplied maximum          */
+     maximum = randmax->getValue();    /* use the supplied maximum          */
 
    if (minimum < 0)                    /* minimum too small?                */
      report_exception3(Error_Incorrect_call_nonnegative, new_cstring(CHAR_RANDOM), IntegerOne, randmin);
@@ -2326,7 +2324,7 @@ RexxInteger * RexxActivation::random(
    return new_integer(minimum);        /* return the random number          */
 }
 
-static PCHAR trace_prefix_table[] = {  /* table of trace prefixes           */
+static const char * trace_prefix_table[] = {  /* table of trace prefixes           */
   "*-*",                               /* TRACE_PREFIX_CLAUSE               */
   "+++",                               /* TRACE_PREFIX_ERROR                */
   ">>>",                               /* TRACE_PREFIX_RESULT               */
@@ -3371,7 +3369,7 @@ RexxVariableBase  *RexxActivation::getDirectVariableRetriever(
           compound++;                  /* count the character               */
       }
                                        /* may have a special character      */
-      else if (lookup[character] == 0) {
+      else if (!RexxSource::isSymbolCharacter(character)) {
                                        /* maybe exponential form?           */
         if (character == '+' || character == '-') {
                                        /* front part not valid?             */
@@ -3395,7 +3393,7 @@ RexxVariableBase  *RexxActivation::getDirectVariableRetriever(
       else if (character < '0' || character > '9')
         nonnumeric++;                  /* count the non-numeric             */
                                        /* lower case character?             */
-      else if (lookup[character] != character)
+      else if (RexxSource::translateChar(character) != character)
         return OREF_NULL;              /* this is bad, return               */
       last = character;                /* remember last one                 */
       scan++;                          /* step the pointer                  */

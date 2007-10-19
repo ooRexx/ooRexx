@@ -52,254 +52,6 @@
                                        /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
 
-/*********************************************************************/
-/*                                                                   */
-/* Table of directive instructions used for translation              */
-/*                                                                   */
-/*********************************************************************/
-
-extern KWDTABLE Directives[];
-extern INT      Directivescount;
-
-/*********************************************************************/
-/*                                                                   */
-/* Table of keyword instructions used for translation                */
-/*                                                                   */
-/*********************************************************************/
-
-extern KWDTABLE KeywordInstructions[]; /* language keyword table     */
-extern INT      KeywordInstructionscount;/* language keyword table size*/
-
-/*********************************************************************/
-/*                                                                   */
-/* Table of instruction subkeywords used for translation             */
-/*                                                                   */
-/*********************************************************************/
-
-extern KWDTABLE SubKeywords[];         /* language keyword table     */
-extern INT      SubKeywordscount;      /* language keyword table size*/
-
-/*********************************************************************/
-/*                                                                   */
-/* Table of built-in functions used for translation                  */
-/*                                                                   */
-/*********************************************************************/
-
-extern KWDTABLE BuiltinFunctions[];    /* built-in function table    */
-extern INT      BuiltinFunctionscount; /* builtin function table size*/
-
-/*********************************************************************/
-/*                                                                   */
-/* Table of condition keywords used for translation                  */
-/*                                                                   */
-/*********************************************************************/
-
-extern KWDTABLE ConditionKeywords[];   /* condition option table     */
-extern INT      ConditionKeywordscount;/* condition option table size*/
-
-/*********************************************************************/
-/*                                                                   */
-/* Table of parse options used for translation                       */
-/*                                                                   */
-/*********************************************************************/
-
-extern KWDTABLE ParseOptions[];        /* parse option table         */
-extern INT      ParseOptionscount;     /* parse option table size    */
-
-/*********************************************************************/
-/*                                                                   */
-/* Table of directive subkeywords used for translation               */
-/*                                                                   */
-/*********************************************************************/
-
-extern KWDTABLE SubDirectives[];/* language directive subkeywords    */
-extern INT      SubDirectivescount;    /* language directive         */
-                                       /* subkeywords table size     */
-
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   resolve_keyword                              */
-/*                                                                   */
-/*   Descriptive Name:  search keyword table for a match             */
-/*                                                                   */
-/*   Function:          look up keyword in table                     */
-/*                        return 0 if not found                      */
-/*                                                                   */
-/*********************************************************************/
-
-INT resolve_keyword(
-  const char *Name,                    /* name to search                    */
-  size_t    Length,                    /* length of the name                */
-  KWDTABLE *Table,                     /* keyword table to use              */
-  INT       Table_Size )               /* size of keyword table             */
-{
-  INT       Upper;                     /* search upper bound         */
-  INT       Lower;                     /* search lower bound         */
-  INT       Middle;                    /* search middle bound        */
-  CHAR      FirstChar;                 /* first search character     */
-  INT       rc;                        /* comparison result          */
-
-  Lower = 0;                           /* set initial lower bound    */
-  Upper = Table_Size - 1;              /* set the upper bound        */
-  FirstChar = *Name;                   /* get the first character    */
-
-  while (Lower <= Upper) {             /* while still a range        */
-                                       /* set new middle location    */
-    Middle = Lower + ((Upper - Lower) / 2);
-                                       /* if first character matches */
-    if (*Table[Middle].name == FirstChar) {
-      rc = memcmp(Name, Table[Middle].name, min(Length, Table[Middle].length));
-      if (!rc) {                       /* compared equal             */
-                                       /* lengths equal?             */
-        if (Length == Table[Middle].length)
-                                       /* return this keyword code   */
-          return Table[Middle].keyword_code;
-                                       /* have to go up?             */
-        else if (Length > Table[Middle].length)
-          Lower = Middle + 1;          /* set new lower bound        */
-        else                           /* going down                 */
-          Upper = Middle - 1;          /* set new upper bound        */
-      }
-      else if (rc > 0)                 /* name is larger             */
-        Lower = Middle + 1;            /* set new lower bound        */
-      else                             /* going down                 */
-        Upper = Middle - 1;            /* set new upper bound        */
-    }
-                                       /* name is larger             */
-    else if (*Table[Middle].name < FirstChar)
-      Lower = Middle + 1;              /* set new lower bound        */
-    else                               /* going down                 */
-      Upper = Middle - 1;              /* set new upper bound        */
-  }
-  return 0;                            /* return failure flag        */
-}
-
-int RexxSource::subKeyword(
-    RexxToken  *token)                 /* token to check                    */
-/******************************************************************************/
-/* Function:  Return a numeric subkeyword identifier for a token              */
-/******************************************************************************/
-{
-  RexxString *value;                   /* token value                       */
-
-  if (token->classId != TOKEN_SYMBOL)  /* not a symbol?                     */
-    return 0;                          /* not a keyword                     */
-  else {
-    value = token->value;              /* get the token's value             */
-                                       /* perform keyword table search      */
-    return resolve_keyword(value->getStringData(), value->getLength(), SubKeywords, SubKeywordscount);
-  }
-}
-
-int RexxSource::keyword(
-    RexxToken  *token)                 /* token to check                    */
-/****************************************************************************/
-/* Function:  Return a numeric keyword identifier for a token               */
-/****************************************************************************/
-{
-  RexxString *value;                   /* token value                       */
-
-  if (token->classId != TOKEN_SYMBOL)  /* not a symbol?                     */
-    return 0;                          /* not a keyword                     */
-  else {
-    value = token->value;              /* get the token's value             */
-                                       /* perform keyword table search      */
-    return resolve_keyword(value->getStringData(), value->getLength(), KeywordInstructions, KeywordInstructionscount);
-  }
-}
-
-int RexxSource::builtin(
-    RexxToken  *token)                 /* token to check                    */
-/****************************************************************************/
-/* Function:  Return a numeric builtin function identifier for a token      */
-/****************************************************************************/
-{
-  RexxString *value;                   /* token value                       */
-
-  value = token->value;                /* get the token's value             */
-                                       /* perform keyword table search      */
-  return resolve_keyword(value->getStringData(), value->getLength(), BuiltinFunctions, BuiltinFunctionscount);
-}
-
-
-int RexxSource::resolveBuiltin(
-    RexxString *value)                 /* name to check                     */
-/******************************************************************************/
-/* Function:  Return a numeric keyword identifier for a string                */
-/******************************************************************************/
-{
-                                       /* perform keyword table search      */
-  return resolve_keyword(value->getStringData(), value->getLength(), BuiltinFunctions, BuiltinFunctionscount);
-}
-
-int RexxSource::condition(
-    RexxToken  *token)                 /* token to check                    */
-/****************************************************************************/
-/* Function:  Return a numeric condition identifier for a token             */
-/****************************************************************************/
-{
-  RexxString *value;                   /* token value                       */
-
-  if (token->classId != TOKEN_SYMBOL)  /* not a symbol?                     */
-    return 0;                          /* not a keyword                     */
-  else {
-    value = token->value;              /* get the token's value             */
-                                       /* perform keyword table search      */
-    return resolve_keyword(value->getStringData(), value->getLength(), ConditionKeywords, ConditionKeywordscount);
-  }
-}
-
-int RexxSource::parseOption(
-    RexxToken  *token)                 /* token to check                    */
-/****************************************************************************/
-/* Function:  Return a numeric condition identifier for a token             */
-/****************************************************************************/
-{
-  RexxString *value;                   /* token value                       */
-
-  if (token->classId != TOKEN_SYMBOL)  /* not a symbol?                     */
-    return 0;                          /* not a keyword                     */
-  else {
-    value = token->value;              /* get the token's value             */
-                                       /* perform keyword table search      */
-    return resolve_keyword(value->getStringData(), value->getLength(), ParseOptions, ParseOptionscount);
-  }
-}
-
-int RexxSource::keyDirective(
-    RexxToken  *token)                 /* token to check                    */
-/****************************************************************************/
-/* Function:  Return a numeric directive identifier for a token             */
-/****************************************************************************/
-{
-  RexxString *value;                   /* token value                       */
-
-  if (token->classId != TOKEN_SYMBOL)  /* not a symbol?                     */
-    return 0;                          /* not a keyword                     */
-  else {
-    value = token->value;              /* get the token's value             */
-                                       /* perform keyword table search      */
-    return resolve_keyword(value->getStringData(), value->getLength(), Directives, Directivescount);
-  }
-}
-
-int RexxSource::subDirective(
-    RexxToken  *token)                 /* token to check                    */
-/****************************************************************************/
-/* Function:  Return a numeric directive option identifier for a token      */
-/****************************************************************************/
-{
-  RexxString *value;                   /* token value                       */
-
-  if (token->classId != TOKEN_SYMBOL)  /* not a symbol?                     */
-    return 0;                          /* not a keyword                     */
-  else {
-    value = token->value;              /* get the token's value             */
-                                       /* perform keyword table search      */
-    return resolve_keyword(value->getStringData(), value->getLength(), SubDirectives, SubDirectivescount);
-  }
-}
-
 int RexxSource::precedence(
     RexxToken  *token)                 /* target token                      */
 /******************************************************************************/
@@ -398,7 +150,7 @@ RexxSource::RexxSource(
 *  special characters that can be part of an REXX symbol.            *
 *  The table also convert lower case letters to upper case.          *
 *********************************************************************/
-INT lookup[]={
+int RexxSource::characterTable[]={
   0, 0, 0, 0, 0,  0, 0, 0, 0, 0,  /*   0 -   9 */
   0, 0, 0, 0, 0,  0, 0, 0, 0, 0,  /*  10 -  19 */
   0, 0, 0, 0, 0,  0, 0, 0, 0, 0,  /*  20 -  29 */
@@ -872,7 +624,7 @@ RexxToken *RexxSource::sourceNextToken(
 {
  RexxToken  *token;                    /* working token                     */
  RexxString *value;                    /* associate string value            */
- UINT   inch;                          /* working input character           */
+ unsigned int inch;                    /* working input character           */
  LONG   eoffset;                       /* location of exponential           */
  INT    state;                         /* state of symbol scanning          */
  LONG   start;                         /* scan start location               */
@@ -929,7 +681,7 @@ RexxToken *RexxSource::sourceNextToken(
       inch = this->locateToken(OREF_NULL);
                                        /* is this blank significant?        */
       if (inch != CLAUSEEND_EOL  &&    /* not at the end                    */
-         (lookup[inch] ||              /* and next is a symbol token        */
+         (isSymbolCharacter(inch) ||   /* and next is a symbol token        */
           inch == '\"' ||              /* or start of a " quoted literal    */
           inch == '\'' ||              /* or start of a ' quoted literal    */
           inch == '('  ||              /* or a left parenthesis             */
@@ -942,7 +694,7 @@ RexxToken *RexxSource::sourceNextToken(
     }
     else {                             /* non-special token type            */
                                        /* process different token types     */
-      tran = lookup[inch];             /* do the table mapping              */
+      tran = translateChar(inch);      /* do the table mapping              */
       if (tran != 0) {                 /* have a symbol character?          */
         state = EXP_START;             /* in a clean state now              */
         eoffset = 0;                   /* no exponential sign yet           */
@@ -1029,7 +781,7 @@ RexxToken *RexxSource::sourceNextToken(
             break;                     /* done processing                   */
 
           inch = GETCHAR();            /* get the next character            */
-          tran = lookup[inch];         /* translate the next character      */
+          tran = translateChar(inch);  /* translate the next character      */
           if (tran != 0)               /* good symbol character?            */
             continue;                  /* loop through the state machine    */
                                        /* check for sign in correct state   */
@@ -1043,7 +795,7 @@ RexxToken *RexxSource::sourceNextToken(
               break;                   /* quit looping                      */
             }
             inch = GETCHAR();          /* get the next character            */
-            tran = lookup[inch];       /* translate the next character      */
+            tran = translateChar(inch);/* translate the next character      */
             if (tran != 0)             /* good character?                   */
               continue;                /* loop around                       */
             else {                     /* bad character                     */
@@ -1067,8 +819,8 @@ RexxToken *RexxSource::sourceNextToken(
                                        /* (translating to uppercase         */
                                        /* get the next character            */
           inch = this->current[start + i];
-          if (lookup[inch] != 0)       /* normal symbol character (not +/-) */
-            inch = lookup[inch];       /* translate to uppercase            */
+          if (isSymbolCharacter(inch))       /* normal symbol character (not +/-) */
+            inch = translateChar(inch);      /* translate to uppercase            */
           value->putChar(i, inch);
         }
         value->setUpperOnly();         /* only contains uppercase           */
@@ -1202,7 +954,7 @@ RexxToken *RexxSource::sourceNextToken(
             this->line_offset++;       /* step to the next character        */
                                        /* the end of the line, or           */
                                        /* have another symbol character     */
-            if (MORELINE() && lookup[GETCHAR()] != 0)
+            if (MORELINE() && isSymbolCharacter(GETCHAR()))
               this->line_offset--;     /* step back to the X                */
             else
               type = LITERAL_HEX;      /* set the appropriate type          */
@@ -1212,7 +964,7 @@ RexxToken *RexxSource::sourceNextToken(
             this->line_offset++;       /* step to the next character        */
                                        /* the end of the line, or           */
                                        /* have another symbol character     */
-            if (MORELINE() && lookup[GETCHAR()] != 0)
+            if (MORELINE() && isSymbolCharacter(GETCHAR()))
               this->line_offset--;     /* step back to the B                */
             else
               type = LITERAL_BIN;      /* set the appropriate type          */

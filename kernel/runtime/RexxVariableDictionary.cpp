@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxVariableDictionary.c     */
+/* REXX Kernel                                   RexxVariableDictionary.c     */
 /*                                                                            */
 /* Primitive Variable Dictionary Class                                        */
 /*                                                                            */
@@ -53,8 +53,6 @@
 #include "ExpressionStem.hpp"
 #include "ExpressionVariable.hpp"
 #include "ExpressionCompoundVariable.hpp"
-
-extern INT lookup[];                   /* token scanning table              */
 
 RexxObject  *RexxVariableDictionary::copy()
 /******************************************************************************/

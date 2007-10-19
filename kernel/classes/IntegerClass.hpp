@@ -76,7 +76,7 @@ class RexxInteger : public RexxObject {
 
   BOOL        isEqual(RexxObject *);
   long        strictComp(RexxObject *);
-  inline long comp(RexxObject *other)
+  inline int  comp(RexxObject *other)
     {
                                        /* current global settings           */
       extern ACTIVATION_SETTINGS *current_settings;
@@ -135,15 +135,17 @@ class RexxInteger : public RexxObject {
                                        /* numberstring operator forwarders  */
   koper (integer_operator_not)
 
-  inline long getVal() {return this->value;}
+  inline int  getValue() {return this->value;}
   inline wholenumber_t wholeNumber() {return this->value;}
   inline stringsize_t stringSize() {return (stringsize_t)this->value;}
-  inline long incrementValue() {return ++this->value;}
-  inline long decrementValue() {return --this->value;}
+  inline int  incrementValue() {return ++this->value;}
+  inline int  decrementValue() {return --this->value;}
   inline RexxString *getStringrep() {return this->stringrep;}
 
+protected:
+
   RexxString *stringrep;               /* integer string representation     */
-  long value;                          /* actual integer value              */
+  int  value;                          /* actual integer value              */
 };
 
 class RexxIntegerClass : public RexxClass {
@@ -153,7 +155,7 @@ class RexxIntegerClass : public RexxClass {
   void *operator new (size_t);
   void *operator new(size_t size, long size1, RexxBehaviour *classBehave, RexxBehaviour *instance) { return new (size, classBehave, instance) RexxClass; }
   RexxIntegerClass();
-  RexxInteger *newCache(long value) {if (value >= INTEGERCACHELOW && value < INTEGERCACHESIZE)
+  RexxInteger *newCache(int value) {if (value >= INTEGERCACHELOW && value < INTEGERCACHESIZE)
                                        return this->integercache[value - INTEGERCACHELOW];
                                      else
                                        return new RexxInteger (value); };

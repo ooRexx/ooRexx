@@ -1537,11 +1537,11 @@ ULONG APIENTRY HandleListCtrlEx(
             CHECKARGL(4)
 
             item = atol(argv[3].strptr);
-            if ( item < -1 || item > (ListView_GetItemCount(hList) - 1) ) RETVAL(-3);
+            if ( item < -1 ) RETVAL(-3);
 
             if ( argc == 4 )
             {
-                if ( item < 0 ) RETVAL(-3);
+                if ( item < 0 || item > (ListView_GetItemCount(hList) - 1) ) RETVAL(-3);
                 RETVAL(!(ListView_GetCheckState(hList, (UINT)item) == 0));
             }
             else if ( argc == 5 )

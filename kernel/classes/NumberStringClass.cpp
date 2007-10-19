@@ -69,10 +69,10 @@ RexxObject *RexxNumberString::##method(RexxObject *operand)\
 /*********************************************************************/
 /*  Function:  Convert a number string into a RexxInteger object     */
 /*********************************************************************/
-long number_create_integer(UCHAR *thisnum, long intlength, int carry, int sign)
+int number_create_integer(const char *thisnum, size_t intlength, int carry, int sign)
 {
-  long intnum;
-  int  numpos;
+  int intnum;
+  size_t  numpos;
 
   if (intlength > 10) {                /* too many digits for integer????   */
     return NO_LONG;
@@ -103,20 +103,20 @@ long number_create_integer(UCHAR *thisnum, long intlength, int carry, int sign)
 /*********************************************************************/
 /*   Function:  Convert the numberstring to ULONG value              */
 /*********************************************************************/
-int  number_create_uinteger(UCHAR *thisnum, long intlength, int carry, int sign, ULONG *value)
+bool number_create_uinteger(const char *thisnum, size_t intlength, int carry, int sign, size_t *value)
 {
-  long intnum;
-  int  numpos;
+  size_t intnum;
+  size_t  numpos;
 
   if (intlength > 10) {                /* too many digits for integer????   */
-    return FALSE;
+    return false;
   }
   else {
     intnum = 0;                        /* initialize integer value to 0;    */
     for (numpos = 1 ; (numpos <= intlength); numpos++ ) {
                                        /* is number about to overflow       */
      if (intnum > MAXPOSBASE || ((intnum == MAXPOSBASE) && (*thisnum > 5))) {
-       return FALSE;                   /* YES, return unconvertable         */
+       return false;                   /* YES, return unconvertable         */
      }
                                        /* compute next digit part.          */
      intnum = (intnum * 10) + (int) *thisnum++ ;
@@ -125,13 +125,13 @@ int  number_create_uinteger(UCHAR *thisnum, long intlength, int carry, int sign,
 
   if (carry)                           /* have a carry out condition?       */
     if (intnum == MAXPOSNUM) {         /* Already at max value?             */
-      return FALSE;                    /* Yup, number too big.              */
+      return false;                    /* Yup, number too big.              */
    }
    else {
     intnum++;                          /* step the number                   */
    }
   *value = intnum;                     /* Assign return value.              */
-  return TRUE;                         /* Indicate sucessfule converison.   */
+  return true;                         /* Indicate sucessfule converison.   */
 }
 
 RexxNumberString::RexxNumberString(size_t len)
@@ -347,14 +347,13 @@ RexxString *RexxNumberString::stringValue()
      } /* endif */
 
      if (temp < 0) {
-       strcpy(expstring, "E");
                                        /* convert exponent value into string*/
-       _ltoa((long)temp, expstring+1, 10);
+       sprintf(expstring, "E%d", temp);
      }
      else if (temp > 0) {
        strcpy(expstring, "E+");
                                        /* convert exponent value into string*/
-       _ltoa((long)temp, expstring+2, 10);
+       sprintf(expstring, "E+%d", temp);
      }
      temp = labs((INT)temp);           /* get positive exponent factor      */
 
@@ -493,12 +492,12 @@ long RexxNumberString::longValue(size_t digits)
 /* Function:  Convert a number string to a long value                         */
 /******************************************************************************/
 {
-  UCHAR *num;
+  const char *num;
   BOOL carry;
   long intnum;
   long numexp;
   size_t numlength, numpos, NumDigits;
-  UCHAR compareChar;
+  char  compareChar;
 
   if (this->sign == 0 )                /* is the number zero ??             */
     return 0;                          /*  yes, return right away           */
@@ -547,11 +546,11 @@ long RexxNumberString::longValue(size_t digits)
 
      if (numpos >= numlength ) {       /* all of number after the decimanl  */
        numpos = numlength;
-       num = (PUCHAR) this->number;    /* start looking at 1st digit        */
+       num = this->number;             /* start looking at 1st digit        */
      }
      else
                                        /* set num to 1st digit after decimal*/
-       num = (PUCHAR) this->number + numlength + numexp;
+       num = this->number + numlength + numexp;
 
      for ( ; numpos ; numpos--) {      /* look at all digits for vaility.   */
       if ( *num++ != compareChar)      /* this the one we're looking for    */
@@ -566,14 +565,14 @@ long RexxNumberString::longValue(size_t digits)
       else
         return 0;                      /* otherwise its a zero.             */
 
-     intnum = number_create_integer((PUCHAR) this->number, numlength + numexp, carry, this->sign);
+     intnum = number_create_integer(this->number, numlength + numexp, carry, this->sign);
      if (intnum == NO_LONG) {          /* Is numebr too big ????            */
       return NO_LONG;                  /* Yes, return invalid integer....   */
      }
 
     }
     else {                             /* straight out number. just compute.*/
-     intnum = number_create_integer((PUCHAR) this->number, numlength, carry, this->sign);
+     intnum = number_create_integer(this->number, numlength, carry, this->sign);
      if (intnum == NO_LONG) {          /* Is numebr too big ????            */
       return NO_LONG;                  /* Yes, return invalid integer....   */
      }
@@ -646,7 +645,7 @@ double   RexxNumberString::doubleValue()
 /*********************************************************************/
 /*   Function:  Convert the numberstring to unsigned value           */
 /*********************************************************************/
-bool  RexxNumberString::createUnsignedInt64Value(stringchar_t *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result)
+bool  RexxNumberString::createUnsignedInt64Value(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result)
 {
     // if the exponent multiplier would cause an overflow, there's no point in doing
     // anything here
@@ -753,7 +752,7 @@ bool RexxNumberString::checkIntegerDigits(stringsize_t numDigits, stringsize_t &
         // the position of the decimal is the negation of the exponent
         stringsize_t decimalPos = (stringsize_t)(-numberExponent);
         // everything to the right of the decimal must be a zero.
-        stringchar_t compareChar = 0;
+        char compareChar = 0;
         // if we had a previous carry condition, this changes things a
         // bit.  Since the carry will add 1 to the right-most digit,
         // in order for all of the decimals to end up zero, then all of
@@ -771,7 +770,7 @@ bool RexxNumberString::checkIntegerDigits(stringsize_t numDigits, stringsize_t &
             compareChar = 9;
         }
 
-        stringchar_t *numberData;
+        const char *numberData;
         if (decimalPos >= numberLength )
         {
             // decimal is somewhere to the left of everything...
@@ -883,7 +882,7 @@ BOOL  RexxNumberString::truthValue(
   return TRUE;                         /* this is TRUE                      */
 }
 
-BOOL numberStringScan(PCHAR number, size_t length)
+BOOL numberStringScan(const char *number, size_t length)
 /******************************************************************************/
 /* Arguments:  Number data, number length                                     */
 /* Function :Scan the string to determine if its a valid number               */
@@ -891,9 +890,9 @@ BOOL numberStringScan(PCHAR number, size_t length)
 /*             1 if input was invalid number                                  */
 /******************************************************************************/
 {
- UCHAR     ch;                         /* current character                 */
- PUCHAR    InPtr;                      /* Input Data Pointer                */
- PUCHAR    EndData;                    /* Scan end position                 */
+ char      ch;                         /* current character                 */
+ const char *InPtr;                    /* Input Data Pointer                */
+ const char *EndData;                  /* Scan end position                 */
  BOOL      hadPeriod;                  /* had a decimal point already       */
 
                                        /* for efficiency, this code takes   */
@@ -906,7 +905,7 @@ BOOL numberStringScan(PCHAR number, size_t length)
    }
 
    hadPeriod = FALSE;                  /* period yet                        */
-   InPtr = (PUCHAR) number;            /*Point to start of input string.    */
+   InPtr = number;                     /*Point to start of input string.    */
    EndData = InPtr + length;           /*Point to end of Data + 1.          */
 
    while (*InPtr == ch_BLANK || *InPtr == ch_TAB)  /* Skip all leading blanks.          */
@@ -978,8 +977,8 @@ BOOL numberStringScan(PCHAR number, size_t length)
 }
 
 void fill_digits(                      /* create a string of digits         */
-  PCHAR  outPtr,                       /* output location                   */
-  PCHAR  number,                       /* start of string of digits         */
+  char *outPtr,                        /* output location                   */
+  const char *number,                  /* start of string of digits         */
   size_t count )                       /* size of resulting string          */
 /******************************************************************************/
 /* Function : Copy "count" digits of a number to the desired location,        */
@@ -1078,7 +1077,7 @@ RexxObject *RexxNumberString::truncInternal(
                                        /* number have a decimal part?       */
     if (this->exp > 0) {
                                        /* fill in the digits                */
-      fill_digits(resultPtr, (PCHAR)this->number, this->length);
+      fill_digits(resultPtr, this->number, this->length);
       resultPtr += this->length;       /* step over the length              */
                                        /* now fill in the extra zeros       */
       memset(resultPtr, '0', this->exp);
@@ -1093,14 +1092,14 @@ RexxObject *RexxNumberString::truncInternal(
       integer_digits = this->length + this->exp;
       if (integer_digits > 0) {        /* something on the left hand side?  */
                                        /* add the integer digits            */
-        fill_digits(resultPtr, (PCHAR)this->number, integer_digits);
+        fill_digits(resultPtr, this->number, integer_digits);
         resultPtr += integer_digits;   /* step over the digits              */
         if (needed_digits != 0) {      /* decimals requested?               */
           *resultPtr++ = '.';          /* add a trailing decimal point      */
                                        /* get count to add                  */
           temp = min(needed_digits, this->length - integer_digits);
                                        /* fill in the digits                */
-          fill_digits(resultPtr, (PCHAR)this->number + integer_digits, temp);
+          fill_digits(resultPtr, this->number + integer_digits, temp);
           resultPtr += temp;           /* step over the digits              */
           needed_digits -= temp;       /* adjust the length                 */
           if (needed_digits != 0)      /* still need more?                  */
@@ -1127,7 +1126,7 @@ RexxObject *RexxNumberString::truncInternal(
                                        /* get count to add                  */
           temp = min(needed_digits, this->length);
                                        /* fill in the digits                */
-          fill_digits(resultPtr, (PCHAR)this->number, temp);
+          fill_digits(resultPtr, this->number, temp);
           resultPtr += temp;           /* step over the digits              */
           needed_digits -= temp;       /* adjust the length                 */
           if (needed_digits != 0)      /* still need more?                  */
@@ -1189,7 +1188,7 @@ RexxString *RexxNumberString::formatInternal(
   LONG   expfactor;                    /* actual used exponent              */
   LONG   temp;                         /* temporary calculation holder      */
   size_t exponentsize;                 /* size of the exponent              */
-  UCHAR  exponent[15];                 /* character exponent value          */
+  char   exponent[15];                 /* character exponent value          */
   LONG   adjust;                       /* exponent adjustment factor        */
   size_t size;                         /* total size of the result          */
   size_t leadingSpaces;                /* number of leading spaces          */
@@ -1198,7 +1197,7 @@ RexxString *RexxNumberString::formatInternal(
   size_t trailingZeros;                /* number of trailing zeros          */
   size_t reqIntegers;                  /* requested integers                */
   RexxString *result;                  /* final formatted number            */
-  PCHAR  resultPtr;                    /* pointer within the result         */
+  char  *resultPtr;                    /* pointer within the result         */
   BOOL   defaultexpsize = FALSE;       /* default exponent size             */
 
   expfactor = 0;                       /* not exponential yet               */
@@ -1218,9 +1217,9 @@ RexxString *RexxNumberString::formatInternal(
       expfactor = temp;                /* save the factor                   */
       temp = labs((INT)temp);          /* get positive exponent value       */
                                        /* format exponent to a string       */
-      _ltoa((long)temp, (PCHAR)exponent, 10);
+      sprintf(exponent, "%d", temp);
                                        /* get the number of digits needed   */
-      exponentsize = strlen((PCHAR)exponent);
+      exponentsize = strlen(exponent);
       if (mathexp == -1) {             /* default exponent size?            */
         mathexp = exponentsize;        /* use actual length                 */
         defaultexpsize = TRUE;         /* default exponent size on          */
@@ -1266,8 +1265,8 @@ RexxString *RexxNumberString::formatInternal(
           {
             this->exp += expfactor;
             expfactor = 0;
-            _ltoa((long)0, (PCHAR)exponent, 10);
-            exponentsize = strlen((PCHAR)exponent);
+            strcpy(exponent, "0");
+            exponentsize = strlen(exponent);
           }
 
           temp = this->exp + this->length - 1;
@@ -1287,9 +1286,9 @@ RexxString *RexxNumberString::formatInternal(
                                        /* adjust the exponent factor        */
             expfactor = expfactor + temp;
                                        /* format exponent to a string       */
-            _ltoa(labs((INT)expfactor), (PCHAR)exponent, 10);
+            sprintf(exponent, "%d", expfactor);
                                        /* get the number of digits needed   */
-            exponentsize = strlen((PCHAR)exponent);
+            exponentsize = strlen(exponent);
 
             if (mathexp == -1)         /* default exponent size?            */
               mathexp = exponentsize;  /* use actual length                 */
@@ -1412,7 +1411,7 @@ RexxString *RexxNumberString::formatInternal(
     }
     if (this->length > 0) {            /* have a length?                    */
                                        /* fill in the remaining part        */
-      fill_digits(resultPtr, (PCHAR)this->number, this->length);
+      fill_digits(resultPtr, this->number, this->length);
       resultPtr += this->length;       /* step over the digits              */
     }
     if (trailingZeros != 0) {          /* need more zeros?                  */
@@ -1423,7 +1422,7 @@ RexxString *RexxNumberString::formatInternal(
   }
   else if (temp >= (long)this->length) {/* all integer data?                 */
                                        /* fill in the remaining part        */
-    fill_digits(resultPtr, (PCHAR)this->number, this->length);
+    fill_digits(resultPtr, this->number, this->length);
     resultPtr += this->length;         /* step over the digits              */
     if (trailingZeros != 0) {          /* need more zeros?                  */
                                        /* fill them in                      */
@@ -1438,11 +1437,11 @@ RexxString *RexxNumberString::formatInternal(
   }
   else {                               /* partial decimal number            */
                                        /* fill in the leading part          */
-    fill_digits(resultPtr, (PCHAR)this->number, temp);
+    fill_digits(resultPtr, this->number, temp);
     resultPtr += temp;                 /* step over the digits              */
     *resultPtr++ = '.';                /* add the period                    */
                                        /* fill in the trailing part         */
-    fill_digits(resultPtr, (PCHAR)this->number + temp, this->length - temp);
+    fill_digits(resultPtr, this->number + temp, this->length - temp);
     resultPtr += this->length - temp;  /* step over the extra part          */
     if ((long) trailingZeros > 0) {           /* extra decimals needed?            */
                                        /* fill them in                      */
@@ -1476,7 +1475,7 @@ RexxString *RexxNumberString::formatInternal(
   return result;                       /* return the result                 */
 }
 
-long RexxNumberString::format(PCHAR number, size_t length)
+long RexxNumberString::format(const char *number, size_t length)
 /******************************************************************************/
 /* Function : Format the string data into a numberstring.                     */
 /*            NOTE: now that a scan is done first the is some cleanup that can*/
@@ -1491,11 +1490,11 @@ long RexxNumberString::format(PCHAR number, size_t length)
  int       ExpSign;                    /* Exponent Sign                     */
  int       ExpValue;                   /* Exponent Value                    */
  size_t    MaxDigits;                  /* Maximum number size               */
- UCHAR     ch;                         /* current character                 */
- UCHAR     MSDigit = 0;                /* Most Significant digit truncated  */
- PUCHAR    InPtr;                      /* Input Data Pointer                */
- PUCHAR    OutPtr;                     /* Output Data Pointer               */
- PUCHAR    EndData;                    /* Scan end position                 */
+ char      ch;                         /* current character                 */
+ char      MSDigit = 0;                /* Most Significant digit truncated  */
+ const char *InPtr;                    /* Input Data Pointer                */
+ char     *OutPtr;                     /* Output Data Pointer               */
+ const char *EndData;                  /* Scan end position                 */
  BOOL      isZero;                     /* Number is zero if TRUE            */
  size_t    NumDigits;                  /* Number of digits in result        */
 
@@ -1504,7 +1503,7 @@ long RexxNumberString::format(PCHAR number, size_t length)
    ExpSign = 0;                        /* set exponent sign                 */
    isZero = TRUE;                      /* Assume number will be zero.       */
 
-   InPtr = (PUCHAR) number;            /*Point to start of input string.    */
+   InPtr = number;                     /*Point to start of input string.    */
    EndData = InPtr + length;           /*Point to end of Data + 1.          */
 
    while (*InPtr == ch_BLANK || *InPtr == ch_TAB)    /* Ship all leading blanks.          */
@@ -1541,7 +1540,7 @@ long RexxNumberString::format(PCHAR number, size_t length)
    while (*InPtr >= ch_ZERO && *InPtr <= ch_NINE) {
      if (MaxDigits) {                  /* Still room to add digits          */
                                        /* Move digit into output.           */
-       *OutPtr++ = (UCHAR)(*InPtr++ - '0');
+       *OutPtr++ = (char)(*InPtr++ - '0');
        MaxDigits--;                    /* Now room for one less.            */
      }
      else {
@@ -1600,7 +1599,7 @@ long RexxNumberString::format(PCHAR number, size_t length)
        if (MaxDigits) {                /*if still room for digits           */
          ExpValue--;                   /* Decrement Exponent                */
                                        /* Move char to output               */
-         *OutPtr++ = (UCHAR)(*InPtr++ - '0');
+         *OutPtr++ = (char)(*InPtr++ - '0');
          MaxDigits--;                  /* Room for one less digit.          */
        }
        else {
@@ -1680,7 +1679,7 @@ void RexxNumberString::formatLong(long integer)
 /* Function : Format the integer num into a numberstring.                     */
 /******************************************************************************/
 {
-  PCHAR  current;                      /* current position                  */
+  char  *current;                      /* current position                  */
 
   if (integer == 0) {                  /* is integer 0?                     */
                                        /* indicate this.                    */
@@ -1693,23 +1692,23 @@ void RexxNumberString::formatLong(long integer)
       integer = -integer;              /* take the positive version         */
     }
                                        /* convert value into string         */
-    _ltoa((long)integer, (PCHAR)this->number, 10);
-    current = (PCHAR)this->number;     /* point to the data start           */
+    sprintf(this->number, "%d", integer);
+    current = this->number;            /* point to the data start           */
     while (*current != '\0') {         /* while still have digits           */
       *current -= '0';                 /* make zero based                   */
       current++;                       /* step to the next one              */
     }
                                        /* set the proper length             */
-    this->length = current - (PCHAR)this->number;
+    this->length = current - this->number;
   }
 }
 
-void RexxNumberString::formatULong(ULONG integer)
+void RexxNumberString::formatULong(size_t integer)
 /******************************************************************************/
 /* Function : Format the integer num into a numberstring.                     */
 /******************************************************************************/
 {
-  PCHAR  current;                      /* current position                  */
+  char  *current;                      /* current position                  */
 
   if (integer == 0) {                  /* is integer 0?                     */
                                        /* indicate this.                    */
@@ -1718,14 +1717,14 @@ void RexxNumberString::formatULong(ULONG integer)
   else {                               /* number is non-zero                */
                                        /* Format the number                 */
                                        /* convert value into string         */
-    _ultoa((long)integer, (PCHAR)this->number, 10);
-    current = (PCHAR)this->number;     /* point to the data start           */
+    sprintf((char *)this->number, "%u", integer);
+    current = this->number;            /* point to the data start           */
     while (*current != '\0') {         /* while still have digits           */
       *current -= '0';                 /* make zero based                   */
       current++;                       /* step to the next one              */
     }
                                        /* set the proper length             */
-    this->length = current - (PCHAR)this->number;
+    this->length = current - this->number;
   }
 }
 
@@ -1910,7 +1909,7 @@ long RexxNumberString::comp(
   size_t    aRlen;                     /* adjusted right length             */
   LONG      MinExp;                    /* minimum exponent                  */
   size_t    NumberDigits;              /* current digits setting            */
-  PCHAR     scan;                      /* scan pointer                      */
+  char     *scan;                      /* scan pointer                      */
   LONG      rc;                        /* compare result                    */
 
                                        /* the compare is acually done by    */
@@ -1959,7 +1958,7 @@ long RexxNumberString::comp(
         rc = memcmp(this->number, rightNumber->number, rightNumber->length) * this->sign;
         if (rc == 0) {                 /* equal for that length?            */
                                        /* point to the remainder part       */
-          scan = (PCHAR)this->number + rightNumber->length;
+          scan = this->number + rightNumber->length;
                                        /* get the remainder length          */
           aRlen = this->length - rightNumber->length;
           while (aRlen--) {            /* scan the remainder                */
@@ -1975,7 +1974,7 @@ long RexxNumberString::comp(
         rc = memcmp(this->number, rightNumber->number, this->length) * this->sign;
         if (rc == 0) {                 /* equal for that length?            */
                                        /* point to the remainder part       */
-          scan = (PCHAR)rightNumber->number + this->length;
+          scan = rightNumber->number + this->length;
                                        /* get the remainder length          */
           aRlen = rightNumber->length - this->length;
           while (aRlen--) {            /* scan the remainder                */
@@ -2326,10 +2325,11 @@ RexxObject *RexxNumberString::isInteger()
 /*   Function:          Round up a number as a result of the chopping*/
 /*                        digits off of the number during init.      */
 /*********************************************************************/
-void RexxNumberString::roundUp(ULONG MSDigit)
+void RexxNumberString::roundUp(int MSDigit)
 {
   int  carry;
-  UCHAR *InPtr, ch;
+  char *InPtr;
+  char ch;
                                        /* Did we chop off digits and is it  */
                                        /* greater/equal to 5, rounding?     */
    if (MSDigit >= ch_FIVE && MSDigit <= ch_NINE) {
@@ -2401,14 +2401,14 @@ RexxString *RexxNumberString::d2xD2c(
 /******************************************************************************/
 
 {
-  UCHAR      PadChar;                  /* needed padding character          */
+  char       PadChar;                  /* needed padding character          */
   long       ResultSize;               /* size of result string             */
   size_t     HexLength;                /* length of hex characters          */
   size_t     BufferLength;             /* length of the buffer              */
-  PCHAR      Scan;                     /* scan pointer                      */
-  PCHAR      HighDigit;                /* highest digit location            */
-  PCHAR      Accumulator;              /* accumulator pointer               */
-  PCHAR      TempPtr;                  /* temporary pointer value           */
+  char     * Scan;                     /* scan pointer                      */
+  char     * HighDigit;                /* highest digit location            */
+  char     * Accumulator;              /* accumulator pointer               */
+  char     * TempPtr;                  /* temporary pointer value           */
   size_t     PadSize;                  /* needed padding                    */
   size_t     CurrentDigits;            /* current digits setting            */
   size_t     TargetLength;             /* length of current number          */
@@ -2430,10 +2430,10 @@ RexxString *RexxNumberString::d2xD2c(
   }
   else if (this->exp < 0) {            /* may have trailing zeros           */
                                        /* point to the decimal part         */
-    TempPtr = (PCHAR)this->number + this->length + this->exp;
+    TempPtr = this->number + this->length + this->exp;
     HexLength = -this->exp;            /* get the length to check           */
                                        /* point to the rounding digit       */
-    HighDigit = (PCHAR)this->number + CurrentDigits;
+    HighDigit = this->number + CurrentDigits;
                                        /* while more decimals               */
     while (HexLength -- && TempPtr <= HighDigit) {
       if (*TempPtr != 0) {             /* non-zero decimal?                 */
@@ -2476,7 +2476,7 @@ RexxString *RexxNumberString::d2xD2c(
       BufferLength = ResultSize + OVERFLOWSPACE;
   }
   Target = new_buffer(BufferLength);   /* set up format buffer              */
-  Scan = (PCHAR)this->number;          /* point to first digit              */
+  Scan = this->number;                 /* point to first digit              */
                                        /* set accumulator pointer           */
   Accumulator = Target->data + BufferLength - 2;
   HighDigit = Accumulator - 1;         /* set initial high position         */
@@ -2508,11 +2508,11 @@ RexxString *RexxNumberString::d2xD2c(
     Scan = Accumulator;                /* point to last digit               */
     while (!*Scan)                     /* handle any borrows                */
       *Scan-- = 0xf;                   /* make digit a 15                   */
-    *Scan = (UCHAR)(*Scan - 1);        /* subtract the 1                    */
+    *Scan = *Scan - 1;                 /* subtract the 1                    */
     Scan = Accumulator;                /* start at first digit again        */
     while (Scan > HighDigit) {         /* invert all the bits               */
                                        /* one digit at a time               */
-      *Scan = (UCHAR)(*Scan ^ (unsigned)0x0f);
+      *Scan = (char)(*Scan ^ (unsigned)0x0f);
       Scan--;                          /* step to next digit                */
     }
   }
@@ -2556,17 +2556,17 @@ RexxString *RexxNumberString::d2xD2c(
 }
 
 int RexxNumberString::ULong(
-     ULONG *  value)                   /* result length                     */
+     size_t*  value)                   /* result length                     */
 /******************************************************************************/
 /* Function:  Convert a valid numberstring to a ULONG value.                  */
 /*   returns TRUE for a sucessfule conversion, FALSE otherwise.               */
 /******************************************************************************/
 {
-  UCHAR *num;
+  const char *num;
   BOOL  carry;
   size_t numlength, numpos;
   long  numexp;
-  ULONG intnum;
+  size_t intnum;
   size_t  NumDigits;
   char  compareChar;
   int   rc;
@@ -2618,10 +2618,10 @@ int RexxNumberString::ULong(
 
      if (numpos >= numlength ) {       /* all of number after the decimanl  */
        numpos = numlength;
-       num = (PUCHAR) this->number;    /* start looking at 1st digit        */
+       num = this->number;             /* start looking at 1st digit        */
      } else
                                        /* set num to 1st digit after decimal*/
-       num = (PUCHAR) this->number + numlength + numexp;
+       num = this->number + numlength + numexp;
 
      for ( ; numpos ; numpos--) {      /* look at all digits for vaility.   */
       if ( *num++ != compareChar)      /* this digit what we're looking for */
@@ -2637,16 +2637,15 @@ int RexxNumberString::ULong(
         *value = 0;                    /* otherwise its a zero.             */
       return TRUE;
      }
-
-     rc = number_create_uinteger((PUCHAR) this->number, numlength + numexp, carry, this->sign, &intnum);
-     if (!rc) {                        /* Is numebr too big ????            */
-      return FALSE;                    /* Yes, return invalid integer....   */
+     // might be too big
+     if (!number_create_uinteger(this->number, numlength + numexp, carry, this->sign, &intnum)) {
+         return FALSE;
      }
     }
     else {                             /* straight out number. just compute.*/
-     rc = number_create_uinteger((PUCHAR) this->number, numlength, carry, this->sign, &intnum);
-     if (!rc) {                        /* Is numebr too big ????            */
-      return FALSE;                    /* Yes, return invalid integer....   */
+     if (!number_create_uinteger(this->number, numlength, carry, this->sign, &intnum))
+     {
+         return FALSE;                 /* Yes, return invalid integer....   */
      }
 
      if (numexp > 0 ) {                /* do we need to add zeros to end?   */

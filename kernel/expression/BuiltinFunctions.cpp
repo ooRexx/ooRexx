@@ -917,7 +917,7 @@ BUILTIN(ERRORTEXT) {
 
   check_args(ERRORTEXT);               /* check on required number of args  */
                                        /* get the error number              */
-  error_number = (required_integer(ERRORTEXT, n))->value;
+  error_number = (required_integer(ERRORTEXT, n))->getValue();
                                        /* outside allowed range?            */
   if (error_number < 0 || error_number > 99)
                                        /* this is an error                  */
@@ -959,7 +959,7 @@ BUILTIN(ARG) {
     result = new_integer(size);
   }
   else if (option == OREF_NULL) {      /* just looking for a specific arg?  */
-    position = n->value;               /* get the integer value             */
+    position = n->getValue();          /* get the integer value             */
                                        /* must be a positive integer        */
     positive_integer(position, ARG, IntegerOne);
                                        /* bigger than argument list size?   */
@@ -976,7 +976,7 @@ BUILTIN(ARG) {
                                        /* this is an error                  */
     report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_ARG), IntegerTwo, new_string("AENO", 4), option);
   else {                               /* need to process an option         */
-    position = n->value;               /* get the integer value             */
+    position = n->getValue();          /* get the integer value             */
                                        /* must be a positive integer        */
     positive_integer(position, ARG, IntegerOne);
 
@@ -1838,7 +1838,7 @@ BUILTIN(SOURCELINE) {
   size = source->sourceSize();         /* get the program size              */
   if (argcount == 1) {                 /* asking for a specific line?       */
                                        /* get the line number               */
-    line_number = required_integer(SOURCELINE, n)->value;
+    line_number = required_integer(SOURCELINE, n)->getValue();
                                        /* must be a positive integer        */
     positive_integer(line_number, SOURCELINE, IntegerOne);
     if (line_number > size)            /* larger than program source?       */
@@ -2336,11 +2336,11 @@ BUILTIN(STREAM) {
 
 
       fOpen = fClose = FALSE;    /* this whole part was reworked and moved up here */
-      if (command_upper->wordPos(new_cstring("OPEN"), OREF_NULL)->value > 0) {
+      if (command_upper->wordPos(new_cstring("OPEN"), OREF_NULL)->getValue() > 0) {
         fOpen = TRUE;
         stream = resolve_stream(name, context, stack, TRUE, &fullName, &added);
       }
-      else if (command_upper->wordPos(new_cstring("CLOSE"), OREF_NULL)->value > 0) {
+      else if (command_upper->wordPos(new_cstring("CLOSE"), OREF_NULL)->getValue() > 0) {
         fClose = TRUE;
         stream = resolve_stream(name, context, stack, TRUE, &fullName, &added);
       }

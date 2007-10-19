@@ -264,7 +264,7 @@ RexxObject  *RexxArray::append(RexxObject *value)
     else
     {
         // the index requires validation
-        newIndex = ((RexxInteger *)lastIndex)->value + 1;
+        newIndex = ((RexxInteger *)lastIndex)->getValue() + 1;
     }
 
     ensureSpace(newIndex);
@@ -594,7 +594,7 @@ size_t  RexxArray::validateIndex(      /* validate an array index           */
                                        /* validate integer index            */
         position = value->requiredPositive(i);
                                        /* get the current dimension         */
-        _dimension = ((RexxInteger *)this->dimensions->get(i))->value;
+        _dimension = ((RexxInteger *)this->dimensions->get(i))->getValue();
         if (position > _dimension) {   /* too large?                        */
                                        /* should the array be extended?     */
           if (bounds_error & ExtendUpper) {
@@ -935,7 +935,7 @@ RexxInteger *RexxArray::hasIndex(RexxObject * _index)
 {
   size_t i;
 
-  if (OTYPE(Integer,_index) && (i = ((RexxInteger *)_index)->value) > 0 && i <= this->size() &&
+  if (OTYPE(Integer,_index) && (i = ((RexxInteger *)_index)->getValue()) > 0 && i <= this->size() &&
       *(this->data()+i-1) != OREF_NULL)
     return (RexxInteger *)TheTrueObject;
   else
@@ -1426,7 +1426,7 @@ RexxObject* RexxArray::indexToArray(size_t idx)
   for (size_t i = dims; i > 0; i--)
   {
       // get the next dimension size
-      size_t _dimension = ((RexxInteger *)this->dimensions->get(i))->value;
+      size_t _dimension = ((RexxInteger *)this->dimensions->get(i))->getValue();
       // now get the remainder.  This tells us the position within this
       // dimension of the array.  Make an integer object and store in the
       // array.
@@ -1555,9 +1555,9 @@ void copyElements(
                                        /* Compute the old dimension num     */
      oldDimension = newDimension - parm->deltaDimSize;
                                        /* Get size for new Dimension        */
-     newDimSize = ((RexxInteger *)parm->newDimArray->get(newDimension))->value;
+     newDimSize = ((RexxInteger *)parm->newDimArray->get(newDimension))->getValue();
                                        /* Get size for old Dimension        */
-     oldDimSize = ((RexxInteger *)parm->oldDimArray->get(oldDimension))->value;
+     oldDimSize = ((RexxInteger *)parm->oldDimArray->get(oldDimension))->getValue();
                                        /* For each subscript at this        */
      for (i= 1; i <= oldDimSize; i++) {/* dimension, (of old size)          */
                                        /* copy elelments.                   */
@@ -1568,7 +1568,7 @@ void copyElements(
                                        /* block of all lower dimensions     */
       for (i = parm->newDimArray->size(), skipAmount = 1;
            i > newDimension;
-           skipAmount *= ((RexxInteger *)parm->newDimArray->get(i))->value, i--);
+           skipAmount *= ((RexxInteger *)parm->newDimArray->get(i))->getValue(), i--);
                                        /* multiple by delta add at this     */
                                        /* dimension.                        */
       skipAmount *= (newDimSize - oldDimSize);
@@ -1653,7 +1653,7 @@ RexxArray *RexxArray::extendMulti(     /* Extend multi array                */
          oldDimension > 0 ;
          oldDimension--, newDimension--) {
                                        /* Get current size of this dimension*/
-      currDimSize = ((RexxInteger *)this->dimensions->get(oldDimension))->value;
+      currDimSize = ((RexxInteger *)this->dimensions->get(oldDimension))->getValue();
                                        /* Get indexd  size of this dimension*/
 
       newDimSize = _index[newDimension - 1]->requiredPositive(newDimension);
@@ -1690,7 +1690,7 @@ RexxArray *RexxArray::extendMulti(     /* Extend multi array                */
          newDimension > 0 ;
          newDimension--) {
                                        /* Get indexd  size of this dimension*/
-      newDimSize = ((RexxInteger *)_index[newDimension - 1])->value;
+      newDimSize = ((RexxInteger *)_index[newDimension - 1])->getValue();
                                        /* set up value for this dimension   */
       newDimArray->put(new_integer(newDimSize), newDimension);
     }
@@ -1730,14 +1730,14 @@ RexxArray *RexxArray::extendMulti(     /* Extend multi array                */
                                        /* to increase.                      */
       for (i = newDimArraySize, accumSize = 1;
            i > firstDimChanged ;
-           accumSize *= ((RexxInteger *)this->dimensions->get(i))->value, i--);
+           accumSize *= ((RexxInteger *)this->dimensions->get(i))->getValue(), i--);
                                        /* Compute lowest largest contig     */
                                        /* chunk that can be copied.         */
-      copyParm.copyElements = accumSize * ((RexxInteger *)this->dimensions->get(firstDimChanged))->value;
+      copyParm.copyElements = accumSize * ((RexxInteger *)this->dimensions->get(firstDimChanged))->getValue();
                                        /* Compute amount need to ship       */
                                        /* to compete expanded dimension     */
-      copyParm.skipElements = accumSize * (((RexxInteger *)newDimArray->get(firstDimChanged))->value -
-                 ((RexxInteger *)this->dimensions->get(firstDimChanged))->value);
+      copyParm.skipElements = accumSize * (((RexxInteger *)newDimArray->get(firstDimChanged))->getValue() -
+                 ((RexxInteger *)this->dimensions->get(firstDimChanged))->getValue());
 
       copyParm.startNew = newArray->data();
       copyParm.startOld = this->data();

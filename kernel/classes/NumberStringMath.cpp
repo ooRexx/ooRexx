@@ -142,7 +142,7 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, U
 }
 
 void RexxNumberStringBase::mathRound(
-    UCHAR *NumPtr)                     /* first digit to round up           */
+    char  *NumPtr)                     /* first digit to round up           */
 /*********************************************************************/
 /* Function:  Adjust a a number string object to correct NUMERIC     */
 /*            DIGITS setting                                         */
@@ -167,7 +167,7 @@ void RexxNumberStringBase::mathRound(
      RoundNum = *NumPtr + carry;       /* Not 9, add 1 (carry) to digit     */
      carry = 0;                        /* no more carry.                    */
     }
-    *NumPtr-- = (UCHAR)RoundNum;       /* Set this digit in data area.      */
+    *NumPtr-- = (char)RoundNum;        /* Set this digit in data area.      */
   }
 
   if (carry ) {                        /* Done will all numbers, do we still*/
@@ -246,9 +246,9 @@ ULONG HighBits(ULONG number)
  return HighBit;                       /* return count.                     */
 }
 
-PUCHAR  RexxNumberStringBase::adjustNumber(
-    UCHAR *NumPtr,                     /* pointer to number data            */
-    UCHAR *result,                     /* result location                   */
+char *RexxNumberStringBase::adjustNumber(
+    char *NumPtr,                      /* pointer to number data            */
+    char  *result,                     /* result location                   */
     size_t resultLen,                  /* result length                     */
     size_t NumberDigits)               /* required digits setting           */
 /*********************************************************************/
@@ -272,11 +272,11 @@ PUCHAR  RexxNumberStringBase::adjustNumber(
  else
                                        /* Copy the data into the result area*/
                                        /*  and pointer to start of data     */
-  return (PUCHAR)(memcpy(((result + resultLen - 1) - this->length), NumPtr, this->length));
+  return (char *)memcpy(((result + resultLen - 1) - this->length), NumPtr, this->length);
 }
 
-PUCHAR RexxNumberStringBase::stripLeadingZeros(
-    UCHAR *AccumPtr)                   /* current accumulator position      */
+char *RexxNumberStringBase::stripLeadingZeros(
+    char *AccumPtr)                    /* current accumulator position      */
 /*********************************************************************/
 /* Function:  Remove all leading zeros from a number                 */
 /*********************************************************************/
@@ -290,60 +290,67 @@ PUCHAR RexxNumberStringBase::stripLeadingZeros(
  return AccumPtr;                      /* return pointer to 1st non-zero    */
 }
 
-void RexxNumberString::adjustPrecision(UCHAR *resultPtr, size_t NumberDigits)
+void RexxNumberString::adjustPrecision(char *resultPtr, size_t NumberDigits)
 /*********************************************************************/
 /* Function:  Adjust the precision of a number to the given digits   */
 /*********************************************************************/
 {
- BOOL  CopyData;
- long resultVal;
-                                       /* resultPtr will either point to    */
-                                       /* the actual result data or be      */
-                                       /* NULL, if the data is already in   */
-                                       /* result obj.                       */
- if (resultPtr == NULL) {              /* Is resultPtr NULL, that is data   */
-                                       /*  already in result object?        */
-  CopyData = FALSE;                    /* Yes, don't copy data.             */
-                                       /* have data pointer point to data in*/
-  resultPtr = this->number;            /* The result object.                */
- }
- else {
-  CopyData = TRUE;                     /* resultPtr not null, need to copy  */
- }
-                                       /* is length of number too big?      */
- if (this->length > NumberDigits) {
-   size_t extra = this->length - NumberDigits;
-   this->length = NumberDigits;        /* Yes, make length equal precision  */
-   this->exp += extra;                 /* adjust exponent by amount over    */
-   this->mathRound(resultPtr);         /* Round the adjusted number         */
- }
+    BOOL  CopyData;
+    long resultVal;
+    /* resultPtr will either point to    */
+    /* the actual result data or be      */
+    /* NULL, if the data is already in   */
+    /* result obj.                       */
+    if (resultPtr == NULL)
+    {              /* Is resultPtr NULL, that is data   */
+                   /*  already in result object?        */
+        CopyData = FALSE;                    /* Yes, don't copy data.             */
+                                             /* have data pointer point to data in*/
+        resultPtr = this->number;            /* The result object.                */
+    }
+    else
+    {
+        CopyData = TRUE;                     /* resultPtr not null, need to copy  */
+    }
+    /* is length of number too big?      */
+    if (this->length > NumberDigits)
+    {
+        size_t extra = this->length - NumberDigits;
+        this->length = NumberDigits;        /* Yes, make length equal precision  */
+        this->exp += extra;                 /* adjust exponent by amount over    */
+        this->mathRound(resultPtr);         /* Round the adjusted number         */
+    }
 
- if (CopyData) {                       /* only remove leading zeros if      */
-                                       /* data note already in the object.  */
-                                       /* remove any leading zeros          */
-   resultPtr = this->stripLeadingZeros(resultPtr);
-                                       /* Move result data into object      */
-   memcpy(this->number, resultPtr, (size_t)this->length);
- }
+    if (CopyData)
+    {                       /* only remove leading zeros if      */
+                            /* data note already in the object.  */
+                            /* remove any leading zeros          */
+        resultPtr = this->stripLeadingZeros(resultPtr);
+        /* Move result data into object      */
+        memcpy(this->number, resultPtr, (size_t)this->length);
+    }
 
- /* make sure this number has the correct numeric settings */
- setNumericSettings(NumberDigits, number_form());
+    /* make sure this number has the correct numeric settings */
+    setNumericSettings(NumberDigits, number_form());
 
- if (!*resultPtr && this->length == 1) /* Was number reduced to zero?       */
-  this->setZero();                     /* Yes, make it so...                */
- else {
+    if (!*resultPtr && this->length == 1) /* Was number reduced to zero?       */
+        this->setZero();                     /* Yes, make it so...                */
+    else
+    {
 
-                                       /* At this point number is all setup,*/
-                                       /*  Check for overflow               */
- resultVal = this->exp + this->length - 1;
- if (resultVal > MAXNUM) {
-   report_exception2(Error_Overflow_expoverflow, new_integer(resultVal), IntegerNine);
- }
- else  if (this->exp < -MAXNUM) {      /*  Check for underflow.             */
-   report_exception2(Error_Overflow_expunderflow, new_integer(this->exp), IntegerNine);
- }
- }
- return;                               /* just return to caller.            */
+        /* At this point number is all setup,*/
+        /*  Check for overflow               */
+        resultVal = this->exp + this->length - 1;
+        if (resultVal > MAXNUM)
+        {
+            report_exception2(Error_Overflow_expoverflow, new_integer(resultVal), IntegerNine);
+        }
+        else if (this->exp < -MAXNUM)
+        {      /*  Check for underflow.             */
+            report_exception2(Error_Overflow_expunderflow, new_integer(this->exp), IntegerNine);
+        }
+    }
+    return;                               /* just return to caller.            */
 }
 
 RexxNumberString *RexxNumberString::prepareNumber(size_t NumberDigits, BOOL rounding)
@@ -384,15 +391,15 @@ RexxNumberString *RexxNumberString::addSub(
 /*********************************************************************/
 {
  RexxNumberString *left, *right, *result, *temp1;
- UCHAR *leftPtr,*rightPtr,*resultPtr;
- UCHAR *resultBuffer = NULL;
+ char  *leftPtr,*rightPtr,*resultPtr;
+ char  *resultBuffer = NULL;
  int   right_sign, carry, addDigit, rc;
  long  LadjustDigits, RadjustDigits;
  long  adjustDigits;
  size_t ResultSize;
  long aLeftExp, aRightExp, rightExp, leftExp, MinExp;
  size_t rightLength, leftLength;
- UCHAR resultBufFast[FASTDIGITS*2+1];  /* for fast allocation if default    */
+ char  resultBufFast[FASTDIGITS*2+1];  /* for fast allocation if default    */
  size_t maxLength = NumberDigits + 1;
 
                                        /* Make copies of the input object   */
@@ -532,14 +539,14 @@ RexxNumberString *RexxNumberString::addSub(
                                        /* our adjusted exponent?            */
      aLeftExp -= adjustDigits;         /* Yes, decrease adj exp             */
                                        /* Right number is now shorter       */
-     rightPtr = (PUCHAR)(rightPtr-adjustDigits);
+     rightPtr = rightPtr-adjustDigits;
      rightExp += adjustDigits;         /* Right exponent adjusted           */
      rightLength -= adjustDigits;      /* update the length to reflect      */
      adjustDigits = 0;                 /* adjustment done.                  */
     }
     else {                             /* decrease by adjusted exp value    */
                                        /* Right number is now shorter       */
-     rightPtr = (PUCHAR)(rightPtr-aLeftExp);
+     rightPtr = rightPtr-aLeftExp;
      rightExp += aLeftExp;             /* Right exponent adjusted           */
      rightLength -= adjustDigits;      /* update the length to reflect      */
      adjustDigits -= aLeftExp;         /* adjustment partially done.        */
@@ -551,14 +558,14 @@ RexxNumberString *RexxNumberString::addSub(
                                        /* our adjusted exponent?            */
      aRightExp -= adjustDigits;        /* Yes, decrease adj exp             */
                                        /* Left  number is now shorter       */
-     leftPtr = (PUCHAR)(leftPtr-adjustDigits);
+     leftPtr = leftPtr-adjustDigits;
      leftExp += adjustDigits;          /* Left  exponent adjusted           */
      leftLength -= adjustDigits;       /* update the length to reflect      */
      adjustDigits = 0;                 /* adjustment done.                  */
     }
     else {                             /* decrease by adjusted exp value    */
                                        /* Right number is now shorter       */
-     leftPtr = (PUCHAR)(leftPtr-aRightExp);
+     leftPtr = leftPtr-aRightExp;
      leftExp += aRightExp;             /* Right exponent adjusted           */
      leftLength -= adjustDigits;       /* update the length to reflect      */
      adjustDigits -= aRightExp;        /* adjustment partially done.        */
@@ -569,15 +576,15 @@ RexxNumberString *RexxNumberString::addSub(
   if (adjustDigits) {                  /* Is there still adjusting needed   */
    leftExp += adjustDigits;            /* So adjust length and exp of each  */
                                        /* bumber by the remaining adjust    */
-   leftPtr = (PUCHAR)(leftPtr-adjustDigits);
+   leftPtr = leftPtr-adjustDigits;
    rightExp += adjustDigits;
-   rightPtr = (PUCHAR)(rightPtr - adjustDigits);
+   rightPtr = rightPtr - adjustDigits;
   }
  }                                     /* Done with adjusting the numbers,  */
  if (NumberDigits <= FASTDIGITS)       /* Get a buffer for the reuslt       */
   resultBuffer = resultBufFast;
  else
-  resultBuffer = (PUCHAR)buffer_alloc(NumberDigits*2 + 1);
+  resultBuffer = buffer_alloc(NumberDigits*2 + 1);
 
                                        /* Have Result Ptr point to end      */
  resultPtr = resultBuffer + NumberDigits*2;
@@ -641,7 +648,7 @@ RexxNumberString *RexxNumberString::addSub(
      else {                            /* not bigger than 10.               */
       carry = 0;                       /* cancel any former carry           */
      }
-     *resultPtr-- = (UCHAR)addDigit;   /* move result into the result       */
+     *resultPtr-- = (char)addDigit;    /* move result into the result       */
      result->length++;                 /* length of result is one more.     */
    }                                   /* go back and do next set of digits */
 
@@ -659,7 +666,7 @@ RexxNumberString *RexxNumberString::addSub(
     else {                             /* not bigger than 10.               */
      carry = 0;                        /* make sure we cancel former carry  */
     }
-    *resultPtr-- = (UCHAR)addDigit;    /* move result into the result       */
+    *resultPtr-- = (char)addDigit;     /* move result into the result       */
     result->length++;                  /* length of result is one more.     */
    }                                   /* all done with left number.        */
 
@@ -674,7 +681,7 @@ RexxNumberString *RexxNumberString::addSub(
     else {                             /* not bigger than 10.               */
      carry = 0;                        /* make sure we cancel former carry  */
     }
-    *resultPtr-- = (UCHAR)addDigit;    /* move result into the result       */
+    *resultPtr-- = (char)addDigit;     /* move result into the result       */
     result->length++;                  /* length of result is one more.     */
    }                                   /* all done with left number.        */
 
@@ -796,13 +803,13 @@ RexxNumberString *RexxNumberString::addSub(
 
 void Subtract_Numbers(
     RexxNumberString *larger,          /* larger numberstring object        */
-    UCHAR            *largerPtr,       /* pointer to last digit in larger   */
+    const char       *largerPtr,       /* pointer to last digit in larger   */
     long              aLargerExp,      /* adjusted exponent of larger       */
     RexxNumberString *smaller,         /* smaller numberstring object       */
-    UCHAR            *smallerPtr,      /* pointer to last digit in smaller  */
+    const char       *smallerPtr,      /* pointer to last digit in smaller  */
     long              aSmallerExp,     /* adjusted exponent of smaller      */
     RexxNumberString *result,          /* result numberstring object        */
-    PUCHAR           *presultPtr)      /* last number in result             */
+    char            **presultPtr)      /* last number in result             */
 /*********************************************************************/
 /* Function:  Subtract two numbers.  The second number is subtracted */
 /*            from the first.  The absolute value of the 1st number  */
@@ -810,7 +817,7 @@ void Subtract_Numbers(
 /*********************************************************************/
 {
  int borrow, subDigit;
- UCHAR *resultPtr;
+ char *resultPtr;
 
  resultPtr = *presultPtr;              /* since we need to update value of  */
                                        /* resultPtr and return value to     */
@@ -856,7 +863,7 @@ void Subtract_Numbers(
     else
      borrow = -1;                      /* nope, result digit ok, and we     */
                                        /* need to borrow.                   */
-    *resultPtr-- = (UCHAR) subDigit;   /* place this digit in result number */
+    *resultPtr-- = (char)subDigit;     /* place this digit in result number */
     result->length++;                  /* length of result is now one more. */
   }
 
@@ -900,7 +907,7 @@ void Subtract_Numbers(
     else {                             /* not less than 0                   */
      borrow = 0;                       /* make sure we cancel former borrow */
     }
-    *resultPtr-- = (UCHAR)subDigit;    /* move result into result object.   */
+    *resultPtr-- = (char)subDigit;     /* move result into result object.   */
     result->length++;                  /* length of result is one more.     */
   }                                    /* go back and do next set of digits */
 
@@ -917,7 +924,7 @@ void Subtract_Numbers(
     else {                             /* not bigger than 10.               */
      borrow = 0;                       /* make sure we cancel former carry  */
     }
-    *resultPtr-- = (UCHAR)subDigit;    /* move result into result object.   */
+    *resultPtr-- = (char)subDigit;     /* move result into result object.   */
     result->length++;                  /* length of result is one more.     */
   }                                    /* all done with larger number.      */
 
@@ -925,10 +932,10 @@ void Subtract_Numbers(
  return;
 }
 
-PCHAR AddToBaseSixteen(
+char *AddToBaseSixteen(
   INT      Digit,                      /* digit to add                      */
-  PCHAR    Value,                      /* number to add                     */
-  PCHAR    HighDigit )                 /* highest digit location            */
+  char    *Value,                      /* number to add                     */
+  char    *HighDigit )                 /* highest digit location            */
 /*********************************************************************/
 /*   Function:          Adds a base ten digit to string number in    */
 /*                      base 16 (used by the d2x and d2c functions)  */
@@ -938,11 +945,11 @@ PCHAR AddToBaseSixteen(
     Digit += *Value;                   /* add in current number             */
     if (Digit > 15) {                  /* carry?                            */
       Digit -= 16;                     /* reduce digit                      */
-      *Value-- = (CHAR)Digit;          /* set digit and step pointer        */
+      *Value-- = (char)Digit;          /* set digit and step pointer        */
       Digit = 1;                       /* just a carry digit now            */
     }
     else {
-      *Value-- = (CHAR)Digit;          /* set the digit                     */
+      *Value-- = (char)Digit;          /* set the digit                     */
       Digit = 0;                       /* no more carry                     */
     }
   }
@@ -952,9 +959,9 @@ PCHAR AddToBaseSixteen(
     return HighDigit;                  /* return the old one                */
 }
 
-PCHAR MultiplyBaseSixteen(
-  PCHAR      Accum,                    /* number to multiply                */
-  PCHAR      HighDigit )               /* current high water mark           */
+char *MultiplyBaseSixteen(
+  char *     Accum,                    /* number to multiply                */
+  char *     HighDigit )               /* current high water mark           */
 /*********************************************************************/
 /*   Function:          multiplies a base 16 number by 10, placing   */
 /*                      the result in the same buffer.               */
@@ -962,7 +969,7 @@ PCHAR MultiplyBaseSixteen(
 {
   INT        Carry;                    /* multiplication carry              */
   UINT       Digit;                    /* current digit                     */
-  PCHAR      OutPtr;                   /* output pointer                    */
+  char *     OutPtr;                   /* output pointer                    */
 
   OutPtr = Accum;                      /* point to first digit              */
   Carry = 0;                           /* no carry yet                      */
@@ -975,17 +982,17 @@ PCHAR MultiplyBaseSixteen(
     }
     else                               /* no carry here                     */
       Carry = 0;                       /* no carry                          */
-    *OutPtr-- = (UCHAR)Digit;          /* set the digit                     */
+    *OutPtr-- = (char)Digit;           /* set the digit                     */
   }
   if (Carry)                           /* carried out?                      */
-    *OutPtr-- = (UCHAR)Carry;          /* set the carry pointer             */
+    *OutPtr-- = (char)Carry;           /* set the carry pointer             */
   return OutPtr;                       /* return new high water mark        */
 }
 
-PCHAR AddToBaseTen(
+char *AddToBaseTen(
   INT      Digit,                      /* digit to add                      */
-  PCHAR    Accum,                      /* number to add                     */
-  PCHAR    HighDigit )                 /* highest digit location            */
+  char    *Accum,                      /* number to add                     */
+  char    *HighDigit )                 /* highest digit location            */
 /*********************************************************************/
 /*   Function:          Adds a base sixteen digit to a string number */
 /*                      base 10 (used by the d2x and d2c functions)  */
@@ -999,10 +1006,10 @@ PCHAR AddToBaseTen(
     if (Digit > 9) {                   /* carry?                            */
       Carry = Digit / 10;              /* get the carry out                 */
       Digit %= 10;                     /* reduce digit                      */
-      *Accum-- = (UCHAR)Digit;         /* set digit and step pointer        */
+      *Accum-- = (char)Digit;          /* set digit and step pointer        */
     }
     else {
-      *Accum-- = (UCHAR)Digit;         /* set the digit                     */
+      *Accum-- = (char)Digit;          /* set the digit                     */
       Carry = 0;                       /* no more carry                     */
     }
     Digit = 0;                         /* no addition after first           */
@@ -1013,16 +1020,16 @@ PCHAR AddToBaseTen(
     return HighDigit;                  /* return the old one                */
 }
 
-PCHAR MultiplyBaseTen(
-  PCHAR      Accum,                    /* number to multiply                */
-  PCHAR      HighDigit )               /* current high water mark           */
+char * MultiplyBaseTen(
+  char *      Accum,                    /* number to multiply                */
+  char *      HighDigit )               /* current high water mark           */
 
 /*********************************************************************/
 /*   Function:          multiplies a base 16 number by 10, placing   */
 /*                      the number in a different buffer.            */
 /*********************************************************************/
 {
-  PCHAR      OutPtr;                   /* addition pointer                  */
+  char *      OutPtr;                   /* addition pointer                  */
   INT        Carry;                    /* multiplication carry              */
   UINT       Digit;                    /* current digit                     */
 
@@ -1038,12 +1045,12 @@ PCHAR MultiplyBaseTen(
     }
     else                               /* no carry here                     */
       Carry = 0;                       /* no carry                          */
-    *OutPtr-- = (UCHAR)Digit;          /* set the digit                     */
+    *OutPtr-- = (char)Digit;           /* set the digit                     */
   }
   while (Carry) {                      /* carried out?                      */
     Digit = Carry % 10;                /* get first carry digit             */
     Carry = Carry / 10;                /* get the next digit                */
-    *OutPtr-- = (UCHAR)Digit;          /* set the digit                     */
+    *OutPtr-- = (char)Digit;           /* set the digit                     */
   }
   return OutPtr;                       /* return new high water mark        */
 }

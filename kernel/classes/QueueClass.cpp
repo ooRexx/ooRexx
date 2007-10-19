@@ -121,7 +121,7 @@ LISTENTRY *RexxQueue::locateEntry(RexxObject *index, RexxObject *position)
         report_exception1(Error_Incorrect_method_queue_index, index);
     }
     // and positive
-    wholenumber_t item_index = integerIndex->value;
+    wholenumber_t item_index = integerIndex->wholeNumber();
     if (item_index < 1)
     {
         report_exception1(Error_Incorrect_method_queue_index, index);

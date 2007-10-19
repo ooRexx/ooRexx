@@ -383,16 +383,7 @@
 #define  BUILTIN_LOWER             BUILTIN_USERID           + 1
 #define  BUILTIN_UPPER             BUILTIN_LOWER            + 1
 
-typedef struct _KWDTABLE {             /* keyword table entries             */
-    PCHAR  name;                       /* keyword name                      */
-    size_t length;                     /* keyword name length               */
-    INT    keyword_code;               /* translated keyword code           */
-} KWDTABLE;
 
-typedef KWDTABLE *PKWDTABLE;           /* pointer to a keyword table entry  */
-                                       /* size of keyword table             */
-#define KWDTABLESIZE(table) (sizeof(table)/sizeof(KWDTABLE))
-#define KWD(s, d)           (PCHAR)s, (sizeof(s) - 1), d,
 
 class RexxToken : public RexxInternalObject {
  public:

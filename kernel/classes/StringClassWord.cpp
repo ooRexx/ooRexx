@@ -51,8 +51,6 @@
 #include "ASCIIDBCSStrings.hpp"
 #include "RexxBuiltinFunctions.h"                     /* Gneral purpose BIF Header file    */
 
-extern INT  lookup[];
-                                       /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
 
 /*********************************************************************/

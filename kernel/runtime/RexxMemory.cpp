@@ -1615,8 +1615,8 @@ RexxObject *RexxMemory::gutCheck(void)
     } else {
                                        /* now make sure both refCounts are  */
                                        /* the same.                         */
-       count = value->value;
-       testcount = testValue->value;
+       count = value->getValue();
+       testcount = testValue->getValue();
        if (count != testcount) {
          printf("object:  %p,  type:  %d, has an incorrect refcount.\n",
                  index, index->behaviour->typenum());
@@ -1743,7 +1743,7 @@ RexxObject *RexxMemory::setOref(void *oldValue, RexxObject *value)
         refcount->decrementValue();
                                        /* if the new value is 0, *index is  */
                                        /*no longer ref'ed from oldspace     */
-        if (refcount->value == 0) {
+        if (refcount->getValue() == 0) {
                                        /* delete the entry for *index       */
           this->old2new->remove(index);
         }

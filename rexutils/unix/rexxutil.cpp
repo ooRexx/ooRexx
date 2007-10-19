@@ -408,7 +408,7 @@ extern RexxMutex rexxutil_call_sem;
 
 #if defined(AIX) || defined(LINUX)
 #define RETVAL(retc) { \
-  _ltoa((long)retc, retstr->strptr,10); \
+  sprintf(retstr->strptr, "%d", retc); \
   retstr->strlength = strlen(retstr->strptr); \
   return VALID_ROUTINE; \
 }

@@ -62,6 +62,24 @@
 #define reclaim_possible 0x00000020    /* can re-establish source connect   */
 #define no_clause        0x00000040    /* last clause of a block reached    */
 
+
+/**
+ * A class for intializing the keyword tables.
+ */
+class KeywordEntry {
+public:
+    inline KeywordEntry(const char *n, int code)
+    {
+        name = n;
+        length = strlen(name);
+        keyword_code = code;
+    }
+
+    const char *name;                  /* keyword name                      */
+    size_t length;                     /* keyword name length               */
+    int    keyword_code;               /* translated keyword code           */
+};
+
 class RexxSource : public RexxInternalObject {
  public:
   void       *operator new(size_t);
@@ -79,6 +97,7 @@ class RexxSource : public RexxInternalObject {
   void        needVariable(RexxToken *);
   void        needVariableOrDotSymbol(RexxToken *);
   BOOL        terminator(int, RexxObject *);
+  int         resolveKeyword(RexxString *token, KeywordEntry *Table, int Table_Size);
   int         subKeyword(RexxToken *);
   int         keyword(RexxToken *);
   int         builtin(RexxToken *);
@@ -263,6 +282,16 @@ class RexxSource : public RexxInternalObject {
   void        removeObj(RexxObject *object) { if (object != OREF_NULL) this->savelist->remove(object); };
   void        setSecurityManager(RexxObject *manager) { OrefSet(this, this->securityManager, manager); }
 
+  static inline bool isSymbolCharacter(char ch)
+  {
+      return characterTable[(unsigned int)ch] != 0;
+  }
+
+  static inline int translateChar(char ch)
+  {
+      return characterTable[(unsigned int)ch];
+  }
+
   LONG  flags;                         /* parsing flags                     */
   RexxArray  *sourceArray;             /* source lines for this code        */
   RexxString *programName;             /* name of the source program        */
@@ -316,5 +345,22 @@ class RexxSource : public RexxInternalObject {
   size_t           currentstack;       /* current expression stack depth    */
   size_t           maxstack;           /* maximum stack depth               */
   size_t           variableindex;      /* current variable index slot       */
+
+
+
+
+protected:
+
+    // Tables of different keywords using in various contexts.
+    static KeywordEntry directives[];
+    static KeywordEntry keywordInstructions[];
+    static KeywordEntry subKeywords[];
+    static KeywordEntry builtinFunctions[];
+    static KeywordEntry conditionKeywords[];
+    static KeywordEntry parseOptions[];
+    static KeywordEntry subDirectives[];
+
+    // table of character values
+    static int characterTable[];
 };
 #endif

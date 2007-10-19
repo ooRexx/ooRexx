@@ -194,7 +194,7 @@ LISTENTRY * RexxList::getEntry(
                                        /* raise an exception                */
     report_exception1(Error_Incorrect_method_index, index);
                                        /* get the binary value              */
-  item_index = integer_index->value;
+  item_index = integer_index->getValue();
   if (item_index < 0)                  /* not a valid index?                */
                                        /* raise an exception                */
     report_exception1(Error_Incorrect_method_index, index);

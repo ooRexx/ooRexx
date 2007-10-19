@@ -1319,7 +1319,7 @@ RexxClass  *RexxClass::external(
   RexxObject *classServer;             /* workplace server object           */
 
                                        /* See how many words are in string  */
-  words = externalString->words()->value;
+  words = externalString->words()->getValue();
   if (words > 2) {                     /* More than 2 words in string?      */
                                        /* This is an Error.                 */
     report_exception(Error_Translation_class_external_bad_parameters);

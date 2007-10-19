@@ -427,6 +427,7 @@ instructions_sources  = $(instructions_dir)/AddressInstruction.cpp \
                         $(instructions_dir)/UseInstruction.cpp \
                         $(instructions_dir)/UseStrictInstruction.cpp
 parser_sources = $(parser_dir)/Clause.cpp \
+                 $(parser_dir)/KeywordConstants.cpp \
                  $(parser_dir)/InstructionParser.cpp \
                  $(parser_dir)/Scanner.cpp \
                  $(parser_dir)/SourceFile.cpp \
@@ -469,7 +470,6 @@ runtime_sources  = $(runtime_dir)/DeadObject.cpp \
                    $(runtime_dir)/RexxCompoundElement.cpp \
                    $(runtime_dir)/RexxCompoundTable.cpp \
                    $(runtime_dir)/RexxCompoundTail.cpp \
-                   $(runtime_dir)/RexxConstants.cpp \
                    $(runtime_dir)/RexxDateTime.cpp \
                    $(runtime_dir)/RexxEnvelope.cpp \
                    $(runtime_dir)/RexxHashTable.cpp \

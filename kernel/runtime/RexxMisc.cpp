@@ -387,10 +387,10 @@ RexxObject *RexxLocal::runProgram(
 /* Function:  Bootstrap the process of running a REXX program                 */
 /******************************************************************************/
 {
-  PVOID    argument_block;             /* system dependent argument block   */
+  void *   argument_block;             /* system dependent argument block   */
 
                                        /* get the argument pointer          */
-  argument_block = (PVOID)arguments->value;
+  argument_block = (void *)arguments->getValue();
   SysRunProgram(argument_block);       /* go run the program                */
   return OREF_NULL;                    /* always returns null               */
 }

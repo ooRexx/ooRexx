@@ -102,16 +102,16 @@ RexxObject *RexxDirectory::copy()
 /* Function:  Copy a directory                                                */
 /******************************************************************************/
 {
-  RexxDirectory *newObject;            /* new directory copy                */
+  RexxDirectory *newObj;               /* new directory copy                */
 
                                        /* copy object via Collection copy   */
-  newObject = (RexxDirectory *)this->RexxHashTableCollection::copy();
+  newObj = (RexxDirectory *)this->RexxHashTableCollection::copy();
                                        /* No specifics for Directory.       */
   if (this->method_table != OREF_NULL) {
                                        /* copy it too                       */
-    OrefSet(newObject, newObject->method_table, (RexxTable *)this->method_table->copy());
+    OrefSet(newObj, newObj->method_table, (RexxTable *)this->method_table->copy());
   }
-  return newObject;                    /* return the copy                   */
+  return newObj;                       /* return the copy                   */
 }
 
 RexxObject *RexxDirectory::entry(
@@ -165,33 +165,30 @@ RexxSupplier *RexxDirectory::supplier(void)
   RexxTable  *result;                  /* Constructed results table         */
   RexxTable  *methodTable;             /* constructed method table          */
   RexxHashTable *hashTab;              /* contents hash table               */
-  RexxString *name;                    /* table index                       */
-  RexxMethod *method;                  /* method to run                     */
-  RexxObject *value;                   /* method run value                  */
-  LONG    index;                       /* table index                       */
+  HashLink   i;                        /* table index                       */
 
   result = new_table();                /* get a table for the supplier      */
   save(result);                        /* protect this                      */
   hashTab = this->contents;            /* point to the contents             */
                                        /* now traverse the entire table     */
-  for (index = hashTab->first(); hashTab->index(index) != OREF_NULL; index = hashTab->next(index)) {
+  for (i = hashTab->first(); hashTab->index(i) != OREF_NULL; i = hashTab->next(i)) {
                                        /* get the directory index           */
-    name = (RexxString *)hashTab->index(index);
+    RexxString *name = (RexxString *)hashTab->index(i);
                                        /* add to the table                  */
-    result->put(hashTab->value(index), name);
+    result->put(hashTab->value(i), name);
   }
                                        /* have a method table?              */
   if (this->method_table != OREF_NULL) {
     methodTable = this->method_table;
                                        /* need to extract method values     */
-    for (index = methodTable->first(); methodTable->available(index); index = methodTable->next(index)) {
+    for (i = methodTable->first(); methodTable->available(i); i = methodTable->next(i)) {
                                        /* get the directory index           */
-      name = (RexxString *)methodTable->index(index);
+      RexxString *name = (RexxString *)methodTable->index(i);
                                        /* get the method                    */
-      method = (RexxMethod *)methodTable->value(index);
+      RexxMethod *method = (RexxMethod *)methodTable->value(i);
                                        /* run the method                    */
-      value = method->run(CurrentActivity, this, name, 0, NULL);
-      result->put(value, name);        /* add to the table                  */
+      RexxObject *v = method->run(CurrentActivity, this, name, 0, NULL);
+      result->put(v, name);            /* add to the table                  */
     }
   }
   discard_hold(result);                /* unlock the result                 */
@@ -231,24 +228,24 @@ RexxArray *RexxDirectory::allIndexes(void)
     wholenumber_t count = this->items();
     RexxArray *result = (RexxArray *)new_array(count);
     save(result);
-    arraysize_t i = 1;
+    arraysize_t out = 1;
     // we're working directly off of the contents.
     RexxHashTable *hashTab = this->contents;
 
     // traverse the entire table coping over the items.
-    for (HashLink index = hashTab->first(); hashTab->index(index) != OREF_NULL; index = hashTab->next(index))
+    for (HashLink i = hashTab->first(); hashTab->index(i) != OREF_NULL; i = hashTab->next(i))
     {
-        RexxString *name = (RexxString *)hashTab->index(index);
-        result->put(name, i++);
+        RexxString *name = (RexxString *)hashTab->index(i);
+        result->put(name, out++);
     }
     // if e hae amethod table, we need to copy those indices also
     if (this->method_table != OREF_NULL)
     {
         RexxTable *methodTable = this->method_table;
-        for (HashLink index = methodTable->first(); methodTable->available(index); index = methodTable->next(index))
+        for (HashLink i = methodTable->first(); methodTable->available(i); i = methodTable->next(i))
         {
-           RexxString *name = (RexxString *)methodTable->index(index);
-           result->put(name, i++);
+           RexxString *name = (RexxString *)methodTable->index(i);
+           result->put(name, out++);
         }
     }
     discard_hold(result);
@@ -261,15 +258,12 @@ RexxArray *RexxDirectory::allItems()
 /*            values of all the SETMETHOD methods                             */
 /******************************************************************************/
 {
-  LONG    count;                       /* count of items in the directory   */
-  LONG    i;                           /* loop counter                      */
-  LONG    index;                       /* table index                       */
+  size_t  count;                       /* count of items in the directory   */
+  size_t  i;                           /* loop counter                      */
   RexxArray *result;                   /* returned result                   */
   RexxHashTable *hashTab;              /* contents hash table               */
   RexxTable *methodTable;              /* contents method table             */
   RexxString *name;                    /* table index                       */
-  RexxMethod *method;                  /* method to run                     */
-  RexxObject *value;                   /* value added                       */
 
                                        /* return the count as an object     */
   count = this->items();               /* get the array size                */
@@ -279,24 +273,24 @@ RexxArray *RexxDirectory::allItems()
   i = 1;                               /* position in array                 */
   hashTab = this->contents;
                                        /* now traverse the entire table     */
-  for (index = hashTab->first(); hashTab->index(index) != OREF_NULL; index = hashTab->next(index)) {
+  for (HashLink j = hashTab->first(); hashTab->index(j) != OREF_NULL; j = hashTab->next(j)) {
                                        /* get the directory index           */
-    name = (RexxString *)hashTab->index(index);
+    name = (RexxString *)hashTab->index(j);
                                        /* add to the array                  */
-    result->put(hashTab->value(index), i++);
+    result->put(hashTab->value(j), i++);
   }
                                        /* have a method table?              */
   if (this->method_table != OREF_NULL) {
     methodTable = this->method_table;  /* grab the table                    */
                                        /* need to extract method values     */
-    for (index = methodTable->first(); methodTable->available(index); index = methodTable->next(index)) {
+    for (HashLink j = methodTable->first(); methodTable->available(j); j = methodTable->next(j)) {
                                        /* get the directory index           */
-      name = (RexxString *)methodTable->index(index);
+      name = (RexxString *)methodTable->index(j);
                                        /* need to extract method values     */
-      method = (RexxMethod *)methodTable->value(index);
+      RexxMethod *method = (RexxMethod *)methodTable->value(j);
                                        /* run the method                    */
-      value = method->run(CurrentActivity, this, name, 0, NULL);
-      result->put(name, i++);          /* add to the array                  */
+      RexxObject *v = method->run(CurrentActivity, this, name, 0, NULL);
+      result->put(v, i++);             /* add to the array                  */
     }
   }
   discard_hold(result);                /* unlock the result                 */
@@ -410,13 +404,13 @@ RexxObject *RexxDirectory::remove(
 /* Function:  Remove an entry from a directory.                               */
 /******************************************************************************/
 {
-  RexxObject *value;                   /* returned value                    */
+  RexxObject *oldVal;                  /* returned value                    */
 
                                        /* get as a string parameter         */
   entryname = REQUIRED_STRING(entryname, ARG_ONE);
-  value = this->at(entryname);         /* go get the directory value        */
-  if (value == OREF_NULL)              /* nothing to return?                */
-    value = TheNilObject;              /* return TheNilObject as a default  */
+  oldVal = this->at(entryname);        /* go get the directory value        */
+  if (oldVal == OREF_NULL)             /* nothing to return?                */
+    oldVal = TheNilObject;             /* return TheNilObject as a default  */
                                        /* have a real entry?                */
   if (this->contents->stringGet(entryname) != OREF_NULL)
     this->contents->remove(entryname); /* remove the entry                  */
@@ -427,7 +421,7 @@ RexxObject *RexxDirectory::remove(
                                        /* remove this method                */
       this->method_table->remove(entryname->upper());
 //  }
-  return value;                        /* return the directory value        */
+  return oldVal;                       /* return the directory value        */
 }
 
 RexxObject *RexxDirectory::unknown(
@@ -520,18 +514,18 @@ RexxObject *RexxDirectory::setMethod(
 }
 
 RexxObject *RexxDirectory::mergeItem(
-    RexxObject *value,                 /* value to add                      */
-    RexxObject *index)                 /* index to use                      */
+    RexxObject *_value,                /* value to add                      */
+    RexxObject *_index)                /* index to use                      */
 /******************************************************************************/
 /* Function:  Merge a single item during merge processing                     */
 /******************************************************************************/
 {
                                        /* just add the item                 */
-  return this->put(value, (RexxString *)index);
+  return this->put(_value, (RexxString *)_index);
 }
 
 RexxObject *RexxDirectory::at(
-    RexxString *index)                 /* index to retrieve                 */
+    RexxString *_index)                /* index to retrieve                 */
 /******************************************************************************/
 /* Function:  Retrieve an item from a directory                               */
 /******************************************************************************/
@@ -540,26 +534,29 @@ RexxObject *RexxDirectory::at(
   RexxMethod *method;                  /* method to run                     */
 
                                        /* try to retrieve the value         */
-  result = this->contents->stringGet(index);
+  result = this->contents->stringGet(_index);
   if (result == OREF_NULL) {           /* no value?                         */
                                        /* have a table?                     */
     if (this->method_table != OREF_NULL) {
                                        /* look for a method                 */
-      method = (RexxMethod *)this->method_table->stringGet(index);
+      method = (RexxMethod *)this->method_table->stringGet(_index);
       if (method != OREF_NULL)         /* have a method?                    */
                                        /* run the method                    */
-        return method->run(CurrentActivity, this, index, 0, NULL);
+        return method->run(CurrentActivity, this, _index, 0, NULL);
     }
                                        /* got an unknown method?            */
     if (this->unknown_method != OREF_NULL)
+    {
+        RexxObject *arg = _index;
                                        /* run it                            */
-      return this->unknown_method->run(CurrentActivity, this, OREF_UNKNOWN, 1, (RexxObject **)&index);
+        return this->unknown_method->run(CurrentActivity, this, OREF_UNKNOWN, 1, (RexxObject **)&arg);
+    }
   }
   return result;                       /* return a result                   */
 }
 
 RexxObject *RexxDirectory::atRexx(
-    RexxString *index)                 /* index to retrieve                 */
+    RexxString *_index)                 /* index to retrieve                 */
 /******************************************************************************/
 /* Function:     This is the REXX version of at.  It issues a                 */
 /*               STRINGREQUEST message to the index parameter if it isn't     */
@@ -570,19 +567,19 @@ RexxObject *RexxDirectory::atRexx(
   RexxObject *temp;                    /* Temporary holder for return value */
 
                                        /* get as a string parameter         */
-  index = REQUIRED_STRING(index, ARG_ONE);
+  _index = REQUIRED_STRING(_index, ARG_ONE);
   // is this the .local object?
   if ((RexxDirectory *)(CurrentActivity->local) == this &&
       CurrentActivity->currentActivation->hasSecurityManager()) {
     RexxDirectory *securityArgs;       /* security check arguments          */
     securityArgs = new_directory();
-    securityArgs->put(index, OREF_NAME);
+    securityArgs->put(_index, OREF_NAME);
     securityArgs->put(TheNilObject, OREF_RESULT);
     if (CurrentActivity->currentActivation->callSecurityManager(OREF_LOCAL, securityArgs))
                                        /* get the result and return         */
       return securityArgs->fastAt(OREF_RESULT);
   }
-  temp = this->at(index);              /* run real AT                       */
+  temp = this->at(_index);             /* run real AT                       */
                                        /* if we found nothing or the method */
   if (temp == OREF_NULL)               /* we ran returned nothing           */
     temp = TheNilObject;               /* return TheNilObject as a default  */
@@ -590,8 +587,8 @@ RexxObject *RexxDirectory::atRexx(
 }
 
 RexxObject *RexxDirectory::put(
-    RexxObject *value,                 /* value to add                      */
-    RexxString *index)                 /* string index of the value         */
+    RexxObject *_value,                /* value to add                      */
+    RexxString *_index)                /* string index of the value         */
 /******************************************************************************/
 /* Function:  Add an item to a directory                                      */
 /******************************************************************************/
@@ -599,11 +596,11 @@ RexxObject *RexxDirectory::put(
   RexxHashTable *newHash;              /* newly created hash table          */
 
                                        /* get as a string parameter         */
-  index = REQUIRED_STRING(index, ARG_TWO);
+  _index = REQUIRED_STRING(_index, ARG_TWO);
   if (this->method_table != OREF_NULL) /* have a table?                     */
-    this->method_table->remove(index); /* remove any method                 */
+    this->method_table->remove(_index);/* remove any method                 */
                                        /* try to place in existing hashtab  */
-  newHash = this->contents->stringPut(value, index);
+  newHash = this->contents->stringPut(_value, _index);
   if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
                                        /* hook on the new hash table        */
     OrefSet(this, this->contents, newHash);
@@ -673,14 +670,14 @@ RexxObject *RexxDirectory::indexRexx(RexxObject *target)
         {
             RexxTable *methodTable = this->method_table;
 
-            for (HashLink index = methodTable->first(); methodTable->available(index); index = methodTable->next(index))
+            for (HashLink i = methodTable->first(); methodTable->available(i); i = methodTable->next(i))
             {
                 // we need to run each method, looking for a value that matches
-                RexxString *name = (RexxString *)methodTable->index(index);
-                RexxMethod *method = (RexxMethod *)methodTable->value(index);
-                RexxObject *value = method->run(CurrentActivity, this, name, 0, NULL);
+                RexxString *name = (RexxString *)methodTable->index(i);
+                RexxMethod *method = (RexxMethod *)methodTable->value(i);
+                RexxObject *v = method->run(CurrentActivity, this, name, 0, NULL);
                 // got a match?
-                if (target->equalValue(value))
+                if (target->equalValue(v))
                 {
                     return name;    // the name is the index
                 }
@@ -718,11 +715,11 @@ RexxObject *RexxDirectory::removeItem(RexxObject *target)
 {
     required_arg(target, ONE);
     // the lookup is more complicated, so just delegate to the index lookup code.
-    RexxObject *index = indexRexx(target);
+    RexxObject *i = indexRexx(target);
     // just use the retrieved index to remove.
-    if (index != TheNilObject)
+    if (i != TheNilObject)
     {
-        return remove((RexxString *)index);
+        return remove((RexxString *)i);
     }
     return TheNilObject;     // nothing removed.
 }
@@ -757,16 +754,16 @@ RexxDirectory *RexxMemory::newDirectory()
 /* Create a new directory item                                                */
 /******************************************************************************/
 {
-  RexxDirectory *newDirectory;         /* new directory object              */
+  RexxDirectory *newObj;               /* new directory object              */
 
                                        /* get a new object and hash         */
-  newDirectory = (RexxDirectory *)new_hashCollection(DEFAULT_HASH_SIZE, sizeof(RexxDirectory));
+  newObj = (RexxDirectory *)new_hashCollection(DEFAULT_HASH_SIZE, sizeof(RexxDirectory));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newDirectory, TheDirectoryBehaviour);
+  BehaviourSet(newObj, TheDirectoryBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newDirectory, T_directory);
+  setVirtualFunctions(newObj, T_directory);
                                        /* set the hash value                */
-  newDirectory->hashvalue = HASHOREF(newDirectory);
-  return newDirectory;                 /* return the new directory          */
+  newObj->hashvalue = HASHOREF(newObj);
+  return newObj;                       /* return the new directory          */
 }
 

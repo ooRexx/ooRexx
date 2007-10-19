@@ -116,7 +116,7 @@ class RexxSupplier;
 //  BOOL        sort(INT order, INT type, size_t start, size_t end, size_t firstcol, size_t lastcol);
   BOOL        sort(RexxString *prefix, INT order, INT type, size_t start, size_t end, size_t firstcol, size_t lastcol);
 
-  inline BOOL compoundVariableExists(RexxCompoundTail *resolved_tail) { return realCompoundVariableValue(resolved_tail) != OREF_NULL; }
+  inline bool compoundVariableExists(RexxCompoundTail *resolved_tail) { return realCompoundVariableValue(resolved_tail) != OREF_NULL; }
   inline RexxString *getName() { return u_name; }
   inline RexxCompoundElement *first() { return tails.first(); }
   inline RexxString *createCompoundName(RexxCompoundTail *tailPart) { return tailPart->createCompoundName(u_name); }

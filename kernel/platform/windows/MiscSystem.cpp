@@ -180,7 +180,7 @@ PFN SysLoadProcedure(
 
   Name = Procedure->getStringData();   /* use the ASCII-Z form of this      */
                                        /* get the module handle             */
-  Handle = (HMODULE)LibraryHandle->value;
+  Handle = (HMODULE)LibraryHandle->getValue();
                                        /* try to get the function address   */
   if ( !(Function =(PFN)GetProcAddress(Handle, Name)) )
                                        /* report an exception               */

@@ -3678,7 +3678,7 @@ void process_message_result(
       case 'V':                        /* VOID *?                           */
       case 'R':                        /* RXSTRING *                        */
                                        /* get the pointer value             */
-          (*((PVOID *)return_pointer)) = (void *)((RexxInteger *)object_id)->value;
+          (*((PVOID *)return_pointer)) = (void *)((RexxInteger *)object_id)->getValue();
         break;
 
       case 'v':                        /* nothing returned at all           */

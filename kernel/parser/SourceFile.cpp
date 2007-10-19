@@ -3380,39 +3380,29 @@ RexxCompoundVariable *RexxSource::addCompound(
   const char *          start;         /* starting scan position            */
   size_t                length;        /* length of tail section            */
   const char *          position;      /* current position                  */
-  const char *          end;           // the end scanning position
   size_t                tailCount;     /* count of tails in compound        */
 
   length = name->getLength();          /* get the string length             */
   position = name->getStringData();    /* start scanning at first character */
   start = position;                    /* save the starting point           */
-  end = position + length;             // save our end marker
 
-  // we know this is a compound, so there must be at least one period.
   while (*position != '.') {           /* scan to the first period          */
     position++;                        /* step to the next character        */
+    length--;                          /* reduce the length also            */
   }
                                        /* get the stem string               */
   stem = new_string(start, position - start + 1);
   stemRetriever = this->addStem(stem); /* get a retriever item for this     */
 
   tailCount = 0;                       /* no tails yet                      */
-  do                                   /* process rest of the variable      */
-  {
-    // we're here because we just saw a previous period.  that's either the
-    // stem variable period or the last tail element we processed.
-    // either way, we step past it.  If this period is a trailing one,
-    // we'll add a null tail element, which is exactly what we want.
-    position++;                          /* step past previous period         */
+  position++;                          /* step past previous period         */
+  length--;                            /* adjust the length                 */
+  while (length > 0) {                 /* process rest of the variable      */
     start = position;                  /* save the start position           */
                                        /* scan for the next period          */
-    while (position < end)
-    {
-        if (*position == '.')          // found the next one?
-        {
-           break;                      // stop scanning now
-        }
-        position++;                    // continue looking
+    while (length > 0 && *position != '.') {
+      position++;                      /* step to the next character        */
+      length--;                        /* reduce the length also            */
     }
                                        /* extract the tail piece            */
     tail = new_string(start, position - start);
@@ -3425,7 +3415,14 @@ RexxCompoundVariable *RexxSource::addCompound(
                                        /* just use the string value directly*/
       this->subTerms->push(this->commonString(tail));
     tailCount++;                       /* up the tail count                 */
-  } while (position < end);
+    position++;                        /* step past previous period         */
+    length--;                          /* adjust the length                 */
+  }
+  if (*(position - 1) == '.') {        /* have a trailing period?           */
+                                       /* add to the tail piece list        */
+    this->subTerms->push(OREF_NULLSTRING);
+    tailCount++;                       /* up the tail count                 */
+  }
                                        /* finally, create the compound var  */
   return new (tailCount) RexxCompoundVariable(stem, stemRetriever->index, this->subTerms, tailCount);
 }

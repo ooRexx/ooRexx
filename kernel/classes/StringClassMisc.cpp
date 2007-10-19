@@ -50,10 +50,9 @@
 #include "StringClass.hpp"
 #include "ASCIIDBCSStrings.hpp"
 #include "RexxBuiltinFunctions.h"                     /* General purpose BIF Header file   */
+#include "SourceFile.hpp"
 
 
-extern INT  lookup[];
-                                       /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
 
 const char *Memcpbrk(
@@ -172,7 +171,7 @@ int RexxString::isSymbol()
   Compound = 0;                        /* set compound name is no           */
   Scan = this->getStringData();        /* save start position               */
                                        /* while still part of symbol        */
-  while (Scan < Linend && lookup[*Scan]) {
+  while (Scan < Linend && RexxSource::isSymbolCharacter(*Scan)) {
 
     if (*Scan == '.')                  /* a dot found..                     */
       Compound++;                      /* indicate a compound var           */

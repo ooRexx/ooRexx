@@ -184,7 +184,7 @@ PFN SysLoadProcedure(
 /******************************************************************************/
 {
    PFN load_address;
-   load_address = dlsym((PVOID) LibraryHandle->value, Procedure->getStringData());
+   load_address = dlsym((PVOID) LibraryHandle->getValue(), Procedure->getStringData());
    if (!load_address)
    {
       report_exception1(Error_External_name_not_found_method, Procedure);

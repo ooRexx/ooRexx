@@ -440,7 +440,7 @@ APIRET REXXENTRY RexxGetOSAInfo(RexxObject * method, ULONG selector, LONG * valu
     selected = (RexxInteger *)OSAinfoDir->at(new_string((const char *)&selector, sizeof(ULONG)));
     if (selected  != OREF_NULL) {      /* Have a value ?                    */
                                        /* Yes, Get value from integer object*/
-      *value = selected->value;
+      *value = selected->getValue();
     } else
       rc = 1;
   } else
@@ -725,7 +725,7 @@ void CreateRexxCondData(
                                        /* give the true data length         */
   pRexxCondData->errortext.strlength = length - 1;
 
-  pRexxCondData->position = ((RexxInteger *)(conditionobj->at(OREF_POSITION)))->value;
+  pRexxCondData->position = ((RexxInteger *)(conditionobj->at(OREF_POSITION)))->getValue();
 
   program = (RexxString *)conditionobj->at(OREF_PROGRAM);
                                        /* get the result length             */

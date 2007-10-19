@@ -198,7 +198,7 @@ somRef nativeact_somref(
   RexxInteger *somReference;           /* SOM reference object              */
                                        /* ask the server to convert         */
   somReference = (RexxInteger *)send_message1(ProcessLocalServer,OREF_SOMSYM,objr);
-  return (somRef)somReference->value;  /* return the actual reference part  */
+  return (somRef)somReference->getValue();  /* return the actual reference part  */
 }
 
 RexxObject *RexxNativeActivation::run(
@@ -603,7 +603,7 @@ PVOID RexxNativeActivation::cself()
                                        /* retrieve from object dictionary   */
   C_self = (RexxInteger *)this->methodVariables()->realValue(OREF_CSELF);
   if (C_self != OREF_NULL)             /* got an item?                      */
-    return (PVOID)C_self->value;       /* return the pointer value          */
+    return (PVOID)C_self->getValue();  /* return the pointer value          */
   else
     return NULL;                       /* no object available               */
 }
@@ -631,7 +631,7 @@ PVOID RexxNativeActivation::pointer(
 /******************************************************************************/
 {
                                        /* just "unwrap" the pointer         */
-  return (PVOID)((RexxInteger *)object)->value;
+  return (PVOID)((RexxInteger *)object)->getValue();
 }
 
 RexxObject   *RexxNativeActivation::dispatch()
@@ -994,12 +994,12 @@ nativei0 (REXXOBJECT, RECEIVER)
   return_oref(this->u_receiver);       /* just forward and return           */
 }
 
-nativei1 (long, INTEGER, REXXOBJECT, object)
+nativei1 (int, INTEGER, REXXOBJECT, object)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  long    result;                      /* returned result                   */
+  int     result;                      /* returned result                   */
 
   native_entry;                        /* synchronize access                */
                                        /* just forward and return           */
@@ -1007,12 +1007,12 @@ nativei1 (long, INTEGER, REXXOBJECT, object)
   return_value(result);                /* return converted value            */
 }
 
-nativei1 (ULONG, UNSIGNED_INTEGER, REXXOBJECT, object)
+nativei1 (size_t, UNSIGNED_INTEGER, REXXOBJECT, object)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  ULONG             result;            /* returned result                   */
+  size_t            result;            /* returned result                   */
   RexxNumberString *argNumStr;         /* numberstring version of this      */
 
   native_entry;                        /* synchronize access                */

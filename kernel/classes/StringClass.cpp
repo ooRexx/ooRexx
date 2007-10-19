@@ -51,7 +51,6 @@
 #include "DirectoryClass.hpp"
 #include "RexxActivation.hpp"
 #include "RexxActivity.hpp"
-extern INT  lookup[];
                                        /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
 
@@ -418,7 +417,7 @@ wholenumber_t RexxString::compareTo(RexxObject *other )
 {
     if (isPrimitive(this))
     {
-        return compareToRexx((RexxString *)other, OREF_NULL, OREF_NULL)->value;
+        return compareToRexx((RexxString *)other, OREF_NULL, OREF_NULL)->getValue();
     }
     else
     {
@@ -1419,7 +1418,7 @@ RexxInteger *RexxString::integerValue(
                                        /* try for an integer                */
     newInteger = numberString->integerValue(digits);
                                        /* did it convert?                   */
-    if (newInteger != TheNilObject && newInteger->stringrep == OREF_NULL)
+    if (newInteger != TheNilObject && newInteger->getStringrep() == OREF_NULL)
       newInteger->setString(this);     /* connect the string value          */
     return newInteger;                 /* return the new integer            */
   }

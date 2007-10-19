@@ -147,7 +147,8 @@ RexxString *RexxInteger::primitiveMakeString()
   if (this->stringrep != OREF_NULL)    /* have a string already?            */
     return this->stringrep;            /* return it directly                */
                                        /* convert value into string         */
-  _ltoa((long)this->value, stringBuffer, 10);
+  sprintf(stringBuffer, "%d", this->value);
+
                                        /* return as a string                */
   string = new_string(stringBuffer, strlen(stringBuffer));
                                        /* cache this away for later         */
@@ -167,7 +168,7 @@ RexxString *RexxInteger::stringValue()
   if (this->stringrep != OREF_NULL)    /* have a string already?            */
     return this->stringrep;            /* return it directly                */
                                        /* convert value into string         */
-  _ltoa((long)this->value, stringBuffer, 10);
+  sprintf(stringBuffer, "%d", this->value);
                                        /* return as a string                */
   string = new_string(stringBuffer, strlen(stringBuffer));
                                        /* cache this away for later         */
@@ -189,7 +190,7 @@ void RexxInteger::copyIntoTail(RexxCompoundTail *tail)
       tail->append(stringrep->getStringData(), stringrep->getLength());
       return;
   }
-  _ltoa((long)this->value, stringBuffer, 10);
+  sprintf(stringBuffer, "%d", this->value);
                                        /* append this to the buffer         */
   tail->append(stringBuffer, strlen(stringBuffer));
 }
@@ -561,8 +562,8 @@ long RexxInteger::strictComp(
 RexxObject *RexxInteger::hashCode()
 {
     // get the hash value, which is actually derived from the integer string value
-    unsigned long hash = this->hash();
-    return new_string((char *)&hash, sizeof(unsigned long));
+    unsigned long hashVal = this->hash();
+    return new_string((char *)&hashVal, sizeof(unsigned long));
 }
 
 
@@ -786,8 +787,7 @@ RexxObject *RexxInteger::Max(
 /* Function:  Perform MAX function on integer objects                         */
 /******************************************************************************/
 {
-  long         value;                  /* current working value             */
-  long         maxvalue;               /* current maximum                   */
+  int          maxvalue;               /* current maximum                   */
   size_t       arg;                    /* current arg position              */
   RexxObject * argument;               /* current argument object           */
   BOOL         AllIntegers;            /* have all integers                 */
@@ -815,9 +815,9 @@ RexxObject *RexxInteger::Max(
 
     if (OTYPE(Integer, argument)) {    /* is this an INTEGER object?        */
                                        /* yes, gets its value.              */
-      value = ((RexxInteger *)argument)->value;
-      if (value > maxvalue)            /* is this number larger than max?   */
-        maxvalue = value;              /* yes, it is our new max.           */
+      int v = ((RexxInteger *)argument)->getValue();
+      if (v > maxvalue)                /* is this number larger than max?   */
+        maxvalue = v;                  /* yes, it is our new max.           */
     }
     else {                             /* not an integer, compare isn't     */
       AllIntegers = FALSE;             /* so simple.                        */
@@ -843,8 +843,7 @@ RexxObject *RexxInteger::Min(
 /* Function:  Perform MAX function on integer objects                         */
 /******************************************************************************/
 {
-  long         value;                  /* current working value             */
-  long         minvalue;               /* current minimum                   */
+  int          minvalue;               /* current minimum                   */
   size_t       arg;                    /* current arg position              */
   RexxObject * argument;               /* current argument object           */
   BOOL         AllIntegers;            /* have all integers                 */
@@ -872,9 +871,9 @@ RexxObject *RexxInteger::Min(
 
     if (OTYPE(Integer, argument)) {    /* is this an INTEGER object?        */
                                        /* yes, gets its value.              */
-      value = ((RexxInteger *)argument)->value;
-      if (value < minvalue)            /* is this number larger than min?   */
-        minvalue = value;              /* yes, it is our new max.           */
+      int v = ((RexxInteger *)argument)->getValue();
+      if (v < minvalue)                /* is this number larger than min?   */
+        minvalue = v;                  /* yes, it is our new max.           */
     }
     else {                             /* not an integer, compare isn't     */
       AllIntegers = FALSE;             /* so simple.                        */
@@ -1063,7 +1062,7 @@ void integer_create (void)
 #include "RexxNativeAPI.h"
 #undef RexxInteger
 
-native0 (long, INTEGER_VALUE)
+native0 (int,  INTEGER_VALUE)
 /******************************************************************************/
 /* Function:  External interface to the object method                         */
 /******************************************************************************/
@@ -1072,11 +1071,11 @@ native0 (long, INTEGER_VALUE)
 /* NOTE:  This method does not reaquire kernel access                         */
 /******************************************************************************/
                                        /* forward the method                */
-  return ((RexxInteger *)self)->value;
+  return ((RexxInteger *)self)->getValue();
 }
 
 nativei1 (REXXOBJECT, INTEGER_NEW,
-         long, value)                  /* integer value                     */
+         int,  value)                  /* integer value                     */
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/

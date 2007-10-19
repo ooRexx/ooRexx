@@ -50,8 +50,6 @@
 #include "StringClass.hpp"
 #include "RexxBuiltinFunctions.h"                     /* General purpose BIF Header file       */
 
-extern INT  lookup[];
-                                       /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
 
 /******************************************************************************/

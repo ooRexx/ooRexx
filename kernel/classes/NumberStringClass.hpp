@@ -74,7 +74,7 @@
       this->sign = 0;                       /* Make sign Zero.   */     \
       this->exp = 0;                        /* exponent is zero. */
 
-long number_create_integer(UCHAR *, long, int, int);
+int number_create_integer(const char *, size_t, int, int);
 
 
 #define NumberStringRound(s,d) s->roundUp(s,d)
@@ -86,9 +86,9 @@ long number_create_integer(UCHAR *, long, int, int);
  class RexxNumberStringBase : public RexxObject {
    public:
     inline RexxNumberStringBase() { ; }
-    void   mathRound(UCHAR *);
-    PUCHAR stripLeadingZeros(UCHAR *);
-    PUCHAR adjustNumber(UCHAR *, UCHAR *, size_t, size_t);
+    void   mathRound(char *);
+    char  *stripLeadingZeros(char *);
+          char * adjustNumber(char *, char *, size_t, size_t);
 
     RexxString *stringObject;          /* converted string value          */
     short NumFlags;                    /* Flags for use by the Numberstring met*/
@@ -137,10 +137,10 @@ long number_create_integer(UCHAR *, long, int, int);
     RexxInteger *strictLessOrEqual(RexxObject *);
     RexxObject  *hashCode();
 
-    int         ULong(ULONG *);
+    int         ULong(size_t *);
     RexxNumberString *clone();
     void        setString(RexxString *);
-    void        roundUp(ULONG);
+    void        roundUp(int);
     RexxString *formatRexx(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     RexxString *formatInternal(size_t, size_t, size_t, size_t, RexxNumberString *, size_t, long);
     RexxObject *operatorNot(RexxObject *);
@@ -162,7 +162,7 @@ long number_create_integer(UCHAR *, long, int, int);
     }
 
     RexxNumberString *prepareNumber(size_t, BOOL);
-    void              adjustPrecision(UCHAR *, size_t);
+    void              adjustPrecision(char *, size_t);
     void              adjustPrecision();
     inline void       checkPrecision() { if (length > NumDigits) adjustPrecision(); }
     inline void       setNumericSettings(size_t digits, int form)
@@ -183,7 +183,7 @@ long number_create_integer(UCHAR *, long, int, int);
         /* check for any required rounding */
         checkPrecision();
     }
-    bool  createUnsignedInt64Value(stringchar_t *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result);
+    bool  createUnsignedInt64Value(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result);
     bool  checkIntegerDigits(stringsize_t numDigits, stringsize_t &numberLength, wholenumber_t &numberExponent, bool &carry);
     bool  int64Value(int64_t *result, stringsize_t numDigits);
     void  formatInt64(int64_t integer);
@@ -214,15 +214,15 @@ long number_create_integer(UCHAR *, long, int, int);
     RexxObject *andOp(RexxObject *);
     RexxObject *xorOp(RexxObject *);
     void        formatLong(long);
-    void        formatULong(ULONG);
-    long        format(PCHAR, size_t);
+    void        formatULong(size_t);
+    long        format(const char *, size_t);
     inline void        setZero() {
                    this->number[0] = '\0';               /* Make value a zero.*/
                    this->length = 1;                     /* Length is 1       */
                    this->sign = 0;                       /* Make sign Zero.   */
                    this->exp = 0;                        /* exponent is zero. */
                 }
-    UCHAR number[4];
+    char  number[4];
  };
 
 class RexxNumberStringClass : public RexxClass {
@@ -236,7 +236,7 @@ class RexxNumberStringClass : public RexxClass {
 
 };
 
-void AdjustPrecision(RexxNumberString *, UCHAR *, int);
+void AdjustPrecision(RexxNumberString *, char *, int);
 
 inline RexxNumberString *new_numberstring(char *s, stringsize_t l)
 {
