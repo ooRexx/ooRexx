@@ -150,10 +150,21 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                     {
                         LPNMITEMACTIVATE pIA = (LPNMITEMACTIVATE)lparam;
 
-                        if ( pIA->uKeyFlags == LVKF_ALT ) strcpy(tmp, "ALT");
-                        else if ( pIA->uKeyFlags == LVKF_CONTROL ) strcpy(tmp, "CONTROL");
-                        else if ( pIA->uKeyFlags == LVKF_SHIFT ) strcpy(tmp, "SHIFT");
-                        else strcpy(tmp, "NONE");
+                        if ( pIA->uKeyFlags == 0 )
+                        {
+                            strcpy(tmp, "NONE");
+                        }
+                        else
+                        {
+                            tmp[0] = '\0';
+
+                            if ( pIA->uKeyFlags & LVKF_SHIFT )
+                                strcpy(tmp, "SHIFT");
+                            if ( pIA->uKeyFlags & LVKF_CONTROL )
+                                tmp[0] == '\0' ? strcpy(tmp, "CONTROL") : strcat(tmp, " CONTROL");
+                            if ( pIA->uKeyFlags & LVKF_ALT )
+                                tmp[0] == '\0' ? strcpy(tmp, "ALT") : strcat(tmp, " ALT");
+                        }
                         np = tmp;
 
                         /* Don't drop through, use AddDialogMessage here and
