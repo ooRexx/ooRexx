@@ -53,10 +53,9 @@ When....:   August 13, 2007
 
 -- Define a couple of variables to use in the code
     delimiter = '0'x
-    crlf      = '0d0a'x
 
 -- Remind the user of what FileNameDialog actually does
-    msg = 'REMEMBER, FileNameDialog does NOT actually open or save your specified file,'||crlf||-
+    msg = 'REMEMBER, FileNameDialog does NOT actually open or save your specified file,'||.endOfLine||-
           'it simply provides a dialog that will return the file path and name!'
     call infoDialog(msg)
 
@@ -169,10 +168,10 @@ Option5:
         call errorDialog('You Did Not Select A File')
     else
         do
-            msg = 'You Selected'crlf
+            msg = 'You Selected'.endOfLine
             do until a_file = ''
                 parse var a_file file_a'^'a_file
-                msg = msg||file_a||crlf
+                msg = msg||file_a||.endOfLine
             end
             call infoDialog(msg)
         end
