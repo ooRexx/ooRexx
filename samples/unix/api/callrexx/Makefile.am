@@ -51,7 +51,7 @@ EXTRA_DIST              = del_macro.rex example.rex load_macro.rex macros.rex \
 #libexec_PROGRAMS         = callrexx1 callrexx2
 noinst_PROGRAMS          = callrexx1 callrexx2
 
-callrexx1_SOURCES        = callrexx1.c
+callrexx1_SOURCES        = callrexx1.cpp
 callrexx2_SOURCES        = callrexx2.c
 
 callrexx1_LDADD          = $(top_builddir)/librexx.la $(top_builddir)/librexxapi.la @ORX_LDADD_EXECUTABLE@
