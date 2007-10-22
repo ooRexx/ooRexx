@@ -313,7 +313,7 @@ union semun {
 extern REXXAPIDATA  *apidata;          /* Global state data          */
 extern INT opencnt[][2];               /* open count array for sems  */
 //extern BOOL WAITANDRESET;              /* for creating sems  */
-extern PCHAR resolve_tilde(PCHAR);
+extern char *resolve_tilde(const char *);
 extern BOOL rexxutil_call;             /* internal call flag         */
 extern RexxMutex rexxutil_call_sem;
 /*extern INT rxstrnicmp(PSZ, PSZ, INT);  */
