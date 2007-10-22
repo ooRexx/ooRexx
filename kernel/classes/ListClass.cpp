@@ -75,20 +75,20 @@ RexxObject *RexxList::copy(void)
 }
 
 void RexxList::partitionBuffer(
-     long  first,                      /* first entry location              */
-     long  count )                     /* entries to partition              */
+     size_t  first_entry,              /* first entry location              */
+     size_t  entry_count )             /* entries to partition              */
 /******************************************************************************/
 /* Function:  Partition a buffer up into a chain of free elements and set     */
 /*            this up as the free element chain                               */
 /******************************************************************************/
 {
-  long       i;                        /* loop counter                      */
+  size_t     i;                        /* loop counter                      */
   LISTENTRY *element;                  /* working list element              */
 
-  this->free = first;                  /* set the new free chain head       */
-  i = first;                           /* get a loop counter                */
+  this->free = first_entry;            /* set the new free chain head       */
+  i = first_entry;                     /* get a loop counter                */
   element = ENTRY_POINTER(i);          /* point to the first element        */
-  while (count--) {
+  while (entry_count-- > 0) {
                                        /* zero the element value            */
     OrefSet(this->table, element->value, OREF_NULL);
     element->next = ++i;               /* set the next element pointer      */
@@ -99,7 +99,7 @@ void RexxList::partitionBuffer(
   element->next = LIST_END;            /* set the terminator                */
 }
 
-long RexxList::getFree(void)
+size_t RexxList::getFree(void)
 /******************************************************************************/
 /* Function:  Check that we have at least one element on the free chain, and  */
 /*            if not, expand our buffer size to add some space.               */
@@ -107,8 +107,8 @@ long RexxList::getFree(void)
 {
   RexxListTable *newLTable;            /* new allocated buffer              */
   LISTENTRY *element;                  /* current working element           */
-  long    new_index;                   /* return index value                */
-  long    i;                           /* loop counter                      */
+  size_t  new_index;                   /* return index value                */
+  size_t  i;                           /* loop counter                      */
 
   if (this->free == LIST_END) {        /* no free elements?                 */
                                        /* allocate a larger table           */
@@ -175,29 +175,29 @@ void RexxList::flatten(RexxEnvelope *envelope)
 }
 
 LISTENTRY * RexxList::getEntry(
-     RexxObject *index,                /* list index item                   */
+     RexxObject *_index,               /* list index item                   */
      RexxObject *position)             /* index argument error position     */
 /******************************************************************************/
 /* Function:  Resolve a list index argument to a list element position        */
 /******************************************************************************/
 {
   RexxInteger *integer_index;          /* requested integer index           */
-  LONG     item_index;                 /* converted item number             */
+  size_t   item_index;                 /* converted item number             */
   LISTENTRY *element;                  /* located list element              */
 
-  if (index == OREF_NULL)              /* must have one here                */
+  if (_index == OREF_NULL)             /* must have one here                */
                                        /* else an error                     */
     report_exception1(Error_Incorrect_method_noarg, position);
                                        /* force to integer form             */
-  integer_index = (RexxInteger *)REQUEST_INTEGER(index);
+  integer_index = (RexxInteger *)REQUEST_INTEGER(_index);
   if (integer_index == TheNilObject)   /* doesn't exist?                    */
                                        /* raise an exception                */
-    report_exception1(Error_Incorrect_method_index, index);
+    report_exception1(Error_Incorrect_method_index, _index);
                                        /* get the binary value              */
   item_index = integer_index->getValue();
   if (item_index < 0)                  /* not a valid index?                */
                                        /* raise an exception                */
-    report_exception1(Error_Incorrect_method_index, index);
+    report_exception1(Error_Incorrect_method_index, _index);
   if (item_index >= this->size)        /* out of possible range?            */
     return NULL;                       /* not found                         */
   element = ENTRY_POINTER(item_index); /* point to the item                 */
@@ -207,7 +207,7 @@ LISTENTRY * RexxList::getEntry(
 }
 
 RexxObject *RexxList::value(
-     RexxObject *index)                /* list index item                   */
+     RexxObject *_index)               /* list index item                   */
 /******************************************************************************/
 /* Function:  Retrieve the value for a given list index                       */
 /******************************************************************************/
@@ -216,7 +216,7 @@ RexxObject *RexxList::value(
   RexxObject *result;                  /* returned result                   */
 
                                        /* locate this entry                 */
-  element = this->getEntry(index, (RexxObject *)IntegerOne);
+  element = this->getEntry(_index, (RexxObject *)IntegerOne);
   if (element == NULL)                 /* not there?                        */
     return TheNilObject;               /* doesn't exist, return .NIL        */
   result = element->value;             /* get the value                     */
@@ -226,8 +226,8 @@ RexxObject *RexxList::value(
 }
 
 RexxObject *RexxList::put(
-     RexxObject *value,                /* new value for the item            */
-     RexxObject *index )               /* index of item to replace          */
+     RexxObject *_value,                /* new value for the item            */
+     RexxObject *_index )               /* index of item to replace          */
 /******************************************************************************/
 /* Function:  Replace the value of an item already in the list.               */
 /******************************************************************************/
@@ -235,38 +235,38 @@ RexxObject *RexxList::put(
   LISTENTRY *element;                  /* list element                      */
 
                                        /* locate this entry                 */
-  element = this->getEntry(index, (RexxObject *)IntegerTwo);
-  required_arg(value, ONE);            /* must have a value also            */
+  element = this->getEntry(_index, (RexxObject *)IntegerTwo);
+  required_arg(_value, ONE);           /* must have a value also            */
   if (element == NULL)                 /* not a valid index?                */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_index, index);
+    report_exception1(Error_Incorrect_method_index, _index);
                                        /* replace the value                 */
-  OrefSet(this->table, element->value, value);
+  OrefSet(this->table, element->value, _value);
   return OREF_NULL;                    /* return nothing at all             */
 }
 
 RexxObject *RexxList::section(
-     RexxObject *index,                /* index of starting item            */
-     RexxObject *count )               /* count of items to return          */
+     RexxObject *_index,                /* index of starting item            */
+     RexxObject *_count )               /* count of items to return          */
 /******************************************************************************/
 /* Function:  Create a sublist of this list                                   */
 /******************************************************************************/
 {
   LISTENTRY *element;                  /* list element                      */
-  LONG   counter;                      /* object counter                    */
+  size_t counter;                      /* object counter                    */
   RexxList *result;                    /* result list                       */
 
                                        /* locate this entry                 */
-  element = this->getEntry(index, (RexxObject *)IntegerOne);
-  if (count != OREF_NULL) {            /* have a count?                     */
+  element = this->getEntry(_index, (RexxObject *)IntegerOne);
+  if (_count != OREF_NULL) {           /* have a count?                     */
                                        /* Make sure it's a good integer     */
-    counter = count->requiredNonNegative(ARG_TWO);
+    counter = _count->requiredNonNegative(ARG_TWO);
   }
   else
     counter = 999999999;               /* just use largest possible count   */
   if (element == NULL)                 /* index doesn't exist?              */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_index, index);
+    report_exception1(Error_Incorrect_method_index, _index);
   if (!OTYPE(List, this))              /* actually a list subclass?         */
                                        /* need to do this the slow way      */
     return this->sectionSubclass(element, counter);
@@ -274,7 +274,7 @@ RexxObject *RexxList::section(
   save(result);                        /* protect this                      */
                                        /* while still more to go and not at */
                                        /* the end of the list               */
-  while (counter--) {                  /* while still more items            */
+  while (counter--> 0) {               /* while still more items            */
                                        /* add the this item to new list     */
     result->addLast(element->value);
     if (element->next == LIST_END)     /* this the last one?                */
@@ -288,7 +288,7 @@ RexxObject *RexxList::section(
 
 RexxObject *RexxList::sectionSubclass(
     LISTENTRY *element,                /* starting element                  */
-    LONG       counter)                /* count of elements                 */
+    size_t     counter)                /* count of elements                 */
 /******************************************************************************/
 /* Function:  Rexx level section method                                       */
 /******************************************************************************/
@@ -300,7 +300,7 @@ RexxObject *RexxList::sectionSubclass(
   save(newList);                       /* protect this                      */
                                        /* while still more to go and not at */
                                        /* the end of the list               */
-  while (counter--) {                  /* while still more items            */
+  while (counter-- > 0) {              /* while still more items            */
                                        /* add the this item to new list     */
     newList->sendMessage(OREF_INSERT, element->value);
     if (element->next == LIST_END)     /* this the last one?                */
@@ -313,8 +313,8 @@ RexxObject *RexxList::sectionSubclass(
 }
 
 RexxObject *RexxList::add(
-     RexxObject *value,                /* new value to add                  */
-     RexxObject *index)                /* addition insertion index          */
+     RexxObject *_value,                /* new value to add                  */
+     RexxObject *_index)                /* addition insertion index          */
 /******************************************************************************/
 /* Function:  Add a new element to the list at the given insertion point.     */
 /*            TheNilObject indicates it should be added to the list end       */
@@ -322,24 +322,24 @@ RexxObject *RexxList::add(
 {
   LISTENTRY *new_element;              /* new insertion element             */
   LISTENTRY *element;                  /* list element                      */
-  long       new_index;                /* index of new inserted item        */
+  size_t     new_index;                /* index of new inserted item        */
 
                                        /* make sure we have room to insert  */
   new_index = this->getFree();
                                        /* point to the actual element       */
   new_element = ENTRY_POINTER(new_index);
-  if (index == TheNilObject)           /* inserting at the end?             */
+  if (_index == TheNilObject)          /* inserting at the end?             */
     element = NULL;                    /* flag this as new                  */
   else {
                                        /* locate this entry                 */
-    element = this->getEntry(index, (RexxObject *)IntegerOne);
+    element = this->getEntry(_index, (RexxObject *)IntegerOne);
     if (element == NULL)               /* index doesn't exist?              */
                                        /* raise an error                    */
-      report_exception1(Error_Incorrect_method_index, index);
+      report_exception1(Error_Incorrect_method_index, _index);
   }
   this->count++;                       /* increase our count                */
                                        /* set the value                     */
-  OrefSet(this->table, new_element->value, value);
+  OrefSet(this->table, new_element->value, _value);
   if (element == NULL) {               /* adding at the end                 */
     if (this->last == LIST_END) {      /* first element added?              */
       this->first = new_index;         /* set this as the first             */
@@ -376,13 +376,13 @@ RexxObject *RexxList::add(
 }
 
 void RexxList::addLast(
-     RexxObject *value )               /* new value to add                  */
+     RexxObject *_value )              /* new value to add                  */
 /******************************************************************************/
 /* Function:  Add a new element to the tail of a list                         */
 /******************************************************************************/
 {
   LISTENTRY *new_element;              /* new insertion element             */
-  long       new_index;                /* index of new inserted item        */
+  size_t     new_index;                /* index of new inserted item        */
 
                                        /* make sure we have room to insert  */
   new_index = this->getFree();
@@ -390,7 +390,7 @@ void RexxList::addLast(
   new_element = ENTRY_POINTER(new_index);
   this->count++;                       /* increase our count                */
                                        /* set the value                     */
-  OrefSet(this->table, new_element->value, value);
+  OrefSet(this->table, new_element->value, _value);
   if (this->last == LIST_END) {        /* first element added?              */
     this->first = new_index;           /* set this as the first             */
     this->last = new_index;            /* and the last                      */
@@ -408,14 +408,14 @@ void RexxList::addLast(
 }
 
 void RexxList::addFirst(
-     RexxObject *value)                /* new value to add                  */
+     RexxObject *_value)               /* new value to add                  */
 /******************************************************************************/
 /* Function:  Insert an element at the front of the list                      */
 /******************************************************************************/
 {
   LISTENTRY *element;                  /* list element                      */
   LISTENTRY *new_element;              /* new insertion element             */
-  long       new_index;                /* index of new inserted item        */
+  size_t     new_index;                /* index of new inserted item        */
 
 
   new_index = this->getFree();         /* make sure we have room to insert  */
@@ -423,7 +423,7 @@ void RexxList::addFirst(
   new_element = ENTRY_POINTER(new_index);
   this->count++;                       /* increase our count                */
                                        /* set the value                     */
-  OrefSet(this->table, new_element->value, value);
+  OrefSet(this->table, new_element->value, _value);
   if (this->last == LIST_END) {        /* first element added?              */
     this->first = new_index;           /* set this as the first             */
     this->last = new_index;            /* and the last                      */
@@ -443,15 +443,15 @@ void RexxList::addFirst(
 
 
 RexxObject *RexxList::insertRexx(
-     RexxObject *value,                /* new value to add                  */
-     RexxObject *index)                /* addition insertion index          */
+     RexxObject *_value,               /* new value to add                  */
+     RexxObject *_index)               /* addition insertion index          */
 /******************************************************************************/
 /* Function:  Publicly accessible version of the list insert function.        */
 /******************************************************************************/
 {
-  required_arg(value, ONE);            /* must have a value to insert       */
+  required_arg(_value, ONE);           /* must have a value to insert       */
                                        /* go do the real insert             */
-  return this->insert(value, index);
+  return this->insert(_value, _index);
 }
 
 
@@ -462,17 +462,17 @@ RexxObject *RexxList::insertRexx(
  *
  * @return The index of the appended item.
  */
-RexxObject *RexxList::append(RexxObject *value)
+RexxObject *RexxList::append(RexxObject *_value)
 {
-    required_arg(value, ONE);
+    required_arg(_value, ONE);
     // this is just an insertion operation with an ommitted index.
-    return insert(value, OREF_NULL);
+    return insert(_value, OREF_NULL);
 }
 
 
 RexxObject *RexxList::insert(
-     RexxObject *value,                /* new value to add                  */
-     RexxObject *index)                /* addition insertion index          */
+     RexxObject *_value,               /* new value to add                  */
+     RexxObject *_index)               /* addition insertion index          */
 /******************************************************************************/
 /* Function:  Add a new element to the list at the given insertion point.     */
 /*            TheNilObject indicates it should be added to the list fron      */
@@ -480,15 +480,15 @@ RexxObject *RexxList::insert(
 {
   LISTENTRY *element;                  /* list element                      */
   LISTENTRY *new_element;              /* new insertion element             */
-  long       new_index;                /* index of new inserted item        */
+  size_t     new_index;                /* index of new inserted item        */
 
                                        /* make sure we have room to insert  */
   new_index = this->getFree();
                                        /* point to the actual element       */
   new_element = ENTRY_POINTER(new_index);
-  if (index == TheNilObject)           /* inserting at the front?           */
+  if (_index == TheNilObject)          /* inserting at the front?           */
     element = NULL;                    /* flag this as new                  */
-  else if (index == OREF_NULL) {       /* inserting at the end?             */
+  else if (_index == OREF_NULL) {      /* inserting at the end?             */
     if (this->last == LIST_END)        /* currently empty?                  */
       element = NULL;                  /* just use the front insert code    */
     else                               /* insert after the last element     */
@@ -496,14 +496,14 @@ RexxObject *RexxList::insert(
   }
   else {
                                        /* locate this entry                 */
-    element = this->getEntry(index, (RexxObject *)IntegerOne);
+    element = this->getEntry(_index, (RexxObject *)IntegerOne);
     if (element == NULL)               /* index doesn't exist?              */
                                        /* raise an error                    */
-      report_exception1(Error_Incorrect_method_index, index);
+      report_exception1(Error_Incorrect_method_index, _index);
   }
   this->count++;                       /* increase our count                */
                                        /* set the value                     */
-  OrefSet(this->table, new_element->value, value);
+  OrefSet(this->table, new_element->value, _value);
   if (element == NULL) {               /* adding at the front               */
     if (this->last == LIST_END) {      /* first element added?              */
       this->first = new_index;         /* set this as the first             */
@@ -539,13 +539,13 @@ RexxObject *RexxList::insert(
 }
 
 RexxObject *RexxList::remove(
-     RexxObject *index)                /* index of item to remove           */
+     RexxObject *_index)               /* index of item to remove           */
 /******************************************************************************/
 /* Function:  Remove a list item from the list                                */
 /******************************************************************************/
 {
                                        /* just remove the given index       */
-  return this->primitiveRemove(this->getEntry(index, (RexxObject *)IntegerOne));
+  return this->primitiveRemove(this->getEntry(_index, (RexxObject *)IntegerOne));
 }
 
 RexxObject *RexxList::primitiveRemove(
@@ -554,25 +554,25 @@ RexxObject *RexxList::primitiveRemove(
 /* Function:  Remove a list item from the list                                */
 /******************************************************************************/
 {
-  RexxObject *value;                   /* value of the removed item         */
-  LISTENTRY *previous;                 /* previous entry                    */
-  LISTENTRY *next;                     /* next entry                        */
+  RexxObject *_value;                  /* value of the removed item         */
+  LISTENTRY *_previous;                /* previous entry                    */
+  LISTENTRY *_next;                    /* next entry                        */
 
   if (element == NULL)                 /* not a valid index?                */
     return TheNilObject;               /* just return .nil                  */
 
-  value = element->value;              /* copy the value                    */
+  _value = element->value;             /* copy the value                    */
   if (element->next != LIST_END) {     /* not end of the list?              */
                                        /* point to the next entry           */
-    next = ENTRY_POINTER(element->next);
-    next->previous = element->previous;/* update the previous pointer       */
+    _next = ENTRY_POINTER(element->next);
+    _next->previous = element->previous;/* update the previous pointer       */
   }
   else
     this->last = element->previous;    /* need to update the last pointer   */
   if (element->previous != LIST_END) { /* not end of the list?              */
                                        /* point to the next entry           */
-    previous = ENTRY_POINTER(element->previous);
-    previous->next = element->next;    /* remove this from the chain        */
+    _previous = ENTRY_POINTER(element->previous);
+    _previous->next = element->next;   /* remove this from the chain        */
   }
   else
     this->first = element->next;       /* need to update the last pointer   */
@@ -582,7 +582,7 @@ RexxObject *RexxList::primitiveRemove(
   element->next = this->free;          /* new head of the free chain        */
   this->free = ENTRY_INDEX(element);   /* this is the first free element    */
 
-  return value;                        /* return the old value              */
+  return _value;                       /* return the old value              */
 }
 
 RexxObject *RexxList::firstItem(void)
@@ -634,17 +634,17 @@ RexxObject *RexxList::lastRexx(void)
 }
 
 RexxObject *RexxList::next(
-     RexxObject *index)                /* index of the target item          */
+     RexxObject *_index)               /* index of the target item          */
 /******************************************************************************/
 /* Function:  Return the next item after the given indexed item               */
 /******************************************************************************/
 {
   LISTENTRY *element;                  /* current working entry             */
                                        /* locate this entry                 */
-  element = this->getEntry(index, (RexxObject *)IntegerOne);
+  element = this->getEntry(_index, (RexxObject *)IntegerOne);
   if (element == NULL)                 /* not a valid index?                */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_index, index);
+    report_exception1(Error_Incorrect_method_index, _index);
 
   if (element->next == LIST_END)       /* no next item?                     */
     return TheNilObject;               /* just return .nil                  */
@@ -655,7 +655,7 @@ RexxObject *RexxList::next(
 }
 
 RexxObject *RexxList::previous(
-     RexxObject *index)                /* index of the target item          */
+     RexxObject *_index)                /* index of the target item          */
 /******************************************************************************/
 /* Function:  Return the item previous to the indexed item                    */
 /******************************************************************************/
@@ -663,10 +663,10 @@ RexxObject *RexxList::previous(
   LISTENTRY *element;                  /* current working entry             */
 
                                        /* locate this entry                 */
-  element = this->getEntry(index, (RexxObject *)IntegerOne);
+  element = this->getEntry(_index, (RexxObject *)IntegerOne);
   if (element == NULL)                 /* not a valid index?                */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_index, index);
+    report_exception1(Error_Incorrect_method_index, _index);
 
   if (element->previous == LIST_END)   /* no previous item?                 */
     return TheNilObject;               /* just return .nil                  */
@@ -676,7 +676,7 @@ RexxObject *RexxList::previous(
 }
 
 RexxObject *RexxList::hasIndex(
-     RexxObject *index)                /* index of the target item          */
+     RexxObject *_index)               /* index of the target item          */
 /******************************************************************************/
 /* Function:  Return an index existence flag                                  */
 /******************************************************************************/
@@ -684,7 +684,7 @@ RexxObject *RexxList::hasIndex(
   LISTENTRY *element;                  /* current working entry             */
 
                                        /* locate this entry                 */
-  element = this->getEntry(index, (RexxObject *)IntegerOne);
+  element = this->getEntry(_index, (RexxObject *)IntegerOne);
                                        /* return an existence flag          */
   return (element!= NULL) ? (RexxObject *)TheTrueObject : (RexxObject *)TheFalseObject;
 }
@@ -720,12 +720,12 @@ RexxArray *RexxList::allItems(void)
 {
     // just iterate through the list, copying the elements.
     RexxArray *array = (RexxArray *)new_array(this->count);
-    long   next = this->first;
-    for (long  i = 1; i <= this->count; i++)
+    size_t   nextEntry = this->first;
+    for (size_t  i = 1; i <= this->count; i++)
     {
-        LISTENTRY *element = ENTRY_POINTER(next);
+        LISTENTRY *element = ENTRY_POINTER(nextEntry);
         array->put(element->value, i);
-        next = element->next;
+        nextEntry = element->next;
     }
     return array;
 }
@@ -738,8 +738,6 @@ RexxArray *RexxList::allItems(void)
  */
 RexxObject *RexxList::empty()
 {
-    // just iterate through the list, copying the elements.
-    RexxArray *array = (RexxArray *)new_array(this->count);
     while (this->first != LIST_END)
     {
         // get the list entry and remove the value
@@ -775,12 +773,12 @@ RexxArray *RexxList::allIndexes(void)
     // this requires protecting, since we're going to be creating new
     // integer objects.
     save(array);
-    long   next = this->first;
-    for (long   i = 1; i <= this->count; i++)
+    size_t   nextEntry = this->first;
+    for (size_t i = 1; i <= this->count; i++)
     {
-        LISTENTRY *element = ENTRY_POINTER(next);
-        array->put((RexxObject *)new_integer(next), i);
-        next = element->next;
+        LISTENTRY *element = ENTRY_POINTER(nextEntry);
+        array->put((RexxObject *)new_integer(nextEntry), i);
+        nextEntry = element->next;
     }
     discard_hold(array);
     return array;
@@ -801,16 +799,16 @@ RexxObject *RexxList::index(RexxObject *target)
     required_arg(target, ONE);
 
     // ok, now run the list looking for the target item
-    long next = this->first;
-    for (long   i = 1; i <= this->count; i++)
+    size_t nextEntry = this->first;
+    for (size_t i = 1; i <= this->count; i++)
     {
-        LISTENTRY *element = ENTRY_POINTER(next);
+        LISTENTRY *element = ENTRY_POINTER(nextEntry);
         // if we got a match, return the item
         if (target->equalValue(element->value))
         {
-            return new_integer(next);
+            return new_integer(nextEntry);
         }
-        next = element->next;
+        nextEntry = element->next;
     }
     // no match
     return TheNilObject;
@@ -831,16 +829,16 @@ RexxObject *RexxList::hasItem(RexxObject *target)
     required_arg(target, ONE);
 
     // ok, now run the list looking for the target item
-    long next = this->first;
-    for (long   i = 1; i <= this->count; i++)
+    size_t nextEntry = this->first;
+    for (size_t i = 1; i <= this->count; i++)
     {
-        LISTENTRY *element = ENTRY_POINTER(next);
+        LISTENTRY *element = ENTRY_POINTER(nextEntry);
         // if we got a match, return the item
         if (target->equalValue(element->value))
         {
             return TheTrueObject;
         }
-        next = element->next;
+        nextEntry = element->next;
     }
     // no match
     return TheFalseObject;
@@ -860,17 +858,18 @@ RexxObject *RexxList::removeItem(RexxObject *target)
     required_arg(target, ONE);
 
     // ok, now run the list looking for the target item
-    long next = this->first;
-    for (long   i = 1; i <= this->count; i++)
+    size_t nextEntry = this->first;
+
+    for (size_t i = 1; i <= this->count; i++)
     {
-        LISTENTRY *element = ENTRY_POINTER(next);
+        LISTENTRY *element = ENTRY_POINTER(nextEntry);
         // if we got a match, return the item
         if (target->equalValue(element->value))
         {
             // remove this item
             return primitiveRemove(element);
         }
-        next = element->next;
+        nextEntry = element->next;
     }
     // no match
     return TheNilObject;
@@ -878,13 +877,13 @@ RexxObject *RexxList::removeItem(RexxObject *target)
 
 
 RexxObject *RexxList::indexOfValue(
-     RexxObject *value)
+     RexxObject *_value)
 /*****************************************************************************/
 /* Function:  Return the index for the value that was passed in              */
 /*            or OREF_NULL                                                   */
 /*****************************************************************************/
 {
-  RexxObject *index = OREF_NULL;
+  RexxObject *_index = OREF_NULL;
   RexxObject *last_index;
   RexxObject *this_value = OREF_NULL;
                                        /* get the last index in the list     */
@@ -893,13 +892,13 @@ RexxObject *RexxList::indexOfValue(
   if (last_index != TheNilObject)
                                        /* loop thru the list looking for the */
                                        /* specified value                    */
-    for (index = this->firstRexx();
-        ((this_value = this->value(index)) != value) && index != last_index;
-         index = this->next(index));
+    for (_index = this->firstRexx();
+        ((this_value = this->value(_index)) != _value) && _index != last_index;
+         _index = this->next(_index));
                                        /* return the index if the value was  */
                                        /* in the list                        */
-  if (this_value == value)
-    return index;
+  if (this_value == _value)
+    return _index;
                                        /* otherwise return nothing           */
   return OREF_NULL;
 }
@@ -911,18 +910,18 @@ RexxArray  *RexxList::makeArrayIndices()
 {
   RexxArray *array;                    /* returned array value              */
   LISTENTRY *element;                  /* current working entry             */
-  long        i;                       /* loop counter                      */
-  long        next;                    /* next item to process              */
+  size_t      i;                       /* loop counter                      */
+  size_t      nextEntry;               /* next item to process              */
 
                                        /* allocate proper sized array       */
   array = (RexxArray *)new_array(this->count);
   save(array);                         /* lock the array                    */
-  next = this->first;                  /* point to the first element        */
+  nextEntry = this->first;             /* point to the first element        */
   for (i = 1; i <= this->count; i++) { /* step through the array elements   */
-    element = ENTRY_POINTER(next);     /* get the next item                 */
+    element = ENTRY_POINTER(nextEntry);/* get the next item                 */
                                        /* create an index item              */
-    array->put((RexxObject *)new_integer(next), i);
-    next = element->next;              /* get the next pointer              */
+    array->put((RexxObject *)new_integer(nextEntry), i);
+    nextEntry = element->next;         /* get the next pointer              */
   }
   discard(hold(array));                /* release the GC lock               */
   return array;                        /* return the array element          */
@@ -1001,8 +1000,8 @@ RexxList *RexxListClass::classOf(
 /* Function:  Create a new list containing the given list items               */
 /******************************************************************************/
 {
-  LONG     size;                       /* size of the array                 */
-  LONG     i;                          /* loop counter                      */
+  size_t   size;                       /* size of the array                 */
+  size_t   i;                          /* loop counter                      */
   RexxList *newList;                   /* newly created list                */
   RexxObject *item;                    /* item to add                       */
 

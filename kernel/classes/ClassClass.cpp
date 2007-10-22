@@ -279,12 +279,12 @@ void  RexxClass::setSomClass(
 }
 
 void  RexxClass::setInstanceBehaviour(
-    RexxBehaviour *behaviour)          /* new instance behaviour            */
+    RexxBehaviour *b)                   /* new instance behaviour            */
 /*****************************************************************************/
 /* Function:  Give a class a new instance behaviour                          */
 /*****************************************************************************/
 {
-  OrefSet(this, this->instanceBehaviour, behaviour);
+  OrefSet(this, this->instanceBehaviour, b);
 }
 
 RexxClass *RexxClass::getSuperClass()
@@ -330,7 +330,7 @@ void RexxClass::addSubClass(RexxClass *subClass)
 }
 
 void RexxClass::defmeths(
-    RexxTable *methods)                /* methods to add                    */
+    RexxTable *newMethods)             /* methods to add                    */
 /*****************************************************************************/
 /* Function:  Add a table of methods to a primitive class behaviour          */
 /*****************************************************************************/
@@ -339,12 +339,12 @@ void RexxClass::defmeths(
   RexxString * method_name;            /* name of an added method           */
 
                                        /* loop through the list of methods  */
-  for (i = methods->first(); methods->available(i); i = methods->next(i)) {
+  for (i = newMethods->first(); newMethods->available(i); i = newMethods->next(i)) {
                                        /* get the method name               */
-    method_name = (RexxString *)methods->index(i);
+    method_name = (RexxString *)newMethods->index(i);
                                        /* add this method to the classes    */
                                        /* class behaviour                   */
-    this->behaviour->define(method_name, (RexxMethod *)methods->value(i));
+    this->behaviour->define(method_name, (RexxMethod *)newMethods->value(i));
   }
 }
 
@@ -368,15 +368,15 @@ RexxTable *RexxClass::getInstanceBehaviourDictionary()
 /* Function:   Return the instance behaviour's method dictionary             */
 /*****************************************************************************/
 {
-  RexxTable *methods;                  /* returned method dictioanry        */
+  RexxTable *methodTable;              /* returned method dictioanry        */
 
                                        /* get the method dictionary         */
-  methods = this->instanceBehaviour->getMethodDictionary();
-  if (methods == OREF_NULL)            /* no methods defined yet?           */
+  methodTable = this->instanceBehaviour->getMethodDictionary();
+  if (methodTable == OREF_NULL)        /* no methods defined yet?           */
     return new_table();                /* create a new method table         */
   else
                                        /* just copy the method dictionary   */
-    return (RexxTable *)methods->copy();
+    return (RexxTable *)methodTable->copy();
 }
 
 RexxTable *RexxClass::getBehaviourDictionary()
@@ -384,15 +384,15 @@ RexxTable *RexxClass::getBehaviourDictionary()
 /* Function:   Return the class behaviour's method dictionary                */
 /*****************************************************************************/
 {
-  RexxTable *methods;                  /* returned method dictioanry        */
+  RexxTable *methodTable;              /* returned method dictioanry        */
 
                                        /* get the method dictionary         */
-  methods = this->behaviour->getMethodDictionary();
-  if (methods == OREF_NULL)            /* no methods defined yet?           */
+  methodTable = this->behaviour->getMethodDictionary();
+  if (methodTable == OREF_NULL)        /* no methods defined yet?           */
     return new_table();                /* create a new method table         */
   else
                                        /* just copy the method dictionary   */
-    return (RexxTable *)methods->copy();
+    return (RexxTable *)methodTable->copy();
 }
 
 /**
@@ -580,25 +580,25 @@ RexxObject *RexxClass::defineMethod(
 }
 
 RexxObject *RexxClass::defineMethods(
-    RexxTable * methods)               /* new table of methods to define    */
+    RexxTable * newMethods)            /* new table of methods to define    */
 /*****************************************************************************/
 /* Function:  Define instance methods on this class object                   */
 /*****************************************************************************/
 {
   long i;                              /* loop counter                      */
   RexxString * index;                  /* method name                       */
-  RexxMethod * method;                 /* new method to process             */
+  RexxMethod * newMethod;              /* new method to process             */
                                        /* loop thru the methods setting the */
                                        /* method scopes to SELF and then    */
                                        /* adding them to SELF's instance    */
                                        /* mdict                             */
-  for (i = methods->first(); (index = (RexxString *)methods->index(i)) != OREF_NULL; i = methods->next(i)) {
+  for (i = newMethods->first(); (index = (RexxString *)newMethods->index(i)) != OREF_NULL; i = newMethods->next(i)) {
                                        /* get the method                    */
-    method = (RexxMethod *)methods->value(i);
-    if (OTYPE(Method, method))         /* if this is a method object        */
-      method->setScope(this);          /* change the scope                  */
+    newMethod = (RexxMethod *)newMethods->value(i);
+    if (OTYPE(Method, newMethod))      /* if this is a method object        */
+      newMethod->setScope(this);        /* change the scope                  */
                                        /* add method to the instance mdict   */
-    this->instanceMethodDictionary->stringPut(method, index);
+    this->instanceMethodDictionary->stringPut(newMethod, index);
                                        /* Installing UNINIT?                */
     if (index->strCompare(CHAR_UNINIT)) {
       this->class_info |= HAS_UNINIT;  /* and turn on uninit if so          */
@@ -615,7 +615,7 @@ RexxObject *RexxClass::defineMethods(
                                        /* that will be imported              */
   if ((this->somClass != (RexxInteger *)TheNilObject) && !(this->class_info & IMPORTED)) {
                                        /* loop through the list of methods   */
-     for (i = methods->first(); (index = (RexxString *)methods->index(i)) != OREF_NULL; i = methods->next(i)) {
+     for (i = newMethods->first(); (index = (RexxString *)newMethods->index(i)) != OREF_NULL; i = newMethods->next(i)) {
                                        /* define the methods as som methods  */
         this->somDefine(index, this->somClass);
      }
@@ -873,9 +873,9 @@ void RexxClass::methodDictionaryMerge(
 /*****************************************************************************/
 {
 
-  RexxMethod   *method;                /* method to be added                */
+  RexxMethod   *method_instance;       /* method to be added                */
   RexxString   *method_name;           /* method name to be added           */
-  LONG          i;                     /* table index for traversal         */
+  HashLink      i;                     /* table index for traversal         */
 
   if (source_mdict == OREF_NULL)       /* check for a source mdict          */
     return;                            /* there isn't anything to do        */
@@ -884,9 +884,9 @@ void RexxClass::methodDictionaryMerge(
                                        /* get the method name               */
     method_name = REQUEST_STRING(source_mdict->index(i));
                                        /* get the method                    */
-    method = (RexxMethod *)source_mdict->value(i);
+    method_instance = (RexxMethod *)source_mdict->value(i);
                                        /* add the method to the target mdict */
-    target_mdict->stringAdd(method, method_name);
+    target_mdict->stringAdd(method_instance, method_name);
                                        /* check if the method that was added */
                                        /* is the uninit method               */
     if ( method_name->strCompare(CHAR_UNINIT))
@@ -905,7 +905,7 @@ RexxTable *RexxClass::methodDictionaryCreate(
 /*****************************************************************************/
 {
   RexxTable    *newDictionary;         /* returned merged mdict             */
-  RexxMethod   *method;                /* method to be added                */
+  RexxMethod   *newMethod;             /* method to be added                */
   RexxString   *method_name;           /* method name to be added           */
   RexxSupplier *supplier;              /* working supplier object           */
 
@@ -919,23 +919,23 @@ RexxTable *RexxClass::methodDictionaryCreate(
                                        /* get the method name (uppercased)  */
     method_name = REQUEST_STRING(supplier->index())->upper();
                                        /* get the method                    */
-    method = (RexxMethod *)supplier->value();
+    newMethod = (RexxMethod *)supplier->value();
                                        /* if the method is not TheNilObject */
-    if (method != (RexxMethod *)TheNilObject) {
+    if (newMethod != (RexxMethod *)TheNilObject) {
                                        /* and it isn't a primitive method   */
-      if (!OTYPE(Method, method)) {    /* object                            */
+      if (!OTYPE(Method, newMethod)) { /* object                            */
                                        /* make it into a method object      */
-         method = TheMethodClass->newRexxCode(method_name, method, IntegerOne);
-         method->setScope(scope);      /* and set the scope to the given    */
+         newMethod = TheMethodClass->newRexxCode(method_name, newMethod, IntegerOne);
+         newMethod->setScope(scope);   /* and set the scope to the given    */
       }
       else {
                                        /* if it is a primitive method object */
                                        /* let the newscope method copy it    */
-         method = method->newScope(scope);
+         newMethod = newMethod->newScope(scope);
       }
     }
                                        /* add the method to the target mdict */
-    newDictionary->stringAdd(method, method_name);
+    newDictionary->stringAdd(newMethod, method_name);
   }
   discard(supplier);                   /* done with the supplier            */
   discard_hold(newDictionary);         /* and also the dictionary           */
@@ -1000,9 +1000,9 @@ RexxObject *RexxClass::inherit(
 /*            or the specified position (parameter two).                     */
 /*****************************************************************************/
 {
-  LONG          class_index;           /* index for class superclasses list */
-  LONG          instance_index;        /* index for instance superclasses   */
-  long i;                              /* loop counter                      */
+  HashLink      class_index;           /* index for class superclasses list */
+  HashLink      instance_index;        /* index for instance superclasses   */
+  HashLink i;                          /* loop counter                      */
                                        /* make sure this isn't a rexx       */
   if (this->rexxDefined())             /* defined class being changed       */
                                        /* report as a nomethod condition    */
@@ -1053,10 +1053,13 @@ RexxObject *RexxClass::inherit(
                                        /* in the class superclasses list    */
                                        /* and the reciever's                */
                                        /* instance superclasses list        */
-    if (((class_index = this->classSuperClasses->indexOf(position)) == 0) ||
-       ((instance_index = this->instanceSuperClasses->indexOf(position)) == 0))
+    class_index = this->classSuperClasses->indexOf(position);
+    instance_index = this->instanceSuperClasses->indexOf(position);
+    if (class_index == 0 || instance_index == 0)
+    {
                                        /* if it isn't raise an error        */
-      report_exception2(Error_Execution_uninherit, this, position);
+        report_exception2(Error_Execution_uninherit, this, position);
+    }
                                        /* insert the mixin class into the   */
                                        /* superclasses list's               */
     this->classSuperClasses->insertItem(mixin_class, class_index + 1);
@@ -1174,7 +1177,7 @@ RexxObject *RexxClass::enhanced(
 }
 
 RexxClass  *RexxClass::mixinclass(
-    RexxString  * id,                  /* ID name of the class              */
+    RexxString  * mixin_id,            /* ID name of the class              */
     RexxClass   * meta_class,          /* source meta class                 */
                                        /* extra class methods               */
     RexxTable   * enhancing_class_methods)
@@ -1185,7 +1188,7 @@ RexxClass  *RexxClass::mixinclass(
 {
   RexxClass * mixin_subclass;          /* new mixin subclass                */
                                        /* call subclass with the parameters */
-  mixin_subclass = this->subclass(id, meta_class, enhancing_class_methods);
+  mixin_subclass = this->subclass(mixin_id, meta_class, enhancing_class_methods);
   mixin_subclass->setMixinClass();     /* turn on the mixin info            */
                                        /* change the base class to the base */
                                        /* class of the reciever             */
@@ -1199,7 +1202,7 @@ RexxClass  *RexxClass::mixinclass(
 
 
 RexxClass  *RexxClass::subclass(
-    RexxString  * id,                  /* ID name of the class              */
+    RexxString  * class_id,            /* ID name of the class              */
     RexxClass   * meta_class,          /* source meta class                 */
                                        /* extra class methods               */
     RexxTable   * enhancing_class_methods)
@@ -1216,7 +1219,7 @@ RexxClass  *RexxClass::subclass(
   if (!meta_class->queryMeta())        /* check that it is a meta class     */
     report_exception1(Error_Translation_bad_metaclass, meta_class);
                                        /* get a copy of the metaclass class */
-  new_class = (RexxClass *)save(meta_class->sendMessage(OREF_NEW, id));
+  new_class = (RexxClass *)save(meta_class->sendMessage(OREF_NEW, class_id));
   new_class->hashvalue = HASHOREF(new_class);
   if (this->queryMeta()) {             /* if the superclass is a metaclass  */
     new_class->setMeta();              /* mark the new class as a meta class*/
@@ -1305,7 +1308,7 @@ RexxInteger *RexxClass::importedRexx()
 
 RexxClass  *RexxClass::external(
     RexxString *externalString,        /* external class name               */
-    RexxClass  *metaClass,             /* external meta class               */
+    RexxClass  *source_metaClass,      /* external meta class               */
     RexxTable  *enhancingClassMethods) /* additional CLass methods          */
 /******************************************************************************/
 /* Function:  Process an external class definition                            */
@@ -1353,7 +1356,7 @@ RexxClass  *RexxClass::external(
 
     if (classModel->strCompare(CHAR_SOM)) {
                                        /* Yes, then import from localserver */
-      externalClass = (RexxClass *)ProcessLocalServer->sendMessage(OREF_IMPORT, className, metaClass, enhancingClassMethods);
+      externalClass = (RexxClass *)ProcessLocalServer->sendMessage(OREF_IMPORT, className, source_metaClass, enhancingClassMethods);
     }
                                        /* Not SOM, is it WPS?               */
     else if (classModel->strCompare(CHAR_WPS)) {
@@ -1361,7 +1364,7 @@ RexxClass  *RexxClass::external(
        classServer = TheEnvironment->at(OREF_WPS);
        if (OREF_NULL != classServer) {
                                        /* Yes, import the class through WPS */
-         externalClass = (RexxClass *)classServer->sendMessage(OREF_IMPORT, className, metaClass, enhancingClassMethods);
+         externalClass = (RexxClass *)classServer->sendMessage(OREF_IMPORT, className, source_metaClass, enhancingClassMethods);
        }
        else
          report_exception1(Error_Execution_class_server_not_installed, classModel);
@@ -1377,7 +1380,7 @@ RexxClass  *RexxClass::external(
          discard_hold(className);      /* done with perm hold, on classname */
        }
                                        /* now load up the class through DSOM*/
-       externalClass = (RexxClass *)classServer->sendMessage(OREF_IMPORT, className, metaClass, enhancingClassMethods);
+       externalClass = (RexxClass *)classServer->sendMessage(OREF_IMPORT, className, source_metaClass, enhancingClassMethods);
     }
     else
       report_exception1(Error_Translation_class_external_bad_class_server, classModel);
@@ -1549,7 +1552,7 @@ RexxObject *RexxClass::exportMethod(
     RexxString *cid,                   /* class ID                          */
     RexxString *sId,                   /* super class ID                    */
     long numMeths,                     /* number of static methods          */
-    RexxClass  *metaClass)             /* SOM meta class                    */
+    RexxClass  *som_metaClass)         /* SOM meta class                    */
 /******************************************************************************/
 /* Function:  Export a SOM method                                             */
 /******************************************************************************/
@@ -1596,12 +1599,12 @@ RexxObject *RexxClass::exportMethod(
     }
 
                                        /* create the SOM class              */
-    if (metaClass == TheNilObject) {
+    if (som_metaClass == TheNilObject) {
                                        /* use parent's metaclass            */
       mclsobj = (SOMClass *)SOM_GetClass(pclsobj);
     }
     else {
-      mclass = metaClass->somClass;
+      mclass = som_metaClass->somClass;
       mclsobj = (SOMClass *)mclass->value;
     }
     classobj = (SOMClass *)mclsobj->somNew();
@@ -1707,37 +1710,37 @@ RexxSOMProxy *RexxClass::newOpart(
 /*                                                                            */
 /******************************************************************************/
 {
-  RexxSOMProxy * newObject;            /* newly created object              */
+  RexxSOMProxy * newProxy;             /* newly created object              */
                                        /* create new object REXX object     */
-  newObject = new RexxSOMProxy;
+  newProxy = new RexxSOMProxy;
                                        /* Set the behaviour                 */
-  BehaviourSet(newObject, this->instanceBehaviour);
+  BehaviourSet(newProxy, this->instanceBehaviour);
                                        /* does object have an UNINT method  */
   if (this->uninitDefined())  {
                                        /* Make sure everyone is notified.   */
-     newObject->hasUninit();
+     newProxy->hasUninit();
   }
                                        /* initalize the Proxy portion       */
-  newObject->initProxy(somObj);
-  return newObject;                    /* return new object.                */
+  newProxy->initProxy(somObj);
+  return newProxy;                     /* return new object.                */
 }
 
 void RexxClass::setMetaClass(
-    RexxClass *metaClass )             /* new meta class to add             */
+    RexxClass *new_metaClass )         /* new meta class to add             */
 /******************************************************************************/
 /* Function:  Set a metaclass for a class                                     */
 /******************************************************************************/
 {
     OrefSet(this, this->metaClass, new_array1(TheClassClass));
-    this->metaClass->addFirst(metaClass);
+    this->metaClass->addFirst(new_metaClass);
                                        /* the metaclass mdict list           */
     OrefSet(this, this->metaClassMethodDictionary, new_array1(TheClassClass->instanceMethodDictionary->copy()));
-    this->metaClassMethodDictionary->addFirst(metaClass->instanceMethodDictionary);
+    this->metaClassMethodDictionary->addFirst(new_metaClass->instanceMethodDictionary);
                                        /* and the metaclass scopes list      */
     OrefSet(this, this->metaClassScopes, (RexxObjectTable *)TheClassClass->behaviour->scopes->copy());
                                        /* add the scope list for this scope  */
-    this->metaClassScopes->add(metaClass, TheNilObject);
-    this->metaClassScopes->add(this->metaClassScopes->allAt(TheNilObject), metaClass);
+    this->metaClassScopes->add(new_metaClass, TheNilObject);
+    this->metaClassScopes->add(this->metaClassScopes->allAt(TheNilObject), new_metaClass);
 }
 
 
@@ -1842,12 +1845,12 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
 /*****************************************************************************/
 {
   RexxClass  * new_class;              /* holder for the new class          */
-  RexxString * id;                     /* id parameter                      */
+  RexxString * class_id;               /* id parameter                      */
   if (argCount == 0)                   /* make sure an arg   was passed in  */
                                        /* if not report an error            */
     report_exception1(Error_Incorrect_method_minarg, IntegerOne);
-  id = (RexxString *)args[0];          /* get the id parameter              */
-  id = REQUIRED_STRING(id, ARG_ONE);   /* and that it can be a string       */
+  class_id = (RexxString *)args[0];    /* get the id parameter              */
+  class_id = REQUIRED_STRING(class_id, ARG_ONE);   /* and that it can be a string       */
                                        /* get a copy of this class object   */
   new_class = (RexxClass *)memoryObject.clone(this);
                                        /* update cloned hashvalue           */
@@ -1913,7 +1916,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
                                        /* set the som class to .nil          */
   OrefSet(new_class, new_class->somClass, (RexxInteger *)TheNilObject);
                                        /* set the id into the class object   */
-  OrefSet(new_class, new_class->id, id);
+  OrefSet(new_class, new_class->id, class_id);
                                        /* clear the info area except for     */
                                        /* uninit and imported                */
   new_class->class_info &= (HAS_UNINIT & IMPORTED);

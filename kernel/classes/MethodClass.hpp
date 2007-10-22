@@ -57,7 +57,7 @@
   public:
   void *operator new(size_t);
   inline void *operator new(size_t size, void *ptr) { return ptr; };
-  RexxMethod(ULONG, PCPPM, LONG, RexxInternalObject *);
+  RexxMethod(size_t, PCPPM, size_t, RexxInternalObject *);
   inline RexxMethod(RESTORETYPE restoreType) { ; };
   void execute(RexxObject *, RexxObject *);
   void live();
@@ -65,7 +65,7 @@
   void flatten(RexxEnvelope*);
   RexxObject   *unflatten(RexxEnvelope *envelope);
   RexxObject   *run(RexxActivity *,  RexxObject *, RexxString *,  size_t, RexxObject **);
-  RexxObject   *call(RexxActivity *,  RexxObject *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, ULONG);
+  RexxObject   *call(RexxActivity *,  RexxObject *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int);
   RexxMethod  *newScope(RexxClass  *);
   RexxArray   *source();
   RexxObject  *setInterface( RexxDirectory *);
@@ -84,23 +84,23 @@
   RexxObject  *isPrivateRexx();
   RexxObject  *isProtectedRexx();
 
-   inline USHORT methnum() {return this->methodInfo.methnum; };
-   inline UCHAR  arguments() {return this->methodInfo.arguments; };
-   inline UCHAR  flags() {return this->methodInfo.flags; };
+   inline size_t methnum() {return this->methodInfo.methnum; };
+   inline size_t  arguments() {return this->methodInfo.arguments; };
+   inline size_t  flags() {return this->methodInfo.flags; };
    inline void   setMethnum(USHORT num) { this->methodInfo.methnum = num; };
    inline void   setFlags(UCHAR newFlags) { this->methodInfo.flags = newFlags; };
    inline void   setArguments(UCHAR args) { this->methodInfo.arguments = args; };
 
-   inline BOOL   isGuarded()      {return !(this->methodInfo.flags & UNGUARDED_FLAG); };
-   inline BOOL   isInternal()     {return this->methodInfo.flags & INTERNAL_FLAG; };
-   inline BOOL   isPrivate()      {return this->methodInfo.flags & PRIVATE_FLAG;}
-   inline BOOL   isProtected()    {return this->methodInfo.flags & PROTECTED_FLAG;}
-   inline BOOL   isSpecial()      {return this->methodInfo.flags & (PROTECTED_FLAG | PRIVATE_FLAG);}
+   inline bool   isGuarded()      {return (this->methodInfo.flags & UNGUARDED_FLAG) == 0; };
+   inline bool   isInternal()     {return (this->methodInfo.flags & INTERNAL_FLAG) != 0; };
+   inline bool   isPrivate()      {return (this->methodInfo.flags & PRIVATE_FLAG) != 0;}
+   inline bool   isProtected()    {return (this->methodInfo.flags & PROTECTED_FLAG) != 0;}
+   inline bool   isSpecial()      {return (this->methodInfo.flags & (PROTECTED_FLAG | PRIVATE_FLAG)) != 0;}
 
-   inline BOOL   isRexxMethod()   {return this->methodInfo.flags & REXX_METHOD; };
-   inline BOOL   isSOMMethod()    {return this->methodInfo.flags & SOM_METHOD; };
-   inline BOOL   isNativeMethod() {return this->methodInfo.flags & NATIVE_METHOD; };
-   inline BOOL   isCPPMethod()    {return this->methodInfo.flags & KERNEL_CPP_METHOD; };
+   inline bool   isRexxMethod()   {return (this->methodInfo.flags & REXX_METHOD) != 0; };
+   inline bool   isSOMMethod()    {return (this->methodInfo.flags & SOM_METHOD) != 0; };
+   inline bool   isNativeMethod() {return (this->methodInfo.flags & NATIVE_METHOD) != 0; };
+   inline bool   isCPPMethod()    {return (this->methodInfo.flags & KERNEL_CPP_METHOD) != 0; };
 
    inline void   setUnGuarded()    {this->methodInfo.flags |= UNGUARDED_FLAG;};
    inline void   setGuarded()      {this->methodInfo.flags &= ~UNGUARDED_FLAG;};

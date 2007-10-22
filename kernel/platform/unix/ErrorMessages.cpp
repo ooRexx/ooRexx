@@ -69,12 +69,12 @@
 
                                        /* define macros to bulid entries in */
                                        /* the msgEntry table for msg lookup */
-#define MAJOR(code)   code, code##_msg,/* Major error codes                 */
-#define MINOR(code)   code, code##_msg,/* Minor error codes (sub-codes)     */
+#define MAJOR(code)   {code, code##_msg},/* Major error codes                 */
+#define MINOR(code)   {code, code##_msg},/* Minor error codes (sub-codes)     */
 
 typedef struct msgEntry {              /* define for error table entries    */
- int   code;                           /* error message code                */
- ULONG msgid;                          /* error message number              */
+ int    code;                          /* error message code                */
+ int    msgid;                         /* error message number              */
 } ERROR_MESSAGE;
 
 #include "RexxMessageNumbers.h"        /* include  definition of errorcodes */

@@ -53,8 +53,6 @@
 #include "NumberStringMath.hpp"
 
 extern ACTIVATION_SETTINGS *current_settings;
-                                       /* create a hex table                */
-static char hextab[] = "0123456789ABCDEF";
 
 /*********************************************************************/
 /*                                                                   */
@@ -66,10 +64,10 @@ static char hextab[] = "0123456789ABCDEF";
 /*                                                                   */
 /*********************************************************************/
 
-INT HexDigitToInt(
-  UCHAR ch)                            /* input hex digit                   */
+int HexDigitToInt(
+  char  ch)                            /* input hex digit                   */
 {
-  INT   Retval;                        /* return value                      */
+  int   Retval;                        /* return value                      */
 
   if (isdigit(ch))                     /* if real digit                     */
     Retval = ch - '0';                 /* convert that                      */
@@ -88,16 +86,16 @@ INT HexDigitToInt(
 /*                                                                   */
 /*********************************************************************/
 
-UCHAR PackByte(
-  PCHAR String )                       /* string to pack                    */
+char PackByte(
+  const char *String )                 /* string to pack                    */
 {
-  UCHAR Result;                        /* returned byte                     */
-  UINT  i;
+  char  Result;                        /* returned byte                     */
+  int   i;
 
   Result = 0;                          /* start off at zero                 */
   for (i = 0; i < 8; i++)              /* loop thru 8 chars                 */
     if (String[i] == '1')              /* if 'bit' set                      */
-      Result |= ((UINT)1<<((UINT)7-i));/* or with mask                      */
+      Result |= (1<<(7-i));            /* or with mask                      */
   return Result;                       /* return packed byte                */
 }
 
@@ -111,15 +109,15 @@ UCHAR PackByte(
 /*                                                                   */
 /*********************************************************************/
 
-UCHAR PackNibble(
-  PCHAR String )                       /* string to pack                    */
+char PackNibble(
+  const char *String )                 /* string to pack                    */
 {
-  CHAR  Buf[8];                        /* temporary buffer                  */
-  INT   i;                             /* table index                       */
+  char  Buf[8];                        /* temporary buffer                  */
+  int   i;                             /* table index                       */
 
   memset(Buf, '0', 4);                 /* set first 4 bytes to zero         */
   memcpy(Buf+4, String, 4);            /* copy next 4 bytes                 */
-  i = (INT)PackByte(Buf);              /* pack to a single byte             */
+  i = PackByte(Buf);                   /* pack to a single byte             */
   return "0123456789ABCDEF"[i];        /* convert to a printable character  */
 }
 
@@ -138,18 +136,18 @@ UCHAR PackNibble(
 /*                                                                   */
 /*********************************************************************/
 
-UCHAR PackByte2(
-  PCHAR    Byte )                      /* location to pack                  */
+char PackByte2(
+  const char *Byte )                   /* location to pack                  */
 {
-  INT      Nibble1;                    /* first nibble                      */
-  INT      Nibble2;                    /* second nibble                     */
+  int      Nibble1;                    /* first nibble                      */
+  int      Nibble2;                    /* second nibble                     */
 
                                        /* convert each digit                */
   Nibble1 = HexDigitToInt(Byte[0]);
   Nibble2 = HexDigitToInt(Byte[1]);
                                        /* combine the two digits            */
 
-  return (UCHAR)((UINT)((UINT)Nibble1<<4) | (UINT)Nibble2);
+  return ((Nibble1 << 4) | Nibble2);
 }
 
 /*********************************************************************/
@@ -168,19 +166,19 @@ UCHAR PackByte2(
 /*                                                                   */
 /*********************************************************************/
 
-INT ValidateSet(
+int ValidateSet(
   const char *String,                  /* string to validate                */
   size_t    Length,                    /* string length                     */
   const char *Set,                     /* character set                     */
-  INT       Modulus,                   /* smallest group size               */
-  BOOL      Hex )                      /* HEX or BIN flag                   */
+  int       Modulus,                   /* smallest group size               */
+  bool      Hex )                      /* HEX or BIN flag                   */
 {
-  UCHAR    c;                          /* current character                 */
+  char     c;                          /* current character                 */
   size_t   Count;                      /* # set members found               */
   const char *Current;                 /* current location                  */
-  const char *SpaceLocation;           /* location of last space            */
-  INT      SpaceFound;                 /* space found yet?                  */
-  size_t   Residue;                    /* if space_found, # set             */
+  const char *SpaceLocation = NULL;    /* location of last space            */
+  int      SpaceFound;                 /* space found yet?                  */
+  size_t   Residue = 0;                /* if space_found, # set             */
                                        /* members                           */
 
   if (*String == ch_SPACE)             /* if no leading blank               */
@@ -343,13 +341,13 @@ RexxString *PackHex(
 /*********************************************************************/
 
 void UnpackNibble(
-  INT    Val,                          /* nibble to unpack           */
-  PCHAR p )                            /* nibble output location     */
+  int    Val,                          /* nibble to unpack           */
+  char   *p )                          /* nibble output location     */
 {
-  p[0] = (UCHAR)((((unsigned)Val)&8u)?'1':'0');
-  p[1] = (UCHAR)((((unsigned)Val)&4u)?'1':'0');
-  p[2] = (UCHAR)((((unsigned)Val)&2u)?'1':'0');
-  p[3] = (UCHAR)((((unsigned)Val)&1u)?'1':'0');
+  p[0] = (Val & 0x08) != 0 ?'1':'0';
+  p[1] = (Val & 0x04) != 0 ?'1':'0';
+  p[2] = (Val & 0x02) != 0 ?'1':'0';
+  p[3] = (Val & 0x01) != 0 ?'1':'0';
 }
 
 /**
@@ -438,7 +436,7 @@ RexxString *RexxString::decodeBase64()
         /* the input string is an invalid length */
         report_exception(Error_Incorrect_method_invbase64);
     }
-    char *source = (char *)this->getStringData();
+    const char *source = (char *)this->getStringData();
     /* figure out the output string length */
     size_t outputLength = (inputLength / 4) * 3;
     if (*(source + inputLength - 1) == '=')
@@ -512,21 +510,21 @@ RexxString *RexxString::c2x()
 /* Function:  Process the string C2X method/function                          */
 /******************************************************************************/
 {
-  UINT        InputLength;             /* length of converted string        */
+  size_t      InputLength;             /* length of converted string        */
   RexxString *Retval;                  /* return value                      */
-  PCHAR       Source;                  /* input string pointer              */
-  PCHAR       Destination;             /* output string pointer             */
-  CHAR        ch;                      /* current character                 */
+  const char *Source;                  /* input string pointer              */
+  char *      Destination;             /* output string pointer             */
+  char        ch;                      /* current character                 */
 
-  InputLength = this->length;          /* get length of string              */
+  InputLength = this->getLength();          /* get length of string              */
   if (!InputLength)                    /* null string?                      */
     Retval = OREF_NULLSTRING;          /* converts to a null string         */
   else {                               /* real data to convert              */
                                        /* allocate output string            */
     Retval = raw_string(InputLength * 2);
-    Source = (PCHAR)this->stringData;  /* point to converted string         */
+    Source = this->getStringData();    /* point to converted string         */
                                        /* point to output area              */
-    Destination = Retval->stringData;
+    Destination = Retval->getWritableData();
     while (InputLength--) {            /* while more string                 */
       ch = *Source++;                  /* get next character                */
                  /***********************************************************/
@@ -534,12 +532,12 @@ RexxString *RexxString::c2x()
                  /* logical ANDING with F to convert to integer then convert*/
                  /* to hex value and put it in destination                  */
                  /***********************************************************/
-      *Destination++ = IntToHexDigit((UCHAR)((UCHAR)ch>>4) & (UCHAR)0xF);
+      *Destination++ = IntToHexDigit((ch>>4) & 0xF);
                  /***********************************************************/
                  /* logical AND with F to convert lower nibble to integer   */
                  /* then convert to hex value and put it in destination     */
                  /***********************************************************/
-      *Destination++ = IntToHexDigit((UCHAR)ch  & (UCHAR)0xF);
+      *Destination++ = IntToHexDigit(ch  & 0xF);
     }
                                        /* done building the string          */
     Retval->generateHash();
@@ -547,7 +545,7 @@ RexxString *RexxString::c2x()
   return Retval;                       /* return converted string           */
 }
 
-RexxString *RexxString::d2c(RexxInteger *length)
+RexxString *RexxString::d2c(RexxInteger *_length)
 /******************************************************************************/
 /* Function:  Process the string D2C method/function                          */
 /******************************************************************************/
@@ -560,10 +558,10 @@ RexxString *RexxString::d2c(RexxInteger *length)
                                        /* report this                       */
     report_exception1(Error_Incorrect_method_d2c, this);
                                        /* format as a string value          */
-  return numberstring->d2xD2c(length, TRUE);
+  return numberstring->d2xD2c(_length, TRUE);
 }
 
-RexxString *RexxString::d2x(RexxInteger *length)
+RexxString *RexxString::d2x(RexxInteger *_length)
 /******************************************************************************/
 /* Function:  Process the string D2X method/function                          */
 /******************************************************************************/
@@ -576,7 +574,7 @@ RexxString *RexxString::d2x(RexxInteger *length)
                                        /* report this                       */
     report_exception1(Error_Incorrect_method_d2x, this);
                                        /* format as a string value          */
-  return numberstring->d2xD2c(length, FALSE);
+  return numberstring->d2xD2c(_length, FALSE);
 }
 
 RexxString *RexxString::x2c()
@@ -587,27 +585,27 @@ RexxString *RexxString::x2c()
   size_t   InputLength;                /* length of converted string */
   RexxString *Retval;                  /* return value               */
 
-  InputLength = this->length;          /* get length of string       */
+  InputLength = this->getLength();          /* get length of string       */
   if (!InputLength)                    /* null string?               */
     Retval = OREF_NULLSTRING;          /* converts to a null string         */
 
   else                                 /* real data to convert       */
                                        /* try to pack the data       */
-    Retval = PackHex(this->stringData, InputLength);
+    Retval = PackHex(this->getStringData(), InputLength);
   return Retval;                       /* return the packed string   */
 }
 
-RexxString *RexxString::x2d(RexxInteger *length)
+RexxString *RexxString::x2d(RexxInteger *_length)
 /******************************************************************************/
 /* Function:  Process the string X2D method/function                          */
 /******************************************************************************/
 {
                                        /* forward to the common routine     */
-  return this->x2dC2d(length, FALSE);
+  return this->x2dC2d(_length, FALSE);
 }
 
 
-RexxString *RexxString::x2dC2d(RexxInteger *length,
+RexxString *RexxString::x2dC2d(RexxInteger *_length,
                                BOOL type )
 /******************************************************************************/
 /* Function:  Common X2D/X2C processing routine                               */
@@ -615,14 +613,14 @@ RexxString *RexxString::x2dC2d(RexxInteger *length,
 {
   size_t     ResultSize;               /* size of result string             */
   size_t     TempSize;                 /* temporary size value              */
-  INT        ch;                       /* addition character                */
+  int        ch;                       /* addition character                */
   size_t     StringLength;             /* input string length               */
-  PCHAR      Scan;                     /* scan pointer                      */
-  PCHAR      HighDigit;                /* high digit position               */
-  PCHAR      Accumulator;              /* accumulator pointer               */
+  char       *Scan;                    /* scan pointer                      */
+  char       *HighDigit;               /* high digit position               */
+  char *     Accumulator;              /* accumulator pointer               */
   BOOL       Negative;                 /* have a negative number            */
   RexxString *String;                  /* converted string                  */
-  PCHAR      StringPtr;                /* string value pointer              */
+  char       *StringPtr;               /* string value pointer              */
   size_t     BytePosition;             /* position of high byte             */
   size_t     NibblePosition;           /* position of high nibble           */
   size_t     DecLength;                /* length of accumulator             */
@@ -632,18 +630,18 @@ RexxString *RexxString::x2dC2d(RexxInteger *length,
   size_t     CurrentDigits;            /* current digits setting            */
 
   CurrentDigits = number_digits();     /* get the current digits setting    */
-  StringLength = this->length;         /* get Argument string length        */
+  StringLength = this->getLength();         /* get Argument string length        */
                                        /* get the target length             */
-  ResultSize = optional_length(length, -1, ARG_ONE);
+  ResultSize = optional_length(_length, -1, ARG_ONE);
   if (!ResultSize)                     /* zero requested                    */
     return (RexxString *)IntegerZero;  /* always returns zero               */
 
   String = this;                       /* use this string directly          */
-  StringPtr = this->stringData;        /* get a string pointer              */
+  StringPtr = this->getWritableData(); /* get a string pointer              */
   NibblePosition = 0;                  /* assume an even nibble number      */
 
   if (type == TRUE) {                  /* dealing with character?           */
-    if (ResultSize == -1) {            /* no size specified?                */
+    if (_length == OREF_NULL) {        /* no size specified?                */
       Negative = FALSE;                /* can't be negative                 */
       ResultSize = StringLength;       /* use entire string                 */
     }
@@ -655,12 +653,12 @@ RexxString *RexxString::x2dC2d(RexxInteger *length,
         StringPtr += StringLength - ResultSize;
         StringLength = ResultSize;     /* adjust the size down              */
 
-        if (*StringPtr & (UCHAR)0x80) {/* first bit on?                     */
+        if (*StringPtr & 0x80) {       /* first bit on?                     */
           Negative = TRUE;             /* this is a negative number         */
                                        /* copy the string                   */
           String = (RexxString *)this->copy();
                                        /* point to the string               */
-          StringPtr = String->stringData + this->length - ResultSize;
+          StringPtr = String->getWritableData() + this->getLength() - ResultSize;
         }
         else                           /* still a positive number           */
           Negative = FALSE;            /* remember for later                */
@@ -671,10 +669,10 @@ RexxString *RexxString::x2dC2d(RexxInteger *length,
                                        /* pack the string                   */
     String = (RexxString *)PackHex(StringPtr, StringLength);
                                        /* get the packed length             */
-    StringLength = String->length;
+    StringLength = String->getLength();
                                        /* point to the packed data          */
-    StringPtr = String->stringData;
-    if (ResultSize == -1) {            /* no size specified?                */
+    StringPtr = String->getWritableData();
+    if (_length == OREF_NULL) {        /* no size specified?                */
       Negative = FALSE;                /* can't be negative                 */
       ResultSize = StringLength;       /* use entire string                 */
     }
@@ -696,9 +694,9 @@ RexxString *RexxString::x2dC2d(RexxInteger *length,
 
         if ((NibblePosition &&         /* odd number of nibbles             */
                                        /* and low nibble negative?          */
-            *StringPtr & (UCHAR)0x08) ||
+            *StringPtr & 0x08) ||
             (!NibblePosition &&        /* or even number of nibbles         */
-            *StringPtr & (UCHAR)0x80)) /* and high nibble negative?         */
+            *StringPtr & 0x80))        /* and high nibble negative?         */
           Negative = TRUE;             /* this is a negative number         */
         else                           /* still a positive number           */
           Negative = FALSE;            /* remember for later                */
@@ -712,17 +710,17 @@ RexxString *RexxString::x2dC2d(RexxInteger *length,
 
     while (TempSize--) {               /* reverse each byte                 */
                                        /* exclusive or with foxes           */
-      *Scan = (UCHAR)(*Scan ^ (UCHAR)0xff);
+      *Scan = *Scan ^ 0xff;
       Scan++;                          /* step the pointer                  */
     }
                                        /* point to the first byte           */
     Scan = StringPtr + StringLength - 1;
     TempSize = StringLength;           /* copy the size                     */
     while (TempSize--) {               /* now add one to the number         */
-      ch = (UCHAR)*Scan;               /* get the character                 */
+      ch = *Scan;                      /* get the character                 */
       ch++;                            /* increment                         */
-      if (ch <= (UCHAR)0xff) {         /* no carry over?                    */
-        *Scan = (UCHAR)ch;             /* set value back                    */
+      if (ch <= 0xff) {                /* no carry over?                    */
+        *Scan = ch;                    /* set value back                    */
         break;                         /* we're finished                    */
       }
       else {                           /* carried out                       */
@@ -740,15 +738,13 @@ RexxString *RexxString::x2dC2d(RexxInteger *length,
                                        /* set accumulator pointer           */
   Accumulator = Buffer->data + CurrentDigits + OVERFLOWSPACE;
                                        /* clear the buffer                  */
-  memset(Buffer->data,
-         '\0',
-         CurrentDigits + OVERFLOWSPACE + 1);
+  memset(Buffer->data, '\0', CurrentDigits + OVERFLOWSPACE + 1);
   HighDigit = Accumulator - 1;         /* set initial high point            */
 
   while (StringLength--) {             /* while more digits                 */
     ch = *Scan++;                      /* get the character                 */
                                        /* add high order nibble             */
-    HighDigit = AddToBaseTen((UCHAR)((unsigned)ch & (unsigned)0xf0)>>4, Accumulator, HighDigit);
+    HighDigit = AddToBaseTen((ch & 0xf0) >> 4, Accumulator, HighDigit);
                                        /* multiply by 16                    */
     HighDigit = MultiplyBaseTen(Accumulator, HighDigit);
                                        /* get accumulator length            */
@@ -760,7 +756,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *length,
         report_exception1(Error_Incorrect_method_x2dbig, new_integer(CurrentDigits));
     }
                                        /* add high order nibble             */
-    HighDigit = AddToBaseTen((UCHAR)ch & (UCHAR)0x0f, Accumulator, HighDigit);
+    HighDigit = AddToBaseTen(ch & 0x0f, Accumulator, HighDigit);
     if (StringLength != 0)             /* not the last one?                 */
                                        /* multiply by 16                    */
       HighDigit = MultiplyBaseTen(Accumulator, HighDigit);
@@ -779,7 +775,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *length,
   Scan = HighDigit + 1;                /* point to the first digit          */
   while (TempLength--) {               /* make into real digits again       */
                                        /* add zero to each digit            */
-    *Scan = (UCHAR)(*Scan + (UCHAR)'0');
+    *Scan = *Scan + '0';
     Scan++;                            /* step the pointer                  */
   }
 
@@ -787,7 +783,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *length,
   if (Negative)                        /* negative number?                  */
     ResultSize++;                      /* add in space for the sign         */
   Retval = raw_string(ResultSize);     /* allocate output buffer            */
-  Scan = Retval->stringData;           /* point to output location          */
+  Scan = Retval->getWritableData();    /* point to output location          */
   if (Negative)                        /* need a sign?                      */
     *Scan++ = '-';                     /* add to the front                  */
                                        /* copy in the number                */
@@ -803,14 +799,14 @@ RexxString *RexxString::b2x()
 {
   RexxString *Retval;                  /* function result                   */
   size_t   Bits;                       /* number of bits in string          */
-  PCHAR    Source;                     /* current source pointer            */
-  PCHAR    Destination;                /* destination pointer               */
+  const char *Source;                     /* current source pointer            */
+  char    *Destination;                /* destination pointer               */
   size_t   Excess;                     /* section boundary                  */
-  CHAR     Nibble[4];                  /* current nibble string             */
+  char     Nibble[4];                  /* current nibble string             */
   size_t   Jump;                       /* string movement offset            */
   size_t   Length;                     /* total string length               */
 
-  if (this->length == 0)               /* null input, i.e. zerolength       */
+  if (this->getLength() == 0)               /* null input, i.e. zerolength       */
                                        /* string                            */
     Retval = OREF_NULLSTRING;          /* return null                       */
   else {                               /* need to do conversion             */
@@ -819,9 +815,9 @@ RexxString *RexxString::b2x()
                                        /* allocate space for result         */
     Retval = raw_string((Bits + 3) / 4);
                                        /* point to the data                 */
-    Destination = Retval->stringData;
-    Source = (PCHAR)this->stringData;  /* point to the source               */
-    Length = this->length;             /* get the string length             */
+    Destination = Retval->getWritableData();
+    Source = this->getStringData();    /* point to the source               */
+    Length = this->getLength();        /* get the string length             */
 
     while (Bits > 0) {                 /* process the string                */
       Excess = Bits % 4;               /* calculate section size            */
@@ -831,7 +827,7 @@ RexxString *RexxString::b2x()
         memset(Nibble, '0', 4);        /* pad the nibble with zeroes        */
       ChGetSm(&Nibble[0] + (4 - Excess), Source, Length, Excess, "01", &Jump);
                                        /* pack into destination             */
-      *Destination++ = PackNibble((PCHAR)Nibble);
+      *Destination++ = PackNibble(Nibble);
       Source += Jump;                  /* advance source pointer            */
       Length -= Jump;                  /* reduce remaining length           */
       Bits -= Excess;                  /* reduce remaining amount           */
@@ -842,13 +838,13 @@ RexxString *RexxString::b2x()
   return Retval;                       /* return packed string              */
 }
 
-RexxString *RexxString::c2d(RexxInteger *length)
+RexxString *RexxString::c2d(RexxInteger *_length)
 /******************************************************************************/
 /* Function:  Common C2D processing routine                                   */
 /******************************************************************************/
 {
                                        /* forward to the common routine     */
-  return this->x2dC2d(length, TRUE);
+  return this->x2dC2d(_length, TRUE);
 }
 
 RexxString *RexxString::x2b()
@@ -862,9 +858,9 @@ RexxString *RexxString::x2b()
   char    *Destination;                /* destination pointer               */
   char     Nibble[4];                  /* current nibble string             */
   char     ch;                         /* current string character          */
-  INT      Val;                        /* converted nible                   */
+  int      Val;                        /* converted nible                   */
 
-  if (this->length == 0)               /* null input, i.e. zerolength       */
+  if (this->getLength() == 0)               /* null input, i.e. zerolength       */
                                        /* string                            */
     Retval = OREF_NULLSTRING;          /* return null                       */
   else {                               /* have real data to pack            */
@@ -882,7 +878,7 @@ RexxString *RexxString::x2b()
         UnpackNibble(Val, Nibble);     /* then convert to binary            */
                                        /* digits                            */
                                        /* copy to the destination           */
-        memcpy(Destination, (const char *)Nibble, 4);
+        memcpy(Destination, Nibble, 4);
         Destination += 4;              /* bump destination pointer          */
         Nibbles--;                     /* Reduce nibbles count              */
       }

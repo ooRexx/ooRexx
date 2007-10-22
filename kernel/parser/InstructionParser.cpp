@@ -121,17 +121,17 @@ RexxInstruction *RexxSource::addressNew()
   environment = OREF_NULL;
   command = OREF_NULL;
   token = nextReal();                  /* get the next token                */
-  if (token->classId != TOKEN_EOC) {   /* something other than a toggle?    */
+  if (token->isEndOfClause()) {        /* something other than a toggle?    */
                                        /* something other than a symbol or  */
                                        /* string?...implicit value form     */
-    if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL) {
+    if (!token->isSymbolOrLiteral()) {
       previousToken();                 /* back up one token                 */
                                        /* process the expression            */
       expression = this->expression(TERM_EOC);
     }
     else {                             /* have a constant address target    */
                                        /* may be value keyword, however...  */
-      if (token->classId == TOKEN_SYMBOL && this->subKeyword(token) == SUBKEY_VALUE) {
+      if (this->subKeyword(token) == SUBKEY_VALUE) {
                                        /* process the expression            */
         expression = this->expression(TERM_EOC);
         if (expression == OREF_NULL)   /* no expression?                    */
@@ -142,7 +142,7 @@ RexxInstruction *RexxSource::addressNew()
         environment = token->value;    /* get the actual name value         */
         token = nextReal();            /* get the next token                */
                                        /* have a command following name?    */
-        if (token->classId != TOKEN_EOC) {
+        if (!token->isEndOfClause()) {
           previousToken();             /* step back a token                 */
                                        /* process the expression            */
           command = this->expression(TERM_EOC);
@@ -230,18 +230,18 @@ RexxInstruction *RexxSource::callNew()
   argCount = 0;                        /* no arguments yet                  */
 
   token = nextReal();                  /* get the next token                */
-  if (token->classId == TOKEN_EOC)     /* no target specified?              */
+  if (token->isEndOfClause())     /* no target specified?              */
                                        /* this is an error                  */
     report_error(Error_Symbol_or_string_call);
                                        /* may have to process ON/OFF forms  */
-  else if (token->classId == TOKEN_SYMBOL) {
+  else if (token->isSymbol()) {
     keyword = this->subKeyword(token); /* check for the subkeywords         */
     if (keyword == SUBKEY_ON) {        /* CALL ON instruction?              */
       flags |= call_on_off;            /* this is a CALL ON                 */
       token = nextReal();              /* get the next token                */
                                        /* no condition specified or not a   */
                                        /* symbol?                           */
-      if (token->classId != TOKEN_SYMBOL)
+      if (!token->isSymbol())
                                        /* this is an error                  */
         report_error(Error_Symbol_expected_on);
       keyword = this->condition(token);/* get the condition involved        */
@@ -260,7 +260,7 @@ RexxInstruction *RexxSource::callNew()
         token = nextReal();            /* get the next token                */
                                        /* no condition specified or not a   */
                                        /* symbol?                           */
-        if (token->classId != TOKEN_SYMBOL)
+        if (!token->isSymbol())
                                        /* this is an error                  */
           report_error(Error_Symbol_expected_user);
                                        /* set the builtin index for later   */
@@ -282,9 +282,9 @@ RexxInstruction *RexxSource::callNew()
       }
       token = nextReal();              /* get the next token                */
                                        /* anything real here?               */
-      if (token->classId != TOKEN_EOC) {
+      if (!token->isEndOfClause()) {
                                        /* not a symbol?                     */
-        if (token->classId != TOKEN_SYMBOL)
+        if (!token->isSymbol())
                                        /* this is an error                  */
           report_error_token(Error_Invalid_subkeyword_callonname, token);
                                        /* not the name token?               */
@@ -302,7 +302,7 @@ RexxInstruction *RexxSource::callNew()
         builtin_index = this->builtin(token);
         token = nextReal();            /* get the next token                */
                                        /* must have the clause end here     */
-        if (token->classId != TOKEN_EOC)
+        if (!token->isEndOfClause())
                                        /* this is an error                  */
           report_error_token(Error_Invalid_data_name, token);
       }
@@ -311,7 +311,7 @@ RexxInstruction *RexxSource::callNew()
       token = nextReal();              /* get the next token                */
                                        /* no condition specified or not a   */
                                        /* symbol?                           */
-      if (token->classId != TOKEN_SYMBOL)
+      if (!token->isSymbol())
                                        /* this is an error                  */
         report_error(Error_Symbol_expected_off);
                                        /* get the condition involved        */
@@ -330,7 +330,7 @@ RexxInstruction *RexxSource::callNew()
         token = nextReal();            /* get the next token                */
                                        /* no condition specified or not a   */
                                        /* symbol?                           */
-        if (token->classId != TOKEN_SYMBOL)
+        if (!token->isSymbol())
                                        /* this is an error                  */
           report_error(Error_Symbol_expected_user);
         condition = token->value;      /* get the token string value        */
@@ -342,7 +342,7 @@ RexxInstruction *RexxSource::callNew()
       else                             /* language defined condition        */
         condition = token->value;      /* set the condition name            */
       token = nextReal();              /* get the next token                */
-      if (token->classId != TOKEN_EOC) /* must have the clause end here     */
+      if (!token->isEndOfClause()) /* must have the clause end here     */
                                        /* this is an error                  */
         report_error_token(Error_Invalid_data_condition, token);
     }
@@ -357,7 +357,7 @@ RexxInstruction *RexxSource::callNew()
     }
   }
                                        /* call with a string target         */
-  else if (token->classId == TOKEN_LITERAL) {
+  else if (token->isLiteral()) {
     name = token->value;               /* set the default target            */
                                        /* set the builtin index for later   */
                                        /* resolution step                   */
@@ -455,14 +455,14 @@ RexxInstruction *RexxSource::createDoLoop(RexxInstructionDo *newDo, bool isLoop)
     // before doing anything, we need to test for a "LABEL name" before other options.  We
     // need to make certain we check that the LABEL keyword is not being
     // used as control variable.
-    if (token->classId == TOKEN_SYMBOL)
+    if (token->isSymbol())
     {
         // potentially a label.  Check the keyword value
         if (this->subKeyword(token) == SUBKEY_LABEL)
         {
             // if the next token is a symbol, this is a label.
             RexxToken *name = nextReal();
-            if (name->classId == TOKEN_SYMBOL)
+            if (name->isSymbol())
             {
                 OrefSet(newDo, newDo->label, name->value);
                 // update the reset position before stepping to the next position
@@ -486,7 +486,7 @@ RexxInstruction *RexxSource::createDoLoop(RexxInstructionDo *newDo, bool isLoop)
 
     // Just the single token means this is either a simple DO block or
     // a LOOP forever, depending on the type of instruction we're parsing.
-    if (token->classId == TOKEN_EOC)
+    if (token->isEndOfClause())
     {
         if (isLoop)
         {
@@ -500,7 +500,7 @@ RexxInstruction *RexxSource::createDoLoop(RexxInstructionDo *newDo, bool isLoop)
     }
 
 
-    if (token->classId == TOKEN_SYMBOL)
+    if (token->isSymbol())
     {
         // this can be a control variable or keyword.  We need to look ahead
         // to the next token.
@@ -540,7 +540,7 @@ RexxInstruction *RexxSource::createDoLoop(RexxInstructionDo *newDo, bool isLoop)
             // the end-of-clause or DO/LOOP keyword, we know the next token will by
             // a symbol
             token = nextReal();
-            while (token->classId != TOKEN_EOC)
+            while (!token->isEndOfClause())
             {
                 // this must be a keyword, so resolve it.
                 switch (this->subKeyword(token) )
@@ -774,13 +774,13 @@ RexxInstruction *RexxSource::endNew()
 
   name = OREF_NULL;                    /* no name yet                       */
   token = nextReal();                  /* get the next token                */
-  if (token->classId != TOKEN_EOC) {   /* have a name specified?            */
-    if (token->classId != TOKEN_SYMBOL)/* must have a symbol here           */
+  if (!token->isEndOfClause()) {   /* have a name specified?            */
+    if (!token->isSymbol())/* must have a symbol here           */
                                        /* this is an error                  */
       report_error(Error_Symbol_expected_end);
     name = token->value;               /* get the name pointer              */
     token = nextReal();                /* get the next token                */
-    if (token->classId != TOKEN_EOC)   /* end of the instruction?           */
+    if (!token->isEndOfClause())   /* end of the instruction?           */
                                        /* this is an error                  */
       report_error_token(Error_Invalid_data_end, token);
   }
@@ -853,8 +853,8 @@ void RexxSource::RexxInstructionForwardCreate(
   returnContinue = FALSE;              /* no return or continue yet         */
   token = nextReal();                  /* get the next token                */
 
-  while (token->classId != TOKEN_EOC) {/* while still more to process       */
-    if (token->classId != TOKEN_SYMBOL)/* not a symbol token?               */
+  while (!token->isEndOfClause()) {/* while still more to process       */
+    if (!token->isSymbol())/* not a symbol token?               */
                                        /* this is an error                  */
       report_error_token(Error_Invalid_subkeyword_forward_option, token);
     switch (this->subKeyword(token)) { /* get the keyword value             */
@@ -966,7 +966,7 @@ RexxInstruction *RexxSource::guardNew()
   RexxObject *newObject;               /* newly created object              */
   RexxArray  *variable_list;           /* list of variables                 */
   RexxToken  *token;                   /* current working token             */
-  BOOL        on_off;                  /* ON or OFF version                 */
+  bool        on_off;                  /* ON or OFF version                 */
   RexxObject *expression;              /* WHEN expression                   */
   INT         variable_count;          /* count of variables                */
 
@@ -974,7 +974,7 @@ RexxInstruction *RexxSource::guardNew()
   variable_list = OREF_NULL;           /* no variable either                */
   variable_count = 0;                  /* no variables yet                  */
   token = nextReal();                  /* get the next token                */
-  if (token->classId != TOKEN_SYMBOL)  /* must have a symbol here           */
+  if (!token->isSymbol())  /* must have a symbol here           */
                                        /* raise the error                   */
     report_error_token(Error_Symbol_expected_numeric, token);
 
@@ -982,11 +982,11 @@ RexxInstruction *RexxSource::guardNew()
                                        /* process the subkeyword            */
   switch (this->subKeyword(token)) {
     case SUBKEY_OFF:                   /* GUARD OFF instruction             */
-      on_off = FALSE;                  /* this is the guard off form        */
+      on_off = false;                  /* this is the guard off form        */
       break;
 
     case SUBKEY_ON:                    /* GUARD ON instruction              */
-      on_off = TRUE;                   /* remember it is the on form        */
+      on_off = true;                   /* remember it is the on form        */
       break;
 
     default:
@@ -995,7 +995,7 @@ RexxInstruction *RexxSource::guardNew()
       break;
   }
   token = nextReal();                  /* get the next token                */
-  if (token->classId == TOKEN_SYMBOL) {/* have the keyword form?            */
+  if (token->isSymbol()) {/* have the keyword form?            */
                                        /* resolve the subkeyword            */
     switch (this->subKeyword(token)) { /* and process                       */
 
@@ -1018,7 +1018,7 @@ RexxInstruction *RexxSource::guardNew()
         break;
     }
   }
-  else if (token->classId != TOKEN_EOC)/* not the end?                      */
+  else if (!token->isEndOfClause())/* not the end?                      */
                                        /* raise an error                    */
     report_error_token(Error_Invalid_subkeyword_guard_on, token);
 
@@ -1130,9 +1130,9 @@ RexxInstruction *RexxSource::leaveNew(
 
   name = OREF_NULL;                    /* no name yet                       */
   token = nextReal();                  /* get the next token                */
-  if (token->classId != TOKEN_EOC) {   /* have a name specified?            */
+  if (!token->isEndOfClause()) {   /* have a name specified?            */
                                        /* must have a symbol here           */
-    if (token->classId != TOKEN_SYMBOL) {
+    if (!token->isSymbol()) {
       if (type == KEYWORD_LEAVE)       /* is it a LEAVE?                    */
                                        /* this is an error                  */
         report_error(Error_Symbol_expected_leave);
@@ -1142,7 +1142,7 @@ RexxInstruction *RexxSource::leaveNew(
     }
     name = token->value;               /* get the name pointer              */
     token = nextReal();                /* get the next token                */
-    if (token->classId != TOKEN_EOC) { /* end of the instruction?           */
+    if (!token->isEndOfClause()) { /* end of the instruction?           */
       if (type == KEYWORD_LEAVE)       /* is it a LEAVE?                    */
                                        /* this is an error                  */
         report_error_token(Error_Invalid_data_leave, token);
@@ -1232,7 +1232,7 @@ RexxInstruction *RexxSource::nopNew()
   RexxToken  *token;                   /* current working token             */
 
   token = nextReal();                  /* get the next token                */
-  if (token->classId != TOKEN_EOC)     /* not at the end-of-clause?         */
+  if (!token->isEndOfClause())     /* not at the end-of-clause?         */
                                        /* bad NOP instruction               */
     report_error_token(Error_Invalid_data_nop, token);
                                        /* create a new translator object    */
@@ -1256,7 +1256,7 @@ RexxInstruction *RexxSource::numericNew()
   expression = OREF_NULL;              /* clear the expression              */
   flags = 0;                           /* and the flags                     */
   token = nextReal();                  /* get the next token                */
-  if (token->classId != TOKEN_SYMBOL)  /* must have a symbol here           */
+  if (!token->isSymbol())  /* must have a symbol here           */
                                        /* raise the error                   */
     report_error_token(Error_Symbol_expected_numeric, token);
 
@@ -1269,10 +1269,10 @@ RexxInstruction *RexxSource::numericNew()
 
     case SUBKEY_FORM:                  /* NUMERIC FORM instruction          */
       token = nextReal();              /* get the next token                */
-      if (token->classId == TOKEN_EOC) /* just NUMERIC FORM?                */
+      if (token->isEndOfClause()) /* just NUMERIC FORM?                */
         break;                         /* we're all finished                */
                                        /* have the keyword form?            */
-      else if (token->classId == TOKEN_SYMBOL) {
+      else if (token->isSymbol()) {
                                        /* resolve the subkeyword            */
                                        /* and process                       */
         switch (this->subKeyword(token)) {
@@ -1280,7 +1280,7 @@ RexxInstruction *RexxSource::numericNew()
           case SUBKEY_SCIENTIFIC:      /* NUMERIC FORM SCIENTIFIC           */
             token = nextReal();        /* get the next token                */
                                        /* end of the instruction?           */
-            if (token->classId != TOKEN_EOC)
+            if (!token->isEndOfClause())
                                        /* this is an error                  */
               report_error_token(Error_Invalid_data_form, token);
             break;
@@ -1290,7 +1290,7 @@ RexxInstruction *RexxSource::numericNew()
             flags |= numeric_engineering;
             token = nextReal();        /* get the next token                */
                                        /* end of the instruction?           */
-            if (token->classId != TOKEN_EOC)
+            if (!token->isEndOfClause())
                                        /* this is an error                  */
               report_error_token(Error_Invalid_data_form, token);
             break;
@@ -1354,9 +1354,9 @@ RexxInstruction *RexxSource::optionsNew()
   nextToken();                         /* step past the first token         */
   first = nextReal();                  /* get the first token               */
                                        /* first token a string?             */
-  if (first->classId == TOKEN_LITERAL) {
+  if (first->isLiteral()) {
     second = nextReal();               /* get the next token                */
-    if (second->classId == TOKEN_EOC) {/* literal the only token?           */
+    if (second->isEndOfClause()) {     /* literal the only token?           */
                                        /* could have "options 'ETMODE'" or  */
                                        /* "options 'NOETMODE'"              */
       value = first->value;            /* get the literal value             */
@@ -1420,7 +1420,7 @@ RexxInstruction *RexxSource::parseNew(
     for (;;) {                         /* loop through for multiple keywords*/
       token = nextReal();              /* get a token                       */
                                        /* not a symbol here?                */
-      if (token->classId != TOKEN_SYMBOL)
+      if (!token->isSymbol())
                                        /* this is an error                  */
         report_error(Error_Symbol_expected_parse);
                                        /* resolve the keyword               */
@@ -1464,7 +1464,7 @@ RexxInstruction *RexxSource::parseNew(
       case SUBKEY_VAR:                 /* PARSE VAR name instruction        */
         token = nextReal();            /* get the next token                */
                                        /* not a symbol token                */
-        if (token->classId != TOKEN_SYMBOL)
+        if (!token->isSymbol())
                                        /* this is an error                  */
           report_error(Error_Symbol_expected_var);
                                        /* get the variable retriever        */
@@ -1480,7 +1480,7 @@ RexxInstruction *RexxSource::parseNew(
         this->saveObject(expression);  /* protecting in the saveTable is better for large PARSE statements */
 
         token = nextToken();           /* get the terminator                */
-        if (token->classId != TOKEN_SYMBOL || this->subKeyword(token) != SUBKEY_WITH)
+        if (!token->isSymbol() || this->subKeyword(token) != SUBKEY_WITH)
                                        /* got another error                 */
           report_error(Error_Invalid_template_with);
         break;
@@ -1500,7 +1500,7 @@ RexxInstruction *RexxSource::parseNew(
 
   for (;;) {                           /* while still in the template       */
                                        /* found the end?                    */
-    if (token->classId == TOKEN_EOC) {
+    if (token->isEndOfClause()) {
                                        /* string trigger, null target       */
       trigger = new (variableCount) RexxTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, variables);
       variableCount = 0;               /* have a new set of variables       */
@@ -1561,7 +1561,7 @@ RexxInstruction *RexxSource::parseNew(
         templateCount++;               /* add this one in                   */
       }
                                        /* have a symbol?                    */
-      else if (token->classId == TOKEN_SYMBOL) {
+      else if (token->isSymbol()) {
                                        /* non-variable symbol?              */
         if (token->subclass != SYMBOL_CONSTANT)
                                        /* this is invalid                   */
@@ -1575,7 +1575,7 @@ RexxInstruction *RexxSource::parseNew(
         templateCount++;               /* step the counter                  */
       }
                                        /* at the end?                       */
-      else if (token->classId == TOKEN_EOC)
+      else if (token->isEndOfClause())
                                        /* report the missing piece          */
         report_error(Error_Invalid_template_missing);
       else
@@ -1657,8 +1657,8 @@ RexxInstruction *RexxSource::procedureNew()
 
   token = nextReal();                  /* get the next token                */
   variableCount = 0;                   /* no variables allocated yet        */
-  if (token->classId != TOKEN_EOC) {   /* potentially PROCEDURE EXPOSE?     */
-    if (token->classId != TOKEN_SYMBOL)/* not a symbol?                     */
+  if (!token->isEndOfClause()) {   /* potentially PROCEDURE EXPOSE?     */
+    if (!token->isSymbol())/* not a symbol?                     */
                                        /* must be a symbol here             */
       report_error_token(Error_Invalid_subkeyword_procedure, token);
                                        /* not the EXPOSE keyword?           */
@@ -1720,7 +1720,7 @@ RexxInstruction *RexxSource::raiseNew()
   this->saveObject(saveQueue);         /* protect it                        */
   token = nextReal();                  /* get the next token                */
                                        /* no target specified or have a     */
-  if (token->classId != TOKEN_SYMBOL)  /* bad token type?                   */
+  if (!token->isSymbol())  /* bad token type?                   */
                                        /* this is an error                  */
     report_error(Error_Symbol_expected_raise);
   condition = token->value;            /* use the condition string value    */
@@ -1744,7 +1744,7 @@ RexxInstruction *RexxSource::raiseNew()
     case CONDITION_USER:               /* CONDITION USER usercondition      */
       token = nextReal();              /* get the next token                */
                                        /* bad token type?                   */
-      if (token->classId != TOKEN_SYMBOL)
+      if (!token->isSymbol())
                                        /* this is an error                  */
         report_error(Error_Symbol_expected_user);
       condition = token->value;        /* get the token string value        */
@@ -1770,8 +1770,8 @@ RexxInstruction *RexxSource::raiseNew()
       break;
   }
   token = nextReal();                  /* get the next token                */
-  while (token->classId != TOKEN_EOC) {/* while still more to process       */
-    if (token->classId != TOKEN_SYMBOL)/* not a symbol token?               */
+  while (!token->isEndOfClause()) {/* while still more to process       */
+    if (!token->isSymbol())/* not a symbol token?               */
                                        /* this is an error                  */
       report_error_token(Error_Invalid_subkeyword_raiseoption, token);
     keyword = this->subKeyword(token); /* get the keyword value             */
@@ -1917,14 +1917,14 @@ RexxInstruction *RexxSource::selectNew()
     // depending on the form used.
     RexxToken *token = nextReal();
     // easy version, no LABEL.
-    if (token->classId == TOKEN_EOC)
+    if (token->isEndOfClause())
     {
         // just a simple SELECT type
         RexxObject *newObject = new_instruction(SELECT, Select);
         new ((void *)newObject) RexxInstructionSelect();
         return (RexxInstruction *)newObject;
     }
-    else if (token->classId != TOKEN_SYMBOL)
+    else if (!token->isSymbol())
     {
         // not a LABEL keyword, this is bad
         report_error_token(Error_Invalid_data_select, token);
@@ -1939,7 +1939,7 @@ RexxInstruction *RexxSource::selectNew()
     // ok, get the label now
     token = nextReal();
     // this is required, and must be a symbol
-    if (token->classId != TOKEN_SYMBOL)
+    if (!token->isSymbol())
     {
         report_error(Error_Symbol_expected_LABEL);
     }
@@ -1947,7 +1947,7 @@ RexxInstruction *RexxSource::selectNew()
     RexxString *label = token->value;
     token = nextReal();
     // this must be the end of the clause
-    if (token->classId != TOKEN_EOC)
+    if (!token->isEndOfClause())
     {
         report_error_token(Error_Invalid_data_select, token);
     }
@@ -1979,18 +1979,18 @@ RexxInstruction *RexxSource::signalNew()
   condition = OREF_NULL;               /* and no condition                  */
   flags = 0;                           /* no flags                          */
   token = nextReal();                  /* get the next token                */
-  if (token->classId == TOKEN_EOC)     /* no target specified?              */
+  if (token->isEndOfClause())     /* no target specified?              */
                                        /* this is an error                  */
     report_error(Error_Symbol_or_string_signal);
                                        /* implicit value form?              */
-  else if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL) {
+  else if (!token->isSymbolOrLiteral()) {
     previousToken();                   /* step back a token                 */
                                        /* go process the expression         */
     expression = (RexxObject *)this->expression(TERM_EOC);
   }
   else {                               /* have a real target                */
                                        /* may have to process ON/OFF forms  */
-    if (token->classId == TOKEN_SYMBOL) {
+    if (token->isSymbol()) {
                                        /* check for the subkeywords         */
       keyword = this->subKeyword(token);
       if (keyword == SUBKEY_ON) {      /* SIGNAL ON instruction?            */
@@ -1998,7 +1998,7 @@ RexxInstruction *RexxSource::signalNew()
         token = nextReal();            /* get the next token                */
                                        /* no condition specified or not a   */
                                        /* symbol?                           */
-        if (token->classId != TOKEN_SYMBOL)
+        if (!token->isSymbol())
                                        /* this is an error                  */
           report_error(Error_Symbol_expected_on);
                                        /* get the condition involved        */
@@ -2012,7 +2012,7 @@ RexxInstruction *RexxSource::signalNew()
           token = nextReal();          /* get the next token                */
                                        /* no condition specified or not a   */
                                        /* symbol?                           */
-          if (token->classId != TOKEN_SYMBOL)
+          if (!token->isSymbol())
                                        /* this is an error                  */
             report_error(Error_Symbol_expected_user);
           name = token->value;         /* set the default target            */
@@ -2027,9 +2027,9 @@ RexxInstruction *RexxSource::signalNew()
         }
         token = nextReal();            /* get the next token                */
                                        /* anything real here?               */
-        if (token->classId != TOKEN_EOC) {
+        if (!token->isEndOfClause()) {
                                        /* not a symbol?                     */
-          if (token->classId != TOKEN_SYMBOL)
+          if (!token->isSymbol())
                                        /* this is an error                  */
             report_error_token(Error_Invalid_subkeyword_signalonname, token);
                                        /* not the name token?               */
@@ -2038,13 +2038,13 @@ RexxInstruction *RexxSource::signalNew()
             report_error_token(Error_Invalid_subkeyword_signalonname, token);
           token = nextReal();          /* get the next token                */
                                        /* not got a symbol here?            */
-          if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+          if (!token->isSymbolOrLiteral())
                                        /* this is an error                  */
             report_error(Error_Symbol_or_string_name);
           name = token->value;         /* set the new target location       */
           token = nextReal();          /* get the next token                */
                                        /* must have the clause end here     */
-          if (token->classId != TOKEN_EOC)
+          if (!token->isEndOfClause())
                                        /* this is an error                  */
             report_error_token(Error_Invalid_data_name, token);
         }
@@ -2054,7 +2054,7 @@ RexxInstruction *RexxSource::signalNew()
         token = nextReal();            /* get the next token                */
                                        /* no condition specified or not a   */
                                        /* symbol?                           */
-        if (token->classId != TOKEN_SYMBOL)
+        if (!token->isSymbol())
                                        /* this is an error                  */
           report_error(Error_Symbol_expected_off);
                                        /* get the condition involved        */
@@ -2068,7 +2068,7 @@ RexxInstruction *RexxSource::signalNew()
           token = nextReal();          /* get the next token                */
                                        /* no condition specified or not a   */
                                        /* symbol?                           */
-          if (token->classId != TOKEN_SYMBOL)
+          if (!token->isSymbol())
                                        /* this is an error                  */
             report_error(Error_Symbol_expected_user);
           condition = token->value;    /* get the token string value        */
@@ -2081,7 +2081,7 @@ RexxInstruction *RexxSource::signalNew()
           condition = token->value;    /* set the condition name            */
         token = nextReal();            /* get the next token                */
                                        /* must have the clause end here     */
-        if (token->classId != TOKEN_EOC)
+        if (!token->isEndOfClause())
                                        /* this is an error                  */
           report_error_token(Error_Invalid_data_condition, token);
       }
@@ -2097,7 +2097,7 @@ RexxInstruction *RexxSource::signalNew()
         name = token->value;           /* set the signal target             */
         token = nextReal();            /* step to the next token            */
                                        /* not the end?                      */
-        if (token->classId != TOKEN_EOC)
+        if (!token->isEndOfClause())
                                        /* have an error                     */
           report_error_token(Error_Invalid_data_signal, token);
       }
@@ -2105,7 +2105,7 @@ RexxInstruction *RexxSource::signalNew()
     else {                             /* signal with a string target       */
       name = token->value;             /* set the signal target             */
       token = nextReal();              /* step to the next token            */
-      if (token->classId != TOKEN_EOC) /* not the end?                      */
+      if (!token->isEndOfClause()) /* not the end?                      */
                                        /* have an error                     */
         report_error_token(Error_Invalid_data_signal, token);
     }
@@ -2154,9 +2154,9 @@ RexxInstruction *RexxSource::traceNew()
   debug_flags = 0;                     /* no debug flags                    */
   expression = OREF_NULL;              /* not expression form               */
   token = nextReal();                  /* get the next token                */
-  if (token->classId != TOKEN_EOC) {   /* more than just TRACE?             */
+  if (!token->isEndOfClause()) {   /* more than just TRACE?             */
                                        /* is this a symbol?                 */
-    if (token->classId == TOKEN_SYMBOL) {
+    if (token->isSymbol()) {
                                        /* TRACE VALUE expr?                 */
       if (this->subKeyword(token) == SUBKEY_VALUE) {
                                        /* process the expression            */
@@ -2169,7 +2169,7 @@ RexxInstruction *RexxSource::traceNew()
         value = token->value;          /* get the string value              */
         token = nextReal();            /* get the next token                */
                                        /* end of the instruction?           */
-        if (token->classId != TOKEN_EOC)
+        if (!token->isEndOfClause())
                                        /* this is an error                  */
           report_error_token(Error_Invalid_data_trace, token);
                                        /* convert the value                 */
@@ -2188,7 +2188,7 @@ RexxInstruction *RexxSource::traceNew()
     else if (token->isLiteral()) {     /* is this a string?                 */
       value = token->value;            /* get the string value              */
       token = nextReal();              /* get the next token                */
-      if (token->classId != TOKEN_EOC) /* end of the instruction?           */
+      if (!token->isEndOfClause()) /* end of the instruction?           */
                                        /* this is an error                  */
         report_error_token(Error_Invalid_data_trace, token);
                                        /* convert the value                 */
@@ -2209,12 +2209,12 @@ RexxInstruction *RexxSource::traceNew()
         debug_flags |= trace_notrace;  /* turn on the notrace flag          */
       setting = 0;                     /* indicate a debug version          */
       token = nextReal();              /* get the next token                */
-      if (token->classId == TOKEN_EOC) /* end of the instruction?           */
+      if (token->isEndOfClause()) /* end of the instruction?           */
                                        /* this is an error                  */
         report_error_token(Error_Invalid_expression_general, token);
       value = token->value;            /* get the string value              */
       token = nextReal();              /* get the next token                */
-      if (token->classId != TOKEN_EOC) /* end of the instruction?           */
+      if (!token->isEndOfClause()) /* end of the instruction?           */
                                        /* this is an error                  */
         report_error(Error_Invalid_data_trace);
                                        /* convert the value                 */
@@ -2278,7 +2278,7 @@ RexxInstruction *RexxSource::useNew()
 
     bool allowOptionals = false;  // we don't allow trailing optionals unless the list ends with "..."
     // keep processing tokens to the end
-    while (token->classId != TOKEN_EOC)
+    while (!token->isEndOfClause())
     {
         // this could be a token to skip a variable
         if (token->classId == TOKEN_COMMA)
@@ -2295,7 +2295,7 @@ RexxInstruction *RexxSource::useNew()
         else   // something real.  This could be a single symbol or a message term
         {
             // we might have an ellipsis (...) on the end of the list meaning stop argument checking at that point
-            if (token->classId == TOKEN_SYMBOL)
+            if (token->isSymbol())
             {
                 // is this an ellipsis symbol?
                 if (token->value->strCompare(CHAR_ELLIPSIS))
@@ -2304,7 +2304,7 @@ RexxInstruction *RexxSource::useNew()
                     allowOptionals = true;
                     // but we still need to make sure it's at the end
                     token = nextReal();
-                    if (token->classId != TOKEN_EOC)
+                    if (!token->isEndOfClause())
                     {
                         report_error(Error_Translation_use_strict_ellipsis);
                     }
@@ -2324,7 +2324,7 @@ RexxInstruction *RexxSource::useNew()
             variableCount++;
             token = nextReal();
             // a terminator takes us out.  We need to keep all 3 lists in sync with dummy entries.
-            if (token->classId == TOKEN_EOC)
+            if (token->isEndOfClause())
             {
                 defaults_list->push(OREF_NULL);
                 break;
@@ -2357,7 +2357,7 @@ RexxInstruction *RexxSource::useNew()
                 // step to the next token
                 token = nextReal();
                 // a terminator takes us out.  We need to keep all 3 lists in sync with dummy entries.
-                if (token->classId == TOKEN_EOC)
+                if (token->isEndOfClause())
                 {
                     break;
                 }

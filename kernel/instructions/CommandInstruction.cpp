@@ -48,13 +48,13 @@
 
 
 RexxInstructionCommand::RexxInstructionCommand(
-    RexxObject *expression)            /* command expression                */
+    RexxObject *_expression)            /* command expression                */
 /******************************************************************************/
 /* Function:  Complete initialzation a command instruction object             */
 /******************************************************************************/
 {
                                        /* save the command expression       */
-  OrefSet(this, this->expression, expression);
+  OrefSet(this, this->expression, _expression);
 }
 
 void RexxInstructionCommand::execute(

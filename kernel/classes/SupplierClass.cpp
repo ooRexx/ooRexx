@@ -49,15 +49,15 @@
 
 
 RexxSupplier::RexxSupplier(
-  RexxArray  *values,                  /* array of values                   */
-  RexxArray  *indexes )                /* array of indexes                  */
+  RexxArray  *_values,                 /* array of values                   */
+  RexxArray  *_indexes )               /* array of indexes                  */
 /****************************************************************************/
 /* Function:  Initialize a supplier                                         */
 /****************************************************************************/
 {
-  OrefSet(this, this->values, values); /* store the values array            */
+  OrefSet(this, this->values, _values); /* store the values array            */
                                        /* and the index array also          */
-  OrefSet(this, this->indexes, indexes);
+  OrefSet(this, this->indexes, _indexes);
   this->position = 1;                  /* set the first position            */
 }
 
@@ -134,17 +134,17 @@ RexxObject  *RexxSupplier::value()
 /* Function:  Retrieve the value of a collection item                       */
 /****************************************************************************/
 {
-  RexxObject *value;                   /* supplier value                    */
+  RexxObject *_value;                   /* supplier value                    */
 
                                        /* already gone past the end?        */
   if (this->position > this->values->size())
                                        /* oops, give an error               */
     report_exception(Error_Incorrect_method_supplier);
                                        /* get the value                     */
-  value = this->values->get(this->position);
-  if (value == OREF_NULL)              /* returned nothing?                 */
-    value = TheNilObject;              /* change this to .nil               */
-  return value;                        /* return this value                 */
+  _value = this->values->get(this->position);
+  if (_value == OREF_NULL)              /* returned nothing?                 */
+    _value = TheNilObject;              /* change this to .nil               */
+  return _value;                        /* return this value                 */
 }
 
 RexxObject  *RexxSupplier::index()
@@ -152,7 +152,7 @@ RexxObject  *RexxSupplier::index()
 /* Function:  Retrieve the index of a collection item                       */
 /****************************************************************************/
 {
-  RexxObject *value;                   /* supplier value                    */
+  RexxObject *_value;                   /* supplier value                    */
 
                                        /* already gone past the end?        */
   if (this->position > this->values->size())
@@ -163,14 +163,14 @@ RexxObject  *RexxSupplier::index()
     return (RexxObject *)new_integer(this->position);
                                        /* already gone past the end?        */
   if (this->position > this->indexes->size())
-    value = TheNilObject;              /* no value to return                */
+    _value = TheNilObject;              /* no value to return                */
   else {
                                        /* get the value                     */
-    value = this->indexes->get(this->position);
-    if (value == OREF_NULL)            /* returned nothing?                 */
-      value = TheNilObject;            /* change this to .nil               */
+    _value = this->indexes->get(this->position);
+    if (_value == OREF_NULL)            /* returned nothing?                 */
+      _value = TheNilObject;            /* change this to .nil               */
   }
-  return value;                        /* and return the value              */
+  return _value;                        /* and return the value              */
 }
 
 void *RexxSupplier::operator new(size_t size)
@@ -201,14 +201,14 @@ void *RexxSupplier::operator new(size_t size)
  *
  * @return Nothing
  */
-RexxObject *RexxSupplier::initRexx(RexxArray *values, RexxArray *indexes)
+RexxObject *RexxSupplier::initRexx(RexxArray *_values, RexxArray *_indexes)
 {
-    required_arg(values, ONE);           // both values are required
-    required_arg(indexes, TWO);
+    required_arg(_values, ONE);           // both values are required
+    required_arg(_indexes, TWO);
 
     // now verify both values
-    RexxArray *new_values = REQUEST_ARRAY(values);
-    RexxArray *new_indexes = REQUEST_ARRAY(indexes);
+    RexxArray *new_values = REQUEST_ARRAY(_values);
+    RexxArray *new_indexes = REQUEST_ARRAY(_indexes);
     if (new_values == (RexxArray  *)TheNilObject || new_values->getDimension() != 1)
     {
         report_exception1(Error_Incorrect_method_noarray, values);
@@ -233,13 +233,13 @@ RexxObject  *RexxSupplierClass::newRexx(
 /* Function:  Public REXX supplier new method                               */
 /****************************************************************************/
 {
-    RexxObject *newObject = new RexxSupplier();
-    BehaviourSet(newObject, this->instanceBehaviour);
+    RexxObject *newObj = new RexxSupplier();
+    BehaviourSet(newObj, this->instanceBehaviour);
     if (this->uninitDefined())
     {
-        newObject->hasUninit();
+        newObj->hasUninit();
     }
                                        /* Initialize the new instance       */
-    newObject->sendMessage(OREF_INIT, init_args, argCount);
-    return newObject;                    /* return the new supplier           */
+    newObj->sendMessage(OREF_INIT, init_args, argCount);
+    return newObj;                       /* return the new supplier           */
 }

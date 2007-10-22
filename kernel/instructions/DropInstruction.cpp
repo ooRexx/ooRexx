@@ -128,8 +128,6 @@ void RexxInstructionDrop::execute(
   size = drop_variable_count;          /* get the variable list size        */
 
   for (i = 0; i < size; i++) {         /* loop through the variable list    */
-                                       /* get the value of the variable     */
-    RexxObject *varObject = this->variables[i]->getValue(context);
     /* have the variable drop itself */
     variables[i]->drop(context);
   }

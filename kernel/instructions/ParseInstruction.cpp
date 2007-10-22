@@ -56,7 +56,7 @@
 extern RexxActivity *CurrentActivity;  /* current activity                  */
 
 RexxInstructionParse::RexxInstructionParse(
-  RexxObject *expression,              /* string expression source          */
+  RexxObject *_expression,             /* string expression source          */
   USHORT      string_source,           /* source of the parsed string       */
   UCHAR       flags,                   /* option flags                      */
   LONG        templateCount,           /* count of template items           */
@@ -66,7 +66,7 @@ RexxInstructionParse::RexxInstructionParse(
 /******************************************************************************/
 {
                                        /* save the expression               */
-  OrefSet(this, this->expression, expression);
+  OrefSet(this, this->expression, _expression);
   i_flags = flags;                     /* save the expression               */
   parse_string_source = string_source; /* save the source information       */
   this->trigger_count = templateCount; /* save the size                     */

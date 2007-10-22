@@ -152,15 +152,15 @@ RexxNumberString *RexxNumberString::clone()
 /* Function:  low level copy of a number string object                        */
 /******************************************************************************/
 {
-  RexxNumberString *newObject;         /* new copy of the object            */
+  RexxNumberString *newObj;            /* new copy of the object            */
 
                                        /* first clone ourselves             */
-  newObject = (RexxNumberString *)memoryObject.clone(this);
+  newObj = (RexxNumberString *)memoryObject.clone(this);
                                        /* don't keep the original string    */
-  OrefSet(newObject, newObject->stringObject, OREF_NULL);
+  OrefSet(newObj, newObj->stringObject, OREF_NULL);
                                        /* or the OVD fields                 */
-  OrefSet(newObject, newObject->objectVariables, OREF_NULL);
-  return newObject;                    /* return this                       */
+  OrefSet(newObj, newObj->objectVariables, OREF_NULL);
+  return newObj;                       /* return this                       */
 }
 
 ULONG   RexxNumberString::hash()
@@ -260,231 +260,254 @@ RexxString *RexxNumberString::stringValue()
 /* Function:  Convert a number string to a string object                      */
 /******************************************************************************/
 {
-  CHAR  expstring[17], num;
-  int    carry;
-  size_t NumDigits;
-  size_t MaxNumSize, LenValue;
-  long   numindex;
-  long  temp, ExpValue, ExpFactor;
-  size_t charpos;
-  RexxString *StringObj;
+    char  expstring[17], num;
+    int    carry;
+    size_t createdDigits;
+    size_t MaxNumSize, LenValue;
+    int   numindex;
+    int  temp, ExpValue, ExpFactor;
+    size_t charpos;
+    RexxString *StringObj;
 
-  if (this->stringObject != OREF_NULL) /* already converted?                */
-    return this->stringObject;         /* all finished                      */
-                                       /* Start converting the number.      */
+    if (this->stringObject != OREF_NULL) /* already converted?                */
+        return this->stringObject;         /* all finished                      */
+                                           /* Start converting the number.      */
 
- if (this->sign == 0  ) {              /* is the number zero?               */
-                                       /* Yes, return a 0 string.           */
-   OrefSet(this, this->stringObject, OREF_ZERO_STRING);
-   SetObjectHasReferences(this);       /* we now have to garbage collect    */
-   return this->stringObject;          /* and return now                    */
- }
- else {                                /*  No, convert the number.          */
-                                       /* convert the exponent numeber into */
-                                       /* string.                           */
-
-   NumDigits = this->NumDigits;        /* Get Digits settings at creation   */
-
-   ExpValue = this->exp;               /* Working copy of exponent          */
-   LenValue = this->length;            /* Working copy of the length.       */
-
-                                       /* If no exponent                    */
-   if (ExpValue == 0) {
-                                       /* Yes, we can fast path conversion  */
-    MaxNumSize = LenValue;             /* Size of result is length of number*/
-    if (this->sign <0)                 /* if number is negative.            */
-     MaxNumSize++;                     /* result one bigger for - sign.     */
-                                       /* Get new string, of exact length,  */
-    StringObj = (RexxString *)raw_string(MaxNumSize);
-    charpos = 0;                       /* data in string to start.          */
-    if (this->sign < 0) {              /* If number is neagative            */
-                                       /*  add negative sign and bump index */
-     StringObj->putChar(charpos++, ch_MINUS);
+    if (this->sign == 0  )
+    {              /* is the number zero?               */
+                   /* Yes, return a 0 string.           */
+        OrefSet(this, this->stringObject, OREF_ZERO_STRING);
+        SetObjectHasReferences(this);       /* we now have to garbage collect    */
+        return this->stringObject;          /* and return now                    */
     }
-                                       /* For each number digits in number  */
-    for(numindex=0; (size_t)numindex < LenValue; numindex++) {
-                                       /* place char rep in NumString       */
-     num = this->number[numindex] + ch_ZERO;
-     StringObj->putChar(charpos++, num);
-    }                                  /* Done with Fast Path....           */
-    StringObj->generateHash();         /* done building the string          */
-   }
-   else {                              /* We need to do this the long way   */
-    carry = 0;                         /* assume rounding-up NOT necessary  */
+    else
+    {                                /*  No, convert the number.          */
+                                     /* convert the exponent numeber into */
+                                     /* string.                           */
 
-                                       /*is number just flat out too big?   */
-    if ((( ExpValue + (long)LenValue - 1) > MAXNUM) ||
-        (ExpValue < (-MAXNUM)) )       /* Yes, report Overflow error.       */
-      report_exception1(Error_Conversion_operator, this);
+        createdDigits = this->NumDigits;    /* Get Digits settings at creation   */
 
+        ExpValue = this->exp;               /* Working copy of exponent          */
+        LenValue = this->length;            /* Working copy of the length.       */
 
-    ExpFactor = 0;                     /* number not eponential yet..       */
-    temp = ExpValue + (long)LenValue - 1;  /* get size of this number           */
-    expstring[0] = '\0';               /* string vlaue of exp factor, Null  */
-                                       /* is left of decimal > NumDigits or */
-    if ((temp >= (long)NumDigits) ||   /* exponent twice numDigits          */
-        ((size_t)labs(ExpValue) > (NumDigits*2)) ) {
-                                       /* Yes, we need to go exponential.   */
-                                       /* we need Engineering format?       */
-     if (!(this->NumFlags & NumFormScientific)) {
-      if (temp < 0)                    /* Yes, is number a whole number?    */
-       temp -= 2;                      /* force 2 char adjustment to left   */
-      temp = (temp/3) * 3;             /* get count to the right of Decimal */
-     }
-     if (labs(temp) > MAXNUM) {        /* is adjusted number too big?       */
-       if (temp > MAXNUM)              /* did it overflow?                  */
-                                       /* Yes, report overflow error.       */
-         report_exception2(Error_Overflow_expoverflow, new_integer(temp), IntegerNine);
-       else
-                                       /* Actually an underflow error.      */
-         report_exception2(Error_Overflow_expunderflow, new_integer(temp), IntegerNine);
-     }
-     ExpValue -= temp;                 /* adjust the exponent               */
-     if ( temp != 0 ) {                /* do we still have exponent ?       */
-        ExpFactor = TRUE;              /* Save the factor                   */
-     } else {
-        ExpFactor = FALSE;             /* no need to save the factor        */
-     } /* endif */
+                                            /* If no exponent                    */
+        if (ExpValue == 0)
+        {
+            /* Yes, we can fast path conversion  */
+            MaxNumSize = LenValue;             /* Size of result is length of number*/
+            if (this->sign <0)                 /* if number is negative.            */
+                MaxNumSize++;                     /* result one bigger for - sign.     */
+                                                  /* Get new string, of exact length,  */
+            StringObj = (RexxString *)raw_string(MaxNumSize);
+            charpos = 0;                       /* data in string to start.          */
+            if (this->sign < 0)
+            {              /* If number is neagative            */
+                           /*  add negative sign and bump index */
+                StringObj->putChar(charpos++, ch_MINUS);
+            }
+            /* For each number digits in number  */
+            for (numindex=0; (size_t)numindex < LenValue; numindex++)
+            {
+                /* place char rep in NumString       */
+                num = this->number[numindex] + ch_ZERO;
+                StringObj->putChar(charpos++, num);
+            }                                  /* Done with Fast Path....           */
+            StringObj->generateHash();         /* done building the string          */
+        }
+        else
+        {                              /* We need to do this the long way   */
+            carry = 0;                         /* assume rounding-up NOT necessary  */
 
-     if (temp < 0) {
-                                       /* convert exponent value into string*/
-       sprintf(expstring, "E%d", temp);
-     }
-     else if (temp > 0) {
-       strcpy(expstring, "E+");
-                                       /* convert exponent value into string*/
-       sprintf(expstring, "E+%d", temp);
-     }
-     temp = labs((INT)temp);           /* get positive exponent factor      */
-
-    }
-                                       /* Now compute size of result string */
-    if (ExpValue >= 0 )                /* if the Exponent is positive       */
-                                       /* Size is length of number plus exp.*/
-     MaxNumSize = (size_t)ExpValue + LenValue;
-                                       /*is exponent larger than length,    */
-    else if ((size_t)labs(ExpValue) >= LenValue)
-                                       /* Yes, we will need to add zeros to */
-                                       /* the front plus a 0.               */
-      MaxNumSize = labs(ExpValue) + 2;
-
-    else                               /*Won't be adding any digits, just   */
-     MaxNumSize = LenValue + 1;        /* length of number + 1 for decimal  */
-
-    if (ExpFactor)                     /* Are we using Exponential notation?*/
-                                       /* Yes, need to add in size of the   */
-     MaxNumSize += strlen(expstring);  /* exponent stuff.                   */
-
-    if (this->sign <0)                 /* is number negative?               */
-     MaxNumSize++;                     /* yes, add one to size for - sign   */
-                                       /* get new string of appropriate size*/
-    StringObj = (RexxString *)raw_string(MaxNumSize);
-
-    charpos = 0;                       /* set starting position             */
-    if (this->sign < 0) {              /* Is the number negative?           */
-                                       /* Yes, add in the negative sign.    */
-     StringObj->putChar(charpos, ch_MINUS);
-    }
-    temp = ExpValue + (long)LenValue;  /* get the adjusted length.          */
-
-                                       /* Since we may have carry from round*/
-                                       /* we'll fill in the number from the */
-                                       /* back and make our way forward.    */
-
-                                       /* Strindex points to exponent start */
-                                       /* part of string.                   */
-    charpos  = MaxNumSize - strlen(expstring);
-
-    if (ExpFactor)                     /* will result have Exponent?        */
-                                       /* Yes, put the data into the string.*/
-     StringObj->put(charpos, expstring, strlen(expstring));
-
-                                       /* Next series of If's will determine*/
-                                       /* if we need to add zeros to end    */
-                                       /* of the number and where to place  */
-                                       /* decimal, fill in string as we     */
-                                       /* go, also need to check for a carry*/
-                                       /* if we rounded the number early on.*/
-
-    if (temp <= 0) {                   /* Is ther an Integer portion?       */
-                                       /*   0.000000xxxx result.            */
-                                       /*   ^^^^^^^^     filler             */
-
-                                       /* Start filling in digits           */
-                                       /*   from the back....               */
-      for (numindex = (long)(LenValue-1);numindex >= 0 ;numindex-- ) {
-                                       /* are we carry from round?          */
-       num = this->number[numindex];   /* working copy of this Digit.       */
-       num = num + ch_ZERO;            /* now put the number as a character */
-       StringObj->putChar(--charpos, num);
-      }
-      temp = -temp;                    /* make the number positive...       */
-
-      if (temp) {
-       charpos  -= temp;               /* yes, point to starting pos to fill*/
-                                       /* now fill in the leading Zeros.    */
-       StringObj->set(charpos, ch_ZERO, temp);
-      }
-      StringObj->putChar(--charpos, ch_PERIOD);
-      if (carry)                       /* now put in the leading 1. is carry*/
-       StringObj->putChar(--charpos, ch_ONE);
-      else                             /* or 0. if no carry.                */
-       StringObj->putChar(--charpos, ch_ZERO);
-      StringObj->generateHash();       /* done building the string          */
-    }
-    /* do we need to add zeros at end?   */
-    else if ((size_t)temp >= LenValue) {
-                                       /*  xxxxxx000000  result             */
-                                       /*        ^^^^^^  filler             */
-
-                                       /* Yes, add zeros first.             */
-     temp -= LenValue;                 /* see how many zeros we need to add.*/
-     charpos  -= temp;                 /* point to starting pos to fill     */
-                                       /* now fill in the leading Zeros.    */
-     StringObj->set(charpos, ch_ZERO, temp);
-                                       /* done w/ trailing zeros start      */
-                                       /* adding digits (from back)         */
+                                               /*is number just flat out too big?   */
+            if ((( ExpValue + (int)LenValue - 1) > MAXNUM) ||
+                (ExpValue < (-MAXNUM)) )       /* Yes, report Overflow error.       */
+                report_exception1(Error_Conversion_operator, this);
 
 
-                                       /* start filling in digits           */
-      for (numindex = (long)LenValue-1;numindex >= 0 ;numindex-- ) {
-       num = this->number[numindex];   /* working copy of this Digit.       */
-       num = num + ch_ZERO;            /* now put the number as a character */
-       StringObj->putChar(--charpos, num);
-      }
-    }                                  /* done with this case....           */
+            ExpFactor = 0;                     /* number not eponential yet..       */
+            temp = ExpValue + (int)LenValue - 1;  /* get size of this number           */
+            expstring[0] = '\0';               /* string vlaue of exp factor, Null  */
+                                               /* is left of decimal > NumDigits or */
+            if ((temp >= (int)createdDigits) ||  /* exponent twice numDigits          */
+                ((size_t)labs(ExpValue) > (createdDigits*2)) )
+            {
+                /* Yes, we need to go exponential.   */
+                /* we need Engineering format?       */
+                if (!(this->NumFlags & NumFormScientific))
+                {
+                    if (temp < 0)                    /* Yes, is number a whole number?    */
+                        temp -= 2;                      /* force 2 char adjustment to left   */
+                    temp = (temp/3) * 3;             /* get count to the right of Decimal */
+                }
+                if (labs(temp) > MAXNUM)
+                {        /* is adjusted number too big?       */
+                    if (temp > MAXNUM)              /* did it overflow?                  */
+                                                    /* Yes, report overflow error.       */
+                        report_exception2(Error_Overflow_expoverflow, new_integer(temp), IntegerNine);
+                    else
+                        /* Actually an underflow error.      */
+                        report_exception2(Error_Overflow_expunderflow, new_integer(temp), IntegerNine);
+                }
+                ExpValue -= temp;                 /* adjust the exponent               */
+                if ( temp != 0 )
+                {                /* do we still have exponent ?       */
+                    ExpFactor = TRUE;              /* Save the factor                   */
+                }
+                else
+                {
+                    ExpFactor = FALSE;             /* no need to save the factor        */
+                } /* endif */
 
-    else {                             /* we have a partial Decimal number  */
-                                       /* add in the first digit a 1.       */
-                                       /* Start filling in digits           */
-      for (numindex = (long)LenValue - 1;numindex > temp - 1 ;numindex-- ) {
-       num = this->number[numindex];   /* working copy of this Digit.       */
-                                       /* now put the number as a character */
-       num += ch_ZERO;
-       StringObj->putChar(--charpos, num);
-      }
-                                       /* add in the decimal point.         */
-     StringObj->putChar(--charpos, ch_PERIOD);
+                if (temp < 0)
+                {
+                    /* convert exponent value into string*/
+                    sprintf(expstring, "E%d", temp);
+                }
+                else if (temp > 0)
+                {
+                    strcpy(expstring, "E+");
+                    /* convert exponent value into string*/
+                    sprintf(expstring, "E+%d", temp);
+                }
+                temp = labs((INT)temp);           /* get positive exponent factor      */
 
-                                       /* Start filling in digits           */
-                                       /* add numbers before decimal point  */
-      for (numindex = temp - 1;numindex >= 0 ;numindex-- ) {
-       num = this->number[numindex];   /* working copy of this Digit.       */
-       num += ch_ZERO;
-       StringObj->putChar(--charpos, num);
-      }
-                                       /* end of final case, conversion done*/
-    }
-   }                                   /* end of non-fast path conversion.  */
-  }                                    /* End of conversion of number       */
-  StringObj->generateHash();           /* force the object to have a hash   */
-                                       /* since string is created from      */
-                                       /* number string, we can set the     */
-  StringObj->setNumberString(this);    /* lookaside right away              */
-                                       /* and also save this string         */
-  OrefSet(this, this->stringObject, StringObj);
-  SetObjectHasReferences(this);        /* we now have to garbage collect    */
-  return StringObj;                    /* all done, return new string       */
+            }
+            /* Now compute size of result string */
+            if (ExpValue >= 0 )                /* if the Exponent is positive       */
+                                               /* Size is length of number plus exp.*/
+                MaxNumSize = (size_t)ExpValue + LenValue;
+            /*is exponent larger than length,    */
+            else if ((size_t)labs(ExpValue) >= LenValue)
+                /* Yes, we will need to add zeros to */
+                /* the front plus a 0.               */
+                MaxNumSize = labs(ExpValue) + 2;
+
+            else                               /*Won't be adding any digits, just   */
+                MaxNumSize = LenValue + 1;        /* length of number + 1 for decimal  */
+
+            if (ExpFactor)                     /* Are we using Exponential notation?*/
+                                               /* Yes, need to add in size of the   */
+                MaxNumSize += strlen(expstring);  /* exponent stuff.                   */
+
+            if (this->sign <0)                 /* is number negative?               */
+                MaxNumSize++;                     /* yes, add one to size for - sign   */
+                                                  /* get new string of appropriate size*/
+            StringObj = (RexxString *)raw_string(MaxNumSize);
+
+            charpos = 0;                       /* set starting position             */
+            if (this->sign < 0)
+            {              /* Is the number negative?           */
+                           /* Yes, add in the negative sign.    */
+                StringObj->putChar(charpos, ch_MINUS);
+            }
+            temp = ExpValue + (int)LenValue;   /* get the adjusted length.          */
+
+                                               /* Since we may have carry from round*/
+                                               /* we'll fill in the number from the */
+                                               /* back and make our way forward.    */
+
+                                               /* Strindex points to exponent start */
+                                               /* part of string.                   */
+            charpos  = MaxNumSize - strlen(expstring);
+
+            if (ExpFactor)                     /* will result have Exponent?        */
+                                               /* Yes, put the data into the string.*/
+                StringObj->put(charpos, expstring, strlen(expstring));
+
+            /* Next series of If's will determine*/
+            /* if we need to add zeros to end    */
+            /* of the number and where to place  */
+            /* decimal, fill in string as we     */
+            /* go, also need to check for a carry*/
+            /* if we rounded the number early on.*/
+
+            if (temp <= 0)
+            {                   /* Is ther an Integer portion?       */
+                                /*   0.000000xxxx result.            */
+                                /*   ^^^^^^^^     filler             */
+
+                                /* Start filling in digits           */
+                                /*   from the back....               */
+                for (numindex = (int)(LenValue-1);numindex >= 0 ;numindex-- )
+                {
+                    /* are we carry from round?          */
+                    num = this->number[numindex];   /* working copy of this Digit.       */
+                    num = num + ch_ZERO;            /* now put the number as a character */
+                    StringObj->putChar(--charpos, num);
+                }
+                temp = -temp;                    /* make the number positive...       */
+
+                if (temp)
+                {
+                    charpos  -= temp;               /* yes, point to starting pos to fill*/
+                                                    /* now fill in the leading Zeros.    */
+                    StringObj->set(charpos, ch_ZERO, temp);
+                }
+                StringObj->putChar(--charpos, ch_PERIOD);
+                if (carry)                       /* now put in the leading 1. is carry*/
+                    StringObj->putChar(--charpos, ch_ONE);
+                else                             /* or 0. if no carry.                */
+                    StringObj->putChar(--charpos, ch_ZERO);
+                StringObj->generateHash();       /* done building the string          */
+            }
+            /* do we need to add zeros at end?   */
+            else if ((size_t)temp >= LenValue)
+            {
+                /*  xxxxxx000000  result             */
+                /*        ^^^^^^  filler             */
+
+                /* Yes, add zeros first.             */
+                temp -= LenValue;                 /* see how many zeros we need to add.*/
+                charpos  -= temp;                 /* point to starting pos to fill     */
+                                                  /* now fill in the leading Zeros.    */
+                StringObj->set(charpos, ch_ZERO, temp);
+                /* done w/ trailing zeros start      */
+                /* adding digits (from back)         */
+
+
+                /* start filling in digits           */
+                for (numindex = (int)LenValue-1;numindex >= 0 ;numindex-- )
+                {
+                    num = this->number[numindex];   /* working copy of this Digit.       */
+                    num = num + ch_ZERO;            /* now put the number as a character */
+                    StringObj->putChar(--charpos, num);
+                }
+            }                                  /* done with this case....           */
+
+            else
+            {                             /* we have a partial Decimal number  */
+                                          /* add in the first digit a 1.       */
+                                          /* Start filling in digits           */
+                for (numindex = (int)LenValue - 1;numindex > temp - 1 ;numindex-- )
+                {
+                    num = this->number[numindex];   /* working copy of this Digit.       */
+                                                    /* now put the number as a character */
+                    num += ch_ZERO;
+                    StringObj->putChar(--charpos, num);
+                }
+                /* add in the decimal point.         */
+                StringObj->putChar(--charpos, ch_PERIOD);
+
+                /* Start filling in digits           */
+                /* add numbers before decimal point  */
+                for (numindex = temp - 1;numindex >= 0 ;numindex-- )
+                {
+                    num = this->number[numindex];   /* working copy of this Digit.       */
+                    num += ch_ZERO;
+                    StringObj->putChar(--charpos, num);
+                }
+                /* end of final case, conversion done*/
+            }
+        }                                   /* end of non-fast path conversion.  */
+    }                                    /* End of conversion of number       */
+    StringObj->generateHash();           /* force the object to have a hash   */
+                                         /* since string is created from      */
+                                         /* number string, we can set the     */
+    StringObj->setNumberString(this);    /* lookaside right away              */
+                                         /* and also save this string         */
+    OrefSet(this, this->stringObject, StringObj);
+    SetObjectHasReferences(this);        /* we now have to garbage collect    */
+    return StringObj;                    /* all done, return new string       */
 }
 
 long RexxNumberString::longValue(size_t digits)
@@ -496,7 +519,7 @@ long RexxNumberString::longValue(size_t digits)
   BOOL carry;
   long intnum;
   long numexp;
-  size_t numlength, numpos, NumDigits;
+  size_t numlength, numpos, createdDigits;
   char  compareChar;
 
   if (this->sign == 0 )                /* is the number zero ??             */
@@ -506,16 +529,16 @@ long RexxNumberString::longValue(size_t digits)
 
     if (digits == NO_LONG) {           /* were we passed a value to use for */
                                        /* digits?                           */
-      NumDigits = number_digits();     /* No, Get current digits setting.   */
-      NumDigits = min(NumDigits, 9);   /* 9 is max for default digits.      */
+      createdDigits = number_digits();       /* No, Get current digits setting.   */
+      createdDigits = min(createdDigits, 9);  /* 9 is max for default digits.      */
     } else {
-      NumDigits = digits;              /* Yes, we will use this setting.    */
+      createdDigits = digits;           /* Yes, we will use this setting.    */
     } /* endif */
 
-    if (this->length > NumDigits) {    /* is number bigger than Digits      */
+    if (this->length > createdDigits) {/* is number bigger than Digits      */
                                        /* Yes need to adjust number down.   */
-     numexp = this->exp + (this->length-NumDigits);
-     numlength = NumDigits;
+     numexp = this->exp + (this->length-createdDigits);
+     numlength = createdDigits;
 
                                        /* is MSD of numbers being trunc     */
      if (*(this->number + numlength) >= 5)
@@ -595,7 +618,7 @@ long RexxNumberString::longValue(size_t digits)
     }
                                        /* is long value expressable as a    */
                                        /*  whole number in REXX term.       */
-    if (NumDigits <= 9 && intnum >= validMaxWhole[NumDigits -1]) {
+    if (createdDigits <= 9 && intnum >= validMaxWhole[NumDigits -1]) {
       return NO_LONG;                  /* nope, not a valid long.           */
     }
 
@@ -2569,7 +2592,6 @@ int RexxNumberString::ULong(
   size_t intnum;
   size_t  NumDigits;
   char  compareChar;
-  int   rc;
 
 
    if (this->sign == -1) {             /*  Anegative numebr?                */
@@ -2682,7 +2704,7 @@ void  *RexxNumberString::operator new(size_t size, size_t length)
   return newNumber;                    /* return the new numberstring       */
 }
 
-RexxNumberString *RexxNumberStringClass::newInstance(char *number, stringsize_t len)
+RexxNumberString *RexxNumberStringClass::newInstance(const char *number, stringsize_t len)
 /******************************************************************************/
 /* Function:  Create a new number string object                               */
 /******************************************************************************/

@@ -47,13 +47,13 @@
 #include "ReplyInstruction.hpp"
 
 RexxInstructionReply::RexxInstructionReply(
-    RexxObject *expression)
+    RexxObject *_expression)
 /******************************************************************************/
 /* Function:  Initialize a REXX REPLY instruction                             */
 /******************************************************************************/
 {
                                        /* do the common initialization      */
- OrefSet(this, this->expression, expression);
+ OrefSet(this, this->expression, _expression);
 }
 
 void RexxInstructionReply::execute(

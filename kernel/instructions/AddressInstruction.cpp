@@ -48,17 +48,17 @@
 #include "AddressInstruction.hpp"
 
 RexxInstructionAddress::RexxInstructionAddress(
-  RexxObject *expression,              /* variable address expression       */
-  RexxString *environment,             /* address environment name          */
-  RexxObject *command)                 /* command to issue                  */
+  RexxObject *_expression,              /* variable address expression       */
+  RexxString *_environment,             /* address environment name          */
+  RexxObject *_command)                 /* command to issue                  */
 /******************************************************************************/
 /* Function : Complete address instruction initialization                     */
 /******************************************************************************/
 {
                                        /* store the instruction state       */
-  OrefSet(this, this->expression, expression);
-  OrefSet(this, this->environment, environment);
-  OrefSet(this, this->command, command);
+  OrefSet(this, this->expression, _expression);
+  OrefSet(this, this->environment, _environment);
+  OrefSet(this, this->command, _command);
 }
 
 void RexxInstructionAddress::live()
@@ -111,7 +111,7 @@ void RexxInstructionAddress::execute(
 /****************************************************************************/
 {
   RexxObject *result;                  /* expression evaluation result      */
-  RexxString *command;                 /* command to be issued              */
+  RexxString *_command;                 /* command to be issued              */
 
   context->traceInstruction(this);     /* trace if necessary                */
                                        /* is this an address toggle?        */
@@ -124,12 +124,12 @@ void RexxInstructionAddress::execute(
     if (this->command != OREF_NULL) {  /* actually the command form?        */
                                        /* get the expression value          */
       result = this->command->evaluate(context, stack);
-      command = REQUEST_STRING(result);/* force to string form              */
+      _command = REQUEST_STRING(result);/* force to string form              */
       context->traceResult(command);   /* trace if necessary                */
                                        /* validate the address name         */
       SysValidateAddressName(this->environment);
                                        /* go process the command            */
-      context->command(command, this->environment);
+      context->command(_command, this->environment);
     }
     else {                             /* just change the address           */
                                        /* validate the address name         */
@@ -142,10 +142,10 @@ void RexxInstructionAddress::execute(
   else {                               /* we have an ADDRESS VALUE form     */
                                        /* get the expression value          */
     result = this->expression->evaluate(context, stack);
-    command = REQUEST_STRING(result);  /* force to string form              */
-    context->traceResult(command);     /* trace if necessary                */
-    SysValidateAddressName(command);   /* validate the address name         */
-    context->setAddress(command);      /* just change the address           */
+    _command = REQUEST_STRING(result); /* force to string form              */
+    context->traceResult(_command);    /* trace if necessary                */
+    SysValidateAddressName(_command);  /* validate the address name         */
+    context->setAddress(_command);     /* just change the address           */
     context->pauseInstruction();       /* do debug pause if necessary       */
   }
 }

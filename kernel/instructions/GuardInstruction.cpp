@@ -52,17 +52,17 @@
 extern RexxActivity *CurrentActivity;  /* current running activity          */
 
 RexxInstructionGuard::RexxInstructionGuard(
-    RexxObject *expression,            /* guard expression                  */
+    RexxObject *_expression,            /* guard expression                  */
     RexxArray  *variable_list,         /* list of variables to trigger on   */
-    BOOL        on_off)                /* ON or OFF form                    */
+    bool        on_off)                /* ON or OFF form                    */
 /******************************************************************************/
 /* Function:  Complete initialization of a GUARD instruction object           */
 /******************************************************************************/
  {
-  INT   i;                             /* loop counter                      */
+  size_t i;                            /* loop counter                      */
 
                                        /* save the guard expression         */
-  OrefSet(this, this->expression, expression);
+  OrefSet(this, this->expression, _expression);
   if (on_off)                          /* this the ON form?                 */
     i_flags |= guard_on_form;          /* turn on the flag                  */
   if (variable_list != OREF_NULL) {    /* got a guard expression?           */
@@ -86,8 +86,8 @@ void RexxInstructionGuard::execute(
 /* Function:  Execute a REXX GUARD instruction                              */
 /****************************************************************************/
 {
-  LONG        size;                    /* size of guard variables list      */
-  LONG        i;                       /* loop counter                      */
+  size_t      size;                    /* size of guard variables list      */
+  size_t      i;                       /* loop counter                      */
   RexxObject *result;                  /* guard expression result           */
 
 #ifdef NOTHREADSUPPORT
@@ -165,8 +165,8 @@ void RexxInstructionGuard::live()
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
 
   setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
@@ -183,8 +183,8 @@ void RexxInstructionGuard::liveGeneral()
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
 
   setUpMemoryMarkGeneral
                                        /* must be first one marked          */
@@ -200,8 +200,8 @@ void RexxInstructionGuard::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
 
   setUpFlatten(RexxInstructionGuard)
 

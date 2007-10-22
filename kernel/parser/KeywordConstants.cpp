@@ -376,7 +376,7 @@ int RexxSource::subKeyword(
 /******************************************************************************/
 {
     // not a symbol?  not a keyword
-    if (token->classId != TOKEN_SYMBOL)
+    if (!token->isSymbol())
     {
         return 0;
     }
@@ -390,7 +390,7 @@ int RexxSource::keyword(
 /****************************************************************************/
 {
     // not a symbol?  not a keyword
-    if (token->classId != TOKEN_SYMBOL)
+    if (!token->isSymbol())
     {
         return 0;
     }
@@ -404,7 +404,7 @@ int RexxSource::builtin(
 /****************************************************************************/
 {
     // not a symbol?  not a keyword
-    if (token->classId != TOKEN_SYMBOL)
+    if (!token->isSymbol())
     {
         return 0;
     }
@@ -429,7 +429,7 @@ int RexxSource::condition(
 /****************************************************************************/
 {
     // not a symbol?  not a keyword
-    if (token->classId != TOKEN_SYMBOL)
+    if (!token->isSymbol())
     {
         return 0;
     }
@@ -443,7 +443,7 @@ int RexxSource::parseOption(
 /****************************************************************************/
 {
     // not a symbol?  not a keyword
-    if (token->classId != TOKEN_SYMBOL)
+    if (!token->isSymbol())
     {
         return 0;
     }
@@ -457,7 +457,7 @@ int RexxSource::keyDirective(
 /****************************************************************************/
 {
     // not a symbol?  not a keyword
-    if (token->classId != TOKEN_SYMBOL)
+    if (!token->isSymbol())
     {
         return 0;
     }
@@ -471,7 +471,7 @@ int RexxSource::subDirective(
 /****************************************************************************/
 {
     // not a symbol?  not a keyword
-    if (token->classId != TOKEN_SYMBOL)
+    if (!token->isSymbol())
     {
         return 0;
     }

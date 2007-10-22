@@ -198,7 +198,7 @@ RexxInteger *RexxExpressionStack::requiredIntegerArg(
     return (RexxInteger *)argument;    /* finished                          */
                                        /* return the string form of argument*/
   long_value = REQUEST_LONG(argument, DEFAULT_DIGITS);
-  if (long_value == NO_LONG) {         /* not convertable?                  */
+  if (long_value == (long)NO_LONG) { /* not convertable?                  */
     tempCount = argcount - position;   /* get the actual argument number    */
                                        /* report an exception               */
     report_exception3(Error_Incorrect_call_whole, new_cstring(function), new_integer(tempCount), argument);
@@ -229,7 +229,7 @@ RexxInteger *RexxExpressionStack::optionalIntegerArg(
     return (RexxInteger *)argument;    /* finished                          */
                                        /* return the string form of argument*/
   long_value = REQUEST_LONG(argument, DEFAULT_DIGITS);
-  if (long_value == NO_LONG) {         /* not convertable?                  */
+  if (long_value == (long)NO_LONG) {   /* not convertable?                  */
     tempCount = argcount - position;   /* get the actual argument number    */
                                        /* report an exception               */
     report_exception3(Error_Incorrect_call_whole, new_cstring(function), new_integer(tempCount), argument);

@@ -47,13 +47,13 @@
 #include "ExitInstruction.hpp"
 
 RexxInstructionExit::RexxInstructionExit(
-    RexxObject *expression)            /* associated EXIT expression        */
+    RexxObject *_expression)            /* associated EXIT expression        */
 /****************************************************************************/
 /* Function:  Complete initialization of an EXIT instruction                */
 /****************************************************************************/
 {
                                        /* just save the expression          */
-  OrefSet(this, this->expression, expression);
+  OrefSet(this, this->expression, _expression);
 }
 
 void RexxInstructionExit::execute(

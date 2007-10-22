@@ -46,8 +46,8 @@
 
 typedef struct listentry {
   RexxObject *value;                   /* list element value                */
-  long next;                           /* next list element in chain        */
-  long previous;                       /* previous list element in chain    */
+  size_t next;                         /* next list element in chain        */
+  size_t previous;                     /* previous list element in chain    */
 } LISTENTRY;
 
  class RexxListTable : public RexxInternalObject {
@@ -64,7 +64,7 @@ typedef struct listentry {
    void         flatten(RexxEnvelope *);
    inline LISTENTRY   *address() {return this->elements; };
 
-   long size;                          /* count of list elements            */
+   size_t size;                        /* count of list elements            */
    LISTENTRY elements[1];              /* entry elements                    */
  };
  #endif

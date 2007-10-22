@@ -49,7 +49,7 @@
 
 
 RexxInstructionTrace::RexxInstructionTrace(
-    RexxObject *expression,            /* TRACE VALUE expression            */
+    RexxObject *_expression,           /* TRACE VALUE expression            */
     USHORT      trace,                 /* trace setting                     */
     UCHAR       debug_flags,           /* new debug setting                 */
     LONG        debug_skip )           /* debug clauses to skip             */
@@ -58,7 +58,7 @@ RexxInstructionTrace::RexxInstructionTrace(
 /******************************************************************************/
 {
                                        /* process the expression            */
-   OrefSet(this, this->expression, expression);
+   OrefSet(this, this->expression, _expression);
    this->debugskip = debug_skip;       /* copy the skip value               */
    i_flags = debug_flags;              /* save the debug flags              */
    trace_setting = trace;              /* and the trace setting             */

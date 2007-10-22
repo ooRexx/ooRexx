@@ -52,7 +52,7 @@ class RexxInstructionQueue : public RexxInstructionExpression {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};
   inline RexxInstructionQueue(RESTORETYPE restoreType) { ; };
-  RexxInstructionQueue(RexxObject *, INT);
+  RexxInstructionQueue(RexxObject *, int);
   void execute(RexxActivation *, RexxExpressionStack *);
 };
 #endif

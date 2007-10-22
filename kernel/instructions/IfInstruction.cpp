@@ -49,7 +49,7 @@
 
 
 RexxInstructionIf::RexxInstructionIf(
-    RexxObject *condition,             /* conditional expression            */
+    RexxObject *_condition,            /* conditional expression            */
     RexxToken  *token)                 /* terminating THEN token            */
 /******************************************************************************/
 /* Function:  Complete IF instruction initialization                          */
@@ -58,7 +58,7 @@ RexxInstructionIf::RexxInstructionIf(
   LOCATIONINFO location;               /* clause token location             */
 
                                        /* save the condition                */
-  OrefSet(this, this->condition, condition);
+  OrefSet(this, this->condition, _condition);
   token->getLocation(&location);       /* get the token location info       */
                                        /* update the end location           */
   this->setEnd(location.line, location.offset);

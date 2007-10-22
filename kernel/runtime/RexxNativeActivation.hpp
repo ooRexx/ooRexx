@@ -94,9 +94,9 @@ class RexxNativeActivation : public RexxActivationBase {
   inline RexxCompoundElement *compoundElement() {return this->compoundelement; }
   inline void        setNextVariable(LONG value)           {this->nextvariable = value;}
   inline void        setNextCurrent(RexxVariableDictionary *vdict)     {this->nextcurrent = vdict;}
-  inline void        setNextStem(RexxStem *stem)     {this->nextstem = stem;}
+  inline void        setNextStem(RexxStem *stemVar)     {this->nextstem = stemVar;}
   inline void        setCompoundElement(RexxCompoundElement *element)     {this->compoundelement = element;}
-  inline void        setSyntaxHandler(jmp_buf *buffer)     {this->syntaxHandler = buffer;}
+  inline void        setSyntaxHandler(jmp_buf *buf)     {this->syntaxHandler = buf;}
 
 
   RexxMethod     *method;              /* Method to run                     */

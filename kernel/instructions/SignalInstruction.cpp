@@ -49,18 +49,18 @@
 #include "SignalInstruction.hpp"
 
 RexxInstructionSignal::RexxInstructionSignal(
-    RexxObject *expression,            /* expression for signal value       */
-    RexxString *condition,             /* signalled condition               */
-    RexxString *name,                  /* signal target name                */
-    UCHAR flags )                      /* option flags                      */
+    RexxObject *_expression,            /* expression for signal value       */
+    RexxString *_condition,             /* signalled condition               */
+    RexxString *_name,                  /* signal target name                */
+    int flags )                         /* option flags                      */
 /******************************************************************************/
 /* Initialize a SIGNAL instruction                                            */
 /******************************************************************************/
 {
                                        /* save all appropriate info         */
-  OrefSet(this, this->expression, expression);
-  OrefSet(this, this->condition, condition);
-  OrefSet(this, this->name, name);
+  OrefSet(this, this->expression, _expression);
+  OrefSet(this, this->condition, _condition);
+  OrefSet(this, this->name, _name);
   i_flags = flags;
 }
 

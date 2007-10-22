@@ -53,7 +53,7 @@ class RexxInstructionGuard : public RexxInstruction {
  public:
 
   inline void *operator new(size_t size, void *ptr) {return ptr;};
-  RexxInstructionGuard(RexxObject*, RexxArray *, BOOL);
+  RexxInstructionGuard(RexxObject*, RexxArray *, bool);
   inline RexxInstructionGuard(RESTORETYPE restoreType) { ; };
   void live();
   void liveGeneral();

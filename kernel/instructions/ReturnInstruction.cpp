@@ -47,13 +47,13 @@
 #include "ReturnInstruction.hpp"
 
 RexxInstructionReturn::RexxInstructionReturn(
-    RexxObject *expression)            /* assciated expression              */
+    RexxObject *_expression)            /* assciated expression              */
 /******************************************************************************/
 /* Function:  Complete initialization of a RETURN instruction                 */
 /******************************************************************************/
 {
                                        /* save the expression               */
-  OrefSet(this, this->expression, expression);
+  OrefSet(this, this->expression, _expression);
 }
 
 void RexxInstructionReturn::execute(

@@ -54,14 +54,14 @@
 
 RexxStemVariable::RexxStemVariable(
      RexxString * stemName,            /* stem name to access               */
-     LONG         index)               /* lookaside index for stem          */
+     LONG         var_index)           /* lookaside index for stem          */
 /******************************************************************************/
 /* Function:  Initialize a translator STEM object                             */
 /******************************************************************************/
 {
                                        /* set the name                      */
   OrefSet(this, this->stem, stemName); /* set the name                      */
-  this->index = index;                 /* and the index                     */
+  this->index = var_index;             /* and the index                     */
 }
 
 void RexxStemVariable::live()

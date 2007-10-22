@@ -54,12 +54,12 @@ extern ACTIVATION_SETTINGS *current_settings;
 extern RexxActivity *CurrentActivity;  /* current running activity          */
 
 RexxInstructionSay::RexxInstructionSay(
-    RexxObject *expression)            /* assciated expression              */
+    RexxObject *_expression)            /* assciated expression              */
 /******************************************************************************/
 /* Function:  Complete initialization of a SAY instruction                    */
 /******************************************************************************/
 {
-   OrefSet(this,this->expression, expression);
+   OrefSet(this, this->expression, _expression);
 }
 
 void  RexxInstructionSay::execute(

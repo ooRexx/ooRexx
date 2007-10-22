@@ -49,7 +49,7 @@ void RexxListTable::live(void)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  long       index;                    /* working index                     */
+  size_t     index;                    /* working index                     */
   setUpMemoryMark
                                        /* loop through our table            */
   for (index = 0; index < this->size; index++)
@@ -63,7 +63,7 @@ void RexxListTable::liveGeneral(void)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  long       index;                    /* working index                     */
+  size_t     index;                    /* working index                     */
 
   setUpMemoryMarkGeneral
                                        /* loop through our table            */
@@ -80,7 +80,7 @@ void   RexxListTable::flatten(RexxEnvelope *envelope)
 {
  setUpFlatten(RexxListTable)
 
- long i;
+ size_t i;
 
    for (i = this->size - 1; i >= 0 ; i--)
      flatten_reference(newThis->elements[i].value, envelope);

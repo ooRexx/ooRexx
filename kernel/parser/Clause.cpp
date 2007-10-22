@@ -131,14 +131,14 @@ void RexxClause::trim()
 /*            clauses (such as a "label: procedure", which is two clauses.    */
 /******************************************************************************/
 {
-  LOCATIONINFO location;               /* location of first new token       */
+  LOCATIONINFO l;                      /* location of first new token       */
 
 
   this->first = this->current;         /* set first item to current         */
                                        /* get first token location          */
-  ((RexxToken *)((this->tokens)->get(this->current)))->getLocation(&location);
+  ((RexxToken *)((this->tokens)->get(this->current)))->getLocation(&l);
                                        /* update the clause location info   */
-  this->setStart(location.line, location.offset);
+  this->setStart(l.line, l.offset);
 }
 
 void RexxClause::newClause()
@@ -157,7 +157,7 @@ RexxToken *RexxClause::newToken(
     int            classId,            /* class of the token                */
     int            subclass,           /* subclass of the token             */
     RexxString    *value,              /* associated string value           */
-    PLOCATIONINFO  location)           /* location of the token             */
+    PLOCATIONINFO  l)                  /* location of the token             */
 /******************************************************************************/
 /* Function :  Return a new token object, with information appropriately      */
 /*             filled in                                                      */
@@ -180,7 +180,7 @@ RexxToken *RexxClause::newToken(
   token = (RexxToken *)this->tokens->get(this->free);
   this->free++;                        /* step the free location            */
                                        /* fill in the token                 */
-  new ((void *)token) RexxToken(classId, subclass, value, location);
+  new ((void *)token) RexxToken(classId, subclass, value, l);
   return token;                        /* send the token back               */
 }
 

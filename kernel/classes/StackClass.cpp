@@ -175,18 +175,18 @@ void *RexxStack::operator new(
 
 RexxSaveStack::RexxSaveStack(
     size_t size,                       /* elements in the stack             */
-    size_t allocSize)                  /* size to allocate!                 */
+    size_t aSize)                      /* size to allocate!                 */
       : RexxStack(size)
 /******************************************************************************/
 /* Function:  Initialize a primitive stack.                                   */
 /******************************************************************************/
 {
-  this->allocSize = allocSize;
+  this->allocSize = aSize;
 }
 
 void RexxSaveStack::init(
     size_t size,                       /* elements in the stack             */
-    size_t allocSize)                  /* size to allocate                  */
+    size_t aSize)                      /* size to allocate                  */
 /******************************************************************************/
 /* Function:  Initialize a primitive stack early in memory set up             */
 /******************************************************************************/
@@ -194,7 +194,7 @@ void RexxSaveStack::init(
   ClearObject(this);                   /* clear entire stack                */
   this->u_size = size;                 /* set the size                      */
   this->top = 0;                       /* set the element to the top        */
-  this->allocSize = allocSize;
+  this->allocSize = aSize;
 }
 
 void *RexxSaveStack::operator new(
@@ -281,8 +281,6 @@ void RexxSaveStack::live()
 //          printf("Large object on save stack encountered of size %d\n", ObjectSize(thisObject));
                                        /* is this a large string? */
             if (OTYPE(String, thisObject)) {
-                RexxString *string = (RexxString *)thisObject;
-//              printf("Examining string object of length%d\n", string->length);
                                        /* if the pointer is less than the top, we don't */
                                        /* need to worry about wrapping now */
                 if (rp < this->stack + this->top) {

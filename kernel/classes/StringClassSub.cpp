@@ -61,10 +61,10 @@ extern ACTIVATION_SETTINGS *current_settings;
 /*                                                                            */
 /*  Returned:  string                                                         */
 /******************************************************************************/
-RexxString *RexxString::center(RexxInteger *length,
+RexxString *RexxString::center(RexxInteger *_length,
                                RexxString  *pad)
 {
-  CHAR     PadChar;                    /* pad character                     */
+  char     PadChar;                    /* pad character                     */
   size_t   LeftPad;                    /* required left pads                */
   size_t   RightPad;                   /* required right pads               */
   size_t   Space;                      /* result string size                */
@@ -74,14 +74,14 @@ RexxString *RexxString::center(RexxInteger *length,
 
   if (DBCS_MODE)                       /* need to use DBCS?                 */
                                        /* do the DBCS version               */
-    return (RexxString *)this->DBCScenter(length, pad);
+    return (RexxString *)this->DBCScenter(_length, pad);
                                        /* see how long result should be     */
-  Width = get_length(length, ARG_ONE);
+  Width = get_length(_length, ARG_ONE);
 
                                        /* Get pad character (optional) blank*/
                                        /*  is used if omitted.              */
   PadChar = get_pad(pad, ' ', ARG_TWO);
-  Len = this->length;                  /* get length of input to center     */
+  Len = this->getLength();                  /* get length of input to center     */
   if (Width == Len)                    /* if input length and               */
                                        /* requested are  the same           */
     Retval = this;                     /* then copy input                   */
@@ -97,14 +97,14 @@ RexxString *RexxString::center(RexxInteger *length,
                                        /* allocate space                    */
       Retval = (RexxString *)raw_string(Space);
                                        /* set left pad characters           */
-      memset(Retval->stringData, PadChar, LeftPad);
+      memset(Retval->getWritableData(), PadChar, LeftPad);
       if (Len)                         /* something to copy?                */
                                        /* copy the string                   */
-        memcpy(Retval->stringData + LeftPad,
-               (PCHAR)this->stringData,
+        memcpy(Retval->getWritableData() + LeftPad,
+               this->getStringData(),
                Len);
                                        /* now the trailing pad chars        */
-      memset(Retval->stringData + LeftPad + Len,
+      memset(Retval->getWritableData() + LeftPad + Len,
              PadChar,
              RightPad);
                                        /* done building the string          */
@@ -114,7 +114,7 @@ RexxString *RexxString::center(RexxInteger *length,
                                        /* input                             */
       LeftPad = (Len - Width) / 2;     /* get left truncate count           */
                                        /* copy the data                     */
-      Retval = (RexxString *)new_string((PCHAR)this->stringData + LeftPad, Width);
+      Retval = (RexxString *)new_string(this->getStringData() + LeftPad, Width);
     }
   }
   return Retval;                       /* done, return output buffer        */
@@ -127,24 +127,24 @@ RexxString *RexxString::center(RexxInteger *length,
 /*  Returned:  string                                                         */
 /******************************************************************************/
 RexxString *RexxString::delstr(RexxInteger *position,
-                               RexxInteger *length)
+                               RexxInteger *_length)
 {
   RexxString *Retval;                  /* return value:                     */
   size_t   BackLen;                    /* end string section                */
   size_t   StringLen;                  /* original string length            */
   size_t   DeleteLen;                  /* deleted length                    */
   size_t   DeletePos;                  /* delete position                   */
-  PCHAR    Current;                    /* current copy position             */
+  char    *Current;                    /* current copy position             */
 
   if (DBCS_SELF)                       /* need to use DBCS?                 */
                                        /* do the DBCS version               */
-    return this->DBCSdelstr(position, length);
+    return this->DBCSdelstr(position, _length);
 
-  StringLen = this->length;            /* get string length                 */
+  StringLen = this->getLength();            /* get string length                 */
                                        /* get start string position         */
   DeletePos = get_position(position, ARG_ONE);
                                        /* get the length to delete          */
-  DeleteLen = optional_length(length, StringLen - DeletePos + 1, ARG_TWO);
+  DeleteLen = optional_length(_length, StringLen - DeletePos + 1, ARG_TWO);
 
   if (DeletePos > StringLen)           /* beyond string bounds?             */
     Retval = this;                     /* return string unchanged           */
@@ -159,18 +159,16 @@ RexxString *RexxString::delstr(RexxInteger *position,
                                        /* allocate result string            */
     Retval = (RexxString *)raw_string(DeletePos + BackLen);
                                        /* point to string part              */
-    Current = Retval->stringData;
+    Current = Retval->getWritableData();
     if (DeletePos) {                   /* have a front part?                */
                                        /* copy it                           */
-      memcpy(Current, (PCHAR)this->stringData, DeletePos);
+      memcpy(Current, this->getStringData(), DeletePos);
       Current += DeletePos;            /* step past the front               */
     }
 
     if (BackLen) {                     /* have a trailing part              */
                                        /* copy that over                    */
-      memcpy(Current,
-             (PCHAR)this->stringData + DeletePos + DeleteLen,
-             BackLen);
+      memcpy(Current, this->getStringData() + DeletePos + DeleteLen, BackLen);
     }
                                        /* done building the string          */
     Retval->generateHash();
@@ -188,12 +186,12 @@ RexxString *RexxString::delstr(RexxInteger *position,
 /******************************************************************************/
 RexxString *RexxString::insert(RexxString  *newStrObj,
                                RexxInteger *position,
-                               RexxInteger *length,
+                               RexxInteger *_length,
                                RexxString  *pad)
 {
   RexxString *Retval;                  /* return string                     */
   RexxString *newStr;                  /* return string                     */
-  CHAR     PadChar;                    /* HugeString for Padding char       */
+  char     PadChar;                    /* HugeString for Padding char       */
   size_t   ReqLenChar;                 /* Actual req char len of new.       */
   size_t   ReqPadChar;                 /* Actual req char len of new.       */
   size_t   ReqLeadPad;                 /* Actual req char len of new.       */
@@ -204,23 +202,23 @@ RexxString *RexxString::insert(RexxString  *newStrObj,
   size_t   BCharLen;                   /* Char len of back portion.         */
   size_t   BuffSiz;                    /* Estimated result area size.       */
   size_t   NChar;                      /* Character position.               */
-  PCHAR    Current;                    /* current copy location             */
+  char *   Current;                    /* current copy location             */
 
   if (DBCS_MODE)                       /* need to use DBCS?                 */
                                        /* do the DBCS version               */
-    return this->DBCSinsert(newStrObj, position, length, pad);
+    return this->DBCSinsert(newStrObj, position, _length, pad);
 
-  TCharLen = this->length;             /* get the target string length      */
+  TCharLen = this->getLength();             /* get the target string length      */
                                        /* get the needle string (and length)*/
   newStr = (RexxString *)get_string(newStrObj, ARG_ONE);
-  NCharLen = newStr->length;
+  NCharLen = newStr->getLength();
                                        /* use optional_length for starting  */
                                        /* position becase a value of 0 IS   */
                                        /* valid for INSERT                  */
   NChar = optional_length(position, 0, ARG_TWO);
                                        /* get the optional length, using the*/
                                        /* needle length as the defaul       */
-  ReqLenChar = optional_length(length, NCharLen, ARG_THREE);
+  ReqLenChar = optional_length(_length, NCharLen, ARG_THREE);
 
                                        /*  is used if omitted.              */
   PadChar = get_pad(pad, ' ', ARG_FOUR);
@@ -247,11 +245,11 @@ RexxString *RexxString::insert(RexxString  *newStrObj,
                                        /* calculate result size             */
   BuffSiz = NCharLen + TargetSize + ReqPadChar + ReqLeadPad;
   Retval = raw_string(BuffSiz);        /* allocate the result               */
-  Current = Retval->stringData;        /* point to start                    */
+  Current = Retval->getWritableData(); /* point to start                    */
 
   if (FCharLen) {                      /* have leading chars                */
                                        /* copy the leading part             */
-    memcpy(Current, (PCHAR)this->stringData, FCharLen);
+    memcpy(Current, this->getStringData(), FCharLen);
     Current += FCharLen;               /* step copy location                */
   }
   if (ReqLeadPad) {                    /* if required leading pads          */
@@ -262,7 +260,7 @@ RexxString *RexxString::insert(RexxString  *newStrObj,
 
   if (NCharLen) {                      /* new string to copy?               */
                                        /* copy the inserted part            */
-    memcpy(Current, newStr->stringData, NCharLen);
+    memcpy(Current, newStr->getStringData(), NCharLen);
     Current += NCharLen;               /* step copy location                */
   }
 
@@ -274,7 +272,7 @@ RexxString *RexxString::insert(RexxString  *newStrObj,
 
   if (BCharLen) {                      /* have trailing chars               */
                                        /* copy the leading part             */
-    memcpy(Current, (PCHAR)this->stringData + FCharLen, BCharLen);
+    memcpy(Current, this->getStringData() + FCharLen, BCharLen);
   }
   Retval->generateHash();              /* done building the string          */
   return Retval;                       /* Return the new string             */
@@ -286,26 +284,26 @@ RexxString *RexxString::insert(RexxString  *newStrObj,
 /*                                                                            */
 /*  Returned:  string                                                         */
 /******************************************************************************/
-RexxString *RexxString::left(RexxInteger *length,
+RexxString *RexxString::left(RexxInteger *_length,
                              RexxString  *pad)
 {
-  CHAR      PadChar;                   /* pad character                     */
+  char      PadChar;                   /* pad character                     */
   size_t    Size;                      /* requested size                    */
   size_t    Length;                    /* string length                     */
   RexxString *Retval;                  /* returned result                   */
-  PCHAR     Current;                   /* current copy location             */
+  char *    Current;                   /* current copy location             */
   size_t    CopyLength;                /* length to copy                    */
 
   if (DBCS_MODE)                       /* need to use DBCS?                 */
                                        /* do the DBCS version               */
-    return this->DBCSleft(length, pad);
+    return this->DBCSleft(_length, pad);
 
                                        /* get the target length             */
-  Size = get_length(length, ARG_ONE);
+  Size = get_length(_length, ARG_ONE);
 
                                        /*  is used if omitted.              */
   PadChar = get_pad(pad, ' ', ARG_TWO);
-  Length = this->length;               /* get input length                  */
+  Length = this->getLength();               /* get input length                  */
 
   if (!Size)                           /* requesting zero bytes?            */
     Retval = OREF_NULLSTRING;          /* return a null string              */
@@ -313,10 +311,10 @@ RexxString *RexxString::left(RexxInteger *length,
     Retval = raw_string(Size);         /* allocate a result string          */
     CopyLength = min(Length, Size);    /* adjust the length                 */
                                        /* point to data part                */
-    Current = Retval->stringData;
+    Current = Retval->getWritableData();
     if (CopyLength) {                  /* have real data?                   */
                                        /* copy it                           */
-      memcpy(Current, (PCHAR)this->stringData, CopyLength);
+      memcpy(Current, this->getStringData(), CopyLength);
       Current += CopyLength;           /* bump the pointer                  */
     }
     if (Size > Length)                 /* need to pad?                      */
@@ -334,7 +332,7 @@ RexxString *RexxString::left(RexxInteger *length,
 RexxString *RexxString::overlay(
     RexxString  *newStrObj,            /* overlayed string                  */
     RexxInteger *position,             /* overlay position                  */
-    RexxInteger *length,               /* overlay length                    */
+    RexxInteger *_length,               /* overlay length                    */
     RexxString  *pad)                  /* pad character to use.             */
 {
   RexxString *Retval;                  /* return string                     */
@@ -347,21 +345,21 @@ RexxString *RexxString::overlay(
   size_t   BackLen;                    /* back length                       */
   size_t   FrontPad;                   /* front pad length                  */
   size_t   BackPad;                    /* back pad length                   */
-  CHAR     PadChar;                    /* pad character                     */
-  PCHAR    Current;                    /* current copy location             */
+  char     PadChar;                    /* pad character                     */
+  char    *Current;                    /* current copy location             */
 
   if (DBCS_MODE)                       /* need to use DBCS?                 */
                                        /* do the DBCS version               */
-    return this->DBCSoverlay(newStrObj, position, length, pad);
+    return this->DBCSoverlay(newStrObj, position, _length, pad);
 
-  TargetLen = this->length;            /* get the haystack length           */
+  TargetLen = this->getLength();            /* get the haystack length           */
                                        /* get the overlay string value      */
   newStr = (RexxString *)get_string(newStrObj, ARG_ONE);
-  NewLen = newStr->length;
+  NewLen = newStr->getLength();
                                        /* get the overlay position          */
   OverlayPos = optional_position(position, 1, ARG_TWO);
                                        /* get final overlay length          */
-  OverlayLen = optional_length(length, NewLen, ARG_THREE);
+  OverlayLen = optional_length(_length, NewLen, ARG_THREE);
                                        /*  is used if omitted.              */
   PadChar = get_pad(pad, ' ', ARG_FOUR);
 
@@ -390,11 +388,11 @@ RexxString *RexxString::overlay(
                                        /* allocate result string            */
   Retval = raw_string(FrontLen + BackLen + FrontPad + OverlayLen);
 
-  Current = Retval->stringData;        /* get copy location                 */
+  Current = Retval->getWritableData(); /* get copy location                 */
 
   if (FrontLen) {                      /* something in front?               */
                                        /* copy the front part               */
-    memcpy(Current, (PCHAR)this->stringData, FrontLen);
+    memcpy(Current, this->getStringData(), FrontLen);
     Current += FrontLen;               /* step the pointer                  */
   }
 
@@ -405,7 +403,7 @@ RexxString *RexxString::overlay(
 
   if (NewLen) {                        /* non-null new string?              */
                                        /* copy the string                   */
-    memcpy(Current, newStr->stringData, NewLen);
+    memcpy(Current, newStr->getStringData(), NewLen);
     Current += NewLen;                 /* step the pointer                  */
   }
 
@@ -417,7 +415,7 @@ RexxString *RexxString::overlay(
 
   if (BackLen) {                       /* trailing part?                    */
                                        /* copy the string                   */
-    memcpy(Current, (PCHAR)this->stringData + OverlayPos + OverlayLen - 1, BackLen);
+    memcpy(Current, this->getStringData() + OverlayPos + OverlayLen - 1, BackLen);
   }
   Retval->generateHash();              /* done building the string          */
   return Retval;                       /* return new string                 */
@@ -433,20 +431,20 @@ RexxString *RexxString::reverse()
 {
   RexxString *Retval;                  /* temp pointer for reversal       */
   size_t     Length;                   /* string length                   */
-  PCHAR      String;                   /* current location                */
-  PCHAR      End;                      /* string end position             */
+  char      *String;                   /* current location                */
+  const char *End;                      /* string end position             */
 
   if (DBCS_SELF)                       /* need to use DBCS?                 */
                                        /* do the DBCS version               */
     return this->DBCSreverse();
 
-  Length = this->length;               /* get first argument              */
+  Length = this->getLength();               /* get first argument              */
   if (Length) {                        /* if really data                  */
     Retval = raw_string(Length);       /* get result storage              */
                                        /* get new string pointer          */
-    String = Retval->stringData;
+    String = Retval->getWritableData();
                                        /* point to end of original        */
-    End = (PCHAR)this->stringData + Length - 1;
+    End = this->getStringData() + Length - 1;
 
     while (Length--)                   /* reverse entire string           */
       *String++ = *End--;              /* copy a single char              */
@@ -465,26 +463,26 @@ RexxString *RexxString::reverse()
 /*                                                                            */
 /*  Returned:  string right justified.                                        */
 /******************************************************************************/
-RexxString *RexxString::right(RexxInteger *length,
+RexxString *RexxString::right(RexxInteger *_length,
                               RexxString  *pad)
 {
-  CHAR      PadChar;                   /* pad character                     */
+  char      PadChar;                   /* pad character                     */
   size_t    Size;                      /* requested size                    */
   size_t    Length;                    /* string length                     */
   RexxString *Retval;                  /* returned result                   */
-  PCHAR     Current;                   /* current copy location             */
+  char *    Current;                   /* current copy location             */
   size_t    CopyLength;                /* length to copy                    */
 
   if (DBCS_MODE)                       /* need to use DBCS?                 */
                                        /* do the DBCS version               */
-    return this->DBCSright(length, pad);
+    return this->DBCSright(_length, pad);
 
                                        /* get the target length             */
-  Size = get_length(length, ARG_ONE);
+  Size = get_length(_length, ARG_ONE);
 
                                        /*  is used if omitted.              */
   PadChar = get_pad(pad, ' ', ARG_TWO);
-  Length = this->length;               /* get input length                  */
+  Length = this->getLength();               /* get input length                  */
 
   if (!Size)                           /* requesting zero bytes?            */
                                        /* return a null string              */
@@ -493,7 +491,7 @@ RexxString *RexxString::right(RexxInteger *length,
     Retval = raw_string(Size);         /* allocate a result string          */
     CopyLength = min(Length, Size);    /* adjust the length                 */
                                        /* point to data part                */
-    Current = Retval->stringData;
+    Current = Retval->getWritableData();
     if (Size > Length) {               /* need to pad?                      */
                                        /* pad the string                    */
       memset(Current, PadChar, Size - Length);
@@ -501,9 +499,7 @@ RexxString *RexxString::right(RexxInteger *length,
     }
     if (CopyLength)                    /* have real data?                   */
                                        /* copy it                           */
-      memcpy(Current,
-             (PCHAR)this->stringData + Length - CopyLength,
-             CopyLength);
+      memcpy(Current, this->getStringData() + Length - CopyLength, CopyLength);
                                        /* done building the string          */
     Retval->generateHash();
   }
@@ -520,11 +516,11 @@ RexxString *RexxString::right(RexxInteger *length,
 RexxString *RexxString::strip(RexxString *option,
                               RexxString *stripchar)
 {
-    PCHAR       Back;                    /* pointer to back part              */
-    PCHAR       Front;                   /* pointer to front part             */
+    const char *Back;                    /* pointer to back part              */
+    const char *Front;                   /* pointer to front part             */
     size_t      Length;                  /* length of the string              */
-    CHAR        RemoveChar;              /* character to remove               */
-    CHAR        Option;                  /* strip option                      */
+    char        RemoveChar;              /* character to remove               */
+    char        Option;                  /* strip option                      */
     RexxString *Retval;                  /* return value                      */
 
     if (DBCS_MODE)                       /* need to use DBCS?                 */
@@ -541,12 +537,12 @@ RexxString *RexxString::strip(RexxString *option,
                           option);
     // get the strip character.  This is a phony default, as the
     // real default strips the entire set of recognized whitespace characters.
-    RemoveChar = (UCHAR) get_pad(stripchar, ' ', ARG_TWO);
+    RemoveChar = get_pad(stripchar, ' ', ARG_TWO);
     // and get a special processing flag
     bool stripWhite = stripchar == OREF_NULL;
 
-    Front = (PCHAR)this->stringData;     /* point to string start             */
-    Length = this->length;               /* get the length                    */
+    Front = this->getStringData();       /* point to string start             */
+    Length = this->getLength();          /* get the length                    */
 
                                          /* need to strip leading?            */
     if (Option == STRIP_LEADING || Option == STRIP_BOTH)
@@ -623,10 +619,10 @@ RexxString *RexxString::strip(RexxString *option,
 /*  Returned:  string, sub string of original.                                */
 /******************************************************************************/
 RexxString *RexxString::substr(RexxInteger *position,
-                               RexxInteger *length,
+                               RexxInteger *_length,
                                RexxString  *pad)
 {
-  UCHAR    PadChar;                    /* pad character                     */
+  char     PadChar;                    /* pad character                     */
   size_t   Position;                   /* start position                    */
   size_t   Length;                     /* required length                   */
   size_t   StringLength;               /* input string length               */
@@ -636,11 +632,11 @@ RexxString *RexxString::substr(RexxInteger *position,
 
   if (DBCS_MODE)                       /* need to use DBCS?                 */
                                        /* do the DBCS version               */
-    return this->DBCSsubstr(position, length, pad);
+    return this->DBCSsubstr(position, _length, pad);
 
                                        /* get starting position             */
   Position = get_position(position, ARG_ONE) - 1;
-  StringLength = this->length;         /* get the string length             */
+  StringLength = this->getLength();         /* get the string length             */
   if (StringLength == 0)               /* string of zerolength              */
     Length = 0L;                       /* no partial to handle              */
   else if (StringLength >= Position)   /* pos within the string?            */
@@ -649,7 +645,7 @@ RexxString *RexxString::substr(RexxInteger *position,
     Length = 0L;                       /* string is used up                 */
                                        /* go get length or use default if   */
                                        /* not supplied.                     */
-  Length = optional_length(length, Length, ARG_TWO);
+  Length = optional_length(_length, Length, ARG_TWO);
                                        /* go get optional pad character,    */
                                        /*  is used if omitted.              */
   PadChar = get_pad(pad, ' ', ARG_THREE);
@@ -670,14 +666,10 @@ RexxString *RexxString::substr(RexxInteger *position,
     Retval = raw_string(Length);       /* get result string                 */
     if (SubstrLength)                  /* data to copy?                     */
                                        /* yes, copy over                    */
-      memcpy(Retval->stringData,
-             (PCHAR)this->stringData + Position,
-             SubstrLength);
+      memcpy(Retval->getWritableData(), this->getStringData() + Position, SubstrLength);
     if (PadCount)                      /* padding needed?                   */
                                        /* add the pad characters            */
-      memset(Retval->stringData + SubstrLength,
-             PadChar,
-             PadCount);
+      memset(Retval->getWritableData() + SubstrLength, PadChar, PadCount);
                                        /* done building the string          */
     Retval->generateHash();
   }
@@ -702,7 +694,7 @@ RexxString *RexxString::subchar(RexxInteger *positionArg)
 {
     // the starting position isn't optional
     size_t position = get_position(positionArg, ARG_ONE) - 1;
-    size_t stringLength = this->length;
+    size_t stringLength = this->getLength();
 
     // beyond the bounds, this is a null string
     if (position >= stringLength)

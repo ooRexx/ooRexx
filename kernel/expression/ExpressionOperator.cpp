@@ -85,7 +85,7 @@ const char *RexxExpressionOperator::operatorNames[] =
 
 
 RexxExpressionOperator::RexxExpressionOperator(
-    INT         oper,                  /* operator index                    */
+    int         op,                    /* operator index                    */
     RexxObject *left,                  /* left expression objects           */
     RexxObject *right)                 /* right expression objects          */
 /******************************************************************************/
@@ -94,7 +94,7 @@ RexxExpressionOperator::RexxExpressionOperator(
 {
   ClearObject(this);                   /* start completely clean            */
                                        /* just fill in the three terms      */
-  this->oper = oper;
+  this->oper = op;
   OrefSet(this, this->left_term, left);
   OrefSet(this, this->right_term, right);
 }
@@ -107,16 +107,16 @@ RexxObject *RexxExpressionOperator::evaluate(
 /******************************************************************************/
 {
   RexxObject *result;                  /* message expression result         */
-  RexxObject *left_term;               /* left term result                  */
-  RexxObject *right_term;              /* right term result                 */
+  RexxObject *left;                    /* left term result                  */
+  RexxObject *right;                   /* right term result                 */
 
                                        /* evaluate the target               */
-  left_term = this->left_term->evaluate(context, stack);
+  left = this->left_term->evaluate(context, stack);
   if (this->right_term != OREF_NULL) { /* not a prefix operator?            */
                                        /* evaluate the right term           */
-    right_term = this->right_term->evaluate(context, stack);
+    right = this->right_term->evaluate(context, stack);
                                        /* evaluate the message              */
-    result = callOperatorMethod(left_term, this->oper, right_term);
+    result = callOperatorMethod(left, this->oper, right);
                                        /* replace top two stack elements    */
     stack->operatorResult(result);     /* with this one                     */
                                        /* trace if necessary                */
@@ -124,7 +124,7 @@ RexxObject *RexxExpressionOperator::evaluate(
   }
   else {                               /* prefix operator                   */
                                        /* process this directly             */
-    result = callOperatorMethod(left_term, this->oper, OREF_NULL);
+    result = callOperatorMethod(left, this->oper, OREF_NULL);
     stack->prefixResult(result);       /* replace the top element           */
                                        /* trace if necessary                */
     context->tracePrefix(operatorName(), result);
@@ -140,15 +140,15 @@ RexxObject *RexxBinaryOperator::evaluate(
 /******************************************************************************/
 {
   RexxObject *result;                  /* message expression result         */
-  RexxObject *left_term;               /* left term result                  */
-  RexxObject *right_term;              /* right term result                 */
+  RexxObject *left;                    /* left term result                  */
+  RexxObject *right;                   /* right term result                 */
 
                                        /* evaluate the target               */
-  left_term = this->left_term->evaluate(context, stack);
+  left = this->left_term->evaluate(context, stack);
                                        /* evaluate the right term           */
-  right_term = this->right_term->evaluate(context, stack);
+  right = this->right_term->evaluate(context, stack);
                                        /* evaluate the message              */
-  result = callOperatorMethod(left_term, this->oper, right_term);
+  result = callOperatorMethod(left, this->oper, right);
                                        /* replace top two stack elements    */
   stack->operatorResult(result);       /* with this one                     */
                                        /* trace if necessary                */
@@ -164,12 +164,12 @@ RexxObject *RexxUnaryOperator::evaluate(
 /******************************************************************************/
 {
   RexxObject *result;                  /* message expression result         */
-  RexxObject *left_term;               /* left term result                  */
+  RexxObject *term;                    /* left term result                  */
 
                                        /* evaluate the target               */
-  left_term = this->left_term->evaluate(context, stack);
+  term = this->left_term->evaluate(context, stack);
                                        /* process this directly             */
-  result = callOperatorMethod(left_term, this->oper, OREF_NULL);
+  result = callOperatorMethod(term, this->oper, OREF_NULL);
   stack->prefixResult(result);         /* replace the top element           */
                                        /* trace if necessary                */
   context->tracePrefix(operatorName(), result);

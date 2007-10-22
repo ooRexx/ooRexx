@@ -51,9 +51,9 @@
 #include "SourceFile.hpp"
 
 RexxExpressionMessage::RexxExpressionMessage(
-    RexxObject *target,                /* message send target               */
+    RexxObject *_target,                /* message send target               */
     RexxString *name,                  /* message name                      */
-    RexxObject *super,                 /* message super class               */
+    RexxObject *_super,                 /* message super class               */
     size_t      argCount,              /* count of arguments                */
     RexxQueue  *arglist,               /* message argument list             */
     int         classId)               /* type of message send              */
@@ -66,10 +66,10 @@ RexxExpressionMessage::RexxExpressionMessage(
                                        /* name doubles as hash so ClearObjec*/
   this->u_name = OREF_NULL;            /* doesn't clear hash field.         */
 
-  OrefSet(this, this->target, target); /* fill in the target                */
+  OrefSet(this, this->target, _target); /* fill in the target                */
                                        /* the message name                  */
   OrefSet(this, this->u_name, name->upper());
-  OrefSet(this, this->super, super);   /* the super class target            */
+  OrefSet(this, this->super, _super);   /* the super class target            */
   if (classId == TOKEN_TILDE)          /* single twiddle form?              */
     this->doubleTilde = FALSE;         /* not a double twiddle form         */
   else
@@ -90,24 +90,24 @@ RexxObject *RexxExpressionMessage::evaluate(
 /******************************************************************************/
 {
   RexxObject *result;                  /* message expression result         */
-  RexxObject *super;                   /* target super class                */
+  RexxObject *_super;                  /* target super class                */
   LONG        argcount;                /* count of arguments                */
-  RexxObject *target;                  /* message target                    */
+  RexxObject *_target;                 /* message target                    */
   size_t      i;                       /* loop counter                      */
 
                                        /* evaluate the target               */
-  target = this->target->evaluate(context, stack);
+  _target = this->target->evaluate(context, stack);
   if (this->super != OREF_NULL) {      /* have a message lookup override?   */
 
-    if (target != context->receiver)   /* sender and receiver different?    */
+    if (_target != context->receiver)   /* sender and receiver different?    */
                                        /* this is an error                  */
       report_exception(Error_Execution_super);
                                        /* get the variable value            */
-    super = this->super->evaluate(context, stack);
+    _super = this->super->evaluate(context, stack);
     stack->toss();                     /* pop the top item                  */
   }
   else
-    super = OREF_NULL;                 /* use the default lookup            */
+    _super = OREF_NULL;                /* use the default lookup            */
 
   argcount = this->argumentCount;      /* get the argument count            */
   /* loop through the argument list    */
@@ -125,12 +125,12 @@ RexxObject *RexxExpressionMessage::evaluate(
       context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
     }
   }
-  if (super == OREF_NULL)              /* no super class override?          */
+  if (_super == OREF_NULL)             /* no super class override?          */
                                        /* issue the fast message            */
     result = stack->send(this->u_name, argcount);
   else
                                        /* evaluate the message w/override   */
-    result = stack->send(this->u_name, super, argcount);
+    result = stack->send(this->u_name, _super, argcount);
   stack->popn(argcount);               /* remove any arguments              */
   if (this->doubleTilde)               /* double twiddle form?              */
     result = target;                   /* get the target element            */
@@ -222,18 +222,18 @@ void RexxExpressionMessage::assign(
 /******************************************************************************/
 {
     // evaluate the target
-    RexxObject *target = this->target->evaluate(context, stack);
-    RexxObject *super = OREF_NULL;
+    RexxObject *_target = this->target->evaluate(context, stack);
+    RexxObject *_super = OREF_NULL;
     // message override?
     if (this->super != OREF_NULL)
     {
         // in this context, the value needs to be SELF
-        if (target != context->receiver)
+        if (_target != context->receiver)
         {
             report_exception(Error_Execution_super);
         }
         // evaluate the superclass override
-        super = this->super->evaluate(context, stack);
+        _super = this->super->evaluate(context, stack);
         stack->toss();
     }
     // push the assignment value on to the stack as the argument
@@ -262,7 +262,7 @@ void RexxExpressionMessage::assign(
     }
 
     // now send the message the appropriate way
-    if (super == OREF_NULL)
+    if (_super == OREF_NULL)
     {
         // normal message send
         result = stack->send(this->u_name, argcount + 1);
@@ -270,7 +270,7 @@ void RexxExpressionMessage::assign(
     else
     {
         // send with an override
-        result = stack->send(this->u_name, super, argcount + 1);
+        result = stack->send(this->u_name, _super, argcount + 1);
     }
     // remove all arguments
     stack->popn(argcount + 1);

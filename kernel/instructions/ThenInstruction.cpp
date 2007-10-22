@@ -51,14 +51,14 @@
 
 RexxInstructionThen::RexxInstructionThen(
     RexxToken         *token,          /* THEN keyword token                */
-    RexxInstructionIf *parent)         /* target parent IF or WHEN clause   */
+    RexxInstructionIf *_parent)        /* target parent IF or WHEN clause   */
 /******************************************************************************/
 /* Function:  Initialize a THEN object                                        */
 /******************************************************************************/
 {
   LOCATIONINFO location;               /* clause token location             */
 
-  OrefSet(this, this->parent, parent); /* remember the parent IF instruction*/
+  OrefSet(this, this->parent, _parent); /* remember the parent IF instruction*/
                                        /* parent an IF instruction?         */
   if (this->parent->instructionInfo.type == KEYWORD_IF)
                                        /* this is an IF ... THEN clause     */

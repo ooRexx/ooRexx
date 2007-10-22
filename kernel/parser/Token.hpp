@@ -397,19 +397,21 @@ class RexxToken : public RexxInternalObject {
   void      *operator new(size_t);
   inline void      *operator new(size_t size, void *ptr) {return ptr;};
 
-  inline BOOL       isVariable(void) { return (this->subclass == SYMBOL_VARIABLE || this->subclass == SYMBOL_STEM || this->subclass == SYMBOL_COMPOUND); };
-  inline BOOL       isLiteral(void)  { return (this->classId == TOKEN_LITERAL); };
-  inline BOOL       isConstant(void)  { return (this->classId == TOKEN_SYMBOL && this->subclass != SYMBOL_VARIABLE && this->subclass != SYMBOL_STEM && this->subclass != SYMBOL_COMPOUND); };
-  inline BOOL       isSymbol(void) { return (this->classId == TOKEN_SYMBOL); };
-  inline void       setNumeric(INT value)   { this->numeric = value; };
-  inline void       getLocation(PLOCATIONINFO location) { *location = this->location; }
-  inline void       setLocation(PLOCATIONINFO location) { this->location = *location; }
+  inline bool       isVariable() { return (this->subclass == SYMBOL_VARIABLE || this->subclass == SYMBOL_STEM || this->subclass == SYMBOL_COMPOUND); };
+  inline bool       isLiteral()  { return (this->classId == TOKEN_LITERAL); };
+  inline bool       isSymbolOrLiteral()  { return (this->classId == TOKEN_LITERAL) || (this->classId == TOKEN_SYMBOL); };
+  inline bool       isConstant()  { return (this->classId == TOKEN_SYMBOL && this->subclass != SYMBOL_VARIABLE && this->subclass != SYMBOL_STEM && this->subclass != SYMBOL_COMPOUND); };
+  inline bool       isSymbol() { return (this->classId == TOKEN_SYMBOL); };
+  inline bool       isEndOfClause() { return this->classId == TOKEN_EOC; }
+  inline void       setNumeric(int v)   { this->numeric = v; };
+  inline void       getLocation(PLOCATIONINFO l) { *l = this->location; }
+  inline void       setLocation(PLOCATIONINFO l) { this->location = *l; }
          void       checkAssignment(RexxSource *source, RexxString *newValue);
 
   LOCATIONINFO location;               /* token source location             */
   RexxString *value;                   /* token string value                */
-  INT         classId;                 /* class of token                    */
-  INT         subclass;                /* specialized type of token         */
-  INT         numeric;                 /* even further specialization       */
+  int         classId;                 /* class of token                    */
+  int         subclass;                /* specialized type of token         */
+  int         numeric;                 /* even further specialization       */
 };
 #endif

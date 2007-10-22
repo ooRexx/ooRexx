@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ExpressionOperator.hpp   */
+/* REXX Kernel                                       ExpressionOperator.hpp   */
 /*                                                                            */
 /* Primitive Expression Operator Class Definitions                            */
 /*                                                                            */
@@ -61,15 +61,15 @@ class RexxExpressionOperator : public RexxInternalObject {
   // table of operator names
   static const char *operatorNames[];
 
-  INT  oper;                           /* operator to perform               */
+  int  oper;                           /* operator to perform               */
   RexxObject *right_term;              /* right term of the operator        */
   RexxObject *left_term;               /* left term of the operator         */
 };
 
 class RexxBinaryOperator : public RexxExpressionOperator {
  public:
-  inline RexxBinaryOperator(INT oper, RexxObject *left, RexxObject *right)
-      : RexxExpressionOperator(oper, left, right) { ; }
+  inline RexxBinaryOperator(int op, RexxObject *left, RexxObject *right)
+      : RexxExpressionOperator(op, left, right) { ; }
   inline RexxBinaryOperator(RESTORETYPE restoreType) { ; };
   void  *operator new(size_t);
   inline void  *operator new(size_t size, void *ptr) {return ptr;};
@@ -78,8 +78,8 @@ class RexxBinaryOperator : public RexxExpressionOperator {
 
 class RexxUnaryOperator : public RexxExpressionOperator {
  public:
-  inline RexxUnaryOperator(INT oper, RexxObject *left)
-      : RexxExpressionOperator(oper, left, OREF_NULL) { ; }
+  inline RexxUnaryOperator(int op, RexxObject *left)
+      : RexxExpressionOperator(op, left, OREF_NULL) { ; }
   inline RexxUnaryOperator(RESTORETYPE restoreType) { ; };
   void  *operator new(size_t);
   inline void  *operator new(size_t size, void *ptr) {return ptr;};

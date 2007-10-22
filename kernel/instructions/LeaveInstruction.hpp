@@ -49,7 +49,7 @@
 class RexxInstructionLeave : public RexxInstruction {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};
-  RexxInstructionLeave(INT, RexxString *);
+  RexxInstructionLeave(int, RexxString *);
   inline RexxInstructionLeave(RESTORETYPE restoreType) { ; };
   void live();
   void liveGeneral();

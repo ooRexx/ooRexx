@@ -48,8 +48,8 @@
 #include "RexxNativeAPI.h"
 
 RexxObject *RexxTable::addOffset(
-  RexxObject *value,                   /* object to add                     */
-  RexxObject *index)                   /* added index                       */
+  RexxObject *_value,                   /* object to add                     */
+  RexxObject *_index)                   /* added index                       */
 /******************************************************************************/
 /* Function:  This add method is used by the envelope packing/copybuffer      */
 /*  processing.  it is used to maintain the nodupTable.  The value argument   */
@@ -64,7 +64,7 @@ RexxObject *RexxTable::addOffset(
 
   memoryObject.disableOrefChecks();    /* Turn off OrefSet Checking.        */
                                        /* try to place in existing hashtab  */
-  newHash = this->contents->primitiveAdd(value, index);
+  newHash = this->contents->primitiveAdd(_value, _index);
   if (newHash  != OREF_NULL) {         /* have a reallocation occur?        */
                                        /* mark the hash as not having refere*/
                                        /* even though the indices are objs  */
@@ -79,18 +79,18 @@ RexxObject *RexxTable::addOffset(
 }
 
 RexxObject *RexxTable::stringAdd(
-  RexxObject *value,                   /* object to add                     */
-  RexxString *index)                   /* added index                       */
+  RexxObject *_value,                   /* object to add                     */
+  RexxString *_index)                   /* added index                       */
 /******************************************************************************/
 /* Function:  Add an object to a table using a string index.                  */
 /******************************************************************************/
 {
   RexxHashTable *newHash;              /* newly created hash table          */
 
-  required_arg(value, ONE);            /* make sure we have an value        */
-  required_arg(index, TWO);            /* make sure we have an index        */
+  required_arg(_value, ONE);            /* make sure we have an value        */
+  required_arg(_index, TWO);            /* make sure we have an index        */
                                        /* try to place in existing hashtab  */
-  newHash = this->contents->stringAdd(value, index);
+  newHash = this->contents->stringAdd(_value, _index);
   if (newHash != OREF_NULL)            /* have a reallocation occur?        */
                                        /* hook on the new hash table        */
     OrefSet(this, this->contents, newHash);
@@ -98,18 +98,18 @@ RexxObject *RexxTable::stringAdd(
 }
 
 RexxObject *RexxTable::stringPut(
-  RexxObject *value,                   /* value to insert                   */
-  RexxString *index)                   /* item index                        */
+  RexxObject *_value,                   /* value to insert                   */
+  RexxString *_index)                   /* item index                        */
 /******************************************************************************/
 /* Function:  Put an object into the table using a string index               */
 /******************************************************************************/
 {
   RexxHashTable *newHash;              /* newly created hash table          */
 
-  required_arg(value, ONE);            /* make sure we have an value        */
-  required_arg(index, TWO);            /* make sure we have an index        */
+  required_arg(_value, ONE);            /* make sure we have an value        */
+  required_arg(_index, TWO);            /* make sure we have an index        */
                                        /* try to place in existing hashtab  */
-  newHash = this->contents->stringPut(value, index);
+  newHash = this->contents->stringPut(_value, _index);
   if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
                                        /* hook on the new hash table        */
     OrefSet(this, this->contents, newHash);
@@ -132,7 +132,7 @@ RexxObject *RexxTable::itemsRexx(void)
 /* Function:  Return the count of items in the table                          */
 /******************************************************************************/
 {
-  LONG  numEntries;
+  size_t  numEntries;
 
   numEntries = this->contents->totalEntries();
   return (RexxObject *)new_integer(numEntries);
@@ -146,7 +146,7 @@ void RexxTable::reset()
   OrefSet(this, this->contents, (RexxHashTable *)new_hashtab(DEFAULT_HASH_SIZE));
 }
 
-RexxObject *RexxTable::putNodupe(RexxObject *value, RexxObject *index)
+RexxObject *RexxTable::putNodupe(RexxObject *_value, RexxObject *_index)
 /******************************************************************************/
 /* Function:  Put an object into a table, ensuring no duplicates.             */
 /******************************************************************************/
@@ -154,7 +154,7 @@ RexxObject *RexxTable::putNodupe(RexxObject *value, RexxObject *index)
   RexxHashTable *newHash;              /* newly created hash table          */
 
                                        /* try to place in existing hashtab  */
-  newHash = this->contents->putNodupe(value, index);
+  newHash = this->contents->putNodupe(_value, _index);
   if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
                                        /* hook on the new hash table        */
     OrefSet(this, this->contents, newHash);
@@ -176,17 +176,17 @@ RexxObject *RexxTable::newRexx(
 /* Function:  Create an instance of a table                                   */
 /******************************************************************************/
 {
-  RexxTable * newObject;               /* newly created table object        */
+  RexxTable * newObj;                  /* newly created table object        */
 
-  newObject = new_table();             /* get a new table                   */
-  BehaviourSet(newObject, ((RexxClass *)this)->instanceBehaviour);
+  newObj = new_table();                /* get a new table                   */
+  BehaviourSet(newObj, ((RexxClass *)this)->instanceBehaviour);
                                        /* does object have an UNINT method  */
   if (((RexxClass *)this)->uninitDefined()) {
-     newObject->hasUninit();           /* Make sure everyone is notified.   */
+     newObj->hasUninit();              /* Make sure everyone is notified.   */
   }
                                        /* call any rexx level init's        */
-  newObject->sendMessage(OREF_INIT, args, argCount);
-  return newObject;                    /* return the new object             */
+  newObj->sendMessage(OREF_INIT, args, argCount);
+  return newObj;                       /* return the new object             */
 }
 
 RexxTable *RexxMemory::newTable()
@@ -194,18 +194,18 @@ RexxTable *RexxMemory::newTable()
 /* Function:  Create an instance of a table                                   */
 /******************************************************************************/
 {
-  RexxTable *newTable;                 /* new object created                */
+  RexxTable *newObj;                   /* new object created                */
 
                                        /* get a new object                  */
-  newTable = (RexxTable *)new_hashCollection(DEFAULT_HASH_SIZE, sizeof(RexxTable));
+  newObj = (RexxTable *)new_hashCollection(DEFAULT_HASH_SIZE, sizeof(RexxTable));
                                        /* set the new behaviour             */
-  BehaviourSet(newTable, TheTableBehaviour);
+  BehaviourSet(newObj, TheTableBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newTable, T_table);
+  setVirtualFunctions(newObj, T_table);
                                        /* fill in the hash value            */
-  newTable->hashvalue = HASHOREF(newTable);
+  newObj->hashvalue = HASHOREF(newObj);
                                        /* create the initial hash table     */
-  return newTable;                     /* return the new table              */
+  return newObj;                       /* return the new table              */
 }
 
 RexxObjectTable *RexxMemory::newObjectTable(size_t size)
@@ -213,23 +213,23 @@ RexxObjectTable *RexxMemory::newObjectTable(size_t size)
 /* Function:  Create an instance of an object table                           */
 /******************************************************************************/
 {
-  RexxObjectTable *newTable;           /* new object created                */
+  RexxObjectTable *newObj;             /* new object created                */
 
                                        /* get a new object                  */
-  newTable = (RexxObjectTable *)new_hashCollection(size, sizeof(RexxObjectTable));
+  newObj = (RexxObjectTable *)new_hashCollection(size, sizeof(RexxObjectTable));
                                        /* set the new behaviour             */
-  BehaviourSet(newTable, TheTableBehaviour);
+  BehaviourSet(newObj, TheTableBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newTable, T_table);
+  setVirtualFunctions(newObj, T_table);
                                        /* fill in the hash value            */
-  newTable->hashvalue = HASHOREF(newTable);
+  newObj->hashvalue = HASHOREF(newObj);
                                        /* create the initial hash table     */
-  return newTable;                     /* return the new table              */
+  return newObj;                       /* return the new table              */
 }
 
 RexxObject *RexxObjectTable::put(
-  RexxObject *value,                   /* value to insert                   */
-  RexxObject *index)                   /* item index                        */
+  RexxObject *_value,                   /* value to insert                   */
+  RexxObject *_index)                   /* item index                        */
 /******************************************************************************/
 /* Function:  Do a put operation into a primitive object table                */
 /******************************************************************************/
@@ -237,7 +237,7 @@ RexxObject *RexxObjectTable::put(
   RexxHashTable *newHash;              /* newly created hash table          */
 
                                        /* try to place in existing hashtab  */
-  newHash = this->contents->primitivePut(value, index);
+  newHash = this->contents->primitivePut(_value, _index);
   if (newHash != OREF_NULL)            /* have a reallocation occur?        */
                                        /* hook on the new hash table        */
     OrefSet(this, this->contents, newHash);
@@ -245,8 +245,8 @@ RexxObject *RexxObjectTable::put(
 }
 
 RexxObject *RexxObjectTable::add(
-  RexxObject *value,                   /* object to add                     */
-  RexxObject *index)                   /* added index                       */
+  RexxObject *_value,                   /* object to add                     */
+  RexxObject *_index)                   /* added index                       */
 /******************************************************************************/
 /* Function:  do an add operation into a primitive object table               */
 /******************************************************************************/
@@ -254,7 +254,7 @@ RexxObject *RexxObjectTable::add(
   RexxHashTable *newHash;              /* newly created hash table          */
 
                                        /* try to place in existing hashtab  */
-  newHash  = this->contents->primitiveAdd(value, index);
+  newHash  = this->contents->primitiveAdd(_value, _index);
   if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
                                        /* hook on the new hash table        */
     OrefSet(this, this->contents, newHash);

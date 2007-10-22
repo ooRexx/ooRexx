@@ -63,8 +63,8 @@ class RexxClause : public RexxInternalObject {
   RexxToken  *newToken(int, int, RexxString *, PLOCATIONINFO);
   RexxToken  *nextRealToken();
   inline void        firstToken() {this->current = this->first;};
-  inline void        getLocation(PLOCATIONINFO location) { *location = this->location; }
-  inline void        setLocation(PLOCATIONINFO location) { this->location = *location; }
+  inline void        getLocation(PLOCATIONINFO l) { *l = this->location; }
+  inline void        setLocation(PLOCATIONINFO l) { this->location = *l; }
   inline void        previous() { this->current--; }
   inline RexxToken  *next() { return (RexxToken *)this->tokens->get(this->current++); }
   inline size_t      mark() { return current; }

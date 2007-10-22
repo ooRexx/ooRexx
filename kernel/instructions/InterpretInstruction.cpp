@@ -48,13 +48,13 @@
 #include "InterpretInstruction.hpp"
 
 RexxInstructionInterpret::RexxInstructionInterpret(
-    RexxObject *expression)            /* associated INTERPRET expression   */
+    RexxObject *_expression)            /* associated INTERPRET expression   */
 /****************************************************************************/
 /* Function:  Complete initialization of an INTERPRET instruction           */
 /****************************************************************************/
 {
                                        /* just save the expression          */
-  OrefSet(this, this->expression, expression);
+  OrefSet(this, this->expression, _expression);
 }
 
 void RexxInstructionInterpret::execute(

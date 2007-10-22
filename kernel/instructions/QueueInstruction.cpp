@@ -54,14 +54,14 @@ extern ACTIVATION_SETTINGS *current_settings;
 extern RexxActivity *CurrentActivity;  /* current running activity          */
 
 RexxInstructionQueue::RexxInstructionQueue(
-  RexxObject *expression,              /* expresion to evaluate             */
+  RexxObject *_expression,              /* expresion to evaluate             */
   INT type)                            /* top of queueing operation         */
 /******************************************************************************/
 /* Function:   Initialize a QUEUE instruction object                          */
 /******************************************************************************/
 {
                                        /* process the expression            */
-  OrefSet(this, this->expression, expression);
+  OrefSet(this, this->expression, _expression);
   queue_type = type;                   /* store the type                    */
 }
 

@@ -72,7 +72,7 @@ class RexxQueue : public RexxList {
  RexxObject *lastRexx();
  RexxObject *next(RexxObject *);
  RexxObject *previous(RexxObject *);
- long        entryToIndex(long target);
+ size_t      entryToIndex(size_t target);
  RexxObject *insert(RexxObject *, RexxObject *);
 
  inline RexxObject *pop() { return this->removeFirst();};

@@ -52,7 +52,7 @@
 class RexxInstructionSignal : public RexxInstructionCallBase {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};
-  RexxInstructionSignal(RexxObject *, RexxString *, RexxString *, UCHAR);
+  RexxInstructionSignal(RexxObject *, RexxString *, RexxString *, int);
   inline RexxInstructionSignal(RESTORETYPE restoreType) { ; };
   void execute(RexxActivation *, RexxExpressionStack *);
   void live();

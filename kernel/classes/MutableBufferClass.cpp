@@ -363,13 +363,13 @@ RexxMutableBuffer *RexxMutableBuffer::overlay(RexxObject *str, RexxObject *pos, 
   return this;
 }
 
-RexxMutableBuffer *RexxMutableBuffer::mydelete(RexxObject *start, RexxObject *len)
+RexxMutableBuffer *RexxMutableBuffer::mydelete(RexxObject *_start, RexxObject *len)
 /******************************************************************************/
 /* Function:  delete character range in buffer                                */
 /******************************************************************************/
 {
   // WARNING: not DBCS enabled, works only on 8-bit data
-  size_t begin = get_position(start, ARG_ONE) - 1;
+  size_t begin = get_position(_start, ARG_ONE) - 1;
   size_t range = optional_length(len, this->data->getLength() - begin, ARG_TWO);
 
 
@@ -386,12 +386,12 @@ RexxMutableBuffer *RexxMutableBuffer::mydelete(RexxObject *start, RexxObject *le
   return this;
 }
 
-RexxObject *RexxMutableBuffer::setBufferSize(RexxInteger *start)
+RexxObject *RexxMutableBuffer::setBufferSize(RexxInteger *size)
 /******************************************************************************/
 /* Function:  set the size of the buffer                                      */
 /******************************************************************************/
 {
-  size_t newsize = get_length(start, ARG_ONE);
+  size_t newsize = get_length(size, ARG_ONE);
 
   if (newsize == 0) {                       /* reset contents?                      */
     bufferLength = defaultSize;

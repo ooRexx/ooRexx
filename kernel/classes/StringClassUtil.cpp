@@ -127,7 +127,7 @@ char get_pad_character(
 /*               character, if it exists otherwise return the default         */
 /*               character as defined (passed in) by the BIF.                 */
 /******************************************************************************/
-CHAR get_option_character(
+char get_option_character(
     RexxObject *argument,              /* method argument                   */
     size_t position )                  /* argument position                 */
 {

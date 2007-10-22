@@ -67,17 +67,17 @@ class RexxInstruction : public RexxInternalObject {
   virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
 
   inline void setNext(RexxInstruction *next) { OrefSet(this, this->nextInstruction, next); };
-  void        setStart(LONG line, LONG offset) {this->lineNumber = line;
-                                                this->offset = offset; };
-  void        setEnd(LONG line, LONG offset) { this->endLine = line;
-                                               this->endOffset = offset; };
-  inline      void        setType(UCHAR type) {this->instructionInfo.type = type; };
-  inline      UCHAR       getType(void)       {return this->instructionInfo.type; };
-  inline      LONG        getLine() { return this->lineNumber; };
+  void        setStart(size_t line, size_t off) {this->lineNumber = line;
+                                                this->offset = off; };
+  void        setEnd(size_t line, size_t off) { this->endLine = line;
+                                                this->endOffset = off; };
+  inline      void        setType(char type) {this->instructionInfo.type = type; };
+  inline      char        getType(void)       {return this->instructionInfo.type; };
+  inline      size_t      getLine() { return this->lineNumber; };
 
-  LONG              offset;            /* offset of instruction start       */
-  LONG              endLine;           /* end line of the instruction       */
-  LONG              endOffset;         /* end offset of the instruction     */
+  size_t            offset;            /* offset of instruction start       */
+  size_t            endLine;           /* end line of the instruction       */
+  size_t            endOffset;         /* end offset of the instruction     */
   INSTRUCTIONINFO   instructionInfo;   /* instruction common information    */
   RexxInstruction  *nextInstruction;   /* next instruction object           */
 };

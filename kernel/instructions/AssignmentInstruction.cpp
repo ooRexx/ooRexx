@@ -49,7 +49,7 @@
 
 RexxInstructionAssignment::RexxInstructionAssignment(
     RexxVariableBase *target,          /* target variable instruction       */
-    RexxObject       *expression)      /* assigned expression value         */
+    RexxObject       *_expression)      /* assigned expression value         */
 /******************************************************************************/
 /* Function:  complete ASSIGNMENT instruction initialization                  */
 /******************************************************************************/
@@ -57,7 +57,7 @@ RexxInstructionAssignment::RexxInstructionAssignment(
                                        /* get the variable target           */
   OrefSet(this, this->variable, target);
                                        /* process the expression            */
-  OrefSet(this, this->expression, expression);
+  OrefSet(this, this->expression, _expression);
 }
 
 void RexxInstructionAssignment::live()

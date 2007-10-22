@@ -207,7 +207,7 @@ class RexxSource : public RexxInternalObject {
 
   inline void        install(RexxActivation *activation) { if (this->flags&_install) this->processInstall(activation); };
   inline void        addReference(RexxObject *reference) { this->calls->addLast(reference); }
-  inline void        pushDo(RexxInstruction *instruction) { this->control->pushRexx((RexxObject *)instruction); }
+  inline void        pushDo(RexxInstruction *i) { this->control->pushRexx((RexxObject *)i); }
   inline RexxInstruction *popDo() { return (RexxInstruction *)(this->control->pullRexx()); };
   inline RexxInstruction *topDo() { return (RexxInstruction *)(this->control->peek()); };
   inline void        setProgramName(RexxString *name) { OrefSet(this, this->programName, name); };
@@ -226,8 +226,8 @@ class RexxSource : public RexxInternalObject {
   inline void        trimClause() { clause->trim(); }
   inline size_t      markPosition() { return clause->mark(); }
   inline void        resetPosition(size_t p) { clause->reset(p); }
-  inline void        report_error_line(int errorcode, RexxInstruction *instruction) { this->errorLine(errorcode, instruction); }
-  inline void        report_error_block(RexxInstruction *instruction) { this->blockError(instruction); }
+  inline void        report_error_line(int errorcode, RexxInstruction *i) { this->errorLine(errorcode, i); }
+  inline void        report_error_block(RexxInstruction *i) { this->blockError(i); }
   inline void        report_error_position(int errorcode, RexxToken *token) { this->errorPosition(errorcode, token); }
   inline void        report_error1(int errorcode, RexxObject *a1) { this->error(errorcode, a1); }
   inline void        report_error2(int errorcode, RexxObject *a1, RexxObject *a2) { this->error(errorcode, a1, a2); }

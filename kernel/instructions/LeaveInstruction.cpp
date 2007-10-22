@@ -49,13 +49,13 @@
 #include "Token.hpp"
 
 RexxInstructionLeave::RexxInstructionLeave(
-    INT         type,                  /* LEAVE or ITERATE instruction      */
-    RexxString *name)                  /* associated name                   */
+    int         type,                  /* LEAVE or ITERATE instruction      */
+    RexxString *_name)                  /* associated name                   */
 /******************************************************************************/
 /* Function : Complete LEAVE/ITERATE instruction initialization               */
 /******************************************************************************/
 {
-  OrefSet(this, this->name, name);     /* store the name                    */
+  OrefSet(this, this->name, _name);     /* store the name                    */
   this->setType(type);                 /* and set the correct type          */
 }
 

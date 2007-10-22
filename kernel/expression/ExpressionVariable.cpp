@@ -52,7 +52,7 @@
 
 RexxParseVariable::RexxParseVariable(
   RexxString *variable_name,           /* variable name to access           */
-  long index )                         /* dictionary lookaside index        */
+  long var_index)                      /* dictionary lookaside index        */
 /******************************************************************************/
 /* Complete initialization of a variable object                               */
 /******************************************************************************/
@@ -60,7 +60,7 @@ RexxParseVariable::RexxParseVariable(
   ClearObject(this);                   /* start completely clean            */
                                        /* set the name value                */
   OrefSet(this, this->variableName, variable_name);
-  this->index = index;                 /* save the index                    */
+  this->index = var_index;             /* save the index                    */
 }
 
 void RexxParseVariable::live()

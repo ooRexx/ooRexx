@@ -62,10 +62,10 @@
 extern PCPPM ExportedMethods[];        /* table of exported methods         */
 
 RexxMethod::RexxMethod(
-    ULONG method,                      /* method table index                */
+    size_t method,                     /* method table index                */
     PCPPM entry,                       /* method entry point                */
-    LONG  arguments,                   /* arguments number/type             */
-    RexxInternalObject *code )         /* associated method code            */
+    size_t argCount,                   /* arguments number/type             */
+    RexxInternalObject *codeObj)       /* associated method code            */
 /******************************************************************************/
 /* Function:  Initialize a method object                                      */
 /******************************************************************************/
@@ -73,11 +73,11 @@ RexxMethod::RexxMethod(
 
   ClearObject(this);                   /* start out fresh                   */
   this->setFlags(0);                   /* clear all of the flags            */
-  this->setMethnum((USHORT)method);    /* save the method code number       */
+  this->setMethnum(method);            /* save the method code number       */
   this->cppEntry = entry;              /* set the entry point               */
-  this->setArguments((UCHAR)arguments);/* and the arguments                 */
+  this->setArguments(argCount);        /* and the arguments                 */
                                        /* get the argument information      */
-  OrefSet(this, this->code, code);     /* store the code                    */
+  OrefSet(this, this->code, codeObj);  /* store the code                    */
   if (code != OREF_NULL) {             /* have some sort of code?           */
     if (OTYPE(RexxCode, code))         /* written in REXX?                  */
       this->setRexxMethod();           /* turn on the REXX flag             */
@@ -153,26 +153,26 @@ RexxObject *RexxMethod::run(
     RexxObject *receiver,              /* object receiving the message      */
     RexxString *msgname,               /* message to be run                 */
     size_t count,                      /* count of arguments                */
-    RexxObject **arguments)            /* arguments to the method           */
+    RexxObject **argPtr)               /* arguments to the method           */
 /******************************************************************************/
 /* Function:  Run a method on an object                                       */
 /******************************************************************************/
 {
-  RexxObject*  result;                 /* result of the activation run      */
+  RexxObject*  result = OREF_NULL;     /* result of the activation run      */
   size_t i;                            /* loop counter                      */
   RexxObject * argument_list[7];       /* arguments removed from the array  */
   RexxActivation *newacta;             /* newly created activation          */
   RexxNativeActivation *newNActa;      /* newly created Native activation   */
-  PCPPM cppEntry;                      /* kernel method entry point         */
+  PCPPM methodEntry;                   /* kernel method entry point         */
   RexxActivation * Parent;
 
   if (this->code == OREF_NULL) {       /* directly to a kernel method?      */
-    cppEntry = this->cppEntry;         /* get the entry point               */
+    methodEntry = this->cppEntry;      /* get the entry point               */
                                        /* expecting an array?               */
                                        /* expecting a pointer/count pair?   */
     if (this->arguments() == A_COUNT) {
                                        /* we can pass this right on         */
-      result = (receiver->*((PCPPMC1)cppEntry))(arguments, count);
+      result = (receiver->*((PCPPMC1)methodEntry))(argPtr, count);
     }
     else {                             /* receiver expects fixed arguments  */
       if (count > this->arguments())   /* too many arguments?               */
@@ -180,48 +180,48 @@ RexxObject *RexxMethod::run(
       if (count < this->arguments()) { /* need to pad these out?            */
         for (i = 0; i < count; i++)    /* copy over the arguments so we     */
                                        /* don't clobber things in the caller*/
-          argument_list[i] = arguments[i];
+          argument_list[i] = argPtr[i];
                                        /* null out any missing arguments    */
         for (i = count; i < this->arguments(); i++)
           argument_list[i] = OREF_NULL;
-        arguments = &argument_list[0]; /* point at the new argument list    */
+        argPtr = &argument_list[0];    /* point at the new argument list    */
       }
 
       switch (this->arguments()) {     /* switch based on number of args    */
 
         case 0:                        /* zero                              */
-          result = (receiver->*((PCPPM0)cppEntry))();
+          result = (receiver->*((PCPPM0)methodEntry))();
           break;
 
         case 1:
-          result = (receiver->*((PCPPM1)cppEntry))(arguments[0]);
+          result = (receiver->*((PCPPM1)methodEntry))(argPtr[0]);
           break;
 
         case 2:
-          result = (receiver->*((PCPPM2)cppEntry))(arguments[0], arguments[1]);
+          result = (receiver->*((PCPPM2)methodEntry))(argPtr[0], argPtr[1]);
           break;
 
         case 3:
-          result = (receiver->*((PCPPM3)cppEntry))(arguments[0], arguments[1], arguments[2]);
+          result = (receiver->*((PCPPM3)methodEntry))(argPtr[0], argPtr[1], argPtr[2]);
           break;
 
         case 4:
-          result = (receiver->*((PCPPM4)cppEntry))(arguments[0], arguments[1], arguments[2], arguments[3]);
+          result = (receiver->*((PCPPM4)methodEntry))(argPtr[0], argPtr[1], argPtr[2], argPtr[3]);
           break;
 
         case 5:
-          result = (receiver->*((PCPPM5)cppEntry))(arguments[0], arguments[1], arguments[2],
-              arguments[3], arguments[4]);
+          result = (receiver->*((PCPPM5)methodEntry))(argPtr[0], argPtr[1], argPtr[2],
+              argPtr[3], argPtr[4]);
           break;
 
         case 6:
-          result = (receiver->*((PCPPM6)cppEntry))(arguments[0], arguments[1], arguments[2],
-              arguments[3], arguments[4], arguments[5]);
+          result = (receiver->*((PCPPM6)methodEntry))(argPtr[0], argPtr[1], argPtr[2],
+              argPtr[3], argPtr[4], argPtr[5]);
           break;
 
         case 7:
-          result = (receiver->*((PCPPM7)cppEntry))(arguments[0], arguments[1], arguments[2],
-              arguments[3], arguments[4], arguments[5], arguments[6]);
+          result = (receiver->*((PCPPM7)methodEntry))(argPtr[0], argPtr[1], argPtr[2],
+              argPtr[3], argPtr[4], argPtr[5], argPtr[6]);
           break;
 
         default:
@@ -246,7 +246,7 @@ RexxObject *RexxMethod::run(
     newacta->dbgPrepareMethod(Parent);
 
                                        /* run the method and return result  */
-    result = newacta->run(arguments, count, OREF_NULL);
+    result = newacta->run(argPtr, count, OREF_NULL);
     if (Parent) Parent->dbgLeaveSubroutine();
     newacta->dbgPassTrace2Parent(Parent);
     CurrentActivity->yield(NULL);    /* yield control now */ /* NULL instead of result */
@@ -262,14 +262,14 @@ RexxObject *RexxMethod::run(
       OrefSet(this, this->somCode, new RexxSOMCode (FALSE));
     }
 
-    return this->somCode->run(receiver, msgname, this->scope, count, arguments);
+    return this->somCode->run(receiver, msgname, this->scope, count, argPtr);
   }
   else {                               /* native activation                 */
                                        /* create a new native activation    */
     newNActa = new (receiver, this, activity, msgname, (RexxActivation *)TheNilObject) RexxNativeActivation;
     activity->push(newNActa);          /* push it on the activity stack     */
                                        /* and go run it                     */
-    return newNActa->run(count, arguments);
+    return newNActa->run(count, argPtr);
   }
 }
 
@@ -277,11 +277,11 @@ RexxObject *RexxMethod::call(
     RexxActivity *activity,            /* activity running under            */
     RexxObject *receiver,              /* object receiving the message      */
     RexxString *msgname,               /* message to be run                 */
-    RexxObject**arguments,             /* arguments to the method           */
+    RexxObject**argPtr,                /* arguments to the method           */
     size_t      argcount,              /* the count of arguments            */
     RexxString *calltype,              /* COMMAND/ROUTINE/FUNCTION          */
     RexxString *environment,           /* initial command environment       */
-    ULONG context)                     /* type of context                   */
+    int   context)                     /* type of context                   */
 /******************************************************************************/
 /* Function:  Call a method as a top level program or external function call  */
 /******************************************************************************/
@@ -315,7 +315,7 @@ RexxObject *RexxMethod::call(
     // see feat. 900 for example program.
     newacta->random_seed += (++rnd);
                 /* run the method and return result  */
-    returnObject = newacta->run(arguments, argcount, OREF_NULL);
+    returnObject = newacta->run(argPtr, argcount, OREF_NULL);
     if (Parent) Parent->dbgLeaveSubroutine();
     newacta->dbgPassTrace2Parent(Parent);
     return returnObject;
@@ -323,11 +323,11 @@ RexxObject *RexxMethod::call(
   }
   else                                 /* kernel/native/SOM method          */
                                        /* pass on the call                  */
-    return this->run(activity, receiver, msgname, argcount, arguments);
+    return this->run(activity, receiver, msgname, argcount, argPtr);
 }
 
 RexxMethod *RexxMethod::newScope(
-    RexxClass  *scope)                 /* new method scope                  */
+    RexxClass  *_scope)                 /* new method scope                  */
 /******************************************************************************/
 /* Function:  Create a new method with a given scope                          */
 /******************************************************************************/
@@ -335,14 +335,14 @@ RexxMethod *RexxMethod::newScope(
   RexxMethod *newMethod;               /* the copied method                 */
 
   if (this->scope == OREF_NULL) {      /* nothing set yet?                  */
-    OrefSet(this, this->scope, scope); /* just set it directly              */
+    OrefSet(this, this->scope, _scope); /* just set it directly              */
     return this;                       /* and pass back unchanged           */
   }
   else {
                                        /* copy the method                   */
     newMethod= (RexxMethod *)this->copy();
                                        /* give the method the new scope     */
-    OrefSet(newMethod, newMethod->scope, scope);
+    OrefSet(newMethod, newMethod->scope, _scope);
     return newMethod;                  /* and return it                     */
   }
 }
@@ -394,13 +394,13 @@ RexxDirectory *RexxMethod::getInterface()
 }
 
 void RexxMethod::setScope(
-    RexxClass  *scope)                 /* scope for the method              */
+    RexxClass  *_scope)                /* scope for the method              */
 /******************************************************************************/
 /* Function:  Set a scope for a method without making a copy of the method    */
 /*            object.                                                         */
 /******************************************************************************/
 {
-  OrefSet(this, this->scope, scope);   /* just set the scope                */
+  OrefSet(this, this->scope, _scope);  /* just set the scope                */
 }
 
 RexxObject *RexxMethod::setUnGuardedRexx()
@@ -533,7 +533,7 @@ RexxMethod *RexxMethodClass::newRexxCode(
   RexxArray  *newSourceArray;          /* created source object             */
   RexxSource *newSource;               /* created source object             */
   RexxString *sourceString;
-  RexxMethod *result;
+  RexxMethod *result = OREF_NULL;
   size_t counter;
 
                                        /* request an array version          */
@@ -618,7 +618,7 @@ RexxMethod *RexxMethodClass::newRexx(
 /*            array                                                           */
 /******************************************************************************/
 {
-  RexxString *pgmname;                 /* method name                       */
+  RexxObject *pgmname;                 /* method name                       */
   RexxObject *source;                  /* Array or string object            */
   RexxMethod *newMethod;               /* newly created method object       */
   RexxObject *option = OREF_NULL;
@@ -628,13 +628,13 @@ RexxMethod *RexxMethodClass::newRexx(
 
   process_new_args(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&source);
                                        /* get the method name as a string   */
-  pgmname = REQUIRED_STRING(pgmname, ARG_ONE);
+  RexxString *nameString = REQUIRED_STRING(pgmname, ARG_ONE);
   required_arg(source, TWO);           /* make sure we have the second too  */
   // retrieve extra parameter if exists
   if (initCount != 0)
     process_new_args(init_args, initCount, &init_args, &initCount, 1, (RexxObject **)&option, NULL);
                                        /* go create a method                */
-  newMethod = this->newRexxCode(pgmname, source, IntegerTwo, option);
+  newMethod = this->newRexxCode(nameString, source, IntegerTwo, option);
   save(newMethod);
                                        /* Give new object its behaviour     */
   BehaviourSet(newMethod, this->instanceBehaviour);
@@ -703,7 +703,7 @@ RexxMethod *RexxMethodClass::newRexxBuffer(
 
 RexxMethod *RexxMethodClass::newNative(
        RexxString *procedure,          /* procedure to load                 */
-       RexxString *library,            /* library to load from              */
+       RexxString *libName,            /* library to load from              */
        RexxClass  *scope)              /* variable scope information        */
 /******************************************************************************/
 /* Function:  Create a new native method with the given procedure, library    */
@@ -714,7 +714,7 @@ RexxMethod *RexxMethodClass::newNative(
   RexxNativeCode *newCode;             /* associated REXX code object       */
 
                                        /* create a new code object          */
-  newCode = new RexxNativeCode (procedure, library, NULL, 0);
+  newCode = new RexxNativeCode (procedure, libName, NULL, 0);
                                        /* get a new method object           */
   newMethod = new_method(0, (PCPPM)NULL, 0, (RexxInternalObject *)newCode);
   if (scope != OREF_NULL)              /* given a scope too?                */

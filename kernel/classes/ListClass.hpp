@@ -57,8 +57,8 @@
                                        /* address of a given buffer entry   */
 #define ENTRY_POINTER(n)      (this->table->address() + n)
 #define ENTRY_INDEX(p)        (p - this->table->address())
-#define LIST_END              -1       /* end of list marker                */
-#define NOT_ACTIVE            -2       /* free element marker               */
+#define LIST_END              ((size_t)-1) /* end of list marker                */
+#define NOT_ACTIVE            ((size_t)-2) /* free element marker               */
 
  class RexxList : public RexxObject {
   public:
@@ -91,13 +91,13 @@
    RexxObject   *insert(RexxObject *, RexxObject *);
    RexxObject   *put(RexxObject *, RexxObject *);
    RexxObject   *section(RexxObject *, RexxObject *);
-   RexxObject   *sectionSubclass(LISTENTRY *, LONG);
+   RexxObject   *sectionSubclass(LISTENTRY *, size_t);
    RexxObject   *firstItem();
    RexxObject   *lastItem();
    RexxObject   *insertRexx(RexxObject *, RexxObject *);
-   void          partitionBuffer(long, long);
+   void          partitionBuffer(size_t, size_t);
    RexxArray    *makeArrayIndices();
-   long          getFree();
+   size_t        getFree();
    RexxObject   *add(RexxObject *, RexxObject *);
    RexxObject   *removeFirst() { return (this->first != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->first)) : TheNilObject; }
    RexxObject   *removeLast() { return (this->last != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->last)) : TheNilObject; }
@@ -111,15 +111,15 @@
 
    void          addLast(RexxObject *value);
    void          addFirst(RexxObject *value);
-   inline long   getSize() {return this->count;}
+   inline size_t getSize() {return this->count;}
    RexxObject   *append(RexxObject *);
 
-   RexxListTable *table;               /* list table  item                  */
-   long first;                         /* first real element index          */
-   long last;                          /* last real element index           */
-   long count;                         /* count of items in the list        */
-   long size;                          /* element slots in the buffer       */
-   long free;                          /* start of free element chain       */
+   RexxListTable *table;                 /* list table  item                  */
+   size_t first;                         /* first real element index          */
+   size_t last;                          /* last real element index           */
+   size_t count;                         /* count of items in the list        */
+   size_t size;                          /* element slots in the buffer       */
+   size_t free;                          /* start of free element chain       */
  };
 
 class RexxListClass : public RexxClass {

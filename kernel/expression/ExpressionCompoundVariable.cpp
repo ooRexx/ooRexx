@@ -54,9 +54,9 @@
 #include "RexxVariable.hpp"
 
 RexxCompoundVariable::RexxCompoundVariable(
-    RexxString * stem,                 /* stem retriever                    */
+    RexxString * stemName,             /* stem retriever                    */
     LONG         stemIndex,            /* stem lookaside index              */
-    RexxQueue  * tails,                /* list of tails                     */
+    RexxQueue  * tailList,             /* list of tails                     */
     LONG         TailCount)            /* count of tails                    */
 /******************************************************************************/
 /* Function:  Complete compound variable initialization                       */
@@ -64,12 +64,12 @@ RexxCompoundVariable::RexxCompoundVariable(
 {
   ClearObject(this);                   /* initialize the object             */
   this->tailCount= TailCount;          /* set the count (and hash value)    */
-  OrefSet(this, this->stem, stem);     /* save the associate value          */
+  OrefSet(this, this->stem, stemName); /* save the associate value          */
   this->index = stemIndex;             /* set the stem index                */
 
   while (TailCount > 0) {              /* loop through the variable list    */
                                        /* copying each variable             */
-    OrefSet(this, this->tails[--TailCount], tails->pop());
+    OrefSet(this, this->tails[--TailCount], tailList->pop());
   }
 }
 

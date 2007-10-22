@@ -2217,7 +2217,7 @@ wholenumber_t RexxArray::sortCompare(RexxObject *comparator, RexxObject *left, R
     }
 
     wholenumber_t comparison = result->longValue(DEFAULT_DIGITS);
-    if (comparison == NO_LONG)
+    if (comparison == (wholenumber_t)NO_LONG)
     {
         reportException(Error_Invalid_whole_number_compare, result);
     }
