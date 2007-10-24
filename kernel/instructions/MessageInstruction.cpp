@@ -168,24 +168,24 @@ void RexxInstructionMessage::execute (
 /****************************************************************************/
 {
   RexxObject *result;                  /* message expression result         */
-  RexxObject *super;                   /* target super class                */
+  RexxObject *_super;                  /* target super class                */
   LONG      argcount;                  /* count of arguments                */
-  RexxObject *target;                  /* message target                    */
+  RexxObject *_target;                 /* message target                    */
   LONG      i;                         /* loop counter                      */
 
   context->traceInstruction(this);     /* trace if necessary                */
                                        /* evaluate the target               */
-  target = this->target->evaluate(context, stack);
+  _target = this->target->evaluate(context, stack);
   if (this->super != OREF_NULL) {      /* have a message lookup override?   */
-    if (target != context->receiver)   /* sender and receiver different?    */
+    if (_target != context->receiver)   /* sender and receiver different?    */
                                        /* this is an error                  */
       report_exception(Error_Execution_super);
                                        /* get the variable value            */
-    super = this->super->evaluate(context, stack);
+    _super = this->super->evaluate(context, stack);
     stack->toss();                     /* pop the top item                  */
   }
   else
-    super = OREF_NULL;                 /* use the default lookup            */
+    _super = OREF_NULL;                 /* use the default lookup            */
 
   argcount = message_argument_count;   /* get the argument count            */
   for (i = 0; i < argcount; i++) {     /* loop through the argument list    */
@@ -207,7 +207,7 @@ void RexxInstructionMessage::execute (
     result = stack->send(this->name, argcount);
   else
                                        /* evaluate the message w/override   */
-    result = stack->send(this->name, super, argcount);
+    result = stack->send(this->name, _super, argcount);
   stack->popn(argcount);               /* remove any arguments              */
   if (i_flags&message_i_double)        /* double twiddle form?              */
     result = target;                   /* get the target element            */

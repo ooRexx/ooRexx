@@ -938,7 +938,7 @@ BUILTIN(ERRORTEXT) {
 BUILTIN(ARG) {
   RexxString  *option;                 /* function option                   */
   RexxInteger *n;                      /* arg position count                */
-  RexxObject  *result;                 /* function result                   */
+  RexxObject  *result = OREF_NULL;     /* function result                   */
   RexxObject **arglist;                /* activation argument list          */
   size_t position;                     /* position argument                 */
   size_t size;                         /* array size                        */
@@ -971,10 +971,6 @@ BUILTIN(ARG) {
         result = OREF_NULLSTRING;      /* this too is a null string         */
     }
   }
-                                       /* have a null string?               */
-  else if (option->getLength() == 0)
-                                       /* this is an error                  */
-    report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_ARG), IntegerTwo, new_string("AENO", 4), option);
   else {                               /* need to process an option         */
     position = n->getValue();          /* get the integer value             */
                                        /* must be a positive integer        */
@@ -1164,7 +1160,7 @@ BUILTIN(DATE) {
                 /*convert the value                  */
                 int basedays = indate->longValue(9);
                 /* bad value?                        */
-                if (basedays == NO_LONG || !timestamp.setBaseDate(basedays))
+                if (basedays == (int)NO_LONG || !timestamp.setBaseDate(basedays))
                 {
                     report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
                 }
@@ -1198,7 +1194,7 @@ BUILTIN(DATE) {
                 /*convert the value                  */
                 int yearday = indate->longValue(9);
                 /* bad value?                        */
-                if (yearday == NO_LONG || yearday < 0 || yearday > YEAR_DAYS + 1 ||
+                if (yearday == (int)NO_LONG || yearday < 0 || yearday > YEAR_DAYS + 1 ||
                     (yearday > YEAR_DAYS && !LeapYear(current.year)))
                 {
                     report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
@@ -1251,7 +1247,6 @@ BUILTIN(DATE) {
     int day = timestamp.day;          /* get various date parts            */
     int month = timestamp.month;
     int year = timestamp.year;
-    int separator = ' ';              // each format with a separator has it's own default
 
     switch (style)
     {                     /* process the various styles        */
@@ -1402,21 +1397,21 @@ BUILTIN(TIME) {
             case 'H':                        /* 'H'ours format                    */
             {
                 int i = intime->longValue(9);      /* convert the value                 */
-                valid = i != NO_LONG && timestamp.setHours(i);
+                valid = i !=(int)NO_LONG && timestamp.setHours(i);
                 break;
             }
 
             case 'S':                        /* 'S'econds format                  */
             {
                 int i = intime->longValue(9);      /* convert the value                 */
-                valid = i != NO_LONG && timestamp.setSeconds(i);
+                valid = i != (int)NO_LONG && timestamp.setSeconds(i);
                 break;
             }
 
             case 'M':                        /* 'M'inutes format                  */
             {
                 int i = intime->longValue(9);      /* convert the value                 */
-                valid = i != NO_LONG && timestamp.setMinutes(i);
+                valid = i != (int)NO_LONG && timestamp.setMinutes(i);
                 break;
             }
 
@@ -1475,7 +1470,7 @@ BUILTIN(TIME) {
             else
             {
                 // format as a long time
-                sprintf(work, "%lu.%06lu", (int)(threshold / (int64_t)MICROSECONDS), (int)(threshold % (int64_t)MICROSECONDS));
+                sprintf(work, "%d.%06d", (int)(threshold / (int64_t)MICROSECONDS), (int)(threshold % (int64_t)MICROSECONDS));
             }
                 /* format the result                 */
             if (style == 'R')               /* is this a reset call?             */
@@ -1690,13 +1685,11 @@ BUILTIN(VALUE) {
     {
         report_exception3(Error_Incorrect_call_symbol, new_cstring(CHAR_VALUE), IntegerOne, variable);
     }
-    else {                             /* need to perform lookup            */
-                                       /* get the variable value            */
-      result = retriever->getValue(context);
-      if (newvalue != OREF_NULL)       /* have a new value to assign?       */
-                                       /* do the assignment                 */
-        retriever->assign(context, stack, newvalue);
-    }
+                                     /* get the variable value            */
+    result = retriever->getValue(context);
+    if (newvalue != OREF_NULL)       /* have a new value to assign?       */
+                                     /* do the assignment                 */
+      retriever->assign(context, stack, newvalue);
   }
   else if (selector->getLength() == 0) { /* null string selector?             */
                                        /* get the existing value            */
@@ -2039,7 +2032,7 @@ BUILTIN(CHARIN) {
   RexxInteger  *position;              /* target position                   */
   RexxInteger  *count;                 /* count of lines                    */
   RexxString   *name;                  /* stream name                       */
-  RexxString   *result;                /* linein result                     */
+  RexxString   *result = OREF_NULL;    /* linein result                     */
   BOOL          added;                 /* add to stream table               */
 
   fix_args(CHARIN);                    /* check required arguments          */
@@ -2080,7 +2073,7 @@ BUILTIN(LINEOUT) {
   RexxObject   *stream;                /* target stream                     */
   RexxInteger  *line;                  /* target position                   */
   RexxString   *name;                  /* stream name                       */
-  RexxString   *result;                /* linein result                     */
+  RexxString   *result = OREF_NULL;    /* linein result                     */
   RexxString   *string;                /* target string                     */
   RexxString   *fullName;              /* fully qual'd stream name          */
   BOOL          added;                 /* add to stream table               */
@@ -2135,7 +2128,7 @@ BUILTIN(CHAROUT) {
   RexxObject   *stream;                /* target stream                     */
   RexxInteger  *position;              /* target position                   */
   RexxString   *name;                  /* stream name                       */
-  RexxString   *result;                /* linein result                     */
+  RexxString   *result = OREF_NULL;    /* linein result                     */
   RexxString   *string;                /* target string                     */
   RexxString   *fullName;              /* fully qual'd stream name          */
   BOOL          added;                 /* add to stream table               */
@@ -2178,7 +2171,6 @@ BUILTIN(LINES) {
   RexxString   *option;                /* option: "N" or "C"                */
   RexxInteger  *result;                /* linein result                     */
   BOOL          added;                 /* add to stream table               */
-  RexxString    *quick;
 
   fix_args(LINES);                     /* check required arguments          */
 
@@ -2196,32 +2188,30 @@ BUILTIN(LINES) {
     stream = resolve_stream(name, context, stack, TRUE, NULL, &added);
 
     if (option != OREF_NULL)
-      switch (option->getChar(0)) {      /* process the option character      */
-        case 'C':
-        case 'c':
-          quick = new_cstring("C");
-          break;
-        case 'N':
-        case 'n':
-          quick = new_cstring("N");
-          break;
-        case '\0':                        /* argument 'O'mitted?               */
-          quick = new_cstring("N");
-          break;
-        default:                         /* unknown option                    */
-                                         /* this is an error                  */
-          report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_ARG), IntegerTwo, new_string("NC", 2), option);
-          break;
+    {
+        switch (option->getChar(0)) {      /* process the option character      */
+          case 'C':
+          case 'c':
+            break;
+          case 'N':
+          case 'n':
+            break;
+          default:                         /* unknown option                    */
+                                           /* this is an error                  */
+            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_ARG), IntegerTwo, new_string("NC", 2), option);
+            break;
+        }
     }
-    else
-      quick = new_cstring("N");
+    else {
+        option = OREF_NORMAL;
+    }
 
     /* use modified LINES method with quick flag       */
-    result = (RexxInteger *)send_message1(stream, OREF_LINES,quick);
+    result = (RexxInteger *)send_message1(stream, OREF_LINES, option);
   }
                                        /* for compatibility this needs      */
                                        /* to only return 0 or 1             */
-  if (quick->getChar(0) == 'N')
+  if (toupper(option->getChar(0)) == 'N')
     return (result != IntegerZero) ? IntegerOne : IntegerZero;
   else
     return result;
@@ -2285,19 +2275,18 @@ BUILTIN(STREAM) {
   /* we need to now, whether the stream already was in the stream table (added = FALSE) */
 //stream = resolve_stream(name, context, stack, TRUE, &added);
 
-  if (action == OREF_NULL) {           /* no action given?                  */
-    action_char = STREAM_STATUS;       /* this is a status attempt          */
-  }
-  else {
-    if (action->getLength() == 0) {    /* get a null string?                */
-                                       /* this is an error                  */
-      report_exception4(Error_Incorrect_call_list, OREF_STREAM, IntegerTwo, new_string("SDC", 3), action);
-    }
-    else {
-                                       /* get the option character          */
+  action_char = STREAM_STATUS;       /* this is a status attempt          */
+  if (action != OREF_NULL) {           /* no action given?                  */
+      if (action->getLength() == 0) {    /* get a null string?                */
+                                         /* this is an error                  */
+        report_exception4(Error_Incorrect_call_list, OREF_STREAM, IntegerTwo, new_string("SDC", 3), action);
+      }
+                                         /* get the option character          */
       action_char = toupper(action->getChar(0));
-    }
   }
+
+  result = OREF_NULL;
+
   switch (action_char) {               /* process the options               */
     case STREAM_STATUS:                /* stream(name, s)                   */
       if (argcount > 2) {              /* given a third argument?           */
@@ -2395,7 +2384,7 @@ BUILTIN(QUEUED) {
 #define CONDITION_option 1
 
 BUILTIN(CONDITION) {
-  INT   style;                         /* style of condition output         */
+  int   style = 'I';                   /* style of condition output         */
   RexxString    *option;               /* function option                   */
   RexxDirectory *conditionobj;         /* current trapped condition object  */
   RexxObject    *result;               /* returned result                   */
@@ -2403,14 +2392,15 @@ BUILTIN(CONDITION) {
   fix_args(CONDITION);                 /* expand arguments to full value    */
                                        /* get the option string             */
   option = optional_string(CONDITION, option);
-  if (option == OREF_NULL)             /* just using default format?        */
-    style = 'I';                       /* use the 'Normal form              */
-  else if (option->getLength() == 0)   /* have a null string?               */
-                                       /* this is an error                  */
-    report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_CONDITION), IntegerOne, new_string("ACDIOS", 6), option);
-  else                                 /* need to process an option         */
-                                       /* option is first character         */
-    style = toupper(option->getChar(0));
+  if (option != OREF_NULL)             /* just using default format?        */
+  {
+      if (option->getLength() == 0)   /* have a null string?               */
+                                           /* this is an error                  */
+        report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_CONDITION), IntegerOne, new_string("ACDIOS", 6), option);
+
+      /* option is first character         */
+      style = toupper(option->getChar(0));
+  }
                                        /* get current trapped condition     */
   conditionobj = context->getConditionObj();
 

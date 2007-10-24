@@ -50,12 +50,12 @@
 #include "DoBlock.hpp"
 
 RexxInstructionEnd::RexxInstructionEnd(
-    RexxString *name)                  /* The END instruction name          */
+    RexxString *_name)                  /* The END instruction name          */
 /****************************************************************************/
 /* Function:  Set the name of an END instruction                            */
 /****************************************************************************/
 {
-  OrefSet(this, this->name, name);
+  OrefSet(this, this->name, _name);
 }
 
 void RexxInstructionEnd::live()

@@ -51,11 +51,11 @@
 #include "RaiseInstruction.hpp"
 
 RexxInstructionRaise::RexxInstructionRaise(
-  RexxString *condition,               /* condition to raise                */
-  RexxObject *expression,              /* expressionial value               */
-  RexxObject *description,             /* description expression            */
-  RexxObject *additional,              /* additional expression             */
-  RexxObject *result,                  /* returned result                   */
+  RexxString *_condition,               /* condition to raise                */
+  RexxObject *_expression,              /* expressionial value               */
+  RexxObject *_description,             /* description expression            */
+  RexxObject *_additional,              /* additional expression             */
+  RexxObject *_result,                  /* returned result                   */
   size_t      arrayCount,              /* size of the array items           */
   RexxQueue  *array,                   /* array argument information        */
   BOOL        raiseReturn )            /* return/exit flag                  */
@@ -64,11 +64,11 @@ RexxInstructionRaise::RexxInstructionRaise(
 /******************************************************************************/
 {
                                        /* save the static information       */
-  OrefSet(this, this->condition, condition);
-  OrefSet(this, this->expression, expression);
-  OrefSet(this, this->description, description);
-  OrefSet(this, this->result, result);
-  if (arrayCount != -1) {              /* array form?                       */
+  OrefSet(this, this->condition, _condition);
+  OrefSet(this, this->expression, _expression);
+  OrefSet(this, this->description, _description);
+  OrefSet(this, this->result, _result);
+  if (arrayCount != (size_t)-1) {      /* array form?                       */
     i_flags |= raise_array;            /* set the array form                */
     /* get the array size                */
     raise_array_count = (USHORT)arrayCount;
@@ -77,7 +77,7 @@ RexxInstructionRaise::RexxInstructionRaise(
       OrefSet(this, this->additional[--arrayCount], array->pop());
   }
   else {                               /* just the one item                 */
-    OrefSet(this, this->additional[0], additional);
+    OrefSet(this, this->additional[0], _additional);
     raise_array_count = 1;             /* just the one item                 */
   }
   if (raiseReturn)                     /* return form?                      */
@@ -151,30 +151,30 @@ void RexxInstructionRaise::execute(
 /* Function:  Execute a REXX RAISE instruction                                */
 /******************************************************************************/
 {
-  RexxObject    *result;               /* evaluated expression              */
+  RexxObject    *_result;              /* evaluated expression              */
   RexxObject    *rc;                   /* RC variable information           */
   RexxString    *errorcode;            /* converted error code              */
-  RexxString    *description;          /* condition description             */
-  RexxObject    *additional;           /* additional state information      */
+  RexxString    *_description;         /* condition description             */
+  RexxObject    *_additional;          /* additional state information      */
   RexxDirectory *conditionobj;         /* propagated condition object       */
   size_t  count;                       /* count of array expressions        */
   size_t  i;                           /* loop counter                      */
   LONG    msgNum;                      /* message number                    */
 
   context->traceInstruction(this);     /* trace if necessary                */
-  additional = OREF_NULL;              /* no object yet                     */
-  description = OREF_NULL;             /* no description                    */
+  _additional = OREF_NULL;             /* no object yet                     */
+  _description = OREF_NULL;            /* no description                    */
   rc = OREF_NULL;                      /* no extra information              */
-  result = OREF_NULL;                  /* no result information             */
+  _result = OREF_NULL;                 /* no result information             */
 
   if (this->expression != OREF_NULL)   /* extra information for RC?         */
                                        /* get the expression value          */
     rc = this->expression->evaluate(context, stack);
                                        /* need to validate the RC value?    */
   if (this->condition->strCompare(CHAR_SYNTAX)) {
-    additional = TheNullArray->copy(); /* change default additional info    */
+    _additional = TheNullArray->copy(); /* change default additional info    */
                                        /* and the default description       */
-    description = OREF_NULLSTRING;
+    _description = OREF_NULLSTRING;
     errorcode = REQUEST_STRING(rc);    /* get the string version            */
     if (errorcode == TheNilObject)     /* didn't convert?                   */
                                        /* raise an error                    */
@@ -186,25 +186,25 @@ void RexxInstructionRaise::execute(
   }
   if (this->description != OREF_NULL)  /* given a description?              */
                                        /* get the expression value          */
-    description = (RexxString *)this->description->evaluate(context, stack);
+    _description = (RexxString *)this->description->evaluate(context, stack);
   if (i_flags&raise_array) {           /* array form of additional?         */
     count = raise_array_count;         /* get the array size                */
-    additional = new_array(count);     /* get a result array                */
-    stack->push(additional);           /* and protect it from collection    */
+    _additional = new_array(count);     /* get a result array                */
+    stack->push(_additional);           /* and protect it from collection    */
     for (i = 0; i < count; i++) {      /* loop through the expression list  */
                                        /* real argument?                    */
       if (this->additional[i] != OREF_NULL)
                                        /* evaluate the expression           */
-        ((RexxArray *)additional)->put((this->additional[i])->evaluate(context, stack), i + 1);
+        ((RexxArray *)_additional)->put((this->additional[i])->evaluate(context, stack), i + 1);
     }
   }
                                        /* extra information with ?          */
   else if (this->additional[0] != OREF_NULL)
                                        /* get the expression value          */
-    additional = this->additional[0]->evaluate(context, stack);
+    _additional = this->additional[0]->evaluate(context, stack);
   if (this->result != OREF_NULL)       /* given a result value?             */
                                        /* get the expression value          */
-    result = this->result->evaluate(context, stack);
+    _result = this->result->evaluate(context, stack);
                                        /* set default condition object      */
   conditionobj = (RexxDirectory *)TheNilObject;
                                        /* propagating an existing condition?*/
@@ -214,7 +214,7 @@ void RexxInstructionRaise::execute(
     if (conditionobj == OREF_NULL)     /* no current active condition?      */
       report_exception(Error_Execution_propagate);
   }
-  if (additional != OREF_NULL) {       /* have additional information?      */
+  if (_additional != OREF_NULL) {      /* have additional information?      */
                                        /* propagate condition maybe?        */
     if (this->condition->strCompare(CHAR_PROPAGATE))
                                        /* get the original condition name   */
@@ -224,19 +224,19 @@ void RexxInstructionRaise::execute(
                                        /* description a single item?        */
     if (errorcode->strCompare(CHAR_SYNTAX)) {
                                        /* get the array version             */
-      additional = REQUEST_ARRAY(additional);
+      _additional = REQUEST_ARRAY(_additional);
                                        /* not an array item or a multiple   */
                                        /* dimension one?                    */
-      if (additional == TheNilObject || ((RexxArray *)additional)->getDimension() != 1)
+      if (_additional == TheNilObject || ((RexxArray *)_additional)->getDimension() != 1)
                                        /* this is an error                  */
         report_exception(Error_Execution_syntax_additional);
     }
   }
   if (i_flags&raise_return)            /* is this the exit form?            */
                                        /* let activation handle as return   */
-    context->raise(this->condition, rc, description, additional, result, conditionobj);
+    context->raise(this->condition, rc, _description, _additional, _result, conditionobj);
   else
                                        /* activation needs to exit          */
-    context->raiseExit(this->condition, rc, description, additional, result, conditionobj);
+    context->raiseExit(this->condition, rc, _description, _additional, _result, conditionobj);
 }
 

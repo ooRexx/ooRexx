@@ -47,15 +47,15 @@
 #include "DoBlock.hpp"
 
 RexxDoBlock::RexxDoBlock(
-    RexxBlockInstruction* parent,      /* parent DO block                   */
-    INT                indent )        /* current indentation level         */
+    RexxBlockInstruction* _parent,      /* parent DO block                   */
+    INT                _indent )        /* current indentation level         */
 /******************************************************************************/
 /* Function:  complete BLOCK instruction initialization                       */
 /******************************************************************************/
 {
   ClearObject(this);                   /*Clear the object.                  */
-  OrefSet(this, this->parent, parent); /* remember the parent block         */
-  this->indent = indent;               /* save the indentation level        */
+  OrefSet(this, this->parent, _parent); /* remember the parent block         */
+  this->indent = _indent;               /* save the indentation level        */
 }
 
 void RexxDoBlock::live()

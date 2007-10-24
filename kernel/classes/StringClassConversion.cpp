@@ -436,7 +436,7 @@ RexxString *RexxString::decodeBase64()
         /* the input string is an invalid length */
         report_exception(Error_Incorrect_method_invbase64);
     }
-    const char *source = (char *)this->getStringData();
+    const char *source = this->getStringData();
     /* figure out the output string length */
     size_t outputLength = (inputLength / 4) * 3;
     if (*(source + inputLength - 1) == '=')

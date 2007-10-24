@@ -104,36 +104,36 @@ void RexxInstructionForward::execute(
 /* Function:  Execute a forward instruction                                   */
 /******************************************************************************/
 {
-  RexxObject *target;                  /* evaluated target                  */
-  RexxString *message;                 /* evaluated message                 */
-  RexxObject *superClass;              /* evaluated super class             */
+  RexxObject *_target;                  /* evaluated target                  */
+  RexxString *_message;                 /* evaluated message                 */
+  RexxObject *_superClass;              /* evaluated super class             */
   RexxObject *result;                  /* message result                    */
   RexxObject *temp;                    /* temporary object                  */
   size_t      count = 0;               /* count of array expressions        */
   size_t      i;                       /* loop counter                      */
-  RexxObject **arguments;
+  RexxObject **_arguments;
 
   context->traceInstruction(this);     /* trace if necessary                */
   if (!context->inMethod())            /* is this a method clause?          */
                                        /* raise an error                    */
     report_exception(Error_Execution_forward);
-  target = OREF_NULL;                  /* no object yet                     */
-  message = OREF_NULL;                 /* no message over ride              */
-  superClass = OREF_NULL;              /* no super class over ride          */
-  arguments = OREF_NULL;               /* no argument over ride             */
+  _target = OREF_NULL;                  /* no object yet                     */
+  _message = OREF_NULL;                 /* no message over ride              */
+  _superClass = OREF_NULL;              /* no super class over ride          */
+  _arguments = OREF_NULL;               /* no argument over ride             */
 
   if (this->target != OREF_NULL)       /* sent to a different object?       */
                                        /* get the expression value          */
-    target = this->target->evaluate(context, stack);
+    _target = this->target->evaluate(context, stack);
   if (this->message != OREF_NULL) {    /* sending a different message?      */
                                        /* get the expression value          */
     temp = this->message->evaluate(context, stack);
-    message = REQUEST_STRING(temp);    /* get the string version            */
-    message = message->upper();        /* and force to uppercase            */
+    _message = REQUEST_STRING(temp);    /* get the string version            */
+    _message = _message->upper();       /* and force to uppercase            */
   }
   if (this->superClass != OREF_NULL)   /* overriding the super class?       */
                                        /* get the expression value          */
-    superClass = this->superClass->evaluate(context, stack);
+    _superClass = this->superClass->evaluate(context, stack);
   if (this->arguments != OREF_NULL) {  /* overriding the arguments?         */
                                        /* get the expression value          */
     temp = this->arguments->evaluate(context, stack);
@@ -156,7 +156,7 @@ void RexxInstructionForward::execute(
         count--;                       /* step back the count               */
       }
     }
-    arguments = argArray->data();    /* point directly to the argument data */
+    _arguments = argArray->data();    /* point directly to the argument data */
   }
   if (this->array != OREF_NULL) {      /* have an array of extra info?      */
     count = this->array->size();       /* get the expression count          */
@@ -173,10 +173,10 @@ void RexxInstructionForward::execute(
       }
     }
     /* now point at the stacked values */
-    arguments = stack->arguments(count);
+    _arguments = stack->arguments(count);
   }
                                        /* go forward this                   */
-  result = context->forward(target, message, superClass, arguments, count, i_flags&forward_continue);
+  result = context->forward(_target, _message, _superClass, _arguments, count, i_flags&forward_continue);
   if (i_flags&forward_continue) {      /* not exiting?                      */
     if (result != OREF_NULL) {         /* result returned?                  */
       context->traceResult(result);    /* trace if necessary                */

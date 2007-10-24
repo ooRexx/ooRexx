@@ -59,7 +59,7 @@ extern ACTIVATION_SETTINGS *current_settings;
 
 
 void RexxInstructionDo::matchLabel(
-     RexxInstructionEnd *end,          /* end to match up                   */
+     RexxInstructionEnd *_end,          /* end to match up                   */
      RexxSource         *source )      /* parsed source file (for errors)   */
 /******************************************************************************/
 /* Function:  Verify that the name on an END and the END statement match      */
@@ -69,8 +69,8 @@ void RexxInstructionDo::matchLabel(
   LOCATIONINFO  location;              /* location of the end               */
   size_t        lineNum;               /* instruction line number           */
 
-  name = end->name;                    /* get then END name                 */
-  end->getLocation(&location);         /* get location of END instruction   */
+  name = _end->name;                    /* get then END name                 */
+  _end->getLocation(&location);         /* get location of END instruction   */
 
   if (name != OREF_NULL) {             /* was a name given?                 */
     lineNum = this->lineNumber;        /* Instruction line number           */
@@ -297,7 +297,7 @@ void RexxInstructionDo::execute(
                                        /* an integer value already, and     */
                                        /* we're dealing with a "normal      */
                                        /* NUMERIC DIGITS setting            */
-        if (OTYPE(Integer, result) && context->digits() >= DEFAULT_DIGITS) {
+        if (OTYPE(Integer, result) && context->digits() >= (long)DEFAULT_DIGITS) {
                                        /* get the value directly            */
           count = ((RexxInteger *)result)->getValue();
           context->traceResult(result);/* trace if necessary                */
@@ -314,7 +314,7 @@ void RexxInstructionDo::execute(
           count = REQUEST_LONG(result, NO_LONG);
         }
                                        /* bad value, too small or too big?  */
-        if (count == NO_LONG || count < 0)
+        if (count == (long)NO_LONG || count < 0)
                                        /* report an exception               */
           report_exception1(Error_Invalid_whole_number_repeat, object);
         doblock->setFor(count);        /* save the new value                */
@@ -330,7 +330,7 @@ void RexxInstructionDo::execute(
                                        /* an integer value already, and     */
                                        /* we're dealing with a "normal      */
                                        /* NUMERIC DIGITS setting            */
-        if (OTYPE(Integer, result) && context->digits() >= DEFAULT_DIGITS) {
+        if (OTYPE(Integer, result) && context->digits() >= (long)DEFAULT_DIGITS) {
                                        /* get the value directly            */
           count = ((RexxInteger *)result)->getValue();
           context->traceResult(result);/* trace if necessary                */
@@ -347,7 +347,7 @@ void RexxInstructionDo::execute(
           count = REQUEST_LONG(result, NO_LONG);
         }
                                        /* bad value, too small or too big?  */
-        if (count == NO_LONG || count < 0)
+        if (count == (long)NO_LONG || count < 0)
                                        /* report an exception               */
           report_exception1(Error_Invalid_whole_number_repeat, object);
         doblock->setFor(count);        /* save the new value                */
@@ -425,14 +425,14 @@ void RexxInstructionDo::controlSetup(
 {
   size_t      i;                       /* loop control variable             */
   RexxObject *result;                  /* expression result                 */
-  RexxObject *initial;                 /* initial variable value            */
+  RexxObject *_initial;                 /* initial variable value            */
   RexxObject *object;                  /* original result object (for error)*/
   LONG        count;                   /* for count                         */
 
                                        /* evaluate the initial expression   */
-  initial = this->initial->evaluate(context, stack);
+  _initial = this->initial->evaluate(context, stack);
                                        /* force rounding                    */
-  initial = callOperatorMethod(initial, OPERATOR_PLUS, OREF_NULL);
+  _initial = callOperatorMethod(_initial, OPERATOR_PLUS, OREF_NULL);
                                        /* process each of the expressions   */
   for (i = 0; i < 3 && this->expressions[i] != 0; i++) {
     switch (this->expressions[i]) {    /* process various keywords          */
@@ -477,7 +477,7 @@ void RexxInstructionDo::controlSetup(
                                        /* an integer value already, and     */
                                        /* we're dealing with a "normal      */
                                        /* NUMERIC DIGITS setting            */
-        if (OTYPE(Integer, result) && context->digits() >= DEFAULT_DIGITS)
+        if (OTYPE(Integer, result) && context->digits() >= (long)DEFAULT_DIGITS)
           {
                                        /* get the value directly            */
           count = ((RexxInteger *)result)->getValue();
@@ -495,7 +495,7 @@ void RexxInstructionDo::controlSetup(
           count = REQUEST_LONG(result, NO_LONG);
         }
                                        /* bad value, too small or too big?  */
-        if (count == NO_LONG || count < 0)
+        if (count == (long)NO_LONG || count < 0)
                                        /* report an exception               */
           report_exception1(Error_Invalid_whole_number_for, object);
         doblock->setFor(count);        /* save the new value                */
@@ -509,7 +509,7 @@ void RexxInstructionDo::controlSetup(
     doblock->setCompare(OPERATOR_GREATERTHAN);
   }
                                        /* do the initial assignment         */
-  this->control->assign(context, stack, initial);
+  this->control->assign(context, stack, _initial);
 }
 
 BOOL RexxInstructionDo::checkOver(

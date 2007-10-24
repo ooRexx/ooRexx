@@ -55,10 +55,10 @@
 extern ACTIVATION_SETTINGS *current_settings;
 
 void RexxTarget::init(
-    RexxObject     *string,            /* target string                     */
-    RexxObject    **arglist,           /* argument list                     */
-    size_t          argcount,          /* size of the argument list         */
-    BOOL            translate,         /* translation flag                  */
+    RexxObject     *_string,            /* target string                     */
+    RexxObject    **_arglist,           /* argument list                     */
+    size_t          _argcount,          /* size of the argument list         */
+    BOOL            _translate,         /* translation flag                  */
     BOOL            multiple,          /* have multiple strings             */
     RexxActivation *context,           /* execution context                 */
     RexxExpressionStack *s)            /* current expression stack          */
@@ -66,10 +66,10 @@ void RexxTarget::init(
 /* Function:  Initialize a parse target object                                */
 /******************************************************************************/
 {
-  this->translate = translate;         /* save the translation flag         */
-  this->arglist = arglist;             /* we have an array of strings       */
-  this->argcount = argcount;
-  this->string = (RexxString *)string; /* save the string also              */
+  this->translate = _translate;         /* save the translation flag         */
+  this->arglist = _arglist;             /* we have an array of strings       */
+  this->argcount = _argcount;
+  this->string = (RexxString *)_string; /* save the string also              */
   this->next_argument = 1;             /* start with the first argument     */
   this->stack = s;                     // save the expression stack for saving object references in
   this->stackTop = s->location();      // save the stack top for resets
@@ -259,7 +259,7 @@ void RexxTarget::backwardLength(
 
 
 void RexxTarget::search(
-    RexxString *string)                /* target search string              */
+    RexxString *needle)                /* target search string              */
 /******************************************************************************/
 /* Arguments:  target location string                                         */
 /******************************************************************************/
@@ -269,10 +269,10 @@ void RexxTarget::search(
                                        /* search for the string trigger     */
   /* use DBCS character count as index into DBCS string */
   if (DBCS_MODE) {
-    this->end = this->string->pos(string,
+    this->end = this->string->pos(needle,
             DBCS_CharacterCount(this->string->getStringData(), this->start));
   } else {
-    this->end = this->string->pos(string, this->start);
+    this->end = this->string->pos(needle, this->start);
   }
   if (this->end == 0) {                /* not found?                        */
     this->end = this->string_length;   /* that is the end position          */
@@ -294,7 +294,7 @@ void RexxTarget::search(
 }
 
 void RexxTarget::caselessSearch(
-    RexxString *string)                /* target search string              */
+    RexxString *needle)                /* target search string              */
 /******************************************************************************/
 /* Arguments:  target location string                                         */
 /******************************************************************************/
@@ -304,10 +304,10 @@ void RexxTarget::caselessSearch(
                                        /* search for the string trigger     */
   /* use DBCS character count as index into DBCS string */
   if (DBCS_MODE) {
-    this->end = this->string->caselessPos(string,
+    this->end = this->string->caselessPos(needle,
               DBCS_CharacterCount(this->string->getStringData(), this->start));
   } else {
-    this->end = this->string->caselessPos(string, this->start);
+    this->end = this->string->caselessPos(needle, this->start);
   }
   if (this->end == 0) {                /* not found?                        */
     this->end = this->string_length;   /* that is the end position          */

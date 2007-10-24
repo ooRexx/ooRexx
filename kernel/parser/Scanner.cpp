@@ -58,21 +58,19 @@ int RexxSource::precedence(
 /* Fucntion:  Determine a token's operator precedence                         */
 /******************************************************************************/
 {
-  INT   precedence;                    /* returned operator precedence      */
-
   switch (token->subclass) {           /* process based on subclass         */
 
     default:
-      precedence = 0;                  /* this is the bottom of the heap    */
+      return 0;                        /* this is the bottom of the heap    */
       break;
 
     case OPERATOR_OR:
     case OPERATOR_XOR:
-      precedence = 1;                  /* various OR types are next         */
+      return 1;                         /* various OR types are next         */
       break;
 
     case OPERATOR_AND:
-      precedence = 2;                  /* AND operator ahead of ORs         */
+      return 2;                         /* AND operator ahead of ORs         */
       break;
 
     case OPERATOR_EQUAL:               /* comparisons are all together      */
@@ -93,36 +91,35 @@ int RexxSource::precedence(
     case OPERATOR_STRICT_LESSTHAN_EQUAL:
     case OPERATOR_LESSTHAN_GREATERTHAN:
     case OPERATOR_GREATERTHAN_LESSTHAN:
-      precedence = 3;                  /* concatenates are next             */
+      return 3;                         /* concatenates are next             */
       break;
 
     case OPERATOR_ABUTTAL:
     case OPERATOR_CONCATENATE:
     case OPERATOR_BLANK:
-      precedence = 4;                  /* concatenates are next             */
+      return 4;                         /* concatenates are next             */
       break;
 
     case OPERATOR_PLUS:
     case OPERATOR_SUBTRACT:
-      precedence = 5;                  /* plus and minus next               */
+      return 5;                         /* plus and minus next               */
       break;
 
     case OPERATOR_MULTIPLY:
     case OPERATOR_DIVIDE:
     case OPERATOR_INTDIV:
     case OPERATOR_REMAINDER:
-      precedence = 6;                  /* mulitiply and divide afer simples */
+      return 6;                         /* mulitiply and divide afer simples */
       break;
 
     case OPERATOR_POWER:
-      precedence = 7;                  /* almost the top of the heap        */
+      return 7;                         /* almost the top of the heap        */
       break;
 
     case OPERATOR_BACKSLASH:
-      precedence = 8;                  /* NOT is the top honcho             */
+      return 8;                         /* NOT is the top honcho             */
       break;
   }
-  return precedence;                   /* return the operator precedence    */
 }
 
 RexxSource::RexxSource(
@@ -451,7 +448,7 @@ RexxString *RexxSource::packLiteral(
 /*            into a string object.                                         */
 /****************************************************************************/
 {
-  INT    first;                        /* switch to mark first group        */
+  INT    _first;                       /* switch to mark first group        */
   INT    blanks;                       /* switch to say if scanning blanks  */
   INT    count;                        /* count for group                   */
   INT    i;                            /* loop counter                      */
@@ -467,7 +464,7 @@ RexxString *RexxSource::packLiteral(
   INT    real_length;                  /* real number of digits in string   */
   CHAR   error_output[2];              /* used for formatting error         */
 
- first = TRUE;                         /* initialize group flags and        */
+ _first = TRUE;                        /* initialize group flags and        */
  count = 0;                            /* counters                          */
  blanks = FALSE;
  error_output[1] = '\0';               /* terminate string                  */
@@ -488,7 +485,7 @@ RexxString *RexxSource::packLiteral(
     /* don't like initial blanks or groups after the first                  */
     /* which are not in twos (hex) or fours (binary)                        */
      if (i == 0 ||                     /* if at the beginning               */
-         (!first &&                    /* or past first group and not the   */
+         (!_first &&                   /* or past first group and not the   */
                                        /* correct size                      */
          (((count&1) && type == LITERAL_HEX) ||
           ((count&3) && type == LITERAL_BIN)))) {
@@ -505,7 +502,7 @@ RexxString *RexxSource::packLiteral(
    }
    else {
      if (blanks)                       /* had a blank group?                */
-       first = FALSE;                  /* no longer on the lead grouping    */
+       _first = FALSE;                 /* no longer on the lead grouping    */
      blanks = FALSE;                   /* not processing blanks now         */
      count++;                          /* count this significant character  */
    }
@@ -513,7 +510,7 @@ RexxString *RexxSource::packLiteral(
   }
 
   if (blanks ||                        /* trailing blanks or                */
-      (!first &&                       /* last group isn't correct count?   */
+      (!_first &&                      /* last group isn't correct count?   */
        (((count&1) && type == LITERAL_HEX) ||
        ((count&3) && type == LITERAL_BIN)))) {
     m = i-1;                           /* place holder for new_integer invocation */
@@ -622,7 +619,7 @@ RexxToken *RexxSource::sourceNextToken(
 /* value extracted.                                                  */
 /*********************************************************************/
 {
- RexxToken  *token;                    /* working token                     */
+ RexxToken  *token = OREF_NULL;        /* working token                     */
  RexxString *value;                    /* associate string value            */
  unsigned int inch;                    /* working input character           */
  LONG   eoffset;                       /* location of exponential           */
@@ -839,7 +836,7 @@ RexxToken *RexxSource::sourceNextToken(
         else if (inch >= '0' && inch <= '9') {
           subclass = SYMBOL_CONSTANT;  /* have a constant symbol            */
                                        /* can we optimize to an integer?    */
-          if (state == EXP_DIGIT && length < DEFAULT_DIGITS) {
+          if (state == EXP_DIGIT && length < (long)DEFAULT_DIGITS) {
                                        /* no leading zero or only zero?     */
             if (inch != '0' || length == 1)
                                        /* we can make this an integer object*/

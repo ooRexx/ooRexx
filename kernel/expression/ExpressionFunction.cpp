@@ -59,7 +59,7 @@ RexxExpressionFunction::RexxExpressionFunction(
     RexxString *function_name,         /* name of the function              */
     size_t      argCount,              /* count of arguments                */
     RexxQueue  *arglist,               /* function arguments                */
-    LONG        builtin_index,         /* index of possible built-in func   */
+    size_t      builtinIndex,          /* index of possible built-in func   */
     BOOL        string )               /* string or symbol invocation       */
 /******************************************************************************/
 /* Function:  Create a function expression object                             */
@@ -79,7 +79,7 @@ RexxExpressionFunction::RexxExpressionFunction(
   }
                                        /* set the builtin index for later   */
   /* resolution step                   */
-  this->builtin_index = (SHORT)builtin_index;
+  this->builtin_index = builtinIndex;
 
   if (string)                          /* have a string lookup?             */
     this->flags |= function_nointernal;/* do not check for internal routines*/
@@ -113,8 +113,8 @@ void RexxExpressionFunction::live()
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
 
   setUpMemoryMark
   memory_mark(this->u_name);
@@ -129,8 +129,8 @@ void RexxExpressionFunction::liveGeneral()
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
 
   setUpMemoryMarkGeneral
   memory_mark_general(this->u_name);
@@ -145,8 +145,8 @@ void RexxExpressionFunction::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
 
   setUpFlatten(RexxExpressionFunction)
 
@@ -165,9 +165,9 @@ RexxObject *RexxExpressionFunction::evaluate(
 /* Function:  Execute a REXX function                                         */
 /******************************************************************************/
 {
-  RexxObject *result;                  /* returned result                   */
-  INT         argcount;                /* count of arguments                */
-  INT         i;                       /* loop counter                      */
+  RexxObject *result = OREF_NULL;      /* returned result                   */
+  size_t      argcount;                /* count of arguments                */
+  size_t      i;                       /* loop counter                      */
   LONG        stacktop;                /* top location on the stack         */
 
   context->activity->stackSpace();     /* check if enough stack is there    */

@@ -244,30 +244,28 @@ RexxNumberString *RexxString::createNumberString()
 /******************************************************************************/
 {
   RexxString       *newSelf;           /* converted string value            */
-  RexxNumberString *numberString;      /* numberstring value of string      */
 
   if (!OTYPE(String, this)) {          /* not truly a string type?          */
     newSelf = this->requestString();   /* do the conversion                 */
                                        /* get a new numberstring Obj        */
     OrefSet(newSelf, newSelf->NumberString, (RexxNumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
                                        /* save the number string            */
-    numberString = newSelf->NumberString;
-    if (numberString != OREF_NULL)     /* Did number convert OK?            */
+    if (newSelf->NumberString != OREF_NULL)     /* Did number convert OK?            */
       SetObjectHasReferences(newSelf); /* Make sure we are sent Live...     */
+    return newSelf->NumberString;
   }
   else {                               /* real primitive string             */
                                        /* get a new numberstring Obj        */
     OrefSet(this, this->NumberString, (RexxNumberString *)new_numberstring(this->getStringData(), this->getLength()));
-    numberString = this->NumberString; /* save the number string            */
-    if (numberString == OREF_NULL)     /* Did number convert OK?            */
+    if (this->NumberString == OREF_NULL)     /* Did number convert OK?            */
       this->setNonNumeric();           /* mark as a nonnumeric              */
     else {
       SetObjectHasReferences(this);    /* Make sure we are sent Live...     */
                                        /* connect the string and number     */
       this->NumberString->setString(this);
     }
+    return this->NumberString;
   }
-  return numberString;                 /* return the numberString Object.   */
 }
 
 

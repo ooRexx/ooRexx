@@ -49,21 +49,21 @@
 #include "SourceFile.hpp"
 
 RexxToken::RexxToken(
-    int            classId,            /* class of token                    */
-    int            subclass,           /* token subclass                    */
-    RexxString     *value,             /* token value                       */
-    PLOCATIONINFO  location)           /* token location descriptor         */
+    int            _classId,            /* class of token                    */
+    int            _subclass,           /* token subclass                    */
+    RexxString     *_value,             /* token value                       */
+    PLOCATIONINFO  _location)           /* token location descriptor         */
 /******************************************************************************/
 /* Function:  Complete set up of a TOKEN object                               */
 /******************************************************************************/
 {
   ClearObject(this);                   /* initialize the object             */
   this->hashvalue = HASHOREF(this);    /* fill in the hash value            */
-  OrefSet(this, this->value, value);   /* use the provided string value     */
-  this->classId = classId;             /* no assigned token class           */
-  this->subclass = subclass;           /* no specialization yet             */
-  if (location != NULL)                /* have location data?               */
-    this->location = *location;        /* copy it over                      */
+  OrefSet(this, this->value, _value);   /* use the provided string value     */
+  this->classId = _classId;             /* no assigned token class           */
+  this->subclass = _subclass;           /* no specialization yet             */
+  if (_location != NULL)                /* have location data?               */
+    this->location = *_location;        /* copy it over                      */
 }
 
 void RexxToken::live()

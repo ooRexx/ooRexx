@@ -48,12 +48,12 @@
 #include "OptionsInstruction.hpp"
 
 RexxInstructionOptions::RexxInstructionOptions(
-    RexxObject *expression)            /* associated expression object      */
+    RexxObject *_expression)            /* associated expression object      */
 /******************************************************************************/
 /* Initialize a REXX OPTION instruction                                       */
 /******************************************************************************/
 {
-  OrefSet(this, this->expression, expression);
+  OrefSet(this, this->expression, _expression);
 }
 
 void RexxInstructionOptions::execute(
@@ -64,18 +64,18 @@ void RexxInstructionOptions::execute(
 /******************************************************************************/
 {
   RexxObject *value;                   /* output value                      */
-  RexxString *stringValue;             /* string version of the value       */
+  RexxString *stringVal;               /* string version of the value       */
   LONG   i;                            /* loop counter                      */
   RexxString *word;                    /* current word                      */
 
   context->traceInstruction(this);     /* trace if necessary                */
                                        /* get the expression value          */
   value = this->expression->evaluate(context, stack);
-  stringValue = REQUEST_STRING(value); /* get the string version            */
+  stringVal = REQUEST_STRING(value);   /* get the string version            */
   context->traceResult(value);         /* trace the output value            */
   for (i = 1; ;i++) {                  /* now process each word             */
                                        /* get the next word                 */
-    word = (RexxString *)(stringValue->word(new_integer(i)));
+    word = (RexxString *)(stringVal->word(new_integer(i)));
     if (word->getLength() == 0)        /* get the length of the word        */
       break;                           /* if length of word = 0 then stop   */
 

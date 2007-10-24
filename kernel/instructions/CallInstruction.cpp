@@ -55,8 +55,8 @@
 extern pbuiltin builtin_table[];       /* table of builtin function stubs   */
 
 RexxInstructionCall::RexxInstructionCall(
-    RexxObject *name,                  /* CALL name                         */
-    RexxString *condition,             /* CALL ON/OFF condition             */
+    RexxObject *_name,                 /* CALL name                         */
+    RexxString *_condition,            /* CALL ON/OFF condition             */
     size_t      argCount,              /* count of arguments                */
     RexxQueue  *argList,               /* call arguments                    */
     CHAR flags,                        /* CALL flags                        */
@@ -66,9 +66,9 @@ RexxInstructionCall::RexxInstructionCall(
 /******************************************************************************/
 {
                                        /* set the name                      */
-  OrefSet(this, this->name, (RexxString *)name);
+  OrefSet(this, this->name, (RexxString *)_name);
                                        /* and the condition                 */
-  OrefSet(this, this->condition, condition);
+  OrefSet(this, this->condition, _condition);
   i_flags = flags;                     /* copy the flags                    */
   call_builtin_index = builtin_index;  /* and the builtin function index    */
                                        /* no arguments                      */
@@ -84,8 +84,8 @@ void RexxInstructionCall::live()
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
 
   setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
@@ -102,8 +102,8 @@ void RexxInstructionCall::liveGeneral()
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
 
   setUpMemoryMarkGeneral
                                        /* must be first one marked          */
@@ -121,8 +121,8 @@ void RexxInstructionCall::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
 
   setUpFlatten(RexxInstructionCall)
 
@@ -172,13 +172,13 @@ void RexxInstructionCall::execute(
 /* Function:  Execute a REXX CALL instruction                                 */
 /******************************************************************************/
 {
-  INT     argcount;                    /* count of arguments                */
-  INT     i;                           /* loop counter                      */
-  INT     type;                        /* type of call                      */
-  INT     builtin_index;               /* builtin function index            */
-  RexxObject       *result;            /* returned result                   */
-  RexxInstruction  *target;            /* resolved call target              */
-  RexxString       *name;              /* resolved function name            */
+  size_t  argcount;                    /* count of arguments                */
+  size_t  i;                           /* loop counter                      */
+  int     type;                        /* type of call                      */
+  int     builtin_index;               /* builtin function index            */
+  RexxObject       *result = OREF_NULL;/* returned result                   */
+  RexxInstruction  *_target;            /* resolved call target              */
+  RexxString       *_name;              /* resolved function name            */
   RexxDirectory    *labels;            /* labels table                      */
 
   context->activity->stackSpace();     /* check if enough stack is there    */
@@ -196,17 +196,17 @@ void RexxInstructionCall::execute(
                                        /* evaluate the variable             */
       result = this->name->evaluate(context, stack);
       stack->toss();                   /* toss the top item                 */
-      name = REQUEST_STRING(result);   /* force to string form              */
+      _name = REQUEST_STRING(result);   /* force to string form              */
       context->traceResult(name);      /* trace if necessary                */
                                        /* resolve potential builtins        */
-      builtin_index = context->source->resolveBuiltin(name);
-      target = OREF_NULL;              /* clear out the target              */
+      builtin_index = context->source->resolveBuiltin(_name);
+      _target = OREF_NULL;              /* clear out the target              */
       labels = context->getLabels();   /* get the labels table              */
       if (labels != OREF_NULL)         /* have labels in the program?       */
                                        /* look up label and go to normal    */
                                        /* signal processing                 */
-        target = (RexxInstruction *)(labels->at(name));
-      if (target != OREF_NULL)         /* found one?                        */
+        _target = (RexxInstruction *)(labels->at(_name));
+      if (_target != OREF_NULL)        /* found one?                        */
         type = call_internal;          /* have an internal call             */
                                        /* have a builtin by this name?      */
       else if (builtin_index != NO_BUILTIN)
@@ -215,8 +215,8 @@ void RexxInstructionCall::execute(
         type = call_external;          /* set as so                         */
     }
     else {                             /* set up for a normal call          */
-      target = this->target;           /* copy the target                   */
-      name = (RexxString *)this->name; /* the name value                    */
+      _target = this->target;           /* copy the target                   */
+      _name = (RexxString *)this->name; /* the name value                    */
                                        /* and the builtin index             */
       builtin_index = call_builtin_index;
       type = i_flags&call_type_mask;   /* just copy the type info           */
@@ -242,7 +242,7 @@ void RexxInstructionCall::execute(
 
       case call_internal:              /* need to process internal routine  */
                                        /* go process the internal call      */
-        result = context->internalCall(target, argcount, stack);
+        result = context->internalCall(_target, argcount, stack);
         break;
 
       case call_builtin:               /* builtin function call             */
@@ -252,7 +252,7 @@ void RexxInstructionCall::execute(
 
       case call_external:              /* need to call externally           */
                                        /* go process the external call      */
-        result = context->externalCall(name, argcount, stack, OREF_ROUTINENAME);
+        result = context->externalCall(_name, argcount, stack, OREF_ROUTINENAME);
         break;
     }
     if (result != OREF_NULL) {         /* result returned?                  */

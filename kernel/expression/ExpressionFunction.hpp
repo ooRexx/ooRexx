@@ -53,7 +53,7 @@
 
 class RexxExpressionFunction : public RexxInternalObject {
  public:
-  RexxExpressionFunction(RexxString *, size_t, RexxQueue *, LONG, BOOL);
+  RexxExpressionFunction(RexxString *, size_t, RexxQueue *, size_t, BOOL);
   inline RexxExpressionFunction(RESTORETYPE restoreType) { ; };
   void        resolve(RexxDirectory *);
   void        live();

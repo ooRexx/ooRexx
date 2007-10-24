@@ -46,7 +46,7 @@
 #ifdef ERROR_TABLE
 
 #define Table_end   0                  /* constant to mark end of table     */
-#define Table_end_msg NULL
+#define Table_end_msg 0
 
 ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
 

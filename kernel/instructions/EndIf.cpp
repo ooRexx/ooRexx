@@ -49,13 +49,13 @@
 
 
 RexxInstructionEndIf::RexxInstructionEndIf(
-    RexxInstructionIf *parent)         /* base parent instruction (IF/WHEN) */
+    RexxInstructionIf *_parent)         /* base parent instruction (IF/WHEN) */
 /******************************************************************************/
 /* Function:  Complete initialization of a PARSE ENDIF object                 */
 /******************************************************************************/
 {
   this->setType(KEYWORD_ENDTHEN);      /* set the default type              */
-  OrefSet(this, this->parent, parent); /* remember parent IF/WHEN/ELSE      */
+  OrefSet(this, this->parent, _parent);/* remember parent IF/WHEN/ELSE      */
   parent->setEndInstruction(this);     /* hook up with the parent object    */
                                        /* is this the ELSE end?             */
   if (parent->instructionInfo.type == KEYWORD_ELSE)

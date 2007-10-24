@@ -165,7 +165,7 @@ RexxString * SysMessageHeader(
 /****************************************************************************/
 {
  ERROR_MESSAGE *p;                     /* table scan pointer                */
- ULONG          msgid;                 /* message number                    */
+ int            msgid;                 /* message number                    */
  CHAR           DataArea[20];          /* buf addr to return message        */
                                        /* loop through looking for the      */
                                        /* error code                        */

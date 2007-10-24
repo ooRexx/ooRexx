@@ -51,25 +51,25 @@
 #include "ExpressionBaseVariable.hpp"
 
 RexxTrigger::RexxTrigger(
-    INT        type,                   /* type of trigger                   */
-    RexxObject *value,                 /* value to evaluatate               */
-    LONG        variableCount,         /* count of variables                */
-    RexxQueue  *variables)             /* array of trigger variables        */
+    INT        type,                    /* type of trigger                   */
+    RexxObject *_value,                 /* value to evaluatate               */
+    LONG        _variableCount,         /* count of variables                */
+    RexxQueue  *_variables)             /* array of trigger variables        */
 /******************************************************************************/
 /* Function:  Initialize a parse trigger translator object                    */
 /******************************************************************************/
 {
   this->setType(type);                 /* set the type (and hashvalue)      */
-  this->variableCount = variableCount; /* set the number of variables also  */
-  OrefSet(this, this->value, value);   /* save the associated value         */
+  this->variableCount = _variableCount; /* set the number of variables also  */
+  OrefSet(this, this->value, _value);   /* save the associated value         */
                                        /* loop through the variable list    */
-  while (variableCount > 0)            /* copying each variable             */
-    OrefSet(this, this->variables[--variableCount], (RexxVariableBase *)variables->pop());
+  while (_variableCount > 0)            /* copying each variable             */
+    OrefSet(this, this->variables[--_variableCount], (RexxVariableBase *)_variables->pop());
 }
 
 
 long RexxTrigger::integerTrigger(
-    RexxObject *value)                 /* value to be converted             */
+    RexxObject *trigger)               /* value to be converted             */
 /******************************************************************************/
 /* Function:  Convert a trigger value to an integer, with appopriate error    */
 /*            reporting.                                                      */
@@ -77,23 +77,23 @@ long RexxTrigger::integerTrigger(
 {
   LONG       result;                   /* converted result                  */
                                        /* convert the value                 */
-  result = REQUEST_LONG(value, NO_LONG);
-  if (result == NO_LONG || result < 0) /* bad value or negative?            */
+  result = REQUEST_LONG(trigger, NO_LONG);
+  if (result == (long)NO_LONG || result < 0) /* bad value or negative?            */
                                        /* report an exception               */
-    report_exception1(Error_Invalid_whole_number_parse, value);
+    report_exception1(Error_Invalid_whole_number_parse, trigger);
   return result;                       /* finished                          */
 }
 
 
 RexxString *RexxTrigger::stringTrigger(
-    RexxObject *value)                 /* value to be converted             */
+    RexxObject *trigger)               /* value to be converted             */
 /******************************************************************************/
 /* Function:  Convert a trigger expression to a String, with appopriate error */
 /*            reporting.                                                      */
 /******************************************************************************/
 {
                                        /* force to string form              */
-  return REQUEST_STRING(value);
+  return REQUEST_STRING(trigger);
 }
 
 
@@ -105,17 +105,17 @@ void RexxTrigger::parse(
 /* Function:  Apply a parsing trigger against a parsing target                */
 /******************************************************************************/
 {
-  RexxObject       *value;             /* evaluated trigger part            */
+  RexxObject       *_value = OREF_NULL;/* evaluated trigger part            */
   RexxString       *stringvalue;       /* new string value                  */
   LONG              integer;           /* target integer value              */
-  INT               i;                 /* loop counter                      */
-  INT               size;              /* size of variables array           */
+  size_t            i;                 /* loop counter                      */
+  size_t            size;              /* size of variables array           */
   RexxVariableBase *variable;          /* current variable processing       */
 
   if (this->value != OREF_NULL) {      /* need a value processed?           */
                                        /* evaluate the expression part      */
-    value = this->value->evaluate(context, stack);
-    context->traceResult(value);       /* trace if necessary                */
+    _value = this->value->evaluate(context, stack);
+    context->traceResult(_value);      /* trace if necessary                */
     stack->pop();                      /* Get rid of the value off the stack*/
   }
   switch (this->getType()) {           /* perform the trigger operations    */
@@ -125,47 +125,47 @@ void RexxTrigger::parse(
       break;
 
     case TRIGGER_PLUS:                 /* positive relative target          */
-      integer = this->integerTrigger(value);  /* get binary version of trigger     */
+      integer = this->integerTrigger(_value);  /* get binary version of trigger     */
       target->forward(integer);        /* move the position                 */
       break;
 
     case TRIGGER_MINUS:                /* negative relative target          */
-      integer = this->integerTrigger(value);  /* get binary version of trigger     */
+      integer = this->integerTrigger(_value);  /* get binary version of trigger     */
       target->backward(integer);       /* move the position                 */
       break;
 
     case TRIGGER_PLUS_LENGTH:          /* positive length                   */
-      integer = this->integerTrigger(value);  /* get binary version of trigger     */
+      integer = this->integerTrigger(_value);  /* get binary version of trigger     */
       target->forwardLength(integer);  /* move the position                 */
       break;
 
     case TRIGGER_MINUS_LENGTH:         /* negative relative target          */
-      integer = this->integerTrigger(value);  /* get binary version of trigger     */
+      integer = this->integerTrigger(_value);  /* get binary version of trigger     */
       target->backwardLength(integer); /* move the position                 */
       break;
 
     case TRIGGER_ABSOLUTE:             /* absolute column position          */
-      integer = this->integerTrigger(value);  /* get binary version of trigger     */
+      integer = this->integerTrigger(_value);  /* get binary version of trigger     */
       target->absolute(integer);       /* move the position                 */
       break;
 
     case TRIGGER_STRING:               /* string search                     */
                                        /* force to string form              */
-      stringvalue = this->stringTrigger(value);
+      stringvalue = this->stringTrigger(_value);
       target->search(stringvalue);     /* perform the search                */
       break;
 
     case TRIGGER_MIXED:                /* string search                     */
                                        /* force to string form              */
-      stringvalue = this->stringTrigger(value);
+      stringvalue = this->stringTrigger(_value);
                                        /* and go search                     */
       target->caselessSearch(stringvalue);
       break;
   }
   if (context->tracingResults()) {     /* are we tracing?                   */
                                        /* loop through the entire list      */
-    for (i = 0, size = this->variableCount - 1; i <= size; i++) {
-      if (i == size)                   /* last variable?                    */
+    for (i = 0, size = this->variableCount; i < size; i++) {
+      if (i + 1 == size)               /* last variable?                    */
         value = target->remainder();   /* extract the remainder             */
       else
         value = target->getWord();     /* just get the next word            */
@@ -182,10 +182,10 @@ void RexxTrigger::parse(
   }
   else {                               /* not tracing, can optimize         */
                                        /* loop through the entire list      */
-    for (i = 0, size = this->variableCount - 1; i <= size; i++) {
+    for (i = 0, size = this->variableCount; i < size; i++) {
       variable = this->variables[i];   /* get the next variable retriever   */
       if (variable != OREF_NULL) {     /* not a place holder dummy?         */
-        if (i == size)                 /* last variable?                    */
+        if (i + 1 == size)             /* last variable?                    */
           value = target->remainder(); /* extract the remainder             */
         else
           value = target->getWord();   /* just get the next word            */
@@ -193,7 +193,7 @@ void RexxTrigger::parse(
         variable->assign(context, stack, value);
       }
       else {                           /* dummy variable, just skip it      */
-        if (i == size)                 /* last variable?                    */
+        if (i + 1 == size)              /* last variable?                    */
           target->skipRemainder();     /* skip the remainder                */
         else
           target->skipWord();          /* just skip the next word           */

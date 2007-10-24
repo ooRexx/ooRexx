@@ -95,11 +95,11 @@ int ValSet(
 /*                          one or more blanks.                      */
 /*********************************************************************/
 {
-  char     c;                          /* current character                 */
+  char     c = '\0';                   /* current character                 */
   size_t   Count;                      /* # set members found               */
   const char *Current;                 /* current location                  */
   int      SpaceFound;                 /* space found yet?                  */
-  size_t   Residue;                    /* if space_found, # set members     */
+  size_t   Residue = 0;                /* if space_found, # set members     */
   int      rc;                         /* return code                       */
 
   rc = FALSE;                          /* default to failure                */

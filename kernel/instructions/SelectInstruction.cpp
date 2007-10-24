@@ -348,12 +348,12 @@ void RexxInstructionSelect::addWhen(
 }
 
 void RexxInstructionSelect::setOtherwise(
-    RexxInstructionOtherWise *otherwise) /* partner OTHERWISE for SELECT      */
+    RexxInstructionOtherWise *_otherwise) /* partner OTHERWISE for SELECT      */
 /******************************************************************************/
 /* Function:  Associate an OTHERSISE instruction with its surrounding SELECT  */
 /******************************************************************************/
 {
                                        /* save the otherwise partner        */
-  OrefSet(this, this->otherwise, otherwise);
+  OrefSet(this, this->otherwise, _otherwise);
 }
 

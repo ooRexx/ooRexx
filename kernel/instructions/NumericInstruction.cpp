@@ -49,7 +49,7 @@
 #include "Token.hpp"
 
 RexxInstructionNumeric::RexxInstructionNumeric(
-    RexxObject *expression,            /* optional expression               */
+    RexxObject *_expression,           /* optional expression               */
     USHORT      type,                  /* type of numeric instruction       */
     UCHAR       flags)                 /* processing flags                  */
 /****************************************************************************/
@@ -57,7 +57,7 @@ RexxInstructionNumeric::RexxInstructionNumeric(
 /****************************************************************************/
 {
                                        /* copy the expression               */
-  OrefSet(this, this->expression, expression);
+  OrefSet(this, this->expression, _expression);
   numeric_type = type;                 /* the type                          */
   i_flags = flags;                     /* and the flag settings             */
 }
@@ -71,8 +71,8 @@ void RexxInstructionNumeric::execute(
 {
   RexxObject  *result;                 /* expression evaluation result      */
   RexxString  *stringResult;           /* converted string                  */
-  LONG         setting;                /* binary form of the setting        */
-  LONG         tempVal;                /* temporary value for errors        */
+  int          setting;                /* binary form of the setting        */
+  int          tempVal;                /* temporary value for errors        */
 
   context->traceInstruction(this);     /* trace if necessary                */
                                        /* process the different types of    */
@@ -90,7 +90,7 @@ void RexxInstructionNumeric::execute(
                                        /* convert the value                 */
         setting = REQUEST_LONG(result, NO_LONG);
                                        /* bad value?                        */
-        if (setting == NO_LONG || setting < 1)
+        if (setting == (int)NO_LONG || setting < 1)
                                        /* report an exception               */
           report_exception1(Error_Invalid_whole_number_digits, result);
                                        /* problem with the fuzz setting?    */
@@ -114,7 +114,7 @@ void RexxInstructionNumeric::execute(
                                        /* convert the value                 */
         setting = REQUEST_LONG(result, NO_LONG);
                                        /* bad value?                        */
-        if (setting == NO_LONG || setting < 0)
+        if (setting == (int)NO_LONG || setting < 0)
                                        /* report an exception               */
           report_exception1(Error_Invalid_whole_number_fuzz, result);
                                        /* problem with the digits setting?  */
