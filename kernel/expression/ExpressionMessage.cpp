@@ -133,7 +133,7 @@ RexxObject *RexxExpressionMessage::evaluate(
     result = stack->send(this->u_name, _super, argcount);
   stack->popn(argcount);               /* remove any arguments              */
   if (this->doubleTilde)               /* double twiddle form?              */
-    result = target;                   /* get the target element            */
+    result = _target;                  /* get the target element            */
   else
     stack->prefixResult(result);       /* replace top element on stack      */
 

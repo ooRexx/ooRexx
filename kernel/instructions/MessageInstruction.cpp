@@ -210,7 +210,7 @@ void RexxInstructionMessage::execute (
     result = stack->send(this->name, _super, argcount);
   stack->popn(argcount);               /* remove any arguments              */
   if (i_flags&message_i_double)        /* double twiddle form?              */
-    result = target;                   /* get the target element            */
+    result = _target;                  /* get the target element            */
   if (result != OREF_NULL) {           /* result returned?                  */
     context->traceResult(result);      /* trace if necessary                */
                                        /* set the RESULT variable to the    */
