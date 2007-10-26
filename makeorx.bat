@@ -55,7 +55,6 @@ REM
 REM If there is not a NO_BUILD_LOG environment variable, redirect output to a
 REM log file.  Otherwise do not redirect.
 if %NO_BUILD_LOG%x == x (set USELOGFILE=1) else (set USELOGFILE=0)
-echo USELOGFILE is: %USELOGFILE%  no build log is: %NO_BUILD_LOG%
 
 REM Check for the 'package' option
 if %2x == x (
