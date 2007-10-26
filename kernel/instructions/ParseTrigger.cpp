@@ -166,18 +166,18 @@ void RexxTrigger::parse(
                                        /* loop through the entire list      */
     for (i = 0, size = this->variableCount; i < size; i++) {
       if (i + 1 == size)               /* last variable?                    */
-        value = target->remainder();   /* extract the remainder             */
+        _value = target->remainder();  /* extract the remainder             */
       else
-        value = target->getWord();     /* just get the next word            */
+        _value = target->getWord();    /* just get the next word            */
       variable = this->variables[i];   /* get the next variable retriever   */
       if (variable != OREF_NULL) {     /* not a place holder dummy?         */
                                        /* set the value                     */
-        variable->assign(context, stack, value);
-        context->traceResult(value);   /* trace if necessary                */
+        variable->assign(context, stack, _value);
+        context->traceResult(_value);   /* trace if necessary                */
       }
       else                             /* dummy variable, just trace it     */
                                        /* trace if necessary                */
-        context->traceIntermediate(value, TRACE_PREFIX_DUMMY);
+        context->traceIntermediate(_value, TRACE_PREFIX_DUMMY);
     }
   }
   else {                               /* not tracing, can optimize         */
@@ -186,11 +186,11 @@ void RexxTrigger::parse(
       variable = this->variables[i];   /* get the next variable retriever   */
       if (variable != OREF_NULL) {     /* not a place holder dummy?         */
         if (i + 1 == size)             /* last variable?                    */
-          value = target->remainder(); /* extract the remainder             */
+          _value = target->remainder(); /* extract the remainder             */
         else
-          value = target->getWord();   /* just get the next word            */
+          _value = target->getWord();   /* just get the next word            */
                                        /* set the value                     */
-        variable->assign(context, stack, value);
+        variable->assign(context, stack, _value);
       }
       else {                           /* dummy variable, just skip it      */
         if (i + 1 == size)              /* last variable?                    */
