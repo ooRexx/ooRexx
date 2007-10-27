@@ -71,8 +71,8 @@ class RexxInstruction : public RexxInternalObject {
                                                 this->offset = off; };
   void        setEnd(size_t line, size_t off) { this->endLine = line;
                                                 this->endOffset = off; };
-  inline      void        setType(char type) {this->instructionInfo.type = type; };
-  inline      char        getType(void)       {return this->instructionInfo.type; };
+  inline      void        setType(size_t type) {this->instructionInfo.type = type; };
+  inline      size_t      getType(void)        {return this->instructionInfo.type; };
   inline      size_t      getLine() { return this->lineNumber; };
 
   size_t            offset;            /* offset of instruction start       */

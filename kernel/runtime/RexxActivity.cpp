@@ -174,7 +174,7 @@ extern RexxArray *ProcessLocalActs;
 extern SMTX rexx_kernel_semaphore;     /* global kernel semaphore           */
 extern SMTX rexx_resource_semaphore;   /* global kernel semaphore           */
 extern SMTX rexx_start_semaphore;      /* startup semaphore                 */
-extern BOOL SysDBCSSetup(PULONG, PUCHAR);
+extern BOOL SysDBCSSetup(PULONG, unsigned char *);
 
                                        /* current active activity           */
 //RexxActivity *CurrentActivity = OREF_NULL;
@@ -567,7 +567,7 @@ void RexxActivity::reportAnException(
 
 void RexxActivity::reportException(
     LONG           errcode,            /* REXX error code                   */
-    PCHAR          string )            /* single string sustitution parm    */
+    char          *string )            /* single string sustitution parm    */
 /******************************************************************************/
 /* Function:  Raise an error using a single REXX character string only        */
 /*            as a substitution parameter                                     */
@@ -620,7 +620,7 @@ void RexxActivity::raiseException(
   RexxString      *errortext;          /* primary error message             */
   RexxString      *message;            /* secondary error message           */
   LONG             primary;            /* primary message code              */
-  CHAR             work[10];           /* temp buffer for formatting        */
+  char             work[10];           /* temp buffer for formatting        */
   LONG             newVal;
 
   if (this->requestingString)          /* recursive entry to error handler? */
@@ -845,7 +845,7 @@ void RexxActivity::reraiseException(
   RexxString     *message;             /* secondary error message           */
   LONG            errornumber;         /* binary error number               */
   LONG            primary;             /* primary message code              */
-  CHAR            work[10];            /* temp buffer for formatting        */
+  char            work[10];            /* temp buffer for formatting        */
   LONG            newVal;
 
   activation = this->currentActivation;/* get the current activation        */
@@ -1729,7 +1729,7 @@ BOOL RexxActivity::sysExitSioTrd(
       return FALSE;                    /* return that request was handled   */
     }
                                        /* Get input string and return it    */
-    *inputstring = (RexxString *)new_string((PCHAR)exit_parm.rxsiotrd_retc.strptr, exit_parm.rxsiotrd_retc.strlength);
+    *inputstring = (RexxString *)new_string((char *)exit_parm.rxsiotrd_retc.strptr, exit_parm.rxsiotrd_retc.strlength);
                                        /* user give us a new buffer?        */
     if (exit_parm.rxsiotrd_retc.strptr != retbuffer)
                                        /* free it                           */
@@ -1770,7 +1770,7 @@ BOOL RexxActivity::sysExitSioDtr(
       return FALSE;                    /* return that request was handled   */
     }
                                        /* Get input string and return it    */
-    *inputstring = (RexxString *)new_string((PCHAR)exit_parm.rxsiodtr_retc.strptr, exit_parm.rxsiodtr_retc.strlength);
+    *inputstring = (RexxString *)new_string((char *)exit_parm.rxsiodtr_retc.strptr, exit_parm.rxsiodtr_retc.strlength);
                                        /* user give us a new buffer?        */
     if (exit_parm.rxsiodtr_retc.strptr != retbuffer)
                                        /* free it                           */
@@ -1841,12 +1841,12 @@ BOOL RexxActivity::sysExitFunc(
       exit_parm.rxfnc_flags.rxffsub = 1;
                                        /* fill in the name parameter        */
     exit_parm.rxfnc_namel = rname->getLength();
-    exit_parm.rxfnc_name = (PUCHAR)rname->getStringData();
+    exit_parm.rxfnc_name = (unsigned char *)rname->getStringData();
 
                                        /* Get current active queue name     */
     stdqueue = (RexxString *)SysGetCurrentQueue();
                                        /* fill in the name                  */
-    exit_parm.rxfnc_que = (PUCHAR)stdqueue->getStringData();
+    exit_parm.rxfnc_que = (unsigned char *)stdqueue->getStringData();
                                        /* and the length                    */
     exit_parm.rxfnc_quel = stdqueue->getLength();
                                        /* Build arg array of RXSTRINGs      */
@@ -1879,12 +1879,12 @@ BOOL RexxActivity::sysExitFunc(
           temp = (RexxString *)REQUEST_STRING(temp);
                                          /* point to the string               */
           argrxarray[argindex].strlength = temp->getLength();
-          argrxarray[argindex].strptr = (PCHAR)temp->getStringData();
+          argrxarray[argindex].strptr = (char *)temp->getStringData();
         }
         else {
                                          /* empty argument                    */
           argrxarray[argindex].strlength = 0;
-          argrxarray[argindex].strptr = (PCHAR)NULL;
+          argrxarray[argindex].strptr = (char *)NULL;
         }
       }
     }
@@ -1938,7 +1938,7 @@ BOOL RexxActivity::sysExitFunc(
           report_exception1(Error_Function_no_data_function,rname);
       } else
                                        /* Get input string and return it    */
-        *funcresult = new_string((PCHAR)exit_parm.rxfnc_retc.strptr, exit_parm.rxfnc_retc.strlength);
+        *funcresult = new_string((char *)exit_parm.rxfnc_retc.strptr, exit_parm.rxfnc_retc.strlength);
                                        /* user give us a new buffer?        */
       if (exit_parm.rxfnc_retc.strptr != retbuffer)
                                        /* free it                           */
@@ -1995,7 +1995,7 @@ BOOL RexxActivity::sysExitCmd(
     exit_parm.rxcmd_flags.rxfcerr = 0;
                                        /* fill in the environment parm      */
     exit_parm.rxcmd_addressl = environment->getLength();
-    exit_parm.rxcmd_address = (PUCHAR)environment->getStringData();
+    exit_parm.rxcmd_address = (unsigned char *)environment->getStringData();
                                        /* make cmdaname into RXSTRING form  */
     MAKERXSTRING(exit_parm.rxcmd_command, cmdname->getStringData(), cmdname->getLength());
 
@@ -2022,7 +2022,7 @@ BOOL RexxActivity::sysExitCmd(
       return FALSE;                    /* return that request was handled   */
     }
                                        /* Get input string and return it    */
-    *cmdresult = new_string((PCHAR)exit_parm.rxcmd_retc.strptr, exit_parm.rxcmd_retc.strlength);
+    *cmdresult = new_string((char *)exit_parm.rxcmd_retc.strptr, exit_parm.rxcmd_retc.strlength);
                                        /* user give us a new buffer?        */
     if (exit_parm.rxcmd_retc.strptr != retbuffer)
                                        /* free it                           */
@@ -2067,7 +2067,7 @@ BOOL  RexxActivity::sysExitMsqPll(
                                        /* return NIL to note empty stack    */
       *inputstring = (RexxString *)TheNilObject;
     else                               /* return resulting object           */
-      *inputstring = (RexxString *)new_string((PCHAR)exit_parm.rxmsq_retc.strptr, exit_parm.rxmsq_retc.strlength);
+      *inputstring = (RexxString *)new_string((char *)exit_parm.rxmsq_retc.strptr, exit_parm.rxmsq_retc.strlength);
                                        /* user give us a new buffer?        */
     if (exit_parm.rxmsq_retc.strptr != retbuffer)
                                        /* free it                           */
@@ -2156,7 +2156,7 @@ BOOL  RexxActivity::sysExitMsqNam(
                                        /* call the handler                  */
     if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQNAM, (PVOID)&exit_parm, FALSE))
       return TRUE;                     /* this wasn't handled               */
-    *inputstring = (RexxString *)new_string((PCHAR)exit_parm.rxmsq_name.strptr, exit_parm.rxmsq_name.strlength);
+    *inputstring = (RexxString *)new_string((char *)exit_parm.rxmsq_name.strptr, exit_parm.rxmsq_name.strlength);
                                        /* user give us a new buffer?        */
     if (exit_parm.rxmsq_name.strptr != retbuffer)
                                        /* free it                           */
@@ -3464,7 +3464,7 @@ void process_message_arguments(
   OREF     tempOREF;                   /* temp argument object reference    */
   LONG     tempLong;                   /* temp converted long               */
   ULONG    tempULong;                  /* temp converted long               */
-  CHAR     tempChar;                   /* temp character value              */
+  char     tempChar;                   /* temp character value              */
   double   tempDouble;                 /* temp double value                 */
   va_list *subArguments;               /* indirect argument descriptor      */
   const char *subInterface;            /* indirect interface definition     */
@@ -3484,7 +3484,7 @@ void process_message_arguments(
       case 'b':                        /* BYTE                              */
       case 'c':                        /* CHARACTER                         */
                                        /* get the character                 */
-        tempChar = (CHAR) va_arg(*arguments, INT);
+        tempChar = (char) va_arg(*arguments, INT);
                                        /* create a string object            */
         argument_list->addLast(new_string(&tempChar, 1));
         break;
@@ -3591,7 +3591,7 @@ void process_message_arguments(
                                        /* get the pointer                   */
         tempPointer = va_arg(*arguments, void *);
                                        /* create a string object            */
-        argument_list->addLast(new_cstring((PCHAR)tempPointer));
+        argument_list->addLast(new_cstring((char *)tempPointer));
         break;
     }
   }
@@ -3600,7 +3600,7 @@ void process_message_arguments(
 void process_message_result(
   RexxObject *value,                   /* returned value                    */
   PVOID    return_pointer,             /* pointer to return value location  */
-  CHAR     interfacedefn )             /* interface definition              */
+  char     interfacedefn )             /* interface definition              */
 /******************************************************************************/
 /* Function:  Convert an OREF return value into the requested message return  */
 /*            type.                                                           */
@@ -3616,7 +3616,7 @@ void process_message_result(
         break;
       case 'c':                        /* CHARACTER                         */
                                        /* get the first character           */
-        (*((CHAR *)return_pointer)) = ((RexxString *)value)->getChar(0);
+        (*((char *)return_pointer)) = ((RexxString *)value)->getChar(0);
         break;
 
       case 'i':                        /* INT                               */
@@ -3780,7 +3780,7 @@ LONG VLAREXXENTRY RexxSendMessage (
   RexxObject *result;                  /* returned result object            */
   RexxArray  *argument_array;          /* array of arguments                */
   RexxList   *argument_list;           /* temp list of arguments            */
-  CHAR returnType;                     /* type of return value              */
+  char returnType;                     /* type of return value              */
   LONG rc;                             /* message return code               */
   va_list arguments;                   /* message argument list             */
   SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */

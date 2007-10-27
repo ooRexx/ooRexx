@@ -246,7 +246,7 @@ int RexxString::isSymbol()
 
 RexxObject *DataType(
      RexxString *String,               /* string value                      */
-     UCHAR       Option )              /* requested option                  */
+     unsigned char Option )            /* requested option                  */
 /*********************************************************************/
 /* Function:  Perform primitive datatype validation                  */
 /*********************************************************************/

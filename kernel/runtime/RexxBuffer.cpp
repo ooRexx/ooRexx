@@ -95,7 +95,7 @@ void *RexxBuffer::operator new(size_t size,
 
 #define this ((RexxBuffer *)self)
 
-native0 (PCHAR, BUFFER_ADDRESS)
+native0 (char *, BUFFER_ADDRESS)
 /******************************************************************************/
 /* Function:  External interface to the object method                         */
 /******************************************************************************/

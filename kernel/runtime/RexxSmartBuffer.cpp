@@ -104,7 +104,7 @@ size_t RexxSmartBuffer::copyData(
                                        /* make itself bigger, and assign    */
                                        /* new buffer                        */
     OrefSet(this, this->buffer, this->buffer->expand(length));
-  this->buffer->copyData(this->current, (PCHAR)start, length);
+  this->buffer->copyData(this->current, (char *)start, length);
 
   dataLoc = this->current;             /* save start location of copied data*/
                                        /* bump pointer to end of copied     */

@@ -56,11 +56,11 @@ class RexxExpressionStack {
   void live();
   void liveGeneral();
   void flatten(RexxEnvelope *);
-  void         expandArgs(int, int, int, PCHAR);
+  void         expandArgs(int, int, int, char *);
   RexxString * requiredStringArg(int);
   RexxString * optionalStringArg(int);
-  RexxInteger *requiredIntegerArg(int, int, PCHAR);
-  RexxInteger *optionalIntegerArg(int, int, PCHAR);
+  RexxInteger *requiredIntegerArg(int, int, char *);
+  RexxInteger *optionalIntegerArg(int, int, char *);
   void         migrate(RexxActivity *);
 
   inline void setFrame(RexxObject **frames, size_t items) { stack = frames; size = items; top = stack; *top = OREF_NULL; }

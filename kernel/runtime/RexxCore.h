@@ -291,7 +291,7 @@ class ACTIVATION_SETTINGS {            /* activation "global" settings      */
       BOOL exmode;                         /* DBCS string processing flag       */
       BOOL DBCS_codepage;                  /* DBCS code page possible           */
       ULONG codepage;                      /* current activity codepage         */
-      PUCHAR DBCS_table;                   /* current DBCS vector table         */
+      unsigned char *DBCS_table;           /* current DBCS vector table         */
 };                                     /* global activation settings        */
                                        /* builtin function prototype        */
 typedef RexxObject *builtin_func(RexxActivation *, INT, RexxExpressionStack *);
@@ -305,13 +305,13 @@ typedef struct {
 
 typedef struct {
   USHORT methnum;                      /* kernel method number            */
-  UCHAR  arguments;
-  UCHAR  flags;                        /* flag information                */
+  uint8_t arguments;
+  uint8_t flags;                       /* flag information                */
 } METHODINFO;
 
 typedef struct {
-  UCHAR  type;                         /* name of the instruction           */
-  UCHAR  flags;                        /* general flag area                 */
+  uint8_t type;                        /* name of the instruction           */
+  uint8_t flags;                       /* general flag area                 */
   USHORT general;                      /* general reusable short value      */
 } INSTRUCTIONINFO;
 
@@ -812,13 +812,13 @@ RexxActivity *activity_find (void);
 /* MHES
 const int  NO_INT  = 0x80000000;
 const long NO_LONG = 0x80000000;
-const PCHAR NO_CSTRING = NULL;
+const char *NO_CSTRING = NULL;
 #define NO_RSTRING       NULL
 */
 /*
 extern const int  NO_INT;
 extern const long NO_LONG;
-extern const PCHAR NO_CSTRING;
+extern const char *NO_CSTRING;
 */
 /* Also in RexxNativeAPI.h */
 #ifndef NO_INT

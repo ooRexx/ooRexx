@@ -114,7 +114,7 @@ RexxActivity *activity_getActivity(BOOL *nested);
 extern BOOL RexxStartedByApplication;
 
 extern "C" {
-APIRET REXXENTRY RexxTranslateProgram( PSZ, PSZ, PRXSYSEXIT);
+APIRET REXXENTRY RexxTranslateProgram(char *, char *, PRXSYSEXIT);
 char *REXXENTRY RexxGetVersionInformation();
 }
 
@@ -637,9 +637,9 @@ APIRET APIENTRY RexxStart(
   RexxStartArguments.runtype = EXECUTE;
   RexxStartArguments.argcount = argcount;
   RexxStartArguments.arglist = arglist;
-  RexxStartArguments.programname = (PSZ) programname;
+  RexxStartArguments.programname = (char *) programname;
   RexxStartArguments.instore = instore;
-  RexxStartArguments.envname = (PSZ) envname;
+  RexxStartArguments.envname = (char *) envname;
   RexxStartArguments.calltype = (SHORT)calltype;
   RexxStartArguments.exits = exits;
   RexxStartArguments.retcode = retcode;
@@ -1070,9 +1070,9 @@ APIRET REXXENTRY RexxLoadMethod(const char *dirname, PRXSTRING scriptData, RexxO
 /*                                                                            */
 /******************************************************************************/
 APIRET REXXENTRY RexxTranslateProgram(
-   PSZ   inFile,                       /* input source program              */
-   PSZ   outFile,                      /* output file name                  */
-   PRXSYSEXIT   exits)                     /* system exits                  */
+   char     *inFile,                   /* input source program              */
+   char     *outFile,                  /* output file name                  */
+   PRXSYSEXIT   exits)                 /* system exits                      */
 {
   LONG     rc;                         /* RexxStart return code             */
   RexxStartInfo RexxStartArguments;    /* entry argument information        */
@@ -1283,7 +1283,7 @@ void translateSource(
 {
   RexxString * fullName;               /* fully resolved input name         */
   RexxMethod * method;                 /* created method                    */
-  CHAR         name[CCHMAXPATH + 2];   /* temporary name buffer             */
+  char         name[CCHMAXPATH + 2];   /* temporary name buffer             */
   BOOL            fileFound;
   RexxActivity*activity;               /* the current activity              */
 
@@ -1324,7 +1324,7 @@ RexxMethod * process_instore(
                                        /* see if this exists                */
     if (!RexxQueryMacro(name->getStringData(), (PUSHORT)&temp)) {
                                        /* get image of function             */
-      RexxExecuteMacroFunction(const_cast<PSZ>(name->getStringData()), &buffer);
+      RexxExecuteMacroFunction(const_cast<char *>(name->getStringData()), &buffer);
                                        /* go convert into a method          */
       method = SysRestoreProgramBuffer(&buffer, name);
 

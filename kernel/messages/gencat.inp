@@ -1029,7 +1029,7 @@ $ Error_Incorrect_method_list
 443 Method argument &1 must be one of &2; found "&3"
 
 $ Error_Incorrect_method_option
-444 Method option must be one of &1; found "&2"
+444 Method option must be one of "&1"; found "&2"
 
 $ Error_Incorrect_method_string
 445 Method argument &1 must have a string value
@@ -1406,9 +1406,6 @@ $ Error_Creating_event_direct_parm
 $ Error_Accessing_aete
 571 Error accessing event information in AETE
 
-$ Error_Translation_duplicate_attribute
-571 Duplicate ::ATTRIBUTE directive instruction
-
 $ Error_Launching_app
 572 Error launching application "&1"
 
@@ -1464,7 +1461,7 @@ $ Error_OLE_Error
 589 OLE error
 
 $ Error_Unknown_OLE_Error
-590 An unknown OLE error occured (HRESULT=&1).
+590 An unknown OLE error occurred (HRESULT=&1).
 
 $ Error_Variant2Rexx
 591 Cannot convert OLE VARIANT to REXX object: The conversion of the VARIANT type &1 into a REXX object failed.
@@ -1695,46 +1692,52 @@ $ Error_Invalid_argument_whole
 674 Argument &1 must be a whole number; found "&2"
 
 $ Error_Invalid_argument_nonnegative
-674 Argument &1 must be zero or a positive whole number; found "&2"
+675 Argument &1 must be zero or a positive whole number; found "&2"
 
 $ Error_Invalid_argument_positive
-675 Argument &1 must be a positive whole number; found "&2"
+676 Argument &1 must be a positive whole number; found "&2"
 
 $ Error_Invalid_argument_toobig
-676 Argument &1 must not exceed &2; found "&3"
+677 Argument &1 must not exceed &2; found "&3"
 
 $ Error_Invalid_argument_range
-677 Argument &1 must be in the range &2-&3; found "&4"
+678 Argument &1 must be in the range &2-&3; found "&4"
 
 $ Error_Invalid_argument_null
-678 Argument &1 must not be a null string
+679 Argument &1 must not be a null string
 
 $ Error_Invalid_argument_string
-679 Argument &1 must have a string value
+680 Argument &1 must have a string value
 
 $ Error_Invalid_argument_pad
-680 Argument &1 is an incorrect pad or character argument; found "&2"
+681 Argument &1 is an incorrect pad or character argument; found "&2"
 
 $ Error_Invalid_argument_length
-681 Argument &1 is an incorrect length argument; found "&2"
+682 Argument &1 is an incorrect length argument; found "&2"
 
 $ Error_Invalid_argument_position
-682 Argument &1 is an incorrect position argument; found "&2"
+683 Argument &1 is an incorrect position argument; found "&2"
 
 $ Error_Invalid_argument_noarray
-683 Argument &1 must have a single-dimensional array value
+684 Argument &1 must have a single-dimensional array value
 
 $ Error_Invalid_argument_noclass
-684 Argument &1 must be of the &2 class
+685 Argument &1 must be of the &2 class
 
 $ Error_Invalid_argument_argType
-685 Argument &1 could not be converted to type &2
+686 Argument &1 could not be converted to type &2
 
 $ Error_Invalid_argument_list
-686 Argument &1 must be one of &2; found "&3"
+687 Argument &1 must be one of &2; found "&3"
 
 $ Error_Invalid_argument_general
-687 Argument &1 &2
+688 Argument &1 &2
+
+$ Error_Translation_duplicate_attribute
+689 Duplicate ::ATTRIBUTE directive instruction
+
+$ Error_Invalid_argument_format
+690 Argument &1 is not in a valid format; found "&2"
 
 
 $ * -------------------------------------------------------------------------- */

@@ -266,7 +266,7 @@ double NO_DOUBLE;                      /* non-exsistent double value        */
 /* MHES
 int  NO_INT  = 0x80000000;
 long NO_LONG = 0x80000000;
-PCHAR NO_CSTRING = NULL;
+char *NO_CSTRING = NULL;
 */
 
 /* Array for valid whole number at various digits settings */

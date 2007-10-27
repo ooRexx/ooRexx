@@ -55,7 +55,7 @@ extern HINSTANCE horyxkDll;            /* Handle to oryxk dll               */
 RexxString *  SysMessageText(
     INT code )                         /* message code to extract           */
 {
-CHAR           DataArea[256];          /* buf addr to return message        */
+char           DataArea[256];          /* buf addr to return message        */
 
                                        /* loop through looking for the      */
                                        /* error code                        */

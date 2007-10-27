@@ -63,30 +63,30 @@
 #define INCL_REXXSAA
 #include "rexx.h"
 
-PCHAR   pcharTemp;
+char   *pcharTemp;
 
 int main()
 {
     RXSTRING arg[4];                        /* argument string for Rexx  */
     RXSTRING rexxretval;                    /* return value from Rexx    */
     RXSTRING instore[2];                    /* in storage parms          */
-    CHAR     *pszTemp;
+    char     *pszTemp;
     PRXSTART FuncAddress;
     PRXWAITFORTERMINATION  WaitForTermFuncPtr;
-    CHAR    *ret_val = NULL;
-    PVOID    pLibHandle = NULL;             /* Library handle             */
+    char    *ret_val = NULL;
+    void    *pLibHandle = NULL;             /* Library handle             */
     APIRET   rc = 0;                        /* return code from Rexx      */
     LONG     rexxrc = 0;                    /* return code from function  */
     char    *pszLibraryName = "librexx.so"; /* define the library name    */
 
-    CHAR    val;
-    CHAR    *str1 = "Arg number one";                   /* text to swap   */
-    CHAR    *str2 = "Arg number two";                   /* text to swap   */
-    CHAR    *str3 = "Arg number three";                 /* text to swap   */
-    CHAR    *str4 = "Arg number four";                  /* text to swap   */
-    CHAR    *prg1 = "say Arg(1)";                       /* text to swap   */
+    char    val;
+    char    *str1 = "Arg number one";                   /* text to swap   */
+    char    *str2 = "Arg number two";                   /* text to swap   */
+    char    *str3 = "Arg number three";                 /* text to swap   */
+    char    *str4 = "Arg number four";                  /* text to swap   */
+    char    *prg1 = "say Arg(1)";                       /* text to swap   */
 
-    CHAR    *sync_tst = "call time 'Reset';" \
+    char    *sync_tst = "call time 'Reset';" \
                         "object1 = .example~new;" \
                         "object2 = .example~new;" \
                         "object3 = .example~new;" \

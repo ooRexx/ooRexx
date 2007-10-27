@@ -125,7 +125,7 @@ void *RexxListTable::operator new(size_t size, size_t initialSize, size_t compan
   newList  = (RexxList *)new_object(bytes + companionSize);
   ClearObject(newList);                /* clear the entire lot              */
                                        /* address the list table            */
-  newTable = (RexxListTable *)(((PCHAR)newList) + companionSize);
+  newTable = (RexxListTable *)(((char *)newList) + companionSize);
                                        /* compute total size of the list    */
                                        /* table (allowing for possible      */
                                        /* over allocation by the memory     */

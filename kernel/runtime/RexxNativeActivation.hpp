@@ -85,7 +85,7 @@ class RexxNativeActivation : public RexxActivationBase {
 
   inline void   termination() { this->guardOff();}
   inline RexxActivation *sender() {return (RexxActivation *)this->activity->sender((RexxActivationBase *)this);}
-  inline CHAR        getVpavailable()   {return this->vpavailable;}
+  inline char        getVpavailable()   {return this->vpavailable;}
   inline RexxMethod *getMethod()        {return this->method;}
   inline RexxString *getMsgname()       {return this->msgname;}
   inline LONG        nextVariable()     {return this->nextvariable;}
@@ -116,8 +116,8 @@ class RexxNativeActivation : public RexxActivationBase {
   RexxCompoundElement *compoundelement;/* current compound variable value   */
   RexxStem *      nextstem;            /* our working stem variable         */
   SHORT           argcount;            /* size of the argument list         */
-  CHAR            vpavailable;         /* Variable pool access flag         */
-  CHAR            object_scope;        /* reserve/release state of variables*/
+  char            vpavailable;         /* Variable pool access flag         */
+  char            object_scope;        /* reserve/release state of variables*/
   jmp_buf         conditionjump;       /* condition trap recovery location  */
   jmp_buf        *syntaxHandler;       /* syntax/memory trapper             */
 };

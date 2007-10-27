@@ -295,7 +295,7 @@ RexxString *RexxCompoundTail::createCompoundName(RexxString *stem)
 {
   long len1;                           /* length of stem                    */
   RexxString *result;                  /* result string                     */
-  PCHAR data;                          /* character pointer                 */
+  char *data;                          /* character pointer                 */
 
   len1 = stem->getLength();                 /* get the stem length               */
                                        /* create a new string               */

@@ -125,7 +125,7 @@ static LONG   queue_allocate(PSZ, PULONG);
 static INT    create_queue_sem(ULONG);
 static VOID delete_queue_sem(ULONG);
 static VOID   release_queue_item(ULONG, INT, ULONG);
-static LONG   allocate_queue_entry(ULONG,PULONG,PCHAR);
+static LONG   allocate_queue_entry(ULONG, PULONG, char *);
 VOID GetDateTime(PDATETIME);
 ULONG CreateMutexSem(INT *);
 ULONG CreateEventSem(INT *);
@@ -137,7 +137,7 @@ VOID ResetEventSem(INT);
 ULONG WaitEventSem(INT,INT);
 VOID ReleaseMutexSem(INT);
 
-CHAR rxqueue_name_mask[]="S%02dQ%010u";
+char rxqueue_name_mask[]="S%02dQ%010u";
 
 /*********************************************************************/
 /*                                                                   */
@@ -593,7 +593,7 @@ ULONG        next;
 static LONG   alloc_queue_entry(
   ULONG       size,                   /* size of queue entry.        */
   PULONG      element,                /* Address of queue element    */
-  PCHAR       data)                   /* actual queue data           */
+  char       *data)                   /* actual queue data           */
 {
    LONG     rc = RXQUEUE_OK;          /* Function result.            */
    ULONG    entry;                    /* temp variable               */
@@ -1236,15 +1236,15 @@ ULONG  APIENTRY RexxPullQueue(
                  QIDATA(item)->size);
                                        /* set the proper length      */
         data_buf->strlength = QIDATA(item)->size;
-        memcpy((PUCHAR)dt,             /* set the datetime info      */
-               (PUCHAR)&(QIDATA(item)->addtime),
+        memcpy((unsigned char *)dt,    /* set the datetime info      */
+               (unsigned char *)&(QIDATA(item)->addtime),
                sizeof(DATETIME));
         release_queue_item(item, sessionflag, current);      /* get rid if the queue item  */
       }
       else {                           /* give up memory directly    */
         if (QIDATA(item)->size) {      /* if not a null string       */
                                        /* allocate a new block       */
-          if (!(data_buf->strptr = (PCHAR)malloc(QIDATA(item)->size))) {
+          if (!(data_buf->strptr = (char *)malloc(QIDATA(item)->size))) {
 //          ExitMustComplete();        /* end of critical section    */
             APICLEANUP(QUEUECHAIN);    /*   clean up everything      */
             return (RXQUEUE_MEMFAIL);  /* error if we couldn't get it*/
@@ -1255,12 +1255,12 @@ ULONG  APIENTRY RexxPullQueue(
                    QIDATA(item)->size);
         }
         else                           /* set a non-null pointer     */
-          data_buf->strptr=(PCHAR)1;
+          data_buf->strptr=(char *)1;
                                        /* set the length             */
         data_buf->strlength =QIDATA(item)->size;
 
-        memcpy((PUCHAR)dt,             /* set the datetime info      */
-               (PUCHAR)&(QIDATA(item)->addtime),
+        memcpy((unsigned char *)dt,    /* set the datetime info      */
+               (unsigned char *)&(QIDATA(item)->addtime),
                sizeof(DATETIME));
         release_queue_item(item, sessionflag, current);      /* free up the queue item     */
       }

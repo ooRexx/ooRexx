@@ -104,7 +104,7 @@ extern int  SecureFlag = 0;
 extern int  thread_counter = 0;
 
 
-APIRET APIENTRY RexxExecuteMacroFunction ( PSZ, PRXSTRING );
+APIRET APIENTRY RexxExecuteMacroFunction ( char *, PRXSTRING );
 
 #ifdef TIMESLICE                       /* System Yielding function prototype*/
 APIRET REXXENTRY RexxSetYield(PID procid, TID threadid);
@@ -121,8 +121,8 @@ extern ActivityTable * ProcessLocalActs;
 extern BOOL RexxStartedByApplication;
 
 extern "C" {
-APIRET REXXENTRY RexxTranslateProgram( PSZ, PSZ);
-//LONG APIENTRY RexxMain(LONG, PRXSTRING, PSZ, PRXSTRING, PSZ, LONG, PRXSYSEXIT, PSHORT, PRXSTRING);
+APIRET REXXENTRY RexxTranslateProgram( char *, char *);
+//LONG APIENTRY RexxMain(LONG, PRXSTRING, char *, PRXSTRING, char *, LONG, PRXSYSEXIT, PSHORT, PRXSTRING);
 }
 
 typedef struct
@@ -130,14 +130,14 @@ typedef struct
 RexxStartInfo {
   LONG       argcount;                 /* Number of args in arglist         */
   PRXSTRING  arglist;                  /* Array of args                     */
-  PSZ        programname;              /* REXX program to run               */
+  char      *programname;              /* REXX program to run               */
   PRXSTRING  instore;                  /* Instore array                     */
-  PSZ        envname;                  /* Initial cmd environment           */
+  char      *envname;                  /* Initial cmd environment           */
   LONG       calltype;                 /* How the program is called         */
   PRXSYSEXIT exits;                    /* Array of system exit names        */
   PSHORT     retcode;                  /* Integer form of result            */
   PRXSTRING  result;                   /* Result returned from program      */
-  PSZ        outputName;               /* compilation output file           */
+  char      *outputName;               /* compilation output file           */
   BOOL       translating;              /* performing a translation only     */
 } RexxStartInfo;
 
@@ -200,9 +200,9 @@ void SearchPrecision(
 LONG APIENTRY RexxStart(
   LONG argcount,                       /* Number of args in arglist         */
   PRXSTRING arglist,                   /* Array of args                     */
-  PSZ programname,                     /* REXX program to run               */
+  char *programname,                   /* REXX program to run               */
   PRXSTRING instore,                   /* Instore array                     */
-  PSZ envname,                         /* Initial cmd environment           */
+  char *envname,                       /* Initial cmd environment           */
   LONG calltype,                       /* How the program is called         */
   PRXSYSEXIT exits,                    /* Array of system exit names        */
   PSHORT retcode,                      /* Integer form of result            */
@@ -274,9 +274,9 @@ LONG APIENTRY RexxStart(
 LONG APIENTRY ApiRexxStart(
   LONG argcount,                       /* Number of args in arglist         */
   PRXSTRING arglist,                   /* Array of args                     */
-  PSZ programname,                     /* REXX program to run               */
+  char *programname,                   /* REXX program to run               */
   PRXSTRING instore,                   /* Instore array                     */
-  PSZ envname,                         /* Initial cmd environment           */
+  char *envname,                       /* Initial cmd environment           */
   LONG calltype,                       /* How the program is called         */
   PRXSYSEXIT exits,                    /* Array of system exit names        */
   PSHORT retcode,                      /* Integer form of result            */
@@ -331,8 +331,8 @@ LONG APIENTRY ApiRexxStart(
 /*                                                                            */
 /******************************************************************************/
 APIRET REXXENTRY RexxTranslateProgram(
-   PSZ   inFile,                       /* input source program              */
-   PSZ   outFile )                     /* output file name                  */
+   char *inFile,                       /* input source program              */
+   char *outFile )                     /* output file name                  */
 {
   LONG     rc;                         /* RexxStart return code             */
   RexxStartInfo RexxStartArguments;    /* entry argument information        */
@@ -468,7 +468,7 @@ VOID REXXENTRY RexxBreakCleanup(VOID){}
 void translateSource(
    RexxString           * inputName,   /* input program name                */
    RexxNativeActivation * newNativeAct,/* base activation                   */
-   PSZ                    outputName ) /* output file name                  */
+   char                 * outputName ) /* output file name                  */
 /******************************************************************************/
 /* Function:  Process instorage execution arguments                           */
 /******************************************************************************/
@@ -823,7 +823,7 @@ char *APIENTRY RexxGetVersionInformation(void)
 {
   void *    pVersionString = NULL;
 
-  pVersionString = (PCHAR) malloc(BUFFERLEN_OS);
+  pVersionString = (char *) malloc(BUFFERLEN_OS);
   if (pVersionString != NULL) {
     sprintf((char *)pVersionString ,"Open Object Rexx Interpreter Version %s for %s\nBuild date: %s\n", PACKAGE_VERSION, ORX_SYS_STR, __DATE__);
     strcat((char *)pVersionString , COPYRIGHT);

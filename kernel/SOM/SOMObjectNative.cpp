@@ -141,7 +141,7 @@ char *type_char (
     case tk_boolean:                   /* BOOLEAN                           */
       *cp++ = 'b';
       break;
-    case tk_char:                      /* CHAR                              */
+    case tk_char:                      /* char                              */
       *cp++ = 'c';
       break;
     case tk_octet:                     /* BYTE                              */
@@ -476,8 +476,8 @@ void  RexxSomSendV (SOMObject *somSelf, SOMClass *classObj, somId methodId, ...)
 
 
 LONG REXXENTRY RexxCallProgram (
-  PCHAR name,                          /* program name                      */
-  PCHAR interface,                     /* interface definition string       */
+  char *name,                          /* program name                      */
+  char *interface,                     /* interface definition string       */
   PVOID result,                        /* returned argument                 */
   ... )                                /* variable number of arguments      */
 /******************************************************************************/
@@ -486,7 +486,7 @@ LONG REXXENTRY RexxCallProgram (
 {
   va_list    arguments;                /* variable argument list            */
   LONG       rc;                       /* REXX return code                  */
-  CHAR       temp_interface[10];       /* temporary interface list          */
+  char       temp_interface[10];       /* temporary interface list          */
 
 
   va_start(arguments, result);         /* get the start of the valist       */
@@ -502,8 +502,8 @@ LONG REXXENTRY RexxCallProgram (
 }
 
 LONG REXXENTRY RexxCallString (
-  PCHAR program,                       /* program string                    */
-  PCHAR interface,                     /* interface definition string       */
+  char  *program,                      /* program string                    */
+  char  *interface,                    /* interface definition string       */
   PVOID result,                        /* returned argument                 */
   ... )                                /* variable number of arguments      */
 /******************************************************************************/
@@ -512,7 +512,7 @@ LONG REXXENTRY RexxCallString (
 {
   va_list    arguments;                /* variable argument list            */
   LONG       rc;                       /* REXX return code                  */
-  CHAR       temp_interface[10];       /* temporary interface list          */
+  char       temp_interface[10];       /* temporary interface list          */
 
 
   va_start(arguments, result);         /* get the start of the valist       */

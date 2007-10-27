@@ -72,7 +72,7 @@
    inline void        decrementTop() { top = (top == 0) ? u_size - 1 : top - 1; }
    inline void        incrementTop() { if (++top >= u_size) top = 0; }
                                                                                                                                                           /* (other->size + 1) was wrong !? */
-   inline void        copyEntries(RexxStack *other) { memcpy((PCHAR)this->stack, other->stack, other->u_size * sizeof(RexxObject *)); this->top = other->top; }
+   inline void        copyEntries(RexxStack *other) { memcpy((char *)this->stack, other->stack, other->u_size * sizeof(RexxObject *)); this->top = other->top; }
 
    size_t   top;                       /* top position on the stack         */
    RexxObject *stack[1];               /* stack entries                     */

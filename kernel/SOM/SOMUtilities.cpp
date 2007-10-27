@@ -68,7 +68,7 @@ RexxString *currentMessage = OREF_NULL;
 
 void bad_argtype(
   LONG   argument_position,            /* argument position location        */
-  PCHAR  argument_name )               /* ascii-z argument name             */
+  char  *argument_name )               /* ascii-z argument name             */
 /******************************************************************************/
 /* Function:  raise a bad argument error                                      */
 /******************************************************************************/
@@ -78,7 +78,7 @@ void bad_argtype(
 
 void unsupported_type(
   LONG   argument_position,            /* argument position location        */
-  PCHAR  argument_name )               /* ascii-z argument name             */
+  char  *argument_name )               /* ascii-z argument name             */
 /******************************************************************************/
 /* Function:  raise an unsupported type message                               */
 /******************************************************************************/
@@ -358,7 +358,7 @@ void *getReturnArea (TypeCode tc, Environment *evp)
 extern "C" {
  BOOL  convertInputString(
   RexxObject         *argument,        /* argument to convert               */
-  PCHAR              *outputArgument,  /* converted argument                */
+  char              **outputArgument,  /* converted argument                */
   RexxTable          *saveTable,
   Environment        *ev );            /* pointer to the environment        */
 
@@ -744,7 +744,7 @@ BOOL  convertInputBoolean(
 
 BOOL  convertInputChar(
   RexxObject         *argument,        /* argument to convert               */
-  CHAR               *outputArgument ) /* converted argument                */
+  char               *outputArgument ) /* converted argument                */
 /******************************************************************************/
 /* Function:  Convert a character input argument type                         */
 /******************************************************************************/
@@ -758,7 +758,7 @@ BOOL  convertInputChar(
                                        /* if resulting string length is one */
   if (tempString->length  == 1) {
                                        /*  yes, return the converted arg    */
-    *outputArgument = (CHAR)*tempString->stringData;
+    *outputArgument = (char)*tempString->stringData;
     return TRUE;                       /* got a good conversion             */
   }
   return FALSE;                        /* bad conversion                    */
@@ -976,10 +976,10 @@ BOOL  convertInputPointer(
   pointerType = *(TypeCode *)parm._value;
                                        /* Get TCKind value                  */
   kind = TypeCode_kind(pointerType, ev);
-                                       /* looking for char * or UCHAR *     */
+                                       /* looking for char * or unsigned char */
   if (tk_char == kind || tk_octet == kind ) {
                                        /* Yes, treat as a string.           */
-    return convertInputString(argument, (PCHAR *)outputArgument, saveTable, ev);
+    return convertInputString(argument, (char **)outputArgument, saveTable, ev);
   }
                                        /* convert OREXX object to pointer   */
                                        /*  and add it to the SOM ArgLIst    */
@@ -1029,7 +1029,7 @@ BOOL  convertInputStructure(
 
 BOOL  convertInputString(
   RexxObject         *argument,        /* argument to convert               */
-  PCHAR              *outputArgument,  /* converted argument                */
+  char              **outputArgument,  /* converted argument                */
   RexxTable          *saveTable,
   Environment        *ev )             /* pointer to the environment        */
 /******************************************************************************/
@@ -1046,7 +1046,7 @@ BOOL  convertInputString(
   else if ((dlfObject = getDLFBasicTypeObj(argument)) && dlfObject->somIsA(_DLFString))
                                        /* Yes, get address, for string      */
                                        /*  Allows updating of String directl*/
-    *outputArgument = (PCHAR)*(((DLFString *)dlfObject)->_get_address(ev));
+    *outputArgument = (char *)*(((DLFString *)dlfObject)->_get_address(ev));
   else {                               /* get the argument string value     */
     RexxString *tempString = argument->stringValue();
     saveTable->put(tempString, tempString);
@@ -1283,7 +1283,7 @@ BOOL  convertInputArray(
 
         case tk_string:
                                        /* do the conversion                 */
-          convertInputString(thisObject, (PCHAR *)bufferPtr, saveTable, ev);
+          convertInputString(thisObject, (char **)bufferPtr, saveTable, ev);
           break;
 
                                        /* Arrays are currently not          */
@@ -1467,7 +1467,7 @@ BOOL  convertInputSequence(
 
         case tk_string:
                                        /* do the conversion                 */
-          convertInputString(thisObject, (PCHAR *)bufferPtr, saveTable, ev);
+          convertInputString(thisObject, (char **)bufferPtr, saveTable, ev);
           break;
 
                                        /* Arrays are currently not          */
@@ -1775,9 +1775,9 @@ RexxObject *som_send (SOMObject *somobj,
 
         case tk_string:
                                        /* do the conversion                 */
-          convertInputString(thisObject, (PCHAR *)&tempAddr, saveTable, &ev);
+          convertInputString(thisObject, (char **)&tempAddr, saveTable, &ev);
                                        /* add to the argument list          */
-          somargs->addString(&ev, (PCHAR)tempAddr);
+          somargs->addString(&ev, (char *)tempAddr);
           break;
 
         case tk_array:
@@ -2274,7 +2274,7 @@ RexxObject *dsom_send (SOMDObject *somobj,
 
         case tk_string:
                                        /* do the conversion                 */
-          convertInputString(thisObject, (PCHAR *)&tempAddr, saveTable, &ev);
+          convertInputString(thisObject, (char **)&tempAddr, saveTable, &ev);
                                        /* add to the argument list          */
           argList->set_item(&ev, argNum, argName, tc, &tempAddr, argLength, flags);
           break;

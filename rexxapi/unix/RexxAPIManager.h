@@ -126,7 +126,7 @@ typedef struct _QUEUEHEADER {
     KMTX  enqsem;                      /* pull exclusion semaphore   */
     ULONG      queue_first;            /* first queue item           */
     ULONG      queue_last;             /* last queue item            */
-    CHAR   queue_name[MAXNAME];        /* queue name                 */
+    char   queue_name[MAXNAME];        /* queue name                 */
     PID queue_session;               /* session of queue (<=> process group ID of the greating porcess)*/
     } QUEUEHEADER;
 
@@ -156,7 +156,7 @@ typedef struct _REXXAPIDATA {          /* Do not move next two items */
   ULONG         base;                  /* Base of queues             */
   ULONG         session_base;          /* Base for session queues    */
   PUCHAR        queue_buf_ptr;         /* Address of queue buffer    */
-  PCHAR         qbase;                 /* ptr to the queue memory pool*/
+  char         *qbase;                 /* ptr to the queue memory pool*/
   INT           qbasememId;            /* memory ID of the pool      */
   ULONG         qmemsize;              /* Size of the queue space    */
   ULONG         qmemsizeused;          /* THU006A */
@@ -168,7 +168,7 @@ typedef struct _REXXAPIDATA {          /* Do not move next two items */
   PID           init_processid;        /* Initial processid          */
   ULONG         num_sessions;          /* Number of possible sessions*/
   ULONG         baseblock[REGNOOFTYPES];/* Registration chains(offsets)*/
-  PCHAR         sebase;                /* ptr to the se memory pool     */
+  char         *sebase;                /* ptr to the se memory pool     */
   ULONG         sememsize;             /* current size of the se memory pool*/
   ULONG         sememtop;              /* number of bytes used in se space */
   INT           sebasememId;           /* memory ID of the pool      */
@@ -178,7 +178,7 @@ typedef struct _REXXAPIDATA {          /* Do not move next two items */
   TID           ThreadId;              /* Current thread id          */
   ULONG         SessionId;             /* Current session id         */
   ULONG         mbase;                 /* ptr to macro space fnc lst */
-  PCHAR         macrobase;             /* Pointer to Macro Space memory pool    */
+  char         *macrobase;             /* Pointer to Macro Space memory pool    */
   INT           mbasememId;            /* memory ID of the pool      */
   ULONG         macrosize;             /* Size of the macro space    */
   ULONG         mmemtop;               /* number of bytes used in macro space */
@@ -189,6 +189,6 @@ typedef struct _REXXAPIDATA {          /* Do not move next two items */
 //ULONG         lazy_block;            /* performance fix            */
 //ULONG         lazy_size;             /* performance fix            */
   INT           moveareaqid;
-  PCHAR         moveareaq;             /* performance fix for queue  */
+  char         *moveareaq;             /* performance fix for queue  */
 }  REXXAPIDATA;
 

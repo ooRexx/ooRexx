@@ -280,10 +280,10 @@ void SysSetThreadPriority(long tid, int  prio)
 
 }
 
-PCHAR SysGetThreadStackBase(INT stacksize)
+char *SysGetThreadStackBase(INT stacksize)
 {
   LONG temp;
-  return (PCHAR) ((ULONG)&temp - (ULONG)stacksize);
+  return (char *) ((ULONG)&temp - (ULONG)stacksize);
 }
 
 /* ********************************************************************** */

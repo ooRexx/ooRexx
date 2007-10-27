@@ -100,8 +100,8 @@ RexxString * SysMessageText(           /* simplified whole code             */
  int            set_num = 1;           /* message set 1 from catalog        */
  ERROR_MESSAGE *p;                     /* message table scan pointer        */
  ULONG          msgid;                 /* message number                    */
- CHAR           DataArea[256];         /* buf to return message             */
- PCHAR          message;
+ char           DataArea[256];         /* buf to return message             */
+ char          *message;
                                        /* loop through looking for the      */
                                        /* error code                        */
 #if defined( HAVE_CATOPEN )
@@ -117,7 +117,7 @@ RexxString * SysMessageText(           /* simplified whole code             */
        {
          sprintf(DataArea, "\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
                            REXXMESSAGEFILE, ORX_CATDIR);
-         return new_string((PCHAR)&DataArea, strlen(DataArea));
+         return new_string((char *)&DataArea, strlen(DataArea));
        }
      }                                   /* retrieve message from repository  */
      message = catgets(catd, set_num, msgid, NULL);
@@ -129,7 +129,7 @@ RexxString * SysMessageText(           /* simplified whole code             */
        {
          sprintf(DataArea, "\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
                            REXXMESSAGEFILE, ORX_CATDIR);
-         return new_string((PCHAR)&DataArea, strlen(DataArea));
+         return new_string((char *)&DataArea, strlen(DataArea));
        }
        else
        {
@@ -147,13 +147,13 @@ RexxString * SysMessageText(           /* simplified whole code             */
        strcpy(DataArea, message);
      catclose(catd);                 /* close the catalog                 */
                                      /* convert and return the message    */
-     return new_string((PCHAR)&DataArea, strlen(DataArea));
+     return new_string((char *)&DataArea, strlen(DataArea));
    }
  }
  return OREF_NULL;                     /* no message retrieved              */
 #else
  sprintf(DataArea,"Cannot get description for error %d",msgid);
- return new_string((PCHAR)&DataArea, strlen(DataArea));
+ return new_string((char *)&DataArea, strlen(DataArea));
 #endif
 }
 
@@ -166,7 +166,7 @@ RexxString * SysMessageHeader(
 {
  ERROR_MESSAGE *p;                     /* table scan pointer                */
  int            msgid;                 /* message number                    */
- CHAR           DataArea[20];          /* buf addr to return message        */
+ char           DataArea[20];          /* buf addr to return message        */
                                        /* loop through looking for the      */
                                        /* error code                        */
  for (p = Message_table; p->code != 0; p++) {

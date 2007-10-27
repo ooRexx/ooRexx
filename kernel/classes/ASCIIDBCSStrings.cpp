@@ -101,15 +101,15 @@ INT DBCS_MemiCmp(
   return rc;                           /* return compare result             */
 }
 
-UCHAR DBCS_Type(
+char DBCS_Type(
   RexxString *String )                 /* Input String                      */
 /*********************************************************************/
 /* Function: Do DBCS string type validation                          */
 /*********************************************************************/
 {
-  const char *CStr;                    /* current scan location             */
-  const char *EndStr;                  /* end location                      */
-  CHAR     rc;                         /* Function return code.             */
+  const char  *CStr;                   /* current scan location             */
+  const char  *EndStr;                 /* end location                      */
+  char        rc;                      /* Function return code.             */
   BOOL     ChkFlag;                    /* Invalid string flag.              */
   size_t   StrLen;                     /* Input String length.              */
   size_t   DBCSNum;                    /* Number of DBCS bytes.             */
@@ -156,8 +156,8 @@ size_t RexxString::validDBCS()
   const char *String;                  /* string scan pointer               */
   size_t   Length;                     /* byte length of the string         */
   size_t   CharLength;                 /* Input HugeString length.          */
-  CHAR     BadChar[4];                 /* working buffer for errors         */
-  CHAR     HexBadChar[4];              /* working buffer for errors         */
+  char     BadChar[4];                 /* working buffer for errors         */
+  char     HexBadChar[4];              /* working buffer for errors         */
   BOOL     HasDBCS;                    /* found a DBCS character            */
 
   if (NoDBCS(this))                    /* already validated?                */
@@ -1191,7 +1191,7 @@ void DBCS_ConvToDBCS(
   char *outspot;                       /* output spot                       */
   union convert {                      /* Use to get DBCS bytes             */
     USHORT convchar;                   /* From USHORT DBCS code.            */
-    UCHAR conv[2];                     /* DBCS 1ST and 2ND byte.            */
+    unsigned char conv[2];             /* DBCS 1ST and 2ND byte.            */
   }
   convert;
   size_t TableNum;                     /* current country table             */
@@ -1261,7 +1261,7 @@ void DBCS_ConvToSBCS(
   size_t i;                            /* Use for index of table.           */
   union convert {                      /* Use to get DBCS bytes             */
     USHORT convchar;                   /* From unsigned int DBCS            */
-    UCHAR conv[2];                     /* DBCS 1ST and 2ND byte.            */
+    unsigned char conv[2];             /* DBCS 1ST and 2ND byte.            */
   }
   convert;
   size_t TableNum;
@@ -1403,10 +1403,10 @@ const char * DBCS_strpbrk(
 
 const char * DBCS_strrchr(
   const char *String,                  /* searched string                   */
-  size_t    Length,                    /* string length                     */
-  UCHAR     ch )                       /* searched character                */
+  size_t      Length,                  /* string length                     */
+  unsigned char ch )                   /* searched character                */
 {
-  const char *    Match;                     /* match location                    */
+  const char *    Match;               /* match location                    */
 
   Match = NULL;                        /* no match yet                      */
 
@@ -2020,7 +2020,7 @@ RexxInteger *RexxString::DBCSwordPos(RexxString *phrase,
 RexxInteger *RexxString::DBCSdatatype(INT  DataType )
 {
   RexxInteger *Retval;                 /* Return DataValue.                 */
-  UCHAR    MixedType;                  /* HugeString attributes.            */
+  unsigned char  MixedType;            /* HugeString attributes.            */
 
   MixedType = DBCS_Type(this);         /* get type of string                */
 
@@ -3005,7 +3005,7 @@ RexxString *RexxString::DBCStranslate(RexxString *tableo,
         if (tablei == OREF_NULL) {     /* Omitted input table?              */
                                        /*  SBCS, use ASCII char code        */
           if (OldCharLen == SBCS_BYTELEN) {
-            BPos = (UCHAR)*InputStr;   /* InTable is character code         */
+            BPos = (unsigned char)*InputStr; /* InTable is character code   */
             BPos++;                    /* make origin 1                     */
           }
           else
@@ -3072,7 +3072,7 @@ RexxString *RexxString::dbLeft(RexxInteger *plength,
   size_t       ReqBytes;               /* requested bytes                   */
   const char *       String;           /* input string pointer              */
   size_t       Length;                 /* string length                     */
-  UCHAR        Option;                 /* specified option                  */
+  unsigned char Option;                /* specified option                  */
   size_t       RemBytes;               /* remainder bytes                   */
   RexxString  *Retval;                 /* function return value             */
 
@@ -3153,7 +3153,7 @@ RexxString *RexxString::dbRight(RexxInteger *plength,
   size_t       PadSize;                /* size of pad character             */
   const char * String;                 /* input string pointer              */
   size_t       Length;                 /* string length                     */
-  UCHAR        Option;                 /* specified option                  */
+  unsigned char Option;                 /* specified option                  */
   size_t       RemBytes;               /* remainder bytes                   */
   RexxString  *Retval;                 /* function return value             */
 
@@ -3248,7 +3248,7 @@ RexxString *RexxString::dbCenter(RexxInteger *plength,
   char *   CStr;                       /* string pointer                    */
   const char *   SBCSPad;              /* SBCSPad character                 */
   const char *   DBCSPad = NULL;       /* DBCSPad character                 */
-  UCHAR    Option;                     /* SO/SI counting option             */
+  unsigned char  Option;               /* SO/SI counting option             */
   size_t   ReqBytes;                   /* requested bytes                   */
 
   ValidDBCS(this);                     /* validate the string               */
@@ -3365,7 +3365,7 @@ RexxString *RexxString::dbRleft(RexxInteger *plength,
   size_t   Length;                     /* length of input string            */
   const char *   String;               /* pointer to string                 */
   RexxString *Retval;                  /* result copy pointer               */
-  UCHAR    Option;                     /* SO/SI counting option             */
+  unsigned char Option;                /* SO/SI counting option             */
   size_t   ReqBytes;                   /* requested bytes                   */
 
   ValidDBCS(this);                     /* validate the string               */
@@ -3400,7 +3400,7 @@ RexxString *RexxString::dbRright(RexxInteger *plength,
   size_t   Length;                     /* length of input string            */
   const char *   String;               /* pointer to string                 */
   RexxString *Retval;                  /* result copy pointer               */
-  UCHAR    Option;                     /* SO/SI counting option             */
+  unsigned char Option;                /* SO/SI counting option             */
   size_t   ReqBytes;                   /* requested bytes                   */
   size_t   RemBytes;                   /* remainder bytes                   */
 
@@ -3521,7 +3521,7 @@ RexxString *RexxString::dbToSbcs()
 RexxInteger *RexxString::dbValidate(RexxString *option)
 {
   RexxInteger *Retval;                 /* return value                      */
-  UCHAR    Option;                     /* SO/SI counting option             */
+  unsigned char Option;                /* SO/SI counting option             */
 
                                        /* get the option character          */
   Option = option_character(option, DBCS_COUNT, ARG_ONE);
@@ -3540,7 +3540,7 @@ RexxInteger *RexxString::dbValidate(RexxString *option)
 
 RexxInteger *RexxString::dbWidth(RexxString *option)
 {
-  UCHAR Option;                        /* function option                   */
+  unsigned char Option;                /* function option                   */
   size_t slength;
 
   ValidDBCS(this);                     /* validate the string               */
@@ -3559,7 +3559,7 @@ RexxInteger *RexxString::dbWidth(RexxString *option)
 
 RexxString *RexxString::dbAdjust(RexxString *option)
 {
-  UCHAR    Option;                     /* function option character         */
+  unsigned char Option;                /* function option character         */
 
   ValidDBCS(this);                     /* validate the string               */
                                        /* get the option character          */

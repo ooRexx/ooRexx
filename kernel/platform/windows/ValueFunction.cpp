@@ -72,7 +72,7 @@ RexxObject * SysValue(
     RexxString * Selector )            /* variable selector                 */
 {
   /* GetEnvironmentVariable will not alloc memory for OldValue ! */
-  CHAR        *OldValue = NULL;        /* old environment value             */
+  char        *OldValue = NULL;        /* old environment value             */
   RexxObject * Retval;                 /* returned old name                 */
   DWORD        dwSize;                 /* size of env. variable             */
   int          SelectorType;           /* Scripting Engine Selector         */
@@ -91,7 +91,7 @@ RexxObject * SysValue(
     dwSize = GetEnvironmentVariable(Name->getStringData(), NULL, 0);
     if (dwSize)
     {
-      OldValue = (CHAR *) SysAllocateResultMemory(dwSize);
+      OldValue = (char *) SysAllocateResultMemory(dwSize);
                                          /* scan for the variable           */
       if (OldValue && GetEnvironmentVariable(Name->getStringData(),OldValue,dwSize) )
       {

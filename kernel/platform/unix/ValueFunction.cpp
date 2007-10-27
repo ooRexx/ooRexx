@@ -74,20 +74,20 @@ INT SetEnvironmentVariable(
   RexxString * Value )                 /* new variable value                */
 
 {
-  PCHAR  Env_Var_String = NULL;        /* Environment variable string for   */
+  char  *Env_Var_String = NULL;        /* Environment variable string for   */
   ULONG size;                          /* size of the string                */
-  PCHAR      * Environment;            /* environment pointer               */
-  PCHAR  del = NULL;                   /* ptr to old unused memory          */
-  PCHAR  np;
+  char **Environment;                  /* environment pointer               */
+  char  *del = NULL;                   /* ptr to old unused memory          */
+  char  *np;
   INT    i;
-  CHAR   namebufcurr[256];             /* buf for extracted name            */
+  char   namebufcurr[256];             /* buf for extracted name            */
 
   Environment = environ;               /* get the environment               */
   if(!putflag){                        /* first change in the environment ? */
     /* copy all entries to dynamic memory                                   */
     for(;*Environment != NULL;Environment++){/*for all entries in the env   */
       size = strlen(*Environment)+1;   /* get the size of the string        */
-      Env_Var_String = (PCHAR)malloc(size);/* and alloc space for it        */
+      Env_Var_String = (char *)malloc(size); /* and alloc space for it      */
       memcpy(Env_Var_String,*Environment,size);/* copy the string           */
       putenv(Env_Var_String);          /* and chain it in                   */
     }
@@ -96,7 +96,7 @@ INT SetEnvironmentVariable(
   }
                                        /* calculate the size                */
   size = strlen(Name->getStringData())+strlen(Value->getStringData())+2;
-  Env_Var_String = (PCHAR)malloc(size);/* get the memory                    */
+  Env_Var_String = (char *)malloc(size); /* get the memory                  */
                                        /* find the entry in the environ     */
   for(;*Environment != NULL;Environment++){
     np = *Environment;
@@ -121,14 +121,13 @@ INT SetEnvironmentVariable(
   return 0;                            /* return success                    */
 }
 
-RexxObject * SysValue(
-    RexxString * Name,                 /* variable name                     */
-    RexxObject * NewValue,             /* new assigned value                */
-    RexxString * Selector )            /* variable selector                 */
+RexxObject *SysValue(
+    RexxString *Name,                  /* variable name                     */
+    RexxObject *NewValue,              /* new assigned value                */
+    RexxString *Selector )             /* variable selector                 */
 {
-  PCHAR        OldValue;               /* old environment value             */
-
-  RexxString * Retval;                 /* returned old name                 */
+  char        *OldValue;               /* old environment value             */
+  RexxString  *Retval;                 /* returned old name                 */
 
   Selector = Selector->upper();        /* upper case the selector           */
                                        /* Linux environment variables can   */

@@ -108,7 +108,7 @@ void RexxExpressionStack::expandArgs(
      INT    argcount,                  /* count of arguments                */
      INT    min,                       /* minimum required arguments        */
      INT    max,                       /* maximum required arguments        */
-     PCHAR  function )                 /* function being processed          */
+     char  *function )                 /* function being processed          */
 /******************************************************************************/
 /* Function:  Verify that a function has received all of its required         */
 /*            arguments, and did not receive extras.                          */
@@ -182,7 +182,7 @@ RexxString *RexxExpressionStack::optionalStringArg(
 RexxInteger *RexxExpressionStack::requiredIntegerArg(
      int    position,                  /* position of argument              */
      int    argcount,                  /* count of arguments                */
-     PCHAR  function)                  /* function being processed          */
+     char  *function)                  /* function being processed          */
 /******************************************************************************/
 /* Function:  Retrieve an object from the expression stack and potentially    */
 /*            convert it into an integer argument.                            */
@@ -211,7 +211,7 @@ RexxInteger *RexxExpressionStack::requiredIntegerArg(
 RexxInteger *RexxExpressionStack::optionalIntegerArg(
      int    position,                  /* position of argument              */
      int    argcount,                  /* count of arguments                */
-     PCHAR  function)                  /* function being processed          */
+     char  *function)                  /* function being processed          */
 /******************************************************************************/
 /* Function:  Retrieve an object from the expression stack and potentially    */
 /*            convert it into an integer argument.                            */

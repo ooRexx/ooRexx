@@ -797,7 +797,7 @@ RexxArray *RexxMethodClass::newArrayOfSOMMethods(
 
 RexxMethod *RexxMethodClass::restore(
     RexxBuffer *buffer,                /* buffer containing the method      */
-    PCHAR startPointer)                /* first character of the method     */
+    char *startPointer)                /* first character of the method     */
 /******************************************************************************/
 /* Function: Unflatten a translated method.  Passed a buffer object containing*/
 /*           the method                                                       */

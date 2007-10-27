@@ -118,7 +118,7 @@ RexxString *SysName( void )
 /******************************************************************************/
 {
 
-  CHAR chVerBuf[26];                   // buffer for version
+  char chVerBuf[26];                   // buffer for version
   int isys;
 
   isys = which_system_is_running();
@@ -153,7 +153,7 @@ RexxString *SysVersion(void)
 /*             in the image.                                                  */
 /******************************************************************************/
 {
-  CHAR chVerBuf[8];                   // buffer for version
+  char chVerBuf[8];                   // buffer for version
   OSVERSIONINFO vi;
   // dont forget to change sysmeths.cmd
 
@@ -398,7 +398,7 @@ int WinExceptionFilter( int xCode )
 }
 
 
-PCHAR SysGetThreadStackBase (INT StackSize)
+char *SysGetThreadStackBase (INT StackSize)
 /******************************************************************************/
 /* Function:  Return a pointer to the current stack base                      */
 /******************************************************************************/
@@ -418,11 +418,11 @@ PCHAR SysGetThreadStackBase (INT StackSize)
    pbStackBase = (PBYTE) mbi.AllocationBase;
 
 //   if (!GetThreadContext(GetCurrentThread(), &con)) printf("\n Bad error: thread context not received");
-//   return (PCHAR)(con.Esp - StackSize);   /* return calculated stack base         */
-   return (PCHAR) pbStackBase;
+//   return (char *)(con.Esp - StackSize);   /* return calculated stack base         */
+   return (char *) pbStackBase;
 #else
    LONG temp;
-   return (PCHAR) ((ULONG)&temp - (ULONG)StackSize);
+   return (char *) ((ULONG)&temp - (ULONG)StackSize);
 #endif
 }
 

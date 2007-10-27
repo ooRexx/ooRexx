@@ -83,8 +83,8 @@
 
 extern BOOL CALL_BY_RXQUEUE;
 
-CHAR  line[4096];              /* buffer for data to add to queue    */
-CHAR  work[256];               /* buffer for queue name, if default  */
+char  line[4096];              /* buffer for data to add to queue    */
+char  work[256];               /* buffer for queue name, if default  */
 LONG  queuemode=-1;            /* mode for access to queue           */
 
 VOID  options_error(           /* function called on errors          */
@@ -92,7 +92,7 @@ VOID  options_error(           /* function called on errors          */
           PSZ   queuename ) ;
 
                                /* function to read stdin             */
-ULONG get_line(PCHAR, ULONG, PULONG);
+ULONG get_line(char *, ULONG, PULONG);
 
 
 int main(
@@ -373,15 +373,15 @@ VOID options_error( LONG  type,        /* Error type.                */
 /*                                                                   */
 /*********************************************************************/
 
-ULONG       get_line( PCHAR buffer,   /* Read buffer                */
+ULONG       get_line( char  *buffer,   /* Read buffer                */
                       ULONG  bufsize,  /* Buffer size                */
                       PULONG linelen)  /* length of line             */
 {
-  static CHAR savechar = '\0';         /* cached character           */
+  static char savechar = '\0';         /* cached character           */
   static BOOL eof = FALSE;             /* not hit eof yet            */
   ULONG actual;                        /* actual bytes read          */
   ULONG rc;                            /* DosRead return code        */
-  CHAR  newchar;                       /* character read             */
+  char  newchar;                       /* character read             */
   ULONG length;                        /* length read                */
 
   if (eof)                             /* already hit end?           */

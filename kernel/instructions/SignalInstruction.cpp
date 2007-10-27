@@ -52,7 +52,7 @@ RexxInstructionSignal::RexxInstructionSignal(
     RexxObject *_expression,            /* expression for signal value       */
     RexxString *_condition,             /* signalled condition               */
     RexxString *_name,                  /* signal target name                */
-    int flags )                         /* option flags                      */
+    size_t flags )                      /* option flags                      */
 /******************************************************************************/
 /* Initialize a SIGNAL instruction                                            */
 /******************************************************************************/

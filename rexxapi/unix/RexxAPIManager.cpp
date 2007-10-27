@@ -589,14 +589,14 @@ LONG  RxAllocMem(
   INT flag)                          /* from which memory to allocate*/
 {
   key_t key;
-  PCHAR  newmem;                     /* new memory                   */
-  PCHAR  runptr;                     /* runs through shared memory   */
+  char  *newmem;                     /* new memory                   */
+  char  *runptr;                     /* runs through shared memory   */
   INT   newmemId;                    /* ID of the new memory         */
   ULONG mbase, baseblock, next, movesize, base, newbase, session_base, newsession_base, first, last, inext, temptop, tempapidatasize;
   PQUEUEHEADER queueheader;
   PQUEUEITEM item;
   ULONG addsize;                      /*THU025A */
-  PCHAR tempptr;                      /*THU025A */
+  char *tempptr;                      /*THU025A */
 
 
   if(flag == MACROMEM){         /* allocate in the macro memory pool?*/
@@ -1061,7 +1061,7 @@ LONG  RxFreeMem(
   INT i;
   PVOID movearea;
   INT newmemId;                    /* ID of the new memory         */
-  PCHAR newmem;                      /* new memory                   */
+  char *newmem;                      /* new memory                   */
   LONG temp_cblock;
   LONG temp_nblock;
   ULONG previousitem = 0;
@@ -1222,7 +1222,7 @@ LONG  RxFreeMemQue(
   INT i;
   PVOID movearea;
   INT newmemId;                      /* ID of the new memory         */
-  PCHAR newmem;                      /* new memory                   */
+  char *newmem;                      /* new memory                   */
   LONG temp_cblock;
   LONG temp_nblock;
   ULONG previousitem = 0;
@@ -1431,9 +1431,9 @@ LONG  RxFreeMemQue(
 LONG CheckForMemory()
 {
    INT newmemId,i;                    /* ID of the new memory         */
-   PCHAR newmem;                      /* new memory                   */
-   PCHAR  runptr;                     /* runs through shared memory   */
-   PCHAR tempptr;
+   char *newmem;                      /* new memory                   */
+   char *runptr;                      /* runs through shared memory   */
+   char *tempptr;
    PQUEUEHEADER queueheader;
    PQUEUEITEM item;
    ULONG addsize;
@@ -1697,7 +1697,6 @@ LONG  RxAllocAPIBlock(
   PSZ        dll_proc)                 /* dll procedure name         */
 {
 LONG    size;                          /* total allocation size      */
-PUCHAR  temp;                          /* used to fill in APIBLOCK   */
 ULONG   offset;
 
  /* Until now the arrays of the names have a constant length of 64   */

@@ -125,7 +125,7 @@ typedef struct nestedinfo {
    long error(size_t);
    BOOL        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, RexxDirectory *);
    void        raiseException(LONG, LOCATIONINFO *, RexxSource *, RexxString *, RexxArray *, RexxObject *);
-   void        reportException(LONG, PCHAR);
+   void        reportException(LONG, char *);
    void        reportException(LONG, LONG);
    void        reportAnException(LONG);
    void        reportAnException(LONG, RexxObject *);
@@ -281,7 +281,7 @@ typedef struct nestedinfo {
 
    BOOL     DBCS_codepage;             /* DBCS characters possible          */
    ULONG    codepage;                  /* current codepage id               */
-   UCHAR    DBCS_table[256];           /* DBCS first byte table             */
+   unsigned char DBCS_table[256];      /* DBCS first byte table             */
  };
 
  class RexxActivityClass : public RexxClass {

@@ -56,7 +56,7 @@
 class RexxInstructionParse : public RexxInstruction {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};
-  RexxInstructionParse(RexxObject *, USHORT, UCHAR, LONG, RexxQueue *);
+  RexxInstructionParse(RexxObject *, USHORT, size_t, LONG, RexxQueue *);
   inline RexxInstructionParse(RESTORETYPE restoreType) { ; };
   void execute(RexxActivation *, RexxExpressionStack *);
   void live();

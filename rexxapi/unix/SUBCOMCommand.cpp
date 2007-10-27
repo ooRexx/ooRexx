@@ -113,7 +113,7 @@ char    **envp )                       /* Ptr to array of env strings*/
                  argv[2],              /* Should be Dll Name         */
                  argv[3],              /* Should be Function Name    */
                  &i,                   /* Ptr to storage for existnce*/
-                 (PUCHAR)userdata      /* Ptr to storage for userdata*/
+                 (unsigned char *)userdata /* Ptr to storage for userdata*/
                 ));                    /*                            */
      }                                 /*                            */
    CASE("DROP"){                       /* Drop Check                 */
@@ -144,8 +144,8 @@ void parmerr( ULONG msgid )            /* removed useless code       */
  nl_catd        catd;                  /* catalog descriptor from catopen() */
 #endif
  int            set_num = 1;           /* message set 1 from catalog */
- PSZ            message;               /* message pointer            */
- CHAR           DataArea[BUFFERLEN];   /* buf to return message      */
+ char          *message;               /* message pointer            */
+ char           DataArea[BUFFERLEN];   /* buf to return message      */
 
 #if defined( HAVE_CATOPEN )
                                        /* open message catalog in NLSPATH   */

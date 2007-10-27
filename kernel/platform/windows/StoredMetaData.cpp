@@ -106,7 +106,7 @@ typedef struct _FILESTATUS{
 typedef struct _control {              /* meta date control info            */
     USHORT   Magic;                    /* identifies as 'meta' prog         */
     USHORT   MetaVersion;              /* version of the meta prog          */
-    UCHAR    RexxVersion[40];          /* version of rexx intrpreter        */
+    unsigned char RexxVersion[40];     /* version of rexx intrpreter        */
     FILESTATUS FileStatus;             /* file information                  */
     LONG     ImageSize;                /* size of the method info           */
 } FILE_CONTROL;                        /* saved control info                */
@@ -177,7 +177,7 @@ RexxMethod *SysRestoreProgram(
   }
                                        /* now read the control info         */
   if (fseek(Handle, 0-sizeof(compiledHeader)-sizeof(Control), SEEK_END) == 0)
-     BytesRead = fread((PCHAR)&Control, 1, sizeof(Control), Handle);
+     BytesRead = fread((char *)&Control, 1, sizeof(Control), Handle);
 
                                        /* check the control info            */
   if ((BytesRead != sizeof(Control)) || (Control.MetaVersion != METAVERSION) || (Control.Magic != MAGIC)) {
@@ -207,7 +207,7 @@ RexxMethod *SysRestoreProgram(
   RequestKernelAccess(activity);       /* get the lock back                 */
   Buffer = new_buffer(BufferSize);     /* get a new buffer                  */
                                        /* position relative to the end      */
-  StartPointer = ((PCHAR)Buffer + ObjectSize(Buffer)) - BufferSize;
+  StartPointer = ((char *)Buffer + ObjectSize(Buffer)) - BufferSize;
   memcpy(StartPointer, MethodInfo, BufferSize);
   GlobalFree(MethodInfo);              /* done with the tokenize buffer     */
   save(Buffer);                        /* protect the buffer                */
@@ -316,16 +316,16 @@ void SysSaveProgram(
 
 RexxMethod *SysRestoreProgramBuffer(
   PRXSTRING    InBuffer,               /* pointer to stored method          */
-  RexxString * Name)                   /* name associated with the program  */
+  RexxString  *Name)                   /* name associated with the program  */
 {
   PFILE_CONTROL Control;               /* control information               */
-  PCHAR         MethodInfo;            /* buffered flattened method         */
-  PCHAR         StartPointer;          /* start of buffered information     */
-  RexxBuffer  * Buffer;                /* Buffer to unflatten               */
+  char         *MethodInfo;            /* buffered flattened method         */
+  char         *StartPointer;          /* start of buffered information     */
+  RexxBuffer   *Buffer;                /* Buffer to unflatten               */
   LONG          BufferSize;            /* size of the buffer                */
-  RexxMethod  * Method;                /* unflattened method                */
-  RexxCode    * Code;                  /* parent rexx method                */
-  RexxSource  * Source;                /* REXX source object                */
+  RexxMethod   *Method;                /* unflattened method                */
+  RexxCode     *Code;                  /* parent rexx method                */
+  RexxSource   *Source;                /* REXX source object                */
 
                                        /* address the control information   */
   Control = (PFILE_CONTROL)InBuffer->strptr;
@@ -339,7 +339,7 @@ RexxMethod *SysRestoreProgramBuffer(
   BufferSize = InBuffer->strlength - CONTROLSZ;
   Buffer = new_buffer(BufferSize);     /* get a new buffer                  */
                                        /* position relative to the end      */
-  StartPointer = ((PCHAR)Buffer + ObjectSize(Buffer)) - BufferSize;
+  StartPointer = ((char *)Buffer + ObjectSize(Buffer)) - BufferSize;
                                        /* fill in the buffer                */
   memcpy(StartPointer, MethodInfo, BufferSize);
   save(Buffer);                        /* protect the buffer                */
@@ -392,15 +392,15 @@ RexxMethod *SysRestoreInstoreProgram(
 /*********************************************************************/
 void SysSaveProgramBuffer(
   PRXSTRING    OutBuffer,              /* location to save the program      */
-  RexxMethod * Method )                /* method to save                    */
+  RexxMethod  *Method )                /* method to save                    */
 {
   PFILE_CONTROL Control;               /* control information               */
-  PCHAR         Buffer;                /* buffer pointer                    */
-  RexxBuffer  * MethodBuffer;          /* flattened method                  */
+  char         *Buffer;                /* buffer pointer                    */
+  RexxBuffer   *MethodBuffer;          /* flattened method                  */
   RexxSmartBuffer *FlatBuffer;         /* flattened smart buffer            */
-  PCHAR         BufferAddress;         /* address of flattened method data  */
+  char         *BufferAddress;         /* address of flattened method data  */
   LONG          BufferLength;          /* length of the flattened method    */
-  RexxString  * Version;               /* REXX version string               */
+  RexxString   *Version;               /* REXX version string               */
 
   save(Method);                        /* lock the method down              */
   FlatBuffer = Method->saveMethod();   /* flatten the method                */
@@ -440,15 +440,15 @@ void SysSaveProgramBuffer(
 // retrofit by IH
 void SysSaveTranslatedProgram(
   const char  *File,                   /* name of file to process           */
-  RexxMethod * Method )                /* method to save                    */
+  RexxMethod  *Method )                /* method to save                    */
 {
   FILE         *Handle;                /* output file handle                */
   FILE_CONTROL  Control;               /* control information               */
-  RexxBuffer *  MethodBuffer;          /* flattened method                  */
+  RexxBuffer   *MethodBuffer;          /* flattened method                  */
   RexxSmartBuffer *FlatBuffer;         /* flattened smart buffer            */
-  PCHAR         BufferAddress;         /* address of flattened method data  */
+  char         *BufferAddress;         /* address of flattened method data  */
   LONG          BufferLength;          /* length of the flattened method    */
-  RexxString  * Version;               /* REXX version string               */
+  RexxString   *Version;               /* REXX version string               */
   RexxActivity *activity;              /* the current activity              */
 
   Handle = fopen(File, "wb");          /* open the output file              */
@@ -499,16 +499,16 @@ RexxMethod *SysRestoreTranslatedProgram(
   FILE       *Handle )                 /* handle of the file to process     */
 {
   FILE_CONTROL  Control;               /* control information               */
-  PCHAR         StartPointer;          /* start of buffered method          */
-  RexxBuffer  * Buffer;                /* Buffer to unflatten               */
+  char         *StartPointer;          /* start of buffered method          */
+  RexxBuffer   *Buffer;                /* Buffer to unflatten               */
   LONG          BufferSize;            /* size of the buffer                */
   ULONG         BytesRead;             /* actual bytes read                 */
-  RexxMethod  * Method;                /* unflattened method                */
-  RexxCode    * Code;                  /* parent rexx method                */
-  RexxSource  * Source;                /* REXX source object                */
+  RexxMethod   *Method;                /* unflattened method                */
+  RexxCode     *Code;                  /* parent rexx method                */
+  RexxSource   *Source;                /* REXX source object                */
   RexxActivity *activity;              /* the current activity              */
                                        /* temporary read buffer             */
-  CHAR          fileTag[sizeof(compiledHeader)];
+  char          fileTag[sizeof(compiledHeader)];
 
   activity = CurrentActivity;          /* save the activity                 */
   ReleaseKernelAccess(activity);       /* release the access                */
@@ -522,7 +522,7 @@ RexxMethod *SysRestoreTranslatedProgram(
     return OREF_NULL;                  /* not a saved program               */
   }
                                        /* now read the control info         */
-  BytesRead = fread((PCHAR)&Control, 1, sizeof(Control), Handle);
+  BytesRead = fread((char *)&Control, 1, sizeof(Control), Handle);
   RequestKernelAccess(activity);       /* get the lock back                 */
                                        /* check the control info            */
   if ((Control.MetaVersion != METAVERSION) || (Control.Magic != MAGIC)) {
@@ -535,7 +535,7 @@ RexxMethod *SysRestoreTranslatedProgram(
   Buffer = new_buffer(BufferSize);     /* get a new buffer                  */
   save(Buffer);                        /* protect the buffer                */
                                        /* position relative to the end      */
-  StartPointer = ((PCHAR)Buffer + ObjectSize(Buffer)) - BufferSize;
+  StartPointer = ((char *)Buffer + ObjectSize(Buffer)) - BufferSize;
   ReleaseKernelAccess(activity);       /* release the access                */
                                        /* read the flattened method         */
   BytesRead = fread(StartPointer, 1, BufferSize, Handle);

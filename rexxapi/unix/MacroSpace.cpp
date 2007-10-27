@@ -170,7 +170,7 @@ static VOID                            /*                            */
   rximagefree(ULONG, ULONG);           /* free a macro image         */
                                        /*                            */
 static ULONG                           /*                            */
-  rxstrtofile(FILE*,PCHAR,ULONG);      /* write a image to a file    */
+  rxstrtofile(FILE*,char*,ULONG);      /* write a image to a file    */
 /*********************************************************************/
 /*                                                                   */
 /*  Function Name:      RexxAddMacro                                 */
@@ -1004,7 +1004,7 @@ static ULONG file_write(
 /*********************************************************************/
 static ULONG rxstrtofile(
   FILE    *file,                       /* handle to open file        */
-  PCHAR    r ,                         /* image to be written        */
+  char    *r ,                         /* image to be written        */
   ULONG    size)                       /* size of the image          */
 {
   ULONG  rc    =        0;
@@ -1061,7 +1061,7 @@ static ULONG macrofile_open(
   FILE **fp )
 {
   ULONG  i,rc = 0;
-  CHAR buf[RXVERSIZE];
+  char buf[RXVERSIZE];
 
 
   if((*fp = fopen(fnam,"r")) == NULL)  /* open the file for read     */

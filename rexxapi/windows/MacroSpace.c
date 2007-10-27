@@ -95,9 +95,9 @@
 #include "APIUtil.h"
 #include "Characters.h"
 
-extern UCHAR first_char[];             /* character type table       */
-extern UCHAR lower_case_table[];       /* lower case table for Rexx  */
-extern UCHAR upper_case_table[];       /* upper case table for Rexx  */
+extern unsigned char first_char[];       /* character type table       */
+extern unsigned char lower_case_table[]; /* lower case table for Rexx  */
+extern unsigned char upper_case_table[]; /* upper case table for Rexx  */
 
 typedef  LONG APIENTRY REXX (
          LONG ,                        /* Num of args passed to rexx */

@@ -66,13 +66,13 @@
    void flattenReference(void *, LONG, void *);
    RexxEnvelope *pack(RexxString *, RexxObject *, RexxString *, RexxArray *);
    RexxObject *unpack();
-   void        puff(RexxBuffer *, PCHAR);
+   void        puff(RexxBuffer *, char *);
    RexxObject *queryObj(RexxObject *);
    RexxObject *queryProxy(RexxObject *);
    RexxObject *copyBuffer(RexxObject *);
-   void rehash();
-   ULONG queryType();
-   PCHAR  bufferStart();
+   void    rehash();
+   ULONG   queryType();
+   char   *bufferStart();
    void    associateProxy(RexxObject *o ,RexxObject *p);
    void    addTable(RexxObject *obj);
    void    addProxy(RexxObject *o, RexxObject *p);

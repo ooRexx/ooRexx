@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2007 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              CallInstruction.c     */
+/* REXX Translator                                      CallInstruction.c     */
 /*                                                                            */
 /* Primitive Call Parse Class                                                 */
 /*                                                                            */
@@ -59,8 +59,8 @@ RexxInstructionCall::RexxInstructionCall(
     RexxString *_condition,            /* CALL ON/OFF condition             */
     size_t      argCount,              /* count of arguments                */
     RexxQueue  *argList,               /* call arguments                    */
-    CHAR flags,                        /* CALL flags                        */
-    CHAR builtin_index)                /* builtin routine index             */
+    size_t      flags,                 /* CALL flags                        */
+    size_t      builtin_index)         /* builtin routine index             */
 /******************************************************************************/
 /* Function:  Complete CALL instruction object                                */
 /******************************************************************************/
@@ -72,7 +72,7 @@ RexxInstructionCall::RexxInstructionCall(
   i_flags = flags;                     /* copy the flags                    */
   call_builtin_index = builtin_index;  /* and the builtin function index    */
                                        /* no arguments                      */
-  call_argument_count = (UCHAR)argCount;
+  call_argument_count = (uint8_t)argCount;
   while (argCount > 0) {               /* now copy the argument pointers    */
                                        /* in reverse order                  */
     OrefSet(this, this->arguments[--argCount], argList->pop());

@@ -98,18 +98,18 @@ extern HANDLE apiProtect;
 
 typedef struct _ENVENTRY {                  /* setlocal/endlocal structure    */
   ULONG    DriveNumber;                     /* saved drive                    */
-  CHAR     Directory[DIRLEN];               /* saved current directory        */
-  PCHAR    Environment;                     /* saved environment segment      */
-  CHAR     Variables[1];                    /* start of variable values       */
+  char     Directory[DIRLEN];               /* saved current directory        */
+  char    *Environment;                     /* saved environment segment      */
+  char     Variables[1];                    /* start of variable values       */
 } ENVENTRY;
 
 RexxMethod *SysRestoreProgramBuffer(PRXSTRING, RexxString *);
-void ReplaceEnvironment( PSZ );
+void ReplaceEnvironment( char * );
 REXXOBJECT BuildEnvlist(void);
 void RestoreEnvironment( void * );
 
 extern "C" {
-APIRET APIENTRY RexxExecuteMacroFunction ( PSZ, PRXSTRING );
+APIRET APIENTRY RexxExecuteMacroFunction ( char *, PRXSTRING );
 }
 
 /*********************************************************************/
@@ -325,7 +325,7 @@ RexxMethod3(REXXOBJECT,sysRxfuncadd,CSTRING,name,CSTRING,module,CSTRING,proc)
   if (proc == NO_CSTRING)              /* no procedure given?               */
     proc = name;                       /* use the defined name              */
                                        /* try to register the function      */
-  if (!RexxRegisterFunctionDll((PSZ)name,(PSZ)module,(PSZ)proc))
+  if (!RexxRegisterFunctionDll((char *)name,(char *)module,(char *)proc))
     return TheFalseObject;             /* this failed                       */
   else
     return TheTrueObject;              /* this worked ok                    */
@@ -341,7 +341,7 @@ RexxMethod1(REXXOBJECT,sysRxfuncdrop,CSTRING,name)
                                        /* raise an error                    */
     send_exception(Error_Incorrect_call);
                                        /* try to drop the function          */
-  if (!RexxDeregisterFunction((PSZ)name))
+  if (!RexxDeregisterFunction((char *)name))
     return TheFalseObject;             /* this failed                       */
   else
     return TheTrueObject;              /* this worked ok                    */
@@ -356,7 +356,7 @@ RexxMethod1(REXXOBJECT,sysRxfuncquery,CSTRING,name)
   if (name == NO_CSTRING)              /* must have a name                  */
                                        /* raise an error                    */
     send_exception(Error_Incorrect_call);
-  if (!RexxQueryFunction((PSZ)name))   /* is it not there?                  */
+  if (!RexxQueryFunction((char *)name))   /* is it not there?                  */
     return TheFalseObject;             /* this failed                       */
   else
     return TheTrueObject;              /* this worked ok                    */
@@ -423,7 +423,7 @@ BOOL MacroSpaceSearch(
     if (order == MS_PREORDER && Position == RXMACRO_SEARCH_AFTER)
       return FALSE;                    /* didn't really find this           */
                                        /* get image of function             */
-    if (RexxExecuteMacroFunction(const_cast<PSZ>(MacroName), &MacroImage) != 0)
+    if (RexxExecuteMacroFunction(const_cast<char *>(MacroName), &MacroImage) != 0)
         return FALSE;
                                        /* unflatten the method now          */
     Routine = SysRestoreProgramBuffer(&MacroImage, target);
@@ -478,7 +478,7 @@ BOOL RegExternalFunction(
   RexxString * argument;               /* current argument                  */
   USHORT    functionrc;                /* Return code from function         */
                                        /* default return code buffer        */
-  CHAR      default_return_buffer[DEFRXSTRING];
+  char      default_return_buffer[DEFRXSTRING];
 
 // retrofit by IH
 
@@ -498,7 +498,7 @@ BOOL RegExternalFunction(
         /* SysLoadFunc is not registered */
         /* register and call SysLoadFunc */
 
-        if (RexxRegisterFunctionDll((PSZ)"SYSLOADFUNCS", (PSZ)"REXXUTIL", (PSZ)"SysLoadFuncs") == 0)
+        if (RexxRegisterFunctionDll((char *)"SYSLOADFUNCS", (char *)"REXXUTIL", (char *)"SysLoadFuncs") == 0)
         {
                                        /* first registration?               */
                                        /* set up an result RXSTRING         */
@@ -560,7 +560,7 @@ BOOL RegExternalFunction(
                                        /* get ready to call the function    */
   activity->exitKernel(activation, OREF_SYSEXTERNALFUNCTION, TRUE);
                                        /* now call the external function    */
-  rc = RexxCallFunction(const_cast<PSZ>(funcname), argcount, argrxarray, &functionrc, &funcresult, const_cast<PSZ>(queuename));
+  rc = RexxCallFunction(const_cast<char *>(funcname), argcount, argrxarray, &functionrc, &funcresult, const_cast<char *>(queuename));
   activity->enterKernel();           /* now re-enter the kernel           */
 
 /* END CRITICAL window here -->>  kernel calls now allowed again            */
@@ -618,7 +618,7 @@ RexxObject * SysExternalFunction(
   RexxObject * result;                 /* Init function result to null      */
   //RXSTRING  funcresult;                /* Function result                 */
   //USHORT    functionrc;                /* Return code from function       */
-  //CHAR      default_return_buffer[10]; /* default return code buffer      */
+  //char      default_return_buffer[10]; /* default return code buffer      */
 
   *foundFnc = TRUE;
 
@@ -653,7 +653,7 @@ RexxMethod * SysGetMacroCode(
   RexxMethod   * method = OREF_NULL;
 
   MacroImage.strptr = NULL;
-  if (RexxExecuteMacroFunction(const_cast<PSZ>(MacroName->getStringData()), &MacroImage) == 0)
+  if (RexxExecuteMacroFunction(const_cast<char *>(MacroName->getStringData()), &MacroImage) == 0)
     method = SysRestoreProgramBuffer(&MacroImage, MacroName);
 
   /* On Windows we need to free the allocated buffer for the macro */
@@ -675,7 +675,7 @@ RexxMethod * SysGetMacroCode(
 /*********************************************************************/
 
 void ReplaceEnvironment(
-  PSZ      VariableSet )               /* new set of variables       */
+  char *VariableSet )                 /* new set of variables       */
 {
 }
 /*********************************************************************/
@@ -717,7 +717,7 @@ RexxMethod4(REXXOBJECT,sysMessageBox,CSTRING,Text,CSTRING,Title, CSTRING,Button,
   INT         Index;                   /* table index                */
   ULONG       rc;                      /* WinMessageBox return code  */
 
-  PSZ    Button_Styles[] =             /* message box button styles  */
+  char * Button_Styles[] =             /* message box button styles  */
     {"OK",
      "OKCANCEL",
      "RETRYCANCEL",
@@ -733,7 +733,7 @@ ULONG  Button_Flags[] =                /* message box button styles  */
      MB_YESNO,
      MB_YESNOCANCEL};
 
-PSZ    Icon_Styles[] =                 /* message box icon styles    */
+char * Icon_Styles[] =                 /* message box icon styles    */
     {"HAND",
      "QUESTION",
      "EXCLAMATION",
@@ -768,7 +768,7 @@ ULONG  Icon_Flags[] =                  /* message box icon styles    */
   else {                               /* check various button styles*/
                                        /* get the number of styles   */
                                        /* search style table         */
-    MaxCnt = sizeof(Button_Styles)/sizeof(PSZ);
+    MaxCnt = sizeof(Button_Styles)/sizeof(char *);
 
     for (Index = 0; Index < MaxCnt; Index++) {
                                        /* find a match?               */
@@ -784,7 +784,7 @@ ULONG  Icon_Flags[] =                  /* message box icon styles    */
 
   if (Icon == NULL) Style += MB_OK;    /* set default icon style?           */
   else {                               /* check various button styles*/
-    MaxCnt = sizeof(Icon_Styles)/sizeof(PSZ);
+    MaxCnt = sizeof(Icon_Styles)/sizeof(char *);
                                        /* search style table                */
     for (Index = 0; Index < MaxCnt; Index++) {
                                        /* find a match?                     */

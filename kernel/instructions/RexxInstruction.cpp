@@ -58,7 +58,7 @@ RexxInstruction::RexxInstruction(
   ClearObject(this);                   /* start out clean                   */
   this->hashvalue = 0;                 /* clear out the instruction info    */
                                        /* record the instruction type       */
-  this->instructionInfo.type = (UCHAR)type;
+  this->instructionInfo.type = (uint8_t)type;
   if (clause != OREF_NULL) {           /* have a clause object?             */
                                        /* fill in default location info     */
     clause->getLocation(&clauseLocation);

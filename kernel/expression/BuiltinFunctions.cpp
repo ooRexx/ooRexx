@@ -1110,7 +1110,7 @@ BUILTIN(DATE) {
         // only certain styles support this option
         if (strchr("BDMWL", style) != NULL)
         {
-            report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerOne, new_string((PCHAR)&style, 1), IntegerFour);
+            report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerOne, new_string((char *)&style, 1), IntegerFour);
         }
         if (osep->getLength() > 1 || (osep->getLength() == 1 && strchr(ALPHANUM, osep->getChar(0)) != NULL))
         {
@@ -1132,7 +1132,7 @@ BUILTIN(DATE) {
         {
             if (strchr("BDMWL", style2) != NULL)
             {
-                report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerThree, new_string((PCHAR)&style2, 1), IntegerFive);
+                report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerThree, new_string((char *)&style2, 1), IntegerFive);
             }
             // explicitly specified delimiter, we need to validate this first
             if (isep->getLength() > 1 || (isep->getLength() == 1 && strchr(ALPHANUM, isep->getChar(0)) != NULL))
@@ -1162,7 +1162,7 @@ BUILTIN(DATE) {
                 /* bad value?                        */
                 if (basedays == (int)NO_LONG || !timestamp.setBaseDate(basedays))
                 {
-                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
+                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1173,7 +1173,7 @@ BUILTIN(DATE) {
                 int64_t basetime;
                 if (!Numerics::objectToInt64(indate, basetime) || !timestamp.setBaseTime(basetime))
                 {
-                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
+                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1184,7 +1184,7 @@ BUILTIN(DATE) {
                 int64_t basetime;
                 if (!Numerics::objectToInt64(indate, basetime) || !timestamp.setUnixTime(basetime))
                 {
-                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
+                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1197,7 +1197,7 @@ BUILTIN(DATE) {
                 if (yearday == (int)NO_LONG || yearday < 0 || yearday > YEAR_DAYS + 1 ||
                     (yearday > YEAR_DAYS && !LeapYear(current.year)))
                 {
-                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
+                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((char *)&style2, 1));
                 }
                 // set the date directly
                 timestamp.setDate(current.year, yearday);
@@ -1221,7 +1221,7 @@ BUILTIN(DATE) {
                 break;
 
             default:
-                report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDEFNOTSU", 7), new_string((PCHAR)&style2, 1));
+                report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDEFNOTSU", 7), new_string((char *)&style2, 1));
                 break;
         }
         // if there's a formatting error
@@ -1234,7 +1234,7 @@ BUILTIN(DATE) {
             }
             else
             {
-                report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((PCHAR)&style2, 1));
+                report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((char *)&style2, 1));
             }
         }
     }
@@ -1372,7 +1372,7 @@ BUILTIN(TIME) {
         // the input timestamp is not valid with the elapsed time options
         if (style == 'R' || style == 'E')
         {
-            report_exception2(Error_Incorrect_call_invalid_conversion, new_cstring(CHAR_TIME), new_string((PCHAR)&style, 1));
+            report_exception2(Error_Incorrect_call_invalid_conversion, new_cstring(CHAR_TIME), new_string((char *)&style, 1));
         }
         bool valid = true;                 // assume this is a good timestamp
         timestamp.clear();                 // clear everything out
@@ -1421,7 +1421,7 @@ BUILTIN(TIME) {
                 int64_t basetime;
                 if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setBaseTime(basetime))
                 {
-                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((PCHAR)&style2, 1));
+                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1432,7 +1432,7 @@ BUILTIN(TIME) {
                 int64_t basetime;
                 if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setUnixTime(basetime))
                 {
-                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((PCHAR)&style2, 1));
+                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1444,7 +1444,7 @@ BUILTIN(TIME) {
         }
         if (!valid)                        /* not convert cleanly?              */
         {
-            report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((PCHAR)&style2, 1) );
+            report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((char *)&style2, 1) );
         }
     }
 
@@ -1562,8 +1562,8 @@ BUILTIN(XRANGE) {
   RexxString *start;                   /* starting position                 */
   RexxString *end;                     /* ending position                   */
   RexxString *result;                  /* XRANGE result                     */
-  UCHAR  startchar;                    /* starting character                */
-  UCHAR  endchar;                      /* ending character                  */
+  unsigned char startchar;             /* starting character                */
+  unsigned char endchar;               /* ending character                  */
   LONG   length;                       /* length of result                  */
   LONG   i;                            /* loop counter                      */
 
@@ -2255,7 +2255,7 @@ BUILTIN(STREAM) {
   RexxString   *command;               /* stream command                    */
   RexxString   *command_upper;         /* stream command upper case         */
   RexxObject   *result;                /* function result                   */
-  CHAR          action_char;           /* reduced action character          */
+  char          action_char;           /* reduced action character          */
   RexxString   *fullName;              /* fully qual'd stream name          */
   BOOL          added;
   BOOL          fOpen = FALSE;         /* open flag                         */

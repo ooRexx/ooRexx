@@ -165,7 +165,7 @@ INT SysQueryThreadID(void);            /* query the current thread          */
 #endif
 
 #ifndef SysGetThreadStackBase
-PCHAR SysGetThreadStackBase(INT);     /* query current thread stack start  */
+char *SysGetThreadStackBase(INT);     /* query current thread stack start  */
 #endif
 
 #ifndef SysCreateThread
@@ -250,7 +250,7 @@ void SysClauseBoundary(RexxActivation *);
 #ifndef SysGetTempFileName
                                        /* Get a temporary file name for     */
                                        /* debug dumps                       */
-PCHAR SysGetTempFileName(void);
+char *SysGetTempFileName(void);
 #endif
 
 #ifndef SysLoadImage

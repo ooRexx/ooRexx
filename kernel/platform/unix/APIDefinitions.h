@@ -49,10 +49,10 @@
 
 typedef struct apireg_node {
     ULONG  next;                       /* number of the next block     */
-    CHAR   apiname[MAXNAME];           /* routine name                 */
-    CHAR   apidll_name[MAXNAME];       /* module name                  */
-    CHAR   apidll_proc[MAXNAME];       /* procedure name               */
-    UCHAR  apiuser[USERLENGTH];        /* user area                    */
+    char   apiname[MAXNAME];           /* routine name                 */
+    char   apidll_name[MAXNAME];       /* module name                  */
+    char   apidll_proc[MAXNAME];       /* procedure name               */
+    unsigned char apiuser[USERLENGTH]; /* user area                    */
     PFN    apiaddr;                    /* routine address              */
     LONG   apitype;                    /* 16 or 32-bit flag            */
     PVOID  apimod_handle;              /* dynalink module handle       */
@@ -78,7 +78,7 @@ typedef APIBLOCK *PAPIBLOCK;
 
 typedef struct _MACRO {                /****** MACRO structure *******/
       ULONG          next;             /* pointer to next function   */
-      CHAR           name[NAMESIZE];   /* function name              */
+      char           name[NAMESIZE];   /* function name              */
       RXSTRING       temp_buf;         /* temp  buffer               */
       ULONG          image;            /* pcode+literals image       */
       ULONG          i_size;           /* size of image              */
@@ -94,7 +94,7 @@ typedef MACRO *PMACRO;                 /* pointer to MACRO structure */
 
 /* Semaphore control structure. Used for the rexxutil semaphores     */
 typedef struct _SEMCONT {
-      CHAR    name[MAXNAME];           /* semaphore name             */
+      char    name[MAXNAME];           /* semaphore name             */
       INT     usecount;                /* semaphore usecount         */
       INT     type;                    /* semaphore type: 0=Event    */
                                        /*                 1=Mutex    */

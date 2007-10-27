@@ -90,7 +90,7 @@ void DisplayError(ULONG msgid)         /* simplified catalog access@MAE004M */
 #endif
  int            set_num = 1;           /* message set 1 from catalog        */
  PSZ            message;               /* message pointer                   */
- CHAR           DataArea[256];         /* buf to return message             */
+ char           DataArea[256];         /* buf to return message             */
 
 #if defined( HAVE_CATOPEN )
                                        /* open message catalog in NLSPATH   */

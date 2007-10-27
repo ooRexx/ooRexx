@@ -404,7 +404,7 @@ RexxTable *RexxClass::getBehaviourDictionary()
  *                   creation, so we delay setting this attribute until the
  *                   class is fully constructed.
  */
-void RexxClass::subClassable(PCHAR class_id, bool restricted)
+void RexxClass::subClassable(char *class_id, bool restricted)
 {
                                        /* get a copy of the class instance   */
                                        /* behaviour mdict before the merge   */

@@ -220,8 +220,8 @@ RexxInstruction *RexxSource::callNew()
   RexxObject *name;                    /* call name                         */
   INT         _keyword;                /* call subkeyword                   */
   RexxString *_condition;              /* created USER condition            */
-  CHAR        _flags;                  /* final CALL flags                  */
-  CHAR        builtin_index;           /* builtin function call index       */
+  size_t      _flags;                  /* final CALL flags                  */
+  size_t      builtin_index;           /* builtin function call index       */
 
   _flags = 0;                          /* clear the flags                   */
   builtin_index = 0;                   /* clear the builtin index           */
@@ -1251,7 +1251,7 @@ RexxInstruction *RexxSource::numericNew()
   RexxObject  *_expression;             /* expression to evaluate            */
   RexxToken   *token;                  /* current working token             */
   USHORT       type;                   /* type of instruction               */
-  UCHAR        _flags;                  /* numeric flags                     */
+  size_t      _flags;                  /* numeric flags                     */
 
   _expression = OREF_NULL;              /* clear the expression              */
   _flags = 0;                           /* and the flags                     */
@@ -1406,7 +1406,7 @@ RexxInstruction *RexxSource::parseNew(
   RexxTrigger      *trigger;           /* current working trigger           */
   int               trigger_type = 0;  /* type of the current trigger       */
   USHORT            string_source;     /* source of string data             */
-  UCHAR             _flags;            /* parsing flags                     */
+  size_t            _flags;            /* parsing flags                     */
   int               templateCount;     /* number of template items          */
   int               variableCount;     /* number of variable items          */
 
@@ -1969,7 +1969,7 @@ RexxInstruction *RexxSource::signalNew()
   RexxString *_condition;               /* constructed USER condition name   */
   int         _keyword;                 /* signal subkeyword                 */
   RexxObject *_expression;              /* signal expression                 */
-  UCHAR       _flags;                   /* option flags                      */
+  size_t      _flags;                   /* option flags                      */
   RexxString *name;                    /* signal name                       */
   BOOL        signalOff;               /* signal off form                   */
 
@@ -2147,7 +2147,7 @@ RexxInstruction *RexxSource::traceNew()
   int         setting;                 /* new trace setting                 */
   int         debug;                   /* new debug setting                 */
   int         debug_skip;              /* amount to skip                    */
-  CHAR        debug_flags;             /* current debug flags               */
+  size_t      debug_flags;             /* current debug flags               */
 
   setting = TRACE_NORMAL;              /* set default trace mode            */
   debug_skip = 0;                      /* no skipping                       */

@@ -181,7 +181,7 @@ int RexxSource::characterTable[]={
                                        /* scanning operations...mostly to   */
                                        /* save some keystrokes and make     */
                                        /* things a little more readable     */
-#define GETCHAR()  ((UCHAR)(this->current[this->line_offset]))
+#define GETCHAR()  ((unsigned char)(this->current[this->line_offset]))
 #define MORELINE() (this->line_offset < this->current_length)
 #define OPERATOR(op) (this->clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, (RexxString *)OREF_##op, &location))
 #define CHECK_ASSIGNMENT(op, token) (token->checkAssignment(this, (RexxString *)OREF_ASSIGNMENT_##op))
@@ -462,7 +462,7 @@ RexxString *RexxSource::packLiteral(
   INT    outpointer;                   /* current output pointer            */
   RexxString *value;                   /* reduced value                     */
   INT    real_length;                  /* real number of digits in string   */
-  CHAR   error_output[2];              /* used for formatting error         */
+  char   error_output[2];              /* used for formatting error         */
 
  _first = TRUE;                        /* initialize group flags and        */
  count = 0;                            /* counters                          */
@@ -635,9 +635,9 @@ RexxToken *RexxSource::sourceNextToken(
  INT    subclass;                      /* sub type of the token             */
  INT    numeric;                       /* numeric type flag                 */
  LOCATIONINFO  location;               /* token location information        */
- CHAR   tran;                          /* translated character              */
- CHAR   badchar[4];                    /* working buffer for errors         */
- CHAR   hexbadchar[4];                 /* working buffer for errors         */
+ char   tran;                          /* translated character              */
+ char   badchar[4];                    /* working buffer for errors         */
+ char   hexbadchar[4];                 /* working buffer for errors         */
 
  /* definitions of states of exponential numeric scan */
 #define EXP_START    0
@@ -1219,7 +1219,7 @@ RexxToken *RexxSource::sourceNextToken(
              token = OPERATOR(BACKSLASH);
            break;
 
-         case (UCHAR)'ª':              /* logical not                       */
+         case (unsigned char)'ª':      /* logical not                       */
                                        /* next one an equal sign?           */
            if (this->nextSpecial('=', &location)) {
                                        /* have an equal sign after that?    */

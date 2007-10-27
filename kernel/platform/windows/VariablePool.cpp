@@ -66,7 +66,7 @@
 #include SYSREXXSAA
 
 extern "C" {
-   APIRET APIENTRY RexxStemSort(PCHAR stemname, INT order, INT type,
+   APIRET APIENTRY RexxStemSort(char *stemname, INT order, INT type,
        size_t start, size_t end, size_t firstcol, size_t lastcol);
 }
 
@@ -76,8 +76,8 @@ typedef struct shvnode {                    /* 16-bit variable pool block     */
     RXSTRING           shvvalue;            /* Pointer to the value buffer    */
     ULONG              shvnamelen;          /* Length of the name value       */
     ULONG              shvvaluelen;         /* Length of the fetch value      */
-    UCHAR              shvcode;             /* Function code for this block   */
-    UCHAR              shvret;              /* Individual Return Code Flags   */
+    uint8_t            shvcode;             /* Function code for this block   */
+    uint8_t            shvret;              /* Individual Return Code Flags   */
     } SHVBLOCK16;
 
 typedef SHVBLOCK16 FAR *PSHVBLOCK16;
@@ -99,7 +99,7 @@ typedef SHVBLOCK16 FAR *PSHVBLOCK16;
 /* Output:                                                                    */
 /*   TRUE if the sort succeeded, FALSE for any parameter errors.              */
 /******************************************************************************/
-ULONG REXXENTRY RexxStemSort(PCHAR stemname, INT order, INT type,
+ULONG REXXENTRY RexxStemSort(char *stemname, INT order, INT type,
     size_t start, size_t end, size_t firstcol, size_t lastcol)
 {
     if (!RexxQuery())                         /* Are we up?                     */
@@ -145,8 +145,7 @@ static ULONG copy_value(
    string_length = stringValue->getLength();/* get the string length             */
    if (rxstring->strptr == NULL) {          /* no target buffer?            */
                                             /* allocate a new one           */
-//   if (NULL == (rxstring->strptr = (PCH)malloc((ULONG) string_length + 1)) )
-     if (NULL == (rxstring->strptr = (PCH)GlobalAlloc(GMEM_FIXED, (ULONG) string_length + 1)) )
+     if (NULL == (rxstring->strptr = (char *)GlobalAlloc(GMEM_FIXED, (ULONG) string_length + 1)) )
        return RXSHV_MEMFL;                  /* couldn't allocate, return flag */
      else                                   /* rxstring is same as string     */
        rxstring->strlength = string_length + 1;
@@ -210,7 +209,7 @@ ULONG SysVariablePool(
 
  if (setjmp(syntaxHandler) != 0) {     /* get a storage error?              */
                                        /* set failure in current            */
-   pshvblock->shvret |= (UCHAR)RXSHV_MEMFL;
+   pshvblock->shvret |= RXSHV_MEMFL;
    retcode |= pshvblock->shvret;       /* OR with the composite             */
    return retcode;                     /* stop processing requests now      */
  }
@@ -231,7 +230,7 @@ ULONG SysVariablePool(
       pshvblock->shvret|=RXSHV_BADN;   /* this is bad                       */
     else {
                                        /* get the variable as a string      */
-      variable = new_string((PCHAR)pshvblock->shvname.strptr, pshvblock->shvname.strlength);
+      variable = new_string((char *)pshvblock->shvname.strptr, pshvblock->shvname.strlength);
                                        /* symbolic access?                  */
       if (code == RXSHV_SYFET || code == RXSHV_SYSET || code == RXSHV_SYDRO)
                                        /* get a symbolic retriever          */
@@ -271,7 +270,7 @@ ULONG SysVariablePool(
               pshvblock->shvret = RXSHV_BADN;
             else
                                        /* do the assignment                 */
-              retriever->set(activation, new_string((PCHAR)pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
+              retriever->set(activation, new_string((char *)pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
             break;
 
           case RXSHV_SYDRO:            /* drop operations                   */
@@ -310,7 +309,7 @@ ULONG SysVariablePool(
       pshvblock->shvret|=RXSHV_BADN;   /* this is bad                       */
     else {
                                        /* get the variable as a string      */
-      variable = new_string((PCHAR)pshvblock->shvname.strptr, pshvblock->shvname.strlength);
+      variable = new_string((char *)pshvblock->shvname.strptr, pshvblock->shvname.strlength);
                                        /* want the version string?          */
       if (IS_EQUAL(variable, "VERSION")) {
                                        /* copy the value                    */
@@ -389,10 +388,10 @@ ULONG SysVariablePool(
 /******************************************************************************/
 /* RexxExecutionLineInfo													  */
 /*                                                                            */
-/* Arguments: UINT *to retrieve currently processed line                       */
-/*            CHAR * to retrieve currently processed modul                  */
+/* Arguments: UINT *to retrieve currently processed line                      */
+/*            char * to retrieve currently processed modul                    */
 /******************************************************************************/
-ULONG REXXENTRY RexxExecutionLineInfo(ULONG * line, PSZ fname, BOOL next)
+ULONG REXXENTRY RexxExecutionLineInfo(ULONG * line, char * fname, BOOL next)
 {
   if (!RexxQuery())                         /* Are we up?                     */
     return 1;                               /*   No, send nastygram.          */

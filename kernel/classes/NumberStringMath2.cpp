@@ -270,9 +270,9 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, UINT DivOP
  RexxNumberStringBase *SaveLeft;       /* dummy operator object             */
  RexxNumberStringBase *SaveRight;      /* dummy operator object             */
                                        /* buffers for dummy arguments       */
- CHAR AccumBuffer[sizeof(RexxNumberStringBase)];
- CHAR SaveLeftBuffer[sizeof(RexxNumberStringBase)];
- CHAR SaveRightBuffer[sizeof(RexxNumberStringBase)];
+ char AccumBuffer[sizeof(RexxNumberStringBase)];
+ char SaveLeftBuffer[sizeof(RexxNumberStringBase)];
+ char SaveRightBuffer[sizeof(RexxNumberStringBase)];
  RexxNumberString   *result;
  char *Num1, *Num2;
  char *resultPtr, *Output, *rightPtr, *leftPtr, *SaveLeftPtr, *SaveRightPtr;
@@ -822,7 +822,7 @@ char * DividePower(char *AccumPtr, RexxNumberStringBase *Accum, char *Output, si
 /*********************************************************************/
 {
  RexxNumberStringBase *left;
- CHAR leftBuffer[sizeof(RexxNumberStringBase)];
+ char  leftBuffer[sizeof(RexxNumberStringBase)];
  char *Num1, *Num2;
  char *resultPtr, *leftPtr, *result;
  int   multiplier, rc;

@@ -105,6 +105,7 @@
 #define SysCall _cdecl
 #define SysCallV __cdecl
 
+typedef unsigned char uint8_t;
 typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
 

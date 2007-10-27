@@ -74,7 +74,7 @@
 #include <stdlib.h>
 
 extern "C" {
-   APIRET APIENTRY RexxStemSort(PCHAR stemname, INT order, INT type,
+   APIRET APIENTRY RexxStemSort(char *stemname, INT order, INT type,
        size_t start, size_t end, size_t firstcol, size_t lastcol);
 }
 
@@ -95,7 +95,7 @@ extern "C" {
 /* Output:                                                                    */
 /*   TRUE if the sort succeeded, FALSE for any parameter errors.              */
 /******************************************************************************/
-ULONG REXXENTRY RexxStemSort(PCHAR stemname, INT order, INT type,
+ULONG REXXENTRY RexxStemSort(char *stemname, INT order, INT type,
     size_t start, size_t end, size_t firstcol, size_t lastcol)
 {
     if (!RexxQuery())                         /* Are we up?                     */
@@ -225,7 +225,7 @@ ULONG SysVariablePool(
       pshvblock->shvret|=RXSHV_BADN;   /* this is bad                       */
     else {
                                        /* get the variable as a string      */
-      variable = new_string((PCHAR)pshvblock->shvname.strptr, pshvblock->shvname.strlength);
+      variable = new_string((char *)pshvblock->shvname.strptr, pshvblock->shvname.strlength);
                                        /* symbolic access?                  */
       if (code == RXSHV_SYFET || code == RXSHV_SYSET || code == RXSHV_SYDRO)
                                        /* get a symbolic retriever          */
@@ -269,8 +269,8 @@ ULONG SysVariablePool(
               pshvblock->shvret = RXSHV_BADN;
             else
                                        /* do the assignment                 */
-//            retriever->set(dictionary, new_string((PCHAR)pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
-              retriever->set(activation, new_string((PCHAR)pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
+//            retriever->set(dictionary, new_string((char *)pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
+              retriever->set(activation, new_string((char *)pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
             break;
 
           case RXSHV_SYDRO:            /* drop operations                   */
@@ -317,7 +317,7 @@ ULONG SysVariablePool(
       pshvblock->shvret|=RXSHV_BADN;   /* this is bad                       */
     else {
                                        /* get the variable as a string      */
-      variable = new_string((PCHAR)pshvblock->shvname.strptr, pshvblock->shvname.strlength);
+      variable = new_string((char *)pshvblock->shvname.strptr, pshvblock->shvname.strlength);
                                        /* want the version string?          */
       if (IS_EQUAL(variable, "VERSION")) {
                                        /* copy the value                    */
@@ -394,7 +394,7 @@ ULONG SysVariablePool(
                                        /* external function or sys exit     */
 
                                        /* Set ret value in the activity     */
-     self->activity->setShvVal(new_string((PCHAR)pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
+     self->activity->setShvVal(new_string((char *)pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
   }
   else if (enabled)                    /* if get here and VP is enabled     */
     pshvblock->shvret |= RXSHV_BADF;   /* bad function                      */

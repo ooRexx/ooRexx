@@ -72,7 +72,7 @@ RexxExpressionFunction::RexxExpressionFunction(
                                        /* set the default target            */
   OrefSet(this, this->u_name, function_name);
   /* save the argument count           */
-  this->argument_count = (UCHAR)argCount;
+  this->argument_count = (uint8_t)argCount;
   while (argCount > 0) {               /* now copy the argument pointers    */
                                        /* in reverse order                  */
     OrefSet(this, this->arguments[--argCount], arglist->pop());

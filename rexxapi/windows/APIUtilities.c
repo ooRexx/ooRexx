@@ -145,8 +145,8 @@ INT rxmemicmp(
 /*                                                                   */
 /*********************************************************************/
 int rxstricmp(
-  PSZ       s1,                        /* first string location      */
-  PSZ       s2 )                       /* second string location     */
+  char *    s1,                        /* first string location      */
+  char *    s2 )                       /* second string location     */
 {
   while ( 1 ) {
     if ( ( tolower(*s1) != tolower(*s2) ) || !*s1 )
@@ -156,7 +156,7 @@ int rxstricmp(
     ++s2;
   }
 
-  return ( (INT)tolower(*s1) - (INT)tolower(*s2) );
+  return ( (int)tolower(*s1) - (int)tolower(*s2) );
 }
 
 /*********************************************************************/

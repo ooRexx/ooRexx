@@ -44,7 +44,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 
-PCHAR  build_date = __DATE__;          /* date of last build                */
+char *  build_date = __DATE__;         /* date of last build                */
 
 RexxString *version_number (void)
 /******************************************************************************/
@@ -53,11 +53,11 @@ RexxString *version_number (void)
 /*  Returned:  Version string                                                 */
 /******************************************************************************/
 {
-  CHAR     buffer[100];                /* buffer for building the string    */
-  CHAR     work[20];                   /* working buffer                    */
-  PCHAR    month;                      /* month of the build                */
-  PCHAR    day;                        /* day of the build                  */
-  PCHAR    year;                       /* year of the build                 */
+  char     buffer[100];                /* buffer for building the string    */
+  char     work[20];                   /* working buffer                    */
+  char    *month;                      /* month of the build                */
+  char    *day;                        /* day of the build                  */
+  char    *year;                       /* year of the build                 */
 
   strcpy(work, build_date);            /* copy the build date               */
   month = strtok(work, " ");           /* get the month                     */

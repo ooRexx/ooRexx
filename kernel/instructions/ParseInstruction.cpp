@@ -58,7 +58,7 @@ extern RexxActivity *CurrentActivity;  /* current activity                  */
 RexxInstructionParse::RexxInstructionParse(
   RexxObject *_expression,             /* string expression source          */
   USHORT      string_source,           /* source of the parsed string       */
-  UCHAR       flags,                   /* option flags                      */
+  size_t      flags,                   /* option flags                      */
   LONG        templateCount,           /* count of template items           */
   RexxQueue  *parse_template )         /* parsing template array            */
 /******************************************************************************/

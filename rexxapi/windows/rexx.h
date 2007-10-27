@@ -63,6 +63,8 @@
 
 #include <windows.h>
 
+typedef unsigned char uint8_t;
+
 #define APIRET ULONG                    // API return types
 typedef DWORD PID;                      // process id
 typedef DWORD TID;                      // thread id (ignored on Windows)
@@ -205,8 +207,8 @@ typedef struct _SHVBLOCK {            /* shvb */
     RXSTRING           shvvalue;      /* Pointer to the value buffer */
     ULONG              shvnamelen;    /* Length of the name value    */
     ULONG              shvvaluelen;   /* Length of the fetch value   */
-    UCHAR              shvcode;       /* Function code for this block*/
-    UCHAR              shvret;        /* Individual Return Code Flags*/
+    uint8_t            shvcode;       /* Function code for this block*/
+    uint8_t            shvret;        /* Individual Return Code Flags*/
 }   SHVBLOCK;
 
 typedef SHVBLOCK *PSHVBLOCK;

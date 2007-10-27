@@ -143,7 +143,7 @@ void RexxEnvelope::flatten(RexxEnvelope *envelope)
                                             /* unpacking of the envelope on the     */
                                             /* remote system                        */
                                             /* compute our offset.                  */
-       this->duptable = (RexxObjectTable *)((PCHAR)this - envelope->bufferStart());
+       this->duptable = (RexxObjectTable *)((char *)this - envelope->bufferStart());
 
 #ifdef NESTED
      } else {
@@ -182,8 +182,8 @@ void RexxEnvelope::flattenReference(
  RexxObject *obj = *objRef;            /* get working pointer to object     */
  RexxObject *proxyObj;                 /* proxy of the flattened object     */
  long        referenceOffset;          /* offset of the reference           */
- PCHAR       buffer;                   /* buffer location                   */
- PCHAR       newBuffer;                /* location after a copy operation   */
+ char       *buffer;                   /* buffer location                   */
+ char       *newBuffer;                /* location after a copy operation   */
 
                                        /* See if object has already been    */
  newObj  = this->queryObj(obj);        /* Flattened/proxied.                */
@@ -325,7 +325,7 @@ RexxObject *RexxEnvelope::unpack()
   OrefSet(this, this->buffer, (RexxSmartBuffer *)new_buffer(objsize));
                                        /* Starting point of buffer, relative*/
                                        /* to the end of the buffer          */
-  op = ((PCHAR)(this->buffer) + ObjectSize(this->buffer)) - objsize;
+  op = ((char *)(this->buffer) + ObjectSize(this->buffer)) - objsize;
   fread(op,1,objsize,objfile);         /* Now read in entire flattened obj  */
   fclose(objfile);                     /* close the file                    */
 
@@ -343,7 +343,7 @@ RexxObject *RexxEnvelope::unpack()
 
 void RexxEnvelope::puff(
     RexxBuffer *buffer,                /* buffer object to unflatten        */
-    PCHAR startPointer)                /* start of buffered data            */
+    char *startPointer)                /* start of buffered data            */
 /******************************************************************************/
 /* Function:  Puff into an envelope and remove its contents (unflatten the    */
 /*            stuff )                                                         */
@@ -357,7 +357,7 @@ void RexxEnvelope::puff(
 
   bufferPointer = startPointer;        /* copy the starting point           */
                                        /* point to end of buffer            */
-  endPointer = (PCHAR)buffer + ObjectSize(buffer);
+  endPointer = (char *)buffer + ObjectSize(buffer);
 
   /* Set objoffset to the real address of the new objects.  This tells              */
   /* mark_general to fix the object's refs and set their live flags.                */
@@ -567,7 +567,7 @@ ULONG   RexxEnvelope::queryType()
   }
 }
 
-PCHAR RexxEnvelope::bufferStart()
+char *RexxEnvelope::bufferStart()
 /******************************************************************************/
 /* Return the start of the envelope buffer                                    */
 /******************************************************************************/

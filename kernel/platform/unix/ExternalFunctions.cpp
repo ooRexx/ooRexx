@@ -132,7 +132,7 @@ REXXOBJECT BuildEnvlist(void);
 RexxMethod *SysRestoreProgramBuffer(PRXSTRING, RexxString *);
 void RestoreEnvironment( void * );
 
-APIRET APIENTRY RexxExecuteMacroFunction ( PSZ, PRXSTRING );
+APIRET APIENTRY RexxExecuteMacroFunction ( char *, PRXSTRING );
 
 /*********************************************************************/
 /*                                                                   */
@@ -242,7 +242,7 @@ char *resolve_tilde(const char *path)
                 return(0);
             /* merge the strings          */
             sprintf(dir_buf, "%s/%s", home_dir, st);
-            return dir_buf; 
+            return dir_buf;
         }
         else
         {
@@ -253,7 +253,7 @@ char *resolve_tilde(const char *path)
             if (!dir_buf)
                 return(0);
             sprintf(dir_buf, "%s/", home_dir);
-            return dir_buf; 
+            return dir_buf;
         }
     }
     else if (*(st) == '~')
@@ -288,13 +288,13 @@ char *resolve_tilde(const char *path)
                                            /* get space for the buf      */
             dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+strlen(slash)+2);
             if (!dir_buf)
-                return NULL; 
+                return NULL;
             /* merge the strings          */
             sprintf(dir_buf, "%s/%s", ppwd->pw_dir, slash);
         }
         return dir_buf;                  /* directory change to        */
     }
-    return NULL;   
+    return NULL;
 }
 
 /****************************************************************************/
@@ -304,7 +304,7 @@ RexxMethod1(REXXOBJECT, sysDirectory, CSTRING, dir)
 {
 //char buffer[CCHMAXPATH+2];
   APIRET rc;
-  PCHAR rdir;                           /* resolved path */
+  char  *rdir;                         /* resolved path */
 
   rc = 0;
   if (dir != NO_CSTRING){              /* if new directory is not null,     */
@@ -394,7 +394,7 @@ RexxMethod3(REXXOBJECT,sysRxfuncadd,CSTRING,name,CSTRING,module,CSTRING,proc)
     proc = name;                       /* use the defined name              */
                                        /* try to register the function      */
 
-  if ((RexxRegisterFunctionDll(const_cast<PSZ>(name), const_cast<PSZ>(module), const_cast<PSZ>(proc))) == RXFUNC_NOTREG){
+  if ((RexxRegisterFunctionDll(const_cast<char *>(name), const_cast<char *>(module), const_cast<char *>(proc))) == RXFUNC_NOTREG){
     return TheTrueObject;              /* this failed                       */
   } else {
     return TheFalseObject;             /* this worked ok                    */
@@ -411,7 +411,7 @@ RexxMethod1(REXXOBJECT,sysRxfuncdrop,CSTRING,name)
                                        /* raise an error                    */
     send_exception(Error_Incorrect_call);
                                        /* try to drop the function          */
-  if (!RexxDeregisterFunction(const_cast<PSZ>(name)))
+  if (!RexxDeregisterFunction(const_cast<char *>(name)))
     return TheFalseObject;
   else
     return TheTrueObject;
@@ -427,7 +427,7 @@ RexxMethod1(REXXOBJECT,sysRxfuncquery,CSTRING,name)
   if (name == NO_CSTRING)              /* must have a name                  */
                                        /* raise an error                    */
     send_exception(Error_Incorrect_call);
-    if (!RexxQueryFunction(const_cast<PSZ>(name))) /* is it not there?                  */
+    if (!RexxQueryFunction(const_cast<char *>(name))) /* is it not there?                  */
     return TheFalseObject;             /* this failed  (function found!)    */
     else
       return TheTrueObject;            /* this worked ok  (no function!)    */
@@ -484,13 +484,13 @@ BOOL MacroSpaceSearch(
   RexxObject    ** result )            /* Result of function call           */
 {
   USHORT       Position;               /* located macro search position     */
-  CONST CHAR  *MacroName;              /* ASCII-Z name version              */
+  const char  *MacroName;              /* ASCII-Z name version              */
   RXSTRING     MacroImage;             /* target macro image                */
   RexxMethod * Routine;                /* method to execute                 */
 
   MacroName = target->getStringData(); /* point to the string data          */
                                        /* did we find this one?             */
-  if (RexxQueryMacro(const_cast<PSZ>(MacroName), &Position) == 0) {
+  if (RexxQueryMacro(const_cast<char *>(MacroName), &Position) == 0) {
                                        /* but not at the right time?        */
     if (order == MS_PREORDER && Position == RXMACRO_SEARCH_AFTER)
       return FALSE;                    /* didn't really find this           */
@@ -499,7 +499,7 @@ BOOL MacroSpaceSearch(
       /* call APISTARTUP to be sure that the ptr remains valid.             */
       APISTARTUP(MACROCHAIN);
 
-      if (RexxExecuteMacroFunction(const_cast<PSZ>(MacroName), &MacroImage) != 0)
+      if (RexxExecuteMacroFunction(const_cast<char *>(MacroName), &MacroImage) != 0)
       {
          APICLEANUP(MACROCHAIN);
          return FALSE;
@@ -556,7 +556,7 @@ BOOL RegExternalFunction(
   USHORT        functionrc;            /* Return code from function         */
 
                                        /* default return code buffer        */
-  CHAR      default_return_buffer[DEFRXSTRING];
+  char      default_return_buffer[DEFRXSTRING];
 
   funcname = target->getStringData();  /* point to the function name        */
                                        /* Do we have the function?          */
@@ -734,10 +734,10 @@ RexxMethod * SysGetMacroCode(
 REXXOBJECT BuildEnvlist()
 {
   REXXOBJECT  newBuffer;               /* Buffer object to hold env  */
-  PCHAR      * Environment;            /* environment pointer        */
+  char      **Environment;             /* environment pointer        */
   ULONG       size = 0;                /* size of the new buffer     */
-  PSZ         curr_dir;                /* current directory          */
-  PSZ         New;                     /* starting address of buffer */
+  char       *curr_dir;                /* current directory          */
+  char       *New;                     /* starting address of buffer */
   Environment = environ;               /* get the ptr to the environ */
 
   for(;*Environment != NULL;Environment++){
@@ -746,7 +746,7 @@ REXXOBJECT BuildEnvlist()
   }                                    /* now get current dir        */
   if(!size)
     return OREF_NULL;                  /* no envrionment !           */
-  if (!(curr_dir=(PSZ)malloc(CCHMAXPATH+2)))/* malloc storage for cwd*/
+  if (!(curr_dir=(char *)malloc(CCHMAXPATH+2)))/* malloc storage for cwd*/
     report_exception(Error_System_service);
 
   if (!getcwd(curr_dir,CCHMAXPATH))    /* get current directory      */
@@ -802,10 +802,10 @@ REXXOBJECT BuildEnvlist()
 void RestoreEnvironment(
   void *CurrentEnv)                    /* saved environment          */
 {
-  PSZ  current;                        /* ptr to saved environment   */
+  char  *current;                      /* ptr to saved environment   */
   size_t size;                         /* size of the saved space    */
   size_t length;                       /* string length              */
-  PSZ begin;                           /* begin of saved space       */
+  char  *begin;                        /* begin of saved space       */
   char      ** Environment;            /* environment pointer        */
 
   char  *del = NULL;                   /* ptr to old unused memory   */
@@ -816,7 +816,7 @@ void RestoreEnvironment(
 
     Environment = environ;             /* get the current environment*/
 
-  begin = current = (PCHAR)CurrentEnv; /* get the saved space        */
+  begin = current = (char *)CurrentEnv;/* get the saved space        */
   size = ((ENVENTRY*)current)->size;   /* first read out the size    */
   current += 4;                        /* update the pointer         */
   if(chdir(current) == -1)             /* restore the curr dir       */
@@ -831,7 +831,7 @@ void RestoreEnvironment(
     for(;*Environment != NULL;Environment++){
       length = strlen(*Environment)+1; /* get the size of the string */
                                        /* and alloc space for it     */
-      Env_Var_String = (PCHAR)malloc(length);
+      Env_Var_String = (char *)malloc(length);
       memcpy(Env_Var_String,*Environment,length);/* copy the string  */
       putenv(Env_Var_String);          /* and make it part of env    */
     }

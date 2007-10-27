@@ -117,8 +117,8 @@ RexxString *  SysResolveProgramName(
 /* FUNCTION    : SysFileExtension                                    */
 /*                                                                   */
 /* DESCRIPTION : Looks for a file extension in given string. Returns */
-/*               the ext in PSZ form. If no file ext returns an      */
-/*               empty pointer.                                      */
+/*               the ext in null terminated string form. If no file  */
+/*               ext returns an empty pointer.                       */
 /*                                                                   */
 /*********************************************************************/
 
@@ -428,15 +428,15 @@ const char *SearchFileName(
 /*                                                                   */
 /*********************************************************************/
 //{
-//  CHAR      FullName[CCHMAXPATH + 2];  /* temporary name buffer             */
+//  char      FullName[CCHMAXPATH + 2];  /* temporary name buffer             */
 //  RexxString * imgpath;
-//  PCHAR      fullname;
+//  char       * fullname;
 //
-//  imgpath = SearchFileName((PCHAR)BASEIMAGE);
-//  fullname = (PSZ)string_data(imgpath);
+//  imgpath = SearchFileName((char *)BASEIMAGE);
+//  fullname = (char *)string_data(imgpath);
 //
 //  if (fullname)
-//       return fopen((PSZ)fullname, "rb");    /* try to open the file        */
+//       return fopen((char *)fullname, "rb");    /* try to open the file        */
 //    else
 //       return NULL;                          /* return an open failure      */
 //}
@@ -459,7 +459,7 @@ void SysLoadImage(char **imageBuffer, long *imageSize)
   }
 #endif
 
-//  fullname = (PSZ)string_data(imgpath);
+//  fullname = (char *)string_data(imgpath);
 
 //if ( imgpath && fullname )                         /* seg faultn          */
   if ( fullname != OREF_NULL )

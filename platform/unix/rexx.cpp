@@ -95,8 +95,8 @@ int main (int argc, char **argv)
 {
   INT   i;                             /* loop counter                      */
   LONG  rc;                            /* actually running program RC       */
-  PCHAR program_name;                  /* name to run                       */
-  CHAR  arg_buffer[8192];              /* starting argument buffer          */
+  char *program_name;                  /* name to run                       */
+  char  arg_buffer[8192];              /* starting argument buffer          */
   char *cp;                            /* option character pointer          */
   RXSTRING argument;                   /* rexxstart argument                */
   LONG  argCount;

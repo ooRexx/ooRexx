@@ -1868,7 +1868,7 @@ nativei2 (REXXOBJECT, STRING_NEW, CSTRING, string, size_t, length)
   return_oref(new_string(string, length));
 }
 
-native3 (size_t, STRING_GET, size_t, start, PCHAR, buffer, size_t, bufl)
+native3 (size_t, STRING_GET, size_t, start, char *, buffer, size_t, bufl)
 /******************************************************************************/
 /* Function:  External interface to the object method                         */
 /******************************************************************************/

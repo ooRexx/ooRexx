@@ -219,9 +219,9 @@ int ValidateSet(
 
         if (Hex)                       /* hex version?                      */
                                        /* raise the hex message             */
-          report_exception1(Error_Incorrect_method_invhex, new_string((PCHAR)&c, 1));
+          report_exception1(Error_Incorrect_method_invhex, new_string((char *)&c, 1));
         else
-          report_exception1(Error_Incorrect_method_invbin, new_string((PCHAR)&c, 1));
+          report_exception1(Error_Incorrect_method_invbin, new_string((char *)&c, 1));
       }
     }
   }

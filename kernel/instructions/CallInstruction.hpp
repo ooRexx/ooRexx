@@ -47,8 +47,8 @@
 #include "RexxInstruction.hpp"
 
 typedef struct callshortoverlay {
-  UCHAR  builtin_index;                /* builtin function index            */
-  UCHAR  argument_count;               /* count of arguments                */
+  uint8_t  builtin_index;              /* builtin function index            */
+  uint8_t  argument_count;             /* count of arguments                */
 } CALLSHORTOVERLAY;
 
 #define call_nointernal  0x01          /* bypass internal routine calls     */
@@ -77,7 +77,7 @@ class RexxInstructionCall : public RexxInstructionCallBase {
  public:
 
   inline void *operator new(size_t size, void *ptr) {return ptr;};
-  RexxInstructionCall(RexxObject *, RexxString *, size_t, RexxQueue *, CHAR, CHAR);
+  RexxInstructionCall(RexxObject *, RexxString *, size_t, RexxQueue *, size_t, size_t);
   inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
   void live();
   void liveGeneral();

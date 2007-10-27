@@ -43,7 +43,7 @@
 /****************************************************************************/
 
 #if defined(REXX_DEBUG)
-VOID _cdecl DbgPrintf(PSZ pszDbgArgs, ...);
+VOID _cdecl DbgPrintf(char *pszDbgArgs, ...);
 #else
 #define DbgPrintf
 #endif

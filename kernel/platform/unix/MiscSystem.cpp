@@ -263,7 +263,7 @@ void SysSetupProgram(
 /******************************************************************************/
 {
 #ifdef RXTRACE_SUPPORT
-  PCHAR RxTraceBuf = NULL;
+  char     *RxTraceBuf = NULL;
   LONG      Length;                    /* length of variable                */
 
                                        /* scan current environment,         */
