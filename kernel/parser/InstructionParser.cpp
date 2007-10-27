@@ -121,7 +121,7 @@ RexxInstruction *RexxSource::addressNew()
   environment = OREF_NULL;
   command = OREF_NULL;
   token = nextReal();                  /* get the next token                */
-  if (token->isEndOfClause()) {        /* something other than a toggle?    */
+  if (!token->isEndOfClause()) {       /* something other than a toggle?    */
                                        /* something other than a symbol or  */
                                        /* string?...implicit value form     */
     if (!token->isSymbolOrLiteral()) {
