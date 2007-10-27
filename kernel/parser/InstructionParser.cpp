@@ -1414,7 +1414,7 @@ RexxInstruction *RexxSource::parseNew(
   _expression = OREF_NULL;              /* zero out the expression           */
   if (argpull != KEYWORD_PARSE) {      /* have one of the short forms?      */
     string_source = argpull;           /* set the proper source location    */
-    flags |= parse_upper;              /* we're uppercasing                 */
+    _flags |= parse_upper;             /* we're uppercasing                 */
   }
   else {                               /* need to parse source keywords     */
     for (;;) {                         /* loop through for multiple keywords*/
@@ -1587,7 +1587,7 @@ RexxInstruction *RexxSource::parseNew(
       // parse off an expression in the parens.
       RexxObject *subExpr = this->parenExpression(token);
                                        /* create the appropriate trigger    */
-      trigger = new (variableCount) RexxTrigger(flags&parse_caseless ? TRIGGER_MIXED : TRIGGER_STRING, subExpr, variableCount, _variables);
+      trigger = new (variableCount) RexxTrigger(_flags&parse_caseless ? TRIGGER_MIXED : TRIGGER_STRING, subExpr, variableCount, _variables);
       variableCount = 0;               /* have a new set of variables       */
                                        /* add this to the trigger list      */
       parse_template->push((RexxObject *)trigger);
@@ -1595,7 +1595,7 @@ RexxInstruction *RexxSource::parseNew(
     }
     else if (token->isLiteral()) {     /* non-variable string trigger?      */
                                        /* create the appropriate trigger    */
-      trigger = new (variableCount) RexxTrigger(flags&parse_caseless ? TRIGGER_MIXED : TRIGGER_STRING,
+      trigger = new (variableCount) RexxTrigger(_flags&parse_caseless ? TRIGGER_MIXED : TRIGGER_STRING,
           this->addText(token), variableCount, _variables);
       variableCount = 0;               /* have a new set of variables       */
                                        /* add this to the trigger list      */
