@@ -618,7 +618,7 @@ long RexxNumberString::longValue(size_t digits)
     }
                                        /* is long value expressable as a    */
                                        /*  whole number in REXX term.       */
-    if (createdDigits <= 9 && intnum >= validMaxWhole[NumDigits -1]) {
+    if (createdDigits <= 9 && intnum >= validMaxWhole[createdDigits - 1]) {
       return NO_LONG;                  /* nope, not a valid long.           */
     }
 
