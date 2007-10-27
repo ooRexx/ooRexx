@@ -1763,11 +1763,16 @@ RexxMethod3(long, stream_lines,
    long        quickflag=0;
 
    if (strQuickFlag != 0)
-      if (stricmp(strQuickFlag,"n") == 0)
-        quickflag = 1;
-      else
-        if (stricmp(strQuickFlag,"c") != 0 && *strQuickFlag != '\0' )
-          send_exception(Error_Incorrect_method);
+   {
+       if (toupper(*strQuickFlag) == 'N')
+       {
+           quickflag = 1;
+       }
+       else if (toupper(*strQuickFlag) != 'C')
+       {
+           send_exception(Error_Incorrect_method);
+       }
+   }
    stream_info = get_stream_info();    /* get the stream block              */
    if (!stream_info->flags.open)       /* not open yet?                     */
                                        /* do the open                       */
