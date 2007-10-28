@@ -284,12 +284,16 @@ class RexxSource : public RexxInternalObject {
 
   static inline bool isSymbolCharacter(char ch)
   {
-      return characterTable[(unsigned int)ch] != 0;
+      // The anding is necessary to keep characters > 0x7F from being
+      // treated as negative numbers and returning bogus values.
+      return characterTable[((unsigned int)ch) & 0xff] != 0;
   }
 
   static inline int translateChar(char ch)
   {
-      return characterTable[(unsigned int)ch];
+      // The anding is necessary to keep characters > 0x7F from being
+      // treated as negative numbers and returning bogus values.
+      return characterTable[((unsigned int)ch) & 0xff];
   }
 
   LONG  flags;                         /* parsing flags                     */
