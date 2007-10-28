@@ -74,6 +74,11 @@
  * Some platforms do not typedef pthread_t without explicitly #including pthread.h
  */
 #include <pthread.h>
+// The limit values for the portable int types are only included in C++ if the
+// following is defined before including stdint.h.
+#define __STDC_LIMIT_MACROS
+
+#include <stdint.h>
 
 /* Definitions maybe provided ---------------------------------------------- */
 

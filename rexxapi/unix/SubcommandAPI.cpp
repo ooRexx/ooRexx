@@ -295,7 +295,7 @@ APIRET APIENTRY RexxRegisterSubcomDll(
 APIRET APIENTRY RexxRegisterSubcomExe(
   PSZ   EnvName,                       /* Subcom name                */
   PFN   EntryPoint,                    /* DLL routine name           */
-  unsigned char *UserArea,             /* User data                  */
+  unsigned char *UserArea)             /* User data                  */
 {
   ULONG  rc;                           /* Function return code.      */
                                        /* Register the subcommand    */
@@ -580,7 +580,7 @@ APIRET APIENTRY RexxRegisterExitDll(
   PSZ   EnvName,                       /* Exit name                  */
   PSZ   ModuleName,                    /* Name of DLL                */
   PSZ   EntryPoint,                    /* DLL routine name           */
-  unsigned char *UserArea )            /* User data                  */
+  unsigned char *UserArea,             /* User data                  */
   ULONG DropAuth )                     /* Drop Authority             */
 {
   ULONG  rc;                           /* Function return code.      */
@@ -855,7 +855,7 @@ LONG RegRegisterDll(
   PSZ       EnvName,                   /* Subcom name                */
   PSZ       ModuleName,                /* Name of DLL                */
   PSZ       EntryPoint,                /* Dll routine name           */
-  unsigned char *UserArea )            /* User data                  */
+  unsigned char *UserArea,             /* User data                  */
   ULONG     DropAuth,                  /* Drop Authoritiy            */
   LONG      type)                      /* Registration Type          */
 {
@@ -945,7 +945,7 @@ LONG RegRegisterDll(
 LONG  RegRegisterExe(
   PSZ   EnvName,                       /* Subcom name                */
   PFN   EntryPoint,                    /* DLL routine name           */
-  unsigned char *UserArea )            /* User data                  */
+  unsigned char *UserArea,             /* User data                  */
   LONG  type,                          /* Registration type.         */
   LONG  CallType )                     /* 32- or 16-bit call outs    */
 {
