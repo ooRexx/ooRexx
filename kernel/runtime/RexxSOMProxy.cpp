@@ -478,9 +478,9 @@ RexxInteger *RexxSOMProxy::integer(RexxInteger *digits)
 /*  Returned:  self                                                           */
 /******************************************************************************/
 {
-  long longValue;
-  longValue = this->longValue(NO_LONG);
-  return new_integer(longValue);
+  long longVal;
+  longVal = this->longValue(NO_LONG);
+  return new_integer(longVal);
 }
 
 RexxObject *RexxSOMProxy::initProxy(RexxInteger *somobj)
@@ -956,21 +956,21 @@ RexxSOMProxy *RexxSOMProxyClass::newRexx(RexxObject **init_args, size_t argCount
 /* Function:  Create a new integer object                                     */
 /******************************************************************************/
 {
-  RexxSOMProxy *newObject;             /* newly create object               */
+  RexxSOMProxy *newObj;                /* newly create object               */
 
                                        /* get a new object                  */
-  newObject = new RexxSOMProxy;
+  newObj = new RexxSOMProxy;
                                        /* add in the integer behaviour, and */
                                        /* make sure old2new knows about it  */
-  BehaviourSet(newObject, this->instanceBehaviour);
+  BehaviourSet(newObj, this->instanceBehaviour);
 
                                        /* set the default hash value        */
                                        /* does object have an UNINT method  */
   if (this->uninitDefined())  {
                                        /* Make sure everyone is notified.   */
-     newObject->hasUninit();
+     newObj->hasUninit();
   }
-  return newObject;                    /* return the new object.            */
+  return newObj;                       /* return the new object.            */
 
 }
 

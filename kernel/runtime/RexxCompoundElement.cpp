@@ -103,20 +103,20 @@ RexxCompoundElement *RexxMemory::newCompoundElement(
 /****************************************************************************/
 {
                                        /* created variable object           */
-  RexxCompoundElement *newObject;
+  RexxCompoundElement *newObj;
 
                                        /* Get new object                    */
-  newObject = (RexxCompoundElement *)new_object(sizeof(RexxCompoundElement));
+  newObj = (RexxCompoundElement *)new_object(sizeof(RexxCompoundElement));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheCompoundElementBehaviour);
+  BehaviourSet(newObj, TheCompoundElementBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newObject, T_compound_element);
+  setVirtualFunctions(newObj, T_compound_element);
   /* Explicitly clear out the variable value, which is not cleared */
   /* by ClearObject call.  Note that we don't use OREF_SET here, as */
   /* this field is likely to be garbage. */
-  newObject->variableValue = OREF_NULL;
-  ClearObject(newObject);              /* clear everything out              */
-  newObject->variable_name = name;     /* fill in the name                  */
+  newObj->variableValue = OREF_NULL;
+  ClearObject(newObj);                 /* clear everything out              */
+  newObj->variable_name = name;        /* fill in the name                  */
 
-  return newObject;                    /* return the new object             */
+  return newObj;                       /* return the new object             */
 }

@@ -148,6 +148,7 @@ void* async_timer(PVOID info)
   (((ASYNC_TIMER_INFO*)info)->sem)->wait(((ASYNC_TIMER_INFO*)info)->time);
   if (!(((ASYNC_TIMER_INFO*)info)->sem)->posted()) /* if sem not posted ..  */
     (((ASYNC_TIMER_INFO*)info)->sem)->post();      /* do it                 */
+  return NULL;
 }
 /*********************************************************************/
 /*                                                                   */

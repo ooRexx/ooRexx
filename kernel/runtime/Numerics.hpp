@@ -80,6 +80,8 @@ public:
     static stringsize_t formatWholeNumber(wholenumber_t integer, stringchar_t *dest);
     static stringsize_t formatStringSize(stringsize_t integer, stringchar_t *dest);
     static stringsize_t formatInt64(int64_t integer, stringchar_t *dest);
+
+    static int validMaxWhole[];          // table of maximum values per digits setting
 };
 
 #endif

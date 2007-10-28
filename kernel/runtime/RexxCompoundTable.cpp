@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
-/* REXX Kernel                                        RexxCompoundTable.c     */
+/* REXX Kernel                                      RexxCompoundTable.c     */
 /*                                                                          */
 /* Stem object table of compound variables                                  */
 /*                                                                          */
@@ -46,9 +46,9 @@
 #include "RexxCompoundElement.hpp"
 
 void RexxCompoundTable::init(
-    RexxStem *parent)                  /* the parent object we're embedded in */
+    RexxStem *parentStem)              /* the parent object we're embedded in */
 {
-    setParent(parent);                 /* make the parent hook up */
+    setParent(parentStem);             /* make the parent hook up */
     setRoot(OREF_NULL);                /* no root member */
 }
 
@@ -88,7 +88,7 @@ RexxCompoundElement *RexxCompoundTable::findEntry(
     BOOL create)                       /* we're creating a variable  */
 {
 
-    INT          rc;                   /* comparison result          */
+    int          rc = 0;               /* comparison result          */
     RexxCompoundElement *previous;     /* pointer for tree traversal */
     RexxCompoundElement *anchor;       /* pointer to current block   */
 
@@ -140,27 +140,27 @@ RexxCompoundElement *RexxCompoundTable::findEntry(
 
 
 void RexxCompoundTable::balance(
-    RexxCompoundElement *node)                    /* starting point             */
+    RexxCompoundElement *node)         /* starting point             */
 {
 
-     RexxCompoundElement *parent;                 /* block parent pointer       */
+     RexxCompoundElement *_parent;     /* block parent pointer       */
      unsigned short depth;             /* current depth              */
      unsigned short wd;                /* working depth              */
 
      if (node == root)                 /* this the root?             */
          return;                       /* nothing to Balance         */
 
-     parent = node->parent;            /* step up to block's parent  */
+     _parent = node->parent;           /* step up to block's parent  */
      depth = 1;                        /* initial depth is 1         */
 
-     while (parent) {                  /* while still have a parent  */
+     while (_parent != OREF_NULL) {    /* while still have a parent  */
 
-         if (parent->right == node) {      /* if on right branch         */
-             parent->rightdepth = depth;   /* set right depth            */
-                                           /* deeper on left?            */
-             if (depth > (wd = parent->leftdepth + (unsigned short)1)) {
-                 moveNode(&parent, FALSE);   /* adjust right branch        */
-                 depth = parent->rightdepth; /* readjust depth             */
+         if (_parent->right == node) {      /* if on right branch         */
+             _parent->rightdepth = depth;   /* set right depth            */
+                                            /* deeper on left?            */
+             if (depth > (wd = _parent->leftdepth + (unsigned short)1)) {
+                 moveNode(&_parent, FALSE);   /* adjust right branch        */
+                 depth = _parent->rightdepth; /* readjust depth             */
              }
              else {
                  if (wd < depth)           /* left shorter               */
@@ -168,11 +168,11 @@ void RexxCompoundTable::balance(
              }
          }
          else {
-             parent->leftdepth = depth;    /* set left depth             */
-                                           /* if right shorter           */
-             if (depth > (wd = parent->rightdepth + (USHORT)1)) {
-                 moveNode(&parent, TRUE);       /* adjust left branch         */
-                 depth = parent->leftdepth;     /* readjust depth             */
+             _parent->leftdepth = depth;    /* set left depth             */
+                                            /* if right shorter           */
+             if (depth > (wd = _parent->rightdepth + (USHORT)1)) {
+                 moveNode(&_parent, TRUE);       /* adjust left branch         */
+                 depth = _parent->leftdepth;     /* readjust depth             */
              }
              else {
                  if (wd < depth)           /* right shorter              */
@@ -180,8 +180,8 @@ void RexxCompoundTable::balance(
              }
          }
          depth++;                           /* increment the depth        */
-         node = parent;                     /* step up to current         */
-         parent = parent->parent;           /* and lift up one more       */
+         node = _parent;                    /* step up to current         */
+         _parent = _parent->parent;         /* and lift up one more       */
      }
 }
 
@@ -257,22 +257,22 @@ RexxCompoundElement *RexxCompoundTable::next(
     RexxCompoundElement *node)             /* starting point we're drilling from */
 {
                                            /* get the parent node */
-    RexxCompoundElement *parent = node->parent;
-    if (parent != OREF_NULL) {
-        if (parent->right == node) {       /* if coming back up from the right */
-            return parent;                 /* this node's turn has come */
+    RexxCompoundElement *_parent = node->parent;
+    if (_parent != OREF_NULL) {
+        if (_parent->right == node) {      /* if coming back up from the right */
+            return _parent;                /* this node's turn has come */
         }
-        if (parent->right != OREF_NULL) {  /* if no right child, do this one immediately */
-            return findLeaf(parent->right);/* drill down the other branch */
+        if (_parent->right != OREF_NULL) {  /* if no right child, do this one immediately */
+            return findLeaf(_parent->right);/* drill down the other branch */
         }
-        return parent;
+        return _parent;
     }
     return OREF_NULL;                      /* we've reached the top */
 }
 
 
 void RexxCompoundTable::setParent(
-    RexxStem *parent)
+    RexxStem *parentStem)
 /******************************************************************************/
 /* Function:  Set the parent for a compound table.  N.B., this cannot be an   */
 /* inline method because of circular header file dependencies between         */
@@ -280,7 +280,7 @@ void RexxCompoundTable::setParent(
 /******************************************************************************/
 {
                                            /* NOTE: we're setting this as a field in the parent object */
-    OrefSet(parent, parent->tails.parent, parent);
+    OrefSet(parentStem, parent->tails.parent, parentStem);
 }
 
 

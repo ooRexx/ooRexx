@@ -154,13 +154,12 @@
 /******************************************************************************/
 /* Initialisation                                                             */
 /******************************************************************************/
-RexxString * kernel_name (char* value);
 void         REXX_terminate (void);
 void         restoreStrings(void);     /* restore "name" strings            */
 void         kernelBuildVirtualFunctionTableArray(void);
 
 RexxString * kernel_name (
-    char* value)                       /* ASCII-Z string value              */
+    const char *value)                 /* ASCII-Z string value              */
 /******************************************************************************/
 /* Function:  Create a common string value during image build and save        */
 /******************************************************************************/

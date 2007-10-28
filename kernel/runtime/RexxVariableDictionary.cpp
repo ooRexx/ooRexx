@@ -59,21 +59,21 @@ RexxObject  *RexxVariableDictionary::copy()
 /* Function:  Copy a variable dictionary                                      */
 /******************************************************************************/
 {
-  RexxVariableDictionary *copy;        /* copied object                     */
+  RexxVariableDictionary *copyObj;     /* copied object                     */
 
   /* create a new object               */
-  copy = new_variableDictionary(contents->mainSlotsSize());
-  ClearObject(copy);                   /* clear this out                    */
+  copyObj = new_variableDictionary(contents->mainSlotsSize());
+  ClearObject(copyObj);                /* clear this out                    */
                                        /* copy the behaviour pointer        */
-  OrefSet(copy, copy->behaviour, this->behaviour);
-  save(copy);                          /* protect from garbage collect      */
+  OrefSet(copyObj, copyObj->behaviour, this->behaviour);
+  save(copyObj);                       /* protect from garbage collect      */
                                        /* copy the hash table               */
-  OrefSet(copy, copy->contents, (RexxHashTable *)this->contents->copy());
+  OrefSet(copyObj, copyObj->contents, (RexxHashTable *)this->contents->copy());
   /* make sure we copy the scope too */
-  OrefSet(copy, copy->scope, this->scope);
-  copy->copyValues();                  /* copy all of the variables         */
-  discard(hold(copy));                 /* unlock the copy                   */
-  return (RexxObject *)copy;           /* return the new vdict              */
+  OrefSet(copyObj, copyObj->scope, this->scope);
+  copyObj->copyValues();               /* copy all of the variables         */
+  discard(hold(copyObj));              /* unlock the copy                   */
+  return (RexxObject *)copyObj;        /* return the new vdict              */
 }
 
 void RexxVariableDictionary::copyValues()
@@ -83,15 +83,15 @@ void RexxVariableDictionary::copyValues()
 {
   size_t      i;                       /* loop counter                      */
   RexxObject *value;                   /* hash table value                  */
-  RexxObject *copy;                    /* copied value                      */
+  RexxObject *copyObj;                 /* copied value                      */
 
                                        /* loop through the hash table       */
   for (i = this->contents->first();
        i < this->contents->totalSlotsSize();
        i = this->contents->next(i)) {
-    value = this->contents->value(i);  /* get the next value                */
-    copy = value->copy();              /* copy the value                    */
-    this->contents->replace(copy, i);  /* replace with the copied value     */
+    value = this->contents->value(i);     /* get the next value                */
+    copyObj = value->copy();              /* copy the value                    */
+    this->contents->replace(copyObj, i);  /* replace with the copied value     */
   }
 }
 
@@ -111,7 +111,7 @@ RexxObject  *RexxVariableDictionary::realValue(
 
 
 RexxCompoundElement *RexxVariableDictionary::getCompoundVariable(
-     RexxString *stem,                 /* name of stem for compound         */
+     RexxString *stemName,             /* name of stem for compound         */
      RexxObject **tail,                /* tail of the compound element      */
      LONG        tailCount)            /* number of tail pieces             */
 /******************************************************************************/
@@ -123,14 +123,14 @@ RexxCompoundElement *RexxVariableDictionary::getCompoundVariable(
                                        /* new tail for compound             */
   RexxCompoundTail resolved_tail(this, tail, tailCount);
 
-  stem_table = getStem(stem);          /* get the stem entry from this dictionary */
+  stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
                                        /* get the compound variable         */
   return stem_table->getCompoundVariable(&resolved_tail);
 }
 
 
 RexxObject *RexxVariableDictionary::getCompoundVariableValue(
-     RexxString *stem,                 /* name of stem for compound         */
+     RexxString *stemName,             /* name of stem for compound         */
      RexxObject **tail,                /* tail of the compound element      */
      LONG        tailCount)            /* number of tail pieces             */
 /******************************************************************************/
@@ -142,7 +142,7 @@ RexxObject *RexxVariableDictionary::getCompoundVariableValue(
                                        /* new tail for compound             */
   RexxCompoundTail resolved_tail(this, tail, tailCount);
 
-  stem_table = getStem(stem);          /* get the stem entry from this dictionary */
+  stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
                                        /* get the value from the stem...we pass OREF_NULL */
                                        /* for the dictionary to bypass NOVALUE handling */
   return stem_table->evaluateCompoundVariableValue(OREF_NULL, &resolved_tail);
@@ -150,14 +150,14 @@ RexxObject *RexxVariableDictionary::getCompoundVariableValue(
 
 
 RexxObject  *RexxVariableDictionary::realStemValue(
-     RexxString *stem)                 /* name of stem for compound         */
+     RexxString *stemName)             /* name of stem for compound         */
 /******************************************************************************/
 /* Function:  Retrieve the "real" value of a stem variable.  OREF_NULL is     */
 /*            returned if the stem does not exist.                            */
 /******************************************************************************/
 {
                                        /* look up the name                  */
-  return this->getStem(stem);          /* find and return the stem directly */
+  return this->getStem(stemName);      /* find and return the stem directly */
 }
 
 
@@ -195,7 +195,7 @@ void RexxVariableDictionary::put(
 
 
 RexxVariable *RexxVariableDictionary::createStemVariable(
-     RexxString *stem)                 /* name of target stem               */
+     RexxString *stemName)             /* name of target stem               */
 /******************************************************************************/
 /* Function:  Lookup and retrieve a STEM variable item (not the stem table)   */
 /*            level)                                                          */
@@ -205,13 +205,13 @@ RexxVariable *RexxVariableDictionary::createStemVariable(
   RexxVariable *variable;              /* resolved variable item            */
   RexxHashTable *new_hash;             /* reallocated hash table            */
 
-  variable =  new_variable(stem);    /* make a new variable entry         */
-  stemtable = new RexxStem (stem);   /* create a stem object as value     */
+  variable =  new_variable(stemName); /* make a new variable entry         */
+  stemtable = new RexxStem (stemName); /* create a stem object as value     */
                                      /* the stem object is the value of   */
                                      /* stem variable                     */
   variable->set((RexxObject *)stemtable);
                                      /* try to place in existing hashtab  */
-  new_hash = this->contents->stringAdd((RexxObject *)variable, stem);
+  new_hash = this->contents->stringAdd((RexxObject *)variable, stemName);
   if (new_hash != OREF_NULL)         /* have a reallocation occur?        */
                                      /* hook on the new hash table        */
     OrefSet(this, this->contents, new_hash);
@@ -357,12 +357,12 @@ BOOL RexxVariableDictionary::transfer(
 }
 
 
-void RexxVariableDictionary::setNextDictionary(RexxVariableDictionary *next)
+void RexxVariableDictionary::setNextDictionary(RexxVariableDictionary *_next)
 /******************************************************************************/
 /* Function:  Chain up a dictionary associated with an object                 */
 /******************************************************************************/
 {
-    OrefSet(this, this->next, next);
+    OrefSet(this, this->next, _next);
 }
 
 void RexxVariableDictionary::live()
@@ -415,7 +415,7 @@ RexxVariableDictionary *RexxMemory::newVariableDictionary(
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxVariableDictionary *newObject;   /* newly created object              */
+  RexxVariableDictionary *newObj;      /* newly created object              */
   size_t hashTabSize;                  /* size of hash table to allocate    */
 
   hashTabSize = looksize * 2;          /* create entries for twice size     */
@@ -428,12 +428,12 @@ RexxVariableDictionary *RexxMemory::newVariableDictionary(
                                        /* some special optimization of the  */
                                        /* look ups                          */
                                        /* get a new object and hash         */
-  newObject = (RexxVariableDictionary *)new_hashCollection(hashTabSize, sizeof(RexxVariableDictionary));
+  newObj = (RexxVariableDictionary *)new_hashCollection(hashTabSize, sizeof(RexxVariableDictionary));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheVariableDictionaryBehaviour);
+  BehaviourSet(newObj, TheVariableDictionaryBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newObject, T_vdict);
-  return newObject;                    /* return the new vdict              */
+  setVirtualFunctions(newObj, T_vdict);
+  return newObj;                       /* return the new vdict              */
 }
 
 
@@ -443,7 +443,7 @@ RexxVariableDictionary *RexxMemory::newVariableDictionary(
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxVariableDictionary *newObject;   /* newly created object              */
+  RexxVariableDictionary *newObj;      /* newly created object              */
   size_t hashTabSize;                  /* size of hash table to allocate    */
 
   /* create entries for twice size     */
@@ -457,11 +457,11 @@ RexxVariableDictionary *RexxMemory::newVariableDictionary(
                                        /* some special optimization of the  */
                                        /* look ups                          */
                                        /* get a new object and hash         */
-  newObject = (RexxVariableDictionary *)new_hashCollection(hashTabSize, sizeof(RexxVariableDictionary));
-  newObject->scope = scope;            /* fill in the scope */
+  newObj = (RexxVariableDictionary *)new_hashCollection(hashTabSize, sizeof(RexxVariableDictionary));
+  newObj->scope = scope;               /* fill in the scope */
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheVariableDictionaryBehaviour);
+  BehaviourSet(newObj, TheVariableDictionaryBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newObject, T_vdict);
-  return newObject;                    /* return the new vdict              */
+  setVirtualFunctions(newObj, T_vdict);
+  return newObj;                       /* return the new vdict              */
 }

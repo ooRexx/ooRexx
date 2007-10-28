@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxNativeActivation.hpp  */
+/* REXX Kernel                                      RexxNativeActivation.hpp  */
 /*                                                                            */
 /* Primitive Native Activation Class Definitions                              */
 /*                                                                            */
@@ -58,10 +58,10 @@ class RexxNativeActivation : public RexxActivationBase {
   RexxObject *run(size_t, RexxObject **);
   RexxObject *saveObject(RexxObject *);
   RexxVariableDictionary *methodVariables();
-  long   isInteger(RexxObject *);
+  bool   isInteger(RexxObject *);
   const char *cstring(RexxObject *);
   double getDoubleValue(RexxObject *);
-  long   isDouble(RexxObject *);
+  bool   isDouble(RexxObject *);
   PVOID  cself();
   PVOID  buffer();
   PVOID  pointer(RexxObject *);
@@ -115,9 +115,9 @@ class RexxNativeActivation : public RexxActivationBase {
   RexxVariableDictionary *nextcurrent; /* current processed vdict           */
   RexxCompoundElement *compoundelement;/* current compound variable value   */
   RexxStem *      nextstem;            /* our working stem variable         */
-  SHORT           argcount;            /* size of the argument list         */
-  char            vpavailable;         /* Variable pool access flag         */
-  char            object_scope;        /* reserve/release state of variables*/
+  size_t          argcount;            /* size of the argument list         */
+  bool            vpavailable;         /* Variable pool access flag         */
+  int             object_scope;        /* reserve/release state of variables*/
   jmp_buf         conditionjump;       /* condition trap recovery location  */
   jmp_buf        *syntaxHandler;       /* syntax/memory trapper             */
 };

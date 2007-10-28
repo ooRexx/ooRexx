@@ -1104,7 +1104,7 @@ bool RexxDateTime::getNumber(const char *input, int length, int *target, int max
 void RexxDateTime::formatBaseDate(char *buffer)
 {
     // format this into the buffer as a number
-    sprintf(buffer, "%lu", getBaseDate());
+    sprintf(buffer, "%d", getBaseDate());
 }
 
 
@@ -1285,7 +1285,7 @@ void RexxDateTime::formatHours(char *buffer)
  */
 void RexxDateTime::formatLongTime(char *buffer)
 {
-    sprintf(buffer, "%2.2u:%2.2u:%2.2u.%6.6lu", hours, minutes, seconds, microseconds);
+    sprintf(buffer, "%2.2u:%2.2u:%2.2u.%6.6u", hours, minutes, seconds, microseconds);
 }
 
 

@@ -126,8 +126,7 @@ RexxObject *SysValue(
     RexxObject *NewValue,              /* new assigned value                */
     RexxString *Selector )             /* variable selector                 */
 {
-  char        *OldValue;               /* old environment value             */
-  RexxString  *Retval;                 /* returned old name                 */
+  const char * OldValue;               /* old environment value             */
 
   Selector = Selector->upper();        /* upper case the selector           */
                                        /* Linux environment variables can   */
@@ -137,8 +136,10 @@ RexxObject *SysValue(
                                        /* flag this error                   */
     report_exception1(Error_Incorrect_call_selector, Selector);
                                        /* scan for the variable             */
+  RexxString *Retval;
 
-  if (OldValue = getenv(Name->getStringData()))  /* have a value already?   */
+  OldValue = getenv(Name->getStringData());
+  if (OldValue != NULL)                /* have a value already?   */
     Retval = new_cstring(OldValue);    /* Yes -  convert to Rexx string     */
   else
     Retval = OREF_NULLSTRING;          /* otherwise, return null            */

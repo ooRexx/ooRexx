@@ -192,10 +192,8 @@ ULONG SysVariablePool(
 {
   RexxString       * variable;         /* name of the variable              */
   RexxVariableBase * retriever;        /* variable retriever                */
-//RexxVariableDictionary * dictionary; /* variable dictionary               */
   RexxActivation   * activation;       /* most recent REXX activation       */
   RexxObject       * value;            /* fetched value                     */
-//RexxArray        * valuePair;        /* name/value pair from fetch next   */
   ULONG              retcode;          /* composite return code             */
   LONG               arg_position;     /* requested argument position       */
   INT                code;             /* variable request code             */
@@ -206,7 +204,6 @@ ULONG SysVariablePool(
 
  pshvblock = (PSHVBLOCK)requests;      /* copy the request block pointer    */
                                        /* get the variable dictionary       */
-// dictionary = self->activationVariables();
  activation = self->activity->currentAct();
 
  while (pshvblock) {                   /* while more request blocks         */
@@ -215,8 +212,6 @@ ULONG SysVariablePool(
 
                                        /* one of the access forms?          */
                                        /* and VP is enabled                 */
-//  if ((code==RXSHV_FETCH || code==RXSHV_SYFET || code==RXSHV_SET || code==RXSHV_SYSET
-//      code==RXSHV_DROPV || code==RXSHV_SYDRO) && (enabled)) {
   if ((code==RXSHV_FETCH || code==RXSHV_SYFET) || (code==RXSHV_SET || code==RXSHV_SYSET ||
       code==RXSHV_DROPV || code==RXSHV_SYDRO) && (enabled)) {
 
@@ -229,10 +224,8 @@ ULONG SysVariablePool(
                                        /* symbolic access?                  */
       if (code == RXSHV_SYFET || code == RXSHV_SYSET || code == RXSHV_SYDRO)
                                        /* get a symbolic retriever          */
-//      retriever = dictionary->retriever(variable);
         retriever = activation->getVariableRetriever(variable);
       else                             /* need a direct retriever           */
-//      retriever = dictionary->directRetriever(variable);
         retriever = activation->getDirectVariableRetriever(variable);
       if (retriever == OREF_NULL)      /* have a bad name?                  */
         pshvblock->shvret|=RXSHV_BADN; /* this is bad                       */
@@ -240,7 +233,6 @@ ULONG SysVariablePool(
         self->resetNext();             /* reset any next operations         */
                                        /* have a non-name retriever         */
                                        /* and a new variable?               */
-//      if (!OTYPE(String, retriever) && !retriever->exists(dictionary))
         if (!OTYPE(String, retriever) && !retriever->exists(activation))
                                        /* flag this in the block            */
           pshvblock->shvret |= RXSHV_NEWV;
@@ -255,7 +247,6 @@ ULONG SysVariablePool(
               value = (RexxObject *)retriever;
             else
                                        /* get the variable value            */
-//            value = retriever->getValue(dictionary);
               value = retriever->getValue(activation);
                                        /* copy the value                    */
             pshvblock->shvret |= copy_value(value, &pshvblock->shvvalue, &pshvblock->shvvaluelen);
@@ -269,8 +260,7 @@ ULONG SysVariablePool(
               pshvblock->shvret = RXSHV_BADN;
             else
                                        /* do the assignment                 */
-//            retriever->set(dictionary, new_string((char *)pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
-              retriever->set(activation, new_string((char *)pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
+              retriever->set(activation, new_string(pshvblock->shvvalue.strptr, pshvblock->shvvalue.strlength));
             break;
 
           case RXSHV_SYDRO:            /* drop operations                   */
@@ -281,32 +271,24 @@ ULONG SysVariablePool(
               pshvblock->shvret = RXSHV_BADN;
             else
                                        /* perform the drop                  */
-//            retriever->drop(dictionary);
               retriever->drop(activation);
             break;
         }
       }
     }
   }
-//else if ((code == RXSHV_NEXTV) &&    /* need to process a NEXT request?   */
-//         (enabled)) {                /* and VP is enabled                 */
-//  MICMICD                            /* get the next variable             */
-//  valuePair = dictionary->fetchNext(self);
-//  if (valuePair == OREF_NULL)        /* last one?                         */
   else if (code == RXSHV_NEXTV) {      /* need to process a NEXT request?   */
     RexxString *name;
-    RexxObject *value;
+    RexxObject *_value;
                                        /* get the next variable             */
-    if (!self->fetchNext(&name, &value)) {
+    if (!self->fetchNext(&name, &_value)) {
       pshvblock->shvret |= RXSHV_LVAR; /* flag as such                      */
     }
     else {                             /* need to copy the name and value   */
                                        /* copy the name                     */
-//    pshvblock->shvret |= copy_value(valuePair->get(1), &pshvblock->shvname, &pshvblock->shvnamelen);
       pshvblock->shvret |= copy_value(name, &pshvblock->shvname, &pshvblock->shvnamelen);
                                        /* copy the value                    */
-//    pshvblock->shvret |= copy_value(valuePair->get(2), &pshvblock->shvvalue, &pshvblock->shvvaluelen);
-      pshvblock->shvret |= copy_value(value, &pshvblock->shvvalue, &pshvblock->shvvaluelen);
+      pshvblock->shvret |= copy_value(_value, &pshvblock->shvvalue, &pshvblock->shvvaluelen);
     }
   }
   else if ((code == RXSHV_PRIV) &&     /* need to process PRIVATE block?    */
@@ -340,7 +322,6 @@ ULONG SysVariablePool(
                                        /* want the version string?          */
       else if (IS_EQUAL(variable, "SOURCE")) {
                                        /* retrieve the source string        */
-//      value = self->activity->currentAct()->sourceString();
         value = activation->sourceString();
                                        /* copy the value                    */
         pshvblock->shvret |= copy_value(value, &pshvblock->shvvalue, &pshvblock->shvvaluelen);
@@ -348,9 +329,7 @@ ULONG SysVariablePool(
                                        /* want the parameter count?         */
       else if (IS_EQUAL(variable, "PARM")) {
                                        /* get the REXX activation           */
-//      activation = self->activity->currentAct();
                                        /* get the argument list size        */
-//      tempSize = activation->getEntryArglist()->size();
         tempSize = activation->getProgramArgumentCount();
         value = new_integer(tempSize);
                                        /* copy the value                    */
@@ -363,23 +342,14 @@ ULONG SysVariablePool(
                                        /* get the binary value              */
         arg_position = value->longValue(DEFAULT_DIGITS);
                                        /* not a good number?                */
-        if (arg_position == NO_LONG || arg_position <= 0)
+        if (arg_position == (long)NO_LONG || arg_position <= 0)
                                        /* this is a bad name                */
           pshvblock->shvret|=RXSHV_BADN;
         else {
                                        /* get the REXX activation           */
-//        activation = self->activity->currentAct();
-//        valuePair = activation->getEntryArglist();
-//                                     /* out of the bounds?                */
-//        if (arg_position > valuePair->size())
-//          value = OREF_NULLSTRING;   /* return a null string              */
-//        else {
-//                                     /* get the argument                  */
           /* get the arcgument from the parent activation */
           value = activation->getProgramArgument(arg_position);
           if (value == OREF_NULL) {    /* doesn't exist?                    */
-//          value = valuePair->get(arg_position);
-//          if (value == OREF_NULL)    /* doesn't exist?                    */
               value = OREF_NULLSTRING; /* return a null string              */
           }
                                        /* copy the value                    */

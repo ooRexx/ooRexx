@@ -184,15 +184,12 @@ PFN SysLoadProcedure(
 /******************************************************************************/
 {
    PFN load_address;
-   load_address = dlsym((PVOID) LibraryHandle->getValue(), Procedure->getStringData());
-   if (!load_address)
+   load_address = dlsym((void *)LibraryHandle->getValue(), Procedure->getStringData());
+   if (load_address == NULL)
    {
       report_exception1(Error_External_name_not_found_method, Procedure);
    }
-   else
-   {
-      return load_address;
-   }
+   return load_address;
 }
 
 RexxInteger * SysLoadLibrary(
@@ -264,7 +261,6 @@ void SysSetupProgram(
 {
 #ifdef RXTRACE_SUPPORT
   char     *RxTraceBuf = NULL;
-  LONG      Length;                    /* length of variable                */
 
                                        /* scan current environment,         */
 /*if (GetEnvironmentVariable("RXTRACE", RxTraceBuf, 8)) {                   */

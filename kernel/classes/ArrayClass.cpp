@@ -76,6 +76,7 @@
 #include "ArrayClass.hpp"
 #include "MutableBufferClass.hpp"
 
+
 extern ACTIVATION_SETTINGS *current_settings;
 
 void RexxArray::init(size_t _size, size_t maxSize)

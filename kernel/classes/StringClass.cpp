@@ -109,22 +109,15 @@ RexxObject *RexxString::unflatten(RexxEnvelope *envelope)
 /* Function:  unflatten an object                                             */
 /******************************************************************************/
 {
-  RexxObject *newSelf;
-
   if (this->header & ProxyObject) {         /* is this a proxy object?              */
-                                            /* Yes, then we need to run the code    */
-                                            /*  to generate a new object            */
-    newSelf = envelope->queryProxy(this);
-    if (!newSelf) {                         /* not in the table?                    */
-                                            /* get the proxy from the environment   */
-      newSelf = TheEnvironment->entry(this);
-                                            /* and add to the proxy table           */
-      envelope->addProxy(this, newSelf);
-    }
+      // just perform an environment lookup
+      return TheEnvironment->entry(this);
   }
   else
-    newSelf = this->RexxObject::unflatten(envelope);
-  return newSelf;                           /* return the new version               */
+  {
+      // perform a normal default unflatten op.
+      return this->RexxObject::unflatten(envelope);
+  }
 }
 
 RexxString *RexxString::stringValue()

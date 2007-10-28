@@ -44,7 +44,7 @@
 #include "RexxCore.h"
 #include "DirectoryClass.hpp"
 #include "ArrayClass.hpp"
-RexxString *kernel_name (char* value);
+RexxString *kernel_name (const char* value);
 
 void createStrings (void)
 /******************************************************************************/

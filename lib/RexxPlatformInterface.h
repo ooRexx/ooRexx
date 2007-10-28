@@ -125,11 +125,11 @@ RexxObject *SysUserid();
 #endif
 
 #ifndef SysAllocateResultMemory
-PVOID SysAllocateResultMemory(LONG);   /* allocate a result memory block    */
+void *SysAllocateResultMemory(size_t); /* allocate a result memory block    */
 #endif
 
 #ifndef SysReleaseResultMemory
-void SysReleaseResultMemory(PVOID);    /* release a result memory block     */
+void SysReleaseResultMemory(void *);   /* release a result memory block     */
 #endif
 
 #ifndef SysExternalFunction

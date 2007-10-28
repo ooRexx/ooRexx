@@ -146,6 +146,8 @@ protected:
 
   RexxString *stringrep;               /* integer string representation     */
   int  value;                          /* actual integer value              */
+
+  static int validMaxWhole[];          // table of maximum values per digits setting
 };
 
 class RexxIntegerClass : public RexxClass {

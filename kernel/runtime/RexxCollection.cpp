@@ -99,7 +99,7 @@ RexxObject *RexxHashTableCollection::makeProxy(RexxEnvelope *envelope)
 {
 
   RexxObject *newProxy;
-  char *proxyCode;
+  const char *proxyCode = "";
 
                                        /* Determine which special object    */
                                        /* this is and compute code for it.  */
@@ -127,15 +127,15 @@ RexxObject *RexxHashTableCollection::copy(void)
 /* Function:  Copy a hash based collection object                             */
 /******************************************************************************/
 {
-  RexxHashTableCollection *newObject;
+  RexxHashTableCollection *newObj;
                                        /* make a copy of ourself (this also */
                                        /* copies the object variables       */
-  newObject = (RexxHashTableCollection *)this->RexxObject::copy();
+  newObj = (RexxHashTableCollection *)this->RexxObject::copy();
                                        /* fill in the hash value            */
-  newObject->hashvalue = HASHOREF(newObject);
+  newObj->hashvalue = HASHOREF(newObj);
                                        /* We copy the Hash table as well    */
-  OrefSet(newObject, newObject->contents, (RexxHashTable *)this->contents->copy());
-  return newObject;                    /* return the new object             */
+  OrefSet(newObj, newObj->contents, (RexxHashTable *)this->contents->copy());
+  return newObj;                       /* return the new object             */
 }
 
 RexxArray *RexxHashTableCollection::makeArray(void)
@@ -146,7 +146,7 @@ RexxArray *RexxHashTableCollection::makeArray(void)
   return this->contents->makeArray();
 }
 
-RexxObject *RexxHashTableCollection::mergeItem(RexxObject *value, RexxObject *index)
+RexxObject *RexxHashTableCollection::mergeItem(RexxObject *_value, RexxObject *_index)
 /******************************************************************************/
 /* Arguments:  Value, index                                                   */
 /*                                                                            */
@@ -154,7 +154,7 @@ RexxObject *RexxHashTableCollection::mergeItem(RexxObject *value, RexxObject *in
 /******************************************************************************/
 {
     // put this in with duplicate protection
-    RexxHashTable *newHash = this->contents->putNodupe(value, index);
+    RexxHashTable *newHash = this->contents->putNodupe(_value, _index);
     // the put can expand, so protect against that
     if (newHash != OREF_NULL)
     {
@@ -164,7 +164,7 @@ RexxObject *RexxHashTableCollection::mergeItem(RexxObject *value, RexxObject *in
 }
 
 RexxObject *RexxHashTableCollection::removeRexx(
-  RexxObject *index)                   /* removed item index                */
+  RexxObject *_index)                   /* removed item index                */
 /******************************************************************************/
 /* Arguments:  Index                                                          */
 /*                                                                            */
@@ -173,9 +173,9 @@ RexxObject *RexxHashTableCollection::removeRexx(
 {
   RexxObject *RemovedItem;
 
-  required_arg(index, ONE);            /* make sure we have an index        */
+  required_arg(_index, ONE);            /* make sure we have an index        */
 
-  RemovedItem = this->remove(index);   /* remove the item                   */
+  RemovedItem = this->remove(_index);   /* remove the item                   */
   if (RemovedItem == OREF_NULL)        /* If nothing found, give back .nil  */
                                        /* (never return OREF_NULL to REXX)  */
     RemovedItem = (RexxObject *)TheNilObject;
@@ -183,20 +183,20 @@ RexxObject *RexxHashTableCollection::removeRexx(
 }
 
 RexxObject *RexxHashTableCollection::allAt(
-  RexxObject *index)                   /* target index                      */
+  RexxObject *_index)                   /* target index                      */
 /******************************************************************************/
 /* Arguments:  Index                                                          */
 /*                                                                            */
 /*  Returned:  Array of all values with the same index                        */
 /******************************************************************************/
 {
-  required_arg(index, ONE);            /* make sure we have an index        */
+  required_arg(_index, ONE);            /* make sure we have an index        */
                                        /* do the get                        */
-  return this->contents->getAll(index);
+  return this->contents->getAll(_index);
 }
 
 RexxObject *RexxHashTableCollection::getRexx(
-  RexxObject *index)                   /* target index                      */
+  RexxObject *_index)                   /* target index                      */
 /******************************************************************************/
 /* Arguments:  Index                                                          */
 /*                                                                            */
@@ -205,16 +205,16 @@ RexxObject *RexxHashTableCollection::getRexx(
 {
   RexxObject *object;
 
-  required_arg(index, ONE);            /* make sure we have an index        */
-  object = this->get(index);           /* get the item                      */
+  required_arg(_index, ONE);            /* make sure we have an index        */
+  object = this->get(_index);           /* get the item                      */
   if (object == OREF_NULL)             /* If nothing found, give back .nil  */
     object = TheNilObject;             /* (never return OREF_NULL to REXX)  */
   return object;                       /* return the item                   */
 }
 
 RexxObject *RexxHashTableCollection::put(
-  RexxObject *value,                   /* value to insert                   */
-  RexxObject *index)                   /* item index                        */
+  RexxObject *_value,                   /* value to insert                   */
+  RexxObject *_index)                   /* item index                        */
 /******************************************************************************/
 /* Arguments:  Value, index                                                   */
 /*                                                                            */
@@ -223,10 +223,10 @@ RexxObject *RexxHashTableCollection::put(
 {
   RexxHashTable *newHash;              /* newly created hash table          */
 
-  required_arg(value, ONE);            /* make sure we have an value        */
-  required_arg(index, TWO);            /* make sure we have an index        */
+  required_arg(_value, ONE);            /* make sure we have an value        */
+  required_arg(_index, TWO);            /* make sure we have an index        */
                                        /* try to place in existing hashtab  */
-  newHash = this->contents->put(value, index);
+  newHash = this->contents->put(_value, _index);
   if (newHash != OREF_NULL)            /* have a reallocation occur?        */
                                        /* hook on the new hash table        */
     OrefSet(this, this->contents, newHash);
@@ -234,8 +234,8 @@ RexxObject *RexxHashTableCollection::put(
 }
 
 RexxObject *RexxHashTableCollection::add(
-  RexxObject *value,                   /* object to add                     */
-  RexxObject *index)                   /* added index                       */
+  RexxObject *_value,                   /* object to add                     */
+  RexxObject *_index)                   /* added index                       */
 /******************************************************************************/
 /* Arguments:  Value, index                                                   */
 /*                                                                            */
@@ -244,10 +244,10 @@ RexxObject *RexxHashTableCollection::add(
 {
   RexxHashTable *newHash;              /* newly created hash table          */
 
-  required_arg(value, ONE);            /* make sure we have an value        */
-  required_arg(index, TWO);            /* make sure we have an index        */
+  required_arg(_value, ONE);            /* make sure we have an value        */
+  required_arg(_index, TWO);            /* make sure we have an index        */
                                        /* try to place in existing hashtab  */
-  newHash  = this->contents->add(value, index);
+  newHash  = this->contents->add(_value, _index);
   if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
                                        /* hook on the new hash table        */
     OrefSet(this, this->contents, newHash);
@@ -273,15 +273,15 @@ RexxObject *RexxHashTableCollection::copyValues(
 /******************************************************************************/
 {
   HashLink i;
-  RexxObject *value;
+  RexxObject *_value;
   RexxObject *valueCopy;
   RexxHashTable *hashTable;
                                        /* Get hash table.                   */
   hashTable = this->contents;
                                        /* For all indices.                  */
   for (i = hashTable->first(); i < hashTable->totalSlotsSize(); i = hashTable->next(i)) {
-    value  = hashTable->value(i);      /* Get this value                    */
-    valueCopy = value->copy();         /* make a copy.                      */
+    _value  = hashTable->value(i);     /* Get this value                    */
+    valueCopy = _value->copy();        /* make a copy.                      */
     hashTable->replace(valueCopy, i);  /* Replace original w/ copy          */
     if (depth > 1)                     /* gone depth requested.             */
                                        /* nope, copy these values           */
@@ -292,20 +292,20 @@ RexxObject *RexxHashTableCollection::copyValues(
 }
 
 RexxObject *RexxHashTableCollection::hasIndex(
-  RexxObject *index)                   /* requested index                   */
+  RexxObject *_index)                   /* requested index                   */
 /******************************************************************************/
 /* Arguments:  Index                                                          */
 /*                                                                            */
 /*  Returned:  True if table has an entry for the index, false otherwise      */
 /******************************************************************************/
 {
-  RexxObject *value;
+  RexxObject *_value;
 
-  required_arg(index, ONE);            /* make sure we have an index        */
+  required_arg(_index, ONE);           /* make sure we have an index        */
                                        /* try to get the item               */
-  value = this->contents->get(index);
+  _value = this->contents->get(_index);
                                        /* tell caller if we succeeded       */
-  return (value != OREF_NULL) ? (RexxObject *)TheTrueObject : (RexxObject *)TheFalseObject;
+  return (_value != OREF_NULL) ? (RexxObject *)TheTrueObject : (RexxObject *)TheFalseObject;
 }
 
 

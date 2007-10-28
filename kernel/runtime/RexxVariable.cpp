@@ -149,18 +149,18 @@ RexxVariable *RexxMemory::newVariable(
 /* Function:  Create a new REXX variable object                             */
 /****************************************************************************/
 {
-  RexxVariable *newObject;             /* created variable object           */
+  RexxVariable *newObj;                /* created variable object           */
 
                                        /* Get new object                    */
-  newObject = (RexxVariable *)new_object(sizeof(RexxVariable));
+  newObj = (RexxVariable *)new_object(sizeof(RexxVariable));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheVariableBehaviour);
+  BehaviourSet(newObj, TheVariableBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newObject, T_variable);
-  newObject->variableValue = OREF_NULL;/* clear out the hash value          */
-  newObject->creator = OREF_NULL;      /* clear out creator field           */
-  newObject->variable_name = name;     /* fill in the name                  */
-  newObject->dependents = OREF_NULL;   /* and the dependents                */
-  return newObject;                    /* return the new object             */
+  setVirtualFunctions(newObj, T_variable);
+  newObj->variableValue = OREF_NULL;   /* clear out the hash value          */
+  newObj->creator = OREF_NULL;         /* clear out creator field           */
+  newObj->variable_name = name;        /* fill in the name                  */
+  newObj->dependents = OREF_NULL;      /* and the dependents                */
+  return newObj;                       /* return the new object             */
 }
 

@@ -80,7 +80,7 @@ void behaviour_setup (void);
   RexxMethod *methodLookup( RexxString *);
   RexxMethod *getMethod( RexxString *);
   RexxObject *deleteMethod(RexxString *);
-  void restore(short, RexxBehaviour *);
+  void restore(RexxBehaviour *);
   RexxClass  *restoreClass();
   RexxObject *superScope( RexxObject *);
   RexxMethod *superMethod(RexxString *, RexxObject *);

@@ -84,21 +84,6 @@ void keyDestructor(void *)
 void SysThreadingInit(void)
 /* This must be done once per process                                 */
 {
-//#ifdef LINUX
-//  int err;
-//
-//
-//                               /* Create a key to hold Tid information*/
-//  if(!(pthread_key_create(&tidKey, NULL)));
-//    else
-//      logic_error("Error while initialize the main thread !");
-//
-//                              // need attr in thread, no API for it :(
-//  if (!(pthread_key_create(&attrKey, NULL)));
-//    else
-//      logic_error("Error while initialize the main thread !");
-//
-//#endif
 }
 
 void SysThreadInit(void)
@@ -114,36 +99,6 @@ void SysThreadInit(void)
      SysThreadYield();
    }
   MTXCR(initialize_sem);
-//#ifdef AIX
-//critical_section_sem = new RexxMutex;
-//MTXCROPEN(critical_section_sem, "OBJREXXCRITSEM");
-//#endif
-//#ifdef LINUX
-//  void * tid;
-//
-//  if(tidKey == -1){           // no key created
-//    SysThreadingInit();
-//  }
-//                              // Set TID
-//  if (!(pthread_setspecific(tidKey, (tid=(void *)malloc(sizeof(int)))))){
-//      threadCount = threadCount+1;
-//      *((int*)tid)= threadCount;
-//  }
-//    else
-//      logic_error("Error while initialize the main thread !");
-//                              // not attr (that I know of)
-//  if (!(pthread_setspecific(attrKey, (void*)NULL)));
-//    else
-//      logic_error("Error while initialize the main thread !");
-//                              // Make sure all threads have equal prio
-//  (pthread_self())->pthread_priority = THREAD_PRIORITY;
-//#endif
-//#ifdef AIX
-//
-//  if (  pthread_mutex_init(&stPThreadMTXCritical, NULL) )
-//     logic_error("Error while initialize the main thread mutex critical section!");
-//
-//#endif
 }
 
 
@@ -164,7 +119,6 @@ INT SysCreateThread(PTHREADFN threadFnc, INT stackSize, PVOID args)
                               // Create an attr block for Thread.
    rc = pthread_attr_init(&newThreadAttr);
                               // Set the stack size.
-//#ifdef OPSYS_SUN
 #if defined(OPSYS_AIX43) || defined(LINUX) ||  defined OPSYS_SUN
 
 /* scheduling on two threads controlled by the result method of the message object */
@@ -189,7 +143,6 @@ INT SysCreateThread(PTHREADFN threadFnc, INT stackSize, PVOID args)
                                               // Now create the thread
    rc = pthread_create(&newThread, &newThreadAttr, threadFnc, (void *)args);
                               // Bumop thread count by one. Threadid
-// rc = pthread_create(&newThread, NULL, threadFnc, (void *)args);
    if (rc != 0)
    {
        report_exception1(Error_System_service_service, new_cstring("ERROR CREATING THREAD"));
@@ -197,76 +150,29 @@ INT SysCreateThread(PTHREADFN threadFnc, INT stackSize, PVOID args)
    }
    rc = pthread_attr_destroy(&newThreadAttr);
 
-//#ifdef AIX
    return (int)newThread;
-//#else
-//   return (threadCount+1);
-//#endif
 }
 
 
 
 void SysInitializeThread()
-/* Init the thread created with SysCreateThread()                             */
 {
-//#ifdef LINUX
-//  void * tid;
-//
-//  (pthread_self())->pthread_priority = THREAD_PRIORITY;
-//  tid = (void*)malloc(sizeof(int));            /* allocate space to hold to id */
-//  threadCount = threadCount + 1;
-//  *((int*)tid) = threadCount;                  /* write the id in              */
-//  pthread_setspecific(tidKey, tid);
-//  pthread_setspecific(attrKey,(void*)NULL);
-//#endif
-
 }
 
 void SysTerminateThread(TID threadid)
 /* terminate a thread created with SysCreateThread()                             */
 {
-// pthread_t threadid2 = reinterpret_cast<pthread_t>(threadid);
    pthread_detach(threadid);
 }
 
-//#ifdef LINUX
-//void SysTerminateThread()
-//{
-//  void * tid;
-//
-//  tid = pthread_getspecific(tidKey);          /* get the ptr to the id location */
-//  free(tid);                                  /* free the space                 */
-//  pthread_setspecific(tidKey, (void *)NULL);  /* reset the value associated with the key */
-//  pthread_setspecific(attrKey, (void *)NULL);
-//}
-//#endif
-
-
 INT SysQueryThreadID()
 {
-//#ifdef LINUX
-//    void * tid;
-//
-//    if(tidKey == -1)                          /* if Rexx isn't up then          */
-//      return(-1);                             /* say so                         */
-//
-//
-//    tid = pthread_getspecific(tidKey);        /* get the ptr to the id location */
-//    if(!tid)
-//      return (-1);                            /* no ptr => Rexx isn't up        */
-//    return (*((int*)tid));
-//#else
     return (int)pthread_self();      /* just call the correct function */
-//#endif
 }
 
 
 void SysSetThreadPriority(long tid, int  prio)
 {
-//#ifdef LINUX
-// (pthread_self())->pthread_priority = prio;
-//#else
-   pthread_t thread;
    int schedpolicy;
    struct sched_param schedparam;
 
@@ -276,7 +182,6 @@ void SysSetThreadPriority(long tid, int  prio)
 
    schedparam.sched_priority = prio;
    pthread_setschedparam((pthread_t) tid, schedpolicy, &schedparam);
-//#endif
 
 }
 
@@ -293,14 +198,6 @@ RexxSemaphore::RexxSemaphore()
 {
   INT iRC = 0;
                                     // Clear mutex/cond prior to init
-//  this->semMutex = NULL;
-//  this->semCond = NULL;
-
-/* The original settings for pthread_mutexattr_settype() were:
-   AIX43: PTHREAD_MUTEX_RECURSIVE
-   SUNOS: PTHREAD_MUTEX_ERRORCHECK
-   LINUX: PTHREAD_MUTEX_RECURSIVE_NP
-*/
 
 #if defined( HAVE_PTHREAD_MUTEXATTR_SETTYPE )
   pthread_mutexattr_t mutexattr;

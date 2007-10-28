@@ -482,7 +482,7 @@ RexxSmartBuffer *RexxMethod::saveMethod()
 
                                        /* now pack up the envelope for      */
                                        /* saving.                           */
-  envelope->pack(OREF_NULL, this, OREF_NULL, OREF_NULL);
+  envelope->pack(this);
                                        /* pull out the buffer               */
   envelopeBuffer = envelope->getBuffer();
   discard(hold(envelope));             /* release memory lock on envelope   */

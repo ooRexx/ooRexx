@@ -58,42 +58,33 @@
    inline void *operator new(size_t size, void *ptr) {return ptr;};
    RexxEnvelope();
    inline RexxEnvelope(RESTORETYPE restoreType) { ; };
-   RexxObject *execute();
    void live();
    void liveGeneral();
    void flatten(RexxEnvelope*);
    RexxObject *unflatten(RexxEnvelope *);
-   void flattenReference(void *, LONG, void *);
-   RexxEnvelope *pack(RexxString *, RexxObject *, RexxString *, RexxArray *);
-   RexxObject *unpack();
+   void flattenReference(void *, size_t, void *);
+   RexxEnvelope *pack(RexxObject *);
    void        puff(RexxBuffer *, char *);
-   RexxObject *queryObj(RexxObject *);
-   RexxObject *queryProxy(RexxObject *);
-   RexxObject *copyBuffer(RexxObject *);
-   void    rehash();
-   ULONG   queryType();
-   char   *bufferStart();
-   void    associateProxy(RexxObject *o ,RexxObject *p);
-   void    addTable(RexxObject *obj);
-   void    addProxy(RexxObject *o, RexxObject *p);
+   size_t queryObj(RexxObject *);
+   size_t copyBuffer(RexxObject *);
+   void rehash();
+   char  *bufferStart();
+   void   associateObject(RexxObject *, size_t);
+   void   addTable(RexxObject *obj);
 
    inline RexxSmartBuffer *getBuffer() {return this->buffer;}
    inline RexxObject *getReceiver() {return this->receiver;}
-   inline LONG        getCurrentOffset() { return this->currentOffset; }
+   inline size_t      getCurrentOffset() { return this->currentOffset; }
    inline RexxObjectTable *getDuptable() {return this->duptable;}
    inline RexxObjectTable *getRehashtable() {return this->rehashtable;}
 
    RexxObject *home;
-   RexxString *destination;            /* mailing destination               */
    RexxObject *receiver;               /* object to receive the message     */
-   RexxString *message;                /* message to issue                  */
-   RexxArray  *arguments;              /* array of arguments                */
-   RexxObject *result;                 /* returned result                   */
    RexxObjectTable  *duptable;         /* table of duplicates               */
    RexxObjectTable  *savetable;        /* table of protected objects created during flattening */
    RexxSmartBuffer *buffer;            /* smart buffer wrapper              */
    RexxObjectTable  *rehashtable;      /* table to rehash                   */
    RexxStack  *flattenStack;           /* the flattening stack              */
-   LONG        currentOffset;          /* current flattening offset         */
+   size_t      currentOffset;          /* current flattening offset         */
  };
 #endif

@@ -52,17 +52,17 @@
 extern PCPPM objectOperatorMethods[];
 
 RexxBehaviour::RexxBehaviour(
-    HEADINFO        header,
-    short           typenum,           /* class type number                 */
+    HEADINFO        newHeader,
+    short           newTypenum,        /* class type number                 */
     PCPPM *         operator_methods ) /* operator lookaside table          */
 /******************************************************************************/
 /* Function:  Construct C++ methods in OKGDATA.C                              */
 /******************************************************************************/
 {
   this->behaviour = &pbehav[T_behaviour];
-  this->header  = header;
+  this->header  = newHeader;
   this->hashvalue = HASHOREF(this);
-  this->setTypenum(typenum);
+  this->setTypenum(newTypenum);
   this->setFlags(0);
   this->scopes = OREF_NULL;
   this->methodDictionary = OREF_NULL;
@@ -267,21 +267,21 @@ RexxMethod *RexxBehaviour::methodLookup(
 /* Function:  Perform lowest level method lookup on an object                 */
 /******************************************************************************/
 {
-  RexxMethod * methodObject;           /* returned method object            */
+  RexxMethod * methodObj;              /* returned method object            */
 
                                        /* have a method dictionary?         */
   if (this->methodDictionary != OREF_NULL) {
                                        /* try to get the method             */
-    methodObject = (RexxMethod *)this->methodDictionary->stringGet(messageName);
-    if (methodObject == OREF_NULL)     /* not there?                        */
+    methodObj = (RexxMethod *)this->methodDictionary->stringGet(messageName);
+    if (methodObj == OREF_NULL)        /* not there?                        */
                                        /* return .nil as the punt value     */
-      methodObject = (RexxMethod *)TheNilObject;
+      methodObj = (RexxMethod *)TheNilObject;
   }
   else {
                                        /* no method dictionary              */
-    methodObject = (RexxMethod *)TheNilObject;
+    methodObj = (RexxMethod *)TheNilObject;
   }
-  return methodObject;                 /* return the method object          */
+  return methodObj;                    /* return the method object          */
 }
 
 RexxMethod *RexxBehaviour::getMethod(
@@ -291,14 +291,12 @@ RexxMethod *RexxBehaviour::getMethod(
 /*            returns OREF_NULL if the method does not exist.                 */
 /******************************************************************************/
 {
-  RexxMethod * methodObject;           /* returned method object            */
-
-  methodObject = OREF_NULL;            /* default to a failure              */
-                                       /* have a method dictionary?         */
   if (this->methodDictionary != OREF_NULL)
+  {
                                        /* try to get the method             */
-    methodObject = (RexxMethod *)this->methodDictionary->stringGet(messageName);
-  return methodObject;                 /* return the method object          */
+      return (RexxMethod *)this->methodDictionary->stringGet(messageName);
+  }
+  return OREF_NULL;                    /* return the method object          */
 }
 
 RexxObject *RexxBehaviour::deleteMethod(
@@ -309,8 +307,10 @@ RexxObject *RexxBehaviour::deleteMethod(
 {
                                        /* have a dictionary?                */
   if (this->methodDictionary != OREF_NULL)
-                                       /* just remove from the table        */
-    this->methodDictionary->remove(messageName);
+  {
+                                         /* just remove from the table        */
+      this->methodDictionary->remove(messageName);
+  }
   return OREF_NULL;                    /* always return nothing             */
 }
 
@@ -326,7 +326,6 @@ void RexxBehaviour::subclass(
 }
 
 void RexxBehaviour::restore(
-    short           typenum,           /* type of the behaviour             */
     RexxBehaviour * saved)             /* the saved behaviour info          */
 /******************************************************************************/
 /* Function:  Restore primtive behaviours                                                                                            */
@@ -389,24 +388,24 @@ RexxMethod *RexxBehaviour::superMethod(
 /* Function:   Find a method using the given starting scope information       */
 /******************************************************************************/
 {
-  RexxArray  * scopes;                 /* working list of scopes            */
+  RexxArray  * scopeList;              /* working list of scopes            */
   RexxArray  * methods;                /* list of matching method names     */
   RexxMethod * method;                 /* located method object             */
-  LONG         scopes_size;            /* size of scopes list               */
-  LONG         methods_size;           /* size of methods list              */
-  LONG         i;                      /* loop counter                      */
-  LONG         j;                      /* loop counter                      */
+  size_t       scopes_size;            /* size of scopes list               */
+  size_t       methods_size;           /* size of methods list              */
+  size_t       i;                      /* loop counter                      */
+  size_t       j;                      /* loop counter                      */
 
                                        /* if we have scopes defined and we  */
                                        /* have a good start scope           */
   if (this->scopes != OREF_NULL && startScope != TheNilObject) {
                                        /* get the scope list for the given  */
                                        /* starting scope                    */
-    scopes = (RexxArray *)this->scopes->get(startScope);
-    if (scopes != OREF_NULL) {         /* have a matching list?             */
+    scopeList = (RexxArray *)this->scopes->get(startScope);
+    if (scopeList != OREF_NULL) {      /* have a matching list?             */
                                        /* get a list of methods             */
       methods = this->methodDictionary->stringGetAll(messageName);
-      scopes_size = scopes->size();    /* get the two array sizes           */
+      scopes_size = scopeList->size(); /* get the two array sizes           */
       methods_size = methods->size();
                                        /* search through the methods list   */
                                        /* for the first one with a          */
@@ -417,7 +416,7 @@ RexxMethod *RexxBehaviour::superMethod(
                                        /* now loop through the scopes list  */
         for (j = 1; j <= scopes_size; j++) {
                                        /* got a matching scope here?        */
-          if (scopes->get(j) == method->getScope())
+          if (scopeList->get(j) == method->getScope())
             return method;             /* return the method                 */
         }
       }

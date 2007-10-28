@@ -366,9 +366,6 @@ EXTERN RexxObject* (__stdcall *NovalueCallback)(const char *) INITGLOBALPTR;
 EXTERN RexxClass  * TheArrayClass INITGLOBALPTR;     /* array class                       */
 EXTERN RexxClass  * TheClassClass INITGLOBALPTR;     /* class of classes                  */
 EXTERN RexxClass  * TheDirectoryClass INITGLOBALPTR; /* directory class                   */
-                                       /* envelope class - for mobile       */
-                                       /*objects                            */
-EXTERN RexxClass  * TheEnvelopeClass INITGLOBALPTR;
 EXTERN RexxDirectory * TheEnvironment INITGLOBALPTR; /* environment object                */
 
 EXTERN RexxDirectory * ThePublicRoutines INITGLOBALPTR; /* public_routines directory                */
@@ -630,7 +627,6 @@ EXTERN void *VFTArray[highest_T];      /* table of virtual functions        */
 #define TheDirectoryBehaviour       ((RexxBehaviour *)(&pbehav[T_directory]))
 #define TheDirectoryClassBehaviour  ((RexxBehaviour *)(&pbehav[T_directory_class]))
 #define TheEnvelopeBehaviour        ((RexxBehaviour *)(&pbehav[T_envelope]))
-#define TheEnvelopeClassBehaviour   ((RexxBehaviour *)(&pbehav[T_envelope_class]))
 #define TheHashTableBehaviour       ((RexxBehaviour *)(&pbehav[T_hashtab]))
 #define TheIntegerBehaviour         ((RexxBehaviour *)(&pbehav[T_integer]))
 #define TheIntegerClassBehaviour    ((RexxBehaviour *)(&pbehav[T_integer_class]))
@@ -786,7 +782,7 @@ const char *mempbrk(const char *, const char *, size_t);     /* search for chara
 void report_halt(RexxString *description);
 void report_nomethod(RexxString *message, RexxObject *receiver);
 void missing_argument(LONG position);
-long message_number(RexxString *);
+int  message_number(RexxString *);
 RexxActivity *activity_find (void);
 
 #define report_exception(error) (CurrentActivity->reportAnException(error))

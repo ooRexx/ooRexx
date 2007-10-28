@@ -558,15 +558,10 @@ void RexxSource::flatten (RexxEnvelope *envelope)
                                        /* don't need to to keep source info   */
                                        /* so ask the envelope if this is a    */
                                        /*  flatten to save the method image   */
-    if (METHOD_ENVELOPE == envelope->queryType()) {
-                                       /* Yes it is, so don't flatten the     */
-                                       /*  source image.                      */
-      this->sourceArray = OREF_NULL;
-      this->sourceBuffer = OREF_NULL;
-      this->sourceIndices = OREF_NULL;
-      this->securityManager = OREF_NULL;
-      this->flags &= ~reclaim_possible;/* can't recover the source immediately*/
-    }
+    this->sourceArray = OREF_NULL;
+    this->sourceBuffer = OREF_NULL;
+    this->sourceIndices = OREF_NULL;
+    this->securityManager = OREF_NULL;
     flatten_reference(newThis->sourceArray, envelope);
     flatten_reference(newThis->programName, envelope);
     flatten_reference(newThis->clause, envelope);

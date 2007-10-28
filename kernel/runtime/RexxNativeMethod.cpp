@@ -52,20 +52,20 @@
 extern "C" internalMethodEntry internalMethodTable[];
 
      RexxNativeCode::RexxNativeCode(
-     RexxString *procedure,            /* procedure to load                 */
-     RexxString *library,              /* library to load from              */
-     PFN         entry,                /* Entry point address for method    */
-     LONG        index )               /* internal method index             */
+     RexxString *_procedure,            /* procedure to load                 */
+     RexxString *_library,              /* library to load from              */
+     PFN         _entry,                /* Entry point address for method    */
+     LONG        _index )               /* internal method index             */
 /****************************************************************************/
 /* Function:  Initialize a REXX native code object                          */
 /****************************************************************************/
 {
-  this->entry = entry;                 /* no resolved entry point yet       */
-  this->index = index;                 /* save the index                    */
+  this->entry = _entry;                 /* no resolved entry point yet       */
+  this->index = _index;                 /* save the index                    */
                                        /* save the library name             */
-  OrefSet(this, this->library, library);
+  OrefSet(this, this->library, _library);
                                        /* save the procedure name           */
-  OrefSet(this, this->procedure, procedure);
+  OrefSet(this, this->procedure, _procedure);
 }
 
 void RexxNativeCode::reinit(           /* reinitialize the nmethod entry    */
@@ -203,8 +203,8 @@ void RexxNativeCodeClass::liveGeneral()
 }
 
 RexxNativeCode *RexxNativeCodeClass::newClass(
-     RexxString *procedure,            /* procedure to load                 */
-     RexxString *library )             /* library to load from              */
+     RexxString *_procedure,            /* procedure to load                 */
+     RexxString *_library )             /* library to load from              */
 /****************************************************************************/
 /* Function:  Create a new native method                                    */
 /****************************************************************************/
@@ -213,23 +213,23 @@ RexxNativeCode *RexxNativeCodeClass::newClass(
   RexxDirectory  *libinfo;             /* Library info table for library    */
   PFN             entry;               /* routine entry point address       */
 
-  libinfo = this->load(library);       /* Load the library.                 */
+  libinfo = this->load(_library);       /* Load the library.                 */
   if (libinfo != OREF_NULL) {          /* library loaded ok?                */
                                        /* See if we already know about this */
                                        /* method.                           */
-    newMethod = (RexxNativeCode *)libinfo->entry(procedure);
+    newMethod = (RexxNativeCode *)libinfo->entry(_procedure);
     if (newMethod == OREF_NULL) {      /* not there yet?                    */
                                        /* resolve the function address      */
-      entry = (PFN)SysLoadProcedure((RexxInteger *)libinfo->at(OREF_NULLSTRING), procedure);
+      entry = (PFN)SysLoadProcedure((RexxInteger *)libinfo->at(OREF_NULLSTRING), _procedure);
                                        /* unknown, create a new one.        */
                                        /* Get new object                    */
-      newMethod = new RexxNativeCode (procedure, library, entry, 0);
+      newMethod = new RexxNativeCode (_procedure, _library, entry, 0);
                                        /* add this to the libraries table   */
-      libinfo->setEntry(procedure, (RexxObject *)newMethod);
+      libinfo->setEntry(_procedure, (RexxObject *)newMethod);
     }
   }
   else {
-    newMethod = new RexxNativeCode (procedure, library, NULL, 0);
+    newMethod = new RexxNativeCode (_procedure, _library, NULL, 0);
   }
   return (RexxNativeCode *)newMethod;  /* return the new method             */
 }

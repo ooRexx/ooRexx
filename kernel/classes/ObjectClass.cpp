@@ -1546,58 +1546,6 @@ RexxMessage *RexxObject::start(
   return newMessage;                   /* return the new message object     */
 }
 
-RexxEnvelope*RexxObject::startAt(RexxObject **args, size_t argCount)
-/****************************************************************************/
-/* Function:  Flatten and run a method "elsewhere"                          */
-/****************************************************************************/
-{
-  RexxEnvelope *envelope;
-  RexxSmartBuffer *envelopeBuffer;
-  RexxBuffer      *buffer;
-  PVOID            data;
-  RexxString *location;
-  RexxString *message;
-  RexxArray  *arguments;
-  long bufferLength;
-
-  FILE *dumpfile;
-
-                                       /* Get new envelope object           */
-  envelope  = (RexxEnvelope *)save(new_envelope());
-
-                                       /* now break apart args, no error    */
-                                       /* checking now, will come later     */
-                                       /* Where are we going?               */
-  location  = (RexxString *)args[0];
-                                       /* what message are we sending?      */
-  message   = (RexxString *)args[1];
-                                       /* all remaining args are arguments  */
-                                       /*  to the message, so get rest into */
-                                       /*  and array.                       */
-  arguments = new (argCount - 2, args + 2) RexxArray;
-
-                                       /* now pack up the envelope for send */
-                                       /* to remote system, the receiver is */
-                                       /*  ourself                          */
-  envelope->pack(location, this, message, arguments);
-
-  /* ******************************************************************************** */
-  /* ***   Temporary - Just dump object to a file for now.                        *** */
-  /* ******************************************************************************** */
-                                       /* get the smartbuffer               */
-  envelopeBuffer = envelope->getBuffer();
-  buffer = envelopeBuffer->getBuffer();/* get the buffer                    */
-  data = (PVOID)buffer->data;          /* get the address                   */
-  dumpfile = fopen("flatten.obj","wb");/* open for binary write             */
-  bufferLength = (long)envelopeBuffer->current;
-                                            /* Write in te size of buffer           */
-  fwrite((PVOID)&bufferLength, 1, sizeof(bufferLength), dumpfile);
-                                            /* NOW WRITE IN ENTIRE BUFFER           */
-  fwrite((PVOID)data, 1, bufferLength, dumpfile);
-  fclose(dumpfile);
-  return envelope;                         /* Temp for now ...                     */
-}
-
 RexxString  *RexxObject::oref()
 /****************************************************************************/
 /* Function:  Return the objects address as a HEX string (debugging only)   */

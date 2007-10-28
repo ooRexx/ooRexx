@@ -141,12 +141,13 @@
    void buildTail(size_t index);
 
    inline void addDot() { append('.'); }
-   inline INT compare(RexxString *name) {
-       INT rc = (INT)length - (INT)name->getLength();
-       if (rc == 0) {
-           rc = memcmp(tail, name->getStringData(), length);
+   inline int compare(RexxString *name) {
+       if (length == name->getLength())
+       {
+           return memcmp(tail, name->getStringData(), length);
        }
-       return rc;
+
+       return length > name->getLength() ? 1 : -1;
    }
 
    inline size_t getLength() { return length; }

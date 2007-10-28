@@ -72,7 +72,7 @@ RexxMethod0(REXXOBJECT, rexx_query_queue)
                                        /* get the queue name                */
    queue_name = RexxVarValue("NAMED_QUEUE");
                                        /* query the queue                   */
-   rc = RexxQueryQueue((char *)string_data(queue_name), &count);
+   rc = RexxQueryQueue(const_cast<char *>(string_data(queue_name)), &count);
                                        /* return zero for any errors        */
    return rc ? IntegerZero : RexxInteger(count);
 }
@@ -94,7 +94,7 @@ RexxMethod0(REXXOBJECT, rexx_pull_queue)
    buf.strptr = NULL;                  /* ask for a returned buffer         */
    buf.strlength = 0;
                                        /* pull a line                       */
-   rc = RexxPullQueue((char *)string_data(queue_name), &buf, &dt, RXQUEUE_NOWAIT);
+   rc = RexxPullQueue(const_cast<char *>(string_data(queue_name)), &buf, &dt, RXQUEUE_NOWAIT);
    if (!rc) {                          /* get a pulled line?                */
      oref_buf = RexxStringL(buf.strptr, buf.strlength);
      if (buf.strptr > (char *)1)       /* have a queue item?             do */
@@ -124,7 +124,7 @@ RexxMethod0(REXXOBJECT, rexx_linein_queue)
    buf.strptr = NULL;                  /* ask for a returned buffer         */
    buf.strlength = 0;
                                        /* pull a line                       */
-   rc = RexxPullQueue((char *)string_data(queue_name), &buf, &dt, RXQUEUE_WAIT);
+   rc = RexxPullQueue(const_cast<char *>(string_data(queue_name)), &buf, &dt, RXQUEUE_WAIT);
 
    if (!rc) {                          /* get a pulled line?                */
      oref_buf = RexxStringL(buf.strptr, buf.strlength);
@@ -155,7 +155,7 @@ long rexx_add_queue(
    rx_string.strptr = const_cast<char *>(string_data(queue_line));
    rx_string.strlength = string_length(queue_line);
                                        /*  move the line to the queue       */
-   rc = RexxAddQueue((char *)string_data(queue_name), &rx_string, order);
+   rc = RexxAddQueue(const_cast<char *>(string_data(queue_name)), &rx_string, order);
    if (rc != 0)                        /* stream error?                     */
      send_exception1(Error_System_service_service, RexxArray1(RexxString("SYSTEM QUEUE")));
    return rc;                          /* return the result                 */
@@ -192,7 +192,7 @@ RexxMethod1(REXXOBJECT, rexx_create_queue,
    unsigned long dup_flag = 0;         /* duplicate name flag               */
 
                                        /* create a queue                    */
-   rc = RexxCreateQueue((char *)buf, sizeof(buf), (char *)queue_name, &dup_flag);
+   rc = RexxCreateQueue((char *)buf, sizeof(buf), const_cast<char *>(queue_name), &dup_flag);
 
    if (!rc)                            /* work ok?                          */
      return RexxString(buf);           /* return the created name           */
@@ -207,8 +207,7 @@ RexxMethod1(long, rexx_delete_queue,
   CSTRING, queue_name)
 {
                                        /* just delete the queue             */
-  return RexxDeleteQueue((char *)queue_name);
-
+  return RexxDeleteQueue(const_cast<char *>(queue_name));
 }
 
 /********************************************************************************************/
@@ -218,13 +217,15 @@ RexxMethod1(REXXOBJECT, function_queueExit,
   STRING, queue_name)                  /* the requested name                */
 {
   RexxActivation *activation;          /* top level real activation         */
+  RexxString *qname = (RexxString *)queue_name;
+
 
   native_entry;                        /* synchronize access                */
                                        /* pick up current activation        */
   activation = (RexxActivation *)CurrentActivity->currentAct();
                                        /* call the exit                     */
-  CurrentActivity->sysExitMsqNam(activation, (RexxString **)&queue_name);
-  return_oref(queue_name);             /* and just return the exit result   */
+  CurrentActivity->sysExitMsqNam(activation, &qname);
+  return_oref(qname);                  /* and just return the exit result   */
 }
 
 

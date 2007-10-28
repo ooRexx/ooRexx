@@ -347,7 +347,6 @@ RexxMethod *SysRestoreTranslatedProgram(
   char         *StartPointer;          /* start of buffered method          */
   RexxBuffer   *Buffer;                /* Buffer to unflatten               */
   LONG          BufferSize;            /* size of the buffer                */
-  ULONG         BytesRead;             /* actual bytes read                 */
   RexxMethod   *Method;                /* unflattened method                */
   RexxCode     *Code;                  /* parent rexx method                */
   RexxSource   *Source;                /* REXX source object                */

@@ -58,19 +58,10 @@ extern MemorySegmentPool *GlobalCurrentPool;
 /*              another program as a return result                   */
 /*                                                                   */
 /*********************************************************************/
-PVOID SysAllocateResultMemory(
-   LONG     Size )                     /* size to allocate                  */
+void *SysAllocateResultMemory(
+   size_t   Size )                     /* size to allocate                  */
 {
-  PVOID  MemoryBlock;                  /* allocated memory block            */
-
-                                       /* try to allocate the storage       */
-    /* @HOL002 malloc for DB2 2.1.1 version */
-//  if (MemoryBlock=(PVOID)malloc(Size))
-  if (MemoryBlock=(PVOID)GlobalAlloc(GMEM_FIXED, Size))
-
-    return MemoryBlock;                /* return the allocated memory       */
-  else                                 /* error, just return a NULL pointer */
-    return NULL;
+    return (void *)GlobalAlloc(GMEM_FIXED, Size);
 }
 
 
@@ -81,14 +72,13 @@ PVOID SysAllocateResultMemory(
 /*                                                                   */
 /*********************************************************************/
 void SysReleaseResultMemory(
-  PVOID  MemoryBlock)                  /* pointer to the result memory      */
+  void  *MemoryBlock)                  /* pointer to the result memory      */
 {
     /* free for DB2 2.1.1 version */
     if (GlobalSize(MemoryBlock))
       GlobalFree(MemoryBlock);
     else
         free(MemoryBlock);           /* release this block */
-//    GlobalFree(MemoryBlock);           /* release this block   */
 }
 
 BOOL SysAccessPool(MemorySegmentPool **pool)

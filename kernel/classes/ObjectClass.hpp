@@ -234,7 +234,6 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *unsetMethod(RexxString *);
      RexxObject  *requestRexx(RexxString *);
      RexxMessage *start(RexxObject **, size_t);
-     RexxEnvelope*startAt(RexxObject **, size_t);
      RexxString  *oref();
      RexxObject  *pmdict();
      RexxObject  *shriekRun(RexxMethod *, RexxString *, RexxString *, RexxObject **, size_t);

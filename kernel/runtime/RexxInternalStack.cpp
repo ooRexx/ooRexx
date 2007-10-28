@@ -98,19 +98,19 @@ RexxInternalStack *RexxMemory::newInternalStack(
 /* Function:  Create a new expression stack                                   */
 /******************************************************************************/
 {
-  RexxInternalStack* newObject;       /* newly create stack                */
+  RexxInternalStack* newObj;          /* newly create stack                */
 
                                        /* Get new object                    */
-  newObject = (RexxInternalStack *)new_object(sizeof(RexxInternalStack) + (stackSize * sizeof(RexxObject *)));
+  newObj = (RexxInternalStack *)new_object(sizeof(RexxInternalStack) + (stackSize * sizeof(RexxObject *)));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheInternalStackBehaviour);
+  BehaviourSet(newObj, TheInternalStackBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newObject, T_intstack);
-  newObject->size = stackSize;         /* set the size                      */
-  newObject->top  = newObject->stack;  /* set the top element               */
+  setVirtualFunctions(newObj, T_intstack);
+  newObj->size = stackSize;            /* set the size                      */
+  newObj->top  = newObj->stack;        /* set the top element               */
                                        /* set marker for "end of object" to */
                                        /* protect against stack overflow    */
-  newObject->stack[0] = OREF_NULL;     /* clear out the first element       */
-  return newObject;                    /* return the new stack item         */
+  newObj->stack[0] = OREF_NULL;        /* clear out the first element       */
+  return newObj;                       /* return the new stack item         */
 }
 

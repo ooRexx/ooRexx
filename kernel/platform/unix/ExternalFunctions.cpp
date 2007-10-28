@@ -839,7 +839,7 @@ void RestoreEnvironment(
   }
                                        /* Loop through the saved env */
                                        /* entries and restore them   */
-  for(;(current-begin)<size;current+=(strlen(current)+1)){
+  for(;(size_t)(current-begin)<size;current+=(strlen(current)+1)){
     Environment = environ;             /* get the environment        */
     del = NULL;
     np = current;

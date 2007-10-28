@@ -59,10 +59,10 @@ void RexxCompoundTail::buildTail(
 {
   if (tailCount == 1) {
       /* get the tail value */
-      RexxObject *tail = tails[0]->getValue(dictionary);
+      RexxObject *tailPiece = tails[0]->getValue(dictionary);
       /* if it is an integer type, we might be able to address the string representation directly. */
-      if (OTYPE(Integer, tail)) {
-          RexxString *rep = ((RexxInteger *)tail)->getStringrep();
+      if (OTYPE(Integer, tailPiece)) {
+          RexxString *rep = ((RexxInteger *)tailPiece)->getStringrep();
           if (rep != OREF_NULL) {
               /* point directly to the value       */
               /* and the length */
@@ -74,18 +74,18 @@ void RexxCompoundTail::buildTail(
           }
       }
       /* if this is directly a string, we can use this directly */
-      if (OTYPE(String, tail)) {
+      if (OTYPE(String, tailPiece)) {
           /* point directly to the value       */
           /* and the length */
-          this->tail = ((RexxString *)tail)->getWritableData();
-          length = ((RexxString *)tail)->getLength();
+          this->tail = ((RexxString *)tailPiece)->getWritableData();
+          length = ((RexxString *)tailPiece)->getLength();
           remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
-          value = (RexxString *)tail;          /* save this reference in case we're asked for it later */
+          value = (RexxString *)tailPiece;     /* save this reference in case we're asked for it later */
           return;
       }
       /* some other type of object, or an integer without a string */
       /* rep.  We need to have it do the copy operation. */
-      tail->copyIntoTail(this);
+      tailPiece->copyIntoTail(this);
       length = current - this->tail;             /* set the final, updated length     */
   }
   else {
@@ -113,10 +113,10 @@ void RexxCompoundTail::buildTail(
 {
   if (tailCount == 1) {
       /* get the tail value */
-      RexxObject *tail = tails[0]->getValue(context);
+      RexxObject *tailPiece = tails[0]->getValue(context);
       /* if it is an integer type, we might be able to address the string representation directly. */
-      if (OTYPE(Integer, tail)) {
-          RexxString *rep = ((RexxInteger *)tail)->getStringrep();
+      if (OTYPE(Integer, tailPiece)) {
+          RexxString *rep = ((RexxInteger *)tailPiece)->getStringrep();
           if (rep != OREF_NULL) {
               /* point directly to the value       */
               /* and the length */
@@ -128,18 +128,18 @@ void RexxCompoundTail::buildTail(
           }
       }
       /* if this is directly a string, we can use this directly */
-      if (OTYPE(String, tail)) {
+      if (OTYPE(String, tailPiece)) {
           /* point directly to the value       */
           /* and the length */
-          this->tail = ((RexxString *)tail)->getWritableData();
-          length = ((RexxString *)tail)->getLength();
+          this->tail = ((RexxString *)tailPiece)->getWritableData();
+          length = ((RexxString *)tailPiece)->getLength();
           remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
-          value = (RexxString *)tail;          /* save this reference in case we're asked for it later */
+          value = (RexxString *)tailPiece;     /* save this reference in case we're asked for it later */
           return;
       }
       /* some other type of object, or an integer without a string */
       /* rep.  We need to have it do the copy operation. */
-      tail->copyIntoTail(this);
+      tailPiece->copyIntoTail(this);
       length = current - this->tail;             /* set the final, updated length     */
   }
   else {
@@ -218,31 +218,30 @@ void RexxCompoundTail::buildUnresolvedTail(
 
 
 void RexxCompoundTail::buildTail(
-    RexxString *tail)                        /* the single string index */
+    RexxString *tailPiece)                  /* the single string index */
 /******************************************************************************/
 /* Function:  Construct a tail from a single string index                     */
 /******************************************************************************/
 {
   /* point directly to the value       */
-  this->tail = tail->getWritableData();
-  length = tail->getLength();               /* and the length */
-  remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
-  value = tail;                        /* save this reference in case we're asked for it later */
+  this->tail = tailPiece->getWritableData();
+  length = tailPiece->getLength();           /* and the length */
+  remainder = 0;                             /* belt and braces...this will force a reallocation if we append */
+  value = tailPiece;                         /* save this reference in case we're asked for it later */
 }
+
+
 void RexxCompoundTail::buildTail(
-    RexxString *tail, size_t index)                        /* the single string index */
+    RexxString *tailPiece, size_t index)     /* the single string index */
 /******************************************************************************/
 /* Function:  Construct a tail from a string and an index                     */
 /******************************************************************************/
 {
   /* point directly to the value       */
-  if (tail->getWritableData() != OREF_NULL)
-  {
-    tail->copyIntoTail(this);        /* add this to our tail              */
-  }
-  length = length + tail->getLength();
+  tailPiece->copyIntoTail(this);        /* add this to our tail              */
+  length = length + tailPiece->getLength();
   sprintf(current, "%d", index);
-  length = length + strlen((char *)current);
+  length = length + strlen(current);
   current += length;
   remainder -= length;
 }
@@ -254,7 +253,7 @@ void RexxCompoundTail::buildTail(
 /******************************************************************************/
 {
   sprintf(current, "%d", index);
-  length = strlen((char *)current);
+  length = strlen(current);
   current += length;
   remainder -= length;
 }

@@ -263,24 +263,6 @@ RexxBehaviour pbehav[highest_T + 1] = {/* table of primitive behaviours     */
                                        /* all zeros, which is a non-valid   */
                                        /* float number                      */
 double NO_DOUBLE;                      /* non-exsistent double value        */
-/* MHES
-int  NO_INT  = 0x80000000;
-long NO_LONG = 0x80000000;
-char *NO_CSTRING = NULL;
-*/
-
-/* Array for valid whole number at various digits settings */
-/*  for value 1-8.                                         */
-extern long validMaxWhole[] = {10,
-                               100,
-                               1000,
-                               10000,
-                               100000,
-                               1000000,
-                               10000000,
-                               100000000,
-                               1000000000};
-
 
 
 MemorySegmentPool *GlobalCurrentPool = NULL;   //wge NULL
@@ -305,7 +287,7 @@ extern "C" {
 
 internalMethodEntry internalMethodTable[] = {
 #include "NativeMethods.h"             /* bring in the internal method table*/
-   NULL, NULL                          /* final empty entry                 */
+   {NULL, NULL}                        /* final empty entry                 */
 };
 
 }

@@ -196,7 +196,7 @@ class MemorySegment : public MemorySegmentHeader {
    inline char *end() { return segmentStart + segmentSize; }
    inline BOOL isReal() { return segmentSize != 0; }
    inline BOOL isEmpty() { return liveObjects == 0; }
-   void   dump(char *owner, INT counter, FILE *keyfile, FILE *dumpfile);
+   void   dump(const char *owner, INT counter, FILE *keyfile, FILE *dumpfile);
    DeadObject *lastDeadObject();
    DeadObject *firstDeadObject();
    void gatherObjectStats(MemoryStats *memStats, SegmentStats *stats);
@@ -219,7 +219,7 @@ class MemorySegmentSet {
   public:
       typedef enum { SET_UNINITIALIZED, SET_NORMAL, SET_LARGEBLOCK, SET_OLDSPACE } SegmentSetID;
         /* the memory segment mimic for anchoring the pool */
-      MemorySegmentSet(RexxMemory *memObject, SegmentSetID id, char *setName)  {
+      MemorySegmentSet(RexxMemory *memObject, SegmentSetID id, const char *setName)  {
           /* Chain this segment to itself.     */
           owner = id;
           count = 0;
@@ -365,7 +365,7 @@ class MemorySegmentSet {
     size_t  liveObjectBytes;              /* bytes allocation to live objects */
     size_t  deadObjectBytes;              /* bytes consumed by dead objects */
     SegmentSetID owner;                   /* the owner of this segment */
-    char   *name;                         /* character identifier for debugging/profiling */
+    const char  *name;                    /* character identifier for debugging/profiling */
     RexxMemory  *memory;                  /* the hosting memory object */
 };
 

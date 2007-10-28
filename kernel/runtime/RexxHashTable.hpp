@@ -50,7 +50,7 @@
 #define FULL_TABLE      3
 
 /* The type for the reference links */
-typedef unsigned long HashLink;
+typedef size_t HashLink;
 
  typedef struct tabentry {
   RexxObject *value;                   /* item value object                 */

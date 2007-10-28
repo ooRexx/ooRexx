@@ -44,16 +44,16 @@
 #include "RexxCore.h"
 
 
-void MemorySegment::dump(char *owner, INT counter, FILE *keyfile, FILE *dumpfile)
+void MemorySegment::dump(const char *owner, INT counter, FILE *keyfile, FILE *dumpfile)
 /******************************************************************************/
 /* Function:  Dump information about an individual segment                    */
 /******************************************************************************/
 {
                                        /* print header for segment          */
-      fprintf(stderr,"Dumping %s Segment from %p for %u\n", owner, counter, &segmentStart, segmentSize);
+      fprintf(stderr,"Dumping %s Segment %d from %p for %u\n", owner, counter, &segmentStart, segmentSize);
                                        /* now dump the segment              */
-      fprintf(keyfile, "%s addr.%u = %p\n", owner, counter, &segmentStart);
-      fprintf(keyfile, "%s size.%u = %u\n", owner, counter, segmentSize);
+      fprintf(keyfile, "%s addr.%d = %p\n", owner, counter, &segmentStart);
+      fprintf(keyfile, "%s size.%d = %u\n", owner, counter, segmentSize);
       fwrite(&segmentStart, 1, segmentSize, dumpfile);
 }
 
@@ -179,16 +179,16 @@ void NormalSegmentSet::checkObjectOverlap(DeadObject *obj)
 /******************************************************************************/
 /* Function:  Constructor for the large segment pool.                         */
 /******************************************************************************/
-LargeSegmentSet::LargeSegmentSet(RexxMemory *memory) :
-    MemorySegmentSet(memory, SET_NORMAL, "Large Allocation Segments"),
-    deadCache("Large Block Allocation Pool"), requests(0), largestObject(0), smallestObject(0) { }
+LargeSegmentSet::LargeSegmentSet(RexxMemory *mem) :
+    MemorySegmentSet(mem, SET_NORMAL, "Large Allocation Segments"),
+    deadCache("Large Block Allocation Pool"), requests(0), smallestObject(0), largestObject(0) { }
 
 
 /******************************************************************************/
 /* Function:  Constructor for the large segment pool.                         */
 /******************************************************************************/
-OldSpaceSegmentSet::OldSpaceSegmentSet(RexxMemory *memory) :
-    MemorySegmentSet(memory, SET_OLDSPACE, "Old Space Segments"),
+OldSpaceSegmentSet::OldSpaceSegmentSet(RexxMemory *mem) :
+    MemorySegmentSet(mem, SET_OLDSPACE, "Old Space Segments"),
     deadCache("Old Space Allocation Pool")
 {
 
@@ -198,8 +198,8 @@ OldSpaceSegmentSet::OldSpaceSegmentSet(RexxMemory *memory) :
 /******************************************************************************/
 /* Function:  Constructor for the normal segment pool.                        */
 /******************************************************************************/
-NormalSegmentSet::NormalSegmentSet(RexxMemory *memory) :
-    MemorySegmentSet(memory, SET_NORMAL, "Normal Allocation Segments"),
+NormalSegmentSet::NormalSegmentSet(RexxMemory *mem) :
+    MemorySegmentSet(mem, SET_NORMAL, "Normal Allocation Segments"),
     largeDead("Large Normal Allocation Pool")
 {
     int i;
@@ -308,13 +308,13 @@ void MemorySegmentSet::activateEmptySegments()
     MemorySegment *segment = emptySegments.next;
     while (segment->isReal()) {
         /* grab the next segment in the chain */
-        MemorySegment *next = segment->next;
+        MemorySegment *nextSeg = segment->next;
 
         /* remove the current one from the chain */
         segment->remove();
         /* insert back into the active list */
         addSegment(segment);
-        segment = next;
+        segment = nextSeg;
     }
 }
 
@@ -689,10 +689,10 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
             /* remove this from the dead chain. */
             deadObject->remove();
             /* And turn this into a segment */
-            MemorySegment *newSegment = new (splitBlock) MemorySegment(splitLength - MemorySegmentOverhead);
+            MemorySegment *newSeg = new (splitBlock) MemorySegment(splitLength - MemorySegmentOverhead);
             /* reduce the length of the segment we took this from */
             candidateSegment->shrink(splitLength);
-            return newSegment;
+            return newSeg;
         }
         /* split a segment in the front.  We need to create two */
         /* segments for this one. */
@@ -711,11 +711,11 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
             /* front of the created tail portion. */
             MemorySegment *tailSegment = (MemorySegment *)( ((char*) candidateSegment) + splitLength);
             /* create two segments out of this */
-            MemorySegment *newSegment = new (candidateSegment) MemorySegment(splitLength);
+            MemorySegment *newSeg = new (candidateSegment) MemorySegment(splitLength);
             tailSegment = new (tailSegment) MemorySegment(tailLength);
             /* Anchor new segment at end of list */
             addSegment(tailSegment, FALSE);
-            return newSegment;
+            return newSeg;
         }
         /* we're taking a block from the middle of the segment.  We */
         /* need to create segments in front, and back. */
@@ -739,13 +739,13 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
             /* trailing segment */
             splitLength -= (2 * MemorySegmentOverhead);
             /* create two segments out of this */
-            MemorySegment *newSegment = new (splitBlock) MemorySegment(splitLength);
+            MemorySegment *newSeg = new (splitBlock) MemorySegment(splitLength);
             tailSegment = new (tailSegment) MemorySegment(tailLength);
             candidateSegment = new (candidateSegment) MemorySegment(frontLength);
             /* Anchor the original pieces on the segment chain */
             addSegment(tailSegment, FALSE);
             addSegment(candidateSegment, FALSE);
-            return newSegment;
+            return newSeg;
         }
     }
     return NULL;
@@ -955,24 +955,24 @@ void MemorySegmentSet::addSegments(size_t requiredSpace)
         size_t segmentSize = calculateSegmentAllocation(requiredSpace);
         size_t minSize = segmentSize >= LargeSegmentDeadSpace ? LargeSegmentDeadSpace : SegmentDeadSpace;
         /* try to allocate a new segment */
-        MemorySegment *newSegment = allocateSegment(segmentSize, minSize);
-        if (newSegment == NULL) {
+        MemorySegment *newSeg = allocateSegment(segmentSize, minSize);
+        if (newSeg == NULL) {
             /* if we already failed to get our "minimum minimum", just quit now. */
             if (minSize == SegmentDeadSpace) {
                 return;
             }
             /* try for a single segment allocation.  If that */
             /* fails...we have nothing else we can do. */
-            newSegment = allocateSegment(SegmentDeadSpace, SegmentDeadSpace);
-            if (newSegment == NULL) {
+            newSeg = allocateSegment(SegmentDeadSpace, SegmentDeadSpace);
+            if (newSeg == NULL) {
                 return;
             }
         }
 
         /* we have a segment.  Add this to the segment pool */
         /* (and add the dead space to the available memory). */
-        addSegment(newSegment);
-        segmentSize = newSegment->size();
+        addSegment(newSeg);
+        segmentSize = newSeg->size();
         /* if we've got what's needed, we're out of here. */
         if (segmentSize >= requiredSpace) {
             return;
@@ -1529,13 +1529,13 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
     /* scan the entire list */
     for (segment = anchor.next; segment->isReal(); segment = segment->next) {
         if (segment->isEmpty()) {
-            MemorySegment *next = segment->next;
+            MemorySegment *nextSeg = segment->next;
             /* loop until we we've collapsed all of the adjacent */
             /* empty segments */
-            for (;segment->isAdjacentTo(next) && next->isEmpty(); next = segment->next) {
+            for (;segment->isAdjacentTo(nextSeg) && nextSeg->isEmpty(); nextSeg = segment->next) {
                 memory->verboseMessage("Combining two empty segments\n");
                 /* combine these segments */
-                combineEmptySegments(segment, next);
+                combineEmptySegments(segment, nextSeg);
             }
         }
     }
@@ -1566,26 +1566,26 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
             size_t deadLength = lastBlock->size();
             /* now go to the next segment, but only continue if */
             /* they abutt */
-            MemorySegment *next = segment->next;
-            if (!segment->isAdjacentTo(next) || !next->isReal()) {
+            MemorySegment *nextSeg = segment->next;
+            if (!segment->isAdjacentTo(nextSeg) || !nextSeg->isReal()) {
                 continue;
             }
             /* we could have a single empty segment after us, as */
             /* we've already merged multiples. */
-            if (next->isEmpty()) {
+            if (nextSeg->isEmpty()) {
                 /* add the size in and continue */
-                deadLength += next->realSize();
-                emptySegment = next;
-                next = next->next;
+                deadLength += nextSeg->realSize();
+                emptySegment = nextSeg;
+                nextSeg = nextSeg->next;
             }
             /* we should now be looking at a potential merger */
             /* candidate. */
-            if (segment->isAdjacentTo(next) && next->isReal()) {
+            if (segment->isAdjacentTo(nextSeg) && nextSeg->isReal()) {
                 /* see if we have an empty block at the front of this */
-                DeadObject *firstBlock = next->firstDeadObject();
+                DeadObject *firstBlock = nextSeg->firstDeadObject();
                 if (firstBlock != NULL) {
                     deadLength += firstBlock->size() + MemorySegmentOverhead;
-                    tailSegment = next;
+                    tailSegment = nextSeg;
                 }
             }
 #if 0

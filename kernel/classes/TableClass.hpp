@@ -58,7 +58,7 @@ class RexxTable : public RexxHashTableCollection {
    RexxObject * putNodupe(RexxObject *, RexxObject *);
    RexxObject * stringPut(RexxObject *, RexxString *);
    RexxObject * stringAdd(RexxObject *, RexxString *);
-   RexxObject * addOffset(RexxObject *, RexxObject *);
+   RexxObject * addOffset(size_t, RexxObject *);
    RexxObject * replace(RexxObject *newValue, long pos) {return this->contents->replace(newValue, pos); };
    RexxArray  * allAt(RexxObject *key)  { return this->contents->getAll(key); }
    void         reHash();

@@ -51,8 +51,9 @@
 #include "RexxActivation.hpp"
 #include "RexxActivity.hpp"
 #include "RexxBuiltinFunctions.h"
+#include "Numerics.hpp"
 
-extern long validMaxWhole[];
+
                                        /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
                                        /* define an operator forwarding     */
@@ -228,7 +229,7 @@ long RexxInteger::longValue(
   }
                                        /* is the long value expressable as a*/
                                        /*  whole number in REXX term.       */
-  if (digits < 9 && labs((INT)this->value) >= validMaxWhole[digits - 1]) {
+  if (digits < 9 && labs((INT)this->value) >= Numerics::validMaxWhole[digits - 1]) {
       return NO_LONG;                  /* nope, not a valid long.           */
   }
   return this->value;                  /* return the value directly         */

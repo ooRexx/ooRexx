@@ -59,7 +59,8 @@ rem REM Rexxapi before oryxk for ORDAPI.C
 REM
 @ECHO Building Rexxapi..
 CD  %OR_ORYXASRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F REXXAPI.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F REXXAPI.MAK )
+IF %OR_ERRLOG%x == x NMAKE /F REXXAPI.MAK
+IF NOT %OR_ERRLOG%x == x NMAKE /F REXXAPI.MAK >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 REM
@@ -67,7 +68,8 @@ REM *** Kernel
 REM
 @ECHO Building Kernel....
 CD  %OR_ORYXKSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F KERNEL.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F KERNEL.MAK )
+IF %OR_ERRLOG%x == x NMAKE /F KERNEL.MAK
+IF NOT %OR_ERRLOG%x == x NMAKE /F KERNEL.MAK >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 REM *** orexxole
@@ -75,56 +77,65 @@ REM
 :OREXXOLE
 @ECHO Building OREXXOLE..
 CD  %OR_ORYXOLESRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F OREXXOLE.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F OREXXOLE.MAK )
+IF %OR_ERRLOG%x == x NMAKE /F OREXXOLE.MAK
+IF NOT %OR_ERRLOG%x == x NMAKE /F OREXXOLE.MAK >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 
 REM
 REM *** These are the commmand lanuchers, need the kernel and rexxapi
 REM
+@echo off
 @ECHO Building Command launchers
 CD  %OR_ORYXWSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F ORYXWIN.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F ORYXWIN.MAK )
+IF %OR_ERRLOG%x == x NMAKE /F ORYXWIN.MAK
+IF NOT %OR_ERRLOG%x == x NMAKE /F ORYXWIN.MAK >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 
-@ECHO Building REXX.IMG ...
+ECHO Building REXX.IMG ...
 CD %OR_OUTDIR%
-IF %USELOGFILE% equ 1 ( REXX -IB >>%OR_ERRLOG% 2>&1 ) else ( REXX -IB )
+REXX -IB >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 @ECHO Building RXSUBCOM and RXQUEUE..
 CD  %OR_ORYXASRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F Rxsubcom.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F Rxsubcom.MAK )
+IF %OR_ERRLOG%x == x NMAKE /F Rxsubcom.MAK
+IF NOT %OR_ERRLOG%x == x NMAKE /F Rxsubcom.MAK >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
-IF %USELOGFILE% equ 1 ( NMAKE /F Rxqueue.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F Rxqueue.MAK )
+IF %OR_ERRLOG%x == x NMAKE /F Rxqueue.MAK
+IF NOT %OR_ERRLOG%x == x NMAKE /F Rxqueue.MAK >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 
 REM
-REM *** Rexxutil
-REM
+rem REM *** Rexxutil
+rem REM
 @ECHO Building Rexxutil..
 CD  %OR_ORYXRSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F REXXUTIL.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F REXXUTIL.MAK )
+IF %OR_ERRLOG%x == x NMAKE /F REXXUTIL.MAK
+IF NOT %OR_ERRLOG%x == x NMAKE /F REXXUTIL.MAK >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 @ECHO Building rxwinsys.dll
-IF %USELOGFILE% equ 1 ( NMAKE /F RXWINSYS.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F RXWINSYS.MAK )
+IF %OR_ERRLOG%x == x NMAKE /F RXWINSYS.MAK
+IF NOT %OR_ERRLOG%x == x NMAKE /F RXWINSYS.MAK >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 REM *** rxsock
 REM
 @ECHO Building RxSock..
 CD  %OR_ORYXRSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F Rxsock.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F Rxsock.MAK )
+IF %OR_ERRLOG%x == x NMAKE /F Rxsock.MAK
+IF NOT %OR_ERRLOG%x == x NMAKE /F Rxsock.MAK >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 REM *** rxmath
 REM
 @ECHO Building RxMath..
 CD  %OR_ORYXRSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F rxmath.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rxmath.mak )
+IF %OR_ERRLOG%x == x NMAKE /F rxmath.mak
+IF NOT %OR_ERRLOG%x == x NMAKE /F rxmath.mak >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 
@@ -132,7 +143,8 @@ REM *** rxregexp
 REM
 @ECHO Building RXREGEXP...
 CD  %OR_ORYXREGEXP%
-IF %USELOGFILE% equ 1 ( NMAKE /F RXREGEXP.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F RXREGEXP.MAK )
+IF %OR_ERRLOG%x == x NMAKE /F RXREGEXP.MAK
+IF NOT %OR_ERRLOG%x == x NMAKE /F RXREGEXP.MAK >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 
@@ -140,13 +152,14 @@ REM *** oodialog
 REM
 @ECHO Building OODIALOG..
 CD  %OR_ORYXOODSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F OODIALOG.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F OODIALOG.MAK )
+IF %OR_ERRLOG%x == x NMAKE /F OODIALOG.MAK
+IF NOT %OR_ERRLOG%x == x NMAKE /F OODIALOG.MAK >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 
 ECHO Building OODIALOG classes
 CD %OR_OUTDIR%
-IF %USELOGFILE% equ 1 ( REXX %OR_ORYXOODSRC%\M_OODCLS >>%OR_ERRLOG% 2>&1 ) else ( REXX %OR_ORYXOODSRC%\M_OODCLS )
+REXX %OR_ORYXOODSRC%\M_OODCLS >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 
@@ -155,16 +168,13 @@ REM
 ECHO Generating security manager code for script engine
 CD %OR_OUTDIR%
 
-IF %USELOGFILE% equ 1 (
-  REXX %OR_ORYXAXSCRIPT%\rexx2inc.rex %OR_ORYXAXSCRIPT%\security.rex %OR_ORYXAXSCRIPT%\security.inc szSecurityCode >> rexx2inc.log 2>&1
-) else (
-  REXX %OR_ORYXAXSCRIPT%\rexx2inc.rex %OR_ORYXAXSCRIPT%\security.rex %OR_ORYXAXSCRIPT%\security.inc szSecurityCode
-)
+REXX %OR_ORYXAXSCRIPT%\rexx2inc.rex %OR_ORYXAXSCRIPT%\security.rex %OR_ORYXAXSCRIPT%\security.inc szSecurityCode >> rexx2inc.log 2>&1
 CD %SRC_DIR%
 
 @ECHO Building ORXSCRPT..
 CD  %OR_ORYXAXSCRIPT%
-IF %USELOGFILE% equ 1 ( NMAKE /F ORXSCRPT.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F ORXSCRPT.MAK )
+IF %OR_ERRLOG%x == x NMAKE /F ORXSCRPT.MAK
+IF NOT %OR_ERRLOG%x == x NMAKE /F ORXSCRPT.MAK >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 
@@ -172,36 +182,50 @@ REM *** API samples
 REM
 @ECHO Building API Samples..
 set LIB=%LIB%;%OR_OUTDIR%
+rem set INCLUDE=%INCLUDE%;%OR_OUTDIR%
 set INCLUDE=%OR_OUTDIR%;%OR_ORYXAWSRC%;%INCLUDE%
 
 CD  %OR_ORYXAPISAMPLES%\callrxnt
-IF %USELOGFILE% equ 1 ( NMAKE /F callrxnt.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F callrxnt.mak )
+IF %OR_ERRLOG%x == x NMAKE /F callrxnt.mak
+IF NOT %OR_ERRLOG%x == x NMAKE /F callrxnt.mak >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 CD  %OR_ORYXAPISAMPLES%\callrxwn
-IF %USELOGFILE% equ 1 ( NMAKE /F callrxwn.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F callrxwn.mak )
+IF %OR_ERRLOG%x == x NMAKE /F callrxwn.mak
+IF NOT %OR_ERRLOG%x == x NMAKE /F callrxwn.mak >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 CD  %OR_ORYXAPISAMPLES%\rexxexit
-IF %USELOGFILE% equ 1 ( NMAKE /F rexxexit.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rexxexit.mak )
+IF %OR_ERRLOG%x == x NMAKE /F rexxexit.mak
+IF NOT %OR_ERRLOG%x == x NMAKE /F rexxexit.mak >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 CD  %OR_ORYXAPISAMPLES%\wpipe\wpipe1
-IF %USELOGFILE% equ 1 ( NMAKE /F rexxapi1.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rexxapi1.mak )
+IF %OR_ERRLOG%x == x NMAKE /F rexxapi1.mak
+IF NOT %OR_ERRLOG%x == x NMAKE /F rexxapi1.mak >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 CD  %OR_ORYXAPISAMPLES%\wpipe\wpipe2
-IF %USELOGFILE% equ 1 ( NMAKE /F rexxapi2.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rexxapi2.mak )
+IF %OR_ERRLOG%x == x NMAKE /F rexxapi2.mak
+IF NOT %OR_ERRLOG%x == x NMAKE /F rexxapi2.mak >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 CD  %OR_ORYXAPISAMPLES%\wpipe\wpipe3
-IF %USELOGFILE% equ 1 ( NMAKE /F rexxapi3.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rexxapi3.mak )
+IF %OR_ERRLOG%x == x NMAKE /F rexxapi3.mak
+IF NOT %OR_ERRLOG%x == x NMAKE /F rexxapi3.mak >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
 
 @ECHO Building OODialog Samples..
 CD  %OR_ORYXOODIALOGSAMPLES%\res
-IF %USELOGFILE% equ 1 ( NMAKE /F res.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak )
+IF %OR_ERRLOG%x == x NMAKE /F res.mak
+IF NOT %OR_ERRLOG%x == x NMAKE /F res.mak >>%OR_ERRLOG% 2>&1
 if ERRORLEVEL 1 goto error
+
+
+REM
+REM Go to output directory and
+REM
+CD %OR_OUTDIR%
 
 goto arounderr
 

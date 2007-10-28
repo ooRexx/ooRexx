@@ -279,7 +279,7 @@ RexxObject *RexxSender::sendMessage(RexxArray *pid, RexxMessage *messageObj)
 }
 
 
-RexxObject *RexxSOMDServer::getClassObj(RexxString *id)
+RexxObject *RexxSOMDServer::getClassObj(RexxString *_id)
 /******************************************************************************/
 /* Function:  get the SOMClass proxy, from the DSOM server                    */
 /******************************************************************************/
@@ -307,7 +307,7 @@ RexxObject *RexxSOMDServer::getClassObj(RexxString *id)
 #endif
 }
 
-RexxObject *RexxSOMDServer::createObj(RexxString *id)
+RexxObject *RexxSOMDServer::createObj(RexxString *_id)
 /******************************************************************************/
 /* Function:  get the SOMClass proxy, from the DSOM server                    */
 /******************************************************************************/

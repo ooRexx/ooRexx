@@ -323,7 +323,7 @@ void RexxTarget::caselessSearch(
       this->end = this->string->DBCSmovePointer(0, INCREMENT, this->end);
     this->pattern_start = this->end;   /* this is the starting point        */
                                        /* end is start + trigger length     */
-    this->pattern_end = this->pattern_start + needle->getLength();
+    this->pattern_end = this->pattern_start + string->getLength();
   }
   this->subcurrent = this->start;      /* set the subpiece pointer          */
 }

@@ -75,7 +75,7 @@ extern MemorySegmentPool *ProcessCurrentPool;
 extern MemorySegmentPool *GlobalCurrentPool;
 extern void *VFTArray[highest_T];
 
-RexxString * kernel_name (char* value);
+RexxString * kernel_name (const char * value);
 
 
 #ifdef AIX
@@ -85,7 +85,7 @@ void ic_setVirtualFunctions(char *a, int b)
 }
 #endif
 
-static void SysCall logMemoryCheck(FILE *outfile, char *message, ...)
+static void SysCall logMemoryCheck(FILE *outfile, const char *message, ...)
 {
     va_list args;
     va_start(args, message);
@@ -142,7 +142,7 @@ RexxMemory::RexxMemory()
   EVCLEAR(this->unflattenMutex);
 }
 
-void RexxMemory::init(BOOL savingImage, BOOL restoringImage)
+void RexxMemory::init(bool _restoringImage)
 /******************************************************************************/
 /* Function:  Initialize the memory and restore the image                     */
 /******************************************************************************/
@@ -172,7 +172,7 @@ void RexxMemory::init(BOOL savingImage, BOOL restoringImage)
                                        /* remember the original one         */
   originalLiveStack = liveStack;
 
-  if (restoringImage) {                /* restoring the image?              */
+  if (_restoringImage) {               /* restoring the image?              */
       restoreImage();                  /* do it now...                      */
   }
 
@@ -189,7 +189,7 @@ void RexxMemory::init(BOOL savingImage, BOOL restoringImage)
   newSpaceNormalSegments.getInitialSet();
 }
 
-void RexxMemory::logVerboseOutput(char *message, void *sub1, void *sub2)
+void RexxMemory::logVerboseOutput(const char *message, void *sub1, void *sub2)
 /******************************************************************************/
 /* Function:  Log verbose output events                                       */
 /******************************************************************************/
@@ -426,23 +426,23 @@ void RexxMemory::checkSubClasses
 /* Function:  Scan the table of subclasses for now dead class objects         */
 /******************************************************************************/
 {
-  LONG        position;                /* position within the table         */
-  RexxObject *classObject;             /* object to check                   */
+  HashLink    position;                /* position within the table         */
+  RexxObject *classObj;                /* object to check                   */
 
                                        /* check each VALUE position, not the*/
                                        /* index positions for dead objects  */
                                        /* the values are the subclasses, and*/
                                        /* are the ones we're trying to clean*/
                                        /* out of memory                     */
-  for (position = subClasses->first(); (classObject = subClasses->value(position)) != OREF_NULL; position = subClasses->next(position)) {
+  for (position = subClasses->first(); (classObj = subClasses->value(position)) != OREF_NULL; position = subClasses->next(position)) {
                                        /* is this object now dead?          */
-    while (objectIsNotLive(classObject) && !OldSpace(classObject)) {
+    while (objectIsNotLive(classObj) && !OldSpace(classObj)) {
                                        /* remove from the table             */
-      subClasses->removeItem(classObject, subClasses->index(position));
+      subClasses->removeItem(classObj, subClasses->index(position));
                                        /* see of something moved into this  */
                                        /* slot                              */
-      classObject = subClasses->value(position);
-      if (classObject == OREF_NULL)    /* cleared the chain for this?       */
+      classObj = subClasses->value(position);
+      if (classObj == OREF_NULL)       /* cleared the chain for this?       */
         break;                         /* done clearing                     */
     }
   }
@@ -646,7 +646,7 @@ void RexxMemory::restoreImage(void)
                                      /* restore all of the saved primitive*/
   for (i = 0; i <= highest_exposed_T; i++)
                                      /* behaviours into this array        */
-    ((RexxBehaviour *)&pbehav[i])->restore(i, (RexxBehaviour *)primitiveBehaviours->get((long)i+1));
+    ((RexxBehaviour *)&pbehav[i])->restore((RexxBehaviour *)primitiveBehaviours->get(i+1));
 
 }
 
@@ -692,17 +692,17 @@ void       RexxMemory::liveGeneral(void)
 
 }
 
-void        RexxMemory::flatten(RexxEnvelope *envelope)
+void        RexxMemory::flatten(RexxEnvelope *env)
 /******************************************************************************/
 /* Arguments:  None                                                           */
 /*                                                                            */
 /*  Returned:  OREF NULL,                                                     */
 /******************************************************************************/
 {
-  /* Nothing to flatten */ this;
+
 }
 
-RexxObject  *RexxMemory::makeProxy(RexxEnvelope *envelope)
+RexxObject  *RexxMemory::makeProxy(RexxEnvelope *env)
 /******************************************************************************/
 /* Arguments:  None                                                           */
 /*                                                                            */
@@ -779,24 +779,24 @@ RexxObject *RexxMemory::oldObject(size_t requestLength)
 /*  Returned:  New object, or OREF_NULL if requested length was too large     */
 /******************************************************************************/
 {
-  RexxObject *newObject;
+  RexxObject *newObj;
 
   /* Compute size of new object and determine where we should */
   /* allocate from */
   requestLength = roundObjectBoundary(requestLength);
-  newObject = oldSpaceSegments.allocateObject(requestLength);
+  newObj = oldSpaceSegments.allocateObject(requestLength);
 
   /* if we got a new object, then perform the final setup steps. */
   /* Since the oldspace objects are special, we don't push them on */
   /* to the save stack.  Also, we don't set the oldspace flag, as */
   /* those are a separate category of object. */
-  if (newObject != OREF_NULL) {
+  if (newObj != OREF_NULL) {
       /* setup the new object header for use */
-      SetUpNewObject(newObject, requestLength);
+      SetUpNewObject(newObj, requestLength);
   }
 
   /* return the newly allocated object to our caller */
-  return newObject;
+  return newObj;
 }
 
 char *RexxMemory::allocateImageBuffer(size_t imageSize)
@@ -818,7 +818,7 @@ RexxObject *RexxMemory::newObject(size_t requestLength)
 /*  Returned:  New object, or OREF_NULL if requested length was too large     */
 /******************************************************************************/
 {
-  RexxObject *newObject;
+  RexxObject *newObj;
 
   allocations++;
 
@@ -832,25 +832,25 @@ RexxObject *RexxMemory::newObject(size_t requestLength)
       if (requestLength < MinimumObjectSize) {
           requestLength = MinimumObjectSize;
       }
-      newObject = newSpaceNormalSegments.allocateObject(requestLength);
+      newObj = newSpaceNormalSegments.allocateObject(requestLength);
       /* feat. 1061 moves the handleAllocationFailure code into the initial */
       /* allocation parts; this way an "if" instruction can be saved.       */
-      if (newObject == NULL) {
-        newObject = newSpaceNormalSegments.handleAllocationFailure(requestLength);
+      if (newObj == NULL) {
+          newObj = newSpaceNormalSegments.handleAllocationFailure(requestLength);
       }
   }
   /* we keep the big objects in a separate cage */
   else {
       /* round this allocation up to the appropriate large boundary */
       requestLength = roundLargeObjectAllocation(requestLength);
-      newObject = newSpaceLargeSegments.allocateObject(requestLength);
-      if (newObject == NULL) {
-          newObject = newSpaceLargeSegments.handleAllocationFailure(requestLength);
+      newObj = newSpaceLargeSegments.allocateObject(requestLength);
+      if (newObj == NULL) {
+          newObj = newSpaceLargeSegments.handleAllocationFailure(requestLength);
       }
   }
 
   /* complete the construction of this */
-  SetUpNewAllocation(newObject);
+  SetUpNewAllocation(newObj);
 
   if (this->saveStack != OREF_NULL) {
                                        /* saveobj doesn't get turned on     */
@@ -860,10 +860,10 @@ RexxObject *RexxMemory::newObject(size_t requestLength)
                                        /*keep him from being garbage        */
                                        /*collected, before it can be used   */
                                        /*and safely anchored by caller.     */
-      pushSaveStack(newObject);
+      pushSaveStack(newObj);
   }
   /* return the newly allocated object to our caller */
-  return newObject;
+  return newObj;
 }
 
 
@@ -878,23 +878,23 @@ RexxObject *RexxMemory::clone(RexxObject *obj)
 /*             being garbage collected on a pending sweep.                    */
 /******************************************************************************/
 {
-  RexxObject *clone;
+  RexxObject *cloneObj;
   HEADINFO    newHeader;
   size_t size = ObjectSize(obj);
                                        /* get new object same size as this  */
-  clone = newObject(size);
+  cloneObj = newObject(size);
   /* copy the header information, and adjust the state bits. */
-  newHeader = ObjectHeader(clone);
+  newHeader = ObjectHeader(cloneObj);
                                        /* copy all data from obj to clone   */
-  memcpy((char *)clone, (char *)obj, size);
-  ObjectHeader(clone) = newHeader;     /* restore the header information    */
-  return clone;
+  memcpy((char *)cloneObj, (char *)obj, size);
+  ObjectHeader(cloneObj) = newHeader;     /* restore the header information    */
+  return cloneObj;
 }
 
 RexxArray  *RexxMemory::newObjects(
                 size_t         size,
                 size_t         count,
-                RexxBehaviour *behaviour)
+                RexxBehaviour *newBehaviour)
 /******************************************************************************/
 /* Arguments:  size of individual objects,                                    */
 /*             number of objects to get                                       */
@@ -985,8 +985,8 @@ RexxArray  *RexxMemory::newObjects(
 
   /* set the length of the first object. */
   SetUpNewObject(largeObject, objSize);
-  largeObject->behaviour = behaviour;
-  setVirtualFunctions(largeObject, behaviour->typenum());
+  largeObject->behaviour = newBehaviour;
+  setVirtualFunctions(largeObject, newBehaviour->typenum());
 
   for (i=1 ;i < count ; i++ ) {
     /* IH: Loop one time less than before because first object is initialized
@@ -1043,7 +1043,7 @@ void RexxMemory::reSize(RexxObject *shrinkObj, size_t requestSize)
           /* create difference object.  Note:  We don't bother */
           /* putting this back on the dead chain.  It will be */
           /* picked up during the next GC cycle. */
-          DeadObject *remainderObj = new ((char *)newDeadObj + ObjectSize(newDeadObj)) DeadObject (deadObjectSize);
+          new ((char *)newDeadObj + ObjectSize(newDeadObj)) DeadObject (deadObjectSize);
       }
       /* Adjust size of original object */
       SetObjectSize(shrinkObj, newSize);
@@ -1075,9 +1075,9 @@ void RexxMemory::scavengeSegmentSets(
 
     /* first look for an unused segment.  We might be able to steal */
     /* one and just move it over. */
-    MemorySegment *newSegment = donor->donateSegment(allocationLength);
-    if (newSegment != NULL) {
-        requestor->addSegment(newSegment);
+    MemorySegment *newSeg = donor->donateSegment(allocationLength);
+    if (newSeg != NULL) {
+        requestor->addSegment(newSeg);
         return;
     }
 
@@ -1150,22 +1150,22 @@ RexxObject *RexxMemory::temporaryObject(size_t requestLength)
 /*            expand the size of the live stack during a garbage collection.  */
 /******************************************************************************/
 {
-  RexxObject *newObject;               /* the new object                    */
+  RexxObject *newObj;                  /* the new object                    */
   size_t allocationLength;             /* length to allocate                */
 
                                        /* get the rounded size of the object*/
   allocationLength = roundObjectBoundary(requestLength);
                                        /* allocate a new object             */
-  newObject = (RexxObject *)malloc(allocationLength);
-  if (newObject == OREF_NULL)          /* unable to allocate a new one?     */
+  newObj = (RexxObject *)malloc(allocationLength);
+  if (newObj == OREF_NULL)             /* unable to allocate a new one?     */
                                        /* can't allocate, report resource   */
                                        /* error.                            */
     report_exception(Error_System_resources);
                                        /* setup the new object header for   */
                                        /*use                                */
-  SetUpNewObject(newObject, allocationLength);
-  setObjectVirtualFunctions(newObject);/* give it the default VFT           */
-  return newObject;                    /* and return it                     */
+  SetUpNewObject(newObj, allocationLength);
+  setObjectVirtualFunctions(newObj);   /* give it the default VFT           */
+  return newObj;                       /* and return it                     */
 }
 
 void RexxMemory::markGeneral(void *obj)
@@ -1287,7 +1287,7 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
 /* Function:  Perform orphan check marking on an object                       */
 /******************************************************************************/
 {
-    char *outFileName;
+    const char *outFileName;
     FILE *outfile;
     BOOL firstnode;
     RexxString *className;
@@ -1328,7 +1328,7 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
                 else
                     objectClassName = className->getStringData();
                 if (firstnode) {             /* is this the first node??          */
-                    printf("-->Parent node was marking offset '%p'x \n",(ULONG)pMarkObject - (ULONG)markObject);
+                    printf("-->Parent node was marking offset '%u'x \n", (char *)pMarkObject - (char *)markObject);
                     dumpObject(markObject, outfile);
                     firstnode = FALSE;
                     logMemoryCheck(outfile, "Parent node is at %p, of type %s(%d) \n",
@@ -1397,16 +1397,16 @@ void RexxMemory::saveImage(void)
 {
   FILE *image;
   RexxObject *markObject;
-  MemoryStats imageStats;
+  MemoryStats _imageStats;
                                        /* array of objects needed at front  */
                                        /*of image for faster restore.       */
   LONG  i;                             /* loop counter                      */
   RexxArray *primitive_behaviours;     /* saved array of behaviours         */
   RexxArray *saveArray;                /* array of objects needed at front  */
 
-  this->imageStats = &imageStats;      /* set the pointer to the current collector */
+  this->imageStats = &_imageStats;     /* set the pointer to the current collector */
                                        /* of image for faster restore.      */
-  imageStats.clear();                  /* clear out image counters          */
+  _imageStats.clear();                 /* clear out image counters          */
 
                                        /* release the global strings table  */
   TheKernel->remove(kernel_name(CHAR_GLOBAL_STRINGS));
@@ -1494,7 +1494,7 @@ void RexxMemory::saveImage(void)
   free(image_buffer);
 
   printf("Object stats for this image save are \n");
-  imageStats.printSavedImageStats();
+  _imageStats.printSavedImageStats();
   printf("\n\n Total bytes for this image %d bytes \n", image_offset);
 }
 
@@ -1578,7 +1578,8 @@ RexxObject *RexxMemory::gutCheck(void)
 /*  Returned:  Nothing                                                        */
 /******************************************************************************/
 {
-  long j, count, testcount;
+  int  count, testcount;
+  HashLink j;
   BOOL restoreimagesave;
   RexxInteger *value;
   RexxInteger *testValue;
@@ -1685,7 +1686,7 @@ void RexxMemory::setObjectOffset(size_t offset)
   this->objOffset = offset;
 }
 
-void      RexxMemory::setEnvelope(RexxEnvelope *envelope)
+void      RexxMemory::setEnvelope(RexxEnvelope *_envelope)
 /******************************************************************************/
 /* Arguments:  envelope object,                                               */
 /*     since only one unflattem can happen at a time, we need to ensure       */
@@ -1697,7 +1698,7 @@ void      RexxMemory::setEnvelope(RexxEnvelope *envelope)
   RexxActivity *currentActivity;
 
                                        /* Starting or ending?               */
-  if (envelope != OREF_NULL) {
+  if (_envelope != OREF_NULL) {
                                        /* have a value, starting unflatt    */
                                        /* See if we can get MUTEX immed     */
    if (MTXRI(this->envelopeMutex)) {
@@ -1716,7 +1717,7 @@ void      RexxMemory::setEnvelope(RexxEnvelope *envelope)
      MTXRL(this->envelopeMutex);       /* Release the MUTEX.                */
   }
 
-  this->envelope = envelope;           /* set the envelope object           */
+  this->envelope = _envelope;          /* set the envelope object           */
 }
 
 
@@ -1782,8 +1783,8 @@ RexxObject *RexxMemory::checkSetOref(
                 RexxObject  *setter,
                 RexxObject **index,
                 RexxObject  *value,
-                char        *fileName,
-                long         lineNumber)
+                const char  *fileName,
+                int          lineNum)
 /******************************************************************************/
 /* Arguments:  index-- OREF to set;  value--OREF to which objr is set         */
 /*                                                                            */
@@ -1792,7 +1793,7 @@ RexxObject *RexxMemory::checkSetOref(
 /******************************************************************************/
 {
   BOOL allOK = TRUE;
-  char *outFileName;
+  const char *outFileName;
   FILE *outfile;
                                        /* Skip all checks during saveimage  */
  if (checkSetOK) {                     /* and initial part of restore Image */
@@ -1826,7 +1827,7 @@ RexxObject *RexxMemory::checkSetOref(
  }
 
   if (!allOK) {
-    logMemoryCheck(outfile, " The error occurred in line %u of file %s\n", lineNumber, fileName);
+    logMemoryCheck(outfile, " The error occurred in line %u of file %s\n", lineNum, fileName);
     printf("The dump data has been written to file %s \n",outFileName);
     fclose(outfile);
     logic_error("Something went really wrong in SetOref ...\n");
@@ -1873,16 +1874,16 @@ RexxObject *RexxMemory::dumpImageStats(void)
 /*                                                                            */
 /******************************************************************************/
 {
-  MemoryStats imageStats;
+  MemoryStats _imageStats;
 
   /* clear all of the statistics */
-  imageStats.clear();
+  _imageStats.clear();
   /* gather a fresh set of stats for all of the segments */
-  newSpaceNormalSegments.gatherStats(&imageStats, &imageStats.normalStats);
-  newSpaceLargeSegments.gatherStats(&imageStats, &imageStats.largeStats);
+  newSpaceNormalSegments.gatherStats(&_imageStats, &_imageStats.normalStats);
+  newSpaceLargeSegments.gatherStats(&_imageStats, &_imageStats.largeStats);
 
   /* print out the memory statistics */
-  imageStats.printMemoryStats();
+  _imageStats.printMemoryStats();
   return TheNilObject;
 }
 
@@ -1909,9 +1910,9 @@ void RexxMemory::accessPools(MemorySegmentPool *pool)
 /* Function:  Gain access to all Pools after pool                             */
 /******************************************************************************/
 {
-  MemorySegmentPool  *lastPool;        /* CHM - defect 29 */
+  MemorySegmentPool  *lastPool = NULL; /* CHM - defect 29 */
 
-  while (pool) {                       /* for all pools.                    */
+  while (pool != NULL) {               /* for all pools.                    */
    lastPool = pool;                    /* CHM def29: save last valid pool   */
    pool->accessNextPool();             /* access next pool.                 */
    pool = pool->nextPool();            /* get next Pool                     */
@@ -2032,7 +2033,7 @@ void memoryCreate()
   TheMemoryObject = pMemoryObject;
 
   /* Make sure memory is cleared!      */
-  memoryObject.init(TRUE, FALSE);
+  memoryObject.init(false);
   class_create();                      /* get the CLASS class created       */
   integer_create();                    /* moved here from OKINIT, because we*/
                                        /* create string first               */
@@ -2086,7 +2087,7 @@ void memoryRestore()
 {
   TheMemoryObject = pMemoryObject;
   /* Make sure memory is cleared! */
-  memoryObject.init(FALSE, TRUE);
+  memoryObject.init(true);
   /* set memories behaviour */
   BehaviourSet(pMemoryObject, TheMemoryBehaviour);
   /* Retrieve special saved objects    */
@@ -2116,7 +2117,6 @@ void memoryRestore()
   RESTORE_CLASS(String, string, RexxStringClass);
   RESTORE_CLASS(Array, array, RexxClass);
   RESTORE_CLASS(Directory, directory, RexxClass);
-  RESTORE_CLASS(Envelope, envelope, RexxClass);
   RESTORE_CLASS(Integer, integer, RexxIntegerClass);
   RESTORE_CLASS(List, list, RexxListClass);
   RESTORE_CLASS(Message, message, RexxClass);

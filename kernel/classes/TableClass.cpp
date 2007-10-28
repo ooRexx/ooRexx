@@ -48,7 +48,7 @@
 #include "RexxNativeAPI.h"
 
 RexxObject *RexxTable::addOffset(
-  RexxObject *_value,                   /* object to add                     */
+  size_t      _value,                   /* object to add                     */
   RexxObject *_index)                   /* added index                       */
 /******************************************************************************/
 /* Function:  This add method is used by the envelope packing/copybuffer      */
@@ -64,7 +64,7 @@ RexxObject *RexxTable::addOffset(
 
   memoryObject.disableOrefChecks();    /* Turn off OrefSet Checking.        */
                                        /* try to place in existing hashtab  */
-  newHash = this->contents->primitiveAdd(_value, _index);
+  newHash = this->contents->primitiveAdd((RexxObject *)_value, _index);
   if (newHash  != OREF_NULL) {         /* have a reallocation occur?        */
                                        /* mark the hash as not having refere*/
                                        /* even though the indices are objs  */

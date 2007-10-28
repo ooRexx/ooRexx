@@ -181,7 +181,7 @@ void kernelTerminate (int terminateType)
 
 void kernelRestore (void);
 void kernelNewProcess (void);
-RexxString * kernel_name (char* value);
+RexxString * kernel_name (const char* value);
 
 extern BOOL ProcessSaveImage;
 

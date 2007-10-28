@@ -34,7 +34,6 @@
 @REM SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @REM
 @echo off
-SETLOCAL
 IF %MKASM%x == x GOTO HELP_MKASM
 REM The newer versions changed the name of the vars setup.  We require this
 REM to be done before attempting the build now.
@@ -190,8 +189,6 @@ ECHO *======================================================
 goto END
 
 :error
-ENDLOCAL
 exit /b 1
 
 :END
-ENDLOCAL

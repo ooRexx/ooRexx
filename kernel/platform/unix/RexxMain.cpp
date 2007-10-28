@@ -97,11 +97,11 @@ BOOL rexxutil_call = FALSE;
 RexxMutex rexxutil_call_sem;
 
 
-extern SMTX initialize_sem = 0;
+SMTX initialize_sem = 0;
 extern SEV   RexxTerminated;               /* Termination complete semaphore.     */
 BOOL         bProcessExitInitFlag = FALSE;
-extern int  SecureFlag = 0;
-extern int  thread_counter = 0;
+int  SecureFlag = 0;
+int  thread_counter = 0;
 
 
 APIRET APIENTRY RexxExecuteMacroFunction ( char *, PRXSTRING );
@@ -479,12 +479,12 @@ void translateSource(
 
                                        /* go resolve the name               */
   pszName = SearchFileName(inputName->getStringData(), 'P'); /* PATH search      */
-  if (pszName != OREF_NULL) fullName = new_cstring(pszName);
-  else
-//  if (fullName == OREF_NULL)           /* not found?                        */
+  if (pszName == OREF_NULL)
+  {
                                        /* got an error here                 */
     report_exception1(Error_Program_unreadable_notfound, inputName);
-/*    report_exception1(Error_Program_unreadable_notfound, fullName);       */
+  }
+  fullName = new_cstring(pszName);
   newNativeAct->saveObject(fullName);  /* protect from garbage collect      */
                                        /* go translate the image            */
   method = TheMethodClass->newFile(fullName);
@@ -732,7 +732,7 @@ void  SysRunProgram(
                                        /* convert to a long value           */
         return_code = program_result->longValue(DEFAULT_DIGITS);
                                        /* if a whole number...              */
-        if (return_code != NO_LONG && return_code <= SHRT_MAX && return_code >= SHRT_MIN)
+        if (return_code != (int)NO_LONG && return_code <= SHRT_MAX && return_code >= SHRT_MIN)
                                        /* ...copy to return code.           */
           *(self->retcode) = (SHORT)return_code;
       }

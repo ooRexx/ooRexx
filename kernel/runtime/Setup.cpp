@@ -201,8 +201,6 @@ CPPMA(RexxDirectory::removeItem),
 
 CPPMD(RexxDirectory::newRexx),
 
-CPPME(RexxEnvelope::unpack),            /* Envelope method(s)                */
-
 CPPMI(RexxInteger::plus),               /* Integer methods                   */
 CPPMI(RexxInteger::minus),
 CPPMI(RexxInteger::multiply),
@@ -548,13 +546,13 @@ CPPMSRV(RexxServer::messageWait),         /* the .server class methods */
 NULL                                   /* final terminating method          */
 };
 
-LONG resolveExportedMethod(
+size_t resolveExportedMethod(
     PCPPM   targetMethod )             /* method needed to resolve          */
 /******************************************************************************/
 /* Function:  Resolve a method address to numeric index                       */
 /******************************************************************************/
 {
-  LONG   i;                            /* loop counter                      */
+  size_t i;                            /* loop counter                      */
 
   if (targetMethod == NULL)            /* unresolved method address?        */
                                        /* this is a bad error               */
@@ -573,7 +571,7 @@ LONG resolveExportedMethod(
 /*****************************************************************************/
 /* Initialisation and build of the Object REXX image                         */
 /*****************************************************************************/
-RexxString * kernel_name (char* value);
+RexxString * kernel_name (const char* value);
 void         kernelBuildVirtualFunctionTableArray(void);
 void         createStrings(void);      /* create "name" strings             */
 extern RexxDirectory *ProcessLocalEnv; /* process local environment (.local)*/
@@ -621,7 +619,6 @@ void kernelInit (void)
   CLASS_CREATE(Stem, RexxClass);       /* RexxStem                          */
   activity_create();                   /* RexxActivity                      */
   CLASS_CREATE(Supplier, RexxClass);   /* RexxSupplier                      */
-  CLASS_CREATE(Envelope, RexxClass);   /* RexxEnvelope                      */
   CLASS_CREATE(Message, RexxClass);    /* RexxMessage                       */
   CLASS_CREATE(MutableBuffer, RexxClass);
 
@@ -636,11 +633,9 @@ void kernelInit (void)
   memoryObject.enableOrefChecks();     /* enable setCheckOrefs...           */
 }
 
-LONG resolveExportedMethod(PCPPM);
-
 RexxMethod * createKernelMethod(
     PCPPM           entryPoint,        /* method entry point                */
-    LONG            arguments)         /* count of arguments                */
+    size_t          arguments)         /* count of arguments                */
 /******************************************************************************/
 /* Function:  Create a primitive, C++ method object                           */
 /******************************************************************************/
@@ -651,7 +646,7 @@ RexxMethod * createKernelMethod(
 
 RexxMethod * createProtectedKernelMethod(
     PCPPM           entryPoint,        /* method entry point                */
-    LONG            arguments)         /* count of arguments                */
+    size_t          arguments)         /* count of arguments                */
 /******************************************************************************/
 /* Function:  Create a primitive, C++ method object                           */
 /******************************************************************************/
@@ -665,7 +660,7 @@ RexxMethod * createProtectedKernelMethod(
 
 RexxMethod * createPrivateKernelMethod(
     PCPPM           entryPoint,        /* method entry point                */
-    LONG            arguments)         /* count of arguments                */
+    size_t          arguments)         /* count of arguments                */
 /******************************************************************************/
 /* Function:  Create a primitive, C++ method object                           */
 /******************************************************************************/
@@ -682,7 +677,7 @@ void defineKernelMethod(
     char          * name,              /* ASCII-Z name for the method       */
     RexxBehaviour * behaviour,         /* behaviour to use                  */
     PCPPM           entryPoint,        /* method's entry point              */
-    LONG            arguments )        /* count of arguments                */
+    size_t          arguments )        /* count of arguments                */
 /******************************************************************************/
 /* Function:  Add a C++ method to an object's behaviour                       */
 /******************************************************************************/
@@ -926,23 +921,6 @@ bool kernel_setup (void)
                                        /* method                            */
   TheDirectoryClass->subClassable("Directory", false);
 
-  /***************************************************************************/
-  /*       ENVELOPE                                                          */
-  /***************************************************************************/
-                                       /* the envelope class is not         */
-                                       /* externalized at this time         */
-                                       /* and has no class methods          */
-
-                                       /* add the instance method           */
-  defineKernelMethod(CHAR_UNPACK, TheEnvelopeBehaviour, CPPME(RexxEnvelope::unpack), 0);
-
-                                       /* set the scope of the method to    */
-                                       /* this classes oref                 */
-  TheEnvelopeBehaviour->setMethodDictionaryScope(TheEnvelopeClass);
-
-                                       /* Now call the class subclassable   */
-                                       /* method                            */
-  TheEnvelopeClass->subClassable("Envelope", true);
 
   /***************************************************************************/
   /*           LIST                                                          */
@@ -1590,7 +1568,6 @@ bool kernel_setup (void)
 
   /* set up the kernel directory (MEMORY done elsewhere) */
   kernel_public(CHAR_INTEGER          ,TheIntegerClass     , TheKernel);
-  kernel_public(CHAR_ENVELOPE         ,TheEnvelopeClass    , TheKernel);
   kernel_public(CHAR_NUMBERSTRING     ,TheNumberStringClass, TheKernel);
   kernel_public(CHAR_ACTIVITY         ,TheActivityClass    , TheKernel);
   kernel_public(CHAR_NMETHOD          ,TheNativeCodeClass  , TheKernel);
@@ -1644,8 +1621,10 @@ bool kernel_setup (void)
   }
                                        /* create a method object out of this*/
   meth = TheMethodClass->newFile(programName);
+
+  RexxObject *args = kernel_methods;   // temporary to avoid type-punning warnings
                                        /* now call BaseClasses to finish the image*/
-  ((RexxObject *)CurrentActivity)->shriekRun(meth, OREF_NULL, OREF_NULL, (RexxObject **)&kernel_methods, 1);
+  ((RexxObject *)CurrentActivity)->shriekRun(meth, OREF_NULL, OREF_NULL, (RexxObject **)&args, 1);
   discard(kernel_methods);             /* release the directory lock        */
 
   /* define and suppress methods in the nil object */

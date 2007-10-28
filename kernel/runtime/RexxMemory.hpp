@@ -275,7 +275,7 @@ class RexxMemory : public RexxObject {
   void flatten(RexxEnvelope *);
   RexxObject  *makeProxy(RexxEnvelope *);
 
-  void        init(BOOL savingImage, BOOL restoringImage);
+  void        init(bool restoringImage);
   MemorySegment *newSegment(size_t requestLength, size_t minLength);
   MemorySegment *newLargeSegment(size_t requestLength, size_t minLength);
   RexxObject *oldObject(size_t size);
@@ -308,7 +308,7 @@ class RexxMemory : public RexxObject {
   void        setEnvelope(RexxEnvelope *);
   inline void        setMarkTable(RexxTable *marktable) {this->markTable = marktable;};
   inline void        setOrphanCheck(BOOL orphancheck) {this->orphanCheck = orphancheck; };
-  RexxObject *checkSetOref(RexxObject *, RexxObject **, RexxObject *, char *, long);
+  RexxObject *checkSetOref(RexxObject *, RexxObject **, RexxObject *, const char *, int);
   RexxObject *setOref(void *index, RexxObject *value);
   RexxStack  *getFlattenStack();
   void        returnFlattenStack();
@@ -323,20 +323,20 @@ class RexxMemory : public RexxObject {
   BOOL        extendSaveStack(size_t inc);
   void        dumpMemoryProfile();
   char *      allocateImageBuffer(size_t size);
-  void        logVerboseOutput(char *message, void *sub1, void *sub2);
-  inline void verboseMessage(char *message) {
+  void        logVerboseOutput(const char *message, void *sub1, void *sub2);
+  inline void verboseMessage(const char *message) {
 #ifdef VERBOSE_GC
       logVerboseOutput(message, NULL, NULL);
 #endif
   }
 
-  inline void verboseMessage(char *message, size_t sub1) {
+  inline void verboseMessage(const char *message, size_t sub1) {
 #ifdef VERBOSE_GC
       logVerboseOutput(message, (void *)sub1, NULL);
 #endif
   }
 
-  inline void verboseMessage(char *message, size_t sub1, size_t sub2) {
+  inline void verboseMessage(const char *message, size_t sub1, size_t sub2) {
 #ifdef VERBOSE_GC
       logVerboseOutput(message, (void *)sub1, (void *)sub2);
 #endif

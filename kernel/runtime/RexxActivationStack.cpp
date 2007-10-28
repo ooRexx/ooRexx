@@ -157,16 +157,16 @@ RexxActivationFrameBuffer *RexxMemory::newActivationFrameBuffer(
 /* Function:  Create a new expression stack                                   */
 /******************************************************************************/
 {
-  RexxActivationFrameBuffer *newObject;/* newly created buffer              */
+  RexxActivationFrameBuffer *newObj;   /* newly created buffer              */
 
                                        /* Get new object                    */
-  newObject = (RexxActivationFrameBuffer *)new_object(sizeof(RexxActivationFrameBuffer) + (entries * sizeof(RexxObject *)));
+  newObj = (RexxActivationFrameBuffer *)new_object(sizeof(RexxActivationFrameBuffer) + (entries * sizeof(RexxObject *)));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheActivationFrameBufferBehaviour);
+  BehaviourSet(newObj, TheActivationFrameBufferBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newObject, T_activation_frame_buffer);
-  newObject->size = entries;           /* set the size                      */
-  newObject->next = 0;                 /* set the top element               */
-  newObject->previous = OREF_NULL;     /* no previous element yet           */
-  return newObject;                    /* return the new stack item         */
+  setVirtualFunctions(newObj, T_activation_frame_buffer);
+  newObj->size = entries;              /* set the size                      */
+  newObj->next = 0;                    /* set the top element               */
+  newObj->previous = OREF_NULL;        /* no previous element yet           */
+  return newObj;                       /* return the new stack item         */
 }

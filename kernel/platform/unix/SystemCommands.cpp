@@ -196,8 +196,8 @@ RexxObject * SysCommand(
   RXSTRING     retstr;                 /* Subcom result string              */
   CMD_TYPE     local_env_type;
   const char * shell_cmd;
-  int          i;
-  long         length;
+  size_t       i;
+  size_t       length;
   RexxObject * result;
 
   char     default_return_buffer[DEFRXSTRING];
@@ -401,13 +401,11 @@ BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
 
   for(i=0;(name[i]!='=')&&(i<iLength);name[i++])
   {
-//   memcpy(&(cmd_name[i]), &(name[i]), 1);
      cmd_name[i] = name[i];
   }
 
 /* lets try handling variables in the assignment string */
 
-//memcpy(&(cmd_name[i]),"\0",1);      /* copy the terminator           */
   cmd_name[i]  = '\0';                /* copy the terminator           */
 
   i++;                                /* the place after'=' */
@@ -418,8 +416,6 @@ BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
   array = (char *) malloc(1281);
   strcpy(array, cmd_name);
   array[strlen(cmd_name)] = '=';
-//memcpy(&(array[i+1]),"\0",1);      /* copy the terminator           */
-//memcpy(&(array[i]),"\0",1);        /* copy the terminator           */
   array[i] = '\0';                   /* copy the terminator           */
   runarray = array + strlen(array);
   runptr = value;
@@ -453,8 +449,8 @@ BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
       runptr++;
     }
 
-//  memcpy(&(temparray[j]), '\0',1);    /* lets see what we can do    */
     temparray[j] = '\0';                /* lets see what we can do    */
+    np = NULL;
 
     for(;(*Environment != NULL) && (hit == NULL) ;Environment++)
     {
@@ -666,7 +662,6 @@ LONG sys_command(const char *cmd, CMD_TYPE local_env_type)
   LONG        rc;                      /* Return code                       */
   int         pid;                     /* process id of child from fork     */
   int         status;
-  int         cmdlength;
 #ifdef LINUX
   int         iErrCode = 0;
 #endif
@@ -734,7 +729,9 @@ LONG sys_command(const char *cmd, CMD_TYPE local_env_type)
   else
   {
 #endif
-    if  ( pid = fork())                    /* spawn a child process to run the  */
+    pid = fork();
+
+    if  (pid != 0)                         /* spawn a child process to run the  */
     {
       waitpid ( pid, &status, 0);          /* command and wait for it to finish */
       if (WIFEXITED(status))               /* If cmd process ended normal       */
@@ -752,19 +749,19 @@ LONG sys_command(const char *cmd, CMD_TYPE local_env_type)
     {                                /* run the command in the child      */
       switch (local_env_type) {
       case cmd_sh:
-        execl("/bin/sh", "sh", "-c", cmd, 0);
+        execl("/bin/sh", "sh", "-c", cmd, NULL);
         break;
       case cmd_ksh:
-        execl("/bin/ksh", "ksh", "-c", cmd, 0);
+        execl("/bin/ksh", "ksh", "-c", cmd, NULL);
         break;
       case cmd_bsh:
-        execl("/bin/bsh", "bsh", "-c", cmd, 0);
+        execl("/bin/bsh", "bsh", "-c", cmd, NULL);
         break;
       case cmd_csh:
-        execl("/bin/csh", "csh", "-c", cmd, 0);
+        execl("/bin/csh", "csh", "-c", cmd, NULL);
         break;
       case cmd_bash:
-        execl("/bin/bash", "bash", "-c", cmd, 0);
+        execl("/bin/bash", "bash", "-c", cmd, NULL);
         break;
       case cmd_cmd:
         scan_cmd(cmd,args);              /* Parse cmd into arguments  */
@@ -775,7 +772,7 @@ LONG sys_command(const char *cmd, CMD_TYPE local_env_type)
                                          /* get out.                  */
         break;
       default:
-        execl("/bin/sh", "sh", "-c", cmd, 0);
+        execl("/bin/sh", "sh", "-c", cmd, NULL);
         break;
       } /* endswitch */
     }
@@ -793,7 +790,7 @@ LONG sys_command(const char *cmd, CMD_TYPE local_env_type)
 /* a shell to invoke its commands.                                   */
 /*********************************************************************/
 
-void scan_cmd(const char *parm_cmd, char **args)
+void scan_cmd(const char *parm_cmd, char **argPtr)
 {
   char * pos;                          /* Current position in command*/
   char * end;                          /* End of command             */
@@ -829,7 +826,7 @@ void scan_cmd(const char *parm_cmd, char **args)
     if (i==MAX_COMMAND_ARGS)
       report_exception(MSG_TOO_MANY_CMD_ARGS);
 
-    args[i++] = pos;                   /* Point to current argument  */
+    argPtr[i++] = pos;                 /* Point to current argument  */
                                        /* and advance i to next      */
                                        /* element of args[]          */
 
@@ -842,7 +839,7 @@ void scan_cmd(const char *parm_cmd, char **args)
   } /* endfor */
 
   /* Finally, put a null pointer in args[] to indicate the end.      */
-  args[i] = NULL;
+  argPtr[i] = NULL;
 }
 
 

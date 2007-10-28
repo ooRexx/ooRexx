@@ -73,6 +73,19 @@ stringsize_t Numerics::DEFAULT_FUZZ    = ((stringsize_t)0); /* default numeric f
                                      /* default numeric form setting      */
 bool Numerics::DEFAULT_FORM = Numerics::FORM_SCIENTIFIC;
 
+
+/* Array for valid whole number at various digits settings */
+/*  for value 1-8.                                         */
+int Numerics::validMaxWhole[] = {10,
+                                 100,
+                                 1000,
+                                 10000,
+                                 100000,
+                                 1000000,
+                                 10000000,
+                                 100000000,
+                                 1000000000};
+
 /**
  * Convert a signed int64 object into the appropriate Rexx
  * object type.
@@ -167,7 +180,7 @@ bool Numerics::objectToWholeNumber(RexxObject *source, wholenumber_t &result, wh
         temp = (wholenumber_t)nString->longValue(ARGUMENT_DIGITS);
 
         // if not a valid whole number, reject this too
-        if (temp == NO_LONG)
+        if (temp == (wholenumber_t)NO_LONG)
         {
             return false;
         }

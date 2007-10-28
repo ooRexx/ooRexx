@@ -54,8 +54,8 @@
 
 RexxCode::RexxCode(
      RexxSource      * source,         /* source object                     */
-     RexxInstruction * start,          /* start of the code tree            */
-     RexxDirectory   * labels,         /* method labels                     */
+     RexxInstruction * _start,         /* start of the code tree            */
+     RexxDirectory   * _labels,        /* method labels                     */
      size_t            maxstack,       /* max operator stack size           */
      size_t            variable_index) /* save of the vdict                 */
 /******************************************************************************/
@@ -63,8 +63,8 @@ RexxCode::RexxCode(
 /******************************************************************************/
 {
   OrefSet(this, this->u_source, source); /* save the program source         */
-  OrefSet(this, this->start, start);   /* the parse tree                    */
-  OrefSet(this, this->labels, labels); /* the method's labels               */
+  OrefSet(this, this->start, _start);   /* the parse tree                    */
+  OrefSet(this, this->labels, _labels); /* the method's labels               */
   /* save the stack info               */
   this->maxStack = (unsigned short)maxstack;
   this->vdictSize = variable_index;    /* save the initial vdict size       */
