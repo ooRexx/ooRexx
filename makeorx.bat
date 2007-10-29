@@ -49,6 +49,13 @@ set CPU=ix86
 REM Check that we have at least the first option
 IF %1x == x GOTO HELP
 
+REM By default the build output is redirected to to a log file.  To turn this
+REM redirection off, set the environment variable NO_BUILD_LOG to any value.
+REM
+REM If there is not a NO_BUILD_LOG environment variable, redirect output to a
+REM log file.  Otherwise do not redirect.
+if %NO_BUILD_LOG%x == x (set USELOGFILE=1) else (set USELOGFILE=0)
+
 REM Check for the 'package' option
 if %2x == x (
   SET DOPACKAGE=0
@@ -98,6 +105,11 @@ ECHO.
 ECHO makeorx NODEBUG PACKAGE C:\myDocs
 ECHO.
 ECHO are equivalent commands.
+ECHO.
+ECHO By default all output is redirected to a log file.  To turn this off,
+ECHO set the environment variable NO_BUILD_LOG to any value.  I.e.,
+ECHO.
+ECHO set NO_BUILD_LOG=1
 GOTO ENV_VARS_CLEANUP
 
 :HELP_SRC_DRV
@@ -207,6 +219,7 @@ SET SRCDIR=
 SET BINDIR=
 SET MISSING_DOC=
 SET SVN_REV=
+SET USELOGFILE=
 
 GOTO END
 
