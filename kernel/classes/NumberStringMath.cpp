@@ -149,17 +149,17 @@ void RexxNumberStringBase::mathRound(
 /*********************************************************************/
 {
  int carry, RoundNum;
- size_t NumDigits;
+ size_t resultDigits;
  long numVal;
 
- NumDigits = this->length;             /* get number of digits in number    */
+ resultDigits = this->length;          /* get number of digits in number    */
  NumPtr += this->length;               /* point one past last digit, this   */
                                        /* gives us most significant digit of*/
                                        /* digits being truncated.           */
 
  if (*NumPtr-- >= 5 ) {                /* is this digit grater_equal to 5   */
   carry = 1;                           /* yes, we need to round up next dig */
-  while (carry && NumDigits--) {       /* do while we have carry and digits */
+  while (carry && resultDigits-- > 0) {/* do while we have carry and digits */
                                        /* left to round up in number        */
     if (*NumPtr == 9)                  /* is this digit 9?                  */
      RoundNum = 0;                     /* Yes, then this digit will be 0    */

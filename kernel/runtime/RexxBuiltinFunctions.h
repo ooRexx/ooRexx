@@ -118,6 +118,6 @@ RexxString *PackHex(const char *String, size_t StringLength);
 /*********************************************************************/
 
                                        /* convert the number                */
-#define IntToHexDigit(n) "0123456789ABCDEF"[n];
+#define IntToHexDigit(n) "0123456789ABCDEF"[(int)n];
 
 #endif

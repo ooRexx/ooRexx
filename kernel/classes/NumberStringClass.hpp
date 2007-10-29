@@ -95,7 +95,7 @@ int number_create_integer(const char *, size_t, int, int);
     short sign;                        /* sign for this number (-1 is neg)     */
     size_t  NumDigits;                 /* Maintain a copy of digits setting of */
                                        /* From when object was created         */
-    long    exp;
+    int     exp;
     size_t  length;
  };
 
@@ -142,7 +142,7 @@ int number_create_integer(const char *, size_t, int, int);
     void        setString(RexxString *);
     void        roundUp(int);
     RexxString *formatRexx(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-    RexxString *formatInternal(size_t, size_t, size_t, size_t, RexxNumberString *, size_t, long);
+    RexxString *formatInternal(size_t, size_t, size_t, size_t, RexxNumberString *, size_t, BOOL);
     RexxObject *operatorNot(RexxObject *);
     RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
     RexxObject *getValue(RexxActivation *context){return this;}
@@ -213,9 +213,9 @@ int number_create_integer(const char *, size_t, int, int);
     RexxObject *orOp(RexxObject *);
     RexxObject *andOp(RexxObject *);
     RexxObject *xorOp(RexxObject *);
-    void        formatLong(long);
+    void        formatLong(int);
     void        formatULong(size_t);
-    long        format(const char *, size_t);
+    int         format(const char *, size_t);
     inline void        setZero() {
                    this->number[0] = '\0';               /* Make value a zero.*/
                    this->length = 1;                     /* Length is 1       */

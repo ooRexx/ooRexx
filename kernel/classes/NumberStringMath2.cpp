@@ -287,6 +287,8 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, UINT DivOP
  char outBufFast[FASTDIGITS];         /* fast allocation if default        */
  size_t  rightPadding;                 /* amount right side is padded by    */
 
+ SaveLeftPtr = NULL;
+
                         /* NOTE: this routine if very similiar to the PowerDivide   */
                         /*   routine, these we kept as seperate routines since there*/
                         /*   are enough subtile differences between the objectPointererations  */
@@ -598,7 +600,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
 /*********************************************************************/
 {
 
- long    power, extra, OldNorm;
+ int     powerValue, extra, OldNorm;
  size_t  NumberDigits;
  char   *Accum, *AccumPtr, *OutPtr, *TempPtr;
  BOOL    NegativePower;
@@ -611,13 +613,13 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
   NegativePower = FALSE;               /* Initialize the flags.             */
   required_arg(PowerObj, ONE);         /* must have one argument            */
                                        /* get the LONG value                */
-  power = REQUEST_LONG(PowerObj, NO_LONG);
-  if (power == NO_LONG)                /*  valid?  no report the exception  */
+  powerValue = REQUEST_LONG(PowerObj, NO_LONG);
+  if (powerValue == (int)NO_LONG)      /*  valid?  no report the exception  */
      report_exception1(Error_Invalid_whole_number_power, PowerObj);
 
-  if (power < 0) {                     /* is the power negative?            */
+  if (powerValue < 0) {                /* is the power negative?            */
    NegativePower = TRUE;               /*  yes, mark for later.             */
-   power = -power;                     /*  make power positive, we first do */
+   powerValue = -powerValue;           /*  make power positive, we first do */
                                        /*    power as if positive then      */
                                        /*    invert value (1/x)             */
   }
@@ -630,7 +632,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
    if (NegativePower)                  /* was power negative?               */
                                        /*  this is a no no, report error.   */
     report_exception(Error_Overflow_power);
-   else if (power == 0)                /* Is power value zero?              */
+   else if (powerValue == 0)           /* Is power value zero?              */
                                        /*  yes, return value of one         */
     return (RexxNumberString *)IntegerOne;
    else                                /* otherwise power was positive      */
@@ -639,15 +641,15 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
 
   }                                    /* Will the result exponent overflow?*/
   if ((HighBits(labs((int)(left->exp + left->length - 1))) +
-       HighBits(labs(power)) + 1) > LONGBITS )
+       HighBits(labs(powerValue)) + 1) > LONGBITS )
                                        /* yes, report error and return.     */
    report_exception3(Error_Overflow_overflow, this, (RexxObject *)OREF_POWER, PowerObj);
                                        /* Will the result overflow ?        */
-  if (labs((int)(left->exp + left->length - 1)) * power > MAXNUM)
+  if (labs((int)(left->exp + left->length - 1)) * powerValue > MAXNUM)
                                        /* yes, report error and return.     */
    report_exception3(Error_Overflow_overflow, this, (RexxObject *)OREF_POWER, PowerObj);
 
-  if (power) {                         /* a non-zero power value?           */
+  if (powerValue != 0) {               /* a non-zero power value?           */
                                        /* yes, do the power operation.      */
                                        /* get storage for Accumulator data. */
    AccumObj = (RexxNumberStringBase *)buffer_alloc(sizeof(RexxNumberStringBase));
@@ -660,7 +662,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
                                        /*  power value, needed for actual   */
                                        /*  precision value to be used in    */
                                        /*  the computation.                 */
-   for (extra=0, OldNorm = power; OldNorm ;extra++ )
+   for (extra=0, OldNorm = powerValue; OldNorm ;extra++ )
     OldNorm /= 10;                     /* Divide value by ten, keeping int  */
    NumberDigits += (extra + 1);        /* adjust digits setting to reflect  */
 
@@ -683,17 +685,17 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
    NumBits = LONGBITS;                 /* Get total number of bits in long  */
 
                                        /* Find first non-zero left most bit */
-   while (!((UINT)power & 0x80000000u)) {
-     power <<= 1;                      /*  bit is zero shift bits 1 to left */
+   while (!((UINT)powerValue & 0x80000000u)) {
+     powerValue <<= 1;                 /*  bit is zero shift bits 1 to left */
      NumBits--;                        /*  one less bit.                    */
    }                                   /* endwhile                          */
 
                                        /* turn off this 1st 1-bit, already  */
                                        /* taken care of. Skip 1st Multiply  */
-   power = (INT) ((UINT)power & 0x7fffffffu);
+   powerValue = (INT) ((UINT)powerValue & 0x7fffffffu);
 
    while (NumBits--) {                 /* while 1-bits remain in power.     */
-    if ((UINT) power & 0x80000000u) {  /* is left most bit a 1?             */
+    if ((UINT) powerValue & 0x80000000u) {  /* is left most bit a 1?             */
                                        /* yes, we need to multiply number by*/
                                        /*  Acummulator.                     */
                                        /* go do multiply.  AccumPtr will get*/
@@ -716,7 +718,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
                                        /* data back to Accum.               */
       AccumPtr = AccumObj->adjustNumber(AccumPtr, Accum, AccumLen, NumberDigits);
     }
-    power <<= 1;                       /* shift power bits one to the left  */
+    powerValue <<= 1;                  /* shift power bits one to the left  */
    }                                   /* Finished with Power 1st step.     */
 
    if (NegativePower) {                /* is this a negative power operation*/
@@ -724,7 +726,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
     AccumPtr = DividePower(AccumPtr, AccumObj, Accum, NumberDigits);
    }
 
-   NumberDigits -= (extra + 1);        /* reset digits setting to original; /* switched lines with above "if" */
+   NumberDigits -= (extra + 1);        /* reset digits setting to original; */
                                        /* Remove all leading zeros.         */
    AccumPtr = AccumObj->stripLeadingZeros(AccumPtr);
 
@@ -769,7 +771,8 @@ char * MultiplyPower(char *leftPtr, RexxNumberStringBase *left,
 /*   Function:  Multiply numbers for the power operation             */
 /*********************************************************************/
 {
- char *current, *resultPtr, *AccumPtr;
+ char *current, *resultPtr;
+ char *AccumPtr = NULL;
  char MultChar;
  size_t  AccumLen;
  size_t  i;

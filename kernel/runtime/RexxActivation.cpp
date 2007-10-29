@@ -2407,7 +2407,7 @@ void RexxActivation::traceValue(       /* trace an intermediate value       */
  * @param tag       The tag name.
  * @param value     The associated trace value.
  */
-void RexxActivation::traceTaggedValue(int prefix, char *tagPrefix, bool quoteTag,
+void RexxActivation::traceTaggedValue(int prefix, const char *tagPrefix, bool quoteTag,
      RexxString *tag, RexxObject * value)
 {
     // the trace settings would normally require us to trace this, but there are conditions
