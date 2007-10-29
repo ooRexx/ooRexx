@@ -2034,7 +2034,7 @@ RexxObject * RexxActivation::loadRequired(
                                        /* No longer installing routine.     */
   this->activity->removeRunningRequires(fullname);
                                        /* now merge all of the info         */
-  this->settings.parent_source->mergeRequired(method->code->u_source);
+  this->settings.parent_source->mergeRequired(_method->code->u_source);
   discard(_method);
   return _method;                      /* return the method  (but not needed!)  */
 }
