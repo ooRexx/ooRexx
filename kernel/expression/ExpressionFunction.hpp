@@ -64,7 +64,7 @@ class RexxExpressionFunction : public RexxInternalObject {
   RexxObject *evaluate(RexxActivation*, RexxExpressionStack *);
 
   RexxInstruction *target;             /* routine to call                   */
-  SHORT builtin_index;                 /* builtin function index            */
+  short builtin_index;                 /* builtin function index            */
   BYTE  flags;                         /* bypass internal routine calls     */
   BYTE  argument_count;                /* count of arguments                */
   RexxObject * arguments[1];           /* argument list                     */

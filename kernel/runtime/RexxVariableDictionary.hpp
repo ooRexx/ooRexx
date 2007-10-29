@@ -130,8 +130,8 @@ class RexxVariableDictionary : public RexxInternalObject {
   RexxActivity  *reservingActivity;    /* current reserving activity        */
   RexxHashTable *contents;             /* vdict hashtable                   */
   RexxList *waitingActivities;         /* list of waiting activities        */
-  USHORT flags;                        /* dictionary control flags          */
-  USHORT reserveCount;                 /* number of times reserved          */
+  unsigned short flags;                /* dictionary control flags          */
+  unsigned short reserveCount;         /* number of times reserved          */
   RexxVariableDictionary *next;        /* chained object dictionary         */
   RexxObject *scope;                   /* scopy of this object dictionary   */
 };

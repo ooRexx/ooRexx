@@ -173,8 +173,8 @@ RexxObject * SysCommand(
   INT      rc    = 0;                  /* Return code from call               */
   const char *current_address;         /* Subcom handler that gets cmd        */
   RXSTRING rxstrcmd;                   /* Command to be executed              */
-  USHORT   flags = 0;                  /* Subcom error flags                  */
-  SHORT    sbrc  = 0;                  /* Subcom return code                  */
+  unsigned short flags = 0;            /* Subcom error flags                  */
+  short    sbrc  = 0;                  /* Subcom return code                  */
   RXSTRING retstr;                     /* Subcom result string                */
   RexxObject * result;                 /* Result array                        */
                                        /* default return code buffer          */
@@ -195,7 +195,7 @@ RexxObject * SysCommand(
 
                                        /* get ready to call the function      */
   activity->exitKernel(activation, OREF_COMMAND, TRUE);
-  rc=RexxCallSubcom(const_cast<char *>(current_address), NULL, &rxstrcmd, &flags, (PUSHORT)&sbrc, (PRXSTRING)&retstr);
+  rc=RexxCallSubcom(const_cast<char *>(current_address), NULL, &rxstrcmd, &flags, (unsigned short *)&sbrc, (PRXSTRING)&retstr);
   activity->enterKernel();             /* now re-enter the kernel           */
 
 /* END CRITICAL window here -->>  kernel calls now allowed again              */
@@ -241,7 +241,7 @@ RexxObject * SysCommand(
       result = new_string(retstr.strptr, retstr.strlength);
       hold(result);
                                        /* try to get the numeric value also */
-      sbrc = (SHORT)result->longValue(NO_LONG);
+      sbrc = (short)result->longValue(NO_LONG);
                                        /* user give us a new buffer?          */
       if (retstr.strptr != default_return_buffer)
                                        /* free it                             */
@@ -254,10 +254,10 @@ RexxObject * SysCommand(
 
       if (sbrc == UNKNOWN_COMMAND)     /* is this unknown command?          */
                                        /*   send failure condition back     */
-        flags |= (USHORT)RXSUBCOM_FAILURE;
+        flags |= (unsigned short)RXSUBCOM_FAILURE;
       else if (sbrc != 0)              /* command error?                    */
                                        /*   send error condition back       */
-        flags |= (USHORT)RXSUBCOM_ERROR;
+        flags |= (unsigned short)RXSUBCOM_ERROR;
     }
 
   /****************************************************************************/
@@ -265,11 +265,11 @@ RexxObject * SysCommand(
   /* into result array.                                                       */
   /****************************************************************************/
 
-    if (flags&(USHORT)RXSUBCOM_FAILURE)/* If failure flag set               */
+    if (flags&(unsigned short)RXSUBCOM_FAILURE)/* If failure flag set               */
                                        /*   send failure condition back     */
       *error_failure = OREF_FAILURENAME;
                                        /* If error flag set                 */
-    else if (flags&(USHORT)RXSUBCOM_ERROR)
+    else if (flags&(unsigned short)RXSUBCOM_ERROR)
       *error_failure = OREF_ERRORNAME; /*   send error condition back       */
   }
   else {                               /* Call to subcom didn't work        */

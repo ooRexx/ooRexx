@@ -1219,7 +1219,7 @@ RexxToken *RexxSource::sourceNextToken(
              token = OPERATOR(BACKSLASH);
            break;
 
-         case (unsigned char)'ª':      /* logical not                       */
+         case (unsigned char)'ª':      /* logical not  (need unsigned cast) */
                                        /* next one an equal sign?           */
            if (this->nextSpecial('=', &location)) {
                                        /* have an equal sign after that?    */

@@ -86,7 +86,7 @@ typedef struct _FILESTATUS{
 typedef struct _control {              /* meta date control info            */
     unsigned short Magic;              /* identifies as 'meta' prog         */
     unsigned short MetaVersion;        /* version of the meta prog          */
-    unsigned char  RexxVersion[40];    /* version of rexx interpreter       */
+             char  RexxVersion[40];    /* version of rexx interpreter       */
     FILESTATUS FileStatus;             /* file information                  */
     long     ImageSize;                /* size of the method info           */
 } FILE_CONTROL;                        /* saved control info                */
@@ -104,7 +104,7 @@ typedef struct _CONVERSION {
   int (__stdcall *checkBIF)(RexxExpressionFunction*);
   // fix object numbers
   unsigned int (__stdcall *fixObjectNumber)(RexxObject*);
-  unsigned char to_date[40];
+  char to_date[40];
 } CONVERSION;
 
 
@@ -135,7 +135,7 @@ CONVERSION possibilities[] = {
 typedef struct _control {              /* meta date control info            */
     unsigned short Magic;              /* identifies as 'meta' prog         */
     unsigned short MetaVersion;        /* version of the meta prog          */
-    unsigned char  RexxVersion[40];    /* version of rexx interpreter       */
+             char  RexxVersion[40];    /* version of rexx interpreter       */
     long     ImageSize;                /* size of the method info           */
 } FILE_CONTROL;                        /* saved control info                */
 
@@ -444,11 +444,11 @@ int checkUSERbif(RexxExpressionFunction *function)
 /* hashvalues (currently only only strings, afaik), if yes, recalculate that*/
 /* value                                                                    */
 /****************************************************************************/
-int checkAndChange(unsigned char *buffer, long length)
+int checkAndChange(char *buffer, long length)
 {
   FILE_CONTROL *fileControl = NULL;
   int rc = ERROR_OK;
-  unsigned char *end;
+  char *end;
   RexxObject *candidate;
   unsigned int objNum;
 
@@ -668,7 +668,7 @@ int SysCall main(int argc, char **argv)
   char *oldfilename;
   char *newfilename;
   /* char tempfilename[512]; */
-  unsigned char *buffer;
+  char *buffer;
   long length;
   int rc;
 
@@ -714,7 +714,7 @@ int SysCall main(int argc, char **argv)
     length = ftell(stream);
     rewind(stream);
     /* allocate memory... */
-    buffer = (unsigned char*) malloc(sizeof(char)*length);
+    buffer = (char *) malloc(sizeof(char)*length);
     /* ...and read it into memory at once */
     if (buffer)
       fread(buffer,sizeof(char),length,stream);

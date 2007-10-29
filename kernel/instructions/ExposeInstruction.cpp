@@ -56,7 +56,7 @@ RexxInstructionExpose::RexxInstructionExpose(
 /******************************************************************************/
  {
                                        /* get the variable size             */
-  expose_variable_count = (USHORT)variableCount;
+  expose_variable_count = (unsigned short)variableCount;
   while (variableCount > 0)            /* loop through the variable list    */
                                        /* copying each variable             */
     OrefSet(this, this->variables[--variableCount], (RexxVariableBase *)(variable_list->pop()));

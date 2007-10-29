@@ -244,7 +244,7 @@ RexxObject * activation_find  (void);
    void              arguments(RexxObject *);
    void              traceValue(RexxObject *, int);
    void              traceCompoundValue(int prefix, RexxString *stem, RexxObject **tails, size_t tailCount, RexxObject * value);
-   void              traceTaggedValue(int prefix, stringchar_t *tagPrefix, bool quoteTag, RexxString *tag, RexxObject * value);
+   void              traceTaggedValue(int prefix, char *tagPrefix, bool quoteTag, RexxString *tag, RexxObject * value);
    void              traceOperatorValue(int prefix, const char *tag, RexxObject *value);
    void              traceSourceString();
    void              traceClause(RexxInstruction *, int);
@@ -347,7 +347,7 @@ RexxObject * activation_find  (void);
    inline void              traceVariable(RexxString *n, RexxObject *v)
        { if (this->settings.intermediate_trace) { this->traceTaggedValue(TRACE_PREFIX_VARIABLE, NULL, false, n, v); } };
    inline void              traceDotVariable(RexxString *n, RexxObject *v)
-       { if (this->settings.intermediate_trace) { this->traceTaggedValue(TRACE_PREFIX_DOTVARIABLE, (stringchar_t *)".", false, n, v); } };
+       { if (this->settings.intermediate_trace) { this->traceTaggedValue(TRACE_PREFIX_DOTVARIABLE, (char *)".", false, n, v); } };
    inline void              traceFunction(RexxString *n, RexxObject *v)
        { if (this->settings.intermediate_trace) { this->traceTaggedValue(TRACE_PREFIX_FUNCTION, NULL, false, n, v); } };
    inline void              traceMessage(RexxString *n, RexxObject *v)

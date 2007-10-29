@@ -486,6 +486,8 @@ long RexxString::comp(RexxObject *other)
                                        /* point to first remainder char     */
       firstStart = firstStart + secondLen;
       while (firstLen-- > secondLen) { /* while still have more to compare  */
+          // Need unsigned char or chars above 0x7f will compare as less than
+          // blank.
           unsigned char current = *firstStart++;
           if (current != ch_BLANK && current != ch_TAB)
           {
@@ -504,11 +506,13 @@ long RexxString::comp(RexxObject *other)
                                        /* part with blanks                  */
       secondStart = secondStart + firstLen;
       while (secondLen-- > firstLen) { /* while the longer string stills has*/
-        unsigned char current = *secondStart++;
-        if (current != ch_BLANK && current != ch_TAB)
-        {
-            return ch_BLANK - current;
-        }
+          // Need unsigned char or chars above 0x7f will compare as less than
+          // blank.
+          unsigned char current = *secondStart++;
+          if (current != ch_BLANK && current != ch_TAB)
+          {
+              return ch_BLANK - current;
+          }
       }
     }
   }

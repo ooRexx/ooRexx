@@ -795,9 +795,9 @@ typedef struct _RXFNC_FLAGS {          /* fl */
 
 typedef struct _RXFNCCAL_PARM {        /* fnc */
    RXFNC_FLAGS       rxfnc_flags ;     /* function flags              */
-   PUCHAR            rxfnc_name;       /* Pointer to function name.   */
+   PCHAR             rxfnc_name;       /* Pointer to function name.   */
    USHORT            rxfnc_namel;      /* Length of function name.    */
-   PUCHAR            rxfnc_que;        /* Current queue name.         */
+   PCHAR             rxfnc_que;        /* Current queue name.         */
    USHORT            rxfnc_quel;       /* Length of queue name.       */
    USHORT            rxfnc_argc;       /* Number of args in list.     */
    PRXSTRING         rxfnc_argv;       /* Pointer to argument list.   */
@@ -816,9 +816,9 @@ typedef struct _RXCMD_FLAGS {          /* fl */
 
 typedef struct _RXCMDHST_PARM {        /* rx */
    RXCMD_FLAGS       rxcmd_flags;      /* error/failure flags         */
-   PUCHAR            rxcmd_address;    /* Pointer to address name     */
+   PCHAR             rxcmd_address;    /* Pointer to address name     */
    USHORT            rxcmd_addressl;   /* Length of address name      */
-   PUCHAR            rxcmd_dll;        /* Library name for command    */
+   PCHAR             rxcmd_dll;        /* Library name for command    */
    USHORT            rxcmd_dll_len;    /* Length of library name      */
    RXSTRING          rxcmd_command;    /* The command string          */
    RXSTRING          rxcmd_retc;       /* Pointer to return buffer    */

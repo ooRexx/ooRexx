@@ -55,7 +55,7 @@
 
 BOOL SysDBCSSetup(
   ULONG  *CodePage,                    /* current code page                 */
-  unsigned char DBCS_Table[])          /* DBCS first byte table             */
+  char    DBCS_Table[])                /* DBCS first byte table             */
 {
   *CodePage = 0;                       /* No code page.                     */
   return FALSE;                        /* Also not DBCS ....                */

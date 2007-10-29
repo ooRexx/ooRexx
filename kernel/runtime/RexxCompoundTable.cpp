@@ -170,7 +170,7 @@ void RexxCompoundTable::balance(
          else {
              _parent->leftdepth = depth;    /* set left depth             */
                                             /* if right shorter           */
-             if (depth > (wd = _parent->rightdepth + (USHORT)1)) {
+             if (depth > (wd = _parent->rightdepth + (unsigned short)1)) {
                  moveNode(&_parent, TRUE);       /* adjust left branch         */
                  depth = _parent->leftdepth;     /* readjust depth             */
              }

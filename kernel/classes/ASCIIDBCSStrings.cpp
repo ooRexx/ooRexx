@@ -822,7 +822,7 @@ void DBCS_SetPadChar(
 /*                                                                   */
 /*********************************************************************/
 
-static USHORT dbcscodeJ[256]={
+static unsigned short dbcscodeJ[256]={
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*00-07*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*08-0f*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*10-17*/
@@ -866,7 +866,7 @@ C_DBCS,C_DBCS, C_DBCS, C_DBCS, C_DBCS, C_UNDF, C_UNDF, C_UNDF /*f8-ff*/
 /*                                                                   */
 /*********************************************************************/
 
-static USHORT dbcscodeK[256]={
+static unsigned short dbcscodeK[256]={
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*00-07*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*08-0f*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*10-17*/
@@ -910,7 +910,7 @@ C_UNDF,C_UNDF, 0x9A82, 0x9B82, 0x9C82, C_UNDF, C_UNDF, C_UNDF /*f8-ff*/
 /*                                                                   */
 /*********************************************************************/
 
-static USHORT dbcscodeP[256]={
+static unsigned short dbcscodeP[256]={
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*00-07*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*08-0f*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*10-17*/
@@ -954,7 +954,7 @@ C_DBCS,C_DBCS, C_DBCS, C_DBCS, C_DBCS, C_UNDF, C_UNDF, C_UNDF /*f8-ff*/
 /*                                                                   */
 /*********************************************************************/
 
-static USHORT dbcscodeR[256]={
+static unsigned short dbcscodeR[256]={
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*00-07*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*08-0f*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*10-17*/
@@ -998,7 +998,7 @@ C_DBCS,C_DBCS, C_DBCS, C_DBCS, C_DBCS, C_UNDF, C_UNDF, C_UNDF /*f8-ff*/
 /*                                                                   */
 /*********************************************************************/
 
-static USHORT dbcscodeJ942[256]={
+static unsigned short dbcscodeJ942[256]={
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*00-07*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*08-0f*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*10-17*/
@@ -1042,7 +1042,7 @@ C_DBCS,C_DBCS, C_DBCS, C_DBCS, C_DBCS, 0x54FA, 0x5F81, 0x6081 /*f8-ff*/
 /*                                                                   */
 /*********************************************************************/
 
-static USHORT dbcscodeK944[256]={
+static unsigned short dbcscodeK944[256]={
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*00-07*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*08-0f*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*10-17*/
@@ -1086,7 +1086,7 @@ C_UNDF,C_UNDF, 0x9A82, 0x9B82, 0x9C82, 0x8C81, 0x4B81, 0x4C81 /*f8-ff*/
 /*                                                                   */
 /*********************************************************************/
 
-static USHORT dbcscodeP946[256]={
+static unsigned short dbcscodeP946[256]={
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*00-07*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*08-0f*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*10-17*/
@@ -1130,7 +1130,7 @@ C_DBCS,C_DBCS, C_DBCS, C_DBCS, C_DBCS, 0x50FA, 0x7B82, 0x4A81 /*f8-ff*/
 /*                                                                   */
 /*********************************************************************/
 
-static USHORT dbcscodeR948[256]={
+static unsigned short dbcscodeR948[256]={
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*00-07*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*08-0f*/
 C_INV ,C_INV , C_INV , C_INV , C_INV , C_INV , C_INV , C_INV ,/*10-17*/
@@ -1165,7 +1165,7 @@ C_DBCS,C_DBCS, C_DBCS, C_DBCS, C_DBCS, C_DBCS, C_DBCS, C_DBCS,/*f0-f7*/
 C_DBCS,C_DBCS, C_DBCS, C_DBCS, C_DBCS, 0x5B8B, 0x5C8B, C_UNDF /*f8-ff*/
 };
 
-static USHORT *dbcstable[]=
+static unsigned short *dbcstable[]=
 {
         dbcscodeJ,                      /* Japan   TableNum = 0             */
         dbcscodeK,                      /* KOREA   TableNum = 1             */
@@ -1190,12 +1190,12 @@ void DBCS_ConvToDBCS(
 {
   char *outspot;                       /* output spot                       */
   union convert {                      /* Use to get DBCS bytes             */
-    USHORT convchar;                   /* From USHORT DBCS code.            */
-    unsigned char conv[2];             /* DBCS 1ST and 2ND byte.            */
+    unsigned short convchar;           /* From unsigned short DBCS code.    */
+    char   conv[2];                    /* DBCS 1ST and 2ND byte.            */
   }
   convert;
   size_t TableNum;                     /* current country table             */
-  USHORT TableChr;                     /* Table number for character.       */
+  unsigned short TableChr;             /* Table number for character.       */
 
   outspot = *output;                   /* copy the pointer                  */
                                        /* find the county code              */
@@ -1260,8 +1260,8 @@ void DBCS_ConvToSBCS(
   char *outspot;                       /* output spot                       */
   size_t i;                            /* Use for index of table.           */
   union convert {                      /* Use to get DBCS bytes             */
-    USHORT convchar;                   /* From unsigned int DBCS            */
-    unsigned char conv[2];             /* DBCS 1ST and 2ND byte.            */
+    unsigned short convchar;           /* From unsigned short DBCS          */
+    char   conv[2];                    /* DBCS 1ST and 2ND byte.            */
   }
   convert;
   size_t TableNum;
@@ -1404,7 +1404,7 @@ const char * DBCS_strpbrk(
 const char * DBCS_strrchr(
   const char *String,                  /* searched string                   */
   size_t      Length,                  /* string length                     */
-  unsigned char ch )                   /* searched character                */
+  char        ch )                     /* searched character                */
 {
   const char *    Match;               /* match location                    */
 
@@ -2020,7 +2020,7 @@ RexxInteger *RexxString::DBCSwordPos(RexxString *phrase,
 RexxInteger *RexxString::DBCSdatatype(INT  DataType )
 {
   RexxInteger *Retval;                 /* Return DataValue.                 */
-  unsigned char  MixedType;            /* HugeString attributes.            */
+  char         MixedType;              /* HugeString attributes.            */
 
   MixedType = DBCS_Type(this);         /* get type of string                */
 
@@ -3005,7 +3005,7 @@ RexxString *RexxString::DBCStranslate(RexxString *tableo,
         if (tablei == OREF_NULL) {     /* Omitted input table?              */
                                        /*  SBCS, use ASCII char code        */
           if (OldCharLen == SBCS_BYTELEN) {
-            BPos = (unsigned char)*InputStr; /* InTable is character code   */
+            BPos = (char)*InputStr;    /* InTable is character code   */
             BPos++;                    /* make origin 1                     */
           }
           else
@@ -3072,7 +3072,7 @@ RexxString *RexxString::dbLeft(RexxInteger *plength,
   size_t       ReqBytes;               /* requested bytes                   */
   const char *       String;           /* input string pointer              */
   size_t       Length;                 /* string length                     */
-  unsigned char Option;                /* specified option                  */
+  char         Option;                 /* specified option                  */
   size_t       RemBytes;               /* remainder bytes                   */
   RexxString  *Retval;                 /* function return value             */
 
@@ -3153,7 +3153,7 @@ RexxString *RexxString::dbRight(RexxInteger *plength,
   size_t       PadSize;                /* size of pad character             */
   const char * String;                 /* input string pointer              */
   size_t       Length;                 /* string length                     */
-  unsigned char Option;                 /* specified option                  */
+  char         Option;                 /* specified option                  */
   size_t       RemBytes;               /* remainder bytes                   */
   RexxString  *Retval;                 /* function return value             */
 
@@ -3248,7 +3248,7 @@ RexxString *RexxString::dbCenter(RexxInteger *plength,
   char *   CStr;                       /* string pointer                    */
   const char *   SBCSPad;              /* SBCSPad character                 */
   const char *   DBCSPad = NULL;       /* DBCSPad character                 */
-  unsigned char  Option;               /* SO/SI counting option             */
+  char           Option;               /* SO/SI counting option             */
   size_t   ReqBytes;                   /* requested bytes                   */
 
   ValidDBCS(this);                     /* validate the string               */
@@ -3365,7 +3365,7 @@ RexxString *RexxString::dbRleft(RexxInteger *plength,
   size_t   Length;                     /* length of input string            */
   const char *   String;               /* pointer to string                 */
   RexxString *Retval;                  /* result copy pointer               */
-  unsigned char Option;                /* SO/SI counting option             */
+  char        Option;                  /* SO/SI counting option             */
   size_t   ReqBytes;                   /* requested bytes                   */
 
   ValidDBCS(this);                     /* validate the string               */
@@ -3400,7 +3400,7 @@ RexxString *RexxString::dbRright(RexxInteger *plength,
   size_t   Length;                     /* length of input string            */
   const char *   String;               /* pointer to string                 */
   RexxString *Retval;                  /* result copy pointer               */
-  unsigned char Option;                /* SO/SI counting option             */
+  char        Option;                  /* SO/SI counting option             */
   size_t   ReqBytes;                   /* requested bytes                   */
   size_t   RemBytes;                   /* remainder bytes                   */
 
@@ -3521,7 +3521,7 @@ RexxString *RexxString::dbToSbcs()
 RexxInteger *RexxString::dbValidate(RexxString *option)
 {
   RexxInteger *Retval;                 /* return value                      */
-  unsigned char Option;                /* SO/SI counting option             */
+  char         Option;                 /* SO/SI counting option             */
 
                                        /* get the option character          */
   Option = option_character(option, DBCS_COUNT, ARG_ONE);
@@ -3540,7 +3540,7 @@ RexxInteger *RexxString::dbValidate(RexxString *option)
 
 RexxInteger *RexxString::dbWidth(RexxString *option)
 {
-  unsigned char Option;                /* function option                   */
+  char   Option;                       /* function option                   */
   size_t slength;
 
   ValidDBCS(this);                     /* validate the string               */
@@ -3559,7 +3559,7 @@ RexxInteger *RexxString::dbWidth(RexxString *option)
 
 RexxString *RexxString::dbAdjust(RexxString *option)
 {
-  unsigned char Option;                /* function option character         */
+  char Option;                         /* function option character         */
 
   ValidDBCS(this);                     /* validate the string               */
                                        /* get the option character          */

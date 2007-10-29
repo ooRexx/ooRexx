@@ -75,7 +75,7 @@ RexxExpressionMessage::RexxExpressionMessage(
   else
     this->doubleTilde = TRUE;          /* target is return value            */
   /* get the count of arguments        */
-  this->argumentCount = (SHORT)argCount;
+  this->argumentCount = (short)argCount;
   while (argCount > 0) {               /* now copy the argument pointers    */
                                        /* in reverse order                  */
     OrefSet(this, this->arguments[--argCount], arglist->pop());

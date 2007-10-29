@@ -59,8 +59,8 @@ class RexxExpressionMessage : public RexxVariableBase {
 
   RexxObject * target;                 /* target subexpression              */
   RexxObject * super;                  /* super class target                */
-  SHORT doubleTilde;                   /* single or double tilde form       */
-  SHORT argumentCount;                 /* number of message arguments       */
+  short doubleTilde;                   /* single or double tilde form       */
+  short argumentCount;                 /* number of message arguments       */
   RexxObject * arguments[1];           /* list of argument subexpressions   */
 };
 #endif

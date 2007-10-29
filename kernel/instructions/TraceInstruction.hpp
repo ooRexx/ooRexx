@@ -59,7 +59,7 @@
 class RexxInstructionTrace : public RexxInstruction {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};
-  RexxInstructionTrace(RexxObject *, USHORT, size_t, LONG);
+  RexxInstructionTrace(RexxObject *, unsigned short, size_t, LONG);
   inline RexxInstructionTrace(RESTORETYPE restoreType) { ; };
   void live();
   void liveGeneral();

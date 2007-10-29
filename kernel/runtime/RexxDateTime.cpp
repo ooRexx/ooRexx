@@ -1115,7 +1115,7 @@ void RexxDateTime::formatBaseDate(char *buffer)
  */
 void RexxDateTime::formatBaseTime(char *buffer)
 {
-    Numerics::formatInt64(getBaseTime(), (stringchar_t *)buffer);
+    Numerics::formatInt64(getBaseTime(), (char *)buffer);
 }
 
 
@@ -1126,7 +1126,7 @@ void RexxDateTime::formatBaseTime(char *buffer)
  */
 void RexxDateTime::formatUnixTime(char *buffer)
 {
-    Numerics::formatInt64(getUnixTime(), (stringchar_t *)buffer);
+    Numerics::formatInt64(getUnixTime(), (char *)buffer);
 }
 
 

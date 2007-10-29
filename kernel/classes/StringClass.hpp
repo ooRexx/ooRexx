@@ -338,7 +338,7 @@ class RexxStringClass : public RexxClass {
                                        /* add in the length (this may pick  */
                                        /* up the trailing NULL if only one  */
                                        /* character long                    */
-       this->hashvalue = *((PSHORT)this->stringData) + this->length + this->stringData[this->length-1];
+       this->hashvalue = *((short *)this->stringData) + this->length + this->stringData[this->length-1];
    }
 
    RexxNumberString *createNumberString();

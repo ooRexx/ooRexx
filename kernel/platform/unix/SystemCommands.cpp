@@ -191,8 +191,8 @@ RexxObject * SysCommand(
   INT          rc    = 0;              /* Return code from call             */
   const char  *current_address;        /* Subcom handler that gets cmd      */
   RXSTRING     rxstrcmd;               /* Command to be executed            */
-  USHORT       flags = 0;              /* Subcom error flags                */
-  SHORT        sbrc  = 0;              /* Subcom return code                */
+  unsigned short flags = 0;            /* Subcom error flags                */
+  short        sbrc  = 0;              /* Subcom return code                */
   RXSTRING     retstr;                 /* Subcom result string              */
   CMD_TYPE     local_env_type;
   const char * shell_cmd;
@@ -230,7 +230,7 @@ RexxObject * SysCommand(
   sbrc = 0;                               /* set initial subcom return code */
                                        /* get ready to call the function    */
   activity->exitKernel(activation, OREF_COMMAND, TRUE);
-  rc=RexxCallSubcom(const_cast<char *>(current_address), NULL, &rxstrcmd, &flags, (PUSHORT)&sbrc, (PRXSTRING)&retstr);
+  rc=RexxCallSubcom(const_cast<char *>(current_address), NULL, &rxstrcmd, &flags, (unsigned short *)&sbrc, (PRXSTRING)&retstr);
   activity->enterKernel();             /* now re-enter the kernel           */
 
 /* END CRITICAL window here -->>  kernel calls now allowed again            */
@@ -271,10 +271,10 @@ RexxObject * SysCommand(
 
       if (sbrc == UNKNOWN_COMMAND)              /* is this unknown command? */
                                              /* send failure condition back */
-        flags |= (USHORT)RXSUBCOM_FAILURE;
+        flags |= (unsigned short)RXSUBCOM_FAILURE;
       else if (sbrc != 0)                                 /* command error? */
                                                /* send error condition back */
-        flags |= (USHORT)RXSUBCOM_ERROR;
+        flags |= (unsigned short)RXSUBCOM_ERROR;
     }
   /****************************************************************************/
   /* Put rc from subcom handler into result array                             */
@@ -296,10 +296,10 @@ RexxObject * SysCommand(
   /* Check error flags from subcom handler and if needed, stick condition     */
   /* into result array.                                                       */
   /****************************************************************************/
-    if (flags&(USHORT)RXSUBCOM_ERROR)           /* If error flag set          */
+    if (flags&(unsigned short)RXSUBCOM_ERROR)   /* If error flag set          */
       *error_failure = OREF_ERRORNAME;          /* send error condition back  */
                                                 /* If failure flag set        */
-    else if (flags&(USHORT)RXSUBCOM_FAILURE)
+    else if (flags&(unsigned short)RXSUBCOM_FAILURE)
                                                 /* send failure condition back*/
       *error_failure = OREF_FAILURENAME;
   }

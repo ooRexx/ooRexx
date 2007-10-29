@@ -94,12 +94,12 @@
 #define PPVOID          void **
 #endif
 
-#define SHORT           short
+// #define SHORT           short
 #define LONG            long
 #define PLONG           LONG *
-#define USHORT          unsigned short
-#define PSHORT          SHORT *
-#define PUSHORT         USHORT *
+// #define USHORT          unsigned short
+// #define PSHORT          SHORT *
+// #define PUSHORT         USHORT *
 
 // #define UCHAR           unsigned char
 // #define PUCHAR          UCHAR *
@@ -112,7 +112,7 @@
 // #define PSZ             PCHAR
 #define APIENTRY
 #define APIRET          ULONG
-#define CONST           const
+// #define CONST           const
 #define LPCTSTR         LPCSTR
 #define BYTE            unsigned char
 #define BOOL            unsigned long

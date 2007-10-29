@@ -1248,9 +1248,9 @@ RexxInstruction *RexxSource::numericNew()
 /****************************************************************************/
 {
   RexxObject  *newObject;              /* newly created object              */
-  RexxObject  *_expression;             /* expression to evaluate            */
+  RexxObject  *_expression;            /* expression to evaluate            */
   RexxToken   *token;                  /* current working token             */
-  USHORT       type;                   /* type of instruction               */
+  unsigned short type;                 /* type of instruction               */
   size_t      _flags;                  /* numeric flags                     */
 
   _expression = OREF_NULL;              /* clear the expression              */
@@ -1405,7 +1405,7 @@ RexxInstruction *RexxSource::parseNew(
   int               _keyword;          /* located keyword                   */
   RexxTrigger      *trigger;           /* current working trigger           */
   int               trigger_type = 0;  /* type of the current trigger       */
-  USHORT            string_source;     /* source of string data             */
+  unsigned short    string_source;     /* source of string data             */
   size_t            _flags;            /* parsing flags                     */
   int               templateCount;     /* number of template items          */
   int               variableCount;     /* number of variable items          */

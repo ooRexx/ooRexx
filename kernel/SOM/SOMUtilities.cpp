@@ -788,7 +788,7 @@ BOOL  convertInputOctet(
 
 BOOL  convertInputShort(
   RexxObject         *argument,        /* argument to convert               */
-  SHORT              *outputArgument ) /* converted argument                */
+  short              *outputArgument ) /* converted argument                */
 /******************************************************************************/
 /* Function:  Convert a short input argument type                             */
 /******************************************************************************/
@@ -811,7 +811,7 @@ BOOL  convertInputShort(
 
 BOOL  convertInputUShort(
   RexxObject         *argument,        /* argument to convert               */
-  USHORT             *outputArgument ) /* converted argument                */
+  unsigned short     *outputArgument ) /* converted argument                */
 /******************************************************************************/
 /* Function:  Convert an unsigned short input argument type                   */
 /******************************************************************************/
@@ -976,7 +976,7 @@ BOOL  convertInputPointer(
   pointerType = *(TypeCode *)parm._value;
                                        /* Get TCKind value                  */
   kind = TypeCode_kind(pointerType, ev);
-                                       /* looking for char * or unsigned char */
+                                       /* looking for char *                */
   if (tk_char == kind || tk_octet == kind ) {
                                        /* Yes, treat as a string.           */
     return convertInputString(argument, (char **)outputArgument, saveTable, ev);
@@ -1229,7 +1229,7 @@ BOOL  convertInputArray(
 
         case tk_ushort:
                                        /* do the short conversion           */
-          if (!convertInputUShort(thisObject, (USHORT *)bufferPtr))
+          if (!convertInputUShort(thisObject, (unsigned short *)bufferPtr))
                                        /* have a bad argument               */
             bad_argtype(i, CHAR_USHORT);
           break;
@@ -1413,7 +1413,7 @@ BOOL  convertInputSequence(
 
         case tk_ushort:
                                        /* do the short conversion           */
-          if (!convertInputUShort(thisObject, (USHORT *)bufferPtr))
+          if (!convertInputUShort(thisObject, (unsigned short *)bufferPtr))
                                        /* have a bad argument               */
             bad_argtype(i, CHAR_USHORT);
           break;
@@ -1558,7 +1558,7 @@ RexxObject *som_send (SOMObject *somobj,
   char     tempChar;
   octet    tempOctet;
   short    tempShort;
-  USHORT   tempUShort;
+  unsigned short tempUShort;
   long     tempLong;
   ULONG    tempULong;
   double   tempDouble;
@@ -2054,7 +2054,7 @@ RexxObject *dsom_send (SOMDObject *somobj,
   char     tempChar;
   octet    tempOctet;
   short    tempShort;
-  USHORT   tempUShort;
+  unsigned short tempUShort;
   long     tempLong;
   ULONG    tempULong;
   double   tempDouble;

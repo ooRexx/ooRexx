@@ -269,7 +269,6 @@ typedef struct internalmethodentry {   /* internal method table entry       */
 // moved to the 4.0 codebase.
 typedef size_t stringsize_t;
 typedef int    wholenumber_t;
-typedef unsigned char stringchar_t;
 typedef size_t arraysize_t;
 
 
@@ -291,7 +290,7 @@ class ACTIVATION_SETTINGS {            /* activation "global" settings      */
       BOOL exmode;                         /* DBCS string processing flag       */
       BOOL DBCS_codepage;                  /* DBCS code page possible           */
       ULONG codepage;                      /* current activity codepage         */
-      unsigned char *DBCS_table;           /* current DBCS vector table         */
+      char *DBCS_table;                    /* current DBCS vector table         */
 };                                     /* global activation settings        */
                                        /* builtin function prototype        */
 typedef RexxObject *builtin_func(RexxActivation *, INT, RexxExpressionStack *);
@@ -304,7 +303,7 @@ typedef struct {
 } BEHAVIOURINFO;
 
 typedef struct {
-  USHORT methnum;                      /* kernel method number            */
+  unsigned short methnum;              /* kernel method number            */
   uint8_t arguments;
   uint8_t flags;                       /* flag information                */
 } METHODINFO;
@@ -312,7 +311,7 @@ typedef struct {
 typedef struct {
   uint8_t type;                        /* name of the instruction           */
   uint8_t flags;                       /* general flag area                 */
-  USHORT general;                      /* general reusable short value      */
+  unsigned short general;              /* general reusable short value      */
 } INSTRUCTIONINFO;
 
                                        /* used ofor special constructor   */

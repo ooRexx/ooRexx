@@ -369,7 +369,7 @@ ULONG RexxObject::hash()
         {
             // either 1 or 2 characters.  Just pick up a short value, which will
             // also pick up terminating null if only a single character
-            h = *((PSHORT)hashString->getStringData());
+            h = *((short *)hashString->getStringData());
         }
         return h;
   }
@@ -475,7 +475,7 @@ ULONG RexxObject::hash()
                                        /* just pick up the first 2 bytes    */
                                        /* (this may pick up the trailing    */
                                        /* NULL if only one character long   */
-      hash = *((PSHORT)hashString->getStringData());
+      hash = *((short *)hashString->getStringData());
     return hash;                       /* return the hash value             */
   }
 }

@@ -103,10 +103,10 @@ void behaviour_setup (void);
    inline RexxTable  *getInstanceMethodDictionary()   { return this->instanceMethodDictionary; };
    inline RexxClass  *getCreateClass()        { return this->createClass;};
    inline void        setClass(RexxClass *c)  { OrefSet(this, this->createClass,  c); };
-   inline SHORT typenum()                 { return this->behaviourInfo.typeNum; };
-   inline SHORT flags()                   { return this->behaviourInfo.behaviourFlags; };
-   inline void  setFlags(SHORT v)         { this->behaviourInfo.behaviourFlags = v; };
-   inline void  setTypenum(SHORT typenumber) { this->behaviourInfo.typeNum = typenumber; };
+   inline short typenum()                 { return this->behaviourInfo.typeNum; };
+   inline short flags()                   { return this->behaviourInfo.behaviourFlags; };
+   inline void  setFlags(short v)         { this->behaviourInfo.behaviourFlags = v; };
+   inline void  setTypenum(short typenumber) { this->behaviourInfo.typeNum = typenumber; };
 
    inline BOOL  isPrimitiveBehaviour()    {  return ! this->isNonPrimitiveBehaviour(); };
    inline BOOL  isNonPrimitiveBehaviour() {  return this->behaviourInfo.behaviourFlags & NON_PRIMITIVE_BEHAVIOUR; };

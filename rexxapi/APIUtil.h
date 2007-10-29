@@ -47,7 +47,7 @@
 
 #ifndef MISC_HC_INCLUDED
 #define MISC_HC_INCLUDED
-extern  void memupper(unsigned char *, size_t);
+extern  void memupper(char *, size_t);
 extern   int rxmemicmp(void *, void *, size_t);
 extern   int rxstricmp(char *, char *);
 #endif

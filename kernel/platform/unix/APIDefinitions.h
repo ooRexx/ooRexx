@@ -52,7 +52,7 @@ typedef struct apireg_node {
     char   apiname[MAXNAME];           /* routine name                 */
     char   apidll_name[MAXNAME];       /* module name                  */
     char   apidll_proc[MAXNAME];       /* procedure name               */
-    unsigned char apiuser[USERLENGTH]; /* user area                    */
+    char   apiuser[USERLENGTH];        /* user area                    */
     PFN    apiaddr;                    /* routine address              */
     LONG   apitype;                    /* 16 or 32-bit flag            */
     PVOID  apimod_handle;              /* dynalink module handle       */

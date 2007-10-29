@@ -344,7 +344,7 @@ ULONG APIENTRY WSRegistryValue(
       DWORD valType;
       DWORD dwNumber;
       DWORD dataLen;
-      CONST BYTE * data;
+      const BYTE * data;
 
       GET_HKEY(argv[1].strptr, hk);
 
@@ -367,12 +367,12 @@ ULONG APIENTRY WSRegistryValue(
           if (valType == REG_DWORD_BIG_ENDIAN)
             Little2BigEndian((BYTE *) &dwNumber, sizeof(dwNumber));
 
-          data = (CONST BYTE *) &dwNumber;
+          data = (const BYTE *) &dwNumber;
           dataLen = sizeof(dwNumber);
       }
       else
       {
-         data = (CONST BYTE *) argv[3].strptr;
+         data = (const BYTE *) argv[3].strptr;
          switch (valType)
          {
            case REG_BINARY:

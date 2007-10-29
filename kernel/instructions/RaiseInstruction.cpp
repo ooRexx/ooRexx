@@ -71,7 +71,7 @@ RexxInstructionRaise::RexxInstructionRaise(
   if (arrayCount != (size_t)-1) {      /* array form?                       */
     i_flags |= raise_array;            /* set the array form                */
     /* get the array size                */
-    raise_array_count = (USHORT)arrayCount;
+    raise_array_count = (unsigned short)arrayCount;
     while (arrayCount > 0)             /* loop through the expression list  */
                                        /* copying each expression           */
       OrefSet(this, this->additional[--arrayCount], array->pop());

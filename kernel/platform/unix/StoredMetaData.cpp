@@ -74,10 +74,10 @@
 #define  magicNumber "#!"              /* AIX magic number flag             */
 
 typedef struct _control {              /* meta date control info            */
-    USHORT   Magic;                    /* identifies as 'meta' prog         */
-    USHORT   MetaVersion;              /* version of the meta prog          */
-    unsigned char  RexxVersion[40];    /* version of rexx intrpreter        */
-    LONG     ImageSize;                /* size of the method info           */
+    unsigned short Magic;              /* identifies as 'meta' prog         */
+    unsigned short MetaVersion;        /* version of the meta prog          */
+    char           RexxVersion[40];    /* version of rexx intrpreter        */
+    LONG           ImageSize;          /* size of the method info           */
 } FILE_CONTROL;                        /* saved control info                */
                                        /* size of control structure         */
 #define  CONTROLSZ      sizeof(FILE_CONTROL)

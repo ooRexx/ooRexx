@@ -52,7 +52,7 @@
 
 BOOL SysDBCSSetup(
   ULONG  *CodePage,                    /* current code page                 */
-  unsigned char *DBCS_Table)           /* DBCS first byte table             */
+  char   *DBCS_Table)                  /* DBCS first byte table             */
 /******************************************************************************/
 /* Function:  Setup the DBCS ASCII first-byte table.                          */
 /******************************************************************************/
@@ -73,7 +73,7 @@ BOOL SysDBCSSetup(
     HaveDBCS = TRUE;                   /* got possible DBCS characters      */
                                        /* fill in the vector range          */
     for (j = CPInfo.LeadByte[i]; j <= CPInfo.LeadByte[i + 1]; j++)
-      DBCS_Table[j] = (unsigned char)TRUE; /* turn on the byte              */
+      DBCS_Table[j] = (char)TRUE;      /* turn on the byte              */
   }
   return HaveDBCS;                     /* return DBCS indicator             */
 }

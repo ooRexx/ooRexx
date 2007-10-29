@@ -51,7 +51,7 @@
 class RexxInstructionNumeric : public RexxInstructionExpression {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};
-  RexxInstructionNumeric(RexxObject *, USHORT, size_t);
+  RexxInstructionNumeric(RexxObject *, unsigned short, size_t);
   inline RexxInstructionNumeric(RESTORETYPE restoreType) { ; };
   void execute(RexxActivation *, RexxExpressionStack *);
 };

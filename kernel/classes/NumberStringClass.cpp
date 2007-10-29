@@ -2275,7 +2275,7 @@ RexxNumberString *RexxNumberString::abs()
  /* necessary */
  NewNumber->setupNumber();
                                        /* switch the sign                   */
- NewNumber->sign = (SHORT)labs((INT)NewNumber->sign);
+ NewNumber->sign = (short)labs((INT)NewNumber->sign);
  return NewNumber;                     /* and return                        */
 }
 

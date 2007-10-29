@@ -470,7 +470,7 @@ BOOL Install()
                   "EventMessageFile",
                   0,
                   REG_EXPAND_SZ,
-                  (CONST BYTE*)szFilePath,
+                  (const BYTE*)szFilePath,
                   strlen(szFilePath) + 1);
 
     // Set the supported types flags.
@@ -479,7 +479,7 @@ BOOL Install()
                   "TypesSupported",
                   0,
                   REG_DWORD,
-                  (CONST BYTE*)&dwData,
+                  (const BYTE*)&dwData,
                   sizeof(DWORD));
     RegCloseKey(hKey);
 

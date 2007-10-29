@@ -50,7 +50,7 @@
 
 RexxInstructionNumeric::RexxInstructionNumeric(
     RexxObject *_expression,           /* optional expression               */
-    USHORT      type,                  /* type of numeric instruction       */
+    unsigned short type,               /* type of numeric instruction       */
     size_t      flags)                 /* processing flags                  */
 /****************************************************************************/
 /* Function:  Execute a REXX NUMERIC instruction                            */

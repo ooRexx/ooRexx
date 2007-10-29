@@ -423,7 +423,7 @@ ULONG REXXENTRY RexxExecutionLineInfo(ULONG * line, char * fname, BOOL next)
 /* Notes:              This routine is originally from OS2VPOOL.C in "classic"*/
 /*                     Rexx.                                                  */
 /******************************************************************************/
-SHORT REXXENTRY Rx32Var(
+short REXXENTRY Rx32Var(
   SHVBLOCK16 *req )                         /* Chain of 16-bit variable pool  */
                                             /* request blocks                 */
 
@@ -446,7 +446,7 @@ SHORT REXXENTRY Rx32Var(
     return_code = RexxVariablePool(&new_req);
 
     if (return_code < 0)                    /* bad entry conditions?          */
-      return (SHORT)return_code;            /* get out                        */
+      return (short)return_code;            /* get out                        */
     composite |= return_code;               /* fill in the composite now      */
                                             /* copy shvblock back copy and    */
                                             /* convert name                   */
@@ -458,6 +458,6 @@ SHORT REXXENTRY Rx32Var(
     req = (PSHVBLOCK16)(req->shvnext);      /* step to the next block         */
     req = (PSHVBLOCK16)FN16toFN32(req);     /* convert it to 32-bit           */
   }
-  return (SHORT)composite;                  /* return the composite rc        */
+  return (short)composite;                  /* return the composite rc        */
 } /* end Rx32Var */
 #endif

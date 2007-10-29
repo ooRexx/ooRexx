@@ -64,7 +64,7 @@ class RexxDoBlock : public RexxInternalObject {
   inline RexxBlockInstruction * getParent() {return this->parent;};
   inline void setTo(RexxObject * value) {this->to = value;};
   inline void setBy(RexxObject * value) {this->by = value;};
-  inline void setCompare(int value) {this->compare = (USHORT)value;};
+  inline void setCompare(int value) {this->compare = (unsigned short)value;};
   inline void setFor(long value) {this->forcount = value;};
   inline BOOL testFor() {return (this->forcount--) <= 0;};
   inline LONG getIndent() { return this->indent; };

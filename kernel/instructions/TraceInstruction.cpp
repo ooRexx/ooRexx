@@ -50,7 +50,7 @@
 
 RexxInstructionTrace::RexxInstructionTrace(
     RexxObject *_expression,           /* TRACE VALUE expression            */
-    USHORT      trace,                 /* trace setting                     */
+    unsigned short trace,              /* trace setting                     */
     size_t      debug_flags,           /* new debug setting                 */
     LONG        debug_skip )           /* debug clauses to skip             */
 /******************************************************************************/

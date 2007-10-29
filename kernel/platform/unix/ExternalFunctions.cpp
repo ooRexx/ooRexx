@@ -483,7 +483,7 @@ BOOL MacroSpaceSearch(
   BOOL             order,              /* Pre/Post order search flag        */
   RexxObject    ** result )            /* Result of function call           */
 {
-  USHORT       Position;               /* located macro search position     */
+  unsigned short Position;             /* located macro search position     */
   const char  *MacroName;              /* ASCII-Z name version              */
   RXSTRING     MacroImage;             /* target macro image                */
   RexxMethod * Routine;                /* method to execute                 */
@@ -553,7 +553,7 @@ BOOL RegExternalFunction(
   PRXSTRING     argrxarray;            /* Array of args in PRXSTRING form   */
   RXSTRING      funcresult;            /* Function result                   */
   RexxString  * argument;              /* current argument                  */
-  USHORT        functionrc;            /* Return code from function         */
+  unsigned short functionrc;           /* Return code from function         */
 
                                        /* default return code buffer        */
   char      default_return_buffer[DEFRXSTRING];

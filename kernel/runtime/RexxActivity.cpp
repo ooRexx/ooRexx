@@ -174,7 +174,7 @@ extern RexxArray *ProcessLocalActs;
 extern SMTX rexx_kernel_semaphore;     /* global kernel semaphore           */
 extern SMTX rexx_resource_semaphore;   /* global kernel semaphore           */
 extern SMTX rexx_start_semaphore;      /* startup semaphore                 */
-extern BOOL SysDBCSSetup(PULONG, unsigned char *);
+extern BOOL SysDBCSSetup(PULONG, char *);
 
                                        /* current active activity           */
 //RexxActivity *CurrentActivity = OREF_NULL;
@@ -1835,12 +1835,12 @@ BOOL RexxActivity::sysExitFunc(
       exit_parm.rxfnc_flags.rxffsub = 1;
                                        /* fill in the name parameter        */
     exit_parm.rxfnc_namel = rname->getLength();
-    exit_parm.rxfnc_name = (unsigned char *)rname->getWritableData();
+    exit_parm.rxfnc_name = rname->getWritableData();
 
                                        /* Get current active queue name     */
     stdqueue = (RexxString *)SysGetCurrentQueue();
                                        /* fill in the name                  */
-    exit_parm.rxfnc_que = (unsigned char *)stdqueue->getWritableData();
+    exit_parm.rxfnc_que = stdqueue->getWritableData();
                                        /* and the length                    */
     exit_parm.rxfnc_quel = stdqueue->getLength();
                                        /* Build arg array of RXSTRINGs      */
@@ -1990,7 +1990,7 @@ BOOL RexxActivity::sysExitCmd(
     exit_parm.rxcmd_flags.rxfcerr = 0;
                                        /* fill in the environment parm      */
     exit_parm.rxcmd_addressl = environment->getLength();
-    exit_parm.rxcmd_address = (unsigned char *)environment->getWritableData();
+    exit_parm.rxcmd_address = environment->getWritableData();
                                        /* make cmdaname into RXSTRING form  */
     MAKERXSTRING(exit_parm.rxcmd_command, cmdname->getWritableData(), cmdname->getLength());
 
@@ -3491,9 +3491,9 @@ void process_message_arguments(
         argument_list->addLast(new_integer(tempLong));
         break;
 
-      case 's':                        /* SHORT                             */
+      case 's':                        /* short                             */
                                        /* get the number                    */
-        tempLong = (LONG) (SHORT) va_arg(*arguments, INT);
+        tempLong = (LONG) (short) va_arg(*arguments, INT);
                                        /* create an integer object          */
         argument_list->addLast(new_integer(tempLong));
         break;
@@ -3513,9 +3513,9 @@ void process_message_arguments(
         argument_list->addLast(new_numberstring((stringsize_t)tempULong));
         break;
 
-      case 'h':                        /* USHORT                            */
+      case 'h':                        /* unsigned short                    */
                                        /* get the number                    */
-        tempLong = (LONG) (USHORT) va_arg(*arguments, INT);
+        tempLong = (LONG) (unsigned short) va_arg(*arguments, INT);
                                        /* create an integer object          */
         argument_list->addLast(new_integer(tempLong));
         break;
@@ -3619,9 +3619,9 @@ void process_message_result(
         (*((INT *)return_pointer)) = (INT)value->longValue(NO_LONG);
         break;
 
-      case 's':                        /* SHORT                             */
+      case 's':                        /* short                             */
                                        /* get the number                    */
-        (*((SHORT *)return_pointer)) = (SHORT)value->longValue(NO_LONG);
+        (*((short *)return_pointer)) = (short)value->longValue(NO_LONG);
         break;
 
       case 'd':                        /* double                            */
@@ -3635,9 +3635,9 @@ void process_message_result(
         (*((ULONG *)return_pointer)) = (ULONG)value->longValue(NO_LONG);
         break;
 
-      case 'h':                        /* USHORT                            */
+      case 'h':                        /* unsigned short                   */
                                        /* get the number                    */
-        (*((USHORT *)return_pointer)) = (USHORT)value->longValue(NO_LONG);
+        (*((unsigned short *)return_pointer)) = (unsigned short)value->longValue(NO_LONG);
         break;
 
       case 'l':                        /* LONG                              */

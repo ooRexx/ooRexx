@@ -79,15 +79,15 @@
 
 // OS2 FILESTATUS Stuctures duplicated for win32
 typedef struct _FDATE {
-   USHORT day:5;
-   USHORT month:4;
-   USHORT year:7;
+   unsigned short day:5;
+   unsigned short month:4;
+   unsigned short year:7;
 } FDATE;
 
 typedef struct _FTIME{
-   USHORT twosecs:5;
-   USHORT minutes:6;
-   USHORT hours:5;
+   unsigned short twosecs:5;
+   unsigned short minutes:6;
+   unsigned short hours:5;
 } FTIME;
 
 
@@ -100,15 +100,15 @@ typedef struct _FILESTATUS{
    FTIME ftimeLastWrite;
    ULONG cbFile;
    ULONG cbFileAlloc;
-   USHORT attrFile;
+   unsigned short attrFile;
 } FILESTATUS;
 
 typedef struct _control {              /* meta date control info            */
-    USHORT   Magic;                    /* identifies as 'meta' prog         */
-    USHORT   MetaVersion;              /* version of the meta prog          */
-    unsigned char RexxVersion[40];     /* version of rexx intrpreter        */
-    FILESTATUS FileStatus;             /* file information                  */
-    LONG     ImageSize;                /* size of the method info           */
+    unsigned short Magic;              /* identifies as 'meta' prog         */
+    unsigned short MetaVersion;        /* version of the meta prog          */
+    char           RexxVersion[40];    /* version of rexx intrpreter        */
+    FILESTATUS     FileStatus;         /* file information                  */
+    LONG           ImageSize;          /* size of the method info           */
 } FILE_CONTROL;                        /* saved control info                */
 
 

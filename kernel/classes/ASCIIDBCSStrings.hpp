@@ -91,7 +91,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-#define IsDBCS(ch) (current_settings->DBCS_table[ch])
+#define IsDBCS(ch) (current_settings->DBCS_table[(unsigned char)ch])
 
 /*********************************************************************/
 /*                                                                   */

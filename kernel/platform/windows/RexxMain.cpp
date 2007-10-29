@@ -129,7 +129,7 @@ char *REXXENTRY RexxGetVersionInformation();
 #define STOREMETHOD   5                /* flatten method object             */
 
 typedef struct _RexxScriptInfo {       /* Control info used by various API's*/
-  SHORT runtype;
+  short runtype;
   const char *index;                   /* index to directory which contains */
                                        /* objects being kept for process.   */
 
@@ -154,15 +154,15 @@ typedef struct _ConditionData {
 } ConditionData;
 
 typedef struct _RexxStartInfo {
-  SHORT runtype;                       /* How source should be handled      */
+  short runtype;                       /* How source should be handled      */
   LONG       argcount;                 /* Number of args in arglist         */
   PRXSTRING  arglist;                  /* Array of args                     */
   const char*programname;              /* REXX program to run               */
   PRXSTRING  instore;                  /* Instore array                     */
   const char*envname;                  /* Initial cmd environment           */
-  SHORT      calltype;                 /* How the program is called         */
+  short      calltype;                 /* How the program is called         */
   PRXSYSEXIT exits;                    /* Array of system exit names        */
-  PSHORT     retcode;                  /* Integer form of result            */
+  short *    retcode;                  /* Integer form of result            */
   PRXSTRING  result;                   /* Result returned from program      */
   const char*outputName;               /* compilation output file           */
 } RexxStartInfo;
@@ -606,7 +606,7 @@ APIRET APIENTRY RexxStart(
   PCSZ envname,                        /* Initial cmd environment           */
   LONG  calltype,                      /* How the program is called         */
   PRXSYSEXIT exits,                    /* Array of system exit names        */
-  PSHORT retcode,                      /* Integer form of result            */
+  short * retcode,                     /* Integer form of result            */
   PRXSTRING result)                    /* Result returned from program      */
 
 {
@@ -640,7 +640,7 @@ APIRET APIENTRY RexxStart(
   RexxStartArguments.programname = (char *) programname;
   RexxStartArguments.instore = instore;
   RexxStartArguments.envname = (char *) envname;
-  RexxStartArguments.calltype = (SHORT)calltype;
+  RexxStartArguments.calltype = (short)calltype;
   RexxStartArguments.exits = exits;
   RexxStartArguments.retcode = retcode;
   RexxStartArguments.result = result;
@@ -1317,12 +1317,12 @@ RexxMethod * process_instore(
 {
   RexxMethod * method;                 /* returned method                   */
   RexxBuffer * source_buffer;          /* buffered source                   */
-  USHORT   temp;                       /* unused position info              */
+  unsigned short temp;                 /* unused position info              */
   RXSTRING buffer;                     /* instorage buffer                  */
 
   if (instore[0].strptr == NULL && instore[1].strptr == NULL) {
                                        /* see if this exists                */
-    if (!RexxQueryMacro(name->getStringData(), (PUSHORT)&temp)) {
+    if (!RexxQueryMacro(name->getStringData(), (unsigned short *)&temp)) {
                                        /* get image of function             */
       RexxExecuteMacroFunction(const_cast<char *>(name->getStringData()), &buffer);
                                        /* go convert into a method          */
@@ -1546,7 +1546,7 @@ void  SysRunProgram(
                                        /* on the activity                   */
   newNativeAct = new ((RexxObject *)CurrentActivity, OREF_NULL, CurrentActivity, OREF_PROGRAM, OREF_NULL) RexxNativeActivation;
   CurrentActivity->push(newNativeAct); /* Push new nativeAct onto stack     */
-  switch (*((PSHORT)ControlInfo)) {
+  switch (*((short *)ControlInfo)) {
     case CREATEMETHOD:
       CreateMethod((RexxScriptInfo *)ControlInfo, newNativeAct);
       return;
@@ -1720,7 +1720,7 @@ void  SysRunProgram(
                                        /* if a whole number...              */
         if (return_code != NO_LONG && return_code <= SHRT_MAX && return_code >= SHRT_MIN)
                                        /* ...copy to return code.           */
-          *(self->retcode) = (SHORT)return_code;
+          *(self->retcode) = (short)return_code;
       }
     }
   }

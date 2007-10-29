@@ -122,7 +122,7 @@ extern BOOL RexxStartedByApplication;
 
 extern "C" {
 APIRET REXXENTRY RexxTranslateProgram( char *, char *);
-//LONG APIENTRY RexxMain(LONG, PRXSTRING, char *, PRXSTRING, char *, LONG, PRXSYSEXIT, PSHORT, PRXSTRING);
+//LONG APIENTRY RexxMain(LONG, PRXSTRING, char *, PRXSTRING, char *, LONG, PRXSYSEXIT, short *, PRXSTRING);
 }
 
 typedef struct
@@ -135,7 +135,7 @@ RexxStartInfo {
   char      *envname;                  /* Initial cmd environment           */
   LONG       calltype;                 /* How the program is called         */
   PRXSYSEXIT exits;                    /* Array of system exit names        */
-  PSHORT     retcode;                  /* Integer form of result            */
+  short *    retcode;                  /* Integer form of result            */
   PRXSTRING  result;                   /* Result returned from program      */
   char      *outputName;               /* compilation output file           */
   BOOL       translating;              /* performing a translation only     */
@@ -205,7 +205,7 @@ LONG APIENTRY RexxStart(
   char *envname,                       /* Initial cmd environment           */
   LONG calltype,                       /* How the program is called         */
   PRXSYSEXIT exits,                    /* Array of system exit names        */
-  PSHORT retcode,                      /* Integer form of result            */
+  short * retcode,                     /* Integer form of result            */
   PRXSTRING result)                    /* Result returned from program      */
 
 {
@@ -279,7 +279,7 @@ LONG APIENTRY ApiRexxStart(
   char *envname,                       /* Initial cmd environment           */
   LONG calltype,                       /* How the program is called         */
   PRXSYSEXIT exits,                    /* Array of system exit names        */
-  PSHORT retcode,                      /* Integer form of result            */
+  short * retcode,                     /* Integer form of result            */
   PRXSTRING result)                    /* Result returned from program      */
 
 {
@@ -504,13 +504,13 @@ RexxMethod * process_instore(
 {
   RexxMethod * method;                 /* returned method                   */
   RexxBuffer * source_buffer;          /* buffered source                   */
-  USHORT   temp;                       /* unused position info              */
+  unsigned short temp;                 /* unused position info              */
   RXSTRING buffer;                     /* instorage buffer                  */
   RexxMethod * Routine;                /* method to execute                 */
 
   if (instore[0].strptr == NULL && instore[1].strptr == NULL) {
                                        /* see if this exists                */
-    if (!RexxQueryMacro(const_cast<char *>(name->getStringData()), (PUSHORT)&temp)) {
+    if (!RexxQueryMacro(const_cast<char *>(name->getStringData()), (unsigned short *)&temp)) {
       /* The ExecMacro func returns a ptr to the shared memory. So we must  */
       /* call APISTARTUP to be sure that the ptr remains valid.             */
       APISTARTUP(MACROCHAIN);
@@ -734,7 +734,7 @@ void  SysRunProgram(
                                        /* if a whole number...              */
         if (return_code != (int)NO_LONG && return_code <= SHRT_MAX && return_code >= SHRT_MIN)
                                        /* ...copy to return code.           */
-          *(self->retcode) = (SHORT)return_code;
+          *(self->retcode) = (short)return_code;
       }
     }
   }

@@ -120,13 +120,13 @@ char *type_char (
     case tk_void:                      /* void                              */
       *cp++ = 'v';
       break;
-    case tk_short:                     /* SHORT                             */
+    case tk_short:                     /* short                             */
       *cp++ = 's';
       break;
     case tk_long:                      /* LONG                              */
       *cp++ = 'l';
       break;
-    case tk_ushort:                    /* USHORT                            */
+    case tk_ushort:                    /* unsigned short                    */
       *cp++ = 'h';
       break;
     case tk_ulong:                     /* ULONG                             */
