@@ -279,8 +279,12 @@ void RexxCompoundTable::setParent(
 /* RexxCompoundTable and RexxStem.                                            */
 /******************************************************************************/
 {
-                                           /* NOTE: we're setting this as a field in the parent object */
-    OrefSet(parentStem, parent->tails.parent, parentStem);
+    // NOTE:  This seems a little weird, but we're doing the set using the parent
+    // object...which will actually set the value in our own object instance.
+    // This is done because the if we have checkSetOref turned on, the validity
+    // checker won't recognize our address as being a valid object because it's
+    // embedded within another Rexx object.
+    OrefSet(parentStem, parentStem->tails.parent, parentStem);
 }
 
 
@@ -292,6 +296,10 @@ void RexxCompoundTable::setRoot(
 /* RexxCompoundTable and RexxStem.                                            */
 /******************************************************************************/
 {
-                                           /* NOTE: we're setting this as a field in the parent object */
+    // NOTE:  This seems a little weird, but we're doing the set using the parent
+    // object...which will actually set the value in our own object instance.
+    // This is done because the if we have checkSetOref turned on, the validity
+    // checker won't recognize our address as being a valid object because it's
+    // embedded within another Rexx object.
     OrefSet(parent, parent->tails.root, newRoot);
 }
