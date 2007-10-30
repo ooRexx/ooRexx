@@ -1431,9 +1431,7 @@ void RexxMemory::saveImage(void)
   saveArray->put((RexxObject *)TheNativeCodeClass, saveArray_NMETHOD);
   saveArray->put((RexxObject *)TheSystem,       saveArray_SYSTEM);
   saveArray->put((RexxObject *)TheFunctionsDirectory,  saveArray_FUNCTIONS);
-  saveArray->put((RexxObject *)TheGenericSomMethod,    saveArray_GENERIC_SOMMETHOD);
   saveArray->put((RexxObject *)TheCommonRetrievers,    saveArray_COMMON_RETRIEVERS);
-  saveArray->put((RexxObject *)TheMSomProxyClass,       saveArray_M_SOMPROXY);
   saveArray->put((RexxObject *)TheKernel->entry(kernel_name(CHAR_NAME_STRINGS)), saveArray_NAME_STRINGS);
   saveArray->put((RexxObject *)TheStaticRequires,       saveArray_STATIC_REQ);
   saveArray->put((RexxObject *)ThePublicRoutines,       saveArray_PUBLIC_RTN);
@@ -2105,7 +2103,6 @@ void memoryRestore()
   TheClassClass  = (RexxClass *)TheSaveArray->get(saveArray_CLASS);
   TheActivityClass    = (RexxActivityClass *)TheSaveArray->get(saveArray_ACTIVITY);
   TheNativeCodeClass  = (RexxNativeCodeClass *)TheSaveArray->get(saveArray_NMETHOD);
-  TheGenericSomMethod = (RexxSOMCode *)TheSaveArray->get(saveArray_GENERIC_SOMMETHOD);
   TheCommonRetrievers = (RexxDirectory *)TheSaveArray->get(saveArray_COMMON_RETRIEVERS);
   TheStaticRequires   = (RexxDirectory *)TheSaveArray->get(saveArray_STATIC_REQ);
   ThePublicRoutines   = (RexxDirectory *)TheSaveArray->get(saveArray_PUBLIC_RTN);

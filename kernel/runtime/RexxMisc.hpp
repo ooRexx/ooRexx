@@ -44,13 +44,6 @@
 #ifndef Included_RexxCorral
 #define Included_RexxCorral
 
-#include "RexxSOMProxy.hpp"
-
-class RexxSOMServer : public RexxObject {
-   public:
-     RexxObject *initDSom();
-     RexxObject *initDSomWPS();
-};
 
 class RexxLocal     : public RexxObject {
    public:
@@ -60,28 +53,4 @@ class RexxLocal     : public RexxObject {
      RexxObject *callString(RexxObject **, size_t);
 };
 
-
-class RexxSender    : public RexxObject {
-   public:
-     RexxArray   *getPid();
-     RexxObject *sendMessage(RexxArray *, RexxMessage *);
-};
-
-
-class RexxServer    : public RexxObject {
-   public:
-     RexxObject *messageWait();
-};
-
-class RexxSOMDServer    : public RexxSOMProxy {
-   public:
-     RexxObject *getClassObj(RexxString *);
-     RexxObject *createObj(RexxString *);
-     RexxObject *deleteObj(RexxSOMProxy *);
-};
-
-class RexxSOMDObjectMgr : public RexxSOMProxy {
-   public:
-     RexxObject *enhanceServer(RexxSOMProxy *, RexxDirectory *);
-};
 #endif

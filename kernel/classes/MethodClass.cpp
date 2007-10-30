@@ -48,7 +48,6 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
-#include "RexxSOMCode.hpp"
 #include "RexxCode.hpp"
 #include "RexxNativeMethod.hpp"
 #include "RexxActivity.hpp"
@@ -81,8 +80,6 @@ RexxMethod::RexxMethod(
   if (code != OREF_NULL) {             /* have some sort of code?           */
     if (OTYPE(RexxCode, code))         /* written in REXX?                  */
       this->setRexxMethod();           /* turn on the REXX flag             */
-    else if (OTYPE(SomCode, code))     /* is it a SOM method                */
-      this->setSOMMethod();            /* turn on the SOM  flag             */
     else
       this->setNativeMethod();    ;    /* this is a native method           */
   }
@@ -94,7 +91,6 @@ void RexxMethod::live()
 /******************************************************************************/
 {
   setUpMemoryMark
-  memory_mark(this->methodinterface);
   memory_mark(this->scope);
   memory_mark(this->code);
   memory_mark(this->objectVariables);
@@ -107,7 +103,6 @@ void RexxMethod::liveGeneral()
 /******************************************************************************/
 {
   setUpMemoryMarkGeneral
-  memory_mark_general(this->methodinterface);
   memory_mark_general(this->scope);
   memory_mark_general(this->code);
   memory_mark_general(this->objectVariables);
@@ -127,7 +122,6 @@ void RexxMethod::flatten(RexxEnvelope *envelope)
 {
   setUpFlatten(RexxMethod)
 
-   flatten_reference(newThis->methodinterface, envelope);
    flatten_reference(newThis->scope, envelope);
    flatten_reference(newThis->code, envelope);
    flatten_reference(newThis->objectVariables, envelope);
@@ -254,16 +248,6 @@ RexxObject *RexxMethod::run(
     if (result != OREF_NULL) discard(result);
     return result;                     /* and return it                     */
   }
-  else if (this->isSOMMethod()) {      /* written in SOM?                   */
-                                       /* has method been resolved?         */
-    if (!this->somCode->isResolved() && this->somCode->isGeneric()) {
-                                       /* yes, about to call so get a REAL  */
-                                       /*& sommethod for resolution later   */
-      OrefSet(this, this->somCode, new RexxSOMCode (FALSE));
-    }
-
-    return this->somCode->run(receiver, msgname, this->scope, count, argPtr);
-  }
   else {                               /* native activation                 */
                                        /* create a new native activation    */
     newNActa = new (receiver, this, activity, msgname, (RexxActivation *)TheNilObject) RexxNativeActivation;
@@ -321,7 +305,7 @@ RexxObject *RexxMethod::call(
     return returnObject;
 
   }
-  else                                 /* kernel/native/SOM method          */
+  else                                 /* kernel/native method              */
                                        /* pass on the call                  */
     return this->run(activity, receiver, msgname, argcount, argPtr);
 }
@@ -355,7 +339,7 @@ RexxArray  *RexxMethod::source()
   if (this->isRexxMethod())            /* this written in REXX?             */
                                        /* return associated source          */
     return this->rexxCode->sourceRexx();
-  else                                 /* kernel/SOM/native code            */
+  else                                 /* kernel/native code                */
                                        /* this is always a null array       */
     return (RexxArray *)TheNullArray->copy();
 }
@@ -371,26 +355,8 @@ RexxObject *RexxMethod::setSecurityManager(
     this->rexxCode->u_source->setSecurityManager(manager);
     return TheTrueObject;              /* this worked ok                    */
   }
-  else                                 /* kernel/SOM/native code            */
+  else                                 /* kernel/native code                */
     return TheFalseObject;             /* nothing to set security on        */
-}
-
-RexxObject *  RexxMethod::setInterface( RexxDirectory *interfacedefn)
-/******************************************************************************/
-/* Function:  Set a method interface definition string (used for export)      */
-/******************************************************************************/
-{
-                                       /* just set the interface            */
-  OrefSet(this, this->methodinterface, interfacedefn);
-  return OREF_NULL;                    /* and return nothing                */
-}
-
-RexxDirectory *RexxMethod::getInterface()
-/******************************************************************************/
-/* Function:  Retrieve the interface description string                       */
-/******************************************************************************/
-{
-  return this->methodinterface;        /* return the method interface       */
 }
 
 void RexxMethod::setScope(
@@ -739,61 +705,6 @@ RexxMethod *RexxMethodClass::newEntry( PFN entry)
   return newMethod;
 }
 
-RexxMethod *RexxMethodClass::newSom(
-    RexxClass *scope)                  /* variable scope information        */
-/******************************************************************************/
-/* Function:  Create a new som method using the given scope                   */
-/******************************************************************************/
-{
-  RexxMethod  *newMethod;              /* newly created method              */
-  RexxSOMCode *newCode;                /* associated SOM  code object       */
-
-  newCode = TheGenericSomMethod;       /* use genric som method initially   */
-                                       /* get a new method object           */
-  newMethod = new_method(0, (PCPPM)NULL, 0, newCode);
-  if (scope != OREF_NULL)              /* given a scope too?                */
-    newMethod->setScope(scope);
-  return newMethod;
-}
-
-RexxArray *RexxMethodClass::newArrayOfSOMMethods(
-          RexxClass  *scope,           /* variable scope information        */
-          long number)                 /* number of obejcts to create       */
-/******************************************************************************/
-/*                                                                            */
-/*  Function: Create number of SOM method objects, full initialized           */
-/*      This is used during the import of a SOM class since we generally      */
-/*      create several of these at a time.  Should help reduce calls to memory*/
-/*      management                                                            */
-/*                                                                            */
-/* NOTE:                                                                      */
-/*    The array of SOM methods returned is still in the save table, the       */
-/*    requester is responsible to discard the array.                          */
-/*                                                                            */
-/******************************************************************************/
-{
-  RexxArray  *newMethods;              /* newly created method              */
-  RexxMethod  *tempMeth;               /* holder for method we are workin w */
-  long i;                              /* counter for initializing objs     */
-
-  newMethods = (RexxArray *)save(memoryObject.newObjects(sizeof(RexxMethod), number, TheMethodBehaviour));
-
-  for (i=1; i<= number ;i++ ) {
-                                       /* retrive the ith method            */
-    tempMeth = (RexxMethod *)newMethods->get(i);
-                                       /* initialize this method.           */
-                                       /* use genric som method initially   */
-    new (tempMeth) RexxMethod (0, (PCPPM)NULL, 0, (RexxObject *)new RexxSOMCode (FALSE));
-    if (scope != OREF_NULL)            /* given a scope too?                */
-                                       /* set the associated scope          */
-      tempMeth->setScope(scope);
-  }
-                                       /* NOTE: that the array is still in  */
-                                       /*  the save table upon return,      */
-                                       /*  requester of these methods is    */
-                                       /*  responsible to discard           */
-  return newMethods;                   /* return the array of methods       */
-}
 
 RexxMethod *RexxMethodClass::restore(
     RexxBuffer *buffer,                /* buffer containing the method      */

@@ -45,13 +45,7 @@
 # -------------------------------------------------------------------------
 # CHM moved target definition to top
 all : ORXHEADERS $(OR_OUTDIR)\rexx.dll  \
-#      $(OR_OUTDIR)\rxcmd32.dll \         not needed for 32-bit rexx
-#      $(OR_OUTDIR)\rxcmd16.dll \         commented by IH
-!IFDEF JAPANESE
-      $(OR_OUTDIR)\rexxjap.dll \
-!ENDIF
       $(OR_OUTDIR)\rexxc.exe \
-      $(OR_OUTDIR)\rxmigrate.exe \
       COPYORXFILES
     @ECHO ...
     @ECHO All done ....
@@ -112,7 +106,7 @@ OTPOBJS=$(OTSOBJ1)  $(OTSOBJ2) $(OTIOBJ1) $(OTIOBJ2) $(OTIOBJ3) \
 
 # Following all part of rexx
 OKCOBJ1=$(OR_OUTDIR)\Version.$(OBJ)
-OKCOBJ2= $(OR_OUTDIR)\RexxStartup.$(OBJ)  $(OR_OUTDIR)\Utilities.$(OBJ) $(OR_OUTDIR)\SOMUtilities.$(OBJ)
+OKCOBJ2= $(OR_OUTDIR)\RexxStartup.$(OBJ)  $(OR_OUTDIR)\Utilities.$(OBJ)
 OKAOBJS= $(OR_OUTDIR)\GlobalData.$(OBJ)  $(OR_OUTDIR)\Initialization.$(OBJ) $(OR_OUTDIR)\GlobalNames.$(OBJ)
 OKLOBJS=$(OR_OUTDIR)\FloatUtilities.$(OBJ)  $(OR_OUTDIR)\Setup.$(OBJ) $(OR_OUTDIR)\InstructionParser.$(OBJ) \
         $(OR_OUTDIR)\Scanner.$(OBJ)
@@ -126,12 +120,12 @@ OKPOBJ3=$(OR_OUTDIR)\ListClass.$(OBJ)   $(OR_OUTDIR)\RexxMemory.$(OBJ) $(OR_OUTD
          $(OR_OUTDIR)\MemoryStats.$(OBJ) $(OR_OUTDIR)\MessageClass.$(OBJ)    \
         $(OR_OUTDIR)\StemClass.$(OBJ)   $(OR_OUTDIR)\ObjectClass.$(OBJ) $(OR_OUTDIR)\RexxCompoundTail.$(OBJ) \
         $(OR_OUTDIR)\RexxCompoundElement.$(OBJ) $(OR_OUTDIR)\RexxCompoundTable.$(OBJ)
-OKPOBJ4=$(OR_OUTDIR)\QueueClass.$(OBJ)  $(OR_OUTDIR)\SupplierClass.$(OBJ)   $(OR_OUTDIR)\RexxSOMProxy.$(OBJ)   \
+OKPOBJ4=$(OR_OUTDIR)\QueueClass.$(OBJ)  $(OR_OUTDIR)\SupplierClass.$(OBJ)  \
         $(OR_OUTDIR)\RelationClass.$(OBJ)  $(OR_OUTDIR)\TableClass.$(OBJ)
 OKPOBJ5=$(OR_OUTDIR)\IntegerClass.$(OBJ)    $(OR_OUTDIR)\NumberStringClass.$(OBJ)
 OKIOBJ1=$(OR_OUTDIR)\RexxActivation.$(OBJ) $(OR_OUTDIR)\RexxActivity.$(OBJ) $(OR_OUTDIR)\KeywordConstants.$(OBJ)  \
         $(OR_OUTDIR)\RexxBehaviour.$(OBJ)  $(OR_OUTDIR)\RexxBuffer.$(OBJ)
-OKIOBJ2=$(OR_OUTDIR)\RexxHashTable.$(OBJ)   $(OR_OUTDIR)\RexxCode.$(OBJ)  $(OR_OUTDIR)\RexxSOMCode.$(OBJ)  \
+OKIOBJ2=$(OR_OUTDIR)\RexxHashTable.$(OBJ)   $(OR_OUTDIR)\RexxCode.$(OBJ)  \
         $(OR_OUTDIR)\RexxListTable.$(OBJ) $(OR_OUTDIR)\RexxNativeActivation.$(OBJ) $(OR_OUTDIR)\RexxNativeMethod.$(OBJ)
 OKIOBJ3=$(OR_OUTDIR)\RexxCollection.$(OBJ)   $(OR_OUTDIR)\RexxSmartBuffer.$(OBJ) $(OR_OUTDIR)\StackClass.$(OBJ)  \
         $(OR_OUTDIR)\RexxVariable.$(OBJ)    $(OR_OUTDIR)\RexxVariableDictionary.$(OBJ) $(OR_OUTDIR)\RexxDateTime.$(OBJ) \
@@ -165,10 +159,6 @@ OKSOBJS=$(OR_OUTDIR)\StringClass.$(OBJ) $(OR_OUTDIR)\StringClassUtil.$(OBJ) $(OR
 OKNOBJS=$(OR_OUTDIR)\NativeRoot.$(OBJ)
 
 SYSERR= $(OR_OUTDIR)\ErrorMessages.$(OBJ)
-
-
-# oryxb (in our rexx.dll)
-ORYXBOBJ=$(OR_OUTDIR)\SOMProxyNative.$(OBJ) $(OR_OUTDIR)\SOMObjectNative.$(OBJ)
 
 # rexx
 ORYXKOBJ= $(OKCOBJS) $(OKAOBJS) $(OKPOBJS) $(OKIOBJS) $(OKSOBJS) $(OEPOBJS)\
@@ -204,10 +194,10 @@ ORXHEADERS=$(KMESSAGES)\RexxErrorCodes.h $(KMESSAGES)\RexxMessageNumbers.h $(KME
 #
 # the type command creates a file of all objects as input to the lib
 #
-$(OR_OUTDIR)\rexx.lib : $(ORYXKOBJ) $(ORYXBOBJ) $(ORYXLOBJ)     \
+$(OR_OUTDIR)\rexx.lib : $(ORYXKOBJ) $(ORYXLOBJ)     \
                   $(KWINDOWS)\wrexx.def
    type <<$(OR_OUTDIR)\oryxk.lst
-   $(ORYXKOBJ) $(ORYXBOBJ) $(ORYXLOBJ)
+   $(ORYXKOBJ) $(ORYXLOBJ)
 <<
         $(OR_IMPLIB)    \
         -machine:$(CPU) \
@@ -220,11 +210,11 @@ $(OR_OUTDIR)\rexx.lib : $(ORYXKOBJ) $(ORYXBOBJ) $(ORYXLOBJ)     \
 #
 # need import libraries and def files still
 #
-$(OR_OUTDIR)\rexx.dll : $(ORXHEADERS) $(ORYXKOBJ) $(ORYXBOBJ) $(ORYXLOBJ) $(RXDBG_OBJ) \
+$(OR_OUTDIR)\rexx.dll : $(ORXHEADERS) $(ORYXKOBJ) $(ORYXLOBJ) $(RXDBG_OBJ) \
                          $(OR_OUTDIR)\$(@B).lib $(KWINDOWS)\wrexx.def    \
                          $(OR_OUTDIR)\winmsgtb.res $(OR_OUTDIR)\verinfo.res
  type <<$(OR_OUTDIR)\oryxk.lst
-   $(ORYXKOBJ) $(ORYXBOBJ) $(RXDBG_OBJ) $(ORYXLOBJ)
+   $(ORYXKOBJ) $(RXDBG_OBJ) $(ORYXLOBJ)
 <<
     $(OR_LINK) $(lflags_common) $(lflags_dll)  -out:$(OR_OUTDIR)\$(@B).dll \
              @$(OR_OUTDIR)\oryxk.lst \
@@ -232,21 +222,6 @@ $(OR_OUTDIR)\rexx.dll : $(ORXHEADERS) $(ORYXKOBJ) $(ORYXBOBJ) $(ORYXLOBJ) $(RXDB
              $(OR_OUTDIR)\$(@B).exp  \
              $(OR_OUTDIR)\rexxapi.lib \
              $(libs_dll)
-
-!IFDEF JAPANESE
-$(OR_OUTDIR)\rexxjap.dll: $(ORYXKOBJ) $(ORYXBOBJ) $(ORYXLOBJ) $(RXDBG_OBJ) \
-                         $(OR_OUTDIR)\rexx.lib $(KWINDOWS)\wrexx.def    \
-                         $(KCORE)\RexxCore.h $(OR_OUTDIR)\winmsgjp.res $(OR_OUTDIR)\verinfo.res
- type <<$(OR_OUTDIR)\oryxk.lst
-   $(ORYXKOBJ) $(ORYXBOBJ) $(RXDBG_OBJ) $(ORYXLOBJ)
-<<
-    $(OR_LINK) $(lflags_common) $(lflags_dll)  -out:$(OR_OUTDIR)\$(@B).dll \
-             @$(OR_OUTDIR)\oryxk.lst \
-             $(OR_OUTDIR)\winmsgjp.res \
-             $(OR_OUTDIR)\rexx.exp  \
-             $(OR_OUTDIR)\rexxapi.lib \
-             $(libs_dll)
-!ENDIF
 
 #
 # *** rxcmd32.LIB  : Creates .lib import library
@@ -323,13 +298,6 @@ $(OR_OUTDIR)\verinfo.res: $(KWINDOWS)\verinfo.rc
         $(rc) $(rcflags_common) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_ORYXKSRC)\$(@B).rc
 
 $(OR_OUTDIR)\rexxc.exe : $(OR_OUTDIR)\RexxCompiler.obj
-    $(OR_LINK) $(**) $(lflags_common_console) \
-    $(OR_OUTDIR)\verinfo.res \
-    $(OR_OUTDIR)\rexx.lib \
-    $(libs_dll)  \
-    -out:$(@)
-
-$(OR_OUTDIR)\rxmigrate.exe : $(OR_OUTDIR)\RexxMigration.obj
     $(OR_LINK) $(**) $(lflags_common_console) \
     $(OR_OUTDIR)\verinfo.res \
     $(OR_OUTDIR)\rexx.lib \
@@ -483,24 +451,6 @@ ORXHEADERS: $(ORXHEADERS)
 # *** For .C files in OR_ORYXLSRC directory
 #
 {$(KCORE)}.c{$(OR_OUTDIR)}.obj:
-    @ECHO .
-    @ECHO Compiling $(**)
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
-
-#
-# *** Inference Rule for C->OBJ
-# *** For .C files in OR_ORYXLSRC directory
-#
-{$(KSOM)}.c{$(OR_OUTDIR)}.obj:
-    @ECHO .
-    @ECHO Compiling $(**)
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
-
-#
-# *** Inference Rule for C->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
-#
-{$(KSOM)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)

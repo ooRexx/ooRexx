@@ -255,7 +255,6 @@ r  n##_m (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5, t6 p6)
 #define OSELF   REXXOBJECT
 #define CSELF   PVOID
 #define BUFFER  PVOID
-#define SOMSELF REXXOBJECT
 #define ARGLIST REXXOBJECT
 #define SCOPE   REXXOBJECT
 #define MSGNAME REXXOBJECT
@@ -366,16 +365,13 @@ ULONG      REXXENTRY REXX_EXECUTIONINFO(PULONG, char *, BOOL);
 #define REXXD_double       5
 #define REXXD_CSTRING      6
 #define REXXD_OSELF        7
-#define REXXD_SOMSELF      8
-#define REXXD_somRef       9
-#define REXXD_somTok      10
-#define REXXD_ARGLIST     11
-#define REXXD_MSGNAME     12
-#define REXXD_SCOPE       13
-#define REXXD_POINTER     14
-#define REXXD_CSELF       15
-#define REXXD_STRING      16
-#define REXXD_BUFFER      17
+#define REXXD_ARGLIST      8
+#define REXXD_MSGNAME      9
+#define REXXD_SCOPE       10
+#define REXXD_POINTER     11
+#define REXXD_CSELF       12
+#define REXXD_STRING      13
+#define REXXD_BUFFER      14
 
 /******************************************************************************/
 /* Internal Macros (used in macro expansions)                                 */
@@ -386,8 +382,6 @@ ULONG      REXXENTRY REXX_EXECUTIONINFO(PULONG, char *, BOOL);
 #define REXX_ret_long(v)          *((long *)*a) = v
 #define REXX_ret_double(v)        *((double *)*a) = v
 #define REXX_ret_CSTRING(v)       *((CSTRING *)*a) = v
-#define REXX_ret_somRef(v)        *((SOMAny **)*a) = v
-#define REXX_ret_somTok(v)        *((somTok *)*a) = v
 #define REXX_ret_POINTER(v)       *((void  **)*a) = v
 #ifdef __cplusplus
 }

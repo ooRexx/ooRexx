@@ -2510,7 +2510,7 @@ special character (such as a parenthesis).
     <Code>39</Code>
     <Subcode>000</Subcode>
     <MessageNumber>39</MessageNumber>
-    <Component>OSA</Component>
+    <Component>Rexx</Component>
     <Severity>Warning</Severity>
     <SymbolicName>Error_Evaluation_stack_overflow</SymbolicName>
     <Text>Evaluation stack overflow</Text>
@@ -4263,15 +4263,6 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>98</Code>
-        <Subcode>901</Subcode>
-        <MessageNumber>477</MessageNumber>
-        <Component>SOM</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Execution_nosomobj</SymbolicName>
-        <Text>SOM object <q><Sub position="1" name="object"/></q> is no longer available</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
         <Subcode>902</Subcode>
         <MessageNumber>478</MessageNumber>
         <Component>Rexx</Component>
@@ -4353,15 +4344,6 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>98</Code>
-        <Subcode>912</Subcode>
-        <MessageNumber>487</MessageNumber>
-        <Component>SOM</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Execution_noSomclass</SymbolicName>
-        <Text>SOM class <q><Sub position="1" name="class"/></q> not found</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
         <Subcode>913</Subcode>
         <MessageNumber>488</MessageNumber>
         <Component>Rexx</Component>
@@ -4422,51 +4404,6 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Execution_nomethod</SymbolicName>
         <Text>Unable to convert object <q><Sub position="1" name="object"/></q> to a method</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>921</Subcode>
-        <MessageNumber>495</MessageNumber>
-        <Component>SOM</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Execution_SOM_general</SymbolicName>
-        <Text>Could not retrieve <q><Sub position="1" name="value"/></q> information for method <q><Sub position="2" name="method"/></q></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>931</Subcode>
-        <MessageNumber>496</MessageNumber>
-        <Component>SOM</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Execution_SOM_noMethodDescriptor</SymbolicName>
-        <Text>No method descriptor information for method <q><Sub position="1" name="method"/></q> on class <q><Sub position="2" name="class"/></q></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>932</Subcode>
-        <MessageNumber>497</MessageNumber>
-        <Component>SOM</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Execution_SOM_unsupportedType</SymbolicName>
-        <Text>The SOM interface does not currently support parameter type <q><Sub position="1" name="type"/></q>, specified for argument <Sub position="2" name="argument"/></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>933</Subcode>
-        <MessageNumber>498</MessageNumber>
-        <Component>SOM</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Execution_SOM_unsupportedReturnType</SymbolicName>
-        <Text>The SOM interface does not currently support parameter type <q><Sub position="1" name="type"/></q>, specified for return value</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>934</Subcode>
-        <MessageNumber>499</MessageNumber>
-        <Component>SOM</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Execution_SOM_maxOutArgs</SymbolicName>
-        <Text>The number of OUT or INOUT type arguments cannot exceed <Sub position="1" name="number"/></Text>
       </SubMessage>
       <SubMessage>
         <Code>98</Code>
@@ -4587,147 +4524,12 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>98</Code>
-        <Subcode>949</Subcode>
-        <MessageNumber>567</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Execution_dsom_noserver</SymbolicName>
-        <Text>The DSOM Server for class <Sub position="1" name="class"/>, could not be resolved.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>961</Subcode>
-        <MessageNumber>568</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Too_many_event_parms</SymbolicName>
-        <Text>Too many parameters for event <q><Sub position="1" name="event"/></q></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>962</Subcode>
-        <MessageNumber>569</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Creating_event</SymbolicName>
-        <Text>Error creating OSA event <q><Sub position="1" name="event"/></q></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>963</Subcode>
-        <MessageNumber>570</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Creating_event_direct_parm</SymbolicName>
-        <Text>Error creating direct parameter for OSA event <q><Sub position="1" name="event"/></q></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>964</Subcode>
-        <MessageNumber>571</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Accessing_aete</SymbolicName>
-        <Text>Error accessing event information in AETE</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>965</Subcode>
-        <MessageNumber>572</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Launching_app</SymbolicName>
-        <Text>Error launching application <q><Sub position="1" name="application"/></q></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>966</Subcode>
-        <MessageNumber>573</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_event_additional_parm</SymbolicName>
-        <Text>Invalid additional parameter <q><Sub position="1" name="parameter"/></q> for OSA event <q><Sub position="2" name="event"/></q></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>967</Subcode>
-        <MessageNumber>574</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Creating_event_additional_parm</SymbolicName>
-        <Text>Error creating additional parameter for OSA event <q><Sub position="1" name="event"/></q></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>968</Subcode>
-        <MessageNumber>575</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Sending_event</SymbolicName>
-        <Text>Error sending OSA event <q><Sub position="1" name="event"/></q></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>969</Subcode>
-        <MessageNumber>576</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Handling_event_result</SymbolicName>
-        <Text>Error handling result for OSA event <q><Sub position="1" name="event"/></q></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>971</Subcode>
-        <MessageNumber>577</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Converting_event_result_to_rexx_obj</SymbolicName>
-        <Text>Error converting OSA event result to a REXX object</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>972</Subcode>
-        <MessageNumber>578</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_event_direct_parm</SymbolicName>
-        <Text>Invalid direct parameter <q><Sub position="1" name="parameter"/></q> for OSA event <q><Sub position="2" name="event"/></q></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>973</Subcode>
-        <MessageNumber>579</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_object_specifier_type</SymbolicName>
-        <Text>Invalid key form for object specifier</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
         <Subcode>951</Subcode>
         <MessageNumber>581</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Execution_no_concurrency</SymbolicName>
         <Text>Concurrency not supported</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>974</Subcode>
-        <MessageNumber>582</MessageNumber>
-        <Component>OSA</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_data_type_for_objspec</SymbolicName>
-        <Text>Invalid parameter type for key form <q><Sub position="1" name="keyform"/></q></Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
-        <Subcode>952</Subcode>
-        <MessageNumber>585</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Error</Severity>
-        <SymbolicName>Error_Execution_class_server_not_installed</SymbolicName>
-        <Text><Sub position="1" name="servername"/> class server not installed</Text>
       </SubMessage>
       <SubMessage>
         <Code>98</Code>

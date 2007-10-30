@@ -77,11 +77,6 @@
 #include "APIUtilities.h"
        /* support macros                    */
 
-#ifdef SOM
-#include "som.xh"
-#include "orxsom.h"
-#endif
-
 
 #define BUFFERLEN         256          /* Length of bufs used                 */
 #define BUFFERLEN_OS      1024         /* Length of bufs used                 */
@@ -229,9 +224,6 @@ LONG APIENTRY RexxStart(
   RexxStartArguments.outputName = NULL;
                                        /* this is a real execution          */
   RexxStartArguments.translating = FALSE;
-#ifdef SOM
-  RexxSomInitialize((SOMObject *) NULL);  /* Perform any needed inits          */
-#else
   if(!rexxutil_call){                  /* no init if called from a rexxutil */
     RexxInitialize();                  /* Perform any needed inits          */
   }
@@ -239,9 +231,6 @@ LONG APIENTRY RexxStart(
     rexxutil_call = FALSE;
     rexxutil_call_sem.release();
   }
-
-#endif
-
                                        /* pass along to the real method     */
   rc = RexxSendMessage(ProcessLocalServer, CHAR_RUN_PROGRAM, NULL, "vp", NULL, &RexxStartArguments);
   RexxTerminate();                     /* perform needed termination        */
@@ -304,21 +293,10 @@ LONG APIENTRY ApiRexxStart(
   RexxStartArguments.outputName = NULL;
                                        /* this is a real execution          */
   RexxStartArguments.translating = FALSE;
-#ifdef SOM
-  RexxSomInitialize((SOMObject *) NULL);  /* Perform any needed inits          */
-#else
-//  if(!rexxutil_call){                  /* no init if called from a rexxutil */
-//    RexxInitialize();                  /* Perform any needed inits        */
-//  }
-//  else{
-    rexxutil_call = FALSE;
-    rexxutil_call_sem.release();
-//  }
-
-#endif
+  rexxutil_call = FALSE;
+  rexxutil_call_sem.release();
                                        /* pass along to the real method     */
   rc = RexxSendMessage(ProcessLocalServer, CHAR_RUN_PROGRAM, NULL, "vp", NULL, &RexxStartArguments);
-//RexxTerminate();                     /* perform needed termination        */
   return -rc;                          /* return the error code (negated)   */
 }
 //#endif /* AIX */
@@ -346,12 +324,7 @@ APIRET REXXENTRY RexxTranslateProgram(
                                        /* this is a translation step        */
   RexxStartArguments.translating = TRUE;
 
-#ifdef SOM
-                                       /* Perform any needed inits          */
-  RexxSomInitialize((SOMObject *) NULL);
-#else
   RexxInitialize();                    /* Perform any needed inits          */
-#endif
 
                                        /* pass along to the real method     */
   rc = RexxSendMessage(ProcessLocalServer, CHAR_RUN_PROGRAM, NULL, "vp", NULL, &RexxStartArguments);

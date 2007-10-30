@@ -183,16 +183,6 @@ ACTIVATION_SETTINGS defaultSettings;
                                        /* default active settings           */
 ACTIVATION_SETTINGS *current_settings = &defaultSettings;
 
-
-#ifdef SOM
-  #include "orxsminf.xh"
-  #include "repostry.xh"
-  #include "somcls.xh"
-  #include "orxsom.h"                  /* SOM client declarations */
-
-  OREF resolve_proxy(SOMObject *);
-#endif
-
 #ifdef HIGHTID_0
 //#define ID2String(id, s) new_cstring(itoa(id,(char *)&s,10))
 #define ID2String(id) new_string((char *)&id, sizeof(LONG))
@@ -3534,17 +3524,6 @@ void process_message_arguments(
         argument_list->addLast(tempOREF);
         break;
 
-#ifdef SOM
-      case 'O':                        /* SOM object reference              */
-                                       /* get the SOM object pointer        */
-        tempPointer = va_arg(*arguments, PVOID);
-                                       /* convert to a real SOM object      */
-        tempOREF = resolve_proxy((SOMObject *)tempPointer);
-                                       /* put the proxy into the array      */
-        argument_list->addLast(tempOREF);
-        break;
-#endif
-
       case 'A':                        /* REXX array of objects             */
                                        /* get the OREF                      */
         {
@@ -3581,7 +3560,6 @@ void process_message_arguments(
         argument_list->addLast(new_pointer(tempPointer));
         break;
 
-      case 'Z':                        /* ASCII-Z string - from SOM         */
       case 'z':                        /* ASCII-Z string                    */
                                        /* get the pointer                   */
         tempPointer = va_arg(*arguments, void *);
@@ -3650,20 +3628,6 @@ void process_message_result(
         (*((OREF *)return_pointer)) = value;
         break;
 
-#ifdef SOM
-      case 'O':                        /* SOM object reference              */
-                                       /* get the object's id               */
-        object_id = send_message1(ProcessLocalServer, OREF_SOMLOOK, value);
-                                       /* copy the value directly           */
-        if (object_id == TheNilObject) /* no id for this one?               */
-                                       /* don't return anything             */
-          (*((PVOID *)return_pointer)) = NULL;
-        else
-                                       /* return the SOM object pointer     */
-          (*((PVOID *)return_pointer)) = (void *)((RexxInteger *)object_id)->value;
-        break;
-#endif
-
       case 'n':                        /* pointer to somId                  */
       case 'p':                        /* POINTER                           */
       case 't':                        /* Token                             */
@@ -3683,21 +3647,6 @@ void process_message_result(
         value = value->stringValue();
         (*((const char **)return_pointer)) = ((RexxString *)value)->getStringData();
         break;
-#ifdef SOM
-      case 'Z':                        /* ASCII-Z string - for SOM          */
-                                       /* storage is obtained, through      */
-                                       /*  SOMMalloc, caller is expected to */
-                                       /*  SOMFree.                         */
-       {                               /* Force to a string.                */
-        RexxString *stringValue;
-        stringValue = value->stringValue();
-                                       /* SOMMalloc storgae we need         */
-        (*((char **)return_pointer)) = (char *)SOMMalloc(stringValue->getLength());
-                                       /* copy the string data into new buff*/
-        strcpy((*((char **)return_pointer)), stringValue->getStringData());
-       }
-        break;
-#endif
   }
 }
 
@@ -3804,19 +3753,6 @@ LONG VLAREXXENTRY RexxSendMessage (
     result = OREF_NULL;                /* no result in this case            */
   }
   else {
-#ifdef SOM
-    if (*interfacedefn == '&') {       /* is the receiver a som object?     */
-                                       /* Yes, resolve to OREXX proxy       */
-      receiver = resolve_proxy((SOMObject *)receiver);
-      interfacedefn++;                 /* bump past receiver interface      */
-
-      if (start_class != OREF_NULL) {  /* Was a string class specified?     */
-                                       /* Yup, its was as a SOMClass.       */
-                                       /*  so resolve to OREXX class.       */
-        start_class = send_message2(ProcessLocalServer, OREF_IMPORT, new_cstring(((SOMClass*)start_class)->somGetName()), TheNilObject);
-      }
-    }
-#endif
     returnType = *interfacedefn++;     /* Get the return type.              */
                                        /* get the argument list start       */
     va_start(arguments, result_pointer);

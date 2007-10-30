@@ -657,10 +657,9 @@ BOOL RegExternalFunction(
 /*             search order is:                                               */
 /*               1) Macro-space pre-order functions                           */
 /*               2) Registered external functions                             */
-/*               3) SOM methods                                               */
-/*               4) REXX programs with same extension (if applicable)         */
-/*               5) REXX programs with default extension                      */
-/*               6) Macro-space post-order functions                          */
+/*               3) REXX programs with same extension (if applicable)         */
+/*               4) REXX programs with default extension                      */
+/*               5) Macro-space post-order functions                          */
 /******************************************************************************/
 RexxObject * SysExternalFunction(
   RexxActivation * activation,         /* Current Activation                */

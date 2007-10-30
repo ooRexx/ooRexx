@@ -113,7 +113,3 @@ syntax: raise propagate
 ::method function_setlocal        EXTERNAL 'REXX sysSetLocal'
 ::method function_endlocal        EXTERNAL 'REXX sysEndLocal'
 
-/* ******************************** */
-/*  S E R V E R     M E T H O D S   */
-/* ******************************** */
-::METHOD server_init_local   EXTERNAL 'REXX server_init_local'

@@ -52,17 +52,9 @@
 #include "DirectoryClass.hpp"
 #include "ArrayClass.hpp"
 #include "SupplierClass.hpp"
-#include "RexxSOMProxy.hpp"
 #include "ClassClass.hpp"
 #include "MethodClass.hpp"
 #include "RexxActivity.hpp"
-#ifdef SOM
-  #include "somcls.xh"
-  #include "somcm.xh"
-  #ifdef DSOM
-  #include "somd.xh"
-  #endif
-#endif
 
 extern RexxObject *ProcessLocalServer; /* local data server object          */
 extern RexxDirectory *ProcessLocalEnv; /* local Environment                 */
@@ -82,7 +74,6 @@ void RexxClass::live()
   memory_mark(this->metaClass);
   memory_mark(this->metaClassMethodDictionary);
   memory_mark(this->metaClassScopes);
-  memory_mark(this->somClass);
   memory_mark(this->classSuperClasses);
   memory_mark(this->instanceSuperClasses);
   cleanUpMemoryMark
@@ -103,7 +94,6 @@ void RexxClass::liveGeneral()
   memory_mark_general(this->metaClass);
   memory_mark_general(this->metaClassMethodDictionary);
   memory_mark_general(this->metaClassScopes);
-  memory_mark_general(this->somClass);
   memory_mark_general(this->classSuperClasses);
   memory_mark_general(this->instanceSuperClasses);
   cleanUpMemoryMarkGeneral
@@ -259,23 +249,6 @@ RexxClass *RexxClass::getMetaClass()
     return TheClassClass;              /* this is always .class             */
   else                                 /* return first member of the list   */
     return (RexxClass *)this->metaClass->get(1);
-}
-
-RexxInteger *RexxClass::getSomClass()
-/*****************************************************************************/
-/* Function:  Retrieve the SOM class                                         */
-/*****************************************************************************/
-{
-  return this->somClass;               /* return the SOM class              */
-}
-
-void  RexxClass::setSomClass(
-    RexxInteger *somclass)             /* new SOM Class                     */
-/*****************************************************************************/
-/* Function:  Assoctiate a SOM class with a REXX class                       */
-/*****************************************************************************/
-{
-  OrefSet(this, this->somClass, somclass);
 }
 
 void  RexxClass::setInstanceBehaviour(
@@ -505,8 +478,6 @@ void RexxClass::subClassable(const char *class_id, bool restricted)
   this->instanceBehaviour->setClass(this);
                                        /* and the class behaviour to CLASS   */
   this->behaviour->setClass(TheClassClass);
-                                       /* set the somclass to .nil           */
-  OrefSet(this, this->somClass, (RexxInteger *)TheNilObject);
                                        /* these are primitive classes       */
   this->class_info |= PRIMITIVE_CLASS;
 
@@ -523,7 +494,6 @@ RexxObject *RexxClass::defineMethod(
 /* Function:  Define an instance method on this class object                 */
 /*****************************************************************************/
 {
-  long i;                              /* position in table                 */
                                        /* check if this is a rexx class     */
   if ( this->class_info & REXX_DEFINED )
                                        /* report as a nomethod condition    */
@@ -564,18 +534,6 @@ RexxObject *RexxClass::defineMethod(
                                        /* to redo their instance behaviour  */
                                        /* this also updates our own         */
   this->updateInstanceSubClasses();    /* behaviour table                   */
-                                       /* if a SOM mixin, and not imported   */
-                                       /* yet, override any Som methods      */
-                                       /* that will be imported              */
-  if ((this->somClass != TheNilObject) && !(this->class_info & IMPORTED)){
-                                       /* loop through the list of methods*/
-     for (i = this->instanceMethodDictionary->first();
-          this->instanceMethodDictionary->available(i);
-          i = this->instanceMethodDictionary->next(i)) {
-                                       /* define the methods as som methods */
-       this->somDefine((RexxString *)this->instanceMethodDictionary->index(i), this->somClass);
-     }
-  }
   return OREF_NULL;                    /* returns nothing                   */
 }
 
@@ -609,17 +567,6 @@ RexxObject *RexxClass::defineMethods(
   this->instanceBehaviour->setMethodDictionary(OREF_NULL);
   this->instanceBehaviour->setScopes(OREF_NULL);
   this->createInstanceBehaviour(this->instanceBehaviour);
-
-                                       /* if a SOM mixin, and not imported   */
-                                       /* yet, override any Som methods      */
-                                       /* that will be imported              */
-  if ((this->somClass != (RexxInteger *)TheNilObject) && !(this->class_info & IMPORTED)) {
-                                       /* loop through the list of methods   */
-     for (i = newMethods->first(); (index = (RexxString *)newMethods->index(i)) != OREF_NULL; i = newMethods->next(i)) {
-                                       /* define the methods as som methods  */
-        this->somDefine(index, this->somClass);
-     }
-  }
 
   return OREF_NULL;                    /* returns nothing                   */
 }
@@ -942,54 +889,6 @@ RexxTable *RexxClass::methodDictionaryCreate(
   return newDictionary;                /* and return the new version        */
 }
 
-RexxObject *RexxClass::somSuperClass(
-    RexxClass  *superclass)
-/*****************************************************************************/
-/* Funcion:  Check if the superclass is a somclass and the reciever is not   */
-/*           if so make a proxy of the superclass                            */
-/*                 Import the superclass' somclass                           */
-/*                 Subclass the somclass                                     */
-/*                 Somdefine any methods at the recievers scope              */
-/*                 Export the somclass subclass                              */
-/*                 Keep track of it in the localserver directory             */
-/*****************************************************************************/
-{
-#ifdef SOM
-  RexxClass   * somproxy;              /* used to hold the som proxy        */
-  RexxClass   * som_super;             /* and the som proxy super class     */
-  long i;                              /* loop counter                      */
-  SOMClass    * superMeta;             /* super class meta class            */
-
-                                       /* Check if this is a som subclassing*/
-                                       /* To a non som class                */
-  if (TheNilObject != (RexxObject *)superclass->getSomClass() && TheNilObject == (RexxObject *)this->somClass) {
-                                       /* and there is some class methods   */
-    if (this->classMethodDictionary->items() > 0) {
-                                       /* create the some proxy             */
-      superMeta = SOM_GetClass(superclass->getSomClass()->value);
-                                       /* Import the superclasses class     */
-      somproxy = (RexxClass *)ProcessLocalServer->sendMessage(OREF_IMPORT, new_cstring(superMeta->somGetName()));
-                                       /* now create new subclass for this  */
-                                       /*  classes Meta.                    */
-      som_super = somproxy->subclass(this->id->concatToCstring("M_"), OREF_NULL, OREF_NULL);
-                                       /* loop through the list of methods  */
-      for (i = this->classMethodDictionary->first(); this->classMethodDictionary->available(i); i = this->classMethodDictionary->next(i)) {
-                                       /* defining them to SOM super class  */
-        som_super->defineMethod((RexxString *)this->classMethodDictionary->index(i), (RexxMethod *)this->classMethodDictionary->value(i));
-      }
-    }
-    else
-      som_super = (RexxClass *)TheNilObject;
-                                       /* now export the new SOM class.     */
-    OrefSet(this, this->somClass, (RexxInteger *)this->exportMethod(this->id, superclass->id, this->somInterfaces(), som_super));
-                                       /* add the class to the SOM list     */
-    ProcessLocalServer->sendMessage(OREF_ADDCLASS, this, this->somClass);
-    if (OTYPENUM(somproxy, this) || OTYPENUM(somproxy_class, this))
-      this->initProxy(this->somClass);
-  }
-#endif
-  return OREF_NULL;                    /* returns nothing                   */
-}
 
 RexxObject *RexxClass::inherit(
     RexxClass  *mixin_class,           /* target class                      */
@@ -1002,7 +901,6 @@ RexxObject *RexxClass::inherit(
 {
   HashLink      class_index;           /* index for class superclasses list */
   HashLink      instance_index;        /* index for instance superclasses   */
-  HashLink i;                          /* loop counter                      */
                                        /* make sure this isn't a rexx       */
   if (this->rexxDefined())             /* defined class being changed       */
                                        /* report as a nomethod condition    */
@@ -1064,7 +962,6 @@ RexxObject *RexxClass::inherit(
                                        /* superclasses list's               */
     this->classSuperClasses->insertItem(mixin_class, class_index + 1);
     this->instanceSuperClasses->insertItem(mixin_class, instance_index + 1);
-    this->somSuperClass(mixin_class);  /* see if any som stuff needs doing  */
   }
 
                                        /* update the mixin class subclass   */
@@ -1074,18 +971,6 @@ RexxObject *RexxClass::inherit(
                                        /* this also updates our own         */
                                        /* behaviour tables.                 */
   this->updateSubClasses();
-                                       /* if a SOM mixin, and not imported  */
-                                       /* yet, override any Som methods     */
-                                       /* that will be imported             */
-  if ((this->somClass != TheNilObject) && !(this->class_info & IMPORTED)) {
-                                       /* loop through the list of methods  */
-     for (i = this->instanceMethodDictionary->first();
-          this->instanceMethodDictionary->available(i);
-          i = this->instanceMethodDictionary->next(i)) {
-                                       /* define the methods as som methods */
-       this->somDefine((RexxString *)this->instanceMethodDictionary->value(i), this->somClass);
-     }
-  }
   /* If the mixin class has an uninit defined, the new class must have one, too */
   if (mixin_class->uninitDefined() || mixin_class->parentUninitDefined()) {
      this->parentHasUninit();
@@ -1274,7 +1159,6 @@ RexxClass  *RexxClass::subclass(
                                        /* set the instance behaviour created */
                                        /* class to the reciever class        */
   new_class->instanceBehaviour->setClass(new_class);
-  new_class->somSuperClass(this);      /* see if any som stuff needs doing  */
                                        /* update the receiver class' subclass*/
 
   this->addSubClass(new_class);        /* list to reflect the new class     */
@@ -1296,433 +1180,6 @@ RexxClass  *RexxClass::subclass(
     new_class->hasUninit();
 
   return new_class;                    /* return the new class              */
-}
-
-RexxInteger *RexxClass::importedRexx()
-/******************************************************************************/
-/* Function:  Check if a class has been imported                              */
-/******************************************************************************/
-{
-   return this->imported() ? TheTrueObject : TheFalseObject;
-}
-
-RexxClass  *RexxClass::external(
-    RexxString *externalString,        /* external class name               */
-    RexxClass  *source_metaClass,      /* external meta class               */
-    RexxTable  *enhancingClassMethods) /* additional CLass methods          */
-/******************************************************************************/
-/* Function:  Process an external class definition                            */
-/******************************************************************************/
-{
-  long        words;                   /* words in the external string      */
-  RexxString *classModel;              /* name of the class model           */
-  RexxString *className;               /* name of the class                 */
-                                       /* external class object             */
-  RexxClass  *externalClass = OREF_NULL;
-  RexxObject *classServer;             /* workplace server object           */
-
-                                       /* See how many words are in string  */
-  words = externalString->words()->getValue();
-  if (words > 2) {                     /* More than 2 words in string?      */
-                                       /* This is an Error.                 */
-    report_exception(Error_Translation_class_external_bad_parameters);
-  }
-  else {
-    if (0 == words)                    /* Nothing specific after EXTERNAL   */
-      report_exception(Error_Translation_class_external_bad_class_name);
-
-    if (1 == words) {                  /* Only one Specified?               */
-      classModel = OREF_SOM;           /* default server is SOM             */
-                                       /* class name is the first word      */
-      className = externalString->word(IntegerOne);
-    }
-    else {
-                                       /* Both ModelName  and               */
-      classModel  = externalString->word(IntegerOne);
-                                       /* class name specified.             */
-      className = externalString->word(IntegerTwo);
-    }
-                                       /* Null string for classname?        */
-    if (className->getLength() == 0 ) {
-                                       /* Not allowed.                      */
-      report_exception(Error_Translation_class_external_bad_class_name);
-    }
-                                       /* Force classMethods to NIL         */
-    if (enhancingClassMethods == OREF_NULL) {
-      enhancingClassMethods = (RexxTable *)TheNilObject;
-    }
-
-                                       /* is external Model SOM ?           */
-
-    if (classModel->strCompare(CHAR_SOM)) {
-                                       /* Yes, then import from localserver */
-      externalClass = (RexxClass *)ProcessLocalServer->sendMessage(OREF_IMPORT, className, source_metaClass, enhancingClassMethods);
-    }
-                                       /* Not SOM, is it WPS?               */
-    else if (classModel->strCompare(CHAR_WPS)) {
-                                       /* YES, is WPS server installed?     */
-       classServer = TheEnvironment->at(OREF_WPS);
-       if (OREF_NULL != classServer) {
-                                       /* Yes, import the class through WPS */
-         externalClass = (RexxClass *)classServer->sendMessage(OREF_IMPORT, className, source_metaClass, enhancingClassMethods);
-       }
-       else
-         report_exception1(Error_Execution_class_server_not_installed, classModel);
-    }
-    else if (classModel->strCompare(CHAR_DSOM)) {
-                                       /* YES, is WPS server installed?     */
-       classServer = ProcessLocalEnv->at(OREF_DSOM);
-                                       /* Is DSOM initialized ?             */
-       if (OREF_NULL == classServer) {
-                                       /* Nope, then initialize it.         */
-         save(className);              /* Keep className from being GCed    */
-         classServer = ProcessLocalServer->sendMessage(new_cstring(CHAR_SOMD_INIT));
-         discard_hold(className);      /* done with perm hold, on classname */
-       }
-                                       /* now load up the class through DSOM*/
-       externalClass = (RexxClass *)classServer->sendMessage(OREF_IMPORT, className, source_metaClass, enhancingClassMethods);
-    }
-    else
-      report_exception1(Error_Translation_class_external_bad_class_server, classModel);
-  }
-  return externalClass;                /* return the external class         */
-}
-
-
-RexxObject *RexxClass::importMethod()
-/******************************************************************************/
-/* Function: Import the SOM class (id) from to to the OREXX environment       */
-/*           and the OREXX class (this) will be the "proxy" for the imported  */
-/*           class.  So use a forwarder method somsend to forward all SOM     */
-/*           messages to instances of this class to SOM.  We do this by       */
-/*           creating an NMETHOD for somsend and use ourself as the scope     */
-/*           (since we intoduce this method).  It is assumed that all our     */
-/*           parent SOM classes have already been imported.                   */
-/*           So we iterate across all the methods this SOM class knows about  */
-/*           and see which methods are new to this class, by checking against */
-/*           all method this class already knows about (FullInstanceMdict).   */
-/*           Any that are new will be added to this class instanceMdict using */
-/*           the somsend nmethod as the method for this message.              */
-/*                                                                            */
-/*  NOTE: When adding code to this method be very careful.  Since this method */
-/*   frequently goes out to SOM, it release Kernel access at various points   */
-/*   to avoid tying up the kernel while accessing SOM information.  This means*/
-/*   that there are times within the method that it isn't safe to do kernel   */
-/*   things.  Be sure you have the kernel semophore before accesing kernel.   */
-/*                                                                            */
-/*  Returned:  SOM class object address                                       */
-/******************************************************************************/
-{
-#ifdef SOM
-  SOMClass *classobj;
-  long nmeths, i;
-  RexxString   *methname;              /* name of the method                */
-  RexxTable    *fmdict;                /* full method dictionary            */
-  RexxTable    *imdict;                /* instance method dictionary        */
-  somId mdesc;
-  somId classId;
-  somId methId;
-  char *methn;
-  somMToken methtok;
-  somMethodPtr classMethod;
-  RexxActivity *myActivity;            /* current activity                  */
-  RexxArray    *arrayOfMethods;        /* Array of SOM methods              */
-  RexxMethod   *newMethod;             /* new SOM method                    */
-  long  remainingMethods;              /* Num of unused methods in Array    */
-  long  requestSize;                   /* amount of SOM methods to request  */
-  RexxTable    *som_methods;           /* methods gained from som           */
-
-  somEnvironmentNew();                 /* make sure the SOM ennvironment    */
-                                       /*  is initialized.                  */
-                                       /* Before give up kernel access.     */
-                                       /* get a fresh table for methods     */
-  som_methods = (RexxTable *)save(new_table());
-                                       /* Retrieve activity for this meth   */
-                                       /*  curracti not reliable since we   */
-                                       /*  go in and out of kernel.  Also   */
-                                       /* want to avoid repeated calls to   */
-                                       /* activity_find()                   */
-  myActivity = CurrentActivity;
-
-                                       /* We are done temporarily with      */
-                                       /* the kernel objects, so release    */
-                                       /* kernel access while we go out to  */
-                                       /* SOM and get info.                 */
-  ReleaseKernelAccess(myActivity);
-                                       /* for all the methods of this SOM   */
-                                       /*class                              */
-  classId = somIdFromString(this->id->getStringData());
-                                       /* lookup and get access to the SOM  */
-                                       /* class we want to import           */
-  classobj = SOMClassMgrObject->somFindClass(classId, 0, 0);
-  if (classobj == NULL) {              /* was class object actually found?  */
-                                       /* No, its an error.                 */
-    RequestKernelAccess(myActivity);   /* 1st regain access to kernel.      */
-    discard(som_methods);              /* release somMethods table          */
-                                       /* now report the error.             */
-    report_exception1(Error_Execution_noSomclass, this->id);
-  }
-  SOMFree(classId);                    /* Free the id for the class.        */
-                                       /* get the number of methods the     */
-                                       /*  SOM class has.                   */
-  nmeths = classobj->somGetNumMethods();
-                                       /* get the OREXX class current       */
-  remainingMethods = 0;                /* no methods at this time.          */
-  arrayOfMethods = OREF_NULL;
-  for (i = 0; i < nmeths; i++) {
-                                       /* get the method id for this method */
-    methId = classobj->somGetNthMethodInfo(i,&mdesc);
-    methn = somStringFromId(methId);   /* convert somId to a string.        */
-                                       /* get the token for this method     */
-    methtok = classobj->somGetMethodToken(methId);
-                                       /* Resolve this method and get the   */
-                                       /* methodPtr this message would call */
-    classMethod = classobj->somDefinedMethod(methtok);
-
-                                       /* enter kernel code again, and      */
-                                       /* lookup this method in OREXX class */
-    RequestKernelAccess(myActivity);   /* Gain exclusive access to kernel   */
-                                       /* get method name as UpperCase name */
-    methname = new_cstring(methn)->upper();
-                                       /* Is this method defined/overidden  */
-    if (classMethod ||                 /*  overridden by this SOM class     */
-                                       /* Or, not  current instance method  */
-       (this->instanceBehaviour->methodLookup(methname) == TheNilObject)) {
-
-                                       /* Add this method to the            */
-                                       /*   OREXX class instanceMdict.      */
-      if (!remainingMethods) {         /* any methods available to use?     */
-                                       /* no, need to get another bunch     */
-        if (arrayOfMethods)            /* if we have an arrayofMethods      */
-          discard(arrayOfMethods);     /* remove it from save table.        */
-                                       /*  assume half remaining methods    */
-                                       /*  to process, will be new at this  */
-                                       /*  level.                           */
-        requestSize = ((nmeths - i) / 2) > 10 ? (nmeths -i) / 2: 10;
-                                       /* Get new array of SOM Methods      */
-        arrayOfMethods = TheMethodClass->newArrayOfSOMMethods(this, requestSize);
-        remainingMethods = requestSize;/* all newly gotten methods remain   */
-      }
-                                       /* Allocate new method from Array    */
-      newMethod = (RexxMethod *)arrayOfMethods->get(remainingMethods--);
-                                       /* add this method w/ methName to    */
-                                       /* table of method to be added for   */
-                                       /* this classes instance MDICT.      */
-      som_methods->add(newMethod, methname);
-    }
-    ReleaseKernelAccess(myActivity);   /* release kernel access. again.     */
-
-
-  }
-  RequestKernelAccess(myActivity);     /* get access to kernel once again   */
-  if (arrayOfMethods)                  /* if allocated array of methods     */
-    discard(arrayOfMethods);           /* remove it from save table.        */
-
-  this->setImported();                 /* mark class as being imported.     */
-  this->defineMethods(som_methods);    /* Rebuild behaviour                 */
-                                       /* remove som_methods table from     */
-  discard(som_methods);                /*save table                         */
-                                       /* Remember the SOM Class for proxy  */
-  OrefSet(this, this->somClass, new_pointer(classobj));
-  return this->somClass;               /* return the SOM class              */
-#else
-  return TheNullPointer;               /* return nullPointer object         */
-#endif
-}
-
-#ifdef SOM
-extern "C" {
-void SOMLINK oryx_class_dispatch2 (SOMObject *somSelf, IN SOMClass *classobj,
-                    OUT somToken *resultp,
-                    IN somId msgid, IN va_list ap);
-void SOMLINK oryx_dispatch2 (SOMObject *somSelf, OUT void **resultp,
-                    OUT somId msgid, va_list ap);
-}
-void *SOMLINK  oryx_dispatch_a (SOMObject *somSelf, INOUT somId methodId,
-                        INOUT somId descriptor, va_list ap);
-float8 SOMLINK oryx_dispatch_d (SOMObject *somSelf, INOUT somId methodId,
-                        INOUT somId descriptor, va_list ap);
-integer4 SOMLINK oryx_dispatch_l (SOMObject *somSelf, INOUT somId methodId,
-                          INOUT somId descriptor, va_list ap);
-void SOMLINK oryx_dispatch_v (SOMObject *somSelf, INOUT somId methodId,
-                      INOUT somId descriptor, va_list ap);
-#endif
-
-RexxObject *RexxClass::exportMethod(
-    RexxString *cid,                   /* class ID                          */
-    RexxString *sId,                   /* super class ID                    */
-    long numMeths,                     /* number of static methods          */
-    RexxClass  *som_metaClass)         /* SOM meta class                    */
-/******************************************************************************/
-/* Function:  Export a SOM method                                             */
-/******************************************************************************/
-{
-#ifdef SOM
-  SOMClass *classobj, *pclsobj, *mclsobj;
-  somId         classId;
-  RexxInteger  *mclass;
-  RexxActivity *myActivity;
-#ifndef SOMV3
-  somId dispatcha = somIdFromString("somDispatchA");
-  somId dispatchd = somIdFromString("somDispatchD");
-  somId dispatchl = somIdFromString("somDispatchL");
-  somId dispatchv = somIdFromString("somDispatchV");
-#endif
-  somId dispatch = somIdFromString("somDispatch");
-  somId classDispatch = somIdFromString("somClassDispatch");
-
-  const char *id = REQUIRED_STRING(cid, ARG_ONE)->getStringData();
-  const char *superId = REQUIRED_STRING(sId, ARG_TWO)->getStringData();
-
-  myActivity = CurrentActivity;
-  /****************************************/
-  /** Let Kernel, don't do kernel things **/
-  /****************************************/
-  ReleaseKernelAccess(myActivity);
-                                       /* See if the class object already   */
-                                       /*exists                             */
-                                       /* for now use somFindClass, should  */
-                                       /* revert to somClassFromID          */
-  classId = somIdFromString(id);
-  classobj = SOMClassMgrObject->somClassFromId(classId);
-  SOMFree(classId);
-
-  if (classobj == (SOMClass *)NULL) {
-                                       /* Get the SOM parent class object   */
-    classId = somIdFromString(superId);
-    pclsobj = SOMClassMgrObject->somClassFromId(classId);
-    SOMFree(classId);
-    if (pclsobj == (SOMClass *) NULL) {
-                                       /* Need kernel for messsage send.    */
-      RequestKernelAccess(myActivity);
-      report_exception1(Error_Execution_noSomclass, sId);
-    }
-
-                                       /* create the SOM class              */
-    if (som_metaClass == TheNilObject) {
-                                       /* use parent's metaclass            */
-      mclsobj = (SOMClass *)SOM_GetClass(pclsobj);
-    }
-    else {
-      mclass = som_metaClass->somClass;
-      mclsobj = (SOMClass *)mclass->value;
-    }
-    classobj = (SOMClass *)mclsobj->somNew();
-
-                                       /* initialize the class              */
-                                       /* size of the data of the new class */
-                                       /* is 0, since we keep the         */
-                                       /*instance data on the Oryx side   */
-    classobj->somInitClass(id,pclsobj, 0,
-        numMeths,                      /* classMaxNoMethods */
-        1,                             /* classMajorVersion */
-        1);                            /* classMinorVersion */
-
-    /* override the somDispatch pointers */
-#ifndef SOMV3
-    classobj->somOverrideSMethod(dispatcha,(somMethodProc *)oryx_dispatch_a);
-    classobj->somOverrideSMethod(dispatchd,(somMethodProc *)oryx_dispatch_d);
-    classobj->somOverrideSMethod(dispatchl,(somMethodProc *)oryx_dispatch_l);
-    classobj->somOverrideSMethod(dispatchv,(somMethodProc *)oryx_dispatch_v);
-#endif
-    classobj->somOverrideSMethod(dispatch,(somMethodProc *)oryx_dispatch2);
-    classobj->somOverrideSMethod(classDispatch,(somMethodProc *)oryx_class_dispatch2);
-
-    /* the class is now ready for use */
-    classobj->somClassReady();
-  } /*if*/
-  else {
-#ifndef SOMV3
-    classobj->somOverrideSMethod(dispatcha,(somMethodProc *)oryx_dispatch_a);
-    classobj->somOverrideSMethod(dispatchd,(somMethodProc *)oryx_dispatch_d);
-    classobj->somOverrideSMethod(dispatchl,(somMethodProc *)oryx_dispatch_l);
-    classobj->somOverrideSMethod(dispatchv,(somMethodProc *)oryx_dispatch_v);
-#endif
-    classobj->somOverrideSMethod(dispatch,(somMethodProc *)oryx_dispatch2);
-    classobj->somOverrideSMethod(classDispatch,(somMethodProc *)oryx_class_dispatch2);
-  }
-
-  RequestKernelAccess(myActivity);
-  return (RexxObject *)new_integer((long)classobj);
-#else
-  return TheNilObject;
-#endif
-}
-
-RexxObject *RexxClass::somDefine(
-    RexxString  *methn,                /* method name                       */
-    RexxInteger *clsobj)               /* SOM class object                  */
-/******************************************************************************/
-/* Function:  Define a SOM class object                                       */
-/******************************************************************************/
-{
-#ifdef SOM
-  somId msgid;
-  int rc;
-  somMethodData md;
-  somMethodProc *redispatchstub;
-  SOMClass *classObj;
-  char *methName;
-
-  methName = REQUIRED_STRING(methn, ARG_ONE)->stringData;
-  classObj = (SOMClass *)clsobj->value;
-  msgid = somIdFromString(methName);
-
-  rc = classObj->somGetMethodData(msgid,&md);
-  if (rc != 0) {
-    redispatchstub = classObj->somGetRdStub(msgid);
-    classObj->somOverrideSMethod(msgid,redispatchstub);
-  } /*if*/
-#endif
-  return TheNilObject;
-}
-
-
-long RexxClass::somInterfaces()
-/******************************************************************************/
-/* Function: Return number of methods this class introduces that has          */
-/*  an interface string associated with it.                                   */
-/******************************************************************************/
-{
-  long count;
-  long iterator;
-
-  count = 0;                           /* initially no method interfaces    */
-                                       /* for all methods introduced by     */
-                                       /* this class.                       */
-  for (iterator = this->instanceMethodDictionary->first();
-       this->instanceMethodDictionary->index(iterator) != OREF_NULL;
-       iterator = this->instanceMethodDictionary->next(iterator)) {
-                                       /* If this method has an             */
-                                       /* interface definition              */
-    if (((RexxMethod *)this->instanceMethodDictionary->value(iterator))->getInterface() != OREF_NULL ) {
-      count++;                         /* bump the count.                   */
-    }
-  }
-                                       /* return total method that have     */
-  return count;                        /* interface definitions.            */
-}
-
-
-RexxSOMProxy *RexxClass::newOpart(
-    RexxInteger  *somObj)
-/******************************************************************************/
-/*                                                                            */
-/******************************************************************************/
-{
-  RexxSOMProxy * newProxy;             /* newly created object              */
-                                       /* create new object REXX object     */
-  newProxy = new RexxSOMProxy;
-                                       /* Set the behaviour                 */
-  BehaviourSet(newProxy, this->instanceBehaviour);
-                                       /* does object have an UNINT method  */
-  if (this->uninitDefined())  {
-                                       /* Make sure everyone is notified.   */
-     newProxy->hasUninit();
-  }
-                                       /* initalize the Proxy portion       */
-  newProxy->initProxy(somObj);
-  return newProxy;                     /* return new object.                */
 }
 
 void RexxClass::setMetaClass(
@@ -1913,13 +1370,11 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
                                        /* set the new class as it's own      */
                                        /* baseclass                          */
   OrefSet(new_class, new_class->baseClass, new_class);
-                                       /* set the som class to .nil          */
-  OrefSet(new_class, new_class->somClass, (RexxInteger *)TheNilObject);
                                        /* set the id into the class object   */
   OrefSet(new_class, new_class->id, class_id);
                                        /* clear the info area except for     */
-                                       /* uninit and imported                */
-  new_class->class_info &= (HAS_UNINIT & IMPORTED);
+                                       /* uninit                             */
+  new_class->class_info &= (HAS_UNINIT);
   /* if the class object has an UNINIT method defined, make sure we */
   /* add this to the table of classes to be processed. */
   if (new_class->hasUninitMethod()) {

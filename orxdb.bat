@@ -104,13 +104,12 @@ set KREXX=%KERNEL%\RexxClasses
 set KPARSER=%KERNEL%\parser
 set KPLATFORM=%KERNEL%\platform\common
 set KWINDOWS=%KERNEL%\platform\windows
-set KSOM=%KERNEL%\SOM
 set KSTREAM=%KERNEL%\streamLibrary
 
 set APLATFORM=%OR_ORYXASRC%\windows
 
-set OR_KERNELPATH=%KERNEL%;%KCLASSES%;%KCORE%;%KEXPR%;%KINST%;%KMAIN%;%KNATIVE%;%KEXTRAS%;%KPARSER%;%KPLATFORM%;%KWINDOWS%;%KSOM%;%KSTREAM%;%KMESSAGES
-set OR_KERNELINCL=-I%KERNEL%\ -I%KCLASSES%\ -I%KCORE%\ -I%KEXPR%\ -I%KINST%\ -I%KMAIN%\ -I%KNATIVE%\ -I%KEXTRAS%\ -I%KPARSER%\ -I%KPLATFORM%\ -I%KWINDOWS%\ -I%KSOM%\ -I%KSTREAM%\ -I%KMESSAGES%\
+set OR_KERNELPATH=%KERNEL%;%KCLASSES%;%KCORE%;%KEXPR%;%KINST%;%KMAIN%;%KNATIVE%;%KEXTRAS%;%KPARSER%;%KPLATFORM%;%KWINDOWS%;%KSTREAM%;%KMESSAGES
+set OR_KERNELINCL=-I%KERNEL%\ -I%KCLASSES%\ -I%KCORE%\ -I%KEXPR%\ -I%KINST%\ -I%KMAIN%\ -I%KNATIVE%\ -I%KEXTRAS%\ -I%KPARSER%\ -I%KPLATFORM%\ -I%KWINDOWS%\ -I%KSTREAM%\ -I%KMESSAGES%\
 REM
 REM set up the directory search orders for the source include files
 REM
@@ -128,13 +127,7 @@ set NODEBUG=%1
 set OPTIMIZE=%1
 set CPLUSPLUS=1
 set NOCRTDLL=1
-set JAPANESE=%2
 set REXXDEBUG=0
-
-REM MHES 29122004 - if not building JAPANESE, then don't include it in the list of DLLs to EDITBIN
-IF %JAPANESE%x == x GOTO :no_japanese
-set JAPDLL=rexxjap.dll
-:no_japanese
 
 REM create output directory
 if not exist %OR_OUTDIR% md %OR_OUTDIR%
@@ -148,22 +141,6 @@ call %SRC_DRV%%SRC_DIR%\platform\windows\buildorx
 if ERRORLEVEL 1 goto error
 
 cd %OR_OUTDIR%
-
-IF %NODEBUG%x == 1x goto :EDITBINREL
-REM EDITBIN for debug version, rexxjap.dll not build for debug version.
-rem echo calling EDITBIN for DEBUG version
-rem killer rxapi.exe
-rem IF %OR_ERRLOG%x == x editbin /REBASE:base=0x6B000000,BASEFILE rexx.dll rexxapi.dll rxwinsys.dll  rxsock.dll orexxole.dll orxscrpt.dll
-rem IF NOT %OR_ERRLOG%x == x editbin /REBASE:base=0x6B000000,BASEFILE rexx.dll rexxapi.dll rxwinsys.dll  rxsock.dll orexxole.dll orxscrpt.dll >>%OR_ERRLOG% 2>&1
-goto :CONTINUE
-
-:EDITBINREL
-REM EDITBIN for release version
-rem echo calling EDITBIN for RELEASE version
-
-rem killer rxapi.exe
-rem IF %OR_ERRLOG%x == x editbin /REBASE:base=0x6B000000,BASEFILE rexx.dll %JAPDLL% rexxapi.dll rexxutil.dll rxwinsys.dll  rxsock.dll orexxole.dll orxscrpt.dll
-rem IF NOT %OR_ERRLOG%x == x editbin /REBASE:base=0x6B000000,BASEFILE rexx.dll %JAPDLL% rexxapi.dll rexxutil.dll rxwinsys.dll rxsock.dll orexxole.dll orxscrpt.dll >>%OR_ERRLOG% 2>&1
 
 :CONTINUE
 cd %SRC_DIR%

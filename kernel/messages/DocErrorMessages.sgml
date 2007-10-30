@@ -3118,12 +3118,6 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>901</term>
-<listitem>
-<para>SOM object "<emphasis>object</emphasis>" is no longer available</para>
-</listitem>
-</varlistentry>
-<varlistentry>
 <term>902</term>
 <listitem>
 <para>Unable to convert object "<emphasis>object</emphasis>" to a double-float value</para>
@@ -3178,12 +3172,6 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>912</term>
-<listitem>
-<para>SOM class "<emphasis>class</emphasis>" not found</para>
-</listitem>
-</varlistentry>
-<varlistentry>
 <term>913</term>
 <listitem>
 <para>Unable to convert object "<emphasis>object</emphasis>" to a single-dimensional array value</para>
@@ -3223,38 +3211,6 @@ special character (such as a parenthesis).
 <term>919</term>
 <listitem>
 <para>Unable to convert object "<emphasis>object</emphasis>" to a method</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>921</term>
-<listitem>
-<para>Could not retrieve "<emphasis>value</emphasis>" information for method "<emphasis>method</emphasis>"</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>931</term>
-<listitem>
-<para>No method descriptor information for method "<emphasis>method</emphasis>" on class "<emphasis>class</emphasis>"</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>932</term>
-<listitem>
-<para>The SOM interface does not currently support parameter type "<emphasis>type</emphasis>", specified for argument <emphasis>argument</emphasis>
-</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>933</term>
-<listitem>
-<para>The SOM interface does not currently support parameter type "<emphasis>type</emphasis>", specified for return value</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>934</term>
-<listitem>
-<para>The number of OUT or INOUT type arguments cannot exceed <emphasis>number</emphasis>
-</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -3337,100 +3293,9 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>949</term>
-<listitem>
-<para>The DSOM Server for class <emphasis>class</emphasis>, could not be resolved.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
 <term>951</term>
 <listitem>
 <para>Concurrency not supported</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>952</term>
-<listitem>
-<para>
-<emphasis>servername</emphasis> class server not installed</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>961</term>
-<listitem>
-<para>Too many parameters for event "<emphasis>event</emphasis>"</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>962</term>
-<listitem>
-<para>Error creating OSA event "<emphasis>event</emphasis>"</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>963</term>
-<listitem>
-<para>Error creating direct parameter for OSA event "<emphasis>event</emphasis>"</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>964</term>
-<listitem>
-<para>Error accessing event information in AETE</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>965</term>
-<listitem>
-<para>Error launching application "<emphasis>application</emphasis>"</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>966</term>
-<listitem>
-<para>Invalid additional parameter "<emphasis>parameter</emphasis>" for OSA event "<emphasis>event</emphasis>"</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>967</term>
-<listitem>
-<para>Error creating additional parameter for OSA event "<emphasis>event</emphasis>"</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>968</term>
-<listitem>
-<para>Error sending OSA event "<emphasis>event</emphasis>"</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>969</term>
-<listitem>
-<para>Error handling result for OSA event "<emphasis>event</emphasis>"</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>971</term>
-<listitem>
-<para>Error converting OSA event result to a REXX object</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>972</term>
-<listitem>
-<para>Invalid direct parameter "<emphasis>parameter</emphasis>" for OSA event "<emphasis>event</emphasis>"</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>973</term>
-<listitem>
-<para>Invalid key form for object specifier</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>974</term>
-<listitem>
-<para>Invalid parameter type for key form "<emphasis>keyform</emphasis>"</para>
 </listitem>
 </varlistentry>
 <varlistentry>

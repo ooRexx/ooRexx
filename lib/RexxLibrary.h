@@ -102,9 +102,6 @@
   class RexxStemVariable;
   class RexxStringClass;
   class RexxString;
-  class RexxSOMCode;
-  class RexxSOMProxy;
-  class RexxSOMProxyClass;
   class RexxSource;
   class RexxSupplier;
   class RexxSmartBuffer;
@@ -116,10 +113,6 @@
   class RexxVariableBase;
   class RexxVariableDictionary;
   class MemorySegmentPool;
-#ifdef SOM
-  class OrxSOMMethodInformation;
-  class OrxSOMArgumentList;
-#endif
 
 typedef RexxObject *OREF;              /* reference to a REXX object        */
 typedef OREF *POREF;                   /* Pointer to a REXX object reference*/

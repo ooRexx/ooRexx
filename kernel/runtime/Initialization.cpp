@@ -70,12 +70,10 @@
  #include "MethodClass.hpp"               /* method used early                 */
  #include "RexxCode.hpp"                /* now various code classes          */
  #include "RexxNativeMethod.hpp"
- #include "RexxSOMCode.hpp"
  #include "ExpressionStack.hpp"               /* now main driver classes           */
  #include "RexxActivation.hpp"
  #include "RexxActivity.hpp"
  #include "RexxNativeActivation.hpp"
- #include "RexxSOMProxy.hpp"
  #include "RexxEnvelope.hpp"
  #include "MessageClass.hpp"
 

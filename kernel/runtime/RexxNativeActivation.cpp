@@ -66,22 +66,11 @@
 
 #include "ASCIIDBCSStrings.hpp"
 #include SYSREXXSAA
-#ifdef SOM
-  #include "orxsminf.xh"
-  #include "repostry.xh"
-  #include "somcls.xh"
-  #include "orxsom.h"                  /* SOM client declarations */
-
-  RexxObject *resolve_proxy(SOMObject *);
-#endif
 
 extern RexxObject *ProcessLocalServer;
 extern RexxDirectory *ProcessLocalEnv; /* process local environment (.local)*/
 extern ACTIVATION_SETTINGS *current_settings;
 
-typedef void *somRef;
-typedef void *somTok;
-                                       /* sizes of different argument       */
                                        /* types                             */
 static size_t tsize[] = { 0, 0,
                           sizeof(RexxObject *),
@@ -90,9 +79,6 @@ static size_t tsize[] = { 0, 0,
                           sizeof(double),
                           sizeof(CSTRING),
                           sizeof(RexxObject *),      /* OSELF */
-                          sizeof(somRef),            /* SOMSELF */
-                          sizeof(somRef),
-                          sizeof(somTok),
                           sizeof(RexxObject *),      /* ARGLIST */
                           sizeof(RexxObject *),      /* MSGNAME */
                           sizeof(RexxObject *),      /* SCOPE */
@@ -189,17 +175,6 @@ void RexxNativeActivation::flatten(RexxEnvelope *envelope)
   cleanUpFlatten
 }
 
-somRef nativeact_somref(
-   RexxObject *objr)                   /* object to proxy                   */
-/******************************************************************************/
-/* Function:  Produce a SOM object reference from a REXX object reference     */
-/******************************************************************************/
-{
-  RexxInteger *somReference;           /* SOM reference object              */
-                                       /* ask the server to convert         */
-  somReference = (RexxInteger *)send_message1(ProcessLocalServer,OREF_SOMSYM,objr);
-  return (somRef)somReference->getValue();  /* return the actual reference part  */
-}
 
 RexxObject *RexxNativeActivation::run(
     size_t       _argcount,             /* argument count                    */
@@ -245,10 +220,6 @@ RexxObject *RexxNativeActivation::run(
 
       case REXXD_BUFFER:               /* reference to Buffered storage     */
         *((void **)*ivalp) = this->buffer();
-        break;
-
-      case REXXD_SOMSELF:              /* this is a SOM reference           */
-        *((somRef *)*ivalp) = nativeact_somref(this->u_receiver);
         break;
 
       case REXXD_ARGLIST:              /* need the argument list            */
@@ -301,14 +272,6 @@ RexxObject *RexxNativeActivation::run(
               *((const char **)*ivalp) = this->cstring(argument);
               break;
 
-            case REXXD_somRef:         /* a SOM reference                   */
-              *((somRef *)*ivalp) = nativeact_somref(argument);
-              break;
-
-            case REXXD_somTok:         /* SOM token - pointer to SOM object */
-              *((somTok *)*ivalp) = (somTok)this->pointer(argument);
-              break;
-
             case REXXD_STRING:         /* Required STRING object            */
             {
                                          /* force to a string value           */
@@ -353,14 +316,6 @@ RexxObject *RexxNativeActivation::run(
 
             case REXXD_CSTRING:        /* missing character string          */
               *((CSTRING *)*ivalp) = NO_CSTRING;
-              break;
-
-            case REXXD_somRef:         /* no SOM pointer                    */
-              *((somRef *)*ivalp) = NULL;
-              break;
-
-            case REXXD_somTok:         /* no SOM pointer                    */
-              *((somTok *)*ivalp) = NULL;
               break;
 
             case REXXD_POINTER:

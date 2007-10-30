@@ -45,7 +45,6 @@
 #define Included_RexxClass
 
 #define REXX_DEFINED      0x00000001    /* this class is a native rexx class */
-#define IMPORTED          0x00000002    /* this class was imported to som    */
 #define MIXIN             0x00000004    /* this is a mixin class             */
 #define HAS_UNINIT        0x00000008    /* this class has an uninit method   */
 #define META_CLASS        0x00000010    /* this class is a meta class        */
@@ -76,8 +75,6 @@ void class_create (void);
    RexxString  *getId();
    RexxClass   *getBaseClass();
    RexxClass   *getMetaClass();
-   RexxInteger *getSomClass();
-   void         setSomClass(RexxInteger *);
    RexxClass   *getSuperClass();
    RexxArray   *getSuperClasses();
    RexxArray   *getSubClasses();
@@ -98,29 +95,19 @@ void class_create (void);
    void        createInstanceBehaviour(RexxBehaviour *);
    void        methodDictionaryMerge(RexxTable *, RexxTable *);
    RexxTable  *methodDictionaryCreate(RexxTable *, RexxClass *);
-   RexxObject *somSuperClass(RexxClass *);
    RexxObject *inherit(RexxClass *, RexxClass *);
    RexxObject *uninherit(RexxClass *);
    RexxObject *enhanced(RexxObject **, size_t);
    RexxClass  *mixinclass(RexxString *, RexxClass *, RexxTable *);
    RexxClass  *subclass(RexxString *, RexxClass *, RexxTable *);
-   RexxInteger *importedRexx();
-   RexxObject *importMethod();
-   RexxObject *exportMethod(RexxString *, RexxString *, long, RexxClass *);
-   RexxObject *somDefine(RexxString *, RexxInteger *);
-   long        somInterfaces();
-   RexxSOMProxy *newOpart(RexxInteger *);
    RexxClass  *newRexx(RexxObject **args, size_t argCount);
    void        setMetaClass(RexxClass *);
-   RexxClass  *external(RexxString *, RexxClass *, RexxTable *);
    bool        isCompatibleWith(RexxClass *other);
    RexxObject *isSubclassOf(RexxClass *other);
    RexxString  *defaultNameRexx();
 
 
    inline BOOL         rexxDefined() { return this->class_info & REXX_DEFINED; };
-   inline BOOL         imported()    { return this->class_info & IMPORTED; }
-   inline void         setImported() { this->class_info |= IMPORTED; }
    inline BOOL         queryMixin()  { return this->class_info & MIXIN; };
    inline BOOL         queryMeta()   { return this->class_info & META_CLASS; };
    inline BOOL         uninitDefined()   { return this->class_info & HAS_UNINIT; };
@@ -147,7 +134,6 @@ void class_create (void);
                                        /* Metaclass mdict                   */
     RexxArray     *metaClassMethodDictionary;
     RexxObjectTable *metaClassScopes;  /* Metaclass scopes                  */
-    RexxInteger   *somClass;           /* Root SomClass if there is one     */
                                        /* The superclass and any inherited  */
     RexxArray     *classSuperClasses;  /* mixins for class behaviour        */
                                        /* The superclass and any inherited  */

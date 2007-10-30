@@ -84,9 +84,6 @@ CLASS_EXTERNAL(stem_class, RexxClass)
 CLASS_EXTERNAL_STRING(string, RexxString)
 CLASS_EXTERNAL(string_class, RexxStringClass)
 
-CLASS_EXTERNAL_STRING(somproxy, RexxSOMProxy)
-CLASS_EXTERNAL(somproxy_class, RexxSOMProxyClass)
-
 CLASS_EXTERNAL(supplier, RexxSupplier)
 CLASS_EXTERNAL(supplier_class, RexxClass)
 
@@ -130,8 +127,6 @@ CLASS_INTERNAL(nmethod_class, RexxNativeCodeClass)
 CLASS_INTERNAL(nativeact, RexxNativeActivation)
 
 CLASS_INTERNAL(smartbuffer, RexxSmartBuffer)
-
-CLASS_INTERNAL(sommethod, RexxSOMCode)
 
 CLASS_INTERNAL(stack, RexxStack)
 

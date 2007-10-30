@@ -43,7 +43,7 @@
 /******************************************************************************/
 #include <stdio.h>
 #include "RexxLibrary.h"
-                                       /* local SOM/proxy server            */
+                                       /* local server                      */
 RexxObject * ProcessLocalServer = OREF_NULL;
 int   ProcessBusyActs = 0;             /* number of busy activities         */
 int   ProcessInitializations = 0;      /* number of active initializations  */

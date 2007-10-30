@@ -48,7 +48,6 @@
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxSOMProxy.hpp"
 #include "RexxNativeAPI.h"
 
 
@@ -172,42 +171,6 @@ PCPPM integerOperatorMethods[] = {     /* integer operator methods          */
    (PCPPM)(PCPPINT)&RexxInteger::orOp,
    (PCPPM)(PCPPINT)&RexxInteger::xorOp,
    (PCPPM)(PCPPINT)&RexxInteger::operatorNot,
-};
-
-PCPPM somproxyOperatorMethods[] = {    /* object operator methods           */
-   NULL,                               /* first entry not used              */
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_plus,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_minus,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_multiply,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_divide,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_integerDivide,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_remainder,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_power,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_concat,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_concat,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_concatBlank,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_equal,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_notEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_isGreaterThan,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_isLessOrEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_isLessThan,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_isGreaterOrEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_isGreaterOrEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_isLessOrEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_strictEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_strictNotEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_strictGreaterThan,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_strictLessOrEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_strictLessThan,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_strictGreaterOrEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_strictGreaterOrEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_strictLessOrEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_notEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_notEqual,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_and,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_or,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_xor,
-   (PCPPM)(PCPPSOM)&RexxSOMProxy::operator_not,
 };
 
 

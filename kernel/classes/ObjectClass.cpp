@@ -2128,39 +2128,6 @@ RexxObject *RexxObject::unknownRexx(
   return this->unknown(message, arguments);
 }
 
-RexxObject *RexxObject::freeSOMObjRexx()
-/******************************************************************************/
-/* Function:  Exported access to an object virtual function                   */
-/******************************************************************************/
-{
-  return this->freeSOMObj();           /* forward to the virtual function   */
-}
-
-RexxObject *RexxObject::SOMObjRexx()
-/******************************************************************************/
-/* Function:  Exported access to an object virtual function                   */
-/******************************************************************************/
-{
-  return this->SOMObj();               /* forward to the virtual function   */
-}
-
-RexxObject *RexxObject::serverRexx()
-/******************************************************************************/
-/* Function:  Exported access to an object virtual function                   */
-/******************************************************************************/
-{
-  return this->server();               /* forward to the virtual function   */
-}
-
-RexxObject *RexxObject::initProxyRexx(
-    RexxInteger *proxy)                /* the proxy object                  */
-/******************************************************************************/
-/* Function:  Exported access to an object virtual function                   */
-/******************************************************************************/
-{
-  return this->initProxy(proxy);       /* forward to the virtual function   */
-}
-
 RexxObject *RexxObject::hasMethodRexx(
     RexxString *message )              /* method name                       */
 /******************************************************************************/

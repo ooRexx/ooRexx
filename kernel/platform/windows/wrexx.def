@@ -122,10 +122,7 @@ RexxLoadMethod                 @95
 RexxCreateDirectory            @96
 RexxRemoveDirectory            @97
 RexxDispose                    @98
-RexxSetOSAInfo                 @99
-RexxGetOSAInfo                 @100
 RexxResultString               @101
-RexxGetSource                  @102
 RexxCopyMethod                 @103
 RexxValidObject                @104
 ;

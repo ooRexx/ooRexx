@@ -1569,7 +1569,7 @@ BUILTIN(XRANGE) {
 
   fix_args(XRANGE);                    /* expand arguments to full value    */
   startchar = 0;                       /* set default start position        */
-  endchar = 0xff;                      /* set default end position          */
+  endchar = (char)0xff;                /* set default end position          */
 
                                        /* get the starting string           */
   start = optional_string(XRANGE, start);

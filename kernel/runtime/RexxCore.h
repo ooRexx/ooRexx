@@ -214,7 +214,6 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 #define new_stemDictionary(s)             (memoryObject.newStemDictionary(s))
 #define new_variable(n)                   (memoryObject.newVariable(n))
 #define new_compoundElement(s)            (memoryObject.newCompoundElement(s))
-#define new_sommethod(s)                  (TheMethodClass->newSOM(s))
 #define new_instance()                    (TheObjectClass->newObject())
 #define new_string(s,l)                   TheStringClass->newString(s, l)
 #define raw_string(l)                     TheStringClass->rawString(l)
@@ -397,8 +396,6 @@ EXTERN RexxInteger* TheNullPointer INITGLOBALPTR;
 EXTERN RexxNumberStringClass  * TheNumberStringClass INITGLOBALPTR;
 EXTERN RexxClass  * TheObjectClass INITGLOBALPTR;    /* generic object class              */
 EXTERN RexxClass  * TheQueueClass INITGLOBALPTR;     /* queue class                       */
-                                       /* Generic SOM  method               */
-EXTERN RexxSOMCode * TheGenericSomMethod INITGLOBALPTR;
                                        /* Predefined variable retrievers    */
 EXTERN RexxDirectory * TheCommonRetrievers INITGLOBALPTR;
 EXTERN RexxClass  * TheStemClass INITGLOBALPTR;      /* stem class                        */
@@ -413,10 +410,6 @@ EXTERN RexxArray  * TheSaveArray INITGLOBALPTR;
                                        /*behaviours                         */
 EXTERN RexxObject * TheSavedBehaviours INITGLOBALPTR;
 EXTERN RexxClass  * TheSupplierClass INITGLOBALPTR;  /* supplier class                    */
-                                       /* somproxy class                    */
-EXTERN RexxSOMProxyClass  * TheSomProxyClass INITGLOBALPTR;
-                                       /* M_somproxy class                  */
-EXTERN RexxSOMProxyClass  * TheMSomProxyClass INITGLOBALPTR;
 EXTERN RexxDirectory * TheSystem INITGLOBALPTR;     /* system directory                  */
 EXTERN RexxClass  * TheTableClass INITGLOBALPTR;     /* table class                       */
 EXTERN RexxClass  * TheRelationClass INITGLOBALPTR;  /* relation class                    */
@@ -482,9 +475,7 @@ EXTERN RexxInteger * IntegerMinusOne INITGLOBALPTR;  /* Static integer -1       
 #define T_stem_class                 T_stem                       + 1
 #define T_string                     T_stem_class                 + 1
 #define T_string_class               T_string                     + 1
-#define T_somproxy                   T_string_class               + 1
-#define T_somproxy_class             T_somproxy                   + 1
-#define T_supplier                   T_somproxy_class             + 1
+#define T_supplier                   T_string_class               + 1
 #define T_supplier_class             T_supplier                   + 1
 #define T_table                      T_supplier_class             + 1
 #define T_table_class                T_table                      + 1
@@ -514,8 +505,7 @@ EXTERN RexxInteger * IntegerMinusOne INITGLOBALPTR;  /* Static integer -1       
 #define T_nmethod_class              T_nmethod                    + 1
 #define T_nativeact                  T_nmethod_class              + 1
 #define T_smartbuffer                T_nativeact                  + 1
-#define T_sommethod                  T_smartbuffer                + 1
-#define T_stack                      T_sommethod                  + 1
+#define T_stack                      T_smartbuffer                + 1
 #define T_variable                   T_stack                      + 1
 #define T_vdict                      T_variable                   + 1
 #define T_clause                     T_vdict                      + 1
@@ -596,10 +586,8 @@ EXTERN RexxInteger * IntegerMinusOne INITGLOBALPTR;  /* Static integer -1       
 #define saveArray_NULLPOINTER        saveArray_NULLA             + 1
 #define saveArray_SYSTEM             saveArray_NULLPOINTER       + 1
 #define saveArray_FUNCTIONS          saveArray_SYSTEM            + 1
-#define saveArray_GENERIC_SOMMETHOD  saveArray_FUNCTIONS         + 1
-#define saveArray_COMMON_RETRIEVERS  saveArray_GENERIC_SOMMETHOD + 1
-#define saveArray_M_SOMPROXY         saveArray_COMMON_RETRIEVERS + 1
-#define saveArray_STATIC_REQ         saveArray_M_SOMPROXY        + 1
+#define saveArray_COMMON_RETRIEVERS  saveArray_FUNCTIONS         + 1
+#define saveArray_STATIC_REQ         saveArray_COMMON_RETRIEVERS + 1
 #define saveArray_PUBLIC_RTN         saveArray_STATIC_REQ        + 1
 #define saveArray_highest            saveArray_PUBLIC_RTN
 
@@ -648,14 +636,11 @@ EXTERN void *VFTArray[highest_T];      /* table of virtual functions        */
 #define TheQueueBehaviour           ((RexxBehaviour *)(&pbehav[T_queue]))
 #define TheQueueClassBehaviour      ((RexxBehaviour *)(&pbehav[T_queue_class]))
 #define TheSmartBufferBehaviour     ((RexxBehaviour *)(&pbehav[T_smartbuffer]))
-#define TheSomCodeBehaviour         ((RexxBehaviour *)(&pbehav[T_sommethod]))
 #define TheStackBehaviour           ((RexxBehaviour *)(&pbehav[T_stack]))
 #define TheStemBehaviour            ((RexxBehaviour *)(&pbehav[T_stem]))
 #define TheStemClassBehaviour       ((RexxBehaviour *)(&pbehav[T_stem_class]))
 #define TheStringBehaviour          ((RexxBehaviour *)(&pbehav[T_string]))
 #define TheStringClassBehaviour     ((RexxBehaviour *)(&pbehav[T_string_class]))
-#define TheSomProxyBehaviour        ((RexxBehaviour *)(&pbehav[T_somproxy]))
-#define TheSomProxyClassBehaviour   ((RexxBehaviour *)(&pbehav[T_somproxy_class]))
 #define TheSupplierBehaviour        ((RexxBehaviour *)(&pbehav[T_supplier]))
 #define TheSupplierClassBehaviour   ((RexxBehaviour *)(&pbehav[T_supplier_class]))
 #define TheTableBehaviour           ((RexxBehaviour *)(&pbehav[T_table]))
@@ -870,7 +855,6 @@ extern double NO_DOUBLE;
  #include "RexxActivity.hpp"               /* activity is needed for errors     */
  #include "NumberStringClass.hpp"               /* added to make 'number_digits()'   */
                                        /* in 'ArrayClass.c' visible            */
- #define PCPPSOM    PCPPM
  #define PCPPINT    PCPPM
  #define PCPPSTR    PCPPM
  #define PCPPNUMSTR PCPPM
@@ -894,19 +878,14 @@ extern double NO_DOUBLE;
  #define CPPMSTEM(n)  CPPM(n)
  #define CPPMSTR(n)  CPPM(n)
  #define CPPMSTRCL(n)  CPPM(n)
- #define CPPMSOM(n)  CPPM(n)
- #define CPPMSOMCL(n)  CPPM(n)
  #define CPPMSUP(n)  CPPM(n)
  #define CPPMSUPCL(n)  CPPM(n)
  #define CPPMTBL(n)  CPPM(n)
  #define CPPMREL(n)  CPPM(n)
  #define CPPMMEM(n)  CPPM(n)
- #define CPPMSOMS(n)  CPPM(n)
  #define CPPMLOC(n)  CPPM(n)
  #define CPPMSND(n)  CPPM(n)
  #define CPPMSRV(n)  CPPM(n)
- #define CPPMSOMDS(n)  CPPM(n)
- #define CPPMSOMDO(n)  CPPM(n)
  #define CPPMMUTB(n)  CPPM(n)
  #define CPPMMUTBCL(n) CPPM(n)
 
@@ -970,11 +949,6 @@ extern double NO_DOUBLE;
  #define CPPMSTR(n) (PCPPM) ((PCPPSTR)&n)
  typedef RexxObject *  (VLAENTRY RexxStringClass::*PCPPSTRCLASS) (...);
  #define CPPMSTRCL(n) (PCPPM) ((PCPPSTRCLASS)&n)
- #include "RexxSOMProxy.hpp"
- typedef RexxObject *  (VLAENTRY RexxSOMProxy::*PCPPSOM) (...);
- #define CPPMSOM(n) (PCPPM) ((PCPPSOM)&n)
- typedef RexxObject *  (VLAENTRY RexxSOMProxyClass::*PCPPSOMCLASS) (...);
- #define CPPMSOMCL(n) (PCPPM) ((PCPPSOMCLASS)&n)
  #include "SupplierClass.hpp"
  typedef RexxObject *  (VLAENTRY RexxSupplier::*PCPPSUP) (...);
  #define CPPMSUP(n) (PCPPM) ((PCPPSUP)&n)
@@ -990,18 +964,8 @@ extern double NO_DOUBLE;
  typedef RexxObject *  (VLAENTRY RexxMemory::*PCPPMEM) (...);
  #define CPPMMEM(n) (PCPPM) ((PCPPMEM)&n)
  #include "RexxMisc.hpp"
- typedef RexxObject *  (VLAENTRY RexxSOMServer::*PCPPSOMSRV) (...);
- #define CPPMSOMS(n) (PCPPM) ((PCPPSOMSRV)&n)
  typedef RexxObject *  (VLAENTRY RexxLocal::*PCPPLOCAL) (...);
  #define CPPMLOC(n) (PCPPM) ((PCPPLOCAL)&n)
- typedef RexxObject *  (VLAENTRY RexxSender::*PCPPSEND) (...);
- #define CPPMSND(n) (PCPPM) ((PCPPSEND)&n)
- typedef RexxObject *  (VLAENTRY RexxServer::*PCPPSRV) (...);
- #define CPPMSRV(n) (PCPPM) ((PCPPSRV)&n)
- typedef RexxObject *  (VLAENTRY RexxSOMDServer::*PCPPSOMD) (...);
- #define CPPMSOMDS(n) (PCPPM) ((PCPPSOMD)&n)
- typedef RexxObject *  (VLAENTRY RexxSOMDObjectMgr::*PCPPSOMO) (...);
- #define CPPMSOMDO(n) (PCPPM) ((PCPPSOMO)&n)
  #include "MutableBufferClass.hpp"
  typedef RexxObject *  (VLAENTRY RexxMutableBuffer::*PCPPMUTB) (...);
  #define CPPMMUTB(n) (PCPPM) ((PCPPMUTB)&n)

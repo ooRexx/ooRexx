@@ -179,15 +179,9 @@ class RexxObject : public RexxInternalObject {
      virtual RexxMethod  *methodObject(RexxString *);
      virtual RexxObject  *defMethod(RexxString *, RexxMethod *, RexxString *a = OREF_NULL);
      virtual RexxString  *defaultName();
-       // Following Virtual functions for SOMProxy polymoprphism
      virtual RexxObject  *unknown(RexxString *msg, RexxArray *args){return OREF_NULL;};
-     virtual RexxObject  *initProxy(RexxInteger*somObj) {return OREF_NULL;};
-     virtual RexxObject  *freeSOMObj() {return OREF_NULL;};
-     virtual RexxObject  *server() {return TheNilObject;};
-     virtual RexxObject  *SOMObj() {return TheNilObject;};
      virtual RexxInteger *hasMethod(RexxString *msg);
              BOOL         hasUninitMethod();
-     virtual void        *realSOMObject() {return OREF_NULL;};
 
      RexxObject *init();
      void        uninit();
@@ -293,9 +287,6 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *unknownRexx(RexxString *, RexxArray *);
      RexxObject  *hasMethodRexx(RexxString *);
      RexxObject  *initProxyRexx(RexxInteger *);
-     RexxObject  *freeSOMObjRexx();
-     RexxObject  *SOMObjRexx();
-     RexxObject  *serverRexx();
      BOOL         callSecurityManager(RexxString *, RexxDirectory *);
      // compare 2 values for equality, potentially falling back on the
      // "==" method for the test.

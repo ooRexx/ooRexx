@@ -96,10 +96,6 @@ extern int  SecureFlag;
 void   activity_startup(void);
 void   createImage(void);
 
-#ifdef SOM
-  #include <som.xh>
-#endif
-
 void kernelShutdown (void)
 /******************************************************************************/
 /* Shutdown OREXX System for this process                                     */

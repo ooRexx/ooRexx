@@ -57,14 +57,12 @@
  #include "ListClass.hpp"
  #include "QueueClass.hpp"
  #include "SupplierClass.hpp"
- #include "RexxSOMProxy.hpp"
  #include "MethodClass.hpp"
  #include "RexxEnvelope.hpp"
  #include "MessageClass.hpp"
  #include "StemClass.hpp"
  #include "RexxMisc.hpp"
  #include "RexxNativeMethod.hpp"
- #include "RexxSOMCode.hpp"
  #include "RexxActivity.hpp"
  #include "RexxNativeActivation.hpp"
  #include "RexxVariableDictionary.hpp"
@@ -106,10 +104,6 @@ CPPM(RexxObject::unknownRexx),
 CPPM(RexxObject::isInstanceOfRexx),
 CPPM(RexxObject::instanceMethodRexx),
 CPPM(RexxObject::instanceMethodsRexx),
-CPPM(RexxObject::initProxyRexx),
-CPPM(RexxObject::freeSOMObjRexx),
-CPPM(RexxObject::SOMObjRexx),
-CPPM(RexxObject::serverRexx),
 CPPM(RexxObject::identityHashRexx),
 CPPM(RexxObject::concatRexx),
 CPPM(RexxObject::concatBlank),
@@ -122,8 +116,6 @@ CPPMC(RexxClass::queryMixinClass),
 CPPMC(RexxClass::getId),
 CPPMC(RexxClass::getBaseClass),
 CPPMC(RexxClass::getMetaClass),
-CPPMC(RexxClass::getSomClass),
-CPPMC(RexxClass::setSomClass),
 CPPMC(RexxClass::getSuperClasses),
 CPPMC(RexxClass::getSuperClass),
 CPPMC(RexxClass::getSubClasses),
@@ -133,15 +125,11 @@ CPPMC(RexxClass::defineMethods),
 CPPMC(RexxClass::deleteMethod),
 CPPMC(RexxClass::method),
 CPPMC(RexxClass::methods),
-CPPMC(RexxClass::somSuperClass),
 CPPMC(RexxClass::inherit),
 CPPMC(RexxClass::uninherit),
 CPPMC(RexxClass::enhanced),
 CPPMC(RexxClass::mixinclass),
 CPPMC(RexxClass::subclass),
-CPPMC(RexxClass::newOpart),
-CPPMC(RexxClass::importMethod),
-CPPMC(RexxClass::importedRexx),
 CPPMC(RexxClass::equal),
 CPPMC(RexxClass::strictEqual),
 CPPMC(RexxClass::notEqual),
@@ -274,8 +262,6 @@ CPPMSG(RexxMessage::arguments),
 CPPMSG(RexxMessage::newRexx),
 
 CPPMTD(RexxMethod::setUnGuardedRexx),    /* Method methods                    */
-CPPMTD(RexxMethod::setInterface),
-CPPMTD(RexxMethod::getInterface),
 CPPMTD(RexxMethod::setGuardedRexx),
 CPPMTD(RexxMethod::source),
 CPPMTD(RexxMethod::setPrivateRexx),
@@ -539,10 +525,6 @@ CPPMLOC(RexxLocal::runProgram),
 CPPMLOC(RexxLocal::callProgram),
 CPPMLOC(RexxLocal::callString),
 
-CPPMSND(RexxSender::getPid),              /* the .sender class methods         */
-CPPMSND(RexxSender::sendMessage),
-
-CPPMSRV(RexxServer::messageWait),         /* the .server class methods */
 NULL                                   /* final terminating method          */
 };
 
@@ -611,8 +593,6 @@ void kernelInit (void)
                                        /* RexxMethod                        */
   CLASS_CREATE(Method, RexxMethodClass);
   nmethod_create();                    /* RexxNativeCode                    */
-                                       /* create the som method template    */
-  TheGenericSomMethod = new RexxSOMCode (TRUE);
   CLASS_CREATE(Queue, RexxClass);      /* RexxQueue                         */
   TheNullPointer = new_pointer(NULL);  /* a NULL pointer object             */
   CLASS_CREATE(List, RexxListClass);   /* RexxList                          */
@@ -1016,8 +996,6 @@ bool kernel_setup (void)
 
                                        /* Add the instance methods to the   */
                                        /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_INTERFACE    ,TheMethodBehaviour, CPPMTD(RexxMethod::getInterface), 0);
-  defineKernelMethod(CHAR_SETINTERFACE ,TheMethodBehaviour, CPPMTD(RexxMethod::setInterface), 1);
   defineKernelMethod(CHAR_SETUNGUARDED ,TheMethodBehaviour, CPPMTD(RexxMethod::setUnGuardedRexx), 0);
   defineKernelMethod(CHAR_SETGUARDED   ,TheMethodBehaviour, CPPMTD(RexxMethod::setGuardedRexx), 0);
   defineKernelMethod(CHAR_SETPRIVATE   ,TheMethodBehaviour, CPPMTD(RexxMethod::setPrivateRexx), 0);
@@ -1576,7 +1554,6 @@ bool kernel_setup (void)
   kernel_public(CHAR_GLOBAL_STRINGS   ,TheGlobalStrings       ,TheKernel);
   kernel_public(CHAR_NULLA            ,TheNullArray           ,TheKernel);
   kernel_public(CHAR_NULLPOINTER      ,TheNullPointer         ,TheKernel);
-  kernel_public(CHAR_GENERIC_SOMMETHOD,TheGenericSomMethod    ,TheKernel);
   kernel_public(CHAR_COMMON_RETRIEVERS,TheCommonRetrievers    ,TheKernel);
   kernel_public(CHAR_ENVIRONMENT      ,TheEnvironment         ,TheKernel);
 
@@ -1605,8 +1582,6 @@ bool kernel_setup (void)
   kernel_methods->put(createKernelMethod(CPPMLOC(RexxLocal::runProgram), 1), kernel_name(CHAR_RUN_PROGRAM));
   kernel_methods->put(createKernelMethod(CPPMLOC(RexxLocal::callString), A_COUNT), kernel_name(CHAR_CALL_STRING));
   kernel_methods->put(createKernelMethod(CPPMLOC(RexxLocal::callProgram), A_COUNT), kernel_name(CHAR_CALL_PROGRAM));
-  kernel_methods->put(createKernelMethod(CPPMSND(RexxSender::getPid), 0), kernel_name(CHAR_SENDER_GETPID));
-  kernel_methods->put(createKernelMethod(CPPMSND(RexxSender::sendMessage), 2), kernel_name(CHAR_SENDER_SENDMESSAGE));
 
                                        /* create the BaseClasses method and run it*/
   symb = kernel_name(BASEIMAGELOAD);   /* get a name version of the string  */

@@ -82,12 +82,6 @@
 #include <fcntl.h>
 #include <io.h>
 
-#ifdef SOM
-#include "som.xh"
-#include "orxsom.h"
-#endif
-
-
 #ifdef TIMESLICE                       /* System Yielding function prototype*/
 INT REXXENTRY RexxSetYield(PID procid, TID threadid);
 #ifdef HIGHTID
@@ -379,124 +373,6 @@ APIRET REXXENTRY RexxResultString(RexxObject * result, PRXSTRING pResultBuffer)
 }
 
 /******************************************************************************/
-/* Name:       RexxSetOSAInfo                                                 */
-/*                                                                            */
-/* Arguments:  method - (Input) method object to hang OSA info off of.        */
-/*             selector - (Input) Index into OSAinfo directory                */
-/*             value - (Input) OSA information                                */
-/*                                                                            */
-/* Notes: Keep OSA information along with method object                       */
-/*                                                                            */
-/* Returned:  -1 - Invalid Object                                             */
-/*                                                                            */
-/******************************************************************************/
-APIRET REXXENTRY RexxSetOSAInfo(RexxObject * method, ULONG selector, LONG value)
-{
-  RexxDirectory *OSAinfoDir;
-
-  RexxActivity *activity;              /* target activity                   */
-  ULONG rc = 0;
-
-  activity = TheActivityClass->getActivity();
-
-  if (OTYPENUM(method, method)) {      /* Make sure this is a method object  */
-    OSAinfoDir = ((RexxMethod *)method)->getInterface();
-                                         /* save value in directory          */
-    OSAinfoDir->put(new_integer(value), new_string((const char *)&selector, sizeof(ULONG)));
-  } else
-    rc = -1;
-
-  TheActivityClass->returnActivity(CurrentActivity);       /* release the kernel semaphore      */
-  return rc;
-}
-
-/******************************************************************************/
-/* Name:       RexxGetOSAInfo                                                 */
-/*                                                                            */
-/* Arguments:  method - (Input) method object to get OSA info from.           */
-/*             selector - (Input) Index into OSAinfo directory                */
-/*             value - (Output) OSA information                               */
-/*                                                                            */
-/* Notes: Get OSA information associated with method object                   */
-/*                                                                            */
-/* Returned:   1 - General Error                                              */
-/*            -1 - Invalid Object                                             */
-/*                                                                            */
-/******************************************************************************/
-
-APIRET REXXENTRY RexxGetOSAInfo(RexxObject * method, ULONG selector, LONG * value)
-{
-  RexxInteger *selected;
-  ULONG rc = 0;
-  RexxDirectory *OSAinfoDir;
-  RexxActivity *activity;              /* target activity                   */
-
-
-  activity = TheActivityClass->getActivity();
-
-  if (OTYPENUM(method, method)) {      /* Make sure this is a method object */
-    OSAinfoDir = ((RexxMethod *)method)->getInterface();
-                                       /* Get value                         */
-    selected = (RexxInteger *)OSAinfoDir->at(new_string((const char *)&selector, sizeof(ULONG)));
-    if (selected  != OREF_NULL) {      /* Have a value ?                    */
-                                       /* Yes, Get value from integer object*/
-      *value = selected->getValue();
-    } else
-      rc = 1;
-  } else
-    rc = -1;                           /* Not a method.                     */
-
-  TheActivityClass->returnActivity(CurrentActivity);       /* release the kernel semaphore      */
-  return rc;
-}
-
-/******************************************************************************/
-/* Name:       RexxGetSource                                                  */
-/*                                                                            */
-/* Arguments:  method - (Input) method object to get source from.             */
-/*             pSourceBuffer - (Output) pointer to RXSTRING containing Source */
-/*                                                                            */
-/* Notes: Get OSA information associated with method object                   */
-/*                                                                            */
-/* Returned:   1 - General Error                                              */
-/*            -1 - Invalid Object                                             */
-/*                                                                            */
-/******************************************************************************/
-
-APIRET REXXENTRY RexxGetSource(RexxObject * method, PRXSTRING pSourceBuffer)
-{
-  RexxString *source;
-  LONG length;
-  RexxDirectory *OSAinfoDir;
-  RexxActivity *activity;              /* target activity                   */
-  ULONG rc = 0;
-
-
-  activity = TheActivityClass->getActivity();
-
-  if (OTYPENUM(method, method)) {      /* Make sure this is a method object */
-    OSAinfoDir = ((RexxMethod *)method)->getInterface();
-    source = (RexxString *)OSAinfoDir->at(new_cstring("SOURCE"));
-
-    length = source->getLength() +1;
-                                       /* allocate a new RXSTRING buffer    */
-    pSourceBuffer->strptr = (char *)SysAllocateResultMemory(length);
-    if (pSourceBuffer->strptr) {       /* Got storage ok ?                  */
-                                       /* yes, copy the data (including the */
-                                       /* terminating null implied by the   */
-                                       /* use of length + 1                 */
-      memcpy(pSourceBuffer->strptr, source->getStringData(), length);
-                                       /* give the true data length         */
-      pSourceBuffer->strlength = length - 1;
-    } else
-      rc = 1;
-  } else
-    rc = -1;
-  TheActivityClass->returnActivity(CurrentActivity);       /* release the kernel semaphore      */
-  return rc;
-}
-
-/******************************************************************************/
 /* Name:       RexxCopyMethod                                                 */
 /*                                                                            */
 /* Arguments:  dirname - (Input) Name of directory object used for anchoring  */
@@ -658,12 +534,7 @@ APIRET APIENTRY RexxStart(
   if ((stderr->_file == -1) && (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_UNKNOWN))
       *stderr = *_fdopen(_open_osfhandle((LONG)GetStdHandle(STD_ERROR_HANDLE),_O_APPEND), "a");
 
-#ifdef SOM
-                                       /* Perform any needed inits          */
-  RexxSomInitialize((SOMObject *) NULL);
-#else
   RexxInitialize();                    /* Perform any needed inits          */
-#endif
 
   TheActivityClass->getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
@@ -840,15 +711,7 @@ APIRET REXXENTRY RexxCreateMethod(
   RexxScriptArgs.ProgramBuffer = sourceData;
   RexxScriptArgs.pmethod = (RexxMethod * *)pmethod;
 
-#ifdef SOM
- #ifdef __cplusplus
-  RexxSomInitialize((SOMObject *) NULL);  /* Perform any needed inits       */
- #else
-  RexxSomInitialize((SOMAny *) NULL);  /* Perform any needed inits          */
- #endif
-#else
   RexxInitialize();                    /* Perform any needed inits          */
-#endif
 
   TheActivityClass->getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
@@ -926,16 +789,7 @@ APIRET REXXENTRY RexxRunMethod(
   RexxScriptArgs.func = f;
   RexxScriptArgs.exits = exit_list;
 
-#ifdef SOM
- #ifdef __cplusplus
-                                       /* Perform any needed inits          */
-  RexxSomInitialize((SOMObject *) NULL);
- #else
-  RexxSomInitialize((SOMAny *) NULL);  /* Perform any needed inits          */
- #endif
-#else
   RexxInitialize();                    /* Perform any needed inits          */
-#endif
 
   if (securityManager) ((RexxMethod*) method)->setSecurityManager(securityManager);
   tempActivity = TheActivityClass->getActivity();     /* get a base activity under us      */
@@ -984,16 +838,7 @@ APIRET REXXENTRY RexxStoreMethod(RexxObject * method, PRXSTRING scriptData)
   RexxScriptArgs.pmethod = (RexxMethod * *)&method;
   RexxScriptArgs.ProgramBuffer = scriptData;
 
-#ifdef SOM
- #ifdef __cplusplus
-  RexxSomInitialize((SOMObject *) NULL);  /* Perform any needed inits       */
- #else
-  RexxSomInitialize((SOMAny *) NULL);  /* Perform any needed inits          */
- #endif
-#else
   RexxInitialize();                    /* Perform any needed inits          */
-#endif
-
 
   TheActivityClass->getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
@@ -1035,15 +880,7 @@ APIRET REXXENTRY RexxLoadMethod(const char *dirname, PRXSTRING scriptData, RexxO
   RexxScriptArgs.ProgramBuffer = scriptData;
   RexxScriptArgs.pmethod = (RexxMethod * *)pmethod;
 
-#ifdef SOM
- #ifdef __cplusplus
-  RexxSomInitialize((SOMObject *) NULL);  /* Perform any needed inits       */
- #else
-  RexxSomInitialize((SOMAny *) NULL);  /* Perform any needed inits          */
- #endif
-#else
   RexxInitialize();                    /* Perform any needed inits          */
-#endif
 
   TheActivityClass->getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
@@ -1090,12 +927,7 @@ APIRET REXXENTRY RexxTranslateProgram(
 
   RexxStartArguments.exits = exits;
 
-#ifdef SOM
-                                       /* Perform any needed inits          */
-  RexxSomInitialize((SOMObject *) NULL);
-#else
   RexxInitialize();                    /* Perform any needed inits          */
-#endif
 
   TheActivityClass->getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
@@ -1376,7 +1208,6 @@ void CreateMethod(
  RexxString *name;                     /* input program name                */
  RexxDirectory *locked_objects;        /* directory used to keep objects    */
                                        /* around for process duration.      */
- RexxDirectory *OSAinfoDir;
 
  name = OREF_NULLSTRING;               /* use an "unlocatable" name         */
  newNativeAct->saveObject(name);      /* protect from garbage collect      */
@@ -1397,20 +1228,6 @@ void CreateMethod(
    locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_cstring(pRexxScriptArgs->index));
    locked_objects->put(*pRexxScriptArgs->pmethod, new_string((const char *)pRexxScriptArgs->pmethod, sizeof(RexxObject *)));
  }
-                                       /* Create directory object that will */
-                                       /* contain OSAinfo.                  */
- OSAinfoDir = new_directory();
- ((RexxMethod *)(*pRexxScriptArgs->pmethod))->setInterface(OSAinfoDir);
-
-                                       /* Hang source off of OSAinfo direct,*/
-                                       /* so we have around for RexxGetSrc. */
-                                       /* This may be tmp. need to talk to  */
-                                       /* Rick about saving source object   */
-                                       /* when flattening.                  */
-
- OSAinfoDir->put(new_string(pRexxScriptArgs->ProgramBuffer->strptr, pRexxScriptArgs->ProgramBuffer->strlength),
-                  new_cstring("SOURCE"));
-
                                        /* finally, discard our activation   */
  CurrentActivity->pop(FALSE);
  return;

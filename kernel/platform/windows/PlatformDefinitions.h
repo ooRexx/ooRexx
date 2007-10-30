@@ -123,14 +123,6 @@ typedef unsigned __int64 uint64_t;
 #define SHARED                         // no shared memory sup
 
 /******************************************************************************/
-/* OPTIONAL:  If the implementation is going to support SOM, include a define */
-/* for SOM.                                                                   */
-/******************************************************************************/
-
-//#define SOM
-//#define SOMV2                          /* both these are required yet       */
-
-/******************************************************************************/
 /* OPTIONAL:  If the implementation is going to support multiple threads,     */
 /* include a define for THREADS.  If not defined, then the REPLY instruction  */
 /* will not work.                                                             */
@@ -458,14 +450,6 @@ typedef PVOID SYSWINDOWINFO;
    INTERNAL_METHOD(sysDirectory) \
    INTERNAL_METHOD(sysFilespec) \
    INTERNAL_METHOD(sysMessageBox) \
-   INTERNAL_METHOD(server_init_local) \
-   INTERNAL_METHOD(server_c_sominit) \
-   INTERNAL_METHOD(server_findsomclass) \
-   INTERNAL_METHOD(server_somclass) \
-   INTERNAL_METHOD(server_somname) \
-   INTERNAL_METHOD(server_somparent) \
-   INTERNAL_METHOD(server_somproxy) \
-   INTERNAL_METHOD(server_somtrace) \
    INTERNAL_METHOD(function_queueExit)
 
 #ifdef INCL_REXX_STREAM                /* asking for file system stuff?     */

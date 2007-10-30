@@ -1223,7 +1223,6 @@ void RexxSource::processInstall(
   RexxArray     *inherits;             /* additional inheritance            */
   RexxDirectory *_instanceMethods;     /* instance methods for a class      */
   RexxObject    *Public;               /* public flag                       */
-  RexxString    *external;             /* external flag                     */
   RexxClass     *metaclass;            /* class metaclass                   */
   RexxClass     *subclass;             /* class subclass                    */
   RexxDirectory *class_methods;        /* class method list                 */
@@ -1271,8 +1270,6 @@ void RexxSource::processInstall(
       Public = current_class->get(CLASS_PUBLIC);
                                        /* get the mixingclass flag          */
       mixin = current_class->get(CLASS_MIXINCLASS);
-                                       /* and the external name             */
-      external = (RexxString *)current_class->get(CLASS_EXTERNAL_NAME);
                                        /* the metaclass                     */
       metaclass_name = (RexxString *)(current_class->get(CLASS_METACLASS));
                                        /* and subclass                      */
@@ -1307,22 +1304,16 @@ void RexxSource::processInstall(
       _instanceMethods = (RexxDirectory *)(current_class->get(CLASS_METHODS));
                                        /* and class methods                 */
       class_methods = (RexxDirectory *)(current_class->get(CLASS_CLASS_METHODS));
-      if (external != OREF_NULL) {     /* have an external name?            */
-                                       /* import external class             */
-        classObject = TheClassClass->external(external, metaclass, (RexxTable *)class_methods);
-      }
-      else {                           /* not imported                      */
-        if (subclass == TheNilObject)  /* no subclass?                      */
-                                       /* use .object for the subclass      */
-          subclass = (RexxClass *)TheEnvironment->fastAt(OREF_OBJECTSYM);
-        if (metaclass == TheNilObject) /* no metaclass?                     */
-          metaclass = OREF_NULL;       /* just null out                     */
-        if (mixin != OREF_NULL)        /* this a mixin class?               */
-          classObject = (RexxClass *)(subclass->mixinclass(class_id, metaclass, (RexxTable *)class_methods));
-        else
-                                       /* doing a subclassing               */
-          classObject = (RexxClass *)(subclass->subclass(class_id, metaclass, (RexxTable *)class_methods));
-      }
+      if (subclass == TheNilObject)  /* no subclass?                      */
+                                     /* use .object for the subclass      */
+        subclass = (RexxClass *)TheEnvironment->fastAt(OREF_OBJECTSYM);
+      if (metaclass == TheNilObject) /* no metaclass?                     */
+        metaclass = OREF_NULL;       /* just null out                     */
+      if (mixin != OREF_NULL)        /* this a mixin class?               */
+        classObject = (RexxClass *)(subclass->mixinclass(class_id, metaclass, (RexxTable *)class_methods));
+      else
+                                     /* doing a subclassing               */
+        classObject = (RexxClass *)(subclass->subclass(class_id, metaclass, (RexxTable *)class_methods));
                                        /* add the class to the directory    */
       this->installed_classes->put(classObject, name);
       if (inherits != OREF_NULL) {     /* have inherits to process?         */

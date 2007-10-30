@@ -49,7 +49,6 @@
 #define INTERNAL_FLAG     0x04         /* method is part of saved image     */
 #define REXX_METHOD       0x08         /* method is a REXX method           */
 #define NATIVE_METHOD     0x10         /* method is a native C method       */
-#define SOM_METHOD        0x20         /* method is a SOM method            */
 #define PROTECTED_FLAG    0x40         /* method is protected               */
 #define KERNEL_CPP_METHOD 0x80         /* method is a kernel C++ meth       */
 
@@ -68,10 +67,8 @@
   RexxObject   *call(RexxActivity *,  RexxObject *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int);
   RexxMethod  *newScope(RexxClass  *);
   RexxArray   *source();
-  RexxObject  *setInterface( RexxDirectory *);
   void              setAttribute(RexxVariableBase *variable) {OrefSet(this, this->attribute, variable); }
   RexxVariableBase *getAttribute() { return this->attribute; };
-  RexxDirectory *getInterface();
   void         setScope(RexxClass  *);
   RexxSmartBuffer  *saveMethod();
   RexxObject  *setUnGuardedRexx();
@@ -98,7 +95,6 @@
    inline bool   isSpecial()      {return (this->methodInfo.flags & (PROTECTED_FLAG | PRIVATE_FLAG)) != 0;}
 
    inline bool   isRexxMethod()   {return (this->methodInfo.flags & REXX_METHOD) != 0; };
-   inline bool   isSOMMethod()    {return (this->methodInfo.flags & SOM_METHOD) != 0; };
    inline bool   isNativeMethod() {return (this->methodInfo.flags & NATIVE_METHOD) != 0; };
    inline bool   isCPPMethod()    {return (this->methodInfo.flags & KERNEL_CPP_METHOD) != 0; };
 
@@ -108,7 +104,6 @@
    inline void   setPrivate()      {this->methodInfo.flags |= (PRIVATE_FLAG | PROTECTED_FLAG);};
    inline void   setProtected()    {this->methodInfo.flags |= PROTECTED_FLAG;};
    inline void   setRexxMethod()   {this->methodInfo.flags |= REXX_METHOD; };
-   inline void   setSOMMethod()    {this->methodInfo.flags |= SOM_METHOD; };
    inline void   setNativeMethod() {this->methodInfo.flags |= NATIVE_METHOD; };
    inline void   setCPPMethod()    {this->methodInfo.flags |= KERNEL_CPP_METHOD; };
 
@@ -118,13 +113,9 @@
 
 
    RexxClass  *scope;                  /* pointer to the method scope       */
-   union {
-     RexxDirectory *methodinterface;   /* SOM interface information         */
-     RexxVariableBase *attribute;      /* method attribute info             */
-   };
+   RexxVariableBase *attribute;      /* method attribute info             */
    union {
       RexxInternalObject *code;        /* associated "code" object          */
-      RexxSOMCode        *somCode;     /* associated "code" object          */
       RexxNativeCode     *nativeCode;  /* associated "code" object          */
       RexxCode           *rexxCode;    /* associated "code" object          */
    };
@@ -139,8 +130,6 @@ class RexxMethodClass : public RexxClass {
   RexxMethod  *newRexxBuffer(RexxString *, RexxBuffer *, RexxClass  *);
   RexxMethod  *newNative(RexxString *, RexxString *, RexxClass  *);
   RexxMethod  *newEntry(PFN);
-  RexxMethod  *newSom(RexxClass  *);
-  RexxArray   *newArrayOfSOMMethods(RexxClass  *, long);
   RexxMethod  *restore(RexxBuffer *, char *);
   RexxMethod  *newFile(RexxString *);
   RexxMethod  *newFileRexx(RexxString *);
