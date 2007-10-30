@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              QueueInstruction.c    */
+/* REXX Translator                                      QueueInstruction.c    */
 /*                                                                            */
 /* Primitive Queue Parse Class                                                */
 /*                                                                            */
@@ -48,7 +48,6 @@
 #include "RexxActivity.hpp"
 #include "QueueInstruction.hpp"
 
-#include "ASCIIDBCSStrings.hpp"
                                        /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
 extern RexxActivity *CurrentActivity;  /* current running activity          */
@@ -83,9 +82,6 @@ void RexxInstructionQueue::execute(
   }
   else
     value =  OREF_NULLSTRING;          /* use a NULL string                 */
-  if (DBCS_MODE) {                     /* need to use DBCS?                 */
-    ValidDBCS(value);                  /* validate the string               */
-  }
   context->traceResult(value);         /* trace if necessary                */
                                        /* write out the line                */
   CurrentActivity->queue(context, value, queue_type);

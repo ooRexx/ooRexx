@@ -278,18 +278,11 @@ class ACTIVATION_SETTINGS {            /* activation "global" settings      */
           digits = DEFAULT_DIGITS;
           fuzz = DEFAULT_FUZZ;
           form = DEFAULT_FORM;
-          DBCS_codepage = FALSE;
-          codepage = 0;
-          DBCS_table = NULL;
       }
 
       size_t digits;                       /* numeric digits setting            */
       size_t fuzz;                         /* numeric fuzz setting              */
       BOOL form;                           /* numeric form setting              */
-      BOOL exmode;                         /* DBCS string processing flag       */
-      BOOL DBCS_codepage;                  /* DBCS code page possible           */
-      ULONG codepage;                      /* current activity codepage         */
-      char *DBCS_table;                    /* current DBCS vector table         */
 };                                     /* global activation settings        */
                                        /* builtin function prototype        */
 typedef RexxObject *builtin_func(RexxActivation *, INT, RexxExpressionStack *);

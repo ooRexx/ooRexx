@@ -1342,8 +1342,6 @@ RexxInstruction *RexxSource::optionsNew()
   RexxObject   *newObject;             /* newly created object              */
   RexxObject   *_expression;            /* expression to evaluate            */
   RexxToken    *_first;                 /* first token of the clause         */
-  RexxToken    *second;                /* second token of the clause        */
-  RexxString   *value;                 /* literal token value               */
 
                                        /* process the expression            */
   _expression = this->expression(TERM_EOC);
@@ -1353,22 +1351,6 @@ RexxInstruction *RexxSource::optionsNew()
   firstToken();                        /* reset the clause to beginning     */
   nextToken();                         /* step past the first token         */
   _first = nextReal();                  /* get the first token               */
-                                       /* first token a string?             */
-  if (_first->isLiteral()) {
-    second = nextReal();               /* get the next token                */
-    if (second->isEndOfClause()) {     /* literal the only token?           */
-                                       /* could have "options 'ETMODE'" or  */
-                                       /* "options 'NOETMODE'"              */
-      value = _first->value;            /* get the literal value             */
-      if (value->strICompare("ETMODE")) /* have ETMODE?                     */
-                                       /* turn on DBCS processing           */
-        this->flags |= DBCS_scanning;  /* set the flag indicator            */
-                                       /* have NOETMODE?                    */
-      else if (value->strICompare("NOETMODE"))
-                                       /* turn off DBCS processing          */
-        this->flags &= ~DBCS_scanning; /* set the flag indicator            */
-    }
-  }
                                        /* create a new translator object    */
   newObject = new_instruction(OPTIONS, Options);
                                        /* now complete this                 */

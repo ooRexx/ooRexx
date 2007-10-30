@@ -135,7 +135,7 @@ OKPOBJS=$(OKPOBJ1) $(OKPOBJ2) $(OKPOBJ3) $(OKPOBJ4) $(OKPOBJ5)
 OKIOBJS=$(OKIOBJ1) $(OKIOBJ2) $(OKIOBJ3)
 #part of rexx
 
-SYSOBJ1=$(OR_OUTDIR)\DBCSSupport.$(OBJ)  $(OR_OUTDIR)\TimeSupport.$(OBJ)  $(OR_OUTDIR)\RexxQueues.$(OBJ) \
+SYSOBJ1=$(OR_OUTDIR)\TimeSupport.$(OBJ)  $(OR_OUTDIR)\RexxQueues.$(OBJ) \
         $(OR_OUTDIR)\FileSystem.$(OBJ)  $(OR_OUTDIR)\ValueFunction.$(OBJ) $(OR_OUTDIR)\UseridFunction.$(OBJ) $(OR_OUTDIR)\VariablePool.$(OBJ)
 
 SYSOBJ2=$(OR_OUTDIR)\ExternalFunctions.$(OBJ)  $(OR_OUTDIR)\RexxMain.$(OBJ)  $(OR_OUTDIR)\SystemCommands.$(OBJ)   \
@@ -152,7 +152,7 @@ OEPOBJS=$(OR_OUTDIR)\NumberStringMath.$(OBJ)   $(OR_OUTDIR)\NumberStringMath2.$(
 #part of rexx
 OKSOBJS=$(OR_OUTDIR)\StringClass.$(OBJ) $(OR_OUTDIR)\StringClassUtil.$(OBJ) $(OR_OUTDIR)\StringClassSub.$(OBJ)   \
         $(OR_OUTDIR)\StringClassWord.$(OBJ) $(OR_OUTDIR)\StringClassMisc.$(OBJ) $(OR_OUTDIR)\StringClassBit.$(OBJ)    \
-        $(OR_OUTDIR)\StringClassConversion.$(OBJ) $(OR_OUTDIR)\ASCIIDBCSStrings.$(OBJ) $(OR_OUTDIR)\MutableBufferClass.$(OBJ)
+        $(OR_OUTDIR)\StringClassConversion.$(OBJ) $(OR_OUTDIR)\MutableBufferClass.$(OBJ)
 
 # in rexx
 # OKNOBJS contain C methods, therefore have different dependancy rules.....

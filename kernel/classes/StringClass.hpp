@@ -59,9 +59,6 @@
 #define  STRING_HASLOWER       0x01    /* string does contain lowercase     */
 #define  STRING_NOLOWER        0x02    /* string does not contain lowercase */
 #define  STRING_NONNUMERIC     0x04    /* string is non-numeric             */
-#define  STRING_NODBCS         0x08    /* string has no DBCS characters     */
-
-#define  NoDBCS(r)                     (((RexxString *)r)->Attributes&STRING_NODBCS)
 
 #define  INITIAL_NAME_SIZE     10      /* first name table allocation       */
 #define  EXTENDED_NAME_SIZE    10      /* amount to extend table by         */
@@ -253,51 +250,6 @@ class RexxStringClass : public RexxClass {
 /*                                                                          */
 /****************************************************************************/
    int         isSymbol();
-
-   size_t      validDBCS();
-   RexxString  *DBCSreverse();
-   RexxString  *DBCSsubstr(RexxInteger *, RexxInteger *, RexxString *);
-   RexxString  *DBCSdelstr(RexxInteger *, RexxInteger *);
-   RexxString  *DBCSsubWord(RexxInteger *, RexxInteger *);
-   RexxString  *DBCSdelWord(RexxInteger *, RexxInteger *);
-   RexxString  *DBCSstrip(RexxString *, RexxString *);
-   RexxInteger *DBCSlength();
-   RexxInteger *DBCSwordPos(RexxString *, RexxInteger *);
-   RexxInteger *DBCSdatatype(INT);
-   RexxInteger *DBCScompare(RexxString *, RexxString *);
-   RexxString  *DBCScopies(RexxInteger *);
-   RexxInteger *DBCSabbrev(RexxString *, RexxInteger *);
-   RexxString  *DBCSspace(RexxInteger *, RexxString *);
-   RexxString  *DBCSleft(RexxInteger *, RexxString *);
-   RexxString  *DBCSright(RexxInteger *, RexxString *);
-   RexxString  *DBCScenter(RexxInteger *, RexxString *);
-   RexxString  *DBCSinsert(RexxString *, RexxInteger *, RexxInteger *, RexxString *);
-   RexxString  *DBCSoverlay(RexxString *, RexxInteger *, RexxInteger *, RexxString *);
-   RexxInteger *DBCSverify(RexxString *, RexxString *, RexxInteger *);
-   RexxInteger *DBCSwords();
-   size_t       DBCSpos(RexxString *, size_t);
-   size_t       DBCScaselessPos(RexxString *, size_t);
-   RexxInteger *DBCSlastPos(RexxString *, RexxInteger *);
-   RexxInteger *DBCSwordIndex(RexxInteger *);
-   RexxInteger *DBCSwordLength(RexxInteger *);
-   RexxString  *DBCSword(RexxInteger *);
-   RexxString  *DBCStranslate(RexxString *, RexxString *, RexxString *);
-   RexxString  *dbLeft(RexxInteger *, RexxString *, RexxString *);
-   RexxString  *dbRight(RexxInteger *, RexxString *, RexxString *);
-   RexxString  *dbCenter(RexxInteger *, RexxString *, RexxString *);
-   RexxString  *dbRleft(RexxInteger *, RexxString *);
-   RexxString  *dbRright(RexxInteger *, RexxString *);
-   RexxString  *dbToDbcs();
-   RexxString  *dbToSbcs();
-   RexxInteger *dbValidate(RexxString *);
-   RexxInteger *dbWidth(RexxString *);
-   RexxString  *dbAdjust(RexxString *);
-   RexxString  *dbBracket();
-   RexxString  *dbUnBracket();
-   int          DBCSstringCompare(RexxString *);
-   size_t       DBCSmovePointer(size_t, INT, size_t);
-
-
 
 /* Inline_functions */
 

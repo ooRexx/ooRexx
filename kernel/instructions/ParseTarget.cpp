@@ -49,8 +49,6 @@
 #include "ParseTarget.hpp"
 #include "ParseInstruction.hpp"
 
-#include "ASCIIDBCSStrings.hpp"
-
                                        /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
 
@@ -143,12 +141,7 @@ void RexxTarget::forward(
 /******************************************************************************/
 {
   this->start = this->pattern_start;   /* start position is last position   */
-  if (DBCS_MODE) {                     /* need to do this in DBCS mode?     */
-                                       /* increment position         */
-    this->end = this->string->DBCSmovePointer(this->start, INCREMENT, offset);
-  }
-  else
-    this->end = this->start + offset;  /* set the end position              */
+  this->end = this->start + offset;    /* set the end position              */
   if (this->end >= this->string_length)/* take us past the end?             */
     this->end = this->string_length;   /* just use the end position         */
   if (this->end <= this->start) {      /* no forward movement?              */
@@ -188,10 +181,6 @@ void RexxTarget::absolute(
   if (offset > 0)                      /* positive offset?                  */
     offset--;                          /* make origin zero                  */
   this->start = this->pattern_end;     /* start position is last position   */
-  if (DBCS_MODE) {                     /* need to do this in DBCS mode?     */
-                                       /* find actual character position    */
-    offset = this->string->DBCSmovePointer(0, INCREMENT, offset);
-  }
   if ((size_t)offset <= this->start) { /* backward movement?                */
     this->end = this->string_length;   /* matches to the end                */
     this->pattern_start = offset;      /* pattern start is actual position  */
@@ -217,17 +206,11 @@ void RexxTarget::backward(
 {
   this->start = this->pattern_start;   /* start position is last position   */
   this->end = this->string_length;     /* negatives always use to the end   */
-  if (DBCS_MODE) {                     /* need to do this in DBCS mode?     */
-                                       /* increment position         */
-    this->pattern_start = this->string->DBCSmovePointer(this->pattern_start, DECREMENT, offset);
-  }
-  else {
-    /* go past start of string?          */
-    if ((size_t)offset > this->pattern_start)
-      this->pattern_start = 0;         /* this resets to the start          */
-    else
-      this->pattern_start -= offset;   /* just back up                      */
-  }
+  /* go past start of string?          */
+  if ((size_t)offset > this->pattern_start)
+    this->pattern_start = 0;         /* this resets to the start          */
+  else
+    this->pattern_start -= offset;   /* just back up                      */
                                        /* and have a zero length pattern    */
   this->pattern_end = this->pattern_start;
   this->subcurrent = this->start;      /* set the subpiece pointer          */
@@ -267,13 +250,7 @@ void RexxTarget::search(
                                        /* start position for strings is the */
   this->start = this->pattern_end;     /* end of the last pattern           */
                                        /* search for the string trigger     */
-  /* use DBCS character count as index into DBCS string */
-  if (DBCS_MODE) {
-    this->end = this->string->pos(needle,
-            DBCS_CharacterCount(this->string->getStringData(), this->start));
-  } else {
-    this->end = this->string->pos(needle, this->start);
-  }
+  this->end = this->string->pos(needle, this->start);
   if (this->end == 0) {                /* not found?                        */
     this->end = this->string_length;   /* that is the end position          */
                                        /* next pattern is end also          */
@@ -283,9 +260,6 @@ void RexxTarget::search(
   }
   else {
     this->end--;                       /* convert to origin zero            */
-    if (DBCS_MODE)                     /* need to do this in DBCS mode?     */
-                                       /* increment position         */
-      this->end = this->string->DBCSmovePointer(0, INCREMENT, this->end);
     this->pattern_start = this->end;   /* this is the starting point        */
                                        /* end is start + trigger length     */
     this->pattern_end = this->pattern_start + needle->getLength();
@@ -302,13 +276,7 @@ void RexxTarget::caselessSearch(
                                        /* start position for strings is the */
   this->start = this->pattern_end;     /* end of the last pattern           */
                                        /* search for the string trigger     */
-  /* use DBCS character count as index into DBCS string */
-  if (DBCS_MODE) {
-    this->end = this->string->caselessPos(needle,
-              DBCS_CharacterCount(this->string->getStringData(), this->start));
-  } else {
-    this->end = this->string->caselessPos(needle, this->start);
-  }
+  this->end = this->string->caselessPos(needle, this->start);
   if (this->end == 0) {                /* not found?                        */
     this->end = this->string_length;   /* that is the end position          */
                                        /* next pattern is end also          */
@@ -318,9 +286,6 @@ void RexxTarget::caselessSearch(
   }
   else {
     this->end--;                       /* convert to origin zero            */
-    if (DBCS_MODE)                     /* need to do this in DBCS mode?     */
-                                       /* increment position         */
-      this->end = this->string->DBCSmovePointer(0, INCREMENT, this->end);
     this->pattern_start = this->end;   /* this is the starting point        */
                                        /* end is start + trigger length     */
     this->pattern_end = this->pattern_start + needle->getLength();
@@ -334,7 +299,6 @@ RexxString *RexxTarget::getWord()
 /******************************************************************************/
 {
   RexxString *word;                    /* extracted word                    */
-  size_t  string_start;                /* string starting offset            */
   size_t  length;                      /* word length                       */
   const char *scan;                    /* scan pointer                      */
   const char *endScan;                 /* end of string location            */
@@ -342,36 +306,6 @@ RexxString *RexxTarget::getWord()
   if (this->subcurrent >= this->end)   /* already used up?                  */
     word = OREF_NULLSTRING;            /* just return a null string         */
   else {                               /* need to scan off a word           */
-    if (DBCS_MODE) {                   /* need DBCS mode?                   */
-                                       /* point to the current position     */
-      scan = this->string->getStringData() + this->subcurrent;
-                                       /* get the subpiece length           */
-      length = this->end - this->subcurrent;
-      DBCS_SkipBlanks(&scan, &length); /* skip over blanks                  */
-      if (length == 0)                 /* blanks only?                      */
-        word = OREF_NULLSTRING;        /* assign a null string              */
-      else {                           /* have a real word                  */
-                                       /* save word start                   */
-        string_start = scan - this->string->getStringData();
-
-        DBCS_SkipNonBlanks(&scan, &length);
-                                       /* get the ending position           */
-        this->subcurrent = scan - this->string->getStringData();
-                                        /* get the subpiece length           */
-        length = this->subcurrent - string_start;
-                                       /* extract the subpiece              */
-        word = this->string->extract(string_start, length);
-        if (length) {                  /* length left?                      */
-          if (IsDBCSBlank(scan))       /* DBCS blank?                       */
-                                       /* step over longer char             */
-            this->subcurrent += DBCS_BYTELEN;
-          else
-            this->subcurrent++;        /* gobble one space                  */
-        }
-                                       /* skip over rest of word            */
-      }
-      return word;                     /* return the word                   */
-    }
                                        /* point to the current position     */
     scan = this->string->getStringData() + this->subcurrent;
                                        /* and the scan end point            */
@@ -432,33 +366,10 @@ void RexxTarget::skipWord()
 /*  Returned:  Next word extracted from parsed substring                      */
 /******************************************************************************/
 {
-  size_t  length;                      /* scanned over length               */
   const char *scan;                    /* scan pointer                      */
   const char *endScan;                 /* end of string location            */
 
   if (this->subcurrent < this->end) {  /* something left?                   */
-    if (DBCS_MODE) {                   /* need DBCS mode?                   */
-                                       /* point to the current position     */
-      scan = this->string->getStringData() + this->subcurrent;
-                                       /* get the subpiece length           */
-      length = this->end - this->subcurrent;
-      DBCS_SkipBlanks(&scan, &length); /* skip over blanks                  */
-      if (length != 0) {               /* something there?                  */
-                                       /* skip over rest of word            */
-        DBCS_SkipNonBlanks(&scan, &length);
-                                       /* get the ending position           */
-        this->subcurrent = scan - this->string->getStringData();
-                                       /* length left?                      */
-        if (this->subcurrent < this->end) {
-          if (IsDBCSBlank(scan))       /* DBCS blank?                       */
-                                       /* step over longer char             */
-            this->subcurrent += DBCS_BYTELEN;
-          else
-            this->subcurrent++;        /* gobble one space                  */
-        }
-      }
-      return;                          /* return the word                   */
-    }
                                        /* point to the current position     */
     scan = this->string->getStringData() + this->subcurrent;
                                        /* and the scan end point            */

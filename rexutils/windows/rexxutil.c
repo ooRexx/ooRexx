@@ -6538,7 +6538,6 @@ LONG APIENTRY SysFromUniCode(
   char* str = NULL;
   char* strptr = NULL;
   CHAR  stemName[MAX];
-  CHAR  szUsedDefChar[2];
 
   /* correct number of arguments ? */
   /* arguments must always be 5. Args 1 and 5 must be valid strings */

@@ -106,8 +106,7 @@ messageXML = $(messages_dir)/rexxmsg.xml
 errorHeaders = $(messages_dir)/RexxMessageNumbers.h \
                $(messages_dir)/RexxErrorCodes.h \
                $(messages_dir)/RexxMessageTable.h
-classesHeaders = $(classes_dir)/ASCIIDBCSStrings.hpp \
-                 $(classes_dir)/ArrayClass.hpp \
+classesHeaders = $(classes_dir)/ArrayClass.hpp \
                  $(classes_dir)/ClassClass.hpp \
                  $(classes_dir)/DirectoryClass.hpp \
                  $(classes_dir)/IntegerClass.hpp \
@@ -226,7 +225,6 @@ libHeaders = $(lib_dir)/RexxLibrary.h \
              $(lib_dir)/RexxPlatformDefinitions.h \
              $(lib_dir)/RexxPlatformInterface.h
 rexxapiHeaders = $(rexxapi_dir)/APIUtil.h \
-                 $(rexxapi_dir)/ASCIIDBCS.h \
                  $(rexxapi_dir)/ASCIISymbols.h \
                  $(rexxapi_dir)/Characters.h \
                  $(rexxapi_dir)/CodePageTables.h
@@ -341,8 +339,7 @@ librexxapi_la_LDFLAGS = $(VERSION_INFO)
 #################### librexx.so ##########################
 # Sources for librexx.so
 #
-classes_sources = $(classes_dir)/ASCIIDBCSStrings.cpp \
-                  $(classes_dir)/ArrayClass.cpp \
+classes_sources = $(classes_dir)/ArrayClass.cpp \
                   $(classes_dir)/ClassClass.cpp \
                   $(classes_dir)/DirectoryClass.cpp \
                   $(classes_dir)/IntegerClass.cpp \
@@ -426,8 +423,7 @@ parser_sources = $(parser_dir)/Clause.cpp \
 kernel_platform_common_sources = $(kernel_platform_common_dir)/ActivityTable.cpp
 #                        SharedMemorySupport.cpp
 #                        SystemSemaphores.cpp
-platform_sources = $(kernel_platform_unix_dir)/DBCSSupport.cpp \
-                   $(kernel_platform_unix_dir)/ErrorMessages.cpp \
+platform_sources = $(kernel_platform_unix_dir)/ErrorMessages.cpp \
                    $(kernel_platform_unix_dir)/ExternalFunctions.cpp \
                    $(kernel_platform_unix_dir)/FileSystem.cpp \
                    $(kernel_platform_unix_dir)/MemorySupport.cpp \

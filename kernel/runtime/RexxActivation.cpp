@@ -3068,16 +3068,6 @@ void RexxActivation::setObjNotify(
 }
 
 
-void RexxActivation::setDBCS(
-     BOOL  setting )                   /* DBCS ON/OFF flag                  */
-/******************************************************************************/
-/* Function:  Set the DBCS string processing state.                           */
-/******************************************************************************/
-{
-                                       /* set the flag indicator            */
-  this->settings.global_settings.exmode = setting;
-}
-
 void RexxActivation::pushEnvironment(
      RexxObject * environment)         /* new local environment buffer        */
 /******************************************************************************/

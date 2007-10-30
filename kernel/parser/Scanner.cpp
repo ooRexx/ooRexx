@@ -48,7 +48,6 @@
 #include "ArrayClass.hpp"
 #include "SourceFile.hpp"
 
-#include "ASCIIDBCSStrings.hpp"
                                        /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
 
@@ -230,11 +229,6 @@ void RexxSource::comment()
   UINT   inch;                         /* next character                    */
   LONG   startline;                    /* starting line for error reports   */
 
-  if (this->flags&DBCS_scanning) {     /* possible DBCS characters?         */
-    this->DBCScomment();               /* use the DBCS version              */
-    return;                            /* finished                          */
-  }
-
   level = 1;                           /* start the comment nesting         */
   this->line_offset += 2;              /* step over the comment start       */
   startline = this->line_number;       /* remember the starting position    */
@@ -262,55 +256,6 @@ void RexxSource::comment()
     else if (inch == '/' && GETCHAR() == '*') {
       level++;                         /* increment the level               */
       this->line_offset++;             /* step the pointer over new start   */
-    }
-  }
-}
-
-void RexxSource::DBCScomment()
-/****************************************************************************/
-/* Function:  Scan source to skip over a nest of comments                   */
-/****************************************************************************/
-{
-  INT    level;                        /* comment nesting level             */
-  UINT   inch;                         /* next character                    */
-  LONG   startline;                    /* starting line for error reports   */
-
-  level = 1;                           /* start the comment nesting         */
-  this->line_offset += 2;              /* step over the comment start       */
-  startline = this->line_number;       /* remember the starting position    */
-  while (level > 0) {                  /* while still in a comment nest     */
-                                       /* hit the end of a line?            */
-    if (this->line_offset >= this->current_length) {
-      this->nextLine();                /* need to go to the next line       */
-                                       /* no more lines?                    */
-      if (this->line_number > this->line_count) {
-                                       /* record current position in clause */
-        this->clause->setEnd(this->line_number, this->line_offset);
-                                       /* error, must report                */
-        report_error1(Error_Unmatched_quote_comment, new_integer(startline));
-      }
-      continue;                        /* go loop around                    */
-    }
-    inch = GETCHAR();                  /* get the next character            */
-    this->line_offset++;               /* step past the character           */
-                                       /* is this the end delimeter?        */
-    if (inch == '*' && GETCHAR() == '/') {
-      level--;                         /* reduce the nesting level          */
-      this->line_offset++;             /* step the pointer over the close   */
-    }
-                                       /* start of a new comment?           */
-    else if (inch == '/' && GETCHAR() == '*') {
-      level++;                         /* increment the level               */
-      this->line_offset++;             /* step the pointer over new start   */
-    }
-    else if (IsDBCS(inch)) {           /* got a DBCS character?             */
-      this->line_offset++;             /* step to the next character        */
-      if (!MORELINE()) {               /* end of the line?                  */
-                                       /* record current position in clause */
-        this->clause->setEnd(this->line_number, this->line_offset);
-                                       /* raise the appropriate error       */
-        report_error(Error_Invalid_character_string_DBCS);
-      }
     }
   }
 }
@@ -876,72 +821,31 @@ RexxToken *RexxSource::sourceNextToken(
         start = this->line_offset + 1; /* save the starting point           */
         dot_count = 0;                 /* no doubled quotes yet             */
         type = 0;                      /* working with a straight literal   */
-                                       /* need to process in DBCS mode?     */
-        if (this->flags&DBCS_scanning) {
-          for (;;) {                   /* spin through the string           */
-            this->line_offset++;       /* step the pointer                  */
-            if (!MORELINE()) {         /* reached the end of the line?      */
-                                       /* record current position in clause */
-              this->clause->setEnd(this->line_number, this->line_offset);
-              if (literal_delimiter == '\'')
-                                       /* raise the appropriate error       */
-                report_error(Error_Unmatched_quote_single);
-              else
-                                       /* must be a double quote            */
-                report_error(Error_Unmatched_quote_double);
-            }
-            inch = GETCHAR();          /* get the next character            */
-                                       /* is this the delimiter?            */
-            if (literal_delimiter == inch) {
-                                       /* remember end location             */
-              litend = this->line_offset - 1;
-              this->line_offset++;     /* step to the next character        */
-              if (!MORELINE())         /* end of the line?                  */
-                break;                 /* we're finished                    */
-              inch = GETCHAR();        /* get the next character            */
-                                       /* not a doubled quote?              */
-              if (inch != literal_delimiter)
-                break;                 /* got the end                       */
-              dot_count++;             /* remember count of doubled quotes  */
-            }
-            else if (IsDBCS(inch)) {   /* found a DBCS first character?     */
-              this->line_offset++;     /* step to the next character        */
-              if (!MORELINE()) {       /* end of the line?                  */
-                                       /* record current position in clause */
-                this->clause->setEnd(this->line_number, this->line_offset);
-                                       /* raise the appropriate error       */
-                report_error(Error_Invalid_character_string_DBCS);
-              }
-            }
+        for (;;) {                   /* spin through the string           */
+          this->line_offset++;       /* step the pointer                  */
+          if (!MORELINE()) {         /* reached the end of the line?      */
+                                     /* record current position in clause */
+            this->clause->setEnd(this->line_number, this->line_offset);
+            if (literal_delimiter == '\'')
+                                     /* raise the appropriate error       */
+              report_error(Error_Unmatched_quote_single);
+            else
+                                     /* must be a double quote            */
+              report_error(Error_Unmatched_quote_double);
           }
-        }
-        else {
-          for (;;) {                   /* spin through the string           */
-            this->line_offset++;       /* step the pointer                  */
-            if (!MORELINE()) {         /* reached the end of the line?      */
-                                       /* record current position in clause */
-              this->clause->setEnd(this->line_number, this->line_offset);
-              if (literal_delimiter == '\'')
-                                       /* raise the appropriate error       */
-                report_error(Error_Unmatched_quote_single);
-              else
-                                       /* must be a double quote            */
-                report_error(Error_Unmatched_quote_double);
-            }
-            inch = GETCHAR();          /* get the next character            */
-                                       /* is this the delimiter?            */
-            if (literal_delimiter == inch) {
-                                       /* remember end location             */
-              litend = this->line_offset - 1;
-              this->line_offset++;     /* step to the next character        */
-              if (!MORELINE())         /* end of the line?                  */
-                break;                 /* we're finished                    */
-              inch = GETCHAR();        /* get the next character            */
-                                       /* not a doubled quote?              */
-              if (inch != literal_delimiter)
-                break;                 /* got the end                       */
-              dot_count++;             /* remember count of doubled quotes  */
-            }
+          inch = GETCHAR();          /* get the next character            */
+                                     /* is this the delimiter?            */
+          if (literal_delimiter == inch) {
+                                     /* remember end location             */
+            litend = this->line_offset - 1;
+            this->line_offset++;     /* step to the next character        */
+            if (!MORELINE())         /* end of the line?                  */
+              break;                 /* we're finished                    */
+            inch = GETCHAR();        /* get the next character            */
+                                     /* not a doubled quote?              */
+            if (inch != literal_delimiter)
+              break;                 /* got the end                       */
+            dot_count++;             /* remember count of doubled quotes  */
           }
         }
         if (MORELINE()) {              /* have more on this line?           */

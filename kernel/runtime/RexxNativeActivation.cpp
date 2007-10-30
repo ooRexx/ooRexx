@@ -64,7 +64,6 @@
 #include "RexxNativeAPI.h"                      /* bring in the native code defines  */
 #undef   RexxTable                     /* remove a conflict                 */
 
-#include "ASCIIDBCSStrings.hpp"
 #include SYSREXXSAA
 
 extern RexxObject *ProcessLocalServer;
@@ -879,40 +878,6 @@ nativei0 (REXXOBJECT, MSGNAME)
                                        /* pick up current activation        */
   self = (RexxNativeActivation *)CurrentActivity->current();
   return_oref(this->msgname);          /* just forward and return           */
-}
-
-nativei0 (BOOL, CURRENT_EXMODE)
-/******************************************************************************/
-/* Function:  External interface for say to get the activation with exmode set*/
-/******************************************************************************/
-{
-  RexxNativeActivation *self;          /* nativeact object                  */
-  RexxActivity        *activity;       /* current activity object           */
-  RexxActivation      *activation;     /* current activation object         */
-  RexxActivation      *prev_activation;/* previous activation objects       */
-  INT    count;                        /* counter for loop                  */
-  BOOL   exmode_option;                /* activation settings exmode value  */
-
-  native_entry;                        /* synchronize access                */
-                                       /* get nativeact object              */
-  self = (RexxNativeActivation *)CurrentActivity->current();
-  activity = this->activity;           /* find the current activity         */
-                                       /* get the current activation        */
-  activation = this->activity->currentAct();
-                                       /* the 2nd previous activation will  */
-                                       /* contain exmode setting (for say   */
-                                       /* instruction only)                 */
-  for (count = 1, exmode_option = DBCS_MODE, prev_activation = activation;
-       count < 3;  count++) {
-                                       /* get next previous activation      */
-    prev_activation = (RexxActivation *)this->activity->sender(prev_activation);
-                                       /* found activation, get exmode value*/
-    if (OTYPE(Activation,prev_activation) || (prev_activation != OREF_NULL))
-      exmode_option = prev_activation->settings.global_settings.exmode;
-    else                               /* not activation, use prev exmode   */
-      break;
-  }
-  return_value(exmode_option);         /* return first exmode found         */
 }
 
 nativei0 (REXXOBJECT, RECEIVER)

@@ -48,7 +48,6 @@
 #include <math.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "ASCIIDBCSStrings.hpp"
 #include "RexxBuiltinFunctions.h"                     /* General purpose BIF Header file   */
 #include "SourceFile.hpp"
 
@@ -283,16 +282,6 @@ RexxObject *DataType(
         Answer = (RexxObject *)TheTrueObject;
       break;
 
-    case DATATYPE_MIXED_DBCS:          /* Mixed SBCS/DBCS string            */
-                                       /* pass on to the DBCS function      */
-      Answer = String->DBCSdatatype(DATATYPE_MIXED_DBCS);
-      break;
-
-    case DATATYPE_PURE_DBCS:           /* Pure DBCS string                  */
-                                       /* pass on to the DBCS function      */
-      Answer = String->DBCSdatatype(DATATYPE_PURE_DBCS);
-      break;
-
     case DATATYPE_LOWERCASE:           /* Lowercase                         */
       if (Len != 0 && !Memcpbrk(Scanp, LOWER_ALPHA, Len))
                                        /* this is a good string             */
@@ -393,10 +382,6 @@ RexxInteger *RexxString::abbrev(
   size_t   ChkLen;                     /* required check length             */
   int      rc;                         /* compare result                    */
 
-  if (DBCS_MODE)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSabbrev(info, _length);
-
   info = get_string(info, ARG_ONE);    /* process the information string    */
   Len2 = info->getLength();                 /* get the length also               */
                                        /* get the optional check length     */
@@ -464,10 +449,6 @@ RexxInteger *RexxString::compare(
   size_t   i;                          /* loop index                        */
   size_t   Length1;                    /* first string length               */
   size_t   Length2;                    /* second string length              */
-
-  if (DBCS_MODE)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCScompare(string2, pad);
 
   Length1 = this->getLength();              /* get this strings length           */
                                        /* validate the compare string       */
@@ -586,8 +567,6 @@ RexxString *RexxString::copies(RexxInteger *_copies)
   size_t   Len;                        /* copy string length                */
   char    *Temp;                       /* copy location                     */
 
-  if (DBCS_SELF)                       /* need to use DBCS?                 */
-    ValidDBCS(this);                   /* validate the DBCS string          */
   required_arg(_copies, ONE);           /* the count is required             */
                                        /* get the copies count              */
   Count = _copies->requiredNonNegative(ARG_ONE);
@@ -644,11 +623,6 @@ RexxObject *RexxString::dataType(RexxString *pType)
 
 RexxInteger *RexxString::lastPosRexx(RexxString  *needle, RexxInteger *_start)
 {
-    // if DBCS mode is turned on...pass it on.
-    if (DBCS_MODE)
-    {
-        return this->DBCSlastPos(needle, _start);
-    }
     needle = REQUIRED_STRING(needle, ARG_ONE);
     // find out where to start the search. The default is at the very end.
     size_t startPos = optional_position(_start, getLength(), ARG_TWO);
@@ -1059,12 +1033,6 @@ RexxInteger *RexxString::caselessPosRexx(
 
 size_t RexxString::pos(RexxString *needle, size_t _start)
 {
-    // DBCS mode is handled elsewhere
-    if (DBCS_MODE)
-    {
-        return this->DBCSpos(needle, _start);
-    }
-
     // get the two working lengths
     size_t haystack_length = getLength();
     size_t needle_length = needle->getLength();
@@ -1103,12 +1071,6 @@ size_t RexxString::pos(RexxString *needle, size_t _start)
 
 size_t RexxString::caselessPos(RexxString *needle, size_t _start)
 {
-    // DBCS mode is handled elsewhere
-    if (DBCS_MODE)
-    {
-        return this->DBCScaselessPos(needle, _start);
-    }
-
     // get the two working lengths
     size_t haystack_length = getLength();
     size_t needle_length = needle->getLength();
@@ -1186,11 +1148,6 @@ RexxString *RexxString::translate(
   char      ch;                        /* current character                 */
   size_t    Position;                  /* table position                    */
 
-  if (DBCS_MODE)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return (RexxString *)this->DBCStranslate(tableo, tablei, pad);
-
-
                                        /* just a simple uppercase?          */
  if (tableo == OREF_NULL && tablei == OREF_NULL && pad == OREF_NULL)
    return this->upper();               /* return the uppercase version      */
@@ -1251,10 +1208,6 @@ RexxInteger *RexxString::verify(
   const char *Current;                 /* current scan position             */
   char      ch;                        /* scan character                    */
   bool      Match;                     /* found a match                     */
-
-  if (DBCS_MODE)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSverify(ref, option, _start);
 
   ref = get_string(ref, ARG_ONE);      /* get the reference string          */
   ReferenceLen = ref->getLength();     /* get a length also                 */

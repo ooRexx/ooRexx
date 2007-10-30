@@ -48,7 +48,6 @@
 #include <math.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "ASCIIDBCSStrings.hpp"
 #include "RexxBuiltinFunctions.h"                     /* Gneral purpose BIF Header file    */
 
 extern ACTIVATION_SETTINGS *current_settings;
@@ -204,10 +203,6 @@ RexxString *RexxString::delWord(RexxInteger *position,
   size_t      FrontLength;             /* front substring                   */
   RexxString *Retval;                  /* return value                      */
 
-  if (DBCS_SELF)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSdelWord(position, plength);
-
                                        /* convert position to binary        */
   WordPos = get_position(position, ARG_ONE);
                                        /* get num of words to delete, the   */
@@ -279,10 +274,6 @@ RexxString *RexxString::space(RexxInteger *space_count,
   size_t      Length;                  /* remaining length                  */
   size_t      WordLength;              /* word size                         */
   RexxString *Retval;                  /* return value                      */
-
-  if (DBCS_MODE)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSspace(space_count, pad);
 
                                        /* get the spacing count             */
   Spaces = optional_length(space_count, 1, ARG_ONE);
@@ -359,10 +350,6 @@ RexxString *RexxString::subWord(RexxInteger *position,
   size_t      WordLength;              /* word size                         */
   RexxString *Retval;                  /* return value                      */
 
-  if (DBCS_SELF)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSsubWord(position, plength);
-
                                        /* convert position to binary        */
   WordPos = get_position(position, ARG_ONE);
                                        /* get num of words to delete, the   */
@@ -415,10 +402,6 @@ RexxString *RexxString::word(RexxInteger *position)
   size_t      WordLength;              /* word size                         */
   RexxString *Retval;                  /* return value                      */
 
-  if (DBCS_SELF)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSword(position);
-
                                        /* convert position to binary        */
   WordPos = get_position(position, ARG_ONE);
 
@@ -459,10 +442,6 @@ RexxInteger *RexxString::wordIndex(RexxInteger *position)
   RexxInteger *Retval;                 /* return value                      */
   size_t      tempIndex;
 
-  if (DBCS_SELF)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSwordIndex(position);
-
   Length = this->getLength();          /* get the string length             */
                                        /* convert count to binary           */
   WordPos = get_position(position, ARG_ONE);
@@ -497,10 +476,6 @@ RexxInteger *RexxString::wordLength(RexxInteger *position)
   size_t      Length;                  /* string length                     */
   size_t      WordLength;              /* word length                       */
   size_t      WordPos;                 /* desired word position             */
-
-  if (DBCS_SELF)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSwordLength(position);
 
   Length = this->getLength();               /* get the string length             */
                                        /* convert count to binary           */
@@ -548,10 +523,6 @@ RexxInteger *RexxString::wordPos(RexxString  *phrase,
   const char *NextHaystackPtr;         /* pointer to next word              */
   const char *NextNeedlePtr;           /* pointer to next word              */
   size_t   i;                          /* loop counter                      */
-
-  if (DBCS_MODE)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSwordPos(phrase, pstart);
 
   phrase = get_string(phrase, ARG_ONE);/* get the phrase we are looking for */
   NeedleLength = phrase->getLength();       /* get the length also               */
@@ -751,13 +722,7 @@ RexxInteger *RexxString::caselessWordPos(RexxString  *phrase, RexxInteger *pstar
 /******************************************************************************/
 RexxInteger *RexxString::words()
 {
-  size_t tempCount;
-  if (DBCS_SELF)                       /* need to use DBCS?                 */
-                                       /* do the DBCS version               */
-    return this->DBCSwords();
-
-                                       /* return count of words      */
-  tempCount = WordCount(this->getStringData(), this->getLength());
+  size_t tempCount = WordCount(this->getStringData(), this->getLength());
   return new_integer(tempCount);
 }
 

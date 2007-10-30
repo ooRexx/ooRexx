@@ -65,7 +65,7 @@ void RexxInstructionOptions::execute(
 {
   RexxObject *value;                   /* output value                      */
   RexxString *stringVal;               /* string version of the value       */
-  LONG   i;                            /* loop counter                      */
+  size_t i;                            /* loop counter                      */
   RexxString *word;                    /* current word                      */
 
   context->traceInstruction(this);     /* trace if necessary                */
@@ -79,14 +79,8 @@ void RexxInstructionOptions::execute(
     if (word->getLength() == 0)        /* get the length of the word        */
       break;                           /* if length of word = 0 then stop   */
 
-    if (word->strICompare(CHAR_EXMODE)) /* is this EXMODE?                  */
-
-      context->setDBCS(TRUE);          /* turn on DBCS processing           */
-                                       /* have NOEXMODE?                    */
-    else if (word->strICompare(CHAR_NOEXMODE))
-      context->setDBCS(FALSE);         /* turn off DBCS processing          */
 #ifdef _DEBUG
-    else if (word->strICompare("DUMPMEMORY")) {
+    if (word->strICompare("DUMPMEMORY")) {
       TheMemoryObject->dumpEnable = TRUE;
       TheMemoryObject->dump();
     }

@@ -78,8 +78,6 @@
 #include "CallInstruction.hpp"
 #include "StreamNative.h"
 
-#include "ASCIIDBCSStrings.hpp"
-
 #define HOLDSIZE         60            /* room for 60 temporaries           */
 
 /* globals for block count based yielding support  */

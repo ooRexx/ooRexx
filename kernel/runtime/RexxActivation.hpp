@@ -288,7 +288,6 @@ RexxObject * activation_find  (void);
    void              setDefaultAddress(RexxString *);
    BOOL              internalMethod();
    RexxObject      * loadRequired(RexxString *, RexxInstruction *);
-   void              setDBCS(BOOL);
    RexxObject      * rexxVariable(RexxString *);
    void              pushEnvironment(RexxObject *);
    RexxObject      * popEnvironment();

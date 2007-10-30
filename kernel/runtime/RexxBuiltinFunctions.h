@@ -80,8 +80,6 @@ RexxString *PackHex(const char *String, size_t StringLength);
                                        /* Datatype function options  */
 #define  DATATYPE_ALPHANUMERIC     'A'
 #define  DATATYPE_BINARY           'B'
-#define  DATATYPE_MIXED_DBCS       'C'
-#define  DATATYPE_PURE_DBCS        'D'
 #define  DATATYPE_LOWERCASE        'L'
 #define  DATATYPE_MIXEDCASE        'M'
 #define  DATATYPE_NUMBER           'N'

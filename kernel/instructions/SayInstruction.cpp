@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              SayInstruction.c      */
+/* REXX Translator                                      SayInstruction.c      */
 /*                                                                            */
 /* Primitive Say Parse Class                                                  */
 /*                                                                            */
@@ -48,7 +48,6 @@
 #include "RexxActivation.hpp"
 #include "SayInstruction.hpp"
 
-#include "ASCIIDBCSStrings.hpp"
                                        /* current global settings           */
 extern ACTIVATION_SETTINGS *current_settings;
 extern RexxActivity *CurrentActivity;  /* current running activity          */
@@ -81,9 +80,6 @@ void  RexxInstructionSay::execute(
   else
                                        /* use a NULL string                 */
     value = (RexxString *)OREF_NULLSTRING;
-  if (DBCS_MODE) {                     /* need to use DBCS?                 */
-    ValidDBCS(value);                  /* validate the string               */
-  }
   context->traceResult(value);         /* trace the output value            */
                                        /* write out the line                */
   CurrentActivity->sayOutput(context, value);

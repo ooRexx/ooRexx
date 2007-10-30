@@ -164,7 +164,6 @@ typedef unsigned short int LENSTRING;  /* # of chars in a data block */
 
 #define  INCL_RXSYSEXIT                /* Include Subcommand interfac*/
 #include "rexx.h"
-#include "ASCIIDBCS.h"
 #include "stdlib.h"
 #include "string.h"
 

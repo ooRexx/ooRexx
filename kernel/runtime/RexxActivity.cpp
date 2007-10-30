@@ -174,7 +174,6 @@ extern RexxArray *ProcessLocalActs;
 extern SMTX rexx_kernel_semaphore;     /* global kernel semaphore           */
 extern SMTX rexx_resource_semaphore;   /* global kernel semaphore           */
 extern SMTX rexx_start_semaphore;      /* startup semaphore                 */
-extern BOOL SysDBCSSetup(PULONG, char *);
 
                                        /* current active activity           */
 //RexxActivity *CurrentActivity = OREF_NULL;
@@ -338,12 +337,6 @@ RexxActivity::RexxActivity(
     this->default_settings = defaultSettings;
                                        /* set up current usage set          */
     this->settings = &this->default_settings;
-                                       /* get the DBCS info                 */
-    this->DBCS_codepage = SysDBCSSetup(&this->codepage, this->DBCS_table);
-                                       /* copy the DBCS info                */
-    this->settings->DBCS_codepage = this->DBCS_codepage;
-    this->settings->codepage = this->codepage;
-    this->settings->DBCS_table = this->DBCS_table;
 
     if (_priority != NO_THREAD) {      /* need to create a thread?          */
 #ifdef FIXEDTIMERS
@@ -762,17 +755,13 @@ RexxString *RexxActivity::messageSubstitution(
   RexxString *back;                    /* back message part                 */
   RexxObject *value;                   /* substituted message value         */
   RexxString *stringVal;               /* converted substitution value      */
-  BOOL       isDBCS;
 
   substitutions = additional->size();  /* get the substitution count        */
   newmessage = OREF_NULLSTRING;        /* start with a null string          */
                                        /* loop through and substitute values*/
   for (i = 1; i <= substitutions; i++) {
                                        /* search for a substitution         */
-    isDBCS = current_settings->exmode; /* save EXMODE setting */
-    current_settings->exmode = FALSE;  /* don't use DBCSpos */
     subposition = message->pos(OREF_AND, 0);
-    current_settings->exmode = isDBCS; /* restore EXMODE setting */
     if (subposition == 0)              /* not found?                        */
       break;                           /* get outta here...                 */
                                        /* get the leading part              */
@@ -1149,10 +1138,6 @@ void RexxActivity::push(
     this->currentActivation = (RexxActivation *)new_activation;
                                        /* get the activation settings       */
     this->settings = ((RexxActivation *)new_activation)->getGlobalSettings();
-                                       /* copy the DBCS information         */
-    this->settings->codepage = this->codepage;
-    this->settings->DBCS_codepage = this->DBCS_codepage;
-    this->settings->DBCS_table = this->DBCS_table;
     if (CurrentActivity == this)       /* this the active activity?         */
                                        /* update the active values          */
       current_settings = this->settings;

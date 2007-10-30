@@ -278,10 +278,6 @@ typedef struct nestedinfo {
    LONG     nestedCount;               /* extent of the nesting             */
    nestedActivityInfo nestedInfo;      /* info saved and restored on calls  */
    jmp_buf  stringError;               /* string request error buffer       */
-
-   BOOL     DBCS_codepage;             /* DBCS characters possible          */
-   ULONG    codepage;                  /* current codepage id               */
-   char     DBCS_table[256];           /* DBCS first byte table             */
  };
 
  class RexxActivityClass : public RexxClass {
