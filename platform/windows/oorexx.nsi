@@ -112,7 +112,6 @@ Section "${LONGNAME} Core (required)" SecMain
   File "${BINDIR}\rxsubcom.exe"
   File "${BINDIR}\rxqueue.exe"
   File "${BINDIR}\rxapi.exe"
-  File "${BINDIR}\rxmigrate.exe"
   File "${BINDIR}\rexxhide.exe"
   File "${BINDIR}\rexxpaws.exe"
   ; Distribution DLLs...
