@@ -1101,8 +1101,11 @@ RexxClass  *RexxClass::subclass(
   if (meta_class == OREF_NULL)         /* if there is no metaclass specified*/
     meta_class = this->getMetaClass(); /* use the default metaclass         */
 
-  if (!meta_class->queryMeta())        /* check that it is a meta class     */
-    reportException(Error_Translation_bad_metaclass, meta_class);
+                                       /* check that it is a meta class     */
+  if (!meta_class->isInstanceOf(TheClassClass) || !meta_class->queryMeta())
+  {
+      reportException(Error_Translation_bad_metaclass, meta_class);
+  }
                                        /* get a copy of the metaclass class */
   new_class = (RexxClass *)save(meta_class->sendMessage(OREF_NEW, class_id));
   new_class->hashvalue = HASHOREF(new_class);
