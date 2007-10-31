@@ -500,9 +500,7 @@ RexxString *RexxString::strip(RexxString *option,
     if (Option != STRIP_TRAILING &&      /* must be a valid option            */
         Option != STRIP_LEADING &&
         Option != STRIP_BOTH )
-        report_exception2(Error_Incorrect_method_option,
-                          new_string("BLT", 3),
-                          option);
+        reportException(Error_Incorrect_method_option, "BLT", option);
     // get the strip character.  This is a phony default, as the
     // real default strips the entire set of recognized whitespace characters.
     RemoveChar = get_pad(stripchar, ' ', ARG_TWO);

@@ -165,7 +165,7 @@ RexxString * kernel_name (
   RexxString * stringValue;            /* string value                      */
   RexxString * result;                 /* result value                      */
 
-  stringValue = new_cstring(value);    /* get a string object               */
+  stringValue = new_string(value);    /* get a string object               */
   if (TheGlobalStrings == OREF_NULL)   /* no longer collecting strings?     */
     return stringValue;                /* just return the string            */
                                        /* check the global table first      */

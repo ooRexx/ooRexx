@@ -174,7 +174,7 @@ void REXXENTRY RexxCreateDirectory(const char * dirname)
   activity = TheActivityClass->getActivity();
 
                                        /* Create string object              */
-  index = new_cstring(dirname);
+  index = new_string(dirname);
 
                                        /* Create directory and hang of off  */
                                        /* local env. directory.             */
@@ -284,7 +284,7 @@ void REXXENTRY RexxRemoveDirectory(const char *dirname)
   activity = TheActivityClass->getActivity();
 
                                        /* Create string object              */
-  index = new_cstring(dirname);
+  index = new_string(dirname);
                                        /* Remove directory from Local env.  */
   ProcessLocalEnv->remove(index);
                                        /* release the kernel semaphore      */
@@ -315,7 +315,7 @@ BOOL REXXENTRY RexxDispose(const char *dirname, RexxObject *RexxObj)
   activity = TheActivityClass->getActivity();
 
                                        /* Create string object              */
-  index = new_cstring(dirname);
+  index = new_string(dirname);
                                        /* Get directory of locked objects   */
   locked_objects = (RexxDirectory *)ProcessLocalEnv->at(index);
                                        /* Remove object                     */
@@ -403,7 +403,7 @@ APIRET REXXENTRY RexxCopyMethod(const char *dirname, RexxObject * method, RexxOb
 
                                        /* Need to keep around for process   */
                                        /* duration.                         */
-      locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_cstring(dirname));
+      locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_string(dirname));
       locked_objects->put(*pmethod, new_string((const char *)pmethod, sizeof(RexxObject *)));
     } else
       rc = 1;
@@ -439,7 +439,7 @@ BOOL REXXENTRY RexxValidObject(const char *dirname, RexxObject * object)
   activity = TheActivityClass->getActivity();
 
                                        /* Get directory of locked objects   */
-  locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_cstring(dirname));
+  locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_string(dirname));
                                        /* See if object exists              */
   object = locked_objects->at(new_string((const char *)&object, sizeof(RexxObject *)));
                                        /* release the kernel semaphore      */
@@ -1127,9 +1127,9 @@ void translateSource(
 
   if (!fileFound)
                                        /* got an error here                 */
-    report_exception1(Error_Program_unreadable_notfound, inputName);
+    reportException(Error_Program_unreadable_notfound, inputName);
 
-  fullName = new_cstring(name);        /* get as a string value             */
+  fullName = new_string(name);        /* get as a string value             */
   newNativeAct->saveObject(fullName);  /* protect from garbage collect      */
                                        /* go translate the image            */
   method = TheMethodClass->newFile(fullName);
@@ -1225,7 +1225,7 @@ void CreateMethod(
  else {
                                        /* Need to keep around for process   */
                                        /* duration.                         */
-   locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_cstring(pRexxScriptArgs->index));
+   locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_string(pRexxScriptArgs->index));
    locked_objects->put(*pRexxScriptArgs->pmethod, new_string((const char *)pRexxScriptArgs->pmethod, sizeof(RexxObject *)));
  }
                                        /* finally, discard our activation   */
@@ -1273,7 +1273,7 @@ void RunMethod(
     new_arglist->put(new_string(rexxargument, arglength), 1);
   }
 
-  initial_address = new_cstring(envname);
+  initial_address = new_string(envname);
                                        /* protect from garbage collect      */
   newNativeAct->saveObject(initial_address);
 
@@ -1283,7 +1283,7 @@ void RunMethod(
                                        /* while not the list ender          */
     while (pRexxScriptArgs->exits[i].sysexit_code != RXENDLST) {
                                        /* convert to a string object        */
-      fullname = new_cstring(pRexxScriptArgs->exits[i].sysexit_name);
+      fullname = new_string(pRexxScriptArgs->exits[i].sysexit_name);
                                        /* protect from garbage collect      */
       newNativeAct->saveObject(fullname);
                                        /* enable this exit                  */
@@ -1300,7 +1300,7 @@ void RunMethod(
   if (pRexxScriptArgs->index != OREF_NULL && *pRexxScriptArgs->presult != OREF_NULL) {
                                        /* Need to keep around for process   */
                                        /* duration.                         */
-   locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_cstring(pRexxScriptArgs->index));
+   locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_string(pRexxScriptArgs->index));
    locked_objects->put(*pRexxScriptArgs->presult, new_string((const char *)pRexxScriptArgs->presult, sizeof(RexxObject *)));
  }
 
@@ -1327,7 +1327,7 @@ void LoadMethod(
  if (pRexxScriptArgs->index != NULLOBJ && *pRexxScriptArgs->pmethod != OREF_NULL) {
                                        /* Need to keep around for process   */
                                        /* duration.                         */
-   locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_cstring(pRexxScriptArgs->index));
+   locked_objects = (RexxDirectory *)ProcessLocalEnv->at(new_string(pRexxScriptArgs->index));
    locked_objects->put(*pRexxScriptArgs->pmethod, new_string((const char *)pRexxScriptArgs->pmethod, sizeof(RexxObject *)));
  }
 
@@ -1387,7 +1387,7 @@ void  SysRunProgram(
   self = (RexxStartInfo *)ControlInfo; /* address all of the arguments      */
   if (self->programname != NULL)       /* have an actual name?              */
                                        /* get string version of the name    */
-    name = new_cstring(self->programname);
+    name = new_string(self->programname);
   else
     name = OREF_NULLSTRING;            /* use an "unlocatable" name         */
   newNativeAct->saveObject(name);      /* protect from garbage collect      */
@@ -1398,7 +1398,7 @@ void  SysRunProgram(
                                        /* while not the list ender          */
       while (self->exits[i].sysexit_code != RXENDLST) {
                                        /* convert to a string object        */
-        fullname = new_cstring(self->exits[i].sysexit_name);
+        fullname = new_string(self->exits[i].sysexit_name);
                                        /* protect from garbage collect      */
         newNativeAct->saveObject(fullname);
                                        /* enable this exit                  */
@@ -1465,7 +1465,7 @@ void  SysRunProgram(
     fullname = SysResolveProgramName(name, OREF_NULL);
     if (fullname == OREF_NULL)         /* not found?                        */
                                        /* got an error here                 */
-      report_exception1(Error_Program_unreadable_notfound, name);
+      reportException(Error_Program_unreadable_notfound, name);
     newNativeAct->saveObject(fullname);/* protect from garbage collect      */
                                        /* try to restore saved image        */
     method = SysRestoreProgram(fullname);
@@ -1481,18 +1481,18 @@ void  SysRunProgram(
     method = process_instore(self->instore, name);
     if (method == OREF_NULL)           /* couldn't get it?                  */
                                        /* got an error here                 */
-      report_exception1(Error_Program_unreadable_name, name);
+      reportException(Error_Program_unreadable_name, name);
     fullname = name;                   /* copy the name                     */
   }
   if (self->envname != NULL)           /* have an address override?         */
                                        /* use the provided one              */
-    initial_address = new_cstring(self->envname);
+    initial_address = new_string(self->envname);
   else {
                                        /* check for a file extension        */
     file_extension = SysFileExtension(fullname->getStringData());
     if (file_extension != NULL)      /* have a real one?                  */
                                        /* use extension as the environment  */
-      initial_address = new_cstring(file_extension + 1);
+      initial_address = new_string(file_extension + 1);
     else
                                        /* use system defined default        */
       initial_address = OREF_INITIALADDRESS;

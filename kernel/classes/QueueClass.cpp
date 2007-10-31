@@ -111,20 +111,20 @@ LISTENTRY *RexxQueue::locateEntry(RexxObject *_index, RexxObject *position)
     // we must have an index
     if (_index == OREF_NULL)
     {
-        report_exception1(Error_Incorrect_method_noarg, position);
+        reportException(Error_Incorrect_method_noarg, position);
     }
 
     // and it must be a valid whole number
     RexxInteger *integerIndex = (RexxInteger *)REQUEST_INTEGER(_index);
     if (integerIndex == TheNilObject)
     {
-        report_exception1(Error_Incorrect_method_queue_index, _index);
+        reportException(Error_Incorrect_method_queue_index, _index);
     }
     // and positive
     wholenumber_t item_index = integerIndex->wholeNumber();
     if (item_index < 1)
     {
-        report_exception1(Error_Incorrect_method_queue_index, _index);
+        reportException(Error_Incorrect_method_queue_index, _index);
     }
 
     // we need to iterate through the entries to locate this
@@ -156,7 +156,7 @@ RexxObject *RexxQueue::put(
   LISTENTRY *list_index = this->locateEntry(_index, IntegerTwo);
   if (list_index == NULL)              /* not a valid index?                */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_queue_index, _index);
+    reportException(Error_Incorrect_method_queue_index, _index);
   OrefSet(this->table, list_index->value, _value);
   return OREF_NULL;                    /* return nothing at all             */
 }
@@ -212,7 +212,7 @@ RexxObject *RexxQueue::insert(RexxObject *_value, RexxObject *_index)
     element = this->locateEntry(_index, IntegerTwo);
     if (element == NULL)               /* index doesn't exist?              */
                                        /* raise an error                    */
-      report_exception1(Error_Incorrect_method_queue_index, _index);
+      reportException(Error_Incorrect_method_queue_index, _index);
   }
   this->count++;                       /* increase our count                */
                                        /* set the value                     */
@@ -399,7 +399,7 @@ RexxObject *RexxQueue::next(
     element = this->locateEntry(_index, (RexxObject *)IntegerOne);
     if (element == NULL)                 /* not a valid index?                */
     {
-        report_exception1(Error_Incorrect_method_queue_index, _index);
+        reportException(Error_Incorrect_method_queue_index, _index);
     }
 
     if (element->next == LIST_END)     /* no next item?                     */
@@ -426,7 +426,7 @@ RexxObject *RexxQueue::previous(
   element = this->locateEntry(_index, (RexxObject *)IntegerOne);
   if (element == NULL)                 /* not a valid index?                */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_queue_index, _index);
+    reportException(Error_Incorrect_method_queue_index, _index);
 
   if (element->previous == LIST_END)   /* no previous item?                 */
     return TheNilObject;               /* just return .nil                  */
@@ -502,7 +502,7 @@ RexxQueue *RexxQueue::ofRexx(
       if (item == OREF_NULL) {         /* omitted item?                     */
         discard(newQueue);             /* release the new list              */
                                        /* raise an error on this            */
-        report_exception1(Error_Incorrect_method_noarg, new_integer(i + 1));
+        reportException(Error_Incorrect_method_noarg, i + 1);
       }
                                        /* add this to the list end          */
       newQueue->addLast(item);
@@ -518,7 +518,7 @@ RexxQueue *RexxQueue::ofRexx(
       if (item == OREF_NULL) {         /* omitted item?                     */
         discard(newQueue);             /* release the new list              */
                                        /* raise an error on this            */
-        report_exception1(Error_Incorrect_method_noarg, new_integer(i + 1));
+        reportException(Error_Incorrect_method_noarg, i + 1);
       }
                                        /* add this to the list end          */
       send_message1(newQueue, OREF_QUEUENAME, item);

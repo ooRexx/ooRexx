@@ -194,7 +194,7 @@ RexxString * LocateProgram(
   RequestKernelAccess(activity);       /* get the semaphore back            */
   if (Found)                           /* got one?                          */
                        /* get as a string object            */
-    Result = new_cstring(FullName);
+    Result = new_string(FullName);
   else
     Result = OREF_NULL;                /* this wasn't found                 */
   return Result;                       /* return the name                   */
@@ -435,7 +435,7 @@ RexxString *SysQualifyFileSystemName(
                        /* uppercase this                    */
    strupr(stream_info.full_name_parameter);
                        /* get the qualified file name       */
-   return new_cstring(stream_info.full_name_parameter);
+   return new_string(stream_info.full_name_parameter);
 }
 
 

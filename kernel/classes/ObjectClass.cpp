@@ -243,7 +243,7 @@ RexxMethod *RexxObject::instanceMethod(RexxString  *method_name)
     // this is an error if it doesn't exist
     if (method_object == OREF_NULL)
     {
-        report_exception2(Error_No_method_name, this, method_name);
+        reportException(Error_No_method_name, this, method_name);
     }
     return method_object;    // got a live one
 }
@@ -422,7 +422,7 @@ BOOL RexxInternalObject::truthValue(
 /******************************************************************************/
 {
                                        /* report the error                  */
-  report_exception1(errorCode, OREF_NULLSTRING);
+  reportException(errorCode, OREF_NULLSTRING);
   return FALSE;                        /* need a return value               */
 }
 
@@ -807,7 +807,7 @@ RexxObject * RexxObject::processUnknown(
   if (method_save == TheNilObject)     /* "unknown" method exists?          */
                                        /* no unknown method - try to raise  */
                                        /* a NOMETHOD condition, and if that */
-    report_nomethod(messageName, this);/* fails, it is an error message     */
+    reportNomethod(messageName, this); /* fails, it is an error message     */
   argumentArray = new_array(count);    /* get an array for the arguments    */
   for (i = 1; i <= count; i++)         /* copy the arguments into an array  */
     argumentArray->put(arguments[i - 1], i);
@@ -1116,7 +1116,7 @@ RexxString *RexxObject::requiredString(
                                        /* didn't convert?                   */
   if (string_value == (RexxString *)TheNilObject)
                                        /* this is an error                  */
-    report_exception1(Error_Incorrect_method_nostring, new_integer(position));
+    reportException(Error_Incorrect_method_nostring, position);
   return string_value;                 /* return the converted form         */
 }
 
@@ -1176,7 +1176,7 @@ RexxInteger *RexxObject::requiredInteger(
                                        /* didn't convert well?              */
   if (result == (RexxInteger *)TheNilObject)
                                        /* raise an error                    */
-    report_exception2(Error_Incorrect_method_whole, new_integer(position), this);
+    reportException(Error_Incorrect_method_whole, position, this);
   return result;                       /* return the new integer            */
 }
 
@@ -1213,7 +1213,7 @@ LONG  RexxObject::requiredLong(
     result = this->requiredString(position)->longValue(precision);
   if (result == (wholenumber_t)NO_LONG)/* didn't convert well?              */
                                        /* raise an error                    */
-    report_exception2(Error_Incorrect_method_whole, new_integer(position), this);
+    reportException(Error_Incorrect_method_whole, position, this);
   return result;                       /* return the result                 */
 }
 
@@ -1231,7 +1231,7 @@ LONG  RexxObject::requiredPositive(
   result = this->requiredLong(position, precision);
   if (result <= 0)                     /* non-positive number?              */
                                        /* raise the error                   */
-    report_exception2(Error_Incorrect_method_positive, new_integer(position), this);
+    reportException(Error_Incorrect_method_positive, position, this);
   return result;                       /* return the result                 */
 }
 
@@ -1249,7 +1249,7 @@ LONG  RexxObject::requiredNonNegative(
   result = this->requiredLong(position, precision);
   if (result < 0)                      /* negative number?                  */
                                        /* raise the error                   */
-    report_exception2(Error_Incorrect_method_nonnegative, new_integer(position), this);
+    reportException(Error_Incorrect_method_nonnegative, position, this);
   return result;                       /* return the result                 */
 }
 
@@ -1327,7 +1327,7 @@ RexxObject  *RexxObject::getAttribute()
 
 RexxObject  *RexxObject::abstractMethod(RexxObject **args, size_t count)
 {
-    report_exception1(Error_Incorrect_method_abstract, last_msgname());
+    reportException(Error_Incorrect_method_abstract, last_msgname());
     return OREF_NULL;
 }
 
@@ -1405,7 +1405,7 @@ RexxObject  *RexxObject::setMethod(
       // "FLOAT" makes option a NULL pointer, causing the old default behaviour on setMethod...
       option = OREF_NULL;
     else
-      report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_SETMETHOD), IntegerThree, new_cstring("\"FLOAT\", \"OBJECT\""), option);
+      reportException(Error_Incorrect_call_list, CHAR_SETMETHOD, IntegerThree, "\"FLOAT\", \"OBJECT\"", option);
   }
 
   if (methobj == OREF_NULL)            /* we weren't passed a method,       */
@@ -1477,8 +1477,7 @@ RexxMessage *RexxObject::start(
   RexxString  *newMsgName;             /* msgname to be sent                */
 
 #ifdef NOTHREADSUPPORT
-   report_exception1(Error_Execution_no_concurrency,
-                  new_cstring("Concurrency not supported"));
+   reportException(Error_Execution_no_concurrency);
 #else
 
   if (argCount < 1 )                   /* no arguments?                     */
@@ -1513,13 +1512,13 @@ RexxMessage *RexxObject::start(
                                        /* didn't get two arguments?         */
     if (messageArray->getDimension() != 1 || messageArray->size() != 2)
                                        /* raise an error                    */
-      report_exception(Error_Incorrect_method_message);
+      reportException(Error_Incorrect_method_message);
                                        /* get the message as a string       */
     newMsgName = REQUIRED_STRING(messageArray->get(1), ARG_ONE);
                                        /* Was starting scope omitted ?      */
     if (OREF_NULL == messageArray->get(2))
                                        /* Yes, this is an error, report it. */
-      report_exception1(Error_Incorrect_method_noarg, IntegerTwo);
+      reportException(Error_Incorrect_method_noarg, IntegerTwo);
                                        /* get the top activation            */
     activation = CurrentActivity->current();
                                        /* have an activation?               */
@@ -1528,11 +1527,11 @@ RexxMessage *RexxObject::start(
       sender = (RexxObject *)activation->u_receiver;
       if (sender != this)              /* not the same receiver?            */
                                        /* this is an error                  */
-         report_exception(Error_Execution_super);
+         reportException(Error_Execution_super);
     }
     else
                                        /* this is an error                  */
-      report_exception(Error_Execution_super);
+      reportException(Error_Execution_super);
   }
   else {                               /* not an array as message.          */
                                        /* force to a string value           */
@@ -1632,7 +1631,7 @@ RexxObject  *RexxObject::run(
         if (argCount < 3)              /* not enough arguments?             */
           missing_argument(ARG_THREE); /* this is an error                  */
         if (argCount > 3)              /* too many arguments?               */
-         report_exception1(Error_Incorrect_method_maxarg, IntegerThree);
+         reportException(Error_Incorrect_method_maxarg, IntegerThree);
                                        /* now get the array                 */
         arglist = (RexxArray *)arguments[2];
                                        /* force to array form               */
@@ -1640,7 +1639,7 @@ RexxObject  *RexxObject::run(
                                        /* not an array?                     */
         if (arglist == TheNilObject || arglist->getDimension() != 1)
                                        /* raise an error                    */
-          report_exception1(Error_Incorrect_method_noarray, arguments[2]);
+          reportException(Error_Incorrect_method_noarray, arguments[2]);
         // request array may create a new one...keep it safe
         save(arglist);
         /* grab the argument information */
@@ -1656,7 +1655,7 @@ RexxObject  *RexxObject::run(
 
       default:
                                        /* invalid option                    */
-        report_exception2(Error_Incorrect_method_option, new_cstring("AI"), option);
+        reportException(Error_Incorrect_method_option, "AI", option);
         break;
     }
   }
@@ -1724,7 +1723,7 @@ RexxObject  *RexxObject::defMethod(
       if (!stricmp("OBJECT",option->getStringData()))
         targetClass = this->behaviour->getCreateClass();
       else
-        report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_SETMETHOD), IntegerThree, new_cstring("\"FLOAT\", \"OBJECT\""), option);
+        reportException(Error_Incorrect_call_list, CHAR_SETMETHOD, IntegerThree, "\"FLOAT\", \"OBJECT\"", option);
     }
                                        /* set a new scope on this           */
     methcopy = methobj->newScope(targetClass);
@@ -1945,7 +1944,7 @@ RexxObject *RexxObject::newRexx(RexxObject **arguments, size_t argCount)
   result = (RexxObject *)this->messageSend(OREF_##message, 1, &operand); \
   if (result == OREF_NULL)             /* in an expression and need a result*/ \
                                        /* need to raise an exception        */ \
-    report_exception1(Error_No_result_object_message, OREF_##message); \
+    reportException(Error_No_result_object_message, OREF_##message); \
   return result;                       /* return the final result           */ \
 }\
 
@@ -1958,7 +1957,7 @@ RexxObject *RexxObject::newRexx(RexxObject **arguments, size_t argCount)
   result = (RexxObject *)this->messageSend(OREF_##message, operand == OREF_NULL ? 0 : 1, &operand); \
   if (result == OREF_NULL)             /* in an expression and need a result*/ \
                                        /* need to raise an exception        */ \
-    report_exception1(Error_No_result_object_message, OREF_##message); \
+    reportException(Error_No_result_object_message, OREF_##message); \
   return result;                       /* return the final result           */ \
 }\
 

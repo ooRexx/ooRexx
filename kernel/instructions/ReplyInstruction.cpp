@@ -66,14 +66,13 @@ void RexxInstructionReply::execute(
   RexxObject *result;                  /* expression result                 */
 
 #ifdef NOTHREADSUPPORT
-   report_exception1(Error_Execution_no_concurrency,
-                  new_cstring("Concurrency not supported"));
+   reportException(Error_Execution_no_concurrency);
 #else
 
   context->traceInstruction(this);     /* trace if necessary                */
   if (!context->inMethod())            /* is this a method clause?          */
                                        /* raise an error                    */
-    report_exception(Error_Translation_reply);
+    reportException(Error_Translation_reply);
   if (this->expression != OREF_NULL) { /* given an expression value?        */
                                        /* evaluate the expression           */
     result = this->expression->evaluate(context, stack);

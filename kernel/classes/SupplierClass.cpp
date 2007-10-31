@@ -124,7 +124,7 @@ RexxObject  *RexxSupplier::next()
                                        /* already gone past the end?        */
   if (this->position > this->values->size())
                                        /* oops, give an error               */
-    report_exception(Error_Incorrect_method_supplier);
+    reportException(Error_Incorrect_method_supplier);
   this->position++;                    /* step the position pointer         */
   return OREF_NULL;                    /* this returns nothing              */
 }
@@ -139,7 +139,7 @@ RexxObject  *RexxSupplier::value()
                                        /* already gone past the end?        */
   if (this->position > this->values->size())
                                        /* oops, give an error               */
-    report_exception(Error_Incorrect_method_supplier);
+    reportException(Error_Incorrect_method_supplier);
                                        /* get the value                     */
   _value = this->values->get(this->position);
   if (_value == OREF_NULL)              /* returned nothing?                 */
@@ -157,7 +157,7 @@ RexxObject  *RexxSupplier::index()
                                        /* already gone past the end?        */
   if (this->position > this->values->size())
                                        /* oops, give an error               */
-    report_exception(Error_Incorrect_method_supplier);
+    reportException(Error_Incorrect_method_supplier);
   if (this->indexes == OREF_NULL)      /* no index array given?             */
                                        /* just return current position      */
     return (RexxObject *)new_integer(this->position);
@@ -211,11 +211,11 @@ RexxObject *RexxSupplier::initRexx(RexxArray *_values, RexxArray *_indexes)
     RexxArray *new_indexes = REQUEST_ARRAY(_indexes);
     if (new_values == (RexxArray  *)TheNilObject || new_values->getDimension() != 1)
     {
-        report_exception1(Error_Incorrect_method_noarray, values);
+        reportException(Error_Incorrect_method_noarray, values);
     }
     if (new_indexes == (RexxArray  *)TheNilObject || new_indexes->getDimension() != 1)
     {
-        report_exception1(Error_Incorrect_method_noarray, indexes);
+        reportException(Error_Incorrect_method_noarray, indexes);
     }
 
     OrefSet(this, this->values, new_values);

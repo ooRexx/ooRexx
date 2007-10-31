@@ -184,10 +184,10 @@ int ValidateSet(
   if (*String == ch_SPACE)             /* if no leading blank               */
     if (Hex)                           /* hex version?                      */
                                        /* raise the hex message             */
-      report_exception1(Error_Incorrect_method_hexblank, IntegerOne);
+      reportException(Error_Incorrect_method_hexblank, IntegerOne);
     else
                                        /* need the binary version           */
-      report_exception1(Error_Incorrect_method_binblank, IntegerOne);
+      reportException(Error_Incorrect_method_binblank, IntegerOne);
   SpaceFound = 0;                      /* set initial space flag            */
   Count = 0;                           /* start count with zero             */
   Current = String;                    /* point to start                    */
@@ -209,19 +209,19 @@ int ValidateSet(
         else if (Residue != (Count % Modulus)) {
           if (Hex)                     /* hex version?                      */
                                        /* raise the hex message             */
-            report_exception1(Error_Incorrect_method_hexblank, new_integer(SpaceLocation - String));
+            reportException(Error_Incorrect_method_hexblank, SpaceLocation - String);
           else
                                        /* need the binary version           */
-            report_exception1(Error_Incorrect_method_binblank, new_integer(SpaceLocation - String));
+            reportException(Error_Incorrect_method_binblank, SpaceLocation - String);
         }
       }
       else {
 
         if (Hex)                       /* hex version?                      */
                                        /* raise the hex message             */
-          report_exception1(Error_Incorrect_method_invhex, new_string((char *)&c, 1));
+          reportException(Error_Incorrect_method_invhex, new_string((char *)&c, 1));
         else
-          report_exception1(Error_Incorrect_method_invbin, new_string((char *)&c, 1));
+          reportException(Error_Incorrect_method_invbin, new_string((char *)&c, 1));
       }
     }
   }
@@ -229,10 +229,10 @@ int ValidateSet(
   if (c == ch_SPACE || SpaceFound && (Count % Modulus) != Residue) {
     if (Hex)                           /* hex version?                      */
                                        /* raise the hex message             */
-      report_exception1(Error_Incorrect_method_hexblank, new_integer(SpaceLocation - String));
+      reportException(Error_Incorrect_method_hexblank, SpaceLocation - String);
     else
                                        /* need the binary version           */
-      report_exception1(Error_Incorrect_method_binblank, new_integer(SpaceLocation - String));
+      reportException(Error_Incorrect_method_binblank, SpaceLocation - String);
   }
   return Count;                        /* return count of chars             */
 }
@@ -434,7 +434,7 @@ RexxString *RexxString::decodeBase64()
     }
     if (inputLength % 4 > 0) {
         /* the input string is an invalid length */
-        report_exception(Error_Incorrect_method_invbase64);
+        reportException(Error_Incorrect_method_invbase64);
     }
     const char *source = this->getStringData();
     /* figure out the output string length */
@@ -471,7 +471,7 @@ RexxString *RexxString::decodeBase64()
                 }
                 else {
                     /* we found an invalid char in the middle of the input string */
-                    report_exception(Error_Incorrect_method_invbase64);
+                    reportException(Error_Incorrect_method_invbase64);
                 }
             }
             /* j is now the 6-bit value we need for building our output string */
@@ -556,7 +556,7 @@ RexxString *RexxString::d2c(RexxInteger *_length)
   numberstring = this->numberString();
   if (numberstring == OREF_NULL)       /* not a valid number?               */
                                        /* report this                       */
-    report_exception1(Error_Incorrect_method_d2c, this);
+    reportException(Error_Incorrect_method_d2c, this);
                                        /* format as a string value          */
   return numberstring->d2xD2c(_length, TRUE);
 }
@@ -572,7 +572,7 @@ RexxString *RexxString::d2x(RexxInteger *_length)
   numberstring = this->numberString();
   if (numberstring == OREF_NULL)       /* not a valid number?               */
                                        /* report this                       */
-    report_exception1(Error_Incorrect_method_d2x, this);
+    reportException(Error_Incorrect_method_d2x, this);
                                        /* format as a string value          */
   return numberstring->d2xD2c(_length, FALSE);
 }
@@ -751,9 +751,9 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
     DecLength = (Accumulator - HighDigit);
     if (DecLength > CurrentDigits) {   /* grown too long?                   */
       if (type == TRUE)                /* c2d version?                      */
-        report_exception1(Error_Incorrect_method_c2dbig, new_integer(CurrentDigits));
+        reportException(Error_Incorrect_method_c2dbig, CurrentDigits);
       else                             /* this is the x2d function          */
-        report_exception1(Error_Incorrect_method_x2dbig, new_integer(CurrentDigits));
+        reportException(Error_Incorrect_method_x2dbig, CurrentDigits);
     }
                                        /* add high order nibble             */
     HighDigit = AddToBaseTen(ch & 0x0f, Accumulator, HighDigit);
@@ -764,9 +764,9 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
     DecLength = (Accumulator - HighDigit);
     if (DecLength > CurrentDigits) {   /* grown too long?                   */
       if (type == TRUE)                /* c2d version?                      */
-        report_exception1(Error_Incorrect_method_c2dbig, new_integer(CurrentDigits));
+        reportException(Error_Incorrect_method_c2dbig, CurrentDigits);
       else                             /* this is the x2d function          */
-        report_exception1(Error_Incorrect_method_x2dbig, new_integer(CurrentDigits));
+        reportException(Error_Incorrect_method_x2dbig, CurrentDigits);
     }
   }
                                        /* get accumulator length            */

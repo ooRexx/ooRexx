@@ -60,30 +60,6 @@ void logic_error (const char *desc)
   exit(RC_LOGIC_ERROR);
 }
 
-void report_halt (                     /* report a halt condition           */
-    RexxString *description )          /* condition descriptive information */
-/******************************************************************************/
-/* Function:   Report a HALT condition, raising an error if not trapped.      */
-/******************************************************************************/
-{
-                                       /* process as common condition       */
-  if (!CurrentActivity->raiseCondition(OREF_HALT, OREF_NULL, description, OREF_NULL, OREF_NULL, OREF_NULL))
-                                       /* raise as a syntax error           */
-    report_exception1(Error_Program_interrupted_condition, OREF_HALT);
-}
-
-void report_nomethod(                  /* report a NOMETHOD condition       */
-    RexxString *message,               /* message that wasn't found         */
-    RexxObject *receiver )             /* object that received the message  */
-/******************************************************************************/
-/* Function:   Report a NOMETHOD condition, raising an error if not trapped.  */
-/******************************************************************************/
-{
-                                       /* process as common condition       */
-  if (!CurrentActivity->raiseCondition(OREF_NOMETHOD, OREF_NULL, message, receiver, OREF_NULL, OREF_NULL))
-                                       /* raise as a syntax error           */
-    report_exception2(Error_No_method_name, receiver, message);
-}
 
 int message_number(
     RexxString *errorcode)             /* REXX error code as string         */
@@ -107,7 +83,7 @@ int message_number(
                                        /* and within range                  */
   if (primary == (int)NO_LONG || primary < 1 || primary >= 100000) {
                                        /* Nope raise an error.              */
-    report_exception(Error_Expression_result_raise);
+    reportException(Error_Expression_result_raise);
   }
 
   if (*decimalPoint) {                 /* Was there a decimal point specified?*/
@@ -116,7 +92,7 @@ int message_number(
                                        /* is the subcode invalid or too big?*/
     if (secondary == (int)NO_LONG || secondary < 0  || secondary >= 1000) {
                                        /* Yes, raise an error.              */
-      report_exception(Error_Expression_result_raise);
+      reportException(Error_Expression_result_raise);
     }
   }
   else {
@@ -166,7 +142,7 @@ void missing_argument(
 /******************************************************************************/
 {
                                        /* just raise the error              */
-  report_exception1(Error_Incorrect_method_noarg, new_integer(argumentPosition));
+  reportException(Error_Incorrect_method_noarg, argumentPosition);
 }
 
 int  CaselessCompare(                  /* do a caseless memory comparison   */

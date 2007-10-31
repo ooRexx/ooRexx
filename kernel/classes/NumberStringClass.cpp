@@ -320,7 +320,7 @@ RexxString *RexxNumberString::stringValue()
                                                /*is number just flat out too big?   */
             if ((( ExpValue + (int)LenValue - 1) > MAXNUM) ||
                 (ExpValue < (-MAXNUM)) )       /* Yes, report Overflow error.       */
-                report_exception1(Error_Conversion_operator, this);
+                reportException(Error_Conversion_operator, this);
 
 
             ExpFactor = 0;                     /* number not eponential yet..       */
@@ -342,10 +342,10 @@ RexxString *RexxNumberString::stringValue()
                 {        /* is adjusted number too big?       */
                     if (temp > MAXNUM)              /* did it overflow?                  */
                                                     /* Yes, report overflow error.       */
-                        report_exception2(Error_Overflow_expoverflow, new_integer(temp), IntegerNine);
+                        reportException(Error_Overflow_expoverflow, temp, IntegerNine);
                     else
                         /* Actually an underflow error.      */
-                        report_exception2(Error_Overflow_expunderflow, new_integer(temp), IntegerNine);
+                        reportException(Error_Overflow_expunderflow, temp, IntegerNine);
                 }
                 ExpValue -= temp;                 /* adjust the exponent               */
                 if ( temp != 0 )
@@ -900,7 +900,7 @@ BOOL  RexxNumberString::truthValue(
     return FALSE;                      /* done quickly                      */
                                        /* not exactly 1?                    */
   else if (!(this->sign == 1 && this->exp == 0 && this->length == 1L && *(this->number) == 1))
-    report_exception1(errorcode, this);/* report the error                  */
+    reportException(errorcode, this);/* report the error                  */
   return TRUE;                         /* this is TRUE                      */
 }
 
@@ -1247,7 +1247,7 @@ RexxString *RexxNumberString::formatInternal(
         defaultexpsize = TRUE;         /* default exponent size on          */
       }
       if (exponentsize > mathexp)      /* not enough room?                  */
-        report_exception2(Error_Incorrect_method_exponent_oversize, original, new_integer(mathexp));
+        reportException(Error_Incorrect_method_exponent_oversize, (RexxObject *)original, mathexp);
     }
   }
 
@@ -1315,7 +1315,7 @@ RexxString *RexxNumberString::formatInternal(
             if (mathexp == (size_t)-1) /* default exponent size?            */
               mathexp = exponentsize;  /* use actual length                 */
             if (exponentsize > mathexp)/* not enough room?                  */
-               report_exception2(Error_Incorrect_method_exponent_oversize, original, new_integer(mathexp));
+               reportException(Error_Incorrect_method_exponent_oversize, original, mathexp);
           }
         }
       }
@@ -1350,7 +1350,7 @@ RexxString *RexxNumberString::formatInternal(
     }
     if ((long)integers < temp)         /* not enough room?                  */
                                        /* this is an error                  */
-      report_exception2(Error_Incorrect_method_before_oversize, original, new_integer(reqIntegers));
+      reportException(Error_Incorrect_method_before_oversize, original, reqIntegers);
   }
 
   size = 0;                            /* start with a null string          */
@@ -2142,7 +2142,7 @@ RexxNumberString *RexxNumberString::plus(RexxObject *right)
     rightNumber = right->numberString();
     if (rightNumber == OREF_NULL)      /* is the operand numeric?           */
                                        /* nope, this is an error            */
-      report_exception1(Error_Conversion_operator, right);
+      reportException(Error_Conversion_operator, right);
                                        /* call addsub to do computation     */
     result = this->addSub(rightNumber, OT_PLUS, number_digits());
   }
@@ -2174,7 +2174,7 @@ RexxNumberString *RexxNumberString::minus(RexxObject *right)
     rightNumber = right->numberString();
     if (rightNumber == OREF_NULL)      /* is the operand numeric?           */
                                        /* nope, this is an error            */
-      report_exception1(Error_Conversion_operator, right);
+      reportException(Error_Conversion_operator, right);
                                        /* call addsub to do computation     */
     result = this->addSub(rightNumber, OT_MINUS, number_digits());
   }
@@ -2201,7 +2201,7 @@ RexxNumberString *RexxNumberString::multiply(RexxObject *right)
   rightNumber = right->numberString();
   if (rightNumber == OREF_NULL)        /* is the operand numeric?           */
                                        /* nope, this is an error            */
-    report_exception1(Error_Conversion_operator, right);
+    reportException(Error_Conversion_operator, right);
   return this->Multiply(rightNumber);  /* go do the multiply                */
 }
 
@@ -2219,7 +2219,7 @@ RexxNumberString *RexxNumberString::divide(RexxObject *right)
   rightNumber = right->numberString();
   if (rightNumber == OREF_NULL)        /* is the operand numeric?           */
                                        /* nope, this is an error            */
-    report_exception1(Error_Conversion_operator, right);
+    reportException(Error_Conversion_operator, right);
                                        /* go do the division                */
   return this->Division(rightNumber, OT_DIVIDE);
 }
@@ -2237,7 +2237,7 @@ RexxNumberString *RexxNumberString::integerDivide(RexxObject *right)
   rightNumber = right->numberString();
   if (rightNumber == OREF_NULL)        /* is the operand numeric?           */
                                        /* nope, this is an error            */
-    report_exception1(Error_Conversion_operator, right);
+    reportException(Error_Conversion_operator, right);
                                        /* go do the division                */
   return this->Division(rightNumber, OT_INT_DIVIDE);
 }
@@ -2256,7 +2256,7 @@ RexxNumberString *RexxNumberString::remainder(RexxObject *right)
   rightNumber = right->numberString();
   if (rightNumber == OREF_NULL)        /* is the operand numeric?           */
                                        /* nope, this is an error            */
-    report_exception1(Error_Conversion_operator, right);
+    reportException(Error_Conversion_operator, right);
                                        /* go do the division                */
   return this->Division(rightNumber, OT_REMAINDER);
 }
@@ -2444,9 +2444,9 @@ RexxString *RexxNumberString::d2xD2c(
   if (this->exp + this->length > CurrentDigits) {
     if (type == TRUE)                  /* d2c form?                         */
                                        /* use that message                  */
-      report_exception1(Error_Incorrect_method_d2c, this);
+      reportException(Error_Incorrect_method_d2c, this);
     else                               /* use d2x form                      */
-      report_exception1(Error_Incorrect_method_d2x, this);
+      reportException(Error_Incorrect_method_d2x, this);
   }
   else if (this->exp < 0) {            /* may have trailing zeros           */
                                        /* point to the decimal part         */
@@ -2465,9 +2465,9 @@ RexxString *RexxNumberString::d2xD2c(
         }
         if (type == TRUE)              /* d2c form?                         */
                                        /* use that message                  */
-          report_exception1(Error_Incorrect_method_d2c, this);
+          reportException(Error_Incorrect_method_d2c, this);
         else                           /* use d2x form                      */
-          report_exception1(Error_Incorrect_method_d2x, this);
+          reportException(Error_Incorrect_method_d2x, this);
       }
       TempPtr++;                       /* step the pointer                  */
     }
@@ -2477,7 +2477,7 @@ RexxString *RexxNumberString::d2xD2c(
                                        /* negative without a size           */
   if (this->sign < 0 && ResultSize == -1)
                                        /* this is an error                  */
-    report_exception(Error_Incorrect_method_d2xd2c);
+    reportException(Error_Incorrect_method_d2xd2c);
   if (ResultSize == -1)                /* using default size?               */
                                        /* allocate buffer based on digits   */
     BufferLength = CurrentDigits + OVERFLOWSPACE;

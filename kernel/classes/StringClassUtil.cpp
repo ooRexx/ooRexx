@@ -72,7 +72,7 @@ size_t get_length(
    value = REQUIRED_LONG(argument, DEFAULT_DIGITS, position);
  if (value < 0)                        /* not a good length argument?       */
                                        /* this is an error                  */
-   report_exception1(Error_Incorrect_method_length, argument);
+   reportException(Error_Incorrect_method_length, argument);
  return (size_t)value;                 /* return converted value            */
 }
 
@@ -97,7 +97,7 @@ size_t get_position(
    value = REQUIRED_LONG(argument, DEFAULT_DIGITS, position);
  if (value <= 0)                       /* not a good position argument?     */
                                        /* this is an error                  */
-   report_exception1(Error_Incorrect_method_position, argument);
+   reportException(Error_Incorrect_method_position, argument);
  return (size_t)value;                 /* return converted value            */
 }
 
@@ -117,7 +117,7 @@ char get_pad_character(
  if (parameter->getLength() != 1)
                                        /* argument not good, so raise an    */
                                        /*error                              */
-   report_exception1(Error_Incorrect_method_pad, argument);
+   reportException(Error_Incorrect_method_pad, argument);
                                        /* yes, return the character.        */
  return parameter->getChar(0);
 }

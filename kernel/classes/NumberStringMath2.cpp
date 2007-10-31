@@ -298,7 +298,7 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, UINT DivOP
 
  if (!other->sign)     {               /* is the right number zero?         */
                                        /* yes, divide by Zero.              */
-  report_exception(Error_Overflow_zero);
+  reportException(Error_Overflow_zero);
  }
  else if (!this->sign) {               /* is left number Zero?              */
                                        /*  yes, just return a zero.         */
@@ -523,9 +523,9 @@ PowerDivideDone:                       /* done doing actual divide now do   */
       (CalcExp < 0  && (size_t)labs(CalcExp) > resultDigits))) {
                                        /* yes, report the error and get out.*/
     if (DivOP == OT_REMAINDER)         /* remainder operation?              */
-      report_exception(Error_Invalid_whole_number_rem);
+      reportException(Error_Invalid_whole_number_rem);
     else
-      report_exception(Error_Invalid_whole_number_intdiv);
+      reportException(Error_Invalid_whole_number_intdiv);
   }
   if (DivOP == OT_REMAINDER) {         /* Are we doing //                   */
    if (resultDigits) {                 /* any numbers in result?            */
@@ -615,7 +615,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
                                        /* get the LONG value                */
   powerValue = REQUEST_LONG(PowerObj, NO_LONG);
   if (powerValue == (int)NO_LONG)      /*  valid?  no report the exception  */
-     report_exception1(Error_Invalid_whole_number_power, PowerObj);
+     reportException(Error_Invalid_whole_number_power, PowerObj);
 
   if (powerValue < 0) {                /* is the power negative?            */
    NegativePower = TRUE;               /*  yes, mark for later.             */
@@ -631,7 +631,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
   if (left->sign == 0) {               /* Is the base number Zero?          */
    if (NegativePower)                  /* was power negative?               */
                                        /*  this is a no no, report error.   */
-    report_exception(Error_Overflow_power);
+    reportException(Error_Overflow_power);
    else if (powerValue == 0)           /* Is power value zero?              */
                                        /*  yes, return value of one         */
     return (RexxNumberString *)IntegerOne;
@@ -643,11 +643,11 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
   if ((HighBits(labs((int)(left->exp + left->length - 1))) +
        HighBits(labs(powerValue)) + 1) > LONGBITS )
                                        /* yes, report error and return.     */
-   report_exception3(Error_Overflow_overflow, this, (RexxObject *)OREF_POWER, PowerObj);
+   reportException(Error_Overflow_overflow, this, (RexxObject *)OREF_POWER, PowerObj);
                                        /* Will the result overflow ?        */
   if (labs((int)(left->exp + left->length - 1)) * powerValue > MAXNUM)
                                        /* yes, report error and return.     */
-   report_exception3(Error_Overflow_overflow, this, (RexxObject *)OREF_POWER, PowerObj);
+   reportException(Error_Overflow_overflow, this, (RexxObject *)OREF_POWER, PowerObj);
 
   if (powerValue != 0) {               /* a non-zero power value?           */
                                        /* yes, do the power operation.      */

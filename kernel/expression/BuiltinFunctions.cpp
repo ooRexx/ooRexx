@@ -63,7 +63,7 @@ void checkPadArgument(char *pFuncName, RexxObject *position, RexxString *pad)
 {
   if (pad == OREF_NULL) return;
   if (pad->getLength() != 1)
-    report_exception3(Error_Incorrect_call_pad, new_cstring(pFuncName), position, pad);
+    reportException(Error_Incorrect_call_pad, pFuncName, position, pad);
 }
 
 #define CENTER_MIN 2
@@ -921,7 +921,7 @@ BUILTIN(ERRORTEXT) {
                                        /* outside allowed range?            */
   if (error_number < 0 || error_number > 99)
                                        /* this is an error                  */
-    report_exception3(Error_Incorrect_call_range, new_cstring(CHAR_ERRORTEXT), IntegerOne, new_integer(error_number));
+    reportException(Error_Incorrect_call_range, CHAR_ERRORTEXT, IntegerOne, error_number);
                                        /* retrieve the major error message  */
   result = (RexxString *)SysMessageText(error_number * 1000);
   if (result == OREF_NULL)             /* not found?                        */
@@ -954,7 +954,7 @@ BUILTIN(ARG) {
   if (n == OREF_NULL) {                /* no position specified?            */
     if (option != OREF_NULL)           /* have an option with no position   */
                                        /* raise an error                    */
-      report_exception2(Error_Incorrect_call_noarg, new_cstring(CHAR_ARG), IntegerOne);
+      reportException(Error_Incorrect_call_noarg, CHAR_ARG, IntegerOne);
     /* return the count as an object */
     result = new_integer(size);
   }
@@ -1027,7 +1027,7 @@ BUILTIN(ARG) {
 
       default:                         /* unknown option                    */
                                        /* this is an error                  */
-        report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_ARG), IntegerTwo, new_string("AENO", 4), option);
+        reportException(Error_Incorrect_call_list, CHAR_ARG, IntegerTwo, "AENO", option);
         break;
     }
   }
@@ -1072,7 +1072,7 @@ BUILTIN(DATE) {
         if (option->getLength() == 0)        /* have a null string?               */
         {
                                              /* this is an error                  */
-            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerOne, new_string("BDEFLMNOSTUW", 10), option);
+            reportException(Error_Incorrect_call_list, CHAR_DATE, IntegerOne, "BDEFLMNOSTUW", option);
         }
         else                                 /* need to process an option         */
         {
@@ -1085,7 +1085,7 @@ BUILTIN(DATE) {
     if (indate == OREF_NULL && (option2 != OREF_NULL || isep != OREF_NULL))
     {
         /* this is an error                  */
-        report_exception2(Error_Incorrect_call_noarg, new_cstring(CHAR_DATE), IntegerTwo);
+        reportException(Error_Incorrect_call_noarg, CHAR_DATE, IntegerTwo);
     }
 
     if (option2 != OREF_NULL)            /* just using default format?        */
@@ -1093,7 +1093,7 @@ BUILTIN(DATE) {
         if (option2->getLength() == 0)       /* have a null string?               */
         {
                                              /* this is an error                  */
-            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDEFNOSTU", 7), option2);
+            reportException(Error_Incorrect_call_list, CHAR_DATE, IntegerThree, "BDEFNOSTU", option2);
         }
         else                                 /* need to process an option         */
         {
@@ -1110,11 +1110,11 @@ BUILTIN(DATE) {
         // only certain styles support this option
         if (strchr("BDMWL", style) != NULL)
         {
-            report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerOne, new_string((char *)&style, 1), IntegerFour);
+            reportException(Error_Incorrect_call_format_incomp_sep, CHAR_DATE, IntegerOne, new_string((char)style), IntegerFour);
         }
         if (osep->getLength() > 1 || (osep->getLength() == 1 && strchr(ALPHANUM, osep->getChar(0)) != NULL))
         {
-            report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFour, osep);
+            reportException(Error_Incorrect_call_parm_wrong_sep, CHAR_DATE, IntegerFour, osep);
         }
         // string objects are null terminated, so we can point directly at what will
         // be either 1 or 0 characters of data.
@@ -1132,14 +1132,14 @@ BUILTIN(DATE) {
         {
             if (strchr("BDMWL", style2) != NULL)
             {
-                report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerThree, new_string((char *)&style2, 1), IntegerFive);
+                reportException(Error_Incorrect_call_format_incomp_sep, CHAR_DATE, IntegerThree, new_string((char *)&style2, 1), IntegerFive);
             }
             // explicitly specified delimiter, we need to validate this first
             if (isep->getLength() > 1 || (isep->getLength() == 1 && strchr(ALPHANUM, isep->getChar(0)) != NULL))
             {
                 // the field delimiter must be a single character and NOT
                 // alphanumeric, or a null character
-                report_exception3(Error_Incorrect_call_parm_wrong_sep, new_cstring(CHAR_DATE), IntegerFive, isep);
+                reportException(Error_Incorrect_call_parm_wrong_sep, new_string(CHAR_DATE), IntegerFive, isep);
             }
             // string objects are null terminated, so we can point directly at what will
             // be either 1 or 0 characters of data.
@@ -1162,7 +1162,7 @@ BUILTIN(DATE) {
                 /* bad value?                        */
                 if (basedays == (int)NO_LONG || !timestamp.setBaseDate(basedays))
                 {
-                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((char *)&style2, 1));
+                    reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1173,7 +1173,7 @@ BUILTIN(DATE) {
                 int64_t basetime;
                 if (!Numerics::objectToInt64(indate, basetime) || !timestamp.setBaseTime(basetime))
                 {
-                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((char *)&style2, 1));
+                    reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1184,7 +1184,7 @@ BUILTIN(DATE) {
                 int64_t basetime;
                 if (!Numerics::objectToInt64(indate, basetime) || !timestamp.setUnixTime(basetime))
                 {
-                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((char *)&style2, 1));
+                    reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1197,7 +1197,7 @@ BUILTIN(DATE) {
                 if (yearday == (int)NO_LONG || yearday < 0 || yearday > YEAR_DAYS + 1 ||
                     (yearday > YEAR_DAYS && !LeapYear(current.year)))
                 {
-                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((char *)&style2, 1));
+                    reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
                 }
                 // set the date directly
                 timestamp.setDate(current.year, yearday);
@@ -1221,7 +1221,7 @@ BUILTIN(DATE) {
                 break;
 
             default:
-                report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerThree, new_string("BDEFNOTSU", 7), new_string((char *)&style2, 1));
+                reportException(Error_Incorrect_call_list, CHAR_DATE, IntegerThree, "BDEFNOTSU", new_string((char *)&style2, 1));
                 break;
         }
         // if there's a formatting error
@@ -1230,11 +1230,11 @@ BUILTIN(DATE) {
             // different error message depending on whether a separator was specified, or not.
             if (isep != OREF_NULL)
             {
-                report_exception4(Error_Incorrect_call_format_incomp_sep, new_cstring(CHAR_DATE), IntegerTwo, indate, IntegerFive);
+                reportException(Error_Incorrect_call_format_incomp_sep, CHAR_DATE, IntegerTwo, indate, IntegerFive);
             }
             else
             {
-                report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_DATE), indate, new_string((char *)&style2, 1));
+                reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
             }
         }
     }
@@ -1307,11 +1307,11 @@ BUILTIN(DATE) {
 
         default:                           /* unrecognized                      */
             work[0] = style;                 /* copy over the character           */
-            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_DATE), IntegerOne, new_string("BDEFLMNOSTUW", 10), new_string(work, 1));
+            reportException(Error_Incorrect_call_list, CHAR_DATE, IntegerOne, "BDEFLMNOSTUW", new_string(work, 1));
             break;
     }
     /* now create a string object        */
-    return new_cstring(work);
+    return new_string(work);
 }
 
 
@@ -1341,7 +1341,7 @@ BUILTIN(TIME) {
         // null strings not allowed as an option character
         if (option->getLength() == 0)
         {
-            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerOne, new_string("CEHLMNRS", 8), option);
+            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerOne, "CEHLMNRS", option);
         }
         // we only use the first character
         style = toupper(option->getChar(0));
@@ -1356,12 +1356,12 @@ BUILTIN(TIME) {
         // the second option requires an input date
         if (intime == OREF_NULL)
         {
-            report_exception2(Error_Incorrect_call_noarg, new_cstring(CHAR_TIME), IntegerTwo);
+            reportException(Error_Incorrect_call_noarg, CHAR_TIME, IntegerTwo);
         }
         // again, must be at least one character, of which we only use the first
         if (option2->getLength() == 0)
         {
-            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerThree, new_string("CHLMNS", 6), option2);
+            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CHLMNS", option2);
         }
         style2 = toupper(option2->getChar(0));
     }
@@ -1372,7 +1372,7 @@ BUILTIN(TIME) {
         // the input timestamp is not valid with the elapsed time options
         if (style == 'R' || style == 'E')
         {
-            report_exception2(Error_Incorrect_call_invalid_conversion, new_cstring(CHAR_TIME), new_string((char *)&style, 1));
+            reportException(Error_Incorrect_call_invalid_conversion, CHAR_TIME, new_string((char *)&style, 1));
         }
         bool valid = true;                 // assume this is a good timestamp
         timestamp.clear();                 // clear everything out
@@ -1421,7 +1421,7 @@ BUILTIN(TIME) {
                 int64_t basetime;
                 if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setBaseTime(basetime))
                 {
-                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((char *)&style2, 1));
+                    reportException(Error_Incorrect_call_format_invalid, CHAR_TIME, intime, new_string((char *)&style2, 1));
                 }
                 break;
             }
@@ -1432,19 +1432,19 @@ BUILTIN(TIME) {
                 int64_t basetime;
                 if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setUnixTime(basetime))
                 {
-                    report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((char *)&style2, 1));
+                    reportException(Error_Incorrect_call_format_invalid, CHAR_TIME, intime, new_string((char *)&style2, 1));
                 }
                 break;
             }
 
             default:
                 work[0] = style2;              /* copy over the character           */
-                report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerThree, new_string("CFHLMNS", 6), new_string(work, 1));
+                reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CFHLMNS", new_string(work, 1));
                 break;
         }
         if (!valid)                        /* not convert cleanly?              */
         {
-            report_exception3(Error_Incorrect_call_format_invalid, new_cstring(CHAR_TIME), intime, new_string((char *)&style2, 1) );
+            reportException(Error_Incorrect_call_format_invalid, CHAR_TIME, intime, new_string((char *)&style2, 1) );
         }
     }
 
@@ -1514,11 +1514,11 @@ BUILTIN(TIME) {
 
         default:                          /* unknown format                    */
             work[0] = style;                /* copy over the character           */
-            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_TIME), IntegerOne, new_string("CEFHLMNRST", 8), new_string(work, 1));
+            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerOne, "CEFHLMNRST", new_string(work, 1));
             break;
     }
     /* now create a string object        */
-    return new_cstring(work);
+    return new_string(work);
 }
 
 #define RANDOM_MIN 0
@@ -1578,13 +1578,13 @@ BUILTIN(XRANGE) {
   if (start != OREF_NULL) {            /* have a start position             */
     if (start->getLength() != 1)            /* not a single character?           */
                                        /* have an error                     */
-      report_exception3(Error_Incorrect_call_pad, new_cstring(CHAR_XRANGE), IntegerOne, start);
+      reportException(Error_Incorrect_call_pad, CHAR_XRANGE, IntegerOne, start);
     startchar = start->getChar(0);     /* get the new start position        */
   }
   if (end != OREF_NULL) {              /* have an end position              */
     if (end->getLength() != 1)         /* not a single character?           */
                                        /* have an error                     */
-      report_exception3(Error_Incorrect_call_pad, new_cstring(CHAR_XRANGE), IntegerTwo, end);
+      reportException(Error_Incorrect_call_pad, CHAR_XRANGE, IntegerTwo, end);
     endchar = end->getChar(0);         /* get the new end position          */
   }
                                        /* calculate result size             */
@@ -1611,18 +1611,18 @@ BUILTIN(SYMBOL) {
   variable = context->getVariableRetriever(result);
   if (variable == OREF_NULL)           /* invalid variable name?            */
                                        /* return the 'BAD' result           */
-    result = (RexxString *)new_cstring(CHAR_BAD);
+    result = (RexxString *)new_string(CHAR_BAD);
   else if (OTYPE(String, variable))    /* directly returned a string?       */
                                        /* this is a literal value           */
-    result = (RexxString *)new_cstring(CHAR_LIT);
+    result = (RexxString *)new_string(CHAR_LIT);
   else {                               /* need to perform lookup            */
                                        /* see if variable has a value       */
     if (!variable->exists(context))
                                        /* this is a literal value           */
-      result = (RexxString *)new_cstring(CHAR_LIT);
+      result = (RexxString *)new_string(CHAR_LIT);
     else
                                        /* this is a variable value          */
-      result = (RexxString *)new_cstring(CHAR_VAR);
+      result = (RexxString *)new_string(CHAR_VAR);
   }
   return result;                       /* return the indicator              */
 }
@@ -1683,7 +1683,7 @@ BUILTIN(VALUE) {
     // symbol.
     if (retriever == OREF_NULL || (newvalue != OREF_NULL && !assignable))
     {
-        report_exception3(Error_Incorrect_call_symbol, new_cstring(CHAR_VALUE), IntegerOne, variable);
+        reportException(Error_Incorrect_call_symbol, CHAR_VALUE, IntegerOne, variable);
     }
                                      /* get the variable value            */
     result = retriever->getValue(context);
@@ -1836,7 +1836,7 @@ BUILTIN(SOURCELINE) {
     positive_integer(line_number, SOURCELINE, IntegerOne);
     if (line_number > size)            /* larger than program source?       */
                                        /* this is an error too?             */
-      report_exception2(Error_Incorrect_call_sourceline, new_integer(line_number), new_integer(size));
+      reportException(Error_Incorrect_call_sourceline, line_number, size);
                                        /* get the specific line             */
     result = (RexxObject *)source->get(line_number);
   }
@@ -1937,7 +1937,7 @@ RexxObject *resolve_stream(            /* resolve a stream name             */
           stream = securityArgs->fastAt(OREF_STREAM);
           if (stream == OREF_NULL)     /* in an expression and need a result*/
                                        /* need to raise an exception        */
-            report_exception1(Error_No_result_object_message, OREF_STREAM);
+            reportException(Error_No_result_object_message, OREF_STREAM);
                                        /* add to the streams table          */
           streamTable->put(stream, qualifiedName);
           return stream;               /* return the stream object          */
@@ -2044,7 +2044,7 @@ BUILTIN(CHARIN) {
   count = optional_integer(CHARIN, count);
   if (check_queue(name))               /* is this "QUEUE:"                  */
                                        /* this isn't allowed                */
-    report_exception1(Error_Incorrect_call_queue_no_char, OREF_CHARIN);
+    reportException(Error_Incorrect_call_queue_no_char, OREF_CHARIN);
 
                                        /* get a stream for this name        */
   stream = resolve_stream(name, context, stack, TRUE, NULL, &added);
@@ -2142,7 +2142,7 @@ BUILTIN(CHAROUT) {
   position = optional_integer(CHAROUT, start);
   if (check_queue(name))               /* is this "QUEUE:"                  */
                                        /* this isn't allowed                */
-    report_exception1(Error_Incorrect_call_queue_no_char, OREF_CHAROUT);
+    reportException(Error_Incorrect_call_queue_no_char, OREF_CHAROUT);
                                        /* get a stream for this name        */
   stream = resolve_stream(name, context, stack, FALSE, &fullName, &added);
   switch (argcount) {                  /* process according to argcount     */
@@ -2198,7 +2198,7 @@ BUILTIN(LINES) {
             break;
           default:                         /* unknown option                    */
                                            /* this is an error                  */
-            report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_ARG), IntegerTwo, new_string("NC", 2), option);
+            reportException(Error_Incorrect_call_list, CHAR_ARG, IntegerTwo, "NC", option);
             break;
         }
     }
@@ -2231,7 +2231,7 @@ BUILTIN(CHARS) {
   name = optional_string(CHARS, name); /* get the string name               */
   if (check_queue(name))               /* is this "QUEUE:"                  */
                                        /* this isn't allowed                */
-    report_exception1(Error_Incorrect_call_queue_no_char, OREF_CHARS);
+    reportException(Error_Incorrect_call_queue_no_char, OREF_CHARS);
                                        /* get a stream for this name        */
   stream = resolve_stream(name, context, stack, TRUE, NULL, &added);
   return send_message0(stream, OREF_CHARS);
@@ -2266,7 +2266,7 @@ BUILTIN(STREAM) {
   name = required_string(STREAM, name);
   if (name->getLength() == 0)          /* check name validity               */
                                        /* raise an error                    */
-    report_exception2(Error_Incorrect_call_stream_name, OREF_STREAM, name);
+    reportException(Error_Incorrect_call_stream_name, OREF_STREAM, name);
                                        /* get any operation                 */
   action = optional_string(STREAM, operation);
                                        /* get any command                   */
@@ -2279,7 +2279,7 @@ BUILTIN(STREAM) {
   if (action != OREF_NULL) {           /* no action given?                  */
       if (action->getLength() == 0) {    /* get a null string?                */
                                          /* this is an error                  */
-        report_exception4(Error_Incorrect_call_list, OREF_STREAM, IntegerTwo, new_string("SDC", 3), action);
+        reportException(Error_Incorrect_call_list, CHAR_STREAM, IntegerTwo, "SDC", action);
       }
                                          /* get the option character          */
       action_char = toupper(action->getChar(0));
@@ -2291,7 +2291,7 @@ BUILTIN(STREAM) {
     case STREAM_STATUS:                /* stream(name, s)                   */
       if (argcount > 2) {              /* given a third argument?           */
                                        /* raise an error                    */
-        report_exception2(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
+        reportException(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
       }
       stream = resolve_stream(name, context, stack, TRUE, NULL, NULL);
                                        /* get the stream state              */
@@ -2301,7 +2301,7 @@ BUILTIN(STREAM) {
     case STREAM_DESCRIPTION:           /* stream(name, d)                   */
       if (argcount > 2) {              /* given a third argument?           */
                                        /* raise an error                    */
-        report_exception2(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
+        reportException(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
       }
       stream = resolve_stream(name, context, stack, TRUE, NULL, NULL);
                                        /* get the stream description        */
@@ -2311,7 +2311,7 @@ BUILTIN(STREAM) {
     case STREAM_COMMAND:               /* stream(name, c, command)          */
       if (argcount < 3) {              /* given a third argument?           */
                                        /* raise an error                    */
-        report_exception2(Error_Incorrect_call_minarg, OREF_STREAM, IntegerThree);
+        reportException(Error_Incorrect_call_minarg, OREF_STREAM, IntegerThree);
       }
                                        /* get the stream description        */
       save(command);                   /* use save instead of hold */
@@ -2325,11 +2325,11 @@ BUILTIN(STREAM) {
 
 
       fOpen = fClose = FALSE;    /* this whole part was reworked and moved up here */
-      if (command_upper->wordPos(new_cstring("OPEN"), OREF_NULL)->getValue() > 0) {
+      if (command_upper->wordPos(new_string("OPEN"), OREF_NULL)->getValue() > 0) {
         fOpen = TRUE;
         stream = resolve_stream(name, context, stack, TRUE, &fullName, &added);
       }
-      else if (command_upper->wordPos(new_cstring("CLOSE"), OREF_NULL)->getValue() > 0) {
+      else if (command_upper->wordPos(new_string("CLOSE"), OREF_NULL)->getValue() > 0) {
         fClose = TRUE;
         stream = resolve_stream(name, context, stack, TRUE, &fullName, &added);
       }
@@ -2355,7 +2355,7 @@ BUILTIN(STREAM) {
 
     default:
                                        /* this is an error                  */
-      report_exception4(Error_Incorrect_call_list, OREF_STREAM, IntegerTwo, new_string("SDC", 3), action);
+      reportException(Error_Incorrect_call_list, CHAR_STREAM, IntegerTwo, "SDC", action);
       break;
   }
   return result;                       /* return the function result        */
@@ -2396,7 +2396,7 @@ BUILTIN(CONDITION) {
   {
       if (option->getLength() == 0)   /* have a null string?               */
                                            /* this is an error                  */
-        report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_CONDITION), IntegerOne, new_string("ACDIOS", 6), option);
+        reportException(Error_Incorrect_call_list, CHAR_CONDITION, IntegerOne, "ACDIOS", option);
 
       /* option is first character         */
       style = toupper(option->getChar(0));
@@ -2456,7 +2456,7 @@ BUILTIN(CONDITION) {
 
     default:                           /* unknown option                    */
                                        /* report an error                   */
-      report_exception4(Error_Incorrect_call_list, new_cstring(CHAR_CONDITION), IntegerOne, new_string("ACDIOS", 6), option);
+      reportException(Error_Incorrect_call_list, CHAR_CONDITION, IntegerOne, "ACDIOS", option);
       break;
   }
   return result;                       /* return requested value            */

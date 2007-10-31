@@ -525,7 +525,7 @@ BOOL RegExternalFunction(
   /* at least one item needs to be allocated to prevent error reporting */
   argrxarray = (PRXSTRING) SysAllocateResultMemory(sizeof(RXSTRING)*max(argcount,1));
   if (argrxarray == OREF_NULL)    /* memory error?                   */
-      report_exception(Error_System_resources);
+      reportException(Error_System_resources);
                                        /* create RXSTRING arguments         */
   for (argindex=0; argindex<argcount; argindex++) {
                                        /* get the next argument             */
@@ -583,10 +583,10 @@ BOOL RegExternalFunction(
     }
     else                             /* Bad rc from function, signal      */
                                        /* error                             */
-      report_exception1(Error_Incorrect_call_external, target);
+      reportException(Error_Incorrect_call_external, target);
   }
   else                               /* Bad rc from RexxCallFunction,     */
-    report_exception1(Error_Routine_not_found_name, target);
+    reportException(Error_Routine_not_found_name, target);
 
   return TRUE;                      /* Show what happened                */
 }
@@ -630,7 +630,7 @@ RexxObject * SysExternalFunction(
                                        /* function.  If still not found,    */
                                        /* then raise an error               */
         if (!MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_POSTORDER, &result)) {
-//          report_exception1(Error_Routine_not_found_name, target);
+//          reportException(Error_Routine_not_found_name, target);
             *foundFnc = FALSE;
         }
       }

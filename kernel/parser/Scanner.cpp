@@ -505,7 +505,7 @@ RexxString *RexxSource::packLiteral(
         else {
           error_output[0] = nibble;    /* copy the error character          */
                                        /* report the invalid character      */
-          report_error1(Error_Invalid_hex_invhex, new_cstring(&error_output[0]));
+          report_error1(Error_Invalid_hex_invhex, new_string(&error_output[0]));
         }
         byte <<= 4;                    /* shift the last nibble over        */
         byte += nibble;                /* add in the next nibble            */
@@ -542,7 +542,7 @@ RexxString *RexxSource::packLiteral(
         else if (nibble != '0') {      /* not a '0' either?                 */
           error_output[0] = nibble;    /* copy the error character          */
                                        /* report the invalid character      */
-          report_error1(Error_Invalid_hex_invbin, new_cstring(&error_output[0]));
+          report_error1(Error_Invalid_hex_invbin, new_string(&error_output[0]));
         }
       }
       oddhex = 0;                      /* use 8 bits for the remaining group*/
@@ -1161,7 +1161,7 @@ RexxToken *RexxSource::sourceNextToken(
            sprintf(badchar, "%c", inch);
            sprintf(hexbadchar, "%2.2X", inch);
                                        /* report the error                  */
-           report_error2(Error_Invalid_character_char, new_cstring(badchar), new_cstring(hexbadchar));
+           report_error2(Error_Invalid_character_char, new_string(badchar), new_string(hexbadchar));
            break;
        }
       }

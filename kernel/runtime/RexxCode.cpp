@@ -119,7 +119,7 @@ RexxArray * RexxCode::sourceRexx()
   RexxInstruction *current;            /* current instruction               */
 
   if (this->start == OREF_NULL)        /* empty method?                     */
-    return new_array(0);               /* just return an empty array        */
+    return new_array((size_t)0);       /* just return an empty array        */
   this->start->getLocation(&location); /* get its location info             */
   current = this->start;               /* point to the beginning            */
                                        /* while not at the last one         */

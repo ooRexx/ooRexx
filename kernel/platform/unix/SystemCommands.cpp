@@ -156,7 +156,7 @@ rc = RexxCallExit(const_cast<char *>(handler_name), NULL, function, subfunction,
       activity->setSysExit(RXSIO, OREF_NULL);
     }
                                        /* go raise an error                 */
-    report_exception1(Error_System_service_service, exitname);
+    reportException(Error_System_service_service, exitname);
   }
   if (rc == RXEXIT_HANDLED)            /* Did exit handle task?             */
     return FALSE;                      /* Yep                               */
@@ -639,7 +639,7 @@ BOOL sys_process_cd(const char * cmd, LONG * rc)
       strncpy( achRexxCurDir, getenv("PWD"), CCHMAXPATH);
       achRexxCurDir[CCHMAXPATH - 1] = '\0';
       if (achRexxCurDir[0] != '/' )
-        report_exception(Error_System_service);  /* Complain if it fails        */
+        reportException(Error_System_service);  /* Complain if it fails        */
     }
     return TRUE;
 }
@@ -824,7 +824,7 @@ void scan_cmd(const char *parm_cmd, char **argPtr)
     /* elements of our args[] array, let the user know, and we must  */
     /* terminate.                                                    */
     if (i==MAX_COMMAND_ARGS)
-      report_exception(MSG_TOO_MANY_CMD_ARGS);
+      reportException(MSG_TOO_MANY_CMD_ARGS);
 
     argPtr[i++] = pos;                 /* Point to current argument  */
                                        /* and advance i to next      */

@@ -137,7 +137,7 @@ BOOL SysExitHandler(
     }
     if (function != RXTER)             /* not the termination exit?           */ // retrofir by IH
                                        /* go raise an error                   */
-      report_exception1(Error_System_service_service, exitname);
+      reportException(Error_System_service_service, exitname);
   }
   if (rc == RXEXIT_HANDLED)            /* Did exit handle task?               */
     return FALSE;                      /* Yep                                 */

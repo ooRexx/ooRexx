@@ -134,13 +134,13 @@ RexxObject *SysValue(
   // Name = Name->upper();             /* and the name too                  */
   if (!Selector->strCompare(SELECTOR)) /* correct selector?                 */
                                        /* flag this error                   */
-    report_exception1(Error_Incorrect_call_selector, Selector);
+    reportException(Error_Incorrect_call_selector, Selector);
                                        /* scan for the variable             */
   RexxString *Retval;
 
   OldValue = getenv(Name->getStringData());
   if (OldValue != NULL)                /* have a value already?   */
-    Retval = new_cstring(OldValue);    /* Yes -  convert to Rexx string     */
+    Retval = new_string(OldValue);    /* Yes -  convert to Rexx string     */
   else
     Retval = OREF_NULLSTRING;          /* otherwise, return null            */
 

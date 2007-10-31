@@ -584,7 +584,7 @@ BOOL RegExternalFunction(
   /* at least one item needs to be allocated to prevent error reporting */
   argrxarray = (PRXSTRING) SysAllocateResultMemory(sizeof(RXSTRING)*max(argcount,1));
   if (argrxarray == OREF_NULL)    /* memory error?                   */
-      report_exception(Error_System_resources);
+      reportException(Error_System_resources);
                                        /* create RXSTRING arguments         */
   for (argindex=0; argindex<argcount; argindex++) {
                                        /* get the next argument             */
@@ -644,10 +644,10 @@ BOOL RegExternalFunction(
     }
     else                               /* Bad rc from function, signal      */
                                        /* error                             */
-      report_exception1(Error_Incorrect_call_external, target);
+      reportException(Error_Incorrect_call_external, target);
   }
   else                                 /* Bad rc from RexxCallFunction,     */
-    report_exception1(Error_Routine_not_found_name, target);
+    reportException(Error_Routine_not_found_name, target);
   return TRUE;                         /* We found this                     */
 }
 /******************************************************************************/
@@ -746,14 +746,14 @@ REXXOBJECT BuildEnvlist()
   if(!size)
     return OREF_NULL;                  /* no envrionment !           */
   if (!(curr_dir=(char *)malloc(CCHMAXPATH+2)))/* malloc storage for cwd*/
-    report_exception(Error_System_service);
+    reportException(Error_System_service);
 
   if (!getcwd(curr_dir,CCHMAXPATH))    /* get current directory      */
   {
      strncpy( achRexxCurDir, getenv("PWD"), CCHMAXPATH);
      achRexxCurDir[CCHMAXPATH - 1] = '\0';
      if (achRexxCurDir[0] != '/' )
-       report_exception(Error_System_service);/* Complain if it fails*/
+       reportException(Error_System_service);/* Complain if it fails*/
   }
   size += strlen(curr_dir);            /* add the space for curr dir */
   size++;                              /* and its terminating '\0'   */

@@ -92,12 +92,12 @@ void RexxInstructionNumeric::execute(
                                        /* bad value?                        */
         if (setting == (int)NO_LONG || setting < 1)
                                        /* report an exception               */
-          report_exception1(Error_Invalid_whole_number_digits, result);
+          reportException(Error_Invalid_whole_number_digits, result);
                                        /* problem with the fuzz setting?    */
         if (setting <= context->fuzz()) {
           tempVal = context->fuzz();   /* get the value                     */
                                        /* this is an error                  */
-          report_exception2(Error_Expression_result_digits, new_integer(setting), new_integer(tempVal));
+          reportException(Error_Expression_result_digits, setting, tempVal);
         }
         context->setDigits(setting);   /* now adjust the setting            */
       }
@@ -116,12 +116,12 @@ void RexxInstructionNumeric::execute(
                                        /* bad value?                        */
         if (setting == (int)NO_LONG || setting < 0)
                                        /* report an exception               */
-          report_exception1(Error_Invalid_whole_number_fuzz, result);
+          reportException(Error_Invalid_whole_number_fuzz, result);
                                        /* problem with the digits setting?  */
         if (setting >= context->digits()) {
           tempVal = context->digits(); /* Get the value                     */
                                        /* and issue the error               */
-          report_exception2(Error_Expression_result_digits, new_integer(tempVal), new_integer(setting));
+          reportException(Error_Expression_result_digits, tempVal, setting);
         }
         context->setFuzz(setting);     /* set the new value                 */
       }
@@ -149,7 +149,7 @@ void RexxInstructionNumeric::execute(
           context->setForm(FORM_ENGINEERING);
         else
                                        /* report an exception               */
-          report_exception1(Error_Invalid_subkeyword_form, result);
+          reportException(Error_Invalid_subkeyword_form, result);
       }
       break;
   }

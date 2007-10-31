@@ -80,7 +80,7 @@ long RexxTrigger::integerTrigger(
   result = REQUEST_LONG(trigger, NO_LONG);
   if (result == (long)NO_LONG || result < 0) /* bad value or negative?            */
                                        /* report an exception               */
-    report_exception1(Error_Invalid_whole_number_parse, trigger);
+    reportException(Error_Invalid_whole_number_parse, trigger);
   return result;                       /* finished                          */
 }
 

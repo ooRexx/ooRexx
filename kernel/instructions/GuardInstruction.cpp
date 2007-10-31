@@ -91,14 +91,13 @@ void RexxInstructionGuard::execute(
   RexxObject *result;                  /* guard expression result           */
 
 #ifdef NOTHREADSUPPORT
-   report_exception1(Error_Execution_no_concurrency,
-                  new_cstring("Concurrency not supported"));
+   reportException(Error_Execution_no_concurrency);
 #else
 
   context->traceInstruction(this);     /* trace if necessary                */
   if (!context->inMethod())            /* is this a method clause?          */
                                        /* raise an error                    */
-    report_exception(Error_Translation_guard_guard);
+    reportException(Error_Translation_guard_guard);
                                        /* non-expression form?              */
   else if (this->expression == OREF_NULL) {
 

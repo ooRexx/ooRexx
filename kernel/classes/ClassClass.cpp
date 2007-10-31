@@ -443,9 +443,9 @@ void RexxClass::subClassable(const char *class_id, bool restricted)
 
   if (TheObjectClass != this ) {
                                        /* set up the new metaclass list      */
-    OrefSet(this, this->metaClass, new_array1(TheClassClass));
+    OrefSet(this, this->metaClass, new_array(TheClassClass));
                                        /* the metaclass mdict list           */
-    OrefSet(this, this->metaClassMethodDictionary, new_array1(TheClassClass->instanceMethodDictionary->copy()));
+    OrefSet(this, this->metaClassMethodDictionary, new_array(TheClassClass->instanceMethodDictionary->copy()));
                                        /* and the metaclass scopes list      */
     OrefSet(this, this->metaClassScopes, (RexxObjectTable *)TheClassClass->behaviour->scopes->copy());
   }
@@ -455,10 +455,10 @@ void RexxClass::subClassable(const char *class_id, bool restricted)
   OrefSet(this, this->baseClass, this);
                                        /* The class superclasses list for    */
                                        /* OBJECT is an empty list.           */
-  OrefSet(this, this->classSuperClasses, new_array(0));
+  OrefSet(this, this->classSuperClasses, new_array((size_t)0));
                                        /* as is the instance superclasses    */
                                        /* list.                              */
-  OrefSet(this, this->instanceSuperClasses, new_array(0));
+  OrefSet(this, this->instanceSuperClasses, new_array((size_t)0));
   if (this != TheObjectClass) {        /* not .object?                      */
                                        /* add object to the list             */
     this->classSuperClasses->addLast(TheObjectClass);
@@ -472,7 +472,7 @@ void RexxClass::subClassable(const char *class_id, bool restricted)
       TheObjectClass->addSubClass(this);
   }
                                        /* initialize the class id            */
-  OrefSet(this, this->id, new_cstring(class_id));
+  OrefSet(this, this->id, new_string(class_id));
                                        /* and point the instance behaviour   */
                                        /* back to this class                 */
   this->instanceBehaviour->setClass(this);
@@ -497,7 +497,7 @@ RexxObject *RexxClass::defineMethod(
                                        /* check if this is a rexx class     */
   if ( this->class_info & REXX_DEFINED )
                                        /* report as a nomethod condition    */
-    report_nomethod(last_msgname(), this);
+    reportNomethod(last_msgname(), this);
                                        /* make sure there is at least one   */
                                        /* parameter                         */
   method_name = REQUIRED_STRING(method_name, ARG_ONE)->upper();
@@ -579,7 +579,7 @@ RexxObject *RexxClass::deleteMethod(
 {
   if (this->class_info & REXX_DEFINED) /* check if this is a rexx class     */
                                        /* report as a nomethod condition    */
-    report_nomethod(last_msgname(), this);
+    reportNomethod(last_msgname(), this);
                                        /* and that it can be a string        */
   method_name = REQUIRED_STRING(method_name, ARG_ONE)->upper();
                                        /* make a copy of the instance        */
@@ -607,7 +607,7 @@ RexxMethod *RexxClass::method(
                                        /* check if it is in the mdict        */
   if ( OREF_NULL == (method_object = (RexxMethod *)this->instanceBehaviour->getMethodDictionary()->stringGet(method_name)))
                                        /* if not return an error             */
-    report_exception2(Error_No_method_name, this, method_name);
+    reportException(Error_No_method_name, this, method_name);
   return method_object;                /* if it was - return the value      */
 }
 
@@ -904,42 +904,42 @@ RexxObject *RexxClass::inherit(
                                        /* make sure this isn't a rexx       */
   if (this->rexxDefined())             /* defined class being changed       */
                                        /* report as a nomethod condition    */
-    report_nomethod(last_msgname(), this);
+    reportNomethod(last_msgname(), this);
   required_arg(mixin_class, ONE);      /* make sure it was passed in        */
 
                                        /* check the mixin class is really a */
                                        /* good class for this               */
   if (!OTYPENUM(class, mixin_class) || !mixin_class->queryMixin())
                                        /* if it isn't raise an error        */
-    report_exception1(Error_Execution_mixinclass, mixin_class);
+    reportException(Error_Execution_mixinclass, mixin_class);
 
                                        /* if the mixin class is also the    */
   if (this == mixin_class )            /* reciever class                    */
                                        /*  raise an error                   */
-    report_exception2(Error_Execution_recursive_inherit, this, mixin_class);
+    reportException(Error_Execution_recursive_inherit, this, mixin_class);
                                        /* check that the mixin class is not */
                                        /* a superclass of the reciever      */
   if (this->behaviour->checkScope(mixin_class))
                                        /* if it is raise an error           */
-    report_exception2(Error_Execution_recursive_inherit, this, mixin_class);
+    reportException(Error_Execution_recursive_inherit, this, mixin_class);
                                        /* check if the reciever class is a  */
                                        /* superclass of the mixin class     */
   if (mixin_class->behaviour->checkScope(this))
                                        /* if it is it's an error            */
-    report_exception2(Error_Execution_recursive_inherit, this, mixin_class);
+    reportException(Error_Execution_recursive_inherit, this, mixin_class);
 
                                        /* Now ensure the mixin class        */
                                        /* baseclass is in the reciever's    */
                                        /* class superclass hierarchy        */
   if (!this->behaviour->checkScope(mixin_class->getBaseClass()))
                                        /* if it isn't raise an error        */
-    report_exception3(Error_Execution_baseclass, this, mixin_class, mixin_class->getBaseClass());
+    reportException(Error_Execution_baseclass, this, mixin_class, mixin_class->getBaseClass());
 
                                        /* and the reciever's                */
                                        /* instance superclass hierarchy     */
   if (!this->instanceBehaviour->checkScope(mixin_class->getBaseClass()))
                                        /* if it isn't raise an error        */
-    report_exception3(Error_Execution_baseclass, this, mixin_class, mixin_class->getBaseClass());
+    reportException(Error_Execution_baseclass, this, mixin_class, mixin_class->getBaseClass());
   if ( position == OREF_NULL ){        /* if position was not specified     */
                                        /* insert the mixin class last in the*/
                                        /* reciever's superclasses list      */
@@ -956,7 +956,7 @@ RexxObject *RexxClass::inherit(
     if (class_index == 0 || instance_index == 0)
     {
                                        /* if it isn't raise an error        */
-        report_exception2(Error_Execution_uninherit, this, position);
+        reportException(Error_Execution_uninherit, this, position);
     }
                                        /* insert the mixin class into the   */
                                        /* superclasses list's               */
@@ -990,7 +990,7 @@ RexxObject *RexxClass::uninherit(
                                        /* make sure this isn't rexx defined */
   if (this->rexxDefined())             /* class that is being changed       */
                                        /* report as a nomethod condition    */
-    report_nomethod(last_msgname(), this);
+    reportNomethod(last_msgname(), this);
   required_arg(mixin_class, ONE);      /* make sure it was passed in        */
 
                                        /* check that the mixin class is a   */
@@ -1004,7 +1004,7 @@ RexxObject *RexxClass::uninherit(
   }
   else
                                        /* else     raise an error           */
-    report_exception2(Error_Execution_uninherit, this, mixin_class);
+    reportException(Error_Execution_uninherit, this, mixin_class);
                                        /* update the mixin class subclass    */
                                        /* list to not have this class        */
   TheActivityClass->getSubClassTable()->removeItem(mixin_class, this);
@@ -1030,13 +1030,13 @@ RexxObject *RexxClass::enhanced(
 
   if (argCount == 0)                   /* make sure an arg   was passed in  */
                                        /* if not report an error            */
-    report_exception1(Error_Incorrect_method_minarg, IntegerOne);
+    reportException(Error_Incorrect_method_minarg, IntegerOne);
                                        /* get the value of the arg          */
   enhanced_instance_mdict = (RexxTable *)args[0];
                                        /* make sure it was a real value     */
   required_arg(enhanced_instance_mdict, ONE);
                                        /* subclass the reciever class       */
-  dummy_subclass = (RexxClass *)save(this->subclass(new_cstring("Enhanced Subclass"), OREF_NULL, OREF_NULL));
+  dummy_subclass = (RexxClass *)save(this->subclass(new_string("Enhanced Subclass"), OREF_NULL, OREF_NULL));
                                        /* turn into a real method dictionary*/
   enhanced_instance_mdict = dummy_subclass->methodDictionaryCreate(enhanced_instance_mdict, (RexxClass *)TheNilObject);
                                        /* enhance the instance behaviour    */
@@ -1102,7 +1102,7 @@ RexxClass  *RexxClass::subclass(
     meta_class = this->getMetaClass(); /* use the default metaclass         */
 
   if (!meta_class->queryMeta())        /* check that it is a meta class     */
-    report_exception1(Error_Translation_bad_metaclass, meta_class);
+    reportException(Error_Translation_bad_metaclass, meta_class);
                                        /* get a copy of the metaclass class */
   new_class = (RexxClass *)save(meta_class->sendMessage(OREF_NEW, class_id));
   new_class->hashvalue = HASHOREF(new_class);
@@ -1130,10 +1130,10 @@ RexxClass  *RexxClass::subclass(
                                        /* set this class as the superclass   */
                                        /* for the new class'                 */
                                        /* class_superclasses list            */
-  OrefSet(new_class, new_class->classSuperClasses, new_array1(this));
+  OrefSet(new_class, new_class->classSuperClasses, new_array(this));
                                        /* make the receiver class the        */
                                        /* superclass for the instance behav  */
-  OrefSet(new_class, new_class->instanceSuperClasses, new_array1(this));
+  OrefSet(new_class, new_class->instanceSuperClasses, new_array(this));
                                        /* if there was enhancing methods     */
                                        /* specified                          */
   if (enhancing_class_methods != OREF_NULL && enhancing_class_methods != TheNilObject) {
@@ -1188,10 +1188,10 @@ void RexxClass::setMetaClass(
 /* Function:  Set a metaclass for a class                                     */
 /******************************************************************************/
 {
-    OrefSet(this, this->metaClass, new_array1(TheClassClass));
+    OrefSet(this, this->metaClass, new_array(TheClassClass));
     this->metaClass->addFirst(new_metaClass);
                                        /* the metaclass mdict list           */
-    OrefSet(this, this->metaClassMethodDictionary, new_array1(TheClassClass->instanceMethodDictionary->copy()));
+    OrefSet(this, this->metaClassMethodDictionary, new_array(TheClassClass->instanceMethodDictionary->copy()));
     this->metaClassMethodDictionary->addFirst(new_metaClass->instanceMethodDictionary);
                                        /* and the metaclass scopes list      */
     OrefSet(this, this->metaClassScopes, (RexxObjectTable *)TheClassClass->behaviour->scopes->copy());
@@ -1305,7 +1305,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
   RexxString * class_id;               /* id parameter                      */
   if (argCount == 0)                   /* make sure an arg   was passed in  */
                                        /* if not report an error            */
-    report_exception1(Error_Incorrect_method_minarg, IntegerOne);
+    reportException(Error_Incorrect_method_minarg, IntegerOne);
   class_id = (RexxString *)args[0];    /* get the id parameter              */
   class_id = REQUIRED_STRING(class_id, ARG_ONE);   /* and that it can be a string       */
                                        /* get a copy of this class object   */
@@ -1320,15 +1320,15 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
                                        /* class mdict                        */
   OrefSet(new_class, new_class->classMethodDictionary, new_table());
                                        /* make this class the superclass     */
-  OrefSet(new_class, new_class->classSuperClasses, new_array1(this));
+  OrefSet(new_class, new_class->classSuperClasses, new_array(this));
   new_class->behaviour->setClass(this);/* and set the behaviour class       */
                                        /* if this is a primitive class then  */
                                        /* there isn't any metaclass info     */
   if (this->isPrimitive()) {           /* set up yet                        */
                                        /* set up the new metaclass list      */
-    OrefSet(new_class, new_class->metaClass, new_array1(TheClassClass));
+    OrefSet(new_class, new_class->metaClass, new_array(TheClassClass));
                                        /* the metaclass mdict list           */
-    OrefSet(new_class, new_class->metaClassMethodDictionary, new_array1(TheClassClass->instanceMethodDictionary->copy()));
+    OrefSet(new_class, new_class->metaClassMethodDictionary, new_array(TheClassClass->instanceMethodDictionary->copy()));
                                        /* and the metaclass scopes list      */
     OrefSet(new_class, new_class->metaClassScopes, (RexxObjectTable *)TheClassClass->behaviour->scopes->copy());
   }
@@ -1357,7 +1357,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
   OrefSet(new_class, new_class->instanceMethodDictionary, new_table());
                                        /* make the instance_superclass list  */
                                        /* with OBJECT in it                  */
-  OrefSet(new_class, new_class->instanceSuperClasses, new_array1(TheObjectClass));
+  OrefSet(new_class, new_class->instanceSuperClasses, new_array(TheObjectClass));
                                        /* and set the behaviour class        */
   new_class->instanceBehaviour->setClass(TheObjectClass);
                                        /* and the instance behaviour scopes  */

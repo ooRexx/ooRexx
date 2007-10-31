@@ -611,7 +611,7 @@ RexxObject * activation_find  (void);
          /* novalue trapping enabled?         */
          if (novalueEnabled()) {
                                   /* handle novalue conditions         */
-             report_novalue(name);
+             reportNovalue(name);
          }
          value = name;            /* just use the name                 */
      }

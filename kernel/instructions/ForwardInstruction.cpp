@@ -116,7 +116,7 @@ void RexxInstructionForward::execute(
   context->traceInstruction(this);     /* trace if necessary                */
   if (!context->inMethod())            /* is this a method clause?          */
                                        /* raise an error                    */
-    report_exception(Error_Execution_forward);
+    reportException(Error_Execution_forward);
   _target = OREF_NULL;                  /* no object yet                     */
   _message = OREF_NULL;                 /* no message over ride              */
   _superClass = OREF_NULL;              /* no super class over ride          */
@@ -144,7 +144,7 @@ void RexxInstructionForward::execute(
                                        /* dimension one?                    */
     if (argArray == TheNilObject || argArray->getDimension() != 1)
                                        /* this is an error                  */
-      report_exception(Error_Execution_forward_arguments);
+      reportException(Error_Execution_forward_arguments);
     count = argArray->size();          /* get the size                      */
                                        /* omitted trailing arguments?       */
     if (count != 0 && argArray->get(count) == OREF_NULL) {

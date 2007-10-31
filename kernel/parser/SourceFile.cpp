@@ -205,7 +205,7 @@ void RexxSource::initFile()
   program_source = (RexxBuffer *)SysReadProgram(file_name);
   if (program_source == OREF_NULL) {   /* Program not found or read error?  */
                                        /* report this                       */
-    report_exception1(Error_Program_unreadable_name, this->programName);
+    reportException(Error_Program_unreadable_name, this->programName);
   }
 
 #ifdef SCRIPTING
@@ -411,13 +411,13 @@ void RexxSource::position(
        new_line = (RexxString *)(this->sourceArray->get(line - this->interpret_adjust));
        if (new_line == OREF_NULL)      /* missing line?                     */
                                        /* this is an error                  */
-         report_exception(Error_Translation_invalid_line);
+         reportException(Error_Translation_invalid_line);
        if (!OTYPE(String, new_line)) { /* not working with a string?        */
                                        /* get this as a string              */
          new_line = (RexxString *)new_line->stringValue();
          if (new_line == TheNilObject) /* got back .nil?                    */
                                        /* this is an error                  */
-           report_exception(Error_Translation_invalid_line);
+           reportException(Error_Translation_invalid_line);
        }
                                        /* set the program pointer           */
        this->current = new_line->getStringData();
@@ -960,7 +960,7 @@ RexxMethod *RexxSource::interpret(
   RexxMethod *_method;                  /* new method for interpret          */
 
                                        /* create a source object            */
-  source = (RexxSource *)save(new RexxSource (this->programName, new_array1(string)));
+  source = (RexxSource *)save(new RexxSource (this->programName, new_array(string)));
   source->interpretLine(_line_number);  /* fudge the line numbering          */
                                        /* convert to executable form        */
   _method = source->interpretMethod(_labels);
@@ -1283,7 +1283,7 @@ void RexxSource::processInstall(
         metaclass = this->resolveClass(metaclass_name, activation);
         if (metaclass == OREF_NULL)    /* nothing found?                    */
                                        /* not found in environment, error!  */
-          report_exception1(Error_Execution_nometaclass, metaclass_name);
+          reportException(Error_Execution_nometaclass, metaclass_name);
       }
 
       if (subclass_name == OREF_NULL)  /* no subclass?                      */
@@ -1294,7 +1294,7 @@ void RexxSource::processInstall(
         subclass = this->resolveClass(subclass_name, activation);
         if (subclass == OREF_NULL)     /* nothing found?                    */
                                        /* not found in environment, error!  */
-          report_exception1(Error_Execution_noclass, subclass_name);
+          reportException(Error_Execution_noclass, subclass_name);
       }
                                        /* get the inherits information      */
       inherits = (RexxArray *)(current_class->get(CLASS_INHERIT));
@@ -1323,7 +1323,7 @@ void RexxSource::processInstall(
           subclass = this->resolveClass(subclass_name, activation);
           if (subclass == OREF_NULL)   /* not found?                        */
                                        /* not found in environment, error!  */
-            report_exception1(Error_Execution_noclass, subclass_name);
+            reportException(Error_Execution_noclass, subclass_name);
                                        /* do the actual inheritance         */
           send_message1(classObject, OREF_INHERIT, subclass);
         }
@@ -4478,7 +4478,7 @@ void RexxSource::errorLine(
   _instruction->getLocation(&instruction_location);
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array1(new_integer(instruction_location.line)), OREF_NULL);
+  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(new_integer(instruction_location.line)), OREF_NULL);
 }
 
 void RexxSource::errorPosition(
@@ -4496,7 +4496,7 @@ void RexxSource::errorPosition(
   token->getLocation(&token_location); /* get the token location            */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array2(new_integer(token_location.offset), new_integer(token_location.line)), OREF_NULL);
+  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(new_integer(token_location.offset), new_integer(token_location.line)), OREF_NULL);
 }
 
 void RexxSource::errorToken(
@@ -4568,7 +4568,7 @@ void RexxSource::errorToken(
   }
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array1(value), OREF_NULL);
+  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -4583,7 +4583,7 @@ void RexxSource::error(
   this->clause->getLocation(&location);/* get the clause location           */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array1(value), OREF_NULL);
+  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -4599,7 +4599,7 @@ void RexxSource::error(
   this->clause->getLocation(&location);/* get the clause location           */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array2(value1, value2), OREF_NULL);
+  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value1, value2), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -4616,7 +4616,7 @@ void RexxSource::error(
   this->clause->getLocation(&location);/* get the clause location           */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array3(value1, value2, value3), OREF_NULL);
+  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
 }
 
 void RexxSource::blockError(
@@ -4811,7 +4811,7 @@ void RexxSource::parseTraceSetting(
           if (this->clause)           /* call different error routines      */
             report_error1(Error_Invalid_trace_trace, value->extract(_position, 1));
           else
-            report_exception1(Error_Invalid_trace_trace, value->extract(_position, 1));
+            reportException(Error_Invalid_trace_trace, value->extract(_position, 1));
           break;
       }
       break;                           /* non-prefix char found             */

@@ -128,7 +128,7 @@ RexxString *SysName( void )
     if (isys == 1) strcpy(chVerBuf, "WindowsNT"); // Windows NT
   else strcpy(chVerBuf, "Windows95");                                              // Windows 95
 
-  return new_cstring(chVerBuf);                     /* return as a string                */
+  return new_string(chVerBuf);                     /* return as a string                */
 }
 
 
@@ -162,7 +162,7 @@ RexxString *SysVersion(void)
   GetVersionEx(&vi);              // get version with extended api
                                        /* format into the buffer            */
   wsprintf(chVerBuf,"%i.%02i",(int)vi.dwMajorVersion,(int)vi.dwMinorVersion);
-  return new_cstring(chVerBuf);     /* return as a string                */
+  return new_string(chVerBuf);     /* return as a string                */
 }
 
 
@@ -184,7 +184,7 @@ PFN SysLoadProcedure(
                                        /* try to get the function address   */
   if ( !(Function =(PFN)GetProcAddress(Handle, Name)) )
                                        /* report an exception               */
-    report_exception1(Error_External_name_not_found_method, Procedure);
+    reportException(Error_External_name_not_found_method, Procedure);
   return Function;                     /* return the pointer information    */
 }
 
@@ -217,7 +217,7 @@ RexxInteger * SysLoadLibrary(
                                        /* try to load the module             */
   else if (!(Handle = LoadLibrary((LPCTSTR)Name)))
                                        /* report an error                    */
-    report_exception1(Error_Execution_library, Library);
+    reportException(Error_Execution_library, Library);
   return new_integer((LONG)Handle);    /* return the new handle info         */
 }
 RexxString * SysGetCurrentQueue(void)
@@ -451,7 +451,7 @@ INT SysCreateThread (
   ht = CreateThread(NULL, StackSize, call_thread_function, Arguments, 0, &res);
   if (!ht)
   {
-      report_exception1(Error_System_service_service, new_cstring("ERROR CREATING THREAD"));
+      reportException(Error_System_service_service, "ERROR CREATING THREAD");
      return 0;   /* error */
   }
   ((RexxActivity *)Arguments)->hThread = ht;

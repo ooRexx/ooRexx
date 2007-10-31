@@ -174,7 +174,7 @@ RexxString * SysMessageHeader(
      msgid = p->msgid;                 /* get msg number associated w/ error*/
                                        /* format as a message header        */
      sprintf(DataArea, "REX%4.4dE: ", msgid);
-     return new_cstring(DataArea);     /* return as a string object         */
+     return new_string(DataArea);     /* return as a string object         */
    }
  }
  return OREF_NULL;                     /* no message retrieved              */

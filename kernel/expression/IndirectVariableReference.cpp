@@ -127,15 +127,15 @@ RexxList *RexxVariableReference::list(
     character = variable_name->getChar(0);
     if (character == '.')              /* start with a period?              */
                                        /* report that error                 */
-      report_exception1(Error_Invalid_variable_period, variable_name);
+      reportException(Error_Invalid_variable_period, variable_name);
                                        /* how about a digit?                */
     else if (character >= '0' && character <= '9')
                                        /* constant symbol                   */
-      report_exception1(Error_Invalid_variable_number, variable_name);
+      reportException(Error_Invalid_variable_number, variable_name);
                                        /* convert into a variable reference */
     retriever = context->getVariableRetriever(variable_name);
     if (retriever == OREF_NULL)        /* not converted ok?                 */
-      report_exception(Error_Symbol_expected_expose);
+      reportException(Error_Symbol_expected_expose);
                                        /* add to the processing list        */
     name_list->addLast((RexxObject *)retriever);
                                        /* get the next variable             */

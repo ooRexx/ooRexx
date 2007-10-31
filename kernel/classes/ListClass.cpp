@@ -187,17 +187,17 @@ LISTENTRY * RexxList::getEntry(
 
   if (_index == OREF_NULL)             /* must have one here                */
                                        /* else an error                     */
-    report_exception1(Error_Incorrect_method_noarg, position);
+    reportException(Error_Incorrect_method_noarg, position);
                                        /* force to integer form             */
   integer_index = (RexxInteger *)REQUEST_INTEGER(_index);
   if (integer_index == TheNilObject)   /* doesn't exist?                    */
                                        /* raise an exception                */
-    report_exception1(Error_Incorrect_method_index, _index);
+    reportException(Error_Incorrect_method_index, _index);
                                        /* get the binary value              */
   item_index = integer_index->getValue();
   if (item_index < 0)                  /* not a valid index?                */
                                        /* raise an exception                */
-    report_exception1(Error_Incorrect_method_index, _index);
+    reportException(Error_Incorrect_method_index, _index);
   if (item_index >= this->size)        /* out of possible range?            */
     return NULL;                       /* not found                         */
   element = ENTRY_POINTER(item_index); /* point to the item                 */
@@ -239,7 +239,7 @@ RexxObject *RexxList::put(
   required_arg(_value, ONE);           /* must have a value also            */
   if (element == NULL)                 /* not a valid index?                */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_index, _index);
+    reportException(Error_Incorrect_method_index, _index);
                                        /* replace the value                 */
   OrefSet(this->table, element->value, _value);
   return OREF_NULL;                    /* return nothing at all             */
@@ -266,7 +266,7 @@ RexxObject *RexxList::section(
     counter = 999999999;               /* just use largest possible count   */
   if (element == NULL)                 /* index doesn't exist?              */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_index, _index);
+    reportException(Error_Incorrect_method_index, _index);
   if (!OTYPE(List, this))              /* actually a list subclass?         */
                                        /* need to do this the slow way      */
     return this->sectionSubclass(element, counter);
@@ -335,7 +335,7 @@ RexxObject *RexxList::add(
     element = this->getEntry(_index, (RexxObject *)IntegerOne);
     if (element == NULL)               /* index doesn't exist?              */
                                        /* raise an error                    */
-      report_exception1(Error_Incorrect_method_index, _index);
+      reportException(Error_Incorrect_method_index, _index);
   }
   this->count++;                       /* increase our count                */
                                        /* set the value                     */
@@ -499,7 +499,7 @@ RexxObject *RexxList::insert(
     element = this->getEntry(_index, (RexxObject *)IntegerOne);
     if (element == NULL)               /* index doesn't exist?              */
                                        /* raise an error                    */
-      report_exception1(Error_Incorrect_method_index, _index);
+      reportException(Error_Incorrect_method_index, _index);
   }
   this->count++;                       /* increase our count                */
                                        /* set the value                     */
@@ -644,7 +644,7 @@ RexxObject *RexxList::next(
   element = this->getEntry(_index, (RexxObject *)IntegerOne);
   if (element == NULL)                 /* not a valid index?                */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_index, _index);
+    reportException(Error_Incorrect_method_index, _index);
 
   if (element->next == LIST_END)       /* no next item?                     */
     return TheNilObject;               /* just return .nil                  */
@@ -666,7 +666,7 @@ RexxObject *RexxList::previous(
   element = this->getEntry(_index, (RexxObject *)IntegerOne);
   if (element == NULL)                 /* not a valid index?                */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_index, _index);
+    reportException(Error_Incorrect_method_index, _index);
 
   if (element->previous == LIST_END)   /* no previous item?                 */
     return TheNilObject;               /* just return .nil                  */
@@ -1014,7 +1014,7 @@ RexxList *RexxListClass::classOf(
       if (item == OREF_NULL) {         /* omitted item?                     */
         discard(newList);              /* release the new list              */
                                        /* raise an error on this            */
-        report_exception1(Error_Incorrect_method_noarg, new_integer(i + 1));
+        reportException(Error_Incorrect_method_noarg, i + 1);
       }
                                        /* add this to the list end          */
       newList->addLast(item);
@@ -1030,7 +1030,7 @@ RexxList *RexxListClass::classOf(
       if (item == OREF_NULL) {         /* omitted item?                     */
         discard(newList);              /* release the new list              */
                                        /* raise an error on this            */
-        report_exception1(Error_Incorrect_method_noarg, new_integer(i + 1));
+        reportException(Error_Incorrect_method_noarg, i + 1);
       }
                                        /* add this to the list end          */
       send_message1(newList, OREF_INSERT, item);

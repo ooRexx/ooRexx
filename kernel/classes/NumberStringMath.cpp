@@ -90,9 +90,9 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, U
                                        /* but restore the fuzz first        */
    CurrentActivation->setFuzz(saveFuzz);
    if (operation == OT_MAX)            /*  doing a MAX operation?           */
-    report_exception2(Error_Incorrect_call_noarg, new_cstring(CHAR_MAX), new_integer(arg + 1));
+    reportException(Error_Incorrect_call_noarg, CHAR_MAX, arg + 1);
    else                                /*  nope must be min.                */
-    report_exception2(Error_Incorrect_call_noarg, new_cstring(CHAR_MIN), new_integer(arg + 1));
+    reportException(Error_Incorrect_call_noarg, CHAR_MIN, arg + 1);
   }
 
   compobj = nextObject->numberString();/* get a numberstring object         */
@@ -127,7 +127,7 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, U
     CurrentActivation->setFuzz(saveFuzz);
                                        /* keep maxminobj around just a      */
     discard(maxminobj);                /* little longer                     */
-    report_exception2(Error_Incorrect_method_number, new_integer(arg + 1), args[arg]);
+    reportException(Error_Incorrect_method_number, arg + 1, args[arg]);
   }
  }
  CurrentActivation->setFuzz(saveFuzz); /* be sure we restore original Fuzz  */
@@ -182,11 +182,11 @@ void RexxNumberStringBase::mathRound(
                                        /*  Check for overflow               */
  numVal = this->exp + this->length - 1;
  if (numVal > MAXNUM) {
-   report_exception2(Error_Overflow_expoverflow, new_integer(numVal), IntegerNine);
+   reportException(Error_Overflow_expoverflow, numVal, IntegerNine);
  }
                                        /*  Check for underflow.             */
  else  if (this->exp < -MAXNUM) {
-   report_exception2(Error_Overflow_expunderflow, new_integer(this->exp), IntegerNine);
+   reportException(Error_Overflow_expunderflow, this->exp, IntegerNine);
  }
  return;
 }
@@ -215,10 +215,10 @@ void RexxNumberString::adjustPrecision()
                                            /*  Check for overflow               */
      resultVal = this->exp + this->length - 1;
      if (resultVal > MAXNUM) {
-       report_exception2(Error_Overflow_expoverflow, new_integer(resultVal), IntegerNine);
+       reportException(Error_Overflow_expoverflow, resultVal, IntegerNine);
      }
      else  if (this->exp < -MAXNUM) {      /*  Check for underflow.             */
-       report_exception2(Error_Overflow_expunderflow, new_integer(this->exp), IntegerNine);
+       reportException(Error_Overflow_expunderflow, this->exp, IntegerNine);
      }
  }
  return;                               /* just return to caller.            */
@@ -343,11 +343,11 @@ void RexxNumberString::adjustPrecision(char *resultPtr, size_t NumberDigits)
         resultVal = this->exp + this->length - 1;
         if (resultVal > MAXNUM)
         {
-            report_exception2(Error_Overflow_expoverflow, new_integer(resultVal), IntegerNine);
+            reportException(Error_Overflow_expoverflow, resultVal, IntegerNine);
         }
         else if (this->exp < -MAXNUM)
         {      /*  Check for underflow.             */
-            report_exception2(Error_Overflow_expunderflow, new_integer(this->exp), IntegerNine);
+            reportException(Error_Overflow_expunderflow, this->exp, IntegerNine);
         }
     }
     return;                               /* just return to caller.            */
@@ -366,7 +366,7 @@ RexxNumberString *RexxNumberString::prepareNumber(size_t NumberDigits, BOOL roun
  if (newObj->length > NumberDigits) {  /* is the length larger than digits()*/
                                        /* raise a numeric condition, may    */
                                        /*  not return from this.            */
-  report_condition(OREF_LOSTDIGITS, (RexxObject *)newObj);
+  reportCondition(OREF_LOSTDIGITS, (RexxString *)newObj);
                                        /* adjust exponet by amount over     */
                                        /* precision                         */
   newObj->exp += newObj->length - NumberDigits;
@@ -416,14 +416,14 @@ RexxNumberString *RexxNumberString::addSub(
 
  if (leftLength > maxLength) {
                                        /* raise a numeric condition, may,   */
-  report_condition(OREF_LOSTDIGITS, (RexxObject *)this);
+  reportCondition(OREF_LOSTDIGITS, (RexxString *)this);
                                        /*  not return from this.            */
   leftExp += leftLength - maxLength;
   leftLength = maxLength;
  }
  if (rightLength > maxLength) {
                                        /* raise a numeric condition, may    */
-  report_condition(OREF_LOSTDIGITS, other);
+  reportCondition(OREF_LOSTDIGITS, (RexxString *)other);
                                        /*  not return from this.            */
   rightExp += rightLength - maxLength;
   rightLength = maxLength;

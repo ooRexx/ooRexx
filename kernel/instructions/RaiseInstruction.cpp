@@ -178,7 +178,7 @@ void RexxInstructionRaise::execute(
     errorcode = REQUEST_STRING(rc);    /* get the string version            */
     if (errorcode == TheNilObject)     /* didn't convert?                   */
                                        /* raise an error                    */
-      report_exception1(Error_Conversion_raise, rc);
+      reportException(Error_Conversion_raise, rc);
                                        /* convert to a decimal              */
                                        /* and get integer object            */
     msgNum = message_number(errorcode);
@@ -212,7 +212,7 @@ void RexxInstructionRaise::execute(
                                        /* get current trapped condition     */
     conditionobj = context->getConditionObj();
     if (conditionobj == OREF_NULL)     /* no current active condition?      */
-      report_exception(Error_Execution_propagate);
+      reportException(Error_Execution_propagate);
   }
   if (_additional != OREF_NULL) {      /* have additional information?      */
                                        /* propagate condition maybe?        */
@@ -229,7 +229,7 @@ void RexxInstructionRaise::execute(
                                        /* dimension one?                    */
       if (_additional == TheNilObject || ((RexxArray *)_additional)->getDimension() != 1)
                                        /* this is an error                  */
-        report_exception(Error_Execution_syntax_additional);
+        reportException(Error_Execution_syntax_additional);
     }
   }
   if (i_flags&raise_return)            /* is this the exit form?            */

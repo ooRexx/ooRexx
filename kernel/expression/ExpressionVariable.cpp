@@ -128,7 +128,7 @@ RexxObject  *RexxParseVariable::evaluate(
         if (value == NULL) {
           // raise novalue?
           if (context->novalueEnabled())
-            report_novalue(this->variableName);
+            reportNovalue(this->variableName);
           // give it default value
           value = this->variableName;
         }
@@ -139,7 +139,7 @@ RexxObject  *RexxParseVariable::evaluate(
       else {
         if (context->novalueEnabled()) /* novalue trapping enabled?         */
                                        /* handle novalue conditions         */
-          report_novalue(this->variableName);
+          reportNovalue(this->variableName);
         value = this->variableName;    /* just use the name                 */
       }
     }

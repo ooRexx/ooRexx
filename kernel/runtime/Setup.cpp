@@ -460,7 +460,7 @@ CPPMSTR(RexxString::caselessCompareToRexx),
                                           /* End of BIF methods                */
 CPPMSTR(RexxString::makeArray),
 
-CPPMSTRCL(RexxStringClass::newRexx),
+CPPMSTR(RexxString::newRexx),
 CPPMMUTBCL(RexxMutableBufferClass::newRexx),
 CPPMMUTB(RexxMutableBuffer::lengthRexx),
 CPPMMUTB(RexxMutableBuffer::requestString),
@@ -569,7 +569,7 @@ void kernelInit (void)
                                        /* RexxNumberString                  */
   CLASS_CREATE(NumberString, RexxNumberStringClass);
   CLASS_CREATE(Array, RexxClass);      /* RexxArray                         */
-  TheNullArray = new_array(0);         /* set up a null array               */
+  TheNullArray = new_array((size_t)0); /* set up a null array               */
 
   CLASS_CREATE(Directory, RexxClass);  /* RexxDirectory                     */
   TheEnvironment = new_directory();    /* create the environment directory  */
@@ -1161,7 +1161,7 @@ bool kernel_setup (void)
 
                                        /* Add the NEW method to the class   */
                                        /* behaviour mdict                   */
-  defineKernelMethod(CHAR_NEW, TheStringClassBehaviour, CPPMSTRCL(RexxStringClass::newRexx), A_COUNT);
+  defineKernelMethod(CHAR_NEW, TheStringClassBehaviour, CPPMSTR(RexxString::newRexx), A_COUNT);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -1323,7 +1323,7 @@ bool kernel_setup (void)
     /* class_id method in its own class but instead it points to the one     */
     /* in the string class.                                                 .*/
 
-  defineKernelMethod(CHAR_NEW, TheIntegerClassBehaviour, CPPMSTRCL(RexxStringClass::newRexx), A_COUNT);
+  defineKernelMethod(CHAR_NEW, TheIntegerClassBehaviour, CPPMSTR(RexxString::newRexx), A_COUNT);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -1388,7 +1388,7 @@ bool kernel_setup (void)
      /* class_id method in its own class but instead it points to the one    */
      /* in the string class.                                                 */
 
-  defineKernelMethod(CHAR_NEW, TheNumberStringClassBehaviour, CPPMSTRCL(RexxStringClass::newRexx), A_COUNT);
+  defineKernelMethod(CHAR_NEW, TheNumberStringClassBehaviour, CPPMSTR(RexxString::newRexx), A_COUNT);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

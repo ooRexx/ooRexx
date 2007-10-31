@@ -247,7 +247,7 @@ RexxObject *RexxNativeActivation::run(
                                        /* not convertable?                  */
               if (tempValues == (long)NO_LONG)
                                        /* this is an error                  */
-                report_exception2(Error_Incorrect_method_whole, new_integer(i+1), argument);
+                reportException(Error_Incorrect_method_whole, i+1, argument);
                                        /* copy over the info                */
               *((int *)*ivalp) = (int)tempValues;
               break;
@@ -258,7 +258,7 @@ RexxObject *RexxNativeActivation::run(
                                        /* not convertable?                  */
               if (tempValues == (long)NO_LONG)
                                        /* this is an error                  */
-                report_exception2(Error_Incorrect_method_whole, new_integer(i+1), argument);
+                reportException(Error_Incorrect_method_whole, i+1, argument);
                                        /* copy over the info                */
               *((long *)*ivalp) = tempValues;
               break;
@@ -332,7 +332,7 @@ RexxObject *RexxNativeActivation::run(
   }
   if (i < argcount && !used_arglist)   /* extra, unwanted arguments?        */
                                        /* got too many                      */
-    report_exception1(Error_Incorrect_method_maxarg, new_integer(i));
+    reportException(Error_Incorrect_method_maxarg, i);
 
                                        /* get a RAISE type return?          */
   if (setjmp(this->conditionjump) != 0) {
@@ -393,7 +393,7 @@ RexxObject *RexxNativeActivation::run(
       if (*((double *)*ivalues) != NO_DOUBLE)
       {
                                          /* format the result as a string     */
-          result = new_stringd((double *)*ivalues);
+          result = new_string(*((double *)*ivalues));
       }
       break;
 
@@ -402,7 +402,7 @@ RexxObject *RexxNativeActivation::run(
       if (*((CSTRING *)*ivalues) != NO_CSTRING)
       {
                                          /* convert to a string object        */
-          result = new_cstring(*((CSTRING *)*ivalues));
+          result = new_string(*((CSTRING *)*ivalues));
       }
       break;
 
@@ -514,7 +514,7 @@ double RexxNativeActivation::getDoubleValue(
                                        /* convert and check result          */
   if ((r = object->doubleValue()) == NO_DOUBLE)
                                        /* conversion error                  */
-    report_exception1(Error_Execution_nodouble, object);
+    reportException(Error_Execution_nodouble, object);
   return r;                            /* return converted number           */
 }
 
@@ -1013,7 +1013,7 @@ nativei3 (REXXOBJECT, SEND,
 /******************************************************************************/
 {
   native_entry;                        /* synchronize access                */
-  return_oref(send_message((RexxObject *)receiver,(RexxString *)new_cstring(msgname),(RexxArray *)arguments));
+  return_oref(send_message((RexxObject *)receiver,(RexxString *)new_string(msgname),(RexxArray *)arguments));
 }
 
 nativei2 (REXXOBJECT, SUPER,
@@ -1037,7 +1037,7 @@ nativei2 (REXXOBJECT, SUPER,
                                        /* copying each OREF                 */
     argarray[i-1] = args->get(i);
                                        /* now send the message              */
-  return_oref(this->u_receiver->messageSend((RexxString *)new_cstring(msgname), count, argarray, this->u_receiver->superScope(this->method->scope)));
+  return_oref(this->u_receiver->messageSend((RexxString *)new_string(msgname), count, argarray, this->u_receiver->superScope(this->method->scope)));
 }
 
 nativei2 (REXXOBJECT, SETVAR,
@@ -1056,7 +1056,7 @@ nativei2 (REXXOBJECT, SETVAR,
                                        /* pick up current activation        */
   self = (RexxNativeActivation *)CurrentActivity->current();
   dictionary = self->methodVariables();/* get the method variables          */
-  variableName = new_cstring(name);    /* get a string version of this      */
+  variableName = new_string(name);    /* get a string version of this      */
                                        /* do the assignment                 */
   dictionary->set(variableName, (RexxObject *)value);
   return_oref(OREF_NULL);              /* return nothing                    */
@@ -1078,7 +1078,7 @@ nativei2 (REXXOBJECT, SETVAR2,
                                        /* pick up current activation        */
   self = (RexxNativeActivation *)CurrentActivity->current();
   RexxActivation *context = (RexxActivation *)this->activity->sender(this);
-  variableName = new_cstring(name);    /* get a string version of this      */
+  variableName = new_string(name);    /* get a string version of this      */
                                        /* do the assignment throug retriever*/
   retriever = context->getVariableRetriever(variableName);
   retriever->set(context, (RexxObject *)value);
@@ -1116,7 +1116,7 @@ nativei2 (REXXOBJECT, SETFUNC,
   }
 
   if (labels) {
-    methodName = new_cstring(name);
+    methodName = new_string(name);
     // if a method by that name exists, it will be OVERWRITTEN!
     labels->setEntry(methodName, (RexxMethod *) value);
   }
@@ -1184,7 +1184,7 @@ nativei1 (REXXOBJECT, GETVAR,
                                        /* pick up current activation        */
   self = (RexxNativeActivation *)CurrentActivity->current();
   dictionary = self->methodVariables();/* get the method variables          */
-  variableName = new_cstring(name);    /* get a string version of this      */
+  variableName = new_string(name);    /* get a string version of this      */
                                        /* go get the variable               */
   value = dictionary->realValue(variableName);
   if (value == OREF_NULL)              /* uninitialized?                    */
@@ -1205,9 +1205,9 @@ nativei2 (void, EXCEPT,
 {
   native_entry;                        /* synchronize access                */
   if (value == OREF_NULL)              /* just a NULL value?                */
-    report_exception(errorcode);       /* no substitution parameters        */
+    reportException(errorcode);        /* no substitution parameters        */
   else                                 /* use the substitution form         */
-    report_exceptiond(errorcode, (RexxArray *)value);
+    reportException(errorcode, (RexxArray *)value);
 }
 
 nativei4 (void, RAISE,
@@ -1226,7 +1226,7 @@ nativei4 (void, RAISE,
   self = (RexxNativeActivation *)CurrentActivity->current();
   this->result = (RexxObject *)result; /* save the result                   */
                                        /* go raise the condition            */
-  CurrentActivity->raiseCondition(new_cstring(condition), OREF_NULL, (RexxString *)description, (RexxObject *)additional, (RexxObject *)result, OREF_NULL);
+  CurrentActivity->raiseCondition(new_string(condition), OREF_NULL, (RexxString *)description, (RexxObject *)additional, (RexxObject *)result, OREF_NULL);
   longjmp(this->conditionjump, 1);     /* now go process the return         */
 }
 
@@ -1485,7 +1485,7 @@ nativei7 (ULONG, STEMSORT,
   RexxActivation *activation = self->activity->currentAct();
 
   /* get the stem name as a string */
-  RexxString *variable = new_cstring(stemname);
+  RexxString *variable = new_string(stemname);
   this->saveObject(variable);
   /* and get a retriever for this variable */
   RexxStemVariable *retriever = (RexxStemVariable *)activation->getVariableRetriever(variable);
@@ -1497,7 +1497,7 @@ nativei7 (ULONG, STEMSORT,
       return FALSE;
   }
 
-//RexxString *tail = (RexxString *) new_cstring(OREF_NULL);
+//RexxString *tail = (RexxString *) new_string(OREF_NULL);
   RexxString *tail = OREF_NULLSTRING ;
   this->saveObject(tail);
 

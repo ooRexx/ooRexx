@@ -116,7 +116,7 @@ RexxObject *RexxLocal::callProgram(
       result = ((RexxObject *)CurrentActivity)->shriekRun(routine, OREF_COMMAND, OREF_INITIALADDRESS, arguments + 1, argCount - 1);
   }
   else
-    report_exception1(Error_Routine_not_found_name, arguments[0]);
+    reportException(Error_Routine_not_found_name, arguments[0]);
                                        /* run and get the result            */
   return result;
 }

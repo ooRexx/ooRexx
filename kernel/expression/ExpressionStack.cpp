@@ -120,10 +120,10 @@ void RexxExpressionStack::expandArgs(
 
   if (argcount < min)                  /* too few arguments?                */
                                        /* report an error                   */
-    report_exception2(Error_Incorrect_call_minarg, new_cstring(function), new_integer(min));
+    reportException(Error_Incorrect_call_minarg, function, min);
   else if (argcount > max)             /* too many arguments?               */
                                        /* report an error                   */
-    report_exception2(Error_Incorrect_call_maxarg, new_cstring(function), new_integer(max));
+    reportException(Error_Incorrect_call_maxarg, function, max);
   else {                               /* need to expand number of args     */
                                        /* address the stack elements        */
     current = this->pointer(argcount - 1);
@@ -131,7 +131,7 @@ void RexxExpressionStack::expandArgs(
       if (*current++ == OREF_NULL) {   /* omitted argument?                 */
         j = min - i + 1;               /* argument location                 */
                                        /* missing required argument         */
-        report_exception2(Error_Incorrect_call_noarg, new_cstring(function), new_integer(j));
+        reportException(Error_Incorrect_call_noarg, function, j);
       }
     }
   }
@@ -201,7 +201,7 @@ RexxInteger *RexxExpressionStack::requiredIntegerArg(
   if (long_value == (long)NO_LONG) { /* not convertable?                  */
     tempCount = argcount - position;   /* get the actual argument number    */
                                        /* report an exception               */
-    report_exception3(Error_Incorrect_call_whole, new_cstring(function), new_integer(tempCount), argument);
+    reportException(Error_Incorrect_call_whole, function, tempCount, argument);
   }
   newInt = new_integer(long_value);    /* create an integer object          */
   this->replace(position, newInt);     /* replace the argument              */
@@ -232,7 +232,7 @@ RexxInteger *RexxExpressionStack::optionalIntegerArg(
   if (long_value == (long)NO_LONG) {   /* not convertable?                  */
     tempCount = argcount - position;   /* get the actual argument number    */
                                        /* report an exception               */
-    report_exception3(Error_Incorrect_call_whole, new_cstring(function), new_integer(tempCount), argument);
+    reportException(Error_Incorrect_call_whole, function, tempCount, argument);
   }
   newInt = new_integer(long_value);    /* create an integer object          */
   this->replace(position, newInt);     /* replace the argument              */

@@ -184,7 +184,7 @@ RexxMethod *SysRestoreProgram(
     fclose(Handle);                    /* close the file                    */
                                        /* got an error here                 */
     RequestKernelAccess(activity);       /* get the lock back                 */
-    report_exception1(Error_Program_unreadable_version, FileName);
+    reportException(Error_Program_unreadable_version, FileName);
   }
                                        /* read the file size                */
   BufferSize = Control.ImageSize;      /* get the method info size          */
@@ -454,7 +454,7 @@ void SysSaveTranslatedProgram(
   Handle = fopen(File, "wb");          /* open the output file              */
   if (Handle == NULL)                  /* get an open error?                */
                                        /* got an error here                 */
-    report_exception1(Error_Program_unreadable_output_error, new_cstring(File));
+    reportException(Error_Program_unreadable_output_error, File);
   save(Method);                        /* and the method too                */
   FlatBuffer = Method->saveMethod();   /* flatten the method                */
   save(FlatBuffer);                    /* protect the flattened one too     */
@@ -528,7 +528,7 @@ RexxMethod *SysRestoreTranslatedProgram(
   if ((Control.MetaVersion != METAVERSION) || (Control.Magic != MAGIC)) {
     fclose(Handle);                    /* close the file                    */
                                        /* got an error here                 */
-    report_exception1(Error_Program_unreadable_version, FileName);
+    reportException(Error_Program_unreadable_version, FileName);
   }
                                        /* read the file size                */
   BufferSize = Control.ImageSize;      /* get the method info size          */

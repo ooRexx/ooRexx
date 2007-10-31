@@ -173,9 +173,9 @@ RexxObject *RexxMessage::notify(RexxMessage *_message)
  }
  else {                                /* nope, its and error, report it.   */
    if ( message == OREF_NULL)
-     report_exception1(Error_Incorrect_method_noarg, IntegerOne);
+     reportException(Error_Incorrect_method_noarg, IntegerOne);
    else
-     report_exception1(Error_Incorrect_method_nomessage, _message);
+     reportException(Error_Incorrect_method_nomessage, _message);
  }
  return OREF_NULL;                     /* all done, we return nothing       */
 }
@@ -232,7 +232,7 @@ RexxObject *RexxMessage::send(RexxObject *_receiver)
                                        /* the receiver?                     */
   if (this->msgSent())
                                        /* Yes, this is an error             */
-    report_exception(Error_Execution_message_reuse);
+    reportException(Error_Execution_message_reuse);
 
                                        /* get the activity I'm running under*/
   myActivity = (RexxActivity *)CurrentActivity;
@@ -241,7 +241,7 @@ RexxObject *RexxMessage::send(RexxObject *_receiver)
                                        /*that message dispatch.             */
   if (this->startPending() && myActivity != this->startActivity )
                                        /* Yes, this is an error             */
-    report_exception(Error_Execution_message_reuse);
+    reportException(Error_Execution_message_reuse);
   this->setMsgSent();                  /* indicate we were sent a message   */
 
   if (_receiver != OREF_NULL) {        /* new receiver specified?           */
@@ -250,7 +250,7 @@ RexxObject *RexxMessage::send(RexxObject *_receiver)
   }
                                        /* validate startscope               */
   if (!this->receiver->behaviour->checkScope(this->startscope)) {
-    report_exception1(Error_Incorrect_method_array_noclass, IntegerTwo);
+    reportException(Error_Incorrect_method_array_noclass, IntegerTwo);
   }
                                        /*  this is a primitive object?      */
                                        /* tell the activation/nativeact, we */
@@ -287,15 +287,14 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
   size_t        i;                     /* loop counter                      */
 
 #ifdef NOTHREADSUPPORT
-   report_exception1(Error_Execution_no_concurrency,
-                  new_cstring("Concurrency not supported"));
+   reportException(Error_Execution_no_concurrency);
 #else
 
                                        /* has message already been sent or  */
                                        /* is another start message pending? */
   if (this->msgSent() || this->startPending())
                                        /* Yes, this is an error             */
-    report_exception(Error_Execution_message_reuse);
+    reportException(Error_Execution_message_reuse);
                                        /* indicate object has received a    */
                                        /*start we need this additional bit  */
                                        /*so that the send message will      */
@@ -525,12 +524,12 @@ RexxObject *RexxMessage::newRexx(
 
   if (num_args < 2 ) {                 /* passed less than 2 args?          */
                                        /* Yes, this is an error.            */
-    report_exception1(Error_Incorrect_method_minarg,  IntegerTwo);
+    reportException(Error_Incorrect_method_minarg,  IntegerTwo);
   }
   _target   = msgArgs[0];              /* Get the receiver object           */
   if (_target == OREF_NULL)            /* no receiver?                      */
                                        /* this is an error                  */
-    report_exception1(Error_Incorrect_method_noarg, IntegerOne);
+    reportException(Error_Incorrect_method_noarg, IntegerOne);
   _message  = msgArgs[1];              /* get the message .                 */
 
                                        /* see if this is an array item      */
@@ -538,21 +537,21 @@ RexxObject *RexxMessage::newRexx(
   if (msgNameArray != TheNilObject) {  /* is message specified as an array? */
     if (msgNameArray->getDimension() != 1 || msgNameArray->size() != 2)
                                        /* raise an error                    */
-      report_exception(Error_Incorrect_method_message);
+      reportException(Error_Incorrect_method_message);
                                        /* Was message name omitted?         */
     msgName = msgNameArray->get(1);
     if (msgName == OREF_NULL)
                                        /* Yes, this is an error, report it. */
-      report_exception1(Error_Incorrect_method_noarg, IntegerOne);
+      reportException(Error_Incorrect_method_noarg, IntegerOne);
 
     msgNameStr = (RexxString *)msgName->makeString();
     if (msgNameStr == TheNilObject)    /* got back .nil?                    */
                                        /* raise an error                    */
-      report_exception1(Error_Incorrect_method_array_nostring, IntegerOne);
+      reportException(Error_Incorrect_method_array_nostring, IntegerOne);
                                        /* Was starting scope omitted ?      */
     if (OREF_NULL == msgNameArray->get(2))
                                        /* Yes, this is an error, report it. */
-      report_exception1(Error_Incorrect_method_noarg, IntegerTwo);
+      reportException(Error_Incorrect_method_noarg, IntegerTwo);
                                        /* get the top activation            */
     activation = (RexxActivation *)CurrentActivity->current();
                                        /* have an activation?               */
@@ -561,11 +560,11 @@ RexxObject *RexxMessage::newRexx(
       sender = (RexxObject *)activation->getReceiver();
       if (sender != target)            /* not the same receiver?            */
                                        /* this is an error                  */
-         report_exception(Error_Execution_super);
+         reportException(Error_Execution_super);
     }
     else
                                        /* this is an error                  */
-      report_exception(Error_Execution_super);
+      reportException(Error_Execution_super);
     _message = msgNameArray;           /* Message to be sent.               */
   }
   else {                               /* not an array as message.          */
@@ -594,31 +593,31 @@ RexxObject *RexxMessage::newRexx(
                                        /* are there less than 4 required    */
                                        /*args?                              */
         if (num_args < 4)              /* this is an error                  */
-          report_exception1(Error_Incorrect_method_minarg, IntegerFour);
+          reportException(Error_Incorrect_method_minarg, IntegerFour);
 
                                        /* are there more than 4 required    */
                                        /*args?                              */
         if (num_args > 4)              /* this is an error                  */
-          report_exception1(Error_Incorrect_method_maxarg, IntegerFour);
+          reportException(Error_Incorrect_method_maxarg, IntegerFour);
 
                                        /* get the array of arguments        */
         argPtr = (RexxArray *)msgArgs[3];
         if (argPtr == OREF_NULL)       /* no array given?                   */
                                        /* this is an error                  */
-          report_exception1(Error_Incorrect_method_noarg, IntegerFour);
+          reportException(Error_Incorrect_method_noarg, IntegerFour);
                                        /* force to array form               */
         argPtr = (RexxArray *)REQUEST_ARRAY(argPtr);
                                        /* not an array?                     */
         if (argPtr == TheNilObject || argPtr->getDimension() != 1)
                                        /* raise an error                    */
-          report_exception1(Error_Incorrect_method_noarray, msgArgs[3]);
+          reportException(Error_Incorrect_method_noarray, msgArgs[3]);
       }
       else if (option == 'i' ){        /* specified as individual?          */
                                        /* yes, build array of all arguments */
         argPtr = new (argCount - 3, msgArgs + 3) RexxArray;
       }
       else {
-        report_exception2(Error_Incorrect_method_option, new_string("AI", 2), msgArgs[2]);
+        reportException(Error_Incorrect_method_option, "AI", msgArgs[2]);
       }
     }
   }

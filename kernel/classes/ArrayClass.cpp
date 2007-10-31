@@ -54,15 +54,15 @@
 /* of array object, and its data is the same irreguardless of the methods     */
 /* used on it.                                                                */
 /*                                                                            */
-/*   Object creation macros:                                                  */
+/*   Object creation functions:                                               */
 /*     new_array(s) - Create an array of size s, initial size of array is     */
 /*                    set to s.  This array will be used as a static array    */
-/*     new_array1(a1) - Create array of size 1 and put a1 in it.              */
+/*     new_array(a1) - Create array of size 1 and put a1 in it.               */
 /*                      same as an array~of(a1)                               */
-/*     new_array2(a1,a2) - Create array of size 2 and put a1 and a2 in it     */
+/*     new_array(a1,a2) - Create array of size 2 and put a1 and a2 in it      */
 /*                      same as an array~of(a1,a2)                            */
-/*     new_array3(a1, a2, a3)      Same as new_array2 but 3 elements.         */
-/*     new_array4(a1, a2, a3, a4)    "   "    "        "  4   "               */
+/*     new_array(a1, a2, a3)      Same as new_array2 but 3 elements.          */
+/*     new_array(a1, a2, a3, a4)    "   "    "        "  4   "                */
 /*                                                                            */
 /*                                                                            */
 /******************************************************************************/
@@ -250,7 +250,7 @@ RexxObject  *RexxArray::append(RexxObject *value)
     // this is not intended for multi-dimensional arrays since they can't expand
     if (this->dimensions != OREF_NULL && this->dimensions->size() != 1)
     {
-        CurrentActivity->reportException(Error_Incorrect_method_array_dimension, CHAR_APPEND);
+        reportException(Error_Incorrect_method_array_dimension, CHAR_APPEND);
     }
 
     RexxObject *lastIndex = lastRexx();
@@ -528,7 +528,7 @@ size_t  RexxArray::validateIndex(      /* validate an array index           */
         if (this->size() != 0) {
                                        /* Yes, number of dims can't change  */
                                        /* report apropriate bounds          */
-          report_exception1(Error_Incorrect_method_maxsub, IntegerOne);
+          reportException(Error_Incorrect_method_maxsub, IntegerOne);
         }
         else {
                                        /* its empty, entendarray for new siz*/
@@ -546,7 +546,7 @@ size_t  RexxArray::validateIndex(      /* validate an array index           */
                                        /* elements (.array~new(0))          */
         if (this->dimensions != OREF_NULL || this->size() != 0)
                                        /* report apropriate bounds          */
-          report_exception1(Error_Incorrect_method_maxsub, IntegerOne);
+          reportException(Error_Incorrect_method_maxsub, IntegerOne);
         else
           return NO_LONG;              /* just report not here              */
       }
@@ -556,13 +556,13 @@ size_t  RexxArray::validateIndex(      /* validate an array index           */
                                        /* Too few? subscripts?  Say so.     */
     else if (indexCount == 0)
                                        /* report apropriate bounds          */
-      report_exception1(Error_Incorrect_method_minarg, new_integer(_start));
+      reportException(Error_Incorrect_method_minarg, _start);
                                        /* validate integer index            */
     position = _index[0]->requiredPositive(_start);
                                        /* out of bounds?                    */
     if (position > this->size() ) {
       if (position >= MAX_FIXEDARRAY_SIZE)
-        report_exception(Error_Incorrect_method_array_too_big);
+        reportException(Error_Incorrect_method_array_too_big);
                                        /* are we to expand the array?       */
       if (bounds_error & ExtendUpper) {
                                        /* yes, compute amount to expand     */
@@ -571,7 +571,7 @@ size_t  RexxArray::validateIndex(      /* validate an array index           */
       }
                                        /* need to raise an error?           */
       else if (bounds_error & RaiseBoundsUpper)
-        report_exception1(Error_Incorrect_method_array, new_integer(position));
+        reportException(Error_Incorrect_method_array, position);
       else
         position = NO_LONG;            /* just return indicator             */
     }
@@ -591,7 +591,7 @@ size_t  RexxArray::validateIndex(      /* validate an array index           */
 
         if (value == OREF_NULL)        /* not given?                        */
                                        /* this is an error too              */
-          report_exception1(Error_Incorrect_method_noarg, new_integer(i + _start));
+          reportException(Error_Incorrect_method_noarg, i + _start);
                                        /* validate integer index            */
         position = value->requiredPositive(i);
                                        /* get the current dimension         */
@@ -607,7 +607,7 @@ size_t  RexxArray::validateIndex(      /* validate an array index           */
           }
                                        /* need to raise an error?           */
           else if (bounds_error & RaiseBoundsUpper)
-            report_exception1(Error_Incorrect_method_array, new_integer(position));
+            reportException(Error_Incorrect_method_array, position);
           else
             return NO_LONG;            /* just return indicator             */
         }
@@ -619,7 +619,7 @@ size_t  RexxArray::validateIndex(      /* validate an array index           */
     }
                                        /* Not enough subscripts?            */
     else if (numsubs < numSize)
-      report_exception1(Error_Incorrect_method_minsub, new_integer(numSize));
+      reportException(Error_Incorrect_method_minsub, numSize);
     else                               /* Must be too many subscripts       */
                                        /* should the array be extended?     */
 #ifdef EXTEND_DIMENSIONS
@@ -628,7 +628,7 @@ size_t  RexxArray::validateIndex(      /* validate an array index           */
        if (this->size() != 0) {
                                        /* Yes, number of dims can't change  */
                                        /* report apropriate bounds          */
-         report_exception1(Error_Incorrect_method_maxarg, new_integer(numSize));
+         reportException(Error_Incorrect_method_maxarg, numSize);
        }
        else {
                                        /* array empty, extend the array     */
@@ -639,10 +639,10 @@ size_t  RexxArray::validateIndex(      /* validate an array index           */
        }
      }
      else {
-      report_exception1(Error_Incorrect_method_maxsub, new_integer(numSize));
+      reportException(Error_Incorrect_method_maxsub, numSize);
      }
 #else
-      report_exception1(Error_Incorrect_method_maxsub, new_integer(numSize));
+      reportException(Error_Incorrect_method_maxsub, numSize);
 #endif
   }
   return position;                     /* return the position               */
@@ -662,7 +662,7 @@ void RexxArray::ensureSpace(size_t newSize)
     {
         if (newSize >= MAX_FIXEDARRAY_SIZE)
         {
-            report_exception(Error_Incorrect_method_array_too_big);
+            reportException(Error_Incorrect_method_array_too_big);
         }
         /* yes, compute amount to expand     */
         this->extend(newSize - this->size());
@@ -713,7 +713,7 @@ RexxArray *  RexxArray::section(size_t _start, size_t _end)
     }
   } else {
                                        /* return 0 element array            */
-    newArray = (RexxArray *)new_array(0);
+    newArray = (RexxArray *)new_array((size_t)0);
   }
   return newArray;                     /* return the newly created array    */
 }
@@ -740,7 +740,7 @@ RexxObject *RexxArray::sectionRexx(
                                        /* multidimensional array?           */
   if (this->dimensions != OREF_NULL && this->dimensions->size() != 1)
                                        /* this is an error                  */
-    report_exception(Error_Incorrect_method_section);
+    reportException(Error_Incorrect_method_section);
   if (!OTYPE(Array, this))             /* actually an array subclass?       */
                                        /* need to do this the slow way      */
     return this->sectionSubclass(nstart, nend);
@@ -1099,13 +1099,13 @@ RexxString *RexxArray::toString(       /* concatenate array elements to create s
   else if (toupper((format->getStringData()[0])) == 'L')
      i_form = 2;
   else
-     report_exception2(Error_Incorrect_method_option, new_cstring("CL"), format);
+     reportException(Error_Incorrect_method_option, "CL", format);
 
   if (i_form == 1)                       /* character oriented processing    */
   {
     if (separator != OREF_NULL)
     {
-        report_exception1(Error_Incorrect_method_maxarg, IntegerOne);
+        reportException(Error_Incorrect_method_maxarg, IntegerOne);
 
     }
 
@@ -1129,7 +1129,7 @@ RexxString *RexxArray::toString(       /* concatenate array elements to create s
          line_end_string = REQUIRED_STRING(separator, ARG_TWO);
       }
       else
-         line_end_string = new_cstring(line_end);
+         line_end_string = new_string(line_end);
 
       save(line_end_string);
       bool first = true;
@@ -1851,10 +1851,10 @@ void *   RexxArray::operator new(size_t size, RexxObject **args, size_t argCount
                                        /* Make sure it's an integer         */
     total_size = current_dim->requiredNonNegative(ARG_ONE, number_digits());
     if (total_size < 0)
-      report_exception1(Error_Incorrect_method_array, new_integer(total_size));
+      reportException(Error_Incorrect_method_array, total_size);
 
     if (total_size >= MAX_FIXEDARRAY_SIZE)
-      report_exception(Error_Incorrect_method_array_too_big);
+      reportException(Error_Incorrect_method_array_too_big);
 
     /* Note: The following will leave the dimension field set to OREF_NULL, */
     /* which is what we want (it will be done by array_init above).         */
@@ -1866,7 +1866,7 @@ void *   RexxArray::operator new(size_t size, RexxObject **args, size_t argCount
                                        /* Yup, setup a Dimension array      */
                                        /* single Dimension, Mark so         */
                                        /* can't change Dimensions.          */
-      OrefSet(temp, temp->dimensions, new_array1(IntegerZero));
+      OrefSet(temp, temp->dimensions, new_array(IntegerZero));
     }
     send_message0(temp, OREF_INIT);    /* call any rexx init's              */
     discard(temp);                     /* protect new object from GC        */
@@ -1886,7 +1886,7 @@ void *   RexxArray::operator new(size_t size, RexxObject **args, size_t argCount
                                        /* going to do an overflow?          */
     if (cur_size != 0 && ((MAX_FIXEDARRAY_SIZE / cur_size) < total_size))
                                        /* this is an error                  */
-      report_exception(Error_Incorrect_method_array_too_big);
+      reportException(Error_Incorrect_method_array_too_big);
     total_size *= cur_size;            /* keep running total size           */
                                        /* Put integer object into curren    */
                                        /* dimension array position          */
@@ -1895,7 +1895,7 @@ void *   RexxArray::operator new(size_t size, RexxObject **args, size_t argCount
                                        /* Make sure flattened array isn't   */
                                        /*  too big.                         */
   if (total_size >= MAX_FIXEDARRAY_SIZE)
-    report_exception(Error_Incorrect_method_array_too_big);
+    reportException(Error_Incorrect_method_array_too_big);
                                        /* Create the new array              */
   temp = (RexxArray *)new_externalArray(total_size, arrayClass);
                                        /* put dimension array in new arr    */
@@ -2245,7 +2245,7 @@ RexxArray *RexxArray::sortRexx()
     {
         if (get(i) == OREF_NULL)
         {
-            reportException(Error_Execution_sparse_array, new_integer(i));
+            reportException(Error_Execution_sparse_array, i);
         }
     }
 
@@ -2276,7 +2276,7 @@ RexxArray *RexxArray::sortWithRexx(RexxObject *comparator)
     {
         if (get(i) == OREF_NULL)
         {
-            reportException(Error_Execution_sparse_array, new_integer(i));
+            reportException(Error_Execution_sparse_array, i);
         }
     }
 
@@ -2305,7 +2305,7 @@ RexxArray *RexxArray::stableSortRexx()
     {
         if (get(i) == OREF_NULL)
         {
-            reportException(Error_Execution_sparse_array, new_integer(i));
+            reportException(Error_Execution_sparse_array, i);
         }
     }
 
@@ -2341,7 +2341,7 @@ RexxArray *RexxArray::stableSortWithRexx(RexxObject *comparator)
     {
         if (get(i) == OREF_NULL)
         {
-            reportException(Error_Execution_sparse_array, new_integer(i));
+            reportException(Error_Execution_sparse_array, i);
         }
     }
 
@@ -2496,7 +2496,7 @@ RexxObject  *RexxArray::of(RexxObject **args, size_t argCount)
                                        /* Yup, setup a Dimension array      */
                                        /* single Dimension, Mark so         */
                                        /* can't change Dimensions.          */
-          OrefSet(newArray, newArray->dimensions, new_array1(IntegerZero));
+          OrefSet(newArray, newArray->dimensions, new_array(IntegerZero));
       }
                                        /* argument array is exactly what    */
                                        /* we want, so just return it        */
@@ -2575,7 +2575,7 @@ nativei1 (REXXOBJECT, ARRAY_NEW1,
 {
   native_entry;                        /* synchronize access                */
                                        /* just forward and return           */
-  return_oref(new_array1((OREF)object1));
+  return_oref(new_array((OREF)object1));
 }
 
 nativei2 (REXXOBJECT, ARRAY_NEW2,
@@ -2587,5 +2587,5 @@ nativei2 (REXXOBJECT, ARRAY_NEW2,
 {
   native_entry;                        /* synchronize access                */
                                        /* just forward and return           */
-  return_oref(new_array2((OREF)object1, (OREF)object2));
+  return_oref(new_array((OREF)object1, (OREF)object2));
 }

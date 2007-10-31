@@ -451,7 +451,7 @@ RexxObject *RexxDirectory::unknown(
     if (arguments == TheNilObject || arguments->getDimension() != 1 ||
         arguments->size() != 1 )
                                        /* raise an error                    */
-      report_exception1(Error_Incorrect_method_noarray, IntegerTwo);
+      reportException(Error_Incorrect_method_noarray, IntegerTwo);
                                        /* extract the name part of the msg  */
     message_value = (RexxString *)message_value->extract(0, message_length - 1);
                                        /* do this as an assignment          */

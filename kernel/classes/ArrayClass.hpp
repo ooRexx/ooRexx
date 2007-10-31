@@ -174,4 +174,36 @@ typedef struct copyElelmentParm {
    RexxArray *expansionArray;          /* actual array containing data  */
    RexxObject  *objects[1];            /* Data.                         */
  };
+
+
+inline RexxArray *new_externalArray(arraysize_t s, RexxClass *c)
+{
+    return new (s, c) RexxArray;
+}
+
+inline RexxArray *new_array(arraysize_t s)
+{
+    return new (s) RexxArray;
+}
+
+inline RexxArray *new_array(RexxObject *o1)
+{
+    return new (o1) RexxArray;
+}
+
+inline RexxArray *new_array(RexxObject *o1, RexxObject *o2)
+{
+    return new (o1, o2) RexxArray;
+}
+
+inline RexxArray *new_array(RexxObject *o1, RexxObject *o2, RexxObject *o3)
+{
+    return new (o1, o2, o3) RexxArray;
+}
+
+inline RexxArray *new_array(RexxObject *o1, RexxObject *o2, RexxObject *o3, RexxObject *o4)
+{
+    return new (o1, o2, o3, o4) RexxArray;
+}
+
  #endif

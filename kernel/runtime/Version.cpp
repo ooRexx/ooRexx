@@ -72,5 +72,5 @@ RexxString *version_number (void)
   sprintf(buffer, "REXX-ooRexx_%d.%d.%d(MT) 6.02 %s %s %s", ORX_VER, ORX_REL, ORX_MOD, day, month, year);
 #endif
 
-  return new_cstring(buffer);          /* return as a rexx string           */
+  return new_string(buffer);          /* return as a rexx string           */
 }

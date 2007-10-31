@@ -496,7 +496,7 @@ void RexxActivation::debugSkip(
 {
   if (!this->debug_pause)              /* not an allowed state?             */
                                        /* report the error                  */
-    report_exception(Error_Invalid_trace_debug);
+    reportException(Error_Invalid_trace_debug);
                                        /* copy the execution count          */
   this->settings.trace_skip = skipcount;
                                        /* set the skip flag                 */
@@ -781,7 +781,7 @@ void RexxActivation::reply(
                                        /* already had a reply issued?       */
   if (this->settings.flags&reply_issued)
                                        /* flag this as an error             */
-    report_exception(Error_Execution_reply);
+    reportException(Error_Execution_reply);
   this->settings.flags |= reply_issued;/* turn on the replied flag          */
                                        /* change execution state to         */
   this->execution_state = REPLIED;     /* terminate the main loop           */
@@ -799,7 +799,7 @@ void RexxActivation::returnFrom(
                                        /* already had a reply issued?       */
   if (this->settings.flags&reply_issued && resultObj != OREF_NULL)
                                        /* flag this as an error             */
-    report_exception(Error_Execution_reply_return);
+    reportException(Error_Execution_reply_return);
                                        /* processing an Interpret           */
   if (this->activation_context == INTERPRET) {
     this->execution_state = RETURNED;  /* this is a returned state          */
@@ -853,7 +853,7 @@ void RexxActivation::iterate(
     {
         if (!loop->isLoop())
         {
-            report_exception1(Error_Invalid_leave_iterate_name, name);
+            reportException(Error_Invalid_leave_iterate_name, name);
         }
                                    /* reset the indentation             */
         this->setIndent(doblock->getIndent());
@@ -866,10 +866,10 @@ void RexxActivation::iterate(
   }
   if (name != OREF_NULL)               /* have a name?                      */
                                        /* report exception with the name    */
-    report_exception1(Error_Invalid_leave_iteratevar, name);
+    reportException(Error_Invalid_leave_iteratevar, name);
   else
                                        /* have a misplaced ITERATE          */
-    report_exception(Error_Invalid_leave_iterate);
+    reportException(Error_Invalid_leave_iterate);
 }
 
 
@@ -908,10 +908,10 @@ void RexxActivation::leaveLoop(
   }
   if (name != OREF_NULL)               /* have a name?                      */
                                        /* report exception with the name    */
-    report_exception1(Error_Invalid_leave_leavevar, name);
+    reportException(Error_Invalid_leave_leavevar, name);
   else
                                        /* have a misplaced LEAVE            */
-    report_exception(Error_Invalid_leave_leave);
+    reportException(Error_Invalid_leave_leave);
 }
 
 long RexxActivation::currentLine()
@@ -935,7 +935,7 @@ void RexxActivation::procedureExpose(
                                        /* procedure not allowed here?       */
   if (!(this->settings.flags&procedure_valid))
                                        /* raise the appropriate error!      */
-    report_exception(Error_Unexpected_procedure_call);
+    reportException(Error_Unexpected_procedure_call);
                                        /* disable further procedures        */
   this->settings.flags &= ~procedure_valid;
 
@@ -1004,7 +1004,7 @@ RexxObject *RexxActivation::forward(
                                        /* already had a reply issued?       */
     if (this->settings.flags&reply_issued  && this->result != OREF_NULL)
                                        /* flag this as an error             */
-      report_exception(Error_Execution_reply_exit);
+      reportException(Error_Execution_reply_exit);
     this->execution_state = RETURNED;  /* this is an EXIT for real          */
     this->next = OREF_NULL;            /* turn off execution engine         */
                                        /* switch debug off to avoid debug   */
@@ -1023,7 +1023,7 @@ RexxObject *RexxActivation::forward(
                                        /* already had a reply issued?       */
     if (this->settings.flags&reply_issued && resultObj != OREF_NULL)
                                        /* flag this as an error             */
-      report_exception(Error_Execution_reply_exit);
+      reportException(Error_Execution_reply_exit);
     this->termination();               /* run "program" termination method  */
                                        /* if there are stream objects       */
     return OREF_NULL;                  /* just return nothing               */
@@ -1050,7 +1050,7 @@ void RexxActivation::exitFrom(
                                        /* already had a reply issued?       */
     if (this->settings.flags&reply_issued && result != OREF_NULL)
                                        /* flag this as an error             */
-      report_exception(Error_Execution_reply_exit);
+      reportException(Error_Execution_reply_exit);
                                        /* real program call?                */
     if (this->activation_context&PROGRAM_LEVEL_CALL)
                                        /* run termination exit              */
@@ -1147,7 +1147,7 @@ void RexxActivation::trapOn(
 {
   this->checkTrapTable();              /* make sure we have a table         */
                                        /* add the trap to the table         */
-  this->settings.traps->put(new_array3((RexxObject *)handler, OREF_ON, condition), condition);
+  this->settings.traps->put(new_array((RexxObject *)handler, OREF_ON, condition), condition);
                                        /* novalue condition or any?         */
   if (condition->strCompare(CHAR_NOVALUE) || condition->strCompare(CHAR_ANY))
                                        /* tag the method dictionary         */
@@ -1417,7 +1417,7 @@ void RexxActivation::signalValue(
     target = (RexxInstruction *)labels->at(name);
   if (target == OREF_NULL)             /* unknown label?                    */
                                        /* raise an error                    */
-    report_exception1(Error_Label_not_found_name, name);
+    reportException(Error_Label_not_found_name, name);
   this->signalTo(target);              /* now switch to the label location  */
 }
 
@@ -1867,7 +1867,7 @@ RexxObject * RexxActivation::externalCall(
             char newCalltype[32] = "AX";
             sprintf(newCalltype+2,"%p",calltype); // store info that is is called in engine
                                                   // context, also store calltype information
-            found = !this->activity->sysExitFunc(this, target, new_cstring(newCalltype), &resultObj, _arguments, _argcount);
+            found = !this->activity->sysExitFunc(this, target, new_string(newCalltype), &resultObj, _arguments, _argcount);
             //if (found)
             //  result = routine->call(this->activity, (RexxObject *)this, target, arguments, calltype, OREF_NULL, EXTERNALCALL);
           }
@@ -1876,7 +1876,7 @@ RexxObject * RexxActivation::externalCall(
           {
               routine = (RexxMethod*) ThePublicRoutines->entry(target);
               if (routine == OREF_NULL)        /* not found yet?                    */
-                  report_exception1(Error_Routine_not_found_name, target);
+                  reportException(Error_Routine_not_found_name, target);
               else
                   resultObj = routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL);
           }
@@ -1993,7 +1993,7 @@ RexxObject * RexxActivation::loadRequired(
                                        /* Are we already trying to install  */
                                        /*this ::REQUIRES?                   */
   if (this->activity->runningRequires(fullname) != OREF_NULL) {
-    report_exception(Error_Translation_duplicate_requires);
+    reportException(Error_Translation_duplicate_requires);
   }
 
   /* first see if we have something in macrospace with this name */
@@ -2017,13 +2017,13 @@ RexxObject * RexxActivation::loadRequired(
 
   if (_method == OREF_NULL)             /* couldn't create this?             */
                                        /* report an error                   */
-    report_exception1(Error_Routine_not_found_requires, target);
+    reportException(Error_Routine_not_found_requires, target);
                                        /* Indicate this routine is being    */
                                        /*installed                          */
   save(_method);
   this->activity->addRunningRequires(fullname);
   if (this->hasSecurityManager()) {
-    resultObj = securityArgs->fastAt(new_cstring(CHAR_SECURITYMANAGER));
+    resultObj = securityArgs->fastAt(new_string(CHAR_SECURITYMANAGER));
     if (resultObj != OREF_NULL && resultObj != TheNilObject)
       _method->setSecurityManager(resultObj);
   }
@@ -2223,7 +2223,7 @@ ULONG RexxActivation::getRandomSeed(
 /* Function:  Return the current random seed                                  */
 /******************************************************************************/
 {
-  LONG  seed_value;                    /* supplied seed value               */
+  wholenumber_t  seed_value;           /* supplied seed value               */
   INT   i;                             /* loop counter                      */
 
                                        /* currently in an internal routine  */
@@ -2236,7 +2236,7 @@ ULONG RexxActivation::getRandomSeed(
     seed_value = seed->getValue();     /* get the value                     */
     if (seed_value < 0)                /* negative value?                   */
                                        /* got an error                      */
-      report_exception3(Error_Incorrect_call_nonnegative, new_cstring(CHAR_RANDOM), IntegerThree, seed);
+      reportException(Error_Incorrect_call_nonnegative, CHAR_RANDOM, IntegerThree, seed);
                                        /* set the saved seed value          */
     this->random_seed = (ULONG)seed_value;
                                        /* flip all of the bits              */
@@ -2291,16 +2291,16 @@ RexxInteger * RexxActivation::random(
      maximum = randmax->getValue();    /* use the supplied maximum          */
 
    if (minimum < 0)                    /* minimum too small?                */
-     report_exception3(Error_Incorrect_call_nonnegative, new_cstring(CHAR_RANDOM), IntegerOne, randmin);
+     reportException(Error_Incorrect_call_nonnegative, CHAR_RANDOM, IntegerOne, randmin);
    if (maximum < 0)                    /* maximum too small?                */
-     report_exception3(Error_Incorrect_call_nonnegative, new_cstring(CHAR_RANDOM), IntegerTwo, randmax);
+     reportException(Error_Incorrect_call_nonnegative, CHAR_RANDOM, IntegerTwo, randmax);
    if (maximum < minimum)              /* range problem?                    */
                                        /* this is an error                  */
-     report_exception2(Error_Incorrect_call_random, randmin, randmax);
+     reportException(Error_Incorrect_call_random, randmin, randmax);
                                        /* to big of a spread ?              */
    if (maximum - minimum > MAX_DIFFERENCE)
                                        /* this is an error                  */
-     report_exception2(Error_Incorrect_call_random_range, randmin, randmax);
+     reportException(Error_Incorrect_call_random_range, randmin, randmax);
 
    if (minimum != maximum) {           /* have real work to do?             */
      work = 0;                         /* start with zero                   */
@@ -2755,7 +2755,7 @@ void RexxActivation::processClauseBoundary()
                                        /* turn off the halt flag            */
     this->settings.flags &= ~halt_condition;
                                        /* yes, raise the flag               */
-    report_halt(this->settings.halt_description);
+    reportHalt(this->settings.halt_description);
   }
                                        /* need to turn on tracing?          */
   if (this->settings.flags&set_trace_on) {
@@ -3152,7 +3152,7 @@ BOOL RexxActivation::callSecurityManager(
   resultObj = this->settings.securityManager->sendMessage(methodName, _arguments);
   if (resultObj == OREF_NULL)          /* no return result?                 */
                                        /* need to raise an exception        */
-    report_exception1(Error_No_result_object_message, methodName);
+    reportException(Error_No_result_object_message, methodName);
   this->stack.pop();                   /* free up the arguments             */
   hold(_arguments);                    /* protect them for a bit            */
                                        /* return the pass/handled flag      */

@@ -103,7 +103,7 @@ BOOL SysAccessPool(MemorySegmentPool **pool)
     tmpPtr = VirtualAlloc(tmpPtr, segmentSize, MEM_COMMIT, PAGE_READWRITE);
     if (!tmpPtr)                       /* Error on commit?                  */
         {
-           report_exception(Error_System_resources);
+           reportException(Error_System_resources);
        return NULL;                    /* return NULL.                      */
         }
 
@@ -129,7 +129,7 @@ BOOL SysAccessPool(MemorySegmentPool **pool)
     return FALSE;                      /* newly created.                    */
   }
   else
-    report_exception(Error_System_resources);
+    reportException(Error_System_resources);
 return FALSE;
 }
 
@@ -160,7 +160,7 @@ void     *MemorySegmentPool::operator new(size_t size, size_t minSize)
   tmpPtr = VirtualAlloc(NULL, poolSize, MEM_RESERVE|MEM_TOP_DOWN, PAGE_READWRITE);
   if (!tmpPtr)                        /* Error on reserve?                 */
   {
-     report_exception(Error_System_resources);
+     reportException(Error_System_resources);
      return NULL;                        /* return NULL.                    */
   }
                                        /* Need to commit some potion of     */
@@ -183,7 +183,7 @@ void     *MemorySegmentPool::operator new(size_t size, size_t minSize)
   newPool = (MemorySegmentPool *) tmpPtr;
   if (!tmpPtr)                        /* Error on commit?                  */
   {
-     report_exception(Error_System_resources);
+     reportException(Error_System_resources);
      return NULL;                        /* return NULL.                   */
   }
 
@@ -243,7 +243,7 @@ MemorySegment *MemorySegmentPool::newSegment(size_t minSize)
          this->nextAlloc = (char *)tmpPtr;
      if (!tmpPtr)
      {
-        report_exception(Error_System_resources);
+        reportException(Error_System_resources);
         return NULL;                        /* return NULL.                   */
      }
                                        /* Create new segment.               */
@@ -306,7 +306,7 @@ MemorySegment *MemorySegmentPool::newLargeSegment(size_t minSize)
      this->nextLargeAlloc = (char *)tmpPtr;
      if (!tmpPtr)
      {
-        report_exception(Error_System_resources);
+        reportException(Error_System_resources);
         return NULL;                        /* return NULL.                   */
      }
                                        /* Create new segment.               */

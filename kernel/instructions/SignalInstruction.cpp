@@ -146,7 +146,7 @@ void RexxInstructionSignal::execute(
   else {                               /* a normal signal?                  */
     if (this->expression == OREF_NULL){/* already have the target?          */
       if (this->target == OREF_NULL)   /* unknown target?                   */
-        report_exception1(Error_Label_not_found_name, this->name);
+        reportException(Error_Label_not_found_name, this->name);
                                        /* tell the activation to perform    */
       context->signalTo(this->target); /* the signal                        */
       context->dbgSignal();            /* call the signal debug exit        */
@@ -174,7 +174,7 @@ void RexxInstructionSignal::trap(
 {
   context->trapOff(this->condition);   /* turn off the trap                 */
   if (this->target == OREF_NULL)       /* unknown target?                   */
-    report_exception1(Error_Label_not_found_name, this->name);
+    reportException(Error_Label_not_found_name, this->name);
                                        /* set the new condition object      */
   context->setConditionObj(conditionObj);
                                        /* tell the activation to perform    */

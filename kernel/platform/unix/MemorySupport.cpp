@@ -95,7 +95,7 @@ BOOL SysAccessPool(MemorySegmentPool **pool)
   tmpPtr = (void *)calloc(MEMSIZE,1);
   if (tmpPtr == NULL)              /* Error on commit?                  */
   {
-     report_exception(Error_System_resources);
+     reportException(Error_System_resources);
   }
 
   *pool = (MemorySegmentPool *)tmpPtr;
@@ -148,7 +148,7 @@ void *MemorySegmentPool::operator new(size_t size, size_t minSize)
    tmpPtr = calloc(poolSize,1);
    if (!tmpPtr)                       /* Error on commit?                  */
    {
-      report_exception(Error_System_resources);
+      reportException(Error_System_resources);
    }
 
    newPool = (MemorySegmentPool *) tmpPtr;

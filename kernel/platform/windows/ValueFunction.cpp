@@ -83,7 +83,7 @@ RexxObject * SysValue(
 
 //  if (!Selector->strCompare(SELECTOR)) /* correct selector?                 */
 //                                       /* flag this error                   */
-//    report_exception1(Error_Incorrect_call_selector, Selector);
+//    reportException(Error_Incorrect_call_selector, Selector);
 
   if (Selector->strCompare(SELECTOR)) {/* selector ENVIRONMENT?             */
 
@@ -96,7 +96,7 @@ RexxObject * SysValue(
       if (OldValue && GetEnvironmentVariable(Name->getStringData(),OldValue,dwSize) )
       {
                                          /* have a value already?           */
-        Retval = (RexxObject*) new_cstring(OldValue);
+        Retval = (RexxObject*) new_string(OldValue);
         SysReleaseResultMemory(OldValue);
       }
       else
@@ -120,13 +120,13 @@ RexxObject * SysValue(
     else if (Selector->strCompare(AXENGINE2)) SelectorType = 2;
     else if (Selector->strCompare(AXENGINE3)) SelectorType = 3;
     if (SelectorType) Retval = WSHPropertyChange(Name,NewValue,SelectorType,&RetCode);  // call into engine
-    else report_exception1(Error_Incorrect_call_selector, Selector);
+    else reportException(Error_Incorrect_call_selector, Selector);
 
-    if (RetCode == 5) report_exception(Error_Incorrect_call_read_from_writeonly);
-    else if (RetCode == 4) report_exception(Error_Incorrect_call_write_to_readonly);
+    if (RetCode == 5) reportException(Error_Incorrect_call_read_from_writeonly);
+    else if (RetCode == 4) reportException(Error_Incorrect_call_write_to_readonly);
 
   } else
-    report_exception1(Error_Incorrect_call_selector, Selector);
+    reportException(Error_Incorrect_call_selector, Selector);
 
   return Retval;                       /* return old value                  */
 }

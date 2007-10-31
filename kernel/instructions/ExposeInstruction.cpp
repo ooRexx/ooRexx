@@ -120,7 +120,7 @@ void RexxInstructionExpose::execute(
   context->traceInstruction(this);     /* trace if necessary                */
   if (!context->inMethod())            /* is this a method clause?          */
                                        /* raise an error                    */
-    report_exception(Error_Translation_expose);
+    reportException(Error_Translation_expose);
 
   /* have the context expose these */
   context->expose(variables, expose_variable_count);

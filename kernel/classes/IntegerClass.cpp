@@ -264,7 +264,7 @@ BOOL RexxInteger::truthValue(
   if (this->value == 0L)               /* have a zero?                      */
     return FALSE;                      /* this is false                     */
   else if (this->value != 1L)          /* how about a one?                  */
-    report_exception1(errorcode, this);/* report the error                  */
+    reportException(errorcode, this);/* report the error                  */
   return TRUE;                         /* this is true                      */
 }
 
@@ -471,7 +471,7 @@ RexxObject *RexxInteger::integerDivide(
       return new_integer(tempVal);     /* and return as an integer object   */
     }
     else                               /* yes, raise error.                 */
-      report_exception(Error_Overflow_zero);
+      reportException(Error_Overflow_zero);
   }
                                        /* not integer, forward to           */
                                        /*numberstring.                      */
@@ -500,7 +500,7 @@ RexxObject *RexxInteger::remainder(
       return new_integer(tempVal);     /* and return as an integer object   */
     }
     else                               /* yes, raise error.                 */
-      report_exception(Error_Overflow_zero);
+      reportException(Error_Overflow_zero);
   }
                                        /* not integer, forward to           */
                                        /*numberstring.                      */
@@ -812,7 +812,7 @@ RexxObject *RexxInteger::Max(
 
     if (argument == OREF_NULL)         /* was argument missging ?           */
                                        /* Yes, report the error.            */
-      report_exception1(Error_Incorrect_method_noarg, new_integer(arg));
+      reportException(Error_Incorrect_method_noarg, arg);
 
     if (OTYPE(Integer, argument)) {    /* is this an INTEGER object?        */
                                        /* yes, gets its value.              */
@@ -868,7 +868,7 @@ RexxObject *RexxInteger::Min(
 
     if (argument == OREF_NULL)         /* was argument missging ?           */
                                        /* Yes, report the error.            */
-      report_exception1(Error_Incorrect_method_noarg, new_integer(arg));
+      reportException(Error_Incorrect_method_noarg, arg);
 
     if (OTYPE(Integer, argument)) {    /* is this an INTEGER object?        */
                                        /* yes, gets its value.              */

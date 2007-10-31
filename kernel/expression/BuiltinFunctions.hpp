@@ -62,8 +62,8 @@
 
 #define BUILTIN(x) RexxObject *builtin_function_##x ( RexxActivation * context, INT argcount, RexxExpressionStack *stack )
 
-#define positive_integer(n,f,p) if (n <= 0) report_exception3(Error_Incorrect_call_positive, new_cstring(CHAR_##f), p, new_integer(n))
-#define nonnegative_integer(n,f,p) if (n < 0) report_exception3(Error_Incorrect_call_nonnegative, new_cstring(CHAR_##f), p, new_integer(n))
+#define positive_integer(n,f,p) if (n <= 0) reportException(Error_Incorrect_call_positive, CHAR_##f, p, n)
+#define nonnegative_integer(n,f,p) if (n < 0) reportException(Error_Incorrect_call_nonnegative, CHAR_##f, p, n)
 
 #define  ALPHANUM "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 #endif

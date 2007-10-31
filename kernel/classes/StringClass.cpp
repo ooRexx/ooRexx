@@ -548,7 +548,7 @@ RexxObject *RexxString::plus(RexxObject *right_term)
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception1(Error_Conversion_operator, this);
+    reportException(Error_Conversion_operator, this);
   return numstr->plus(right_term);     /* have numberstring do this         */
 }
 
@@ -562,7 +562,7 @@ RexxObject *RexxString::minus(RexxObject *right_term)
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception1(Error_Conversion_operator, this);
+    reportException(Error_Conversion_operator, this);
   return numstr->minus(right_term);    /* have numberstring do this         */
 }
 
@@ -576,7 +576,7 @@ RexxObject *RexxString::multiply(RexxObject *right_term)
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception1(Error_Conversion_operator, this);
+    reportException(Error_Conversion_operator, this);
   return numstr->multiply(right_term); /* have numberstring do this         */
 }
 
@@ -590,7 +590,7 @@ RexxObject *RexxString::divide(RexxObject *right_term)
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception1(Error_Conversion_operator, this);
+    reportException(Error_Conversion_operator, this);
   return numstr->divide(right_term);   /* have numberstring do this         */
 }
 
@@ -604,7 +604,7 @@ RexxObject *RexxString::integerDivide(RexxObject *right_term)
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception1(Error_Conversion_operator, this);
+    reportException(Error_Conversion_operator, this);
   return numstr->integerDivide(right_term); /* have numberstring do this         */
 }
 
@@ -618,7 +618,7 @@ RexxObject *RexxString::remainder(RexxObject *right_term)
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception1(Error_Conversion_operator, this);
+    reportException(Error_Conversion_operator, this);
   return numstr->remainder(right_term);     /* have numberstring do this         */
 }
 
@@ -632,7 +632,7 @@ RexxObject *RexxString::power(RexxObject *right_term)
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception1(Error_Conversion_operator, this);
+    reportException(Error_Conversion_operator, this);
   return numstr->power(right_term);    /* have numberstring do this         */
 }
 
@@ -646,7 +646,7 @@ RexxObject *RexxString::abs(void)
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception2(Error_Incorrect_method_string_nonumber, new_cstring("ABS"), this);
+    reportException(Error_Incorrect_method_string_nonumber, CHAR_ABS, this);
   return numstr->abs();                /* have numberstring do this         */
 }
 
@@ -660,7 +660,7 @@ RexxObject *RexxString::sign(void)
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception2(Error_Incorrect_method_string_nonumber, new_cstring("SIGN"), this);
+    reportException(Error_Incorrect_method_string_nonumber, CHAR_SIGN, this);
   return numstr->Sign();               /* have numberstring do this         */
 }
 
@@ -674,7 +674,7 @@ RexxObject *RexxString::Max(RexxObject **arguments, size_t argCount)
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception2(Error_Incorrect_method_string_nonumber, new_cstring("MAX"), this);
+    reportException(Error_Incorrect_method_string_nonumber, CHAR_MAX, this);
   /* have numberstring do this         */
   return numstr->Max(arguments, argCount);
 }
@@ -689,7 +689,7 @@ RexxObject *RexxString::Min(RexxObject **arguments, size_t argCount)
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception2(Error_Incorrect_method_string_nonumber, new_cstring("MIN"), this);
+    reportException(Error_Incorrect_method_string_nonumber, CHAR_MIN, this);
   /* have numberstring do this         */
   return numstr->Min(arguments, argCount);
 }
@@ -704,7 +704,7 @@ RexxObject *RexxString::trunc(RexxInteger *decimals)
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception2(Error_Incorrect_method_string_nonumber, new_cstring("TRUNC"), this);
+    reportException(Error_Incorrect_method_string_nonumber, CHAR_TRUNC, this);
   return numstr->trunc(decimals);      /* have numberstring do this         */
 }
 
@@ -718,7 +718,7 @@ RexxObject *RexxString::format(RexxObject *Integers, RexxObject *Decimals, RexxO
                                        /* non-numeric?                      */
   if ((numstr = this->fastNumberString()) == OREF_NULL)
                                        /* this is a conversion error        */
-    report_exception2(Error_Incorrect_method_string_nonumber, new_cstring("FORMAT"), this);
+    reportException(Error_Incorrect_method_string_nonumber, CHAR_FORMAT, this);
                                        /* have numberstring do this         */
   return numstr->formatRexx(Integers, Decimals, MathExp, ExpTrigger);
 }
@@ -910,7 +910,7 @@ RexxString *RexxString::concatRexx(RexxObject *otherObj)
 
   /* added error checking for NULL pointer (from NilObject) */
   if (other == OREF_NULL)
-    report_exception1(Error_Incorrect_method_nostring, IntegerOne);
+    reportException(Error_Incorrect_method_nostring, IntegerOne);
 
                                        /* the following logic also appears  */
                                        /* in string_concat, but is repeated */
@@ -992,14 +992,14 @@ RexxString *RexxString::concatBlank(RexxObject *otherObj)
 
   /* added error checking for NULL pointer (from NilObject) */
   if (other == OREF_NULL)
-    report_exception1(Error_Incorrect_method_nostring, IntegerOne);
+    reportException(Error_Incorrect_method_nostring, IntegerOne);
 
                                        /* ensure a string value             */
   other = (RexxString *)REQUEST_STRING(otherObj);
 
   /* added error checking for NULL pointer (from NilObject) */
   if (other == OREF_NULL)
-    report_exception1(Error_Incorrect_method_nostring, IntegerOne);
+    reportException(Error_Incorrect_method_nostring, IntegerOne);
                                        /* the following logic also appears  */
                                        /* in string_concat_with, but is     */
                                        /* repeated here because this is a   */
@@ -1036,12 +1036,12 @@ BOOL RexxString::truthValue(long errorCode)
     testString = this;                 /* just use the string directly      */
   if (testString->getLength() != 1L)        /* not exactly 1 character long?     */
                                        /* report the error                  */
-    report_exception1(errorCode, testString);
+    reportException(errorCode, testString);
   if (*(testString->getStringData()) == '0')/* exactly '0'?                      */
       return FALSE;                    /* have a false                      */
                                        /* not exactly '1'?                  */
   else if (!(*(testString->getStringData()) == '1'))
-    report_exception1(errorCode, this);/* report the error                  */
+    reportException(errorCode, this);/* report the error                  */
   return TRUE;                         /* this is true                      */
 }
 
@@ -1443,11 +1443,11 @@ RexxArray *RexxString::makeArray(RexxString *div)
   if (div != OREF_NULL) {
                                        /* it must be a string object        */
     if (!OTYPE(String, div)) {
-      report_exception1(Error_Incorrect_method_nostring, IntegerOne);
+      reportException(Error_Incorrect_method_nostring, IntegerOne);
     }
                                        /* it must only contain one character*/
     if (div->getLength() > 1) {
-      report_exception1(Error_Incorrect_method_pad, div);
+      reportException(Error_Incorrect_method_pad, div);
     }
 
                                        /* use the first character           */
@@ -1592,7 +1592,7 @@ RexxObject *RexxString::evaluate(
   return this;                         /* also return the result            */
 }
 
-RexxString *RexxStringClass::newString(const char *string, size_t length)
+RexxString *RexxString::newString(const char *string, size_t length)
 /******************************************************************************/
 /* Function:  Allocate (and initialize) a string object                       */
 /******************************************************************************/
@@ -1628,7 +1628,7 @@ RexxString *RexxStringClass::newString(const char *string, size_t length)
   return newObj;                       /*having OREFs                       */
 }
 
-RexxString *RexxStringClass::rawString(size_t length)
+RexxString *RexxString::rawString(size_t length)
 /******************************************************************************/
 /* Function:  Allocate (and initialize) an empty string object                */
 /******************************************************************************/
@@ -1661,28 +1661,73 @@ RexxString *RexxStringClass::rawString(size_t length)
   return newObj;                       /*having OREFs                       */
 }
 
-RexxString *RexxStringClass::newCstring(const char *string)
-/******************************************************************************/
-/* Function:  Create a new string object from a CSTRING                       */
-/******************************************************************************/
-{                                      /* just return the string value      */
-  return (RexxString *)new_string(string, strlen(string));
+
+/**
+ * Allocate an initialize a string object that will also
+ * contain only uppercase characters.  This allows a creation
+ * and uppercase operation to be done in one shot, without
+ * requiring two string objects to be created.
+ *
+ * @param string The source string data.
+ * @param length The length of the string data.
+ *
+ * @return A newly constructed string object.
+ */
+RexxString *RexxString::newUpperString(const char * string, stringsize_t length)
+{
+    RexxString *newObj;                  /* new string object                 */
+    stringsize_t      size2;                   /* allocated size                    */
+
+    /* calculate the size                */
+    /* STRINGOBJ - excess chars (3)      */
+    /* + length. only sub 3 to allow     */
+    /* for terminating NULL              */
+    size2 = sizeof(RexxString) - (sizeof(char) * 3) + length;
+    /* allocate the new object           */
+    newObj = (RexxString *)new_object(size2);
+    /* set the behaviour from the class*/
+    BehaviourSet(newObj, TheStringBehaviour);
+    /* set the virtual function table    */
+    setVirtualFunctions(newObj, T_string);
+    /* clear the front part              */
+    ClearObjectLength(newObj, sizeof(RexxString));
+    newObj->length = length;             /* save the length                   */
+    newObj->hashvalue = 0;               // make sure the hash value is zeroed
+                                         /* create a new string               */
+                                         /* point to output data              */
+    char *outdata = newObj->getWritableData();
+    // set the input markers
+    const char *indata = string;
+    const char *endData = indata + length;
+    while (indata < endData)             /* loop through entire string        */
+    {
+        *outdata = toupper(*indata);     /* copy the uppercase character      */
+        indata++;                        /* step the position                 */
+        outdata++;                       /* and the output position           */
+    }
+    newObj->setUpperOnly();              /* flag the string as uppercased     */
+                                         /* Null terminate, allows faster     */
+                                         /* conversion to ASCII-Z string      */
+    newObj->putChar(length, '\0');
+    newObj->generateHash();              /* generate the hash value           */
+    /* by  default, we don't need Live   */
+    SetObjectHasNoReferences(newObj);    /*sent                               */
+                                         /* NOTE: That if we can set          */
+                                         /*  this->NumebrString elsewhere     */
+                                         /*we need to mark ourselves as       */
+    return newObj;                       /*having OREFs                       */
 }
 
-
-RexxString *RexxStringClass::newDouble(PDBL  number)
+RexxString *RexxString::newString(double number)
 /******************************************************************************/
 /* Function: Create a string from a double value                              */
 /******************************************************************************/
 {
-  RexxNumberString *numberStringDouble;
                                        /* get double as a number string.    */
-  numberStringDouble = (RexxNumberString *)new_numberstring(*number);
-                                       /* now convert to string object      */
-  return numberStringDouble->stringValue();
+  return new_numberstring(number)->stringValue();
 }
 
-RexxString *RexxStringClass::newProxy(const char *string)
+RexxString *RexxString::newProxy(const char *string)
 /******************************************************************************/
 /* Function:  Create a proxy object from this string                          */
 /******************************************************************************/
@@ -1692,7 +1737,7 @@ RexxString *RexxStringClass::newProxy(const char *string)
                                        /*  terminated so let class_new      */
                                        /*  compute the length.              */
                                        /* get a new string object           */
-  sref = (RexxString *)new_cstring(string);
+  sref = (RexxString *)new_string(string);
                                        /* here we need to identify this     */
                                        /*string                             */
   sref->header |= ProxyObject;         /*  as being a proxy object          */
@@ -1700,7 +1745,7 @@ RexxString *RexxStringClass::newProxy(const char *string)
   return sref;
 }
 
-RexxString *RexxStringClass::newRexx(RexxObject **init_args, size_t argCount)
+RexxString *RexxString::newRexx(RexxObject **init_args, size_t argCount)
 /******************************************************************************/
 /* Arguments: Subclass init arguments                                         */
 /* Function:  Create a new string value (used primarily for subclasses)       */
@@ -1714,7 +1759,7 @@ RexxString *RexxStringClass::newRexx(RexxObject **init_args, size_t argCount)
   RexxString *string = (RexxString *)REQUIRED_STRING(stringObj, ARG_ONE);
                                        /* create a new string object        */
   string = new_string(string->getStringData(), string->getLength());
-  BehaviourSet(string, this->instanceBehaviour);
+  BehaviourSet(string, ((RexxClass *)this)->instanceBehaviour);
   if (((RexxClass *)this)->uninitDefined()) {
     string->hasUninit();
   }
@@ -1758,7 +1803,7 @@ nativei1 (REXXOBJECT, STRING_NEWD, PDBL, number)
 {
   native_entry;                        /* synchronize access                */
                                        /* just forward and return           */
-  return_oref(new_stringd(number));
+  return_oref(new_string(*number));
 }
 
 nativei1 (REXXOBJECT, STRING_NEW_UPPER, CSTRING, string)
@@ -1768,7 +1813,7 @@ nativei1 (REXXOBJECT, STRING_NEW_UPPER, CSTRING, string)
 {
   native_entry;                        /* synchronize access                */
                                        /* just forward and return           */
-  return_oref(((RexxString *)new_cstring(string))->upper());
+  return_oref(((RexxString *)new_string(string))->upper());
 }
 
 nativei2 (REXXOBJECT, STRING_NEW, CSTRING, string, size_t, length)

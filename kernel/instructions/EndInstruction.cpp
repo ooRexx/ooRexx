@@ -107,7 +107,7 @@ void RexxInstructionEnd::execute(
     context->traceInstruction(this);     /* trace if necessary                */
     if (context->blockNest == 0)         /* no possible blocks?               */
                                          /* this is an error                  */
-        report_exception(Error_Unexpected_end_nodo);
+        reportException(Error_Unexpected_end_nodo);
 
     switch (this->getStyle())
     {          /* process each loop type            */
@@ -123,7 +123,7 @@ void RexxInstructionEnd::execute(
         case SELECT_BLOCK:                 /* END of a select block             */
             /* looking for a WHEN match          */
             /* this is an error                  */
-            report_exception(Error_When_expected_nootherwise);
+            reportException(Error_When_expected_nootherwise);
             break;
 
             // for labeled BLOCK types, we need to remove the active marker.

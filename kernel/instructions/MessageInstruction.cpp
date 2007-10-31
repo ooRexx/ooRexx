@@ -179,7 +179,7 @@ void RexxInstructionMessage::execute (
   if (this->super != OREF_NULL) {      /* have a message lookup override?   */
     if (_target != context->receiver)   /* sender and receiver different?    */
                                        /* this is an error                  */
-      report_exception(Error_Execution_super);
+      reportException(Error_Execution_super);
                                        /* get the variable value            */
     _super = this->super->evaluate(context, stack);
     stack->toss();                     /* pop the top item                  */

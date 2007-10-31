@@ -84,5 +84,5 @@ RexxObject * SysUserid()
 #else
     strcpy( account_buffer, "unknown" );
 #endif
-    return new_cstring(account_buffer);
+    return new_string(account_buffer);
 }

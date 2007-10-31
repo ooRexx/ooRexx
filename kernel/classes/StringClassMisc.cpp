@@ -365,7 +365,7 @@ RexxObject *DataType(
           break;
 
     default  :                         /* unsupported option                */
-      report_exception2(Error_Incorrect_method_option, new_cstring("ABCDLMNOSUVWX9"), new_string((const char *)&Option,1));
+      reportException(Error_Incorrect_method_option, "ABCDLMNOSUVWX9", new_string((const char *)&Option,1));
   }
   return Answer;                       /* return validation answer          */
 }
@@ -1216,7 +1216,7 @@ RexxInteger *RexxString::verify(
   if (Option != VERIFY_MATCH &&        /* options are 'Match' and           */
       Option != VERIFY_NOMATCH)        /* 'NoMatch'                         */
                                        /* not that either, then its an error*/
-    report_exception2(Error_Incorrect_method_option, new_string("MN", 2), option);
+    reportException(Error_Incorrect_method_option, "MN", option);
 
                                        /* get starting position             */
   StartPos = optional_position(_start, 1, ARG_THREE);

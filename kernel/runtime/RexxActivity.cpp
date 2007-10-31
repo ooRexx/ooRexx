@@ -183,7 +183,7 @@ ACTIVATION_SETTINGS defaultSettings;
 ACTIVATION_SETTINGS *current_settings = &defaultSettings;
 
 #ifdef HIGHTID_0
-//#define ID2String(id, s) new_cstring(itoa(id,(char *)&s,10))
+//#define ID2String(id, s) new_string(itoa(id,(char *)&s,10))
 #define ID2String(id) new_string((char *)&id, sizeof(LONG))
 /* make fastAt in activity_find() faster if there's only one thread */
 static LONG HighTidLastID = 0;
@@ -489,7 +489,7 @@ BOOL RexxActivity::raiseCondition(
 }
 
 void RexxActivity::reportAnException(
-    LONG errcode )                     /* REXX error code                   */
+    wholenumber_t errcode )            /* REXX error code                   */
 /******************************************************************************/
 /* Function:  Forward on an exception condition                               */
 /******************************************************************************/
@@ -499,28 +499,28 @@ void RexxActivity::reportAnException(
 }
 
 void RexxActivity::reportAnException(
-    LONG errcode,                      /* REXX error code                   */
+    wholenumber_t errcode,             /* REXX error code                   */
     RexxObject *substitution1 )        /* substitution information          */
 /******************************************************************************/
 /* Function:  Forward on an exception condition                               */
 /******************************************************************************/
 {
-  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array1(substitution1), OREF_NULL);
+  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array(substitution1), OREF_NULL);
 }
 
 void RexxActivity::reportAnException(
-    LONG errcode,                      /* REXX error code                   */
+    wholenumber_t errcode,             /* REXX error code                   */
     RexxObject *substitution1,         /* substitution information          */
     RexxObject *substitution2 )        /* substitution information          */
 /******************************************************************************/
 /* Function:  Forward on an exception condition                               */
 /******************************************************************************/
 {
-  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array2(substitution1, substitution2), OREF_NULL);
+  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array(substitution1, substitution2), OREF_NULL);
 }
 
 void RexxActivity::reportAnException(
-    LONG errcode,                      /* REXX error code                   */
+    wholenumber_t errcode,             /* REXX error code                   */
     RexxObject *substitution1,         /* substitution information          */
     RexxObject *substitution2,         /* substitution information          */
     RexxObject *substitution3 )        /* substitution information          */
@@ -528,11 +528,11 @@ void RexxActivity::reportAnException(
 /* Function:  Forward on an exception condition                               */
 /******************************************************************************/
 {
-  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array3(substitution1, substitution2, substitution3), OREF_NULL);
+  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array(substitution1, substitution2, substitution3), OREF_NULL);
 }
 
 void RexxActivity::reportAnException(
-    LONG errcode,                      /* REXX error code                   */
+    wholenumber_t errcode,             /* REXX error code                   */
     RexxObject *substitution1,         /* substitution information          */
     RexxObject *substitution2,         /* substitution information          */
     RexxObject *substitution3,         /* substitution information          */
@@ -541,35 +541,154 @@ void RexxActivity::reportAnException(
 /* Function:  Forward on an exception condition                               */
 /******************************************************************************/
 {
-  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array4(substitution1, substitution2, substitution3, substitution4), OREF_NULL);
+  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array(substitution1, substitution2, substitution3, substitution4), OREF_NULL);
 }
 
-void RexxActivity::reportException(
-    LONG           errcode,            /* REXX error code                   */
-    char          *string )            /* single string sustitution parm    */
+void RexxActivity::reportAnException(
+    wholenumber_t errcode,             /* REXX error code                   */
+    const char *substitution1,         /* substitution information          */
+    RexxObject *substitution2,         /* substitution information          */
+    const char *substitution3,         /* substitution information          */
+    RexxObject *substitution4 )        /* substitution information          */
+/******************************************************************************/
+/* Function:  Forward on an exception condition                               */
+/******************************************************************************/
+{
+    this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array(new_string(substitution1), substitution2, new_string(substitution3), substitution4), OREF_NULL);
+}
+
+void RexxActivity::reportAnException(
+    wholenumber_t errcode,             /* REXX error code                   */
+    const char *string )               /* single string sustitution parm    */
 /******************************************************************************/
 /* Function:  Raise an error using a single REXX character string only        */
 /*            as a substitution parameter                                     */
 /******************************************************************************/
 {
                                        /* convert and forward along         */
-  report_exception1(errcode, new_cstring(string));
+  this->reportAnException(errcode, new_string(string));
 }
 
-void RexxActivity::reportException(
-    LONG           errcode,            /* REXX error code                   */
-    LONG           integer )           /* single integer substitution parm  */
+void RexxActivity::reportAnException(
+    wholenumber_t errcode,             /* REXX error code                   */
+    const char *string,                /* single string sustitution parm    */
+    wholenumber_t  integer )           /* single integer substitution parm  */
+/******************************************************************************/
+/* Function:  Raise an error using a single REXX character string only        */
+/*            as a substitution parameter                                     */
+/******************************************************************************/
+{
+                                       /* convert and forward along         */
+  this->reportAnException(errcode, new_string(string), new_integer(integer));
+}
+
+void RexxActivity::reportAnException(
+    wholenumber_t errcode,             /* REXX error code                   */
+    const char *string,                /* string value  sustitution parm    */
+    wholenumber_t integer,             /* single integer substitution parm  */
+    RexxObject   *obj)                 /* and object sub parm               */
+/******************************************************************************/
+/* Function:  Raise an error using a single REXX character string only        */
+/*            as a substitution parameter                                     */
+/******************************************************************************/
+{
+                                       /* convert and forward along         */
+  this->reportAnException(errcode, new_string(string), new_integer(integer), obj);
+}
+
+void RexxActivity::reportAnException(
+    wholenumber_t errcode,             /* REXX error code                   */
+    const char *string,                /* string value  sustitution parm    */
+    RexxObject   *obj,                 /* and object sub parm               */
+    wholenumber_t integer)             /* single integer substitution parm  */
+/******************************************************************************/
+/* Function:  Raise an error using a single REXX character string only        */
+/*            as a substitution parameter                                     */
+/******************************************************************************/
+{
+                                       /* convert and forward along         */
+  this->reportAnException(errcode, new_string(string), obj, new_integer(integer));
+}
+
+void RexxActivity::reportAnException(
+    wholenumber_t errcode,             /* REXX error code                   */
+    RexxObject   *obj,                 /* and object sub parm               */
+    wholenumber_t integer)             /* single integer substitution parm  */
+/******************************************************************************/
+/* Function:  Raise an error using a single REXX character string only        */
+/*            as a substitution parameter                                     */
+/******************************************************************************/
+{
+                                       /* convert and forward along         */
+  this->reportAnException(errcode, obj, new_integer(integer));
+}
+
+void RexxActivity::reportAnException(
+    wholenumber_t errcode,             /* REXX error code                   */
+    RexxObject   *obj,                 /* and object sub parm               */
+    const char *string)                /* string value  sustitution parm    */
+/******************************************************************************/
+/* Function:  Raise an error using a single REXX character string only        */
+/*            as a substitution parameter                                     */
+/******************************************************************************/
+{
+                                       /* convert and forward along         */
+  this->reportAnException(errcode, obj, new_string(string));
+}
+
+void RexxActivity::reportAnException(
+    wholenumber_t errcode,             /* REXX error code                   */
+    const char *string,                /* string value  sustitution parm    */
+    RexxObject   *obj)                 /* and object sub parm               */
+/******************************************************************************/
+/* Function:  Raise an error using a single REXX character string only        */
+/*            as a substitution parameter                                     */
+/******************************************************************************/
+{
+                                       /* convert and forward along         */
+  this->reportAnException(errcode, new_string(string), obj);
+}
+
+void RexxActivity::reportAnException(
+    wholenumber_t errcode,             /* REXX error code                   */
+    wholenumber_t  integer )           /* single integer substitution parm  */
 /******************************************************************************/
 /* Function:  Raise an error using a single REXX integer value only           */
 /*            as a substitution parameter                                     */
 /******************************************************************************/
 {
                                        /* convert and forward along         */
-  report_exception1(errcode, new_integer(integer));
+  this->reportAnException(errcode, new_integer(integer));
+}
+
+void RexxActivity::reportAnException(
+    wholenumber_t errcode,             /* REXX error code                   */
+    wholenumber_t  integer,            /* single integer substitution parm  */
+    wholenumber_t  integer2)           /* single integer substitution parm  */
+/******************************************************************************/
+/* Function:  Raise an error using a single REXX integer value only           */
+/*            as a substitution parameter                                     */
+/******************************************************************************/
+{
+                                       /* convert and forward along         */
+  this->reportAnException(errcode, new_integer(integer), new_integer(integer2));
+}
+
+void RexxActivity::reportAnException(
+    wholenumber_t errcode,             /* REXX error code                   */
+    wholenumber_t  a1,                 /* single integer substitution parm  */
+    RexxObject *   a2)                 /* single object substitution parm   */
+/******************************************************************************/
+/* Function:  Raise an error using a single REXX integer value only           */
+/*            as a substitution parameter                                     */
+/******************************************************************************/
+{
+                                       /* convert and forward along         */
+  this->reportAnException(errcode, new_integer(a1), a2);
 }
 
 void RexxActivity::raiseException(
-    int            errcode,            /* REXX error code                   */
+    wholenumber_t  errcode,            /* REXX error code                   */
     LOCATIONINFO  *location,           /* location information              */
     RexxSource    *source,             /* source file to process            */
     RexxString    *description,        /* descriptive information           */
@@ -615,20 +734,20 @@ void RexxActivity::raiseException(
                                        /* format the number (string) into   */
                                        /*  work buffer.                     */
   sprintf(work,"%d.%1d", errcode/1000, errcode - primary);
-  code = new_cstring(work);            /* get the formatted code            */
+  code = new_string(work);            /* get the formatted code            */
   newVal = primary/1000;
   rc = new_integer(newVal);            /* get the primary message number    */
                                        /* get the primary message text      */
   errortext = SysMessageText(primary);
   if (errortext == OREF_NULL)          /* no corresponding message          */
                                        /* this is an error                  */
-    report_exception1(Error_Execution_error_condition, code);
+    reportException(Error_Execution_error_condition, code);
   if (primary != errcode) {            /* have a secondary message to issue?*/
                                        /* retrieve the secondary message    */
     message = SysMessageText(errcode);
     if (message == OREF_NULL)          /* no corresponding message          */
                                        /* this is an error                  */
-      report_exception1(Error_Execution_error_condition, code);
+      reportException(Error_Execution_error_condition, code);
   }
   else
                                        /* don't give a secondary message    */
@@ -727,7 +846,7 @@ void RexxActivity::raiseException(
 
         if ((activation != (RexxActivation *)TheNilObject) &&
                 (activation->settings.traceindent > MAX_TRACEBACK_LIST))
-                traceback->addLast(new_cstring("     >...<"));
+                traceback->addLast(new_string("     >...<"));
 
                                        /* actually have an activation?      */
     if (activation != (RexxActivation *)TheNilObject) {
@@ -773,7 +892,7 @@ RexxString *RexxActivity::messageSubstitution(
                                        /* not a good number?                */
     if (selector < '0' || selector > '9')
                                        /* use a default message             */
-      stringVal = new_cstring("<BAD MESSAGE>"); /* must be stringValue, not value, otherwise trap */
+      stringVal = new_string("<BAD MESSAGE>"); /* must be stringValue, not value, otherwise trap */
     else {
       selector -= '0';                 /* convert to a number               */
       if (selector > substitutions)    /* out of our range?                 */
@@ -1349,7 +1468,7 @@ void RexxActivity::checkDeadLock(
                                        /* have a circular wait              */
     if (owningActivity == targetActivity)
                                        /* have a deaklock                   */
-      report_exception(Error_Execution_deadlock);
+      reportException(Error_Execution_deadlock);
     if (owningActivity != OREF_NULL)   /* have a real activity?             */
                                        /* pass it along the chain           */
       owningActivity->checkDeadLock(targetActivity);
@@ -1512,7 +1631,7 @@ void RexxActivity::stackSpace()
   long temp;                           /* if checking and there isn't room  */
   if (PTRSUB2(&temp,this->nestedInfo.stackptr) < MIN_C_STACK && this->stackcheck == TRUE)
                                        /* go raise an exception             */
-    report_exception(Error_Control_stack_full);
+    reportException(Error_Control_stack_full);
 #endif
 }
 
@@ -1592,7 +1711,7 @@ void RexxActivity::sysExitInit(
                                        /* add the variable RXPROGRAMNAME to */
                                        /* the variable pool, it contains the*/
                                        /* script name that is currently run */
-    RexxString   *varName = new_cstring("RXPROGRAMNAME");
+    RexxString   *varName = new_string("RXPROGRAMNAME");
     RexxString   *sourceStr = activation->code->getProgramName();
     RexxVariableDictionary *vdict = activation->getLocalVariables();
     RexxVariable *pgmName = vdict->createVariable(varName);
@@ -1829,7 +1948,7 @@ BOOL RexxActivity::sysExitFunc(
     argrxarray = (PRXSTRING) SysAllocateResultMemory(
                     sizeof(RXSTRING) * max(exit_parm.rxfnc_argc,1));
     if (argrxarray == OREF_NULL)       /* memory error?                     */
-      report_exception(Error_System_resources);
+      reportException(Error_System_resources);
                                        /* give the arg array pointer        */
     exit_parm.rxfnc_argv = argrxarray;
                                        /* construct the arg array           */
@@ -1881,11 +2000,11 @@ BOOL RexxActivity::sysExitFunc(
 
     if (exit_parm.rxfnc_flags.rxfferr) /* function error?                   */
                                        /* raise an error                    */
-      report_exception1(Error_Incorrect_call_external, rname);
+      reportException(Error_Incorrect_call_external, rname);
                                        /* Did we find the function??        */
     else if (exit_parm.rxfnc_flags.rxffnfnd)
                                        /* also an error                     */
-      report_exception1(Error_Routine_not_found_name,rname);
+      reportException(Error_Routine_not_found_name,rname);
                                        /* shv_exit return a value?          */
     if (this->nestedInfo.shvexitvalue != OREF_NULL) {
                                        /* return this information           */
@@ -1895,7 +2014,7 @@ BOOL RexxActivity::sysExitFunc(
                                        /* Was it a function call??          */
     if (exit_parm.rxfnc_retc.strptr == OREF_NULL && calltype == OREF_FUNCTIONNAME)
                                        /* Have to return data               */
-      report_exception1(Error_Function_no_data_function,rname);
+      reportException(Error_Function_no_data_function,rname);
 
     if (exit_parm.rxfnc_retc.strptr) { /* If we have result, return it      */
       // is this a real object?
@@ -1904,7 +2023,7 @@ BOOL RexxActivity::sysExitFunc(
         if (sscanf(exit_parm.rxfnc_retc.strptr,"%p",&transfer) == 1)
           *funcresult = transfer;
         else
-          report_exception1(Error_Function_no_data_function,rname);
+          reportException(Error_Function_no_data_function,rname);
       } else
                                        /* Get input string and return it    */
         *funcresult = new_string((char *)exit_parm.rxfnc_retc.strptr, exit_parm.rxfnc_retc.strlength);
@@ -3478,7 +3597,7 @@ void process_message_arguments(
                                        /* get a double value                */
         tempDouble = va_arg(*arguments, double);
                                        /* convert to string form            */
-        argument_list->addLast(new_stringd(&tempDouble));
+        argument_list->addLast(new_string(tempDouble));
         break;
 
       case 'g':                        /* ULONG                             */
@@ -3549,7 +3668,7 @@ void process_message_arguments(
                                        /* get the pointer                   */
         tempPointer = va_arg(*arguments, void *);
                                        /* create a string object            */
-        argument_list->addLast(new_cstring((char *)tempPointer));
+        argument_list->addLast(new_string((char *)tempPointer));
         break;
     }
   }
@@ -3751,11 +3870,11 @@ LONG VLAREXXENTRY RexxSendMessage (
     va_end(arguments);                 /* end of argument processing        */
     if (start_class == OREF_NULL)      /* no start scope given?             */
                                        /* issue a straight message send     */
-      result = receiver->messageSend(new_cstring(msgname)->upper(),
+      result = receiver->messageSend(new_string(msgname)->upper(),
           argument_array->size(), argument_array->data());
     else
                                        /* go issue the message with override*/
-      result = receiver->messageSend(new_cstring(msgname)->upper(),
+      result = receiver->messageSend(new_string(msgname)->upper(),
           argument_array->size(), argument_array->data(), start_class);
     discard(argument_array);           /* no longer need the argument array */
     if (result != OREF_NULL) {         /* if we got a result, protect it.   */
@@ -3776,7 +3895,7 @@ LONG VLAREXXENTRY RexxSendMessage (
   if (result != OREF_NULL) {
     if (returnType == 'o' || returnType == 'z')
                                        /* Need to keep result obj around.   */
-       send_message0(ProcessLocalServer, (RexxString *)new_cstring("SAVE_RESULT"));
+       send_message0(ProcessLocalServer, (RexxString *)new_string("SAVE_RESULT"));
 
      discard(hold(result));            /* release it and hole a bit longer  */
   }

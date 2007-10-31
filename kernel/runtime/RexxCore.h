@@ -179,12 +179,6 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 #define create_udsubClass(c,t)            The##c##Class = new (sizeof(t), The##c##ClassBehaviour, The##c##Behaviour) t
 #define new_activity(l)                   (TheActivityClass->newActivity(MEDIUM_PRIORITY, l))
 #define new_behaviour(t)                  (new (t) RexxBehaviour)
-#define new_externalArray(s,c)            (new ((LONG)(s), c) RexxArray)
-#define new_array(s)                      (new ((size_t)(s)) RexxArray)
-#define new_array1(a1)                    (new ((RexxObject *)a1) RexxArray)
-#define new_array2(a1,a2)                 (new ((RexxObject *)a1, (RexxObject *)a2) RexxArray)
-#define new_array3(a1,a2,a3)              (new ((RexxObject *)a1, (RexxObject *)a2, (RexxObject *)a3) RexxArray)
-#define new_array4(a1,a2,a3,a4)           (new ((RexxObject *)a1, (RexxObject *)a2, (RexxObject *)a3, (RexxObject *)a4) RexxArray)
 #define new_buffer(s)                     (new (s) RexxBuffer)
 #define new_clause()                      (new RexxClause)
 #define new_counter(v)                    (new RexxInteger (v))
@@ -202,7 +196,6 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 #define new_object(s)                     (memoryObject.newObject((long)(s)))
 #define new_arrayofObject(s,c,b)          (memoryObject.newObjects(s, c, b))
 #define new_pointer(p)                    (TheIntegerClass->newCache((LONG)p))
-#define new_proxy(s)                      (TheStringClass->newProxy(s))
 #define new_smartbuffer()                 (new RexxSmartBuffer(1024))
 #define new_sizedSmartBuffer(size)        (new RexxSmartBuffer(size))
 #define new_stack(s)                      (new(s) RexxStack (s))
@@ -215,10 +208,6 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 #define new_variable(n)                   (memoryObject.newVariable(n))
 #define new_compoundElement(s)            (memoryObject.newCompoundElement(s))
 #define new_instance()                    (TheObjectClass->newObject())
-#define new_string(s,l)                   TheStringClass->newString(s, l)
-#define raw_string(l)                     TheStringClass->rawString(l)
-#define new_cstring(s)                    (TheStringClass->newCstring(s))
-#define new_stringd(pd)                   (TheStringClass->newDouble(pd))
 #define new_table()                       (memoryObject.newTable())
 #define new_object_table()                (memoryObject.newObjectTable(DEFAULT_HASH_SIZE))
 #define new_scope_table()                 (memoryObject.newObjectTable(DEFAULT_SCOPE_SIZE))
@@ -753,21 +742,9 @@ const char *mempbrk(const char *, const char *, size_t);     /* search for chara
 #define env_find(s) (TheEnvironment->entry(s))
                                        /* various exception/condition       */
                                        /* reporting routines                */
-#define report_novalue(description) report_condition(OREF_NOVALUE, (RexxString *)description)
-#define report_nostring(description) report_condition(OREF_NOSTRING, (RexxString *)description)
-#define report_condition(condition, description) (CurrentActivity->raiseCondition(condition, OREF_NULL, (RexxString *)description, OREF_NULL, OREF_NULL, OREF_NULL))
-void report_halt(RexxString *description);
-void report_nomethod(RexxString *message, RexxObject *receiver);
 void missing_argument(LONG position);
 int  message_number(RexxString *);
 RexxActivity *activity_find (void);
-
-#define report_exception(error) (CurrentActivity->reportAnException(error))
-#define report_exception1(error, a1) (CurrentActivity->reportAnException(error, a1))
-#define report_exception2(error, a1, a2) (CurrentActivity->reportAnException(error, a1, a2))
-#define report_exception3(error, a1, a2, a3) (CurrentActivity->reportAnException(error, a1, a2, a3))
-#define report_exception4(error, a1, a2, a3, a4) (CurrentActivity->reportAnException(error, a1, a2, a3, a4))
-#define report_exceptiond(error,d) CurrentActivity->raiseException(error, NULL, OREF_NULL, OREF_NULL, d, OREF_NULL)
 
                                        /* verify argument presence          */
 #define required_arg(arg, position) if (arg == OREF_NULL) missing_argument(ARG_##position)
@@ -782,17 +759,6 @@ RexxActivity *activity_find (void);
 /* Constant GLobal values (for general use)                                   */
 /******************************************************************************/
 
-/* MHES
-const int  NO_INT  = 0x80000000;
-const long NO_LONG = 0x80000000;
-const char *NO_CSTRING = NULL;
-#define NO_RSTRING       NULL
-*/
-/*
-extern const int  NO_INT;
-extern const long NO_LONG;
-extern const char *NO_CSTRING;
-*/
 /* Also in RexxNativeAPI.h */
 #ifndef NO_INT
 # define NO_INT                0x80000000

@@ -170,7 +170,7 @@ RexxObject *RexxMethod::run(
     }
     else {                             /* receiver expects fixed arguments  */
       if (count > this->arguments())   /* too many arguments?               */
-        report_exception1(Error_Incorrect_method_maxarg, new_integer(this->arguments()));
+        reportException(Error_Incorrect_method_maxarg, this->arguments());
       if (count < this->arguments()) { /* need to pad these out?            */
         for (i = 0; i < count; i++)    /* copy over the arguments so we     */
                                        /* don't clobber things in the caller*/
@@ -512,15 +512,15 @@ RexxMethod *RexxMethodClass::newRexxCode(
     if (sourceString == (RexxString *)TheNilObject)
                                        /* raise an error                    */
 
-      report_exception1(Error_Incorrect_method_no_method, position);
+      reportException(Error_Incorrect_method_no_method, position);
                                        /* wrap an array around the value    */
-    newSourceArray = new_array1(sourceString);
+    newSourceArray = new_array(sourceString);
   }
   else {                               /* have an array, make sure all      */
                                        /* is it single dimensional?         */
     if (newSourceArray->getDimension() != 1)
                                        /* raise an error                    */
-      report_exception1(Error_Incorrect_method_noarray, position);
+      reportException(Error_Incorrect_method_noarray, position);
                                        /*  element are strings.             */
                                        /* Make a source array safe.         */
     save(newSourceArray);
@@ -533,7 +533,7 @@ RexxMethod *RexxMethodClass::newRexxCode(
                                        /* nope, release source array.       */
         discard(newSourceArray);
                                        /* and report the error.             */
-        report_exception1(Error_Incorrect_method_nostring_inarray, IntegerTwo);
+        reportException(Error_Incorrect_method_nostring_inarray, IntegerTwo);
       }
       else {
                                        /* itsa string add to source array   */
@@ -554,13 +554,13 @@ RexxMethod *RexxMethodClass::newRexxCode(
       result->code->u_source->public_routines = ((RexxMethod*) option)->code->u_source->public_routines;
     } else {
       if (!OTYPE(String, option))
-        report_exception2(Error_Incorrect_method_argType, IntegerThree, new_cstring("Method/String object") );
+        reportException(Error_Incorrect_method_argType, IntegerThree, "Method/String object");
       else {
         // default given? set option to NULL (see code below)
         if (!stricmp("PROGRAMSCOPE",((RexxString*) option)->getStringData()))
           option = NULL;
         else
-          report_exception4(Error_Incorrect_call_list, new_cstring("NEW"), IntegerThree, new_cstring("\"PROGRAMSCOPE\", Method object"), option);
+          reportException(Error_Incorrect_call_list, "NEW", IntegerThree, "\"PROGRAMSCOPE\", Method object", option);
       }
     }
   }
@@ -655,7 +655,7 @@ RexxMethod *RexxMethodClass::newRexxBuffer(
 
   if (source == OREF_NULL)             /* didn't get source?                */
                                        /* raise an error                    */
-    report_exception1(Error_Incorrect_method_noarg, IntegerTwo);
+    reportException(Error_Incorrect_method_noarg, IntegerTwo);
                                        /* create a source object            */
   newSource = (RexxSource *)((RexxSource *)TheNilObject)->classNewBuffered(pgmname, source);
   // we need to protect this source object until parsing is complete

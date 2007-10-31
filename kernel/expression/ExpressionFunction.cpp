@@ -211,9 +211,9 @@ RexxObject *RexxExpressionFunction::evaluate(
   if (result == OREF_NULL)             /* result returned?                  */
                                        /* raise an error                    */
     if (this->u_name)
-      report_exception1(Error_Function_no_data_function, this->u_name);
+      reportException(Error_Function_no_data_function, this->u_name);
     else
-      report_exception(Error_Function_no_data);  // no name => don't try to print one out...!
+      reportException(Error_Function_no_data);  // no name => don't try to print one out...!
   stack->setTop(stacktop);             /* remove arguments from the stack   */
   stack->push(result);                 /* push onto the stack               */
   if ((this->flags&function_type_mask) != function_builtin) discard(result);

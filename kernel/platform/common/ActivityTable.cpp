@@ -52,7 +52,7 @@ ActivityTable::ActivityTable()
     size = INITIALSIZE;
     max_element = 0;
     data = (ThreadActivityPair *)calloc(size, sizeof(ThreadActivityPair));
-    if (!data)  {  report_exception(Error_System_resources); };
+    if (!data)  {  reportException(Error_System_resources); };
     MostRecentlyUsedTid = 0;
     MostRecentlyUsedActivity = OREF_NULL;
 }
@@ -115,7 +115,7 @@ void ActivityTable::extend()
 {
     void * tmp;
     tmp = calloc(size*2, sizeof(ThreadActivityPair));
-    if (!tmp)  {  report_exception(Error_System_resources); };
+    if (!tmp)  {  reportException(Error_System_resources); };
     memcpy(tmp, data, size*sizeof(ThreadActivityPair));
     size = size*2;
     free(data);

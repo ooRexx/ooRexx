@@ -77,9 +77,9 @@ void RexxInstructionDo::matchLabel(
     RexxString *myLabel = getLabel();
     if (myLabel == OREF_NULL)          /* name given on non-control form?   */
                                        /* have a mismatched end             */
-      CurrentActivity->raiseException(Error_Unexpected_end_nocontrol, &location, source, OREF_NULL, new_array2(name, new_integer(lineNum)), OREF_NULL);
+      CurrentActivity->raiseException(Error_Unexpected_end_nocontrol, &location, source, OREF_NULL, new_array(name, new_integer(lineNum)), OREF_NULL);
     else if (name != getLabel())       /* not the same name?                */
-      CurrentActivity->raiseException(Error_Unexpected_end_control, &location, source, OREF_NULL, new_array3(name, myLabel, new_integer(lineNum)), OREF_NULL);
+      CurrentActivity->raiseException(Error_Unexpected_end_control, &location, source, OREF_NULL, new_array(name, myLabel, new_integer(lineNum)), OREF_NULL);
   }
 }
 
@@ -254,7 +254,7 @@ void RexxInstructionDo::execute(
                                        /* didn't convert ok?                */
           if (array == TheNilObject || !OTYPE(Array, array) )
                                        /* raise an error                    */
-            report_exception1(Error_Execution_noarray, result);
+            reportException(Error_Execution_noarray, result);
         }
         doblock->setTo(array);         /* save this as the "TO" value       */
         doblock->setFor(1);            /* set the initial position          */
@@ -279,7 +279,7 @@ void RexxInstructionDo::execute(
                                        /* didn't convert ok?                */
           if (array == TheNilObject || !OTYPE(Array, array) )
                                        /* raise an error                    */
-            report_exception1(Error_Execution_noarray, result);
+            reportException(Error_Execution_noarray, result);
         }
         doblock->setTo(array);         /* save this as the "TO" value       */
         doblock->setFor(1);            /* set the initial position          */
@@ -316,7 +316,7 @@ void RexxInstructionDo::execute(
                                        /* bad value, too small or too big?  */
         if (count == (long)NO_LONG || count < 0)
                                        /* report an exception               */
-          report_exception1(Error_Invalid_whole_number_repeat, object);
+          reportException(Error_Invalid_whole_number_repeat, object);
         doblock->setFor(count);        /* save the new value                */
         if (doblock->testFor())        /* is this DO 0?                     */
                                        /* cause termination cleanup         */
@@ -349,7 +349,7 @@ void RexxInstructionDo::execute(
                                        /* bad value, too small or too big?  */
         if (count == (long)NO_LONG || count < 0)
                                        /* report an exception               */
-          report_exception1(Error_Invalid_whole_number_repeat, object);
+          reportException(Error_Invalid_whole_number_repeat, object);
         doblock->setFor(count);        /* save the new value                */
                                        /* is this DO 0?                     */
         if (doblock->testFor() || !this->whileCondition(context, stack))
@@ -497,7 +497,7 @@ void RexxInstructionDo::controlSetup(
                                        /* bad value, too small or too big?  */
         if (count == (long)NO_LONG || count < 0)
                                        /* report an exception               */
-          report_exception1(Error_Invalid_whole_number_for, object);
+          reportException(Error_Invalid_whole_number_for, object);
         doblock->setFor(count);        /* save the new value                */
         break;
     }

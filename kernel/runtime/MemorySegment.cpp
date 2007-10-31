@@ -1285,7 +1285,7 @@ RexxObject *NormalSegmentSet::handleAllocationFailure(size_t allocationLength)
               }
               if (newObject == OREF_NULL) {
                   /* can't allocate, report resource error. */
-                  report_exception(Error_System_resources);
+                  reportException(Error_System_resources);
               }
           }
       }
@@ -1340,7 +1340,7 @@ RexxObject *LargeSegmentSet::handleAllocationFailure(size_t allocationLength)
             newObject = findObject(allocationLength);
             if (newObject == OREF_NULL) {/* still no luck?                    */
                 /* can't allocate, report resource error. */
-                report_exception(Error_System_resources);
+                reportException(Error_System_resources);
             }
         }
     }

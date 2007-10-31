@@ -67,12 +67,6 @@ class RexxStringClass : public RexxClass {
  public:
    RexxStringClass(RESTORETYPE restoreType) { ; };
    void *operator new(size_t size, void *ptr) {return ptr;};
-   RexxString *newString(const char *, size_t);
-   RexxString *rawString(size_t);
-   RexxString *newCstring(const char *);
-   RexxString *newDouble(PDBL);
-   RexxString *newProxy(const char *);
-   RexxString *newRexx(RexxObject **, size_t);
 };
 
  class RexxString : public RexxObject {
@@ -154,7 +148,7 @@ class RexxStringClass : public RexxClass {
    RexxObject *format(RexxObject *Integers, RexxObject *Decimals, RexxObject *MathExp, RexxObject *ExpTrigger);
    RexxObject *isInteger();
    RexxObject *logicalOperation(RexxObject *, RexxObject *, UINT);
-   RexxString *extract(size_t offset, size_t sublength) { return new_string(this->stringData + offset, sublength); }
+   RexxString *extract(size_t offset, size_t sublength) { return newString(this->getStringData() + offset, sublength); }
    RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
    RexxObject *getValue(RexxActivation *context) {return this;}
    RexxObject *getValue(RexxVariableDictionary *context) {return this;}
@@ -407,6 +401,15 @@ class RexxStringClass : public RexxClass {
        return result;
    }
 
+
+   static RexxString *newString(const char *, size_t);
+   static RexxString *rawString(size_t);
+   static RexxString *newUpperString(const char *, stringsize_t);
+   static RexxString *newString(double d);
+   static RexxString *newProxy(const char *);
+   // NB:  newRexx() cannot be static and exported as an ooRexx method.
+          RexxString *newRexx(RexxObject **, size_t);
+
  protected:
 
    size_t length;                      /* string length                   */
@@ -414,4 +417,79 @@ class RexxStringClass : public RexxClass {
    ULONG Attributes;                   /* string attributes               */
    char stringData[4];                 /* Start of the string data part   */
  };
+
+
+// some handy functions for doing cstring/RexxString manipulations
+
+ inline void * rmemcpy(void *t, RexxString *s, size_t len)
+ {
+     return memcpy(t, s->getStringData(), len);
+ }
+
+ inline int rmemcmp(const void *t, RexxString *s, size_t len)
+ {
+     return memcmp(t, s->getStringData(), len);
+ }
+
+ inline char * rstrcpy(char *t, RexxString *s)
+ {
+     return strcpy(t, s->getStringData());
+ }
+
+ inline char * rstrcat(char *t, RexxString *s)
+ {
+     return strcat(t, s->getStringData());
+ }
+
+ inline int rstrcmp(const char *t, RexxString *s)
+ {
+     return strcmp(t, s->getStringData());
+ }
+
+
+// String creation inline functions
+
+inline RexxString *new_string(const char *s, stringsize_t l)
+{
+    return RexxString::newString(s, l);
+}
+
+inline RexxString *raw_string(stringsize_t l)
+{
+    return RexxString::rawString(l);
+}
+
+inline RexxString *new_string(double d)
+{
+    return RexxString::newString(d);
+}
+
+
+inline RexxString *new_string(const char *string)
+{
+    return new_string(string, strlen(string));
+}
+
+
+inline RexxString *new_string(char cc)
+{
+    return new_string(&cc, 1);
+}
+
+
+inline RexxString *new_proxy(const char *name)
+{
+
+    return RexxString::newProxy(name);
+}
+
+inline RexxString *new_upper_string(const char *s, stringsize_t l)
+{
+    return RexxString::newUpperString(s, l);
+}
+
+inline RexxString *new_upper_string(const char *string)
+{
+    return new_upper_string(string, strlen(string));
+}
 #endif

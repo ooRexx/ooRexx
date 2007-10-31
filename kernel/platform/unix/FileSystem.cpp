@@ -199,7 +199,7 @@ RexxString *  LocateProgram(
   Result = SearchFileName(Name, 'P');  /* check on the "raw" name first     */
   if (Result != NULL)                  /* not found?  try adding extensions */
   {
-      return new_cstring(Result);
+      return new_string(Result);
   }
                                      /* get space left for an extension   */
   ExtensionSpace = sizeof(TempName) - strlen(Name);
@@ -213,7 +213,7 @@ RexxString *  LocateProgram(
       Result = SearchFileName(TempName, 'P'); /* PATH search         */
       if (Result != NULL)                      /* not found?  try adding extensions */
       {
-          return new_cstring(Result);
+          return new_string(Result);
       }
       // try again in lower case
       strlower(TempName);
@@ -221,7 +221,7 @@ RexxString *  LocateProgram(
       Result = SearchFileName(TempName, 'P'); /* PATH search         */
       if (Result != NULL)                      /* not found?  try adding extensions */
       {
-          return new_cstring(Result);
+          return new_string(Result);
       }
   }
   return OREF_NULL;
@@ -582,7 +582,7 @@ RexxString *SysQualifyFileSystemName(
    SysQualifyStreamName(&stream_info); /* expand the full name              */
 
                                        /* get the qualified file name       */
-   return new_cstring(stream_info.full_name_parameter);
+   return new_string(stream_info.full_name_parameter);
 }
 
 BOOL SearchFirstFile(

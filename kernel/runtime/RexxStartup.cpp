@@ -204,7 +204,7 @@ void start_rexx_environment(void)
                                        /* get the local environment         */
     ProcessLocalEnv = (RexxDirectory *)save(new_directory());
                                        /* get the server class              */
-  server_class = env_find(new_cstring("!SERVER"));
+  server_class = env_find(new_string("!SERVER"));
   activity_unlock_kernel();            /* now unlock the kernel             */
 
   TheActivityClass->getActivity();     /* get an activity set up            */

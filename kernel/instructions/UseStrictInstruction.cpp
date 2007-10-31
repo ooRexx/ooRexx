@@ -157,11 +157,11 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
             // this is a pain, but there are different errors for method errors vs. call errors.
             if (context->inMethod())
             {
-                report_exception1(Error_Incorrect_method_minarg, new_integer(minimumRequired));
+                reportException(Error_Incorrect_method_minarg, minimumRequired);
             }
             else
             {
-                report_exception2(Error_Incorrect_call_minarg, context->getCallname(), new_integer(minimumRequired));
+                reportException(Error_Incorrect_call_minarg, context->getCallname(), minimumRequired);
             }
         }
         // potentially too many?
@@ -169,11 +169,11 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
         {
             if (context->inMethod())
             {
-                report_exception1(Error_Incorrect_method_maxarg, new_integer(variableCount));
+                reportException(Error_Incorrect_method_maxarg, variableCount);
             }
             else
             {
-                report_exception2(Error_Incorrect_call_maxarg, context->getCallname(), new_integer(variableCount));
+                reportException(Error_Incorrect_call_maxarg, context->getCallname(), variableCount);
             }
         }
     }
@@ -222,11 +222,11 @@ void RexxInstructionUseStrict::execute(RexxActivation *context, RexxExpressionSt
                     {
                         if (context->inMethod())
                         {
-                            report_exception1(Error_Incorrect_method_noarg, new_integer(i + 1));
+                            reportException(Error_Incorrect_method_noarg, i + 1);
                         }
                         else
                         {
-                            report_exception2(Error_Incorrect_call_noarg, context->getCallname(), new_integer(i + 1));
+                            reportException(Error_Incorrect_call_noarg, context->getCallname(), i + 1);
                         }
                     }
                 }

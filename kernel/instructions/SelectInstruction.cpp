@@ -288,11 +288,11 @@ void RexxInstructionSelect::matchEnd(
     RexxString *myLabel = getLabel();
     if (myLabel == OREF_NULL)          /* name given on non-control form?   */
     {
-        CurrentActivity->raiseException(Error_Unexpected_end_select_nolabel, &location, source, OREF_NULL, new_array2(partner->name, new_integer(lineNum)), OREF_NULL);
+        CurrentActivity->raiseException(Error_Unexpected_end_select_nolabel, &location, source, OREF_NULL, new_array(partner->name, new_integer(lineNum)), OREF_NULL);
     }
     else if (name != myLabel)          /* not the same name?                */
     {
-        CurrentActivity->raiseException(Error_Unexpected_end_select, &location, source, OREF_NULL, new_array3(name, myLabel, new_integer(lineNum)), OREF_NULL);
+        CurrentActivity->raiseException(Error_Unexpected_end_select, &location, source, OREF_NULL, new_array(name, myLabel, new_integer(lineNum)), OREF_NULL);
     }
   }
                                        /* misplaced END instruction         */
@@ -303,7 +303,7 @@ void RexxInstructionSelect::matchEnd(
   if (when == (RexxInstructionIf *)TheNilObject) {
     this->getLocation(&location);      /* get the location info             */
                                        /* need at least one WHEN here       */
-    CurrentActivity->raiseException(Error_When_expected_when, &location, source, OREF_NULL, new_array1(new_integer(lineNum)), OREF_NULL);
+    CurrentActivity->raiseException(Error_When_expected_when, &location, source, OREF_NULL, new_array(new_integer(lineNum)), OREF_NULL);
   }
                                        /* link up each WHEN with the END    */
   while (when != (RexxInstructionIf *)TheNilObject) {

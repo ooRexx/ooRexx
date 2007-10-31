@@ -1160,7 +1160,7 @@ RexxObject *RexxMemory::temporaryObject(size_t requestLength)
   if (newObj == OREF_NULL)             /* unable to allocate a new one?     */
                                        /* can't allocate, report resource   */
                                        /* error.                            */
-    report_exception(Error_System_resources);
+    reportException(Error_System_resources);
                                        /* setup the new object header for   */
                                        /*use                                */
   SetUpNewObject(newObj, allocationLength);

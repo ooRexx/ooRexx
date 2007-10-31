@@ -79,12 +79,12 @@ RexxObject * SysUserid()
                 account = (char*) malloc(account_size);
                 break;
             default:
-                report_exception1(Error_Function_no_data_function, new_string(CHAR_USERID, strlen(CHAR_USERID)));
+                reportException(Error_Function_no_data_function, CHAR_USERID);
                 break;
         }
     }
 
-    string_result = new_cstring(account);
+    string_result = new_string(account);
 
     if(account != account_buffer)
     {

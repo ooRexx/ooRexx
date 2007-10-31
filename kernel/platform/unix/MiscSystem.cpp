@@ -173,7 +173,7 @@ RexxString *SysVersion(void)
 
   uname(&info);                        /* get the info               */
 
-  return new_cstring(info.release);    /* return as a string                */
+  return new_string(info.release);    /* return as a string                */
 }
 
 PFN SysLoadProcedure(
@@ -187,7 +187,7 @@ PFN SysLoadProcedure(
    load_address = dlsym((void *)LibraryHandle->getValue(), Procedure->getStringData());
    if (load_address == NULL)
    {
-      report_exception1(Error_External_name_not_found_method, Procedure);
+      reportException(Error_External_name_not_found_method, Procedure);
    }
    return load_address;
 }
@@ -202,7 +202,7 @@ RexxInteger * SysLoadLibrary(
   RexxString *tempresult;
   LONG plib;
 
-  result = (RexxString*) new_cstring("lib");
+  result = (RexxString*) new_string("lib");
   result = result->concatWithCstring(Library->getStringData());
   result = result->concatWithCstring(ORX_SHARED_LIBRARY_EXT);
   tempresult = (RexxString *)result->copy();
@@ -214,7 +214,7 @@ RexxInteger * SysLoadLibrary(
      if (!(plib = (LONG) dlopen(result->getStringData(), RTLD_LAZY )))
      {
         fprintf(stderr, " *** Error dlopen: %s\n", dlerror());
-        report_exception1(Error_Execution_library, tempresult);
+        reportException(Error_Execution_library, tempresult);
      }
   }
   return new_integer((LONG)plib);
@@ -231,7 +231,7 @@ void SysValidateAddressName(
                                        /* name too long?                    */
   if (Name->getLength() > MAX_ADDRESS_NAME_LENGTH)
                                        /* go report an error                */
-    report_exception2(Error_Environment_name_name, new_integer(MAX_ADDRESS_NAME_LENGTH), Name);
+    reportException(Error_Environment_name_name, MAX_ADDRESS_NAME_LENGTH, Name);
 }
 
 RexxString * SysGetCurrentQueue(void)

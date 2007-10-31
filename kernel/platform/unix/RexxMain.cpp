@@ -455,9 +455,9 @@ void translateSource(
   if (pszName == OREF_NULL)
   {
                                        /* got an error here                 */
-    report_exception1(Error_Program_unreadable_notfound, inputName);
+    reportException(Error_Program_unreadable_notfound, inputName);
   }
-  fullName = new_cstring(pszName);
+  fullName = new_string(pszName);
   newNativeAct->saveObject(fullName);  /* protect from garbage collect      */
                                        /* go translate the image            */
   method = TheMethodClass->newFile(fullName);
@@ -561,7 +561,7 @@ void  SysRunProgram(
   self = (RexxStartInfo *)ControlInfo; /* address all of the arguments      */
   if (self->programname != NULL)       /* have an actual name?              */
                                        /* get string version of the name    */
-    name = new_cstring(self->programname);
+    name = new_string(self->programname);
   else
     name = OREF_NULLSTRING;            /* use an "unlocatable" name         */
   newNativeAct->saveObject(name);      /* protect from garbage collect      */
@@ -576,7 +576,7 @@ void  SysRunProgram(
                                        /* while not the list ender          */
       while (self->exits[i].sysexit_code != RXENDLST) {
                                        /* enable this exit                  */
-        CurrentActivity->setSysExit(self->exits[i].sysexit_code, new_cstring(self->exits[i].sysexit_name));
+        CurrentActivity->setSysExit(self->exits[i].sysexit_code, new_string(self->exits[i].sysexit_name));
         i++;                           /* step to the next exit             */
       }
     }
@@ -628,7 +628,7 @@ void  SysRunProgram(
     fullname = SysResolveProgramName(name, OREF_NULL);
     if (fullname == OREF_NULL)         /* not found?                        */
                                        /* got an error here                 */
-      report_exception1(Error_Program_unreadable_notfound, name);
+      reportException(Error_Program_unreadable_notfound, name);
     newNativeAct->saveObject(fullname);/* protect from garbage collect      */
                                        /* try to restore saved image        */
     method = SysRestoreProgram(fullname);
@@ -644,18 +644,18 @@ void  SysRunProgram(
     method = process_instore(self->instore, name);
     if (method == OREF_NULL)           /* couldn't get it?                  */
                                        /* got an error here                 */
-      report_exception1(Error_Program_unreadable_name, name);
+      reportException(Error_Program_unreadable_name, name);
     fullname = name;                   /* copy the name                     */
   }
   if (self->envname != NULL)           /* have an address override?         */
                                        /* use the provided one              */
-    initial_address = new_cstring(self->envname);
+    initial_address = new_string(self->envname);
   else {
                                        /* check for a file extension        */
     file_extension = SysFileExtension(fullname->getStringData());
     if (file_extension != NULL)      /* have a real one?                  */
                                        /* use extension as the environment  */
-      initial_address = new_cstring(file_extension + 1);
+      initial_address = new_string(file_extension + 1);
     else
                                        /* use system defined default        */
       initial_address = OREF_INITIALADDRESS;

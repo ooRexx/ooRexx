@@ -124,14 +124,23 @@ typedef struct nestedinfo {
    RexxActivity(BOOL, long, RexxDirectory *);
    long error(size_t);
    BOOL        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, RexxDirectory *);
-   void        raiseException(int, LOCATIONINFO *, RexxSource *, RexxString *, RexxArray *, RexxObject *);
-   void        reportException(LONG, char *);
-   void        reportException(LONG, LONG);
-   void        reportAnException(LONG);
-   void        reportAnException(LONG, RexxObject *);
-   void        reportAnException(LONG, RexxObject *, RexxObject *);
-   void        reportAnException(LONG, RexxObject *, RexxObject *, RexxObject *);
-   void        reportAnException(LONG, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+   void        raiseException(wholenumber_t, LOCATIONINFO *, RexxSource *, RexxString *, RexxArray *, RexxObject *);
+   void        reportAnException(wholenumber_t, const char *);
+   void        reportAnException(wholenumber_t, RexxObject *, const char *);
+   void        reportAnException(wholenumber_t, RexxObject *, wholenumber_t);
+   void        reportAnException(wholenumber_t, const char *, RexxObject *);
+   void        reportAnException(wholenumber_t, const char *, wholenumber_t);
+   void        reportAnException(wholenumber_t, const char *, wholenumber_t, RexxObject *);
+   void        reportAnException(wholenumber_t, const char *, RexxObject *, wholenumber_t);
+   void        reportAnException(wholenumber_t, wholenumber_t);
+   void        reportAnException(wholenumber_t, wholenumber_t, wholenumber_t);
+   void        reportAnException(wholenumber_t, wholenumber_t, RexxObject *);
+   void        reportAnException(wholenumber_t);
+   void        reportAnException(wholenumber_t, RexxObject *);
+   void        reportAnException(wholenumber_t, RexxObject *, RexxObject *);
+   void        reportAnException(wholenumber_t, RexxObject *, RexxObject *, RexxObject *);
+   void        reportAnException(wholenumber_t, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+   void        reportAnException(wholenumber_t, const char *, RexxObject *, const char *, RexxObject *);
    void        reraiseException(RexxDirectory *);
    void        raisePropagate(RexxDirectory *);
    RexxObject *display(RexxDirectory *);
@@ -339,14 +348,75 @@ typedef struct nestedinfo {
  };
 
 
+                                       /* various exception/condition       */
+                                       /* reporting routines                */
+inline void reportCondition(RexxString *condition, RexxString *description) { CurrentActivity->raiseCondition(condition, OREF_NULL, description, OREF_NULL, OREF_NULL, OREF_NULL); }
+inline void reportNovalue(RexxString *description) { reportCondition(OREF_NOVALUE, description); }
+inline void reportNostring(RexxString *description) { reportCondition(OREF_NOSTRING, description); }
+
 inline void reportException(wholenumber_t error)
 {
     CurrentActivity->reportAnException(error);
 }
 
+inline void reportException(wholenumber_t error, RexxArray *args)
+{
+    CurrentActivity->raiseException(error, NULL, OREF_NULL, OREF_NULL, args, OREF_NULL);
+}
+
 inline void reportException(wholenumber_t error, RexxObject *a1)
 {
     CurrentActivity->reportAnException(error, a1);
+}
+
+inline void reportException(wholenumber_t error, wholenumber_t a1)
+{
+    CurrentActivity->reportAnException(error, a1);
+}
+
+inline void reportException(wholenumber_t error, wholenumber_t a1, wholenumber_t a2)
+{
+    CurrentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, wholenumber_t a1, RexxObject *a2)
+{
+    CurrentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, RexxObject *a1, wholenumber_t a2)
+{
+    CurrentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2)
+{
+    CurrentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, RexxObject *a1, const char *a2)
+{
+    CurrentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, const char *a1)
+{
+    CurrentActivity->reportAnException(error, a1);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, wholenumber_t a2)
+{
+    CurrentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, wholenumber_t a2, RexxObject *a3)
+{
+    CurrentActivity->reportAnException(error, a1, a2, a3);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, wholenumber_t a3)
+{
+    CurrentActivity->reportAnException(error, a1, a2, a3);
 }
 
 inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2)
@@ -364,9 +434,39 @@ inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2,
     CurrentActivity->reportAnException(error, a1, a2, a3, a4);
 }
 
-inline void reportException(wholenumber_t error, wholenumber_t a1)
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, const char *a3, RexxObject *a4)
 {
-    CurrentActivity->reportAnException(error, new_integer(a1));
+    CurrentActivity->reportAnException(error, a1, a2, a3, a4);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, RexxObject *a3, RexxObject *a4)
+{
+    CurrentActivity->reportAnException(error, new_string(a1), a2, a3, a4);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, RexxObject *a3)
+{
+    CurrentActivity->reportAnException(error, new_string(a1), a2, a3);
+}
+
+inline void reportNomethod(RexxString *message, RexxObject *receiver)
+{
+    if (!CurrentActivity->raiseCondition(OREF_NOMETHOD, OREF_NULL, message, receiver, OREF_NULL, OREF_NULL))
+    {
+                                           /* raise as a syntax error           */
+        reportException(Error_No_method_name, receiver, message);
+    }
+}
+
+
+inline void reportHalt(RexxString *description)
+{
+                                       /* process as common condition       */
+  if (!CurrentActivity->raiseCondition(OREF_HALT, OREF_NULL, description, OREF_NULL, OREF_NULL, OREF_NULL))
+  {
+                                         /* raise as a syntax error           */
+      reportException(Error_Program_interrupted_condition, OREF_HALT);
+  }
 }
 
 void activity_create (void);

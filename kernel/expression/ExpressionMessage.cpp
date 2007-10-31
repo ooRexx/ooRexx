@@ -101,7 +101,7 @@ RexxObject *RexxExpressionMessage::evaluate(
 
     if (_target != context->receiver)   /* sender and receiver different?    */
                                        /* this is an error                  */
-      report_exception(Error_Execution_super);
+      reportException(Error_Execution_super);
                                        /* get the variable value            */
     _super = this->super->evaluate(context, stack);
     stack->toss();                     /* pop the top item                  */
@@ -139,7 +139,7 @@ RexxObject *RexxExpressionMessage::evaluate(
 
   if (result == OREF_NULL)             /* in an expression and need a result*/
                                        /* need to raise an exception        */
-    report_exception1(Error_No_result_object_message, this->u_name);
+    reportException(Error_No_result_object_message, this->u_name);
                                        /* trace if necessary                */
   context->traceMessage(u_name, result);
   return result;                       /* return the result                 */
@@ -230,7 +230,7 @@ void RexxExpressionMessage::assign(
         // in this context, the value needs to be SELF
         if (_target != context->receiver)
         {
-            report_exception(Error_Execution_super);
+            reportException(Error_Execution_super);
         }
         // evaluate the superclass override
         _super = this->super->evaluate(context, stack);
