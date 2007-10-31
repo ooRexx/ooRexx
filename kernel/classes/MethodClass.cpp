@@ -94,6 +94,7 @@ void RexxMethod::live()
   memory_mark(this->scope);
   memory_mark(this->code);
   memory_mark(this->objectVariables);
+  memory_mark(this->attribute);
   cleanUpMemoryMark
 }
 
@@ -106,6 +107,7 @@ void RexxMethod::liveGeneral()
   memory_mark_general(this->scope);
   memory_mark_general(this->code);
   memory_mark_general(this->objectVariables);
+  memory_mark_general(this->attribute);
   cleanUpMemoryMarkGeneral
                                        /* part of the saved image?          */
   if (memoryObject.restoringImage()) { /* restoring the image?              */
@@ -125,6 +127,7 @@ void RexxMethod::flatten(RexxEnvelope *envelope)
    flatten_reference(newThis->scope, envelope);
    flatten_reference(newThis->code, envelope);
    flatten_reference(newThis->objectVariables, envelope);
+   flatten_reference(newThis->attribute, envelope);
 
   cleanUpFlatten
 }
