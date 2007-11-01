@@ -113,6 +113,16 @@ exit
   if lc = .nil then return
   lc~DeleteAll
   component = self~GetComboBox(100)~title
+-- Gather data on the current size and position of the dialog
+  parse value lc~getPos() with siX siY
+  parse value lc~getSize() with siW siH
+-- Get the current position of the cursor
+  parse value self~CursorPos with preCX preCY
+-- Set the cursor to the hour glass
+  ch1 = lc~Cursor_Wait
+-- Place the hour glass cursor in the center of the dialog being populated
+  lc~SetCursorPos((siX+(siW/2))*self~FactorX,(siY+(siH/2))*self~FactorY)
+
   WMIobject = .OLEObject~GetObject("WinMgmts:")
   objects = WMIobject~InstancesOf(component)
 
@@ -127,3 +137,6 @@ exit
     else
       lc~add(name "("desc")")
   end
+-- Restore the cursor to its original shape and position
+  lc~RestoreCursorShape(ch1)
+  self~SetCursorPos(preCX,preCY)
