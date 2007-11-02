@@ -496,7 +496,7 @@ RexxBuffer *SysReadProgram(
 /*******************************************************************/
 {
   FILE    *handle;                     /* open file access handle           */
-  INT      buffersize;                 /* size of read buffer               */
+  size_t   buffersize;                 /* size of read buffer               */
   RexxBuffer * buffer;                 /* buffer object to read file into   */
   RexxActivity*activity;               /* the current activity              */
 

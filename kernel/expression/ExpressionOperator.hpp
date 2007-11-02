@@ -47,7 +47,7 @@
 class RexxExpressionOperator : public RexxInternalObject {
  public:
   inline RexxExpressionOperator() { ; }
-  RexxExpressionOperator(INT, RexxObject *, RexxObject *);
+  RexxExpressionOperator(int, RexxObject *, RexxObject *);
   inline RexxExpressionOperator(RESTORETYPE restoreType) { ; };
   void   live();
   void   liveGeneral();

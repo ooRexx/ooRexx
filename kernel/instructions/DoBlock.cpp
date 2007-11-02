@@ -48,7 +48,7 @@
 
 RexxDoBlock::RexxDoBlock(
     RexxBlockInstruction* _parent,      /* parent DO block                   */
-    INT                _indent )        /* current indentation level         */
+    int                _indent )        /* current indentation level         */
 /******************************************************************************/
 /* Function:  complete BLOCK instruction initialization                       */
 /******************************************************************************/

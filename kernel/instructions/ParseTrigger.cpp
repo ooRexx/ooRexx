@@ -51,7 +51,7 @@
 #include "ExpressionBaseVariable.hpp"
 
 RexxTrigger::RexxTrigger(
-    INT        type,                    /* type of trigger                   */
+    int        type,                    /* type of trigger                   */
     RexxObject *_value,                 /* value to evaluatate               */
     LONG        _variableCount,         /* count of variables                */
     RexxQueue  *_variables)             /* array of trigger variables        */
@@ -207,8 +207,8 @@ void RexxTrigger::live()
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpMemoryMark
   for (i = 0, count = this->variableCount; i < count; i++)
@@ -222,8 +222,8 @@ void RexxTrigger::liveGeneral()
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpMemoryMarkGeneral
   for (i = 0, count = this->variableCount; i < count; i++)
@@ -237,8 +237,8 @@ void RexxTrigger::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpFlatten(RexxTrigger)            /* set up for the flatten            */
 

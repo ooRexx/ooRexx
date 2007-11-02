@@ -276,7 +276,7 @@ void RexxCompoundTail::expandCapacity(
     }
     else {
                                          /* get a new buffer size */
-        INT newLength = length + needed + ALLOCATION_PAD;
+        size_t newLength = length + needed + ALLOCATION_PAD;
         temp = (RexxBuffer *)new_buffer(newLength);
         save(temp);                      /* this is protected until the destructor releases it */
         tail = temp->address();

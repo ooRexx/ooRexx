@@ -44,7 +44,7 @@
 #include "RexxCore.h"
 
 
-void MemorySegment::dump(const char *owner, INT counter, FILE *keyfile, FILE *dumpfile)
+void MemorySegment::dump(const char *owner, size_t counter, FILE *keyfile, FILE *dumpfile)
 /******************************************************************************/
 /* Function:  Dump information about an individual segment                    */
 /******************************************************************************/
@@ -118,7 +118,7 @@ void MemorySegmentSet::dumpSegments(FILE *keyfile, FILE *dumpfile)
 /******************************************************************************/
 {
     MemorySegment *segment;
-    INT counter = 0;
+    size_t counter = 0;
 
     for (segment = first(); segment != NULL; segment = next(segment)) {
         segment->dump(name, ++counter, keyfile, dumpfile);
@@ -384,7 +384,7 @@ void NormalSegmentSet::addDeadObject(DeadObject *object)
     else {
         /* calculate the dead chain          */
         /* and add that to the appropriate chain */
-        UINT deadChain = LengthToDeadPool(length);
+        unsigned int deadChain = LengthToDeadPool(length);
         subpools[deadChain].addSingle(object);
         /* we can mark this subpool as having items again */
         lastUsedSubpool[deadChain] = deadChain;
@@ -447,7 +447,7 @@ void NormalSegmentSet::addDeadObject(char *object, size_t length)
     else {
         /* calculate the dead chain          */
         /* and add that to the appropriate chain */
-        UINT deadChain = LengthToDeadPool(length);
+        unsigned int deadChain = LengthToDeadPool(length);
         subpools[deadChain].addSingle(new (object) DeadObject(length));
         /* we can mark this subpool as having items again */
         lastUsedSubpool[deadChain] = deadChain;

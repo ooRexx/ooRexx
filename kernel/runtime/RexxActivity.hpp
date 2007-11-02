@@ -195,7 +195,7 @@ typedef struct nestedinfo {
    BOOL sysExitDbgTst(RexxActivation *, BOOL, BOOL);
    void traceOutput(RexxActivation *, RexxString *);
    void sayOutput(RexxActivation *, RexxString *);
-   void queue(RexxActivation *, RexxString *, INT);
+   void queue(RexxActivation *, RexxString *, int);
    RexxString *traceInput(RexxActivation *);
    RexxString *pullInput(RexxActivation *);
    RexxObject *lineOut(RexxString *);
@@ -296,7 +296,7 @@ typedef struct nestedinfo {
    void *operator new(size_t size, void *ptr) {return ptr;};
    void *operator new(size_t size, long size1, RexxBehaviour *classBehave, RexxBehaviour *instance) { return new (size, classBehave, instance) RexxClass; }
    RexxActivity *newActivity( long, RexxObject *);
-   RexxActivation *newActivation(RexxObject *, RexxMethod *, RexxActivity *, RexxString *, RexxActivation *, INT);
+   RexxActivation *newActivation(RexxObject *, RexxMethod *, RexxActivity *, RexxString *, RexxActivation *, int);
    void            cacheActivation(RexxActivation *);
 
    void init();

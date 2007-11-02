@@ -274,7 +274,7 @@ class ACTIVATION_SETTINGS {            /* activation "global" settings      */
       BOOL form;                           /* numeric form setting              */
 };                                     /* global activation settings        */
                                        /* builtin function prototype        */
-typedef RexxObject *builtin_func(RexxActivation *, INT, RexxExpressionStack *);
+typedef RexxObject *builtin_func(RexxActivation *, int, RexxExpressionStack *);
 typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
 
                                        /*  as "overLoading" of hashValue  */

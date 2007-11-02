@@ -225,10 +225,10 @@ char *allocate_stream_buffer(
 
 void openStream(
     STREAM_INFO *stream_info,          /* target stream information block   */
-    INT          openFlags,            /* _sopen flags                      */
-    INT          openMode,             /* _sopen mode                       */
+    int          openFlags,            /* _sopen flags                      */
+    int          openMode,             /* _sopen mode                       */
     const char  *fdopenMode,           /* fdopen mode information           */
-    INT          sharedFlag )          /* flag for shared open              */
+    int          sharedFlag )          /* flag for shared open              */
 /******************************************************************************/
 /* Function:  Open a stream in a specific mode                                */
 /******************************************************************************/
@@ -317,7 +317,7 @@ LONG stream_size(
 void stream_error(
     REXXOBJECT   self,                 /* target stream object              */
     STREAM_INFO *stream_info,          /* current stream information        */
-    INT          error_code,           /* new error information             */
+    int          error_code,           /* new error information             */
     REXXOBJECT   result )              /* notready return result            */
 /******************************************************************************/
 /* Function:   Raise a notready condition for stream errors                   */
@@ -351,7 +351,7 @@ void stream_eof(
 void stream_check_eof(
     REXXOBJECT   self,                 /* target stream object              */
     STREAM_INFO *stream_info,          /* current stream information        */
-    INT          error_code,           /* new error information             */
+    int          error_code,           /* new error information             */
     REXXOBJECT   result )              /* notready return result            */
 /******************************************************************************/
 /* Function:   Check for an eof or error condition and raise appropriate      */
@@ -1007,7 +1007,7 @@ LONG read_stream_buffer(               /* read a buffer of data             */
    return result;                      /* return the read count             */
 }
 
-INT get_file_statistics(               /* read a line from an I/O stream    */
+int get_file_statistics(               /* read a line from an I/O stream    */
     STREAM_INFO *stream_info,          /* current stream information        */
     struct stat *stat_info )           /* returned stat information         */
 /******************************************************************************/

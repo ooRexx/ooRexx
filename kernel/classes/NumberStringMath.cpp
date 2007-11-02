@@ -57,7 +57,7 @@
 extern ACTIVATION_SETTINGS *current_settings;
 
 
-RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, UINT operation)
+RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, unsigned int operation)
 /*********************************************************************/
 /* Function:  Process the MAX and MIN builtin functions and methods  */
 /*********************************************************************/
@@ -384,7 +384,7 @@ RexxNumberString *RexxNumberString::prepareNumber(size_t NumberDigits, BOOL roun
 
 RexxNumberString *RexxNumberString::addSub(
   RexxNumberString *other,             /* other addition/subtract target    */
-  UINT operation,                      /* add or subtract operation         */
+  unsigned int operation,              /* add or subtract operation         */
   size_t NumberDigits )                /* precision to use                  */
 /*********************************************************************/
 /* Function:  Add or subtract two normalized numbers                 */
@@ -933,7 +933,7 @@ void Subtract_Numbers(
 }
 
 char *AddToBaseSixteen(
-  INT      Digit,                      /* digit to add                      */
+  int      Digit,                      /* digit to add                      */
   char    *Value,                      /* number to add                     */
   char    *HighDigit )                 /* highest digit location            */
 /*********************************************************************/
@@ -967,18 +967,18 @@ char *MultiplyBaseSixteen(
 /*                      the result in the same buffer.               */
 /*********************************************************************/
 {
-  INT        Carry;                    /* multiplication carry              */
-  UINT       Digit;                    /* current digit                     */
-  char *     OutPtr;                   /* output pointer                    */
+  int          Carry;                  /* multiplication carry              */
+  unsigned int Digit;                  /* current digit                     */
+  char *       OutPtr;                 /* output pointer                    */
 
   OutPtr = Accum;                      /* point to first digit              */
   Carry = 0;                           /* no carry yet                      */
   while (OutPtr > HighDigit) {         /* while more digits                 */
                                        /* multiply digit by 10              */
-    Digit = (UINT )((*OutPtr * 10) + Carry);
+    Digit = (unsigned int )((*OutPtr * 10) + Carry);
     if (Digit > 15) {                  /* carry?                            */
-      Carry = (INT)(Digit / 16);       /* get carry value                   */
-      Digit &= (UINT )0x0000000f;      /* keep just lower nibble            */
+      Carry = (int)(Digit / 16);       /* get carry value                   */
+      Digit &= (unsigned int )0x0000000f; /* keep just lower nibble         */
     }
     else                               /* no carry here                     */
       Carry = 0;                       /* no carry                          */
@@ -990,7 +990,7 @@ char *MultiplyBaseSixteen(
 }
 
 char *AddToBaseTen(
-  INT      Digit,                      /* digit to add                      */
+  int      Digit,                      /* digit to add                      */
   char    *Accum,                      /* number to add                     */
   char    *HighDigit )                 /* highest digit location            */
 /*********************************************************************/
@@ -998,7 +998,7 @@ char *AddToBaseTen(
 /*                      base 10 (used by the d2x and d2c functions)  */
 /*********************************************************************/
 {
-  INT      Carry;                      /* carry number                      */
+  int      Carry;                      /* carry number                      */
 
   Carry = 0;                           /* no carry yet                      */
   while (Digit || Carry) {             /* while something to add            */
@@ -1029,18 +1029,18 @@ char * MultiplyBaseTen(
 /*                      the number in a different buffer.            */
 /*********************************************************************/
 {
-  char *      OutPtr;                   /* addition pointer                  */
-  INT        Carry;                    /* multiplication carry              */
-  UINT       Digit;                    /* current digit                     */
+  char *       OutPtr;                 /* addition pointer                  */
+  int          Carry;                  /* multiplication carry              */
+  unsigned int Digit;                  /* current digit                     */
 
   OutPtr = Accum;                      /* point to output buffer            */
   Carry = 0;                           /* no carry yet                      */
 
   while (OutPtr > HighDigit) {         /* while more digits                 */
                                        /* multiply digit by 16              */
-    Digit = (UINT )((*OutPtr * 16) + Carry);
+    Digit = (unsigned int )((*OutPtr * 16) + Carry);
     if (Digit > 9) {                   /* carry?                            */
-      Carry = (INT)(Digit / 10);       /* get carry value                   */
+      Carry = (int)(Digit / 10);       /* get carry value                   */
       Digit %= 10;                     /* get the digit value               */
     }
     else                               /* no carry here                     */

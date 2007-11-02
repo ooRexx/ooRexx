@@ -150,8 +150,8 @@ void RexxExpressionMessage::live()
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpMemoryMark
   memory_mark(this->u_name);
@@ -167,8 +167,8 @@ void RexxExpressionMessage::liveGeneral()
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpMemoryMarkGeneral
   memory_mark_general(this->u_name);
@@ -184,8 +184,8 @@ void RexxExpressionMessage::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpFlatten(RexxExpressionMessage)
 

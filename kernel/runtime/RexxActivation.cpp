@@ -219,7 +219,7 @@ RexxObject * RexxActivation::run(
 /******************************************************************************/
 {
   RexxActivationBase*activation;       /* used for unwinding activations    */
-  LONG               i;                /* loop counter                      */
+  size_t             i;                /* loop counter                      */
   RexxActivity      *oldActivity;      /* old activity                      */
 #ifndef FIXEDTIMERS                    /* currently disabled                */
   LONG               instructionCount; /* instructions without yielding     */
@@ -458,7 +458,7 @@ void RexxActivation::processTraps()
   RexxArray     * trapHandler;         /* current trap handler              */
   RexxDirectory * conditionObj;        /* associated condition object       */
   RexxObject    * rc;                  /* return code value                 */
-  LONG            i;                   /* loop counter                      */
+  size_t          i;                   /* loop counter                      */
 
   i = this->pending_count;             /* get the pending count             */
   while (i--) {                        /* while pending conditions          */
@@ -2107,7 +2107,7 @@ void RexxActivation::guardWait()
 /* Function:  Wait for a variable in a guard expression to get updated.       */
 /******************************************************************************/
 {
-  INT   initial_state;                 /* initial guard state               */
+  int   initial_state;                 /* initial guard state               */
 
   initial_state = this->object_scope;  /* save the initial state            */
                                        /* have the scope reserved?          */
@@ -2224,7 +2224,7 @@ ULONG RexxActivation::getRandomSeed(
 /******************************************************************************/
 {
   wholenumber_t  seed_value;           /* supplied seed value               */
-  INT   i;                             /* loop counter                      */
+  size_t         i;                    /* loop counter                      */
 
                                        /* currently in an internal routine  */
                                        /* or interpret instruction?         */
@@ -2263,11 +2263,11 @@ RexxInteger * RexxActivation::random(
 /*            seed value.                                                     */
 /******************************************************************************/
 {
-   LONG  minimum;                      /* minimum value                     */
-   LONG  maximum;                      /* maximum value                     */
-   ULONG work;                         /* working random number             */
-   ULONG seed;                         /* copy of the seed number           */
-   INT   i;                            /* loop counter                      */
+   LONG   minimum;                     /* minimum value                     */
+   LONG   maximum;                     /* maximum value                     */
+   ULONG  work;                        /* working random number             */
+   ULONG  seed;                        /* copy of the seed number           */
+   size_t i;                           /* loop counter                      */
 
                                        /* go get the seed value             */
    seed = this->getRandomSeed(randseed);
@@ -3265,7 +3265,7 @@ RexxVariableBase  *RexxActivation::getVariableRetriever(
 /*  Returned:  Retriever for variable (returns OREF_NULL for invalids)        */
 /******************************************************************************/
 {
-  INT         Type;                    /* type returned from string method  */
+  int         Type;                    /* type returned from string method  */
 
   variable = variable->upper();        /* upper case the variable           */
   Type = variable->isSymbol();         /* validate the symbol               */
@@ -3314,9 +3314,9 @@ RexxVariableBase  *RexxActivation::getDirectVariableRetriever(
   char        character;               /* current character                 */
   LONG        nonnumeric;              /* count of non-numeric characters   */
   char        last;                    /* previous character                */
-  INT         compound;                /* count of period characters        */
+  size_t      compound;                /* count of period characters        */
 
-  length = variable->getLength();           /* get the name length               */
+  length = variable->getLength();      /* get the name length               */
                                        /* get the first character           */
   character = variable->getChar(0);
                                        /* constant symbol?                  */
@@ -3391,9 +3391,9 @@ RexxObject *buildCompoundVariable(
   RexxString *   tail;                 /* tail section string value         */
   RexxQueue  *   tails;                /* tail elements                     */
   RexxObject *   tailPart;             /* tail element retriever            */
-  INT     position;                    /* scan position within compound name*/
-  INT     start;                       /* starting scan position            */
-  INT     length;                      /* length of tail section            */
+  size_t  position;                    /* scan position within compound name*/
+  size_t  start;                       /* starting scan position            */
+  int     length;                      /* length of tail section            */
 
   length = variable_name->getLength();      /* get the string length             */
   position = 0;                        /* start scanning at first character */

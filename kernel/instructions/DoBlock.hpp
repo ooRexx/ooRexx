@@ -51,7 +51,7 @@ class RexxDoBlock : public RexxInternalObject {
 
   void *operator new(size_t);
   inline void *operator new(size_t size, void *ptr) {return ptr;};
-  RexxDoBlock(RexxBlockInstruction *, INT);
+  RexxDoBlock(RexxBlockInstruction *, int);
   inline RexxDoBlock(RESTORETYPE restoreType) { ; };
   void live();
   void liveGeneral();
@@ -59,7 +59,7 @@ class RexxDoBlock : public RexxInternalObject {
 
   inline RexxObject * getTo() {return this->to;};
   inline LONG getFor() {return this->forcount;};
-  inline INT  getCompare() {return (INT)(this->compare);};
+  inline int  getCompare() {return (int)(this->compare);};
   inline RexxObject * getBy() {return this->by;};
   inline RexxBlockInstruction * getParent() {return this->parent;};
   inline void setTo(RexxObject * value) {this->to = value;};

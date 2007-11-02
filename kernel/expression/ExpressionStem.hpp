@@ -67,8 +67,8 @@ class RexxStemVariable : public RexxVariableBase {
   void clearGuard(RexxActivation *);
   void expose(RexxActivation *, RexxExpressionStack *, RexxVariableDictionary *);
   void procedureExpose(RexxActivation *, RexxActivation *, RexxExpressionStack *);
-//BOOL sort(RexxActivation *context, INT order, INT type, size_t start, size_t end, size_t firstcol, size_t lastcol);
-  BOOL sort(RexxActivation *context, RexxString *prefix, INT order, INT type, size_t start, size_t end, size_t firstcol, size_t lastcol);
+//BOOL sort(RexxActivation *context, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
+  BOOL sort(RexxActivation *context, RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
   inline LONG getIndex() {return this->index;};
 
                                        /* name of stem is in hash value     */

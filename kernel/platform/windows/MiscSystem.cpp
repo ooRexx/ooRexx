@@ -65,8 +65,8 @@ extern ACTIVATION_SETTINGS *current_settings;
 extern "C" void activity_thread (RexxActivity *objp);
 
 
-UINT iClauseCounter=0;                      // count of clauses
-UINT iTransClauseCounter=0;                 // count of clauses in translator
+unsigned int iClauseCounter=0;         // count of clauses
+unsigned int iTransClauseCounter=0;    // count of clauses in translator
 
 #ifdef HIGHTID
 extern ActivityTable *ProcessLocalActs;
@@ -77,7 +77,7 @@ extern "C" _declspec(dllimport) HANDLE ExceptionQueueSem;
 extern ULONG ExceptionHostProcessId;
 extern HANDLE ExceptionHostProcess;
 extern BOOL ExceptionConsole;
-static INT SignalCount = 0;
+static int SignalCount = 0;
 
 
 #ifdef TIMESLICE
@@ -88,7 +88,7 @@ static INT SignalCount = 0;
  *  Not used in windows because timer pops only get reflected
  *  during a yield.
  */
-extern INT REXXENTRY RexxSetYield(PID procid, TID threadid);
+extern int REXXENTRY RexxSetYield(PID procid, TID threadid);
 #endif //TIMESLICE
 
 RexxObject *SysProcessName( void )
@@ -332,7 +332,7 @@ BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
 /******************************************************************************/
 {
     /* set halt condition for all threads of this process */
-  INT i;
+  int i;
   RexxActivity   * activity;           /* associated activity               */
   char envp[65];
                                        /* current running activation        */
@@ -398,7 +398,7 @@ int WinExceptionFilter( int xCode )
 }
 
 
-char *SysGetThreadStackBase (INT StackSize)
+char *SysGetThreadStackBase (size_t StackSize)
 /******************************************************************************/
 /* Function:  Return a pointer to the current stack base                      */
 /******************************************************************************/
@@ -435,9 +435,9 @@ DWORD WINAPI call_thread_function(void * Arguments)
 }
 
 
-INT SysCreateThread (
+int SysCreateThread (
   PTHREADFN ThreadProcedure,           /* address of thread procedure       */
-  INT       StackSize,                 /* required stack size               */
+  size_t    StackSize,                 /* required stack size               */
   PVOID     Arguments )                /* thread procedure argument block   */
 /******************************************************************************/
 /* Function:  Create a new thread                                             */
@@ -445,8 +445,6 @@ INT SysCreateThread (
 {
   DWORD res;
   HANDLE ht;
-  INT i=1;
-  INT tabsize = 0;
 
   ht = CreateThread(NULL, StackSize, call_thread_function, Arguments, 0, &res);
   if (!ht)

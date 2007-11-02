@@ -712,8 +712,8 @@ void RestoreEnvironment(
 RexxMethod4(REXXOBJECT,sysMessageBox,CSTRING,Text,CSTRING,Title, CSTRING,Button,CSTRING,Icon)
 {
   ULONG       Style;                   /* window style flags         */
-  INT         MaxCnt;                  /* Max loop count             */
-  INT         Index;                   /* table index                */
+  size_t      MaxCnt;                  /* Max loop count             */
+  size_t      Index;                   /* table index                */
   ULONG       rc;                      /* WinMessageBox return code  */
 
   char * Button_Styles[] =             /* message box button styles  */

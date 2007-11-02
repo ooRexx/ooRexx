@@ -67,10 +67,10 @@ BOOL  SearchFileName(const char *, char *);
 void GetLongName(char *, DWORD);
 BOOL FindFirstFile(const char *Name);
 FILE * SysBinaryFilemode(FILE *, BOOL);
-INT SysFFlush(FILE *);
+int SysFFlush(FILE *);
 BOOL SysFileIsDevice(int fhandle);
 int  SysPeekKeyboard(void);
-INT SysStat(char * path, struct stat *buffer);
+int SysStat(char * path, struct stat *buffer);
 BOOL SysFileIsPipe(STREAM_INFO * stream_info);
 
 
@@ -217,7 +217,7 @@ BOOL SearchFileName(
 
   DWORD dwFileAttrib;             // file attributes
   LPTSTR ppszFilePart=NULL;            // file name only in buffer
-  UINT   errorMode;
+  unsigned int errorMode;
 
   NameLength = strlen(Name);           /* get length of incoming name       */
 
@@ -338,7 +338,7 @@ RexxBuffer *SysReadProgram(
 /*******************************************************************/
 {
   HANDLE        fileHandle;             /* open file access handle           */
-  INT      buffersize;                 /* size of read buffer               */
+  int      buffersize;                 /* size of read buffer               */
   RexxBuffer * buffer;                 /* buffer object to read file into   */
   RexxActivity*activity;               /* the current activity              */
   BY_HANDLE_FILE_INFORMATION   status; /* file status information           */
@@ -381,7 +381,7 @@ void SysQualifyStreamName(
 /*******************************************************************/
 {
   LPTSTR  lpszLastNamePart;
-  UINT errorMode;
+  unsigned int errorMode;
                        /* already expanded?                 */
   if (stream_info->full_name_parameter[0] != '\0')
     return;                            /* nothing more to do                */
@@ -444,7 +444,7 @@ BOOL SearchFirstFile(
 {
    HANDLE FindHandle;
    WIN32_FIND_DATA FindData;
-   UINT errorMode;
+   unsigned int errorMode;
 
    errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
    FindHandle = FindFirstFile(Name, &FindData);
@@ -484,10 +484,10 @@ int SysPeekKeyboard(void)
 }
 
 
-INT SysStat(char * path, struct stat *buffer)
+int SysStat(char * path, struct stat *buffer)
 {
-   UINT   errorMode;
-   INT    retstat;
+   unsigned int errorMode;
+   int    retstat;
 
    errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
    retstat = stat(path, buffer);

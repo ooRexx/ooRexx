@@ -108,9 +108,9 @@ void SysThreadInit(void)
 /*  are no performance improvements.                               */
 /*****************************************************************************/
 
-INT SysCreateThread(PTHREADFN threadFnc, INT stackSize, PVOID args)
+int SysCreateThread(PTHREADFN threadFnc, size_t stackSize, PVOID args)
 {
-   INT             rc;
+   int             rc;
    pthread_t       newThread;
    pthread_attr_t  newThreadAttr;
    int schedpolicy;
@@ -165,7 +165,7 @@ void SysTerminateThread(TID threadid)
    pthread_detach(threadid);
 }
 
-INT SysQueryThreadID()
+int SysQueryThreadID()
 {
     return (int)pthread_self();      /* just call the correct function */
 }
@@ -185,7 +185,7 @@ void SysSetThreadPriority(long tid, int  prio)
 
 }
 
-char *SysGetThreadStackBase(INT stacksize)
+char *SysGetThreadStackBase(size_t stacksize)
 {
   LONG temp;
   return (char *) ((ULONG)&temp - (ULONG)stacksize);
@@ -196,7 +196,7 @@ char *SysGetThreadStackBase(INT stacksize)
 /* ********************************************************************** */
 RexxSemaphore::RexxSemaphore()
 {
-  INT iRC = 0;
+  int iRC = 0;
                                     // Clear mutex/cond prior to init
 
 #if defined( HAVE_PTHREAD_MUTEXATTR_SETTYPE )
@@ -242,7 +242,7 @@ RexxSemaphore::~RexxSemaphore()
 
 void RexxSemaphore::post()
 {
-  INT rc;
+  int rc;
 
   rc = pthread_mutex_lock(&(this->semMutex));      //Lock the semaphores Mutex
   this->value += 1;                            //Increment post count
@@ -252,7 +252,7 @@ void RexxSemaphore::post()
 
 void RexxSemaphore::wait()
 {
-  INT rc;
+  int rc;
   int schedpolicy, i_prio;
   struct sched_param schedparam;
 
@@ -298,7 +298,7 @@ u_long RexxSemaphore::posted()
 /* ********************************************************************** */
 RexxMutex::RexxMutex()
 {
-  INT iRC = 0;
+  int iRC = 0;
                                       // Clear Mutex prior to Init call
 //   this->mutexMutex = NULL;
    this->mutex_value = 0;

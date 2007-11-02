@@ -513,14 +513,14 @@ typedef char *(far REXXENTRY *PNMF)(void **);
 
 //#define SysGetThreadStackBase() NULL
 
-//#define SysCreateThread(PTHREADFN, INT, PVOID) WinCreateThread(PTHREADFN, INT, PVOID)
+//#define SysCreateThread(PTHREADFN, int, PVOID) WinCreateThread(PTHREADFN, size_t, PVOID)
 
-//DWORD WinCreateThread(PTHREADFN pThFunc, INT StackSize, PVOID arg);
+//DWORD WinCreateThread(PTHREADFN pThFunc, size_t StackSize, PVOID arg);
 
-INT SysCreateThread (
+int SysCreateThread (
   PTHREADFN ThreadProcedure,           /* address of thread procedure       */
-  INT       StackSize,                 /* required stack size               */
-  PVOID     Arguments );                /* thread procedure argument block   */
+  size_t    StackSize,                 /* required stack size               */
+  PVOID     Arguments );               /* thread procedure argument block   */
 
 
 #define SysValidateAddressName(OREF)   // OS2MISC: Validates address
@@ -541,7 +541,7 @@ void SysTermination();              // No initialization / termination yet
 #define SysInitializeWindowEnv() NULL  // activi.c has an assignment
 #define SysTerminateWindowEnv(SYSWINDOWINFO)
                                        //Temp workaround for message handling
-#define SysMessageHeader(INT) OREF_NULL
+#define SysMessageHeader(int) OREF_NULL
 //#define SysSaveProgram(a,b)            // Unable to save a program image
                                        // in Windows, no EA's
 #define SysClauseBoundary(a)

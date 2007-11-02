@@ -140,7 +140,7 @@ RexxMethod0(REXXOBJECT, rexx_linein_queue)
 /********************************************************************************************/
 long rexx_add_queue(
   REXXOBJECT  queue_line,              /* line to add                       */
-  INT         order )                  /* queuing order                     */
+  int         order )                  /* queuing order                     */
 {
    RXSTRING rx_string;                 /* rxstring to return                */
    APIRET rc;                          /* queue return code                 */

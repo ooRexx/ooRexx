@@ -95,8 +95,8 @@ typedef MACRO *PMACRO;                 /* pointer to MACRO structure */
 /* Semaphore control structure. Used for the rexxutil semaphores     */
 typedef struct _SEMCONT {
       char    name[MAXNAME];           /* semaphore name             */
-      INT     usecount;                /* semaphore usecount         */
-      INT     type;                    /* semaphore type: 0=Event    */
+      int     usecount;                /* semaphore usecount         */
+      int     type;                    /* semaphore type: 0=Event    */
                                        /*                 1=Mutex    */
       BOOL    waitandreset;            /* eventsem second new arg    */
 } SEMCONT;

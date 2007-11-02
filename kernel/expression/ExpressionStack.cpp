@@ -105,17 +105,17 @@ void RexxExpressionStack::migrate(RexxActivity *activity)
 }
 
 void RexxExpressionStack::expandArgs(
-     INT    argcount,                  /* count of arguments                */
-     INT    min,                       /* minimum required arguments        */
-     INT    max,                       /* maximum required arguments        */
+     int argcount,                     /* count of arguments                */
+     int min,                          /* minimum required arguments        */
+     int max,                          /* maximum required arguments        */
      char  *function )                 /* function being processed          */
 /******************************************************************************/
 /* Function:  Verify that a function has received all of its required         */
 /*            arguments, and did not receive extras.                          */
 /******************************************************************************/
 {
-  INT          i;                      /* loop counter                      */
-  LONG         j;
+  size_t       i;                      /* loop counter                      */
+  size_t       j;
   RexxObject **current;                /* pointer to the current stack item */
 
   if (argcount < min)                  /* too few arguments?                */
@@ -138,7 +138,7 @@ void RexxExpressionStack::expandArgs(
 }
 
 RexxString *RexxExpressionStack::requiredStringArg(
-    INT    position)                   /* position of argument              */
+    int    position)                   /* position of argument              */
 /******************************************************************************/
 /* Function:  Retrieve an object from the expression stack and potentially    */
 /*            convert it into a string argument.                              */
@@ -158,7 +158,7 @@ RexxString *RexxExpressionStack::requiredStringArg(
 }
 
 RexxString *RexxExpressionStack::optionalStringArg(
-    INT    position)                   /* position of argument              */
+    int     position)                   /* position of argument              */
 /******************************************************************************/
 /* Function:  Retrieve an object from the expression stack and potentially    */
 /*            convert it into a string argument.                              */

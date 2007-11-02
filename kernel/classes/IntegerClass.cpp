@@ -229,7 +229,7 @@ long RexxInteger::longValue(
   }
                                        /* is the long value expressable as a*/
                                        /*  whole number in REXX term.       */
-  if (digits < 9 && labs((INT)this->value) >= Numerics::validMaxWhole[digits - 1]) {
+  if (digits < 9 && labs((int)this->value) >= Numerics::validMaxWhole[digits - 1]) {
       return NO_LONG;                  /* nope, not a valid long.           */
   }
   return this->value;                  /* return the value directly         */
@@ -430,8 +430,8 @@ RexxObject *RexxInteger::multiply(
   required_arg(other, ONE);            /* make sure the argument is there   */
                                        /* is the other an integer and will  */
                                        /* the result be in a good range?    */
-  if (OTYPE(Integer, other) && labs((INT)this->value) <= 99999 &&
-      labs((INT)(otherval = other->value)) <= 9999) {
+  if (OTYPE(Integer, other) && labs((int)this->value) <= 99999 &&
+      labs((int)(otherval = other->value)) <= 9999) {
     tempVal = this->value * otherval;  /* multiply directly                 */
     return new_integer(tempVal);       /* and return as an integer          */
   }

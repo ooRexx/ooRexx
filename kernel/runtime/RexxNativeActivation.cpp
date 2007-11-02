@@ -1023,10 +1023,10 @@ nativei2 (REXXOBJECT, SUPER,
 /* Function:  Forward a message to a super class from native code             */
 /******************************************************************************/
 {
-  INT             count;               /* count of arguments                */
+  size_t          count;               /* count of arguments                */
   RexxObject     *argarray[10];        /* C array of arguments              */
   RexxArray      *args = (RexxArray *)arguments;
-  INT             i;                   /* loop counter                      */
+  size_t          i;                   /* loop counter                      */
   RexxNativeActivation * self;         /* current native activation         */
 
   native_entry;                        /* synchronize access                */
@@ -1456,15 +1456,15 @@ nativei3(ULONG, EXECUTIONINFO,
 }
 
 nativei7 (ULONG, STEMSORT,
-     CSTRING, stemname, INT, order, INT, type, size_t, start, size_t, end,
+     CSTRING, stemname, int, order, int, type, size_t, start, size_t, end,
      size_t, firstcol, size_t, lastcol)
 /******************************************************************************/
 /* Function:  Perform a sort on stem data.  If everything works correctly,    */
 /*             this returns zero, otherwise an appropriate error value.       */
 /******************************************************************************/
 {
-  INT     position;                    /* scan position within compound name */
-  INT     length;                      /* length of tail section            */
+  size_t  position;                    /* scan position within compound name */
+  size_t  length;                      /* length of tail section            */
 
   RexxNativeActivation * self;         /* current native activation         */
 

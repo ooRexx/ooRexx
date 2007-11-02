@@ -83,7 +83,7 @@
 #include <io.h>
 
 #ifdef TIMESLICE                       /* System Yielding function prototype*/
-INT REXXENTRY RexxSetYield(PID procid, TID threadid);
+int REXXENTRY RexxSetYield(PID procid, TID threadid);
 #ifdef HIGHTID
 extern ActivityTable * ProcessLocalActs; /* needed for halt and trace */
 #endif
@@ -955,7 +955,7 @@ APIRET REXXENTRY RexxTranslateProgram(
 /*         a system yield via activity_relinquish.                            */
 /*                                                                            */
 /******************************************************************************/
-INT REXXENTRY RexxSetYield(PID procid, TID threadid)
+int REXXENTRY RexxSetYield(PID procid, TID threadid)
 {
 //  threadid=1L;                              // until we can figure out tid
   if (RexxQuery()) {                        /* Are we up?                     */
@@ -985,7 +985,7 @@ INT REXXENTRY RexxSetYield(PID procid, TID threadid)
 APIRET REXXENTRY RexxSetHalt(PID procid, TID threadid)
 {
   APIRET res = RXARI_NOT_FOUND;
-  INT i;
+  int i;
 
   if (RexxQuery()) {                        /* Are we up?                     */
      if (!threadid)
@@ -1036,7 +1036,7 @@ APIRET REXXENTRY RexxSetHalt(PID procid, TID threadid)
 APIRET InternSetResetTrace(PID procid, TID threadid, BOOL flag)
 {
   APIRET res = RXARI_NOT_FOUND;
-  INT i;
+  int i;
 
   if (RexxQuery()) {                        /* Are we up?                     */
      if (!threadid)
@@ -1559,15 +1559,15 @@ char *REXXENTRY RexxGetVersionInformation()
     char vbuf4[] = "\nare made available under the terms of the Common Public License v1.0";
     char vbuf5[] = "\nwhich accompanies this distribution.";
     char vbuf6[] = "\nhttp://www.oorexx.org/license.html";
-    INT s0 = strlen(vbuf0);
-    INT s1 = strlen(vbuf1);
-    INT s2 = strlen(vbuf2);
-    INT s3 = strlen(vbuf3);
-    INT s4 = strlen(vbuf4);
-    INT s5 = strlen(vbuf5);
-    INT s6 = strlen(vbuf6);
-    INT sd = strlen(__DATE__);
-    INT sv = strlen(ver);
+    int s0 = strlen(vbuf0);
+    int s1 = strlen(vbuf1);
+    int s2 = strlen(vbuf2);
+    int s3 = strlen(vbuf3);
+    int s4 = strlen(vbuf4);
+    int s5 = strlen(vbuf5);
+    int s6 = strlen(vbuf6);
+    int sd = strlen(__DATE__);
+    int sv = strlen(ver);
     char *ptr = (char *)GlobalAlloc(GMEM_FIXED, sv+s0+s1+s2+s3+s4+s5+s6+sd+1);
     if (ptr)
     {

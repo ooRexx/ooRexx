@@ -108,8 +108,8 @@ RexxList *RexxVariableReference::list(
   RexxString *variable_name;           /* current variable name             */
   RexxVariableBase *retriever;         /* variable retriever                */
   RexxObject *value;                   /* variable value                    */
-  LONG    i;                           /* loop variable                     */
-  INT     character;                   /* first character of name           */
+  size_t  i;                           /* loop variable                     */
+  int     character;                   /* first character of name           */
 
                                        /* get the variable value            */
   value = this->variableObject->evaluate(context, stack);

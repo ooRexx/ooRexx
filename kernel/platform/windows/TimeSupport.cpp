@@ -54,11 +54,11 @@ extern RexxInteger * ProcessName;
 
 extern BOOL UseMessageLoop;  /* for VAC++ */
 
-void CALLBACK TimerProc( HWND, UINT, UINT, DWORD);
-void CALLBACK alarmTimerProc( HWND, UINT, UINT, DWORD);
+void CALLBACK TimerProc( HWND, unsigned int, unsigned int, DWORD);
+void CALLBACK alarmTimerProc( HWND, unsigned int, unsigned int, DWORD);
 
 static HANDLE SemHandle = 0;                  /* Event-semaphore handle repository */
-static UINT TimerHandle = 0;                   /* Timer handle                      */
+static unsigned int TimerHandle = 0;          /* Timer handle                      */
 static TIMERPROC lpTimerProc;
 
 #define TIMESLICE_STACKSIZE 2048
@@ -67,7 +67,7 @@ static TIMERPROC lpTimerProc;
 
 #ifdef TIMESLICE
 extern SEV   RexxTerminated;           /* Termination complete semaphore.   */
-extern INT REXXENTRY RexxSetYield(PID procid, TID threadid);
+extern int REXXENTRY RexxSetYield(PID procid, TID threadid);
 extern BOOL rexxTimeSliceElapsed;
 #endif
 
@@ -178,7 +178,7 @@ RexxMethod2(void, alarm_startTimer,
   long cancelVal;                      /* value of cancel                   */
   MSG msg; 			       /* to retrieve WM_TIMER */
   HANDLE SemHandle = 0;                /* Event-semaphore handle repository */
-  UINT TimerHandle = 0;                /* Timer handle                      */
+  unsigned int TimerHandle = 0;        /* Timer handle                      */
                                        /* Create an event semaphore to be   */
                                        /* posted by the timer               */
   SemHandle = CreateEvent(NULL, TRUE, fState, NULL);

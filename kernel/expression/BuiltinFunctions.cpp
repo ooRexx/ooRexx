@@ -912,7 +912,7 @@ BUILTIN(USERID) {
 #define ERRORTEXT_n   1
 
 BUILTIN(ERRORTEXT) {
-  INT    error_number;                 /* requested error number            */
+  int    error_number;                 /* requested error number            */
   RexxString *result;                  /* function result                   */
 
   check_args(ERRORTEXT);               /* check on required number of args  */
@@ -1853,8 +1853,8 @@ BUILTIN(SOURCELINE) {
 BUILTIN(TRACE) {
   RexxString  *result;                 /* returned result                   */
   RexxString  *setting;                /* new trace setting                 */
-  INT    newsetting;                   /* new trace setting                 */
-  INT    debug;                        /* new debug setting                 */
+  int    newsetting;                   /* new trace setting                 */
+  int    debug;                        /* new debug setting                 */
 
   fix_args(TRACE);                     /* check required arguments          */
                                        /* get the trace setting             */

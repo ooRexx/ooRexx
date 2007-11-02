@@ -165,12 +165,12 @@ INT SysQueryThreadID(void);            /* query the current thread          */
 #endif
 
 #ifndef SysGetThreadStackBase
-char *SysGetThreadStackBase(INT);     /* query current thread stack start  */
+char *SysGetThreadStackBase(size_t);   /* query current thread stack start  */
 #endif
 
 #ifndef SysCreateThread
                                        /* create a new thread               */
-INT SysCreateThread (PTHREADFN, INT, PVOID);
+int SysCreateThread (PTHREADFN, size_t, PVOID);
 #endif
 
 #ifndef SysLoadProcedure

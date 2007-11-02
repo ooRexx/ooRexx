@@ -233,7 +233,7 @@ MemorySegmentPool *GlobalCurrentPool = NULL;   //wge NULL
 SysSharedSemaphoreDefn                 /* semaphore definitions             */
                                        /* defined in xxxdef.h               */
 
-INT   rexx_waiting_activity_count = 0; /* number of waiting activities      */
+int   rexx_waiting_activity_count = 0; /* number of waiting activities      */
 
 void *VFTArray[highest_T + 1] = {NULL};   //wge NULL
                                        /* Most currently allocated memoryPoo*/

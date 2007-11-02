@@ -83,7 +83,7 @@ RexxInstructionMessage::RexxInstructionMessage(
 /******************************************************************************/
 {
   RexxObject  **argument_pointer;      /* pointer to message args           */
-  INT    i;                            /* loop counter                      */
+  size_t i;                            /* loop counter                      */
 
                                        /* copy the message info             */
   OrefSet(this, this->target, message->target);
@@ -108,8 +108,8 @@ void RexxInstructionMessage::live()
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
@@ -126,8 +126,8 @@ void RexxInstructionMessage::liveGeneral()
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpMemoryMarkGeneral
                                        /* must be first one marked          */
@@ -145,8 +145,8 @@ void RexxInstructionMessage::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpFlatten(RexxInstructionMessage)
 
@@ -169,15 +169,15 @@ void RexxInstructionMessage::execute (
 {
   RexxObject *result;                  /* message expression result         */
   RexxObject *_super;                  /* target super class                */
-  LONG      argcount;                  /* count of arguments                */
+  size_t      argcount;                /* count of arguments                */
   RexxObject *_target;                 /* message target                    */
-  LONG      i;                         /* loop counter                      */
+  size_t      i;                       /* loop counter                      */
 
   context->traceInstruction(this);     /* trace if necessary                */
                                        /* evaluate the target               */
   _target = this->target->evaluate(context, stack);
   if (this->super != OREF_NULL) {      /* have a message lookup override?   */
-    if (_target != context->receiver)   /* sender and receiver different?    */
+    if (_target != context->receiver)  /* sender and receiver different?    */
                                        /* this is an error                  */
       reportException(Error_Execution_super);
                                        /* get the variable value            */

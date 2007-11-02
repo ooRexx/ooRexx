@@ -149,8 +149,8 @@ void RexxCompoundVariable::live()
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpMemoryMark
   for (i = 0, count = this->tailCount; i < count; i++)
@@ -164,8 +164,8 @@ void RexxCompoundVariable::liveGeneral()
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpMemoryMarkGeneral
   for (i = 0, count = this->tailCount; i < count; i++)
@@ -180,8 +180,8 @@ void RexxCompoundVariable::flatten(RexxEnvelope *envelope)
 /******************************************************************************/
 {
 
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpFlatten(RexxCompoundVariable)
 

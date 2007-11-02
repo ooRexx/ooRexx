@@ -78,7 +78,7 @@ class RexxCompoundTable {
     /******************************************************************************/
     {
 
-        INT          rc;                   /* comparison result          */
+        int          rc;                   /* comparison result          */
         RexxCompoundElement *anchor;       /* pointer to current block   */
 
         anchor = root;                     /* get root block             */

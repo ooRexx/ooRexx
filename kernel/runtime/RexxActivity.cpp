@@ -1236,7 +1236,7 @@ void RexxActivity::push(
 /******************************************************************************/
 {
   RexxInternalStack *newstack;         /* replacement activation stack      */
-  INT  i;                              /* loop counter                      */
+  int  i;                              /* loop counter                      */
 
   if (this->depth == this->size) {     /* reached the end?                  */
                                        /* get a larger stack                */
@@ -1270,7 +1270,7 @@ void RexxActivity::pushNil()
 /******************************************************************************/
 {
   RexxInternalStack *newstack;         /* replacement activation stack      */
-  INT  i;                              /* loop counter                      */
+  int  i;                              /* loop counter                      */
 
   if (this->depth == this->size) {     /* reached the end?                  */
                                        /* get a larger stack                */
@@ -2938,7 +2938,7 @@ RexxActivation *RexxActivityClass::newActivation(
      RexxActivity   *activity,         /* current activity                  */
      RexxString     *msgname,          /* message name processed            */
      RexxActivation *activation,       /* parent activation                 */
-     INT             context )         /* execution context                 */
+     int             context )         /* execution context                 */
 /******************************************************************************/
 /* Function:  Get an activation from cache or create new one                  */
 /******************************************************************************/
@@ -3573,21 +3573,21 @@ void process_message_arguments(
       case 'b':                        /* BYTE                              */
       case 'c':                        /* CHARACTER                         */
                                        /* get the character                 */
-        tempChar = (char) va_arg(*arguments, INT);
+        tempChar = (char) va_arg(*arguments, int);
                                        /* create a string object            */
         argument_list->addLast(new_string(&tempChar, 1));
         break;
 
-      case 'i':                        /* INT                               */
+      case 'i':                        /* int                               */
                                        /* get the number                    */
-        tempLong = va_arg(*arguments, INT);
+        tempLong = va_arg(*arguments, int);
                                        /* create an integer object          */
         argument_list->addLast(new_integer(tempLong));
         break;
 
       case 's':                        /* short                             */
                                        /* get the number                    */
-        tempLong = (LONG) (short) va_arg(*arguments, INT);
+        tempLong = (LONG) (short) va_arg(*arguments, int);
                                        /* create an integer object          */
         argument_list->addLast(new_integer(tempLong));
         break;
@@ -3609,7 +3609,7 @@ void process_message_arguments(
 
       case 'h':                        /* unsigned short                    */
                                        /* get the number                    */
-        tempLong = (LONG) (unsigned short) va_arg(*arguments, INT);
+        tempLong = (LONG) (unsigned short) va_arg(*arguments, int);
                                        /* create an integer object          */
         argument_list->addLast(new_integer(tempLong));
         break;
@@ -3696,9 +3696,9 @@ void process_message_result(
         (*((char *)return_pointer)) = ((RexxString *)value)->getChar(0);
         break;
 
-      case 'i':                        /* INT                               */
+      case 'i':                        /* int                               */
                                        /* get the number                    */
-        (*((INT *)return_pointer)) = (INT)value->longValue(NO_LONG);
+        (*((int *)return_pointer)) = (int)value->longValue(NO_LONG);
         break;
 
       case 's':                        /* short                             */
@@ -3765,7 +3765,7 @@ LONG RexxActivity::messageSend(
 /*              method will do any needed activity setup before hand.         */
 /******************************************************************************/
 {
-  INT     jmprc;                       /* setjmp return code                */
+  int     jmprc;                       /* setjmp return code                */
   LONG    rc;                          /* message return code               */
   SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
   long    startDepth;                  /* starting depth of activation stack*/
@@ -3823,7 +3823,7 @@ LONG VLAREXXENTRY RexxSendMessage (
 /*            interface string.                                               */
 /******************************************************************************/
 {
-  INT  jmprc;                          /* setjmp return code                */
+  int  jmprc;                          /* setjmp return code                */
   RexxActivity *activity;              /* target activity                   */
   RexxObject *result;                  /* returned result object            */
   RexxArray  *argument_array;          /* array of arguments                */

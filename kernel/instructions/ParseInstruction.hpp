@@ -64,7 +64,7 @@ class RexxInstructionParse : public RexxInstruction {
   void flatten(RexxEnvelope*);
 
   RexxObject       *expression;        /* parse value expression            */
-  LONG              trigger_count;     /* number of triggers                */
+  size_t            trigger_count;     /* number of triggers                */
   RexxTrigger *triggers[1];            /* parsing triggers                  */
 };
 #endif

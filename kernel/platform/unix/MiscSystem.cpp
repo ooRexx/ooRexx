@@ -104,8 +104,8 @@ extern ActivityTable *ProcessLocalActs;
 extern RexxArray *ProcessLocalActs;
 #endif
 
-UINT iClauseCounter=0;                      // count of clauses
-UINT iTransClauseCounter=0;                 // count of clauses in translator
+unsigned int iClauseCounter=0;         // count of clauses
+unsigned int iTransClauseCounter=0;    // count of clauses in translator
 #define LOADED_OBJECTS 100
 
 RexxObject *SysProcessName( void )

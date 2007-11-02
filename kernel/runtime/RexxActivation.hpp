@@ -124,7 +124,7 @@ class ACTSETTINGS {
       RexxDirectory * streams;             /* Directory of openned streams      */
       RexxString    * halt_description;    /* description from a HALT condition */
       RexxObject    * securityManager;     /* security manager object           */
-      INT  traceoption;                    /* current active trace option       */
+      int  traceoption;                    /* current active trace option       */
       ULONG flags;                         /* trace/numeric and other settings  */
       ULONG dbg_flags;                     /* debug exit settings               */
       LONG trace_skip;                     /* count of trace events to skip     */
@@ -679,18 +679,18 @@ RexxObject * activation_find  (void);
    RexxInstruction     *current;       /* current execution pointer         */
    RexxInstruction     *next;          /* next instruction to execute       */
    BOOL                 debug_pause;   /* executing a debug pause           */
-   INT                  object_scope;  /* reserve/release state of variables*/
+   int                  object_scope;  /* reserve/release state of variables*/
    RexxObject          *result;        /* result of execution               */
    RexxArray           *trapinfo;      /* current trap handler              */
    jmp_buf              conditionjump; /* condition trap recovery location  */
                                        /* current activation state          */
-   INT                  execution_state;
+   int                  execution_state;
                                        /* type of activation activity       */
-   INT                  activation_context;
+   int                  activation_context;
    RexxMessage         *objnotify;     /* an object to notify if excep occur*/
                                        /* LIst of Saved Local environments  */
    RexxList            *environmentList;
-   INT                  pending_count; /* number of pending conditions      */
+   int                  pending_count; /* number of pending conditions      */
    RexxQueue           *handler_queue; /* queue of trapped condition handler*/
                                        /* queue of trapped conditions       */
    RexxQueue           *condition_queue;

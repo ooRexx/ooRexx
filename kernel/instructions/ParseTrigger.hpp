@@ -57,7 +57,7 @@ class RexxTrigger : public RexxInternalObject {
  public:
   void       *operator new(size_t, LONG);
   inline void       *operator new(size_t size, void *ptr) {return ptr;};
-  RexxTrigger(INT, RexxObject *, LONG, RexxQueue *);
+  RexxTrigger(int, RexxObject *, LONG, RexxQueue *);
   inline RexxTrigger(RESTORETYPE restoreType) { ; };
   long        integerTrigger(RexxObject *);
   RexxString *stringTrigger(RexxObject *);
@@ -66,7 +66,7 @@ class RexxTrigger : public RexxInternalObject {
   void        liveGeneral();
   void        flatten(RexxEnvelope *);
   inline long        getType()     { return this->hashvalue; } ;
-  inline void        setType(INT v) { this->hashvalue = (long) v; } ;
+  inline void        setType(int v) { this->hashvalue = (long) v; } ;
 
   LONG        variableCount;           /* type of trigger                   */
   RexxObject *value;                   /* value associated with trigger     */

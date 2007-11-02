@@ -87,9 +87,9 @@ void RexxInstructionParse::execute(
   size_t            argCount;          /* the argument list size            */
   RexxTarget        target;            /* created target value              */
   RexxTrigger      *trigger;           /* current trigger                   */
-  LONG              size;              /* size of template array            */
+  size_t            size;              /* size of template array            */
   BOOL              multiple;          /* processing an argument list       */
-  LONG              i;                 /* loop counter                      */
+  size_t            i;                 /* loop counter                      */
 
   context->traceInstruction(this);     /* trace if necessary                */
   multiple = FALSE;                    /* default to no argument list       */
@@ -169,8 +169,8 @@ void RexxInstructionParse::live()
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
@@ -185,8 +185,8 @@ void RexxInstructionParse::liveGeneral()
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpMemoryMarkGeneral
                                        /* must be first one marked          */
@@ -202,8 +202,8 @@ void RexxInstructionParse::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  INT  i;                              /* loop counter                      */
-  INT  count;                          /* argument count                    */
+  size_t  i;                           /* loop counter                      */
+  size_t  count;                       /* argument count                    */
 
   setUpFlatten(RexxInstructionParse)
 

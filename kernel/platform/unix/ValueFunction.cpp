@@ -59,7 +59,7 @@
 #define  SELECTOR  "ENVIRONMENT"       /* environment selector              */
 
 extern char **environ;
-extern INT putflag;
+extern int putflag;
 
 /*********************************************************************/
 /*                                                                   */
@@ -69,7 +69,7 @@ extern INT putflag;
 /*                                                                   */
 /*********************************************************************/
 
-INT SetEnvironmentVariable(
+int SetEnvironmentVariable(
   RexxString * Name,                   /* variable name                     */
   RexxString * Value )                 /* new variable value                */
 
@@ -79,7 +79,7 @@ INT SetEnvironmentVariable(
   char **Environment;                  /* environment pointer               */
   char  *del = NULL;                   /* ptr to old unused memory          */
   char  *np;
-  INT    i;
+  size_t i;
   char   namebufcurr[256];             /* buf for extracted name            */
 
   Environment = environ;               /* get the environment               */

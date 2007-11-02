@@ -170,7 +170,7 @@ RexxObject * SysCommand(
   RexxString        * command,         /* command to issue                    */
   RexxString       ** error_failure )  /* error or failure flags              */
 {
-  INT      rc    = 0;                  /* Return code from call               */
+  int      rc    = 0;                  /* Return code from call               */
   const char *current_address;         /* Subcom handler that gets cmd        */
   RXSTRING rxstrcmd;                   /* Command to be executed              */
   unsigned short flags = 0;            /* Subcom error flags                  */
@@ -631,7 +631,7 @@ LONG sysCommandNT(const char *cmdstring_ptr, RexxString  **error_failure, BOOL d
   ----------------------------------------------------------------------------*/
 LONG sysCommand32s(char *cmdstring_ptr, RexxString **error_failure)
 {
-  typedef int (FAR WINAPI * PSYSCMD)(PTSTR, UINT);
+  typedef int (FAR WINAPI * PSYSCMD)(PTSTR, unsigned int);
   #define UT32DLL "RXCMD32.DLL"        // name of 32-bit UT dll
   DWORD rc;                            // SystemCommand RC
   PSYSCMD fpSystemCommand = NULL;      // ptr to SystemCommand in UT

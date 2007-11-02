@@ -80,6 +80,6 @@ class RexxTarget {
   size_t  pattern_start;               /* start of matched pattern          */
   size_t  subcurrent;                  /* current location for word parse   */
   size_t  next_argument;               /* next PARSE ARG argument           */
-  INT   translate;                     /* string translation flag           */
+  int     translate;                     /* string translation flag           */
 };
 #endif

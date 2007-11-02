@@ -218,7 +218,7 @@ RexxInstruction *RexxSource::callNew()
   LONG        argCount;                /* call arguments                    */
   RexxToken  *token;                   /* current working token             */
   RexxObject *name;                    /* call name                         */
-  INT         _keyword;                /* call subkeyword                   */
+  int         _keyword;                /* call subkeyword                   */
   RexxString *_condition;              /* created USER condition            */
   size_t      _flags;                  /* final CALL flags                  */
   size_t      builtin_index;           /* builtin function call index       */
@@ -968,7 +968,7 @@ RexxInstruction *RexxSource::guardNew()
   RexxToken  *token;                   /* current working token             */
   bool        on_off = false;          /* ON or OFF version                 */
   RexxObject *_expression;             /* WHEN expression                   */
-  INT         variable_count;          /* count of variables                */
+  int         variable_count;          /* count of variables                */
 
   _expression = OREF_NULL;             /* default no expression             */
   variable_list = OREF_NULL;           /* no variable either                */
@@ -1031,7 +1031,7 @@ RexxInstruction *RexxSource::guardNew()
 }
 
 RexxInstruction *RexxSource::ifNew(
-    INT   type )                       /* type of instruction (IF or WHEN)  */
+    int   type )                       /* type of instruction (IF or WHEN)  */
 /****************************************************************************/
 /* Function:  Create a new INTERPRET instruction object                     */
 /****************************************************************************/
@@ -1119,7 +1119,7 @@ RexxInstruction *RexxSource::labelNew()
 }
 
 RexxInstruction *RexxSource::leaveNew(
-     INT type )                        /* type of queueing operation        */
+     int type )                        /* type of queueing operation        */
 /****************************************************************************/
 /* Function:  Create a new LEAVE/ITERATE instruction translator object      */
 /****************************************************************************/
@@ -1374,7 +1374,7 @@ RexxInstruction *RexxSource::otherwiseNew(
 }
 
 RexxInstruction *RexxSource::parseNew(
-  INT argpull)                         /* type of parsing operation         */
+  int argpull)                         /* type of parsing operation         */
 /****************************************************************************/
 /* Function:  Create a PARSE instruction object                             */
 /****************************************************************************/
@@ -1657,7 +1657,7 @@ RexxInstruction *RexxSource::procedureNew()
 }
 
 RexxInstruction *RexxSource::queueNew(
-  INT type)                            /* type of queueing operation        */
+  int type)                            /* type of queueing operation        */
 /****************************************************************************/
 /* Function:  Create a QUEUE instruction object                             */
 /****************************************************************************/

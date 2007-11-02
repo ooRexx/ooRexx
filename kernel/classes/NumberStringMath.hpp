@@ -73,8 +73,8 @@ char *MultiplyPower(char *leftPtr, RexxNumberStringBase *left,
                      char *rightPtr, RexxNumberStringBase *right,
                      char *OutPtr, size_t OutLen, size_t NumberDigits);
 char *DividePower(char *AccumPtr, RexxNumberStringBase *Accum, char *Output, size_t NumberDigits);
-char * AddToBaseSixteen(INT, char *, char *);
-char * AddToBaseTen(INT, char *, char *);
+char * AddToBaseSixteen(int, char *, char *);
+char * AddToBaseTen(int, char *, char *);
 char * MultiplyBaseSixteen(char *, char *);
 char * MultiplyBaseTen(char *, char *);
 

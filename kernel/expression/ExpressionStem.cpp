@@ -299,7 +299,7 @@ void RexxStemVariable::clearGuard(
   variable->uninform(CurrentActivity); /* mark the variable entry           */
 }
 BOOL RexxStemVariable::sort(
-    RexxActivation *context, RexxString *prefix, INT order, INT type, size_t start,
+    RexxActivation *context, RexxString *prefix, int order, int type, size_t start,
     size_t end, size_t firstcol, size_t lastcol)
 /******************************************************************************/
 /* Sort the elements of a stem variable as if they were an array.             */

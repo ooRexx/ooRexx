@@ -58,7 +58,7 @@
 extern "C" APIRET APIENTRY RexxTranslateProgram(char *, char *, PRXSYSEXIT);
 extern "C" char * APIENTRY RexxGetVersionInformation();
 
-void DisplayError(HINSTANCE hDll, INT err_no)
+void DisplayError(HINSTANCE hDll, int err_no)
 {
    char str[BUFFERLEN];
    if (LoadString(hDll, err_no, str, BUFFERLEN))
@@ -71,8 +71,8 @@ void DisplayError(HINSTANCE hDll, INT err_no)
 int SysCallV main(int argc, char **argv)
 {
   char fn[2][BUFFERLEN];
-  INT silent = 0;
-  INT j = 0;
+  int  silent = 0;
+  int  j = 0;
 
   HINSTANCE hDll=NULL;
 

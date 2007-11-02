@@ -798,7 +798,7 @@ RexxObject * RexxObject::processUnknown(
 /******************************************************************************/
 {
   RexxObject     *unknown_arguments[2];/* arguments to the unknown method   */
-  INT             i;                   /* loop counter                      */
+  size_t          i;                   /* loop counter                      */
   RexxArray      *argumentArray;       /* unknown method argument array     */
 
                                        /* no method for this msgname        */

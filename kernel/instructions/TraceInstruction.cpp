@@ -109,8 +109,8 @@ void RexxInstructionTrace::execute(
 {
   RexxObject  *result;                 /* expression result                 */
   RexxString  *value;                  /* string version of expression      */
-  INT          setting;                /* new trace setting                 */
-  INT          debug;                  /* new debug setting                 */
+  int          setting;                /* new trace setting                 */
+  int          debug;                  /* new debug setting                 */
 
   context->traceInstruction(this);     /* trace if necessary                */
   if (trace_setting == 0)              /* interactive debug mode request?   */

@@ -368,7 +368,7 @@ RexxString *RexxNumberString::stringValue()
                     /* convert exponent value into string*/
                     sprintf(expstring, "E+%d", temp);
                 }
-                temp = labs((INT)temp);           /* get positive exponent factor      */
+                temp = labs((int)temp);           /* get positive exponent factor      */
 
             }
             /* Now compute size of result string */

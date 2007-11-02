@@ -113,8 +113,8 @@ class RexxSupplier;
   RexxCompoundElement *nextVariable(RexxNativeActivation *activation);
   RexxObject *handleNovalue(RexxString *name, RexxActivation *context);
   void        expose(RexxCompoundElement *variable);
-//  BOOL        sort(INT order, INT type, size_t start, size_t end, size_t firstcol, size_t lastcol);
-  BOOL        sort(RexxString *prefix, INT order, INT type, size_t start, size_t end, size_t firstcol, size_t lastcol);
+//  BOOL        sort(int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
+  BOOL        sort(RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
 
   inline bool compoundVariableExists(RexxCompoundTail *resolved_tail) { return realCompoundVariableValue(resolved_tail) != OREF_NULL; }
   inline RexxString *getName() { return u_name; }

@@ -105,9 +105,9 @@
 // #define PUCHAR          UCHAR *
 // #define CHAR            char
 // #define PCHAR           CHAR *
-#define INT             int
-#define UINT            unsigned int
-#define PINT            int *
+// #define INT             int
+// #define UINT            unsigned int
+// #define PINT            int *
 // #define PCH             PCHAR
 // #define PSZ             PCHAR
 #define APIENTRY
@@ -565,7 +565,7 @@ typedef char *(far *REXXENTRY PNMF)(void **);
 //#define SysThreadYield()   sched_yield()
 #endif
 //#define SysQueryThreadID() LinThreadQueryID()
-//#define SysGetThreadStackBase(INT) NULL
+//#define SysGetThreadStackBase(int) NULL
 
 //#define SysTerminateThread(t) { pthread_detach((t)); }
 
@@ -574,7 +574,7 @@ typedef char *(far *REXXENTRY PNMF)(void **);
 #endif
 
 #define SysThreadArg(a) a->args
-//#define SysCreateThread(PTHREADFN, INT, PVOID) LinThreadCreate(PTHREADFN, INT, PVOID)
+//#define SysCreateThread(PTHREADFN, int, PVOID) LinThreadCreate(PTHREADFN, int, PVOID)
 #define SysInitialAddressName() OREF_INITIALADDRESS
 
 #define SysRegisterExceptions(SYSEXCEPTIONBLOCK)

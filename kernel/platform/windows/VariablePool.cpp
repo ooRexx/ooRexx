@@ -66,7 +66,7 @@
 #include SYSREXXSAA
 
 extern "C" {
-   APIRET APIENTRY RexxStemSort(char *stemname, INT order, INT type,
+   APIRET APIENTRY RexxStemSort(char *stemname, int order, int type,
        size_t start, size_t end, size_t firstcol, size_t lastcol);
 }
 
@@ -99,7 +99,7 @@ typedef SHVBLOCK16 FAR *PSHVBLOCK16;
 /* Output:                                                                    */
 /*   TRUE if the sort succeeded, FALSE for any parameter errors.              */
 /******************************************************************************/
-ULONG REXXENTRY RexxStemSort(char *stemname, INT order, INT type,
+ULONG REXXENTRY RexxStemSort(char *stemname, int order, int type,
     size_t start, size_t end, size_t firstcol, size_t lastcol)
 {
     if (!RexxQuery())                         /* Are we up?                     */
@@ -196,7 +196,7 @@ ULONG SysVariablePool(
   RexxObject       * value;            /* fetched value                     */
   ULONG              retcode;          /* composite return code             */
   LONG               arg_position;     /* requested argument position       */
-  INT                code;             /* variable request code             */
+  int                code;             /* variable request code             */
   PSHVBLOCK          pshvblock;        /* variable pool request block       */
   LONG               tempSize;
   jmp_buf            syntaxHandler;    /* syntax return point               */  // retrofit by IH
@@ -388,10 +388,10 @@ ULONG SysVariablePool(
 /******************************************************************************/
 /* RexxExecutionLineInfo													  */
 /*                                                                            */
-/* Arguments: UINT *to retrieve currently processed line                      */
-/*            char * to retrieve currently processed modul                    */
+/* Arguments: size_t *to retrieve currently processed line                    */
+/*            char   * to retrieve currently processed modul                  */
 /******************************************************************************/
-ULONG REXXENTRY RexxExecutionLineInfo(ULONG * line, char * fname, BOOL next)
+ULONG REXXENTRY RexxExecutionLineInfo(PULONG line, char * fname, BOOL next)
 {
   if (!RexxQuery())                         /* Are we up?                     */
     return 1;                               /*   No, send nastygram.          */

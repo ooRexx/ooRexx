@@ -323,7 +323,7 @@ RexxString *RexxString::space(RexxInteger *space_count,
       WordLength = NextWord(&Word, &Length, &NextSite);
     }
                                        /* copy the word over                */
-    memcpy(Current, Word, (UINT)WordLength);
+    memcpy(Current, Word, (size_t)WordLength);
                                        /* done building the string          */
     Retval->generateHash();
   }

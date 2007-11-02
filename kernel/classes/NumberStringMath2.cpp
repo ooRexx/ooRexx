@@ -194,7 +194,7 @@ char * SubtractDivisor(char *data1, size_t length1,
 {
   char *OutPtr;
   int   carry, DivChar;
-  UINT  extra;
+  unsigned int  extra;
                         /* This rountine actually does the divide of the Best Guess */
                         /*  Mult.  This Best guess is a guess at how many times the */
                         /*  dividend will go into the divisor, since it is only a   */
@@ -260,7 +260,7 @@ char * SubtractDivisor(char *data1, size_t length1,
 }
 
 
-RexxNumberString *RexxNumberString::Division(RexxNumberString *other, UINT DivOP)
+RexxNumberString *RexxNumberString::Division(RexxNumberString *other, unsigned int DivOP)
 /*********************************************************************/
 /* Function:  Divide two numbers                                     */
 /*********************************************************************/
@@ -427,7 +427,7 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, UINT DivOP
                                        /* are two numbers equal in length?  */
     if (SaveLeft->length == SaveRight->length) {
                                        /* yes, then compare two numbers     */
-     rc = memcmp(Num1, Num2, (UINT)SaveLeft->length);
+     rc = memcmp(Num1, Num2, (unsigned int)SaveLeft->length);
      if (rc < 0)                       /* is Num1(left) smaller?            */
       break;                           /* yes, break out of inner loop.     */
 
@@ -607,7 +607,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
  RexxNumberStringBase *AccumObj;
  RexxNumberString     *left;
  RexxNumberString     *result;
- UINT    NumBits;
+ unsigned int    NumBits;
  size_t    AccumLen;
 
   NegativePower = FALSE;               /* Initialize the flags.             */
@@ -685,17 +685,17 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
    NumBits = LONGBITS;                 /* Get total number of bits in long  */
 
                                        /* Find first non-zero left most bit */
-   while (!((UINT)powerValue & 0x80000000u)) {
+   while (!((unsigned int)powerValue & 0x80000000u)) {
      powerValue <<= 1;                 /*  bit is zero shift bits 1 to left */
      NumBits--;                        /*  one less bit.                    */
    }                                   /* endwhile                          */
 
                                        /* turn off this 1st 1-bit, already  */
                                        /* taken care of. Skip 1st Multiply  */
-   powerValue = (INT) ((UINT)powerValue & 0x7fffffffu);
+   powerValue = (int) ((unsigned int)powerValue & 0x7fffffffu);
 
    while (NumBits--) {                 /* while 1-bits remain in power.     */
-    if ((UINT) powerValue & 0x80000000u) {  /* is left most bit a 1?             */
+    if ((unsigned int) powerValue & 0x80000000u) { /* is left most bit a 1? */
                                        /* yes, we need to multiply number by*/
                                        /*  Acummulator.                     */
                                        /* go do multiply.  AccumPtr will get*/
@@ -797,7 +797,7 @@ char * MultiplyPower(char *leftPtr, RexxNumberStringBase *left,
    resultPtr--;                        /* Backup Result Ptr, for next digit */
  }                                     /* go do next digit.                 */
                                        /* Get length of computed number.    */
- AccumLen = (UINT)(++resultPtr - AccumPtr) + right->length;
+ AccumLen = (unsigned int)(++resultPtr - AccumPtr) + right->length;
 
                                        /* AccumPtr now points to result, and*/
                                        /*  the len of result is in AccumLen */
@@ -859,7 +859,7 @@ char * DividePower(char *AccumPtr, RexxNumberStringBase *Accum, char *Output, si
                                        /* fill the rest of data with Zero   */
  memset(leftPtr + 1, '\0', totalDigits - 1);
                                        /* calculate expected resultant exp  */
- CalcExp = -Accum->exp - (INT)Accum->length + 1;
+ CalcExp = -Accum->exp - (int)Accum->length + 1;
 
  Num1 = leftPtr;                       /* Num1 will be left digit pointer.  */
  Num2 = AccumPtr;                      /* Num2 is our input digit pointer   */
@@ -908,7 +908,7 @@ char * DividePower(char *AccumPtr, RexxNumberStringBase *Accum, char *Output, si
                                        /* are two numbers equal in length?  */
     if (left->length == Accum->length) {
                                        /* yes, then compare the two numbers */
-     rc = memcmp(Num1, Num2, (UINT)left->length);
+     rc = memcmp(Num1, Num2, (unsigned int)left->length);
      if (rc < 0)                       /* is Num1(left) smaller?            */
       break;                           /* yes, break out of inner loop.     */
 

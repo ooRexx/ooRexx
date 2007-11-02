@@ -54,7 +54,7 @@ extern RexxActivity *CurrentActivity;  /* current running activity          */
 
 RexxInstructionQueue::RexxInstructionQueue(
   RexxObject *_expression,              /* expresion to evaluate             */
-  INT type)                            /* top of queueing operation         */
+  int type)                            /* top of queueing operation         */
 /******************************************************************************/
 /* Function:   Initialize a QUEUE instruction object                          */
 /******************************************************************************/

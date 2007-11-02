@@ -126,7 +126,7 @@ typedef struct _ENVENTRY {                  /* setlocal/endlocal structure    */
   ULONG    size;                            /* size of the saved memory       */
 } ENVENTRY;
 
-INT putflag = 0;                            /* static or dynamic env memory   */
+int putflag = 0;                            /* static or dynamic env memory   */
 
 REXXOBJECT BuildEnvlist(void);
 RexxMethod *SysRestoreProgramBuffer(PRXSTRING, RexxString *);

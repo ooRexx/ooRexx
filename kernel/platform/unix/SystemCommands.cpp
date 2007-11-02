@@ -97,7 +97,7 @@
 #define UNSET_FLAG  3
 #define MAX_VALUE   1280
 
-extern INT putflag;
+extern int putflag;
 
 extern char **environ;
 
@@ -188,7 +188,7 @@ RexxObject * SysCommand(
   RexxString        * command,         /* command to issue                  */
   RexxString       ** error_failure )  /* error or failure flags            */
 {
-  INT          rc    = 0;              /* Return code from call             */
+  int          rc    = 0;              /* Return code from call             */
   const char  *current_address;        /* Subcom handler that gets cmd      */
   RXSTRING     rxstrcmd;               /* Command to be executed            */
   unsigned short flags = 0;            /* Subcom error flags                */
@@ -318,7 +318,7 @@ BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
   ULONG size, allocsize;               /* size of the string                */
   char      **Environment;             /* environment pointer               */
   char  *np;
-  INT    i,j,k,l,iLength, copyval;
+  size_t i,j,k,l,iLength, copyval;
   char   namebufcurr[1281];             /* buf for extracted name            */
   char   cmd_name[1281];                /* name of the envvariable setting   */
   char   *array, *runarray, *runptr, *endptr, *maxptr;

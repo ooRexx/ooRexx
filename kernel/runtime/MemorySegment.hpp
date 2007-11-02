@@ -196,7 +196,7 @@ class MemorySegment : public MemorySegmentHeader {
    inline char *end() { return segmentStart + segmentSize; }
    inline BOOL isReal() { return segmentSize != 0; }
    inline BOOL isEmpty() { return liveObjects == 0; }
-   void   dump(const char *owner, INT counter, FILE *keyfile, FILE *dumpfile);
+   void   dump(const char *owner, size_t counter, FILE *keyfile, FILE *dumpfile);
    DeadObject *lastDeadObject();
    DeadObject *firstDeadObject();
    void gatherObjectStats(MemoryStats *memStats, SegmentStats *stats);
@@ -382,7 +382,7 @@ class NormalSegmentSet : public MemorySegmentSet
     inline  RexxObject *allocateObject(size_t allocationLength)
     {
         DeadObject *newObject;
-        INT targetPool;
+        int targetPool;
         size_t realLength;
 
         /* Calculate the dead chain.  Note that if this is larger than */
@@ -395,7 +395,7 @@ class NormalSegmentSet : public MemorySegmentSet
         if (targetPool < DeadPools) {
 
             /* pick up the last successful one */
-            INT currentDead = lastUsedSubpool[targetPool];
+            int currentDead = lastUsedSubpool[targetPool];
             /* loop through the small pool chains looking for a block. */
             /* We only go up to the largest blocks as a last resort to */
             /* reduce the fragmentation. */
@@ -512,7 +512,7 @@ class NormalSegmentSet : public MemorySegmentSet
         else {
             /* calculate the dead chain          */
             /* and add that to the appropriate chain */
-            UINT deadChain = LengthToDeadPool(deadLength);
+            unsigned int deadChain = LengthToDeadPool(deadLength);
             subpools[deadChain].addSingle(new (largeObject) DeadObject(deadLength));
             /* we can mark this subpool as having items again */
             lastUsedSubpool[deadChain] = deadChain;

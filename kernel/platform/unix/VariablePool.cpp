@@ -74,7 +74,7 @@
 #include <stdlib.h>
 
 extern "C" {
-   APIRET APIENTRY RexxStemSort(char *stemname, INT order, INT type,
+   APIRET APIENTRY RexxStemSort(char *stemname, int order, int type,
        size_t start, size_t end, size_t firstcol, size_t lastcol);
 }
 
@@ -95,7 +95,7 @@ extern "C" {
 /* Output:                                                                    */
 /*   TRUE if the sort succeeded, FALSE for any parameter errors.              */
 /******************************************************************************/
-ULONG REXXENTRY RexxStemSort(char *stemname, INT order, INT type,
+ULONG REXXENTRY RexxStemSort(char *stemname, int order, int type,
     size_t start, size_t end, size_t firstcol, size_t lastcol)
 {
     if (!RexxQuery())                         /* Are we up?                     */
@@ -196,7 +196,7 @@ ULONG SysVariablePool(
   RexxObject       * value;            /* fetched value                     */
   ULONG              retcode;          /* composite return code             */
   LONG               arg_position;     /* requested argument position       */
-  INT                code;             /* variable request code             */
+  int                code;             /* variable request code             */
   PSHVBLOCK          pshvblock;        /* variable pool request block       */
   LONG               tempSize;
 
