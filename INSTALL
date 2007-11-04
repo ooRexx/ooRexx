@@ -43,7 +43,7 @@ Using the 3.1.2 release as an example, to install without prompting into the
 E:\downloads\ooRexx312.exe /S /D=D:\Local Interpreters\ooRexx
 
 It is recommended that an existing version of ooRexx first be uninstalled
-before installation.  Staring the installer when a previous version of
+before installation.  Starting the installer when a previous version of
 ooRexx is installed will automatically run the uninstaller first.  This is
 true even when the installer is started from a command prompt using the /S
 option.
@@ -66,8 +66,8 @@ clicking first simply saves a step and is not really necessary.
 ooRexx runs a process: rxapi.exe the first time a Rexx program executes.
 The rxapi process can be installed as a service, or not.  Although the
 installer offers the choice to install as a service, on Vista the user
-*should* always install rxapi as a service.  This allow Rexx programs to run
-without using "elevated privileges."
+*should* always install rxapi as a service.  This allows Rexx programs to
+run without using "elevated privileges."
 
 If rxapi is *not* installed as a service on Vista, the rxapi process will
 not start for standard users.  This prevents almost all Rexx programs from

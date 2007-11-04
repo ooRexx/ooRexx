@@ -3,11 +3,11 @@
 
 Please read ALL of these notes before building ooRexx!
 
-The proces of building ooRexx is slightly different if building from a
-release source file achive or from a svn checkout.  When building from a svn
+The process of building ooRexx is slightly different if building from a
+release source file achieve or from a svn checkout.  When building from a svn
 checkout, the bootstrap script will need to be executed first.  Some details
-on this are farther down in this file unde the "Notes for developers"
-section.  If building from svn, check that section first before proceding
+on this are further down in this file under the "Notes for developers"
+section.  If building from svn, check that section first before proceeding
 with the next "Build and Install" section.  In addition, at the end of the
 file are some notes on packaging ooRexx.
 
@@ -20,7 +20,9 @@ executing the configure script provided in the archive.
 Generally all you need to run is "configure", but there are some
 options that can be passed to the configure script; use
 "configure --help" to view them. If the configure script does not
-exist then run "bootstrap" script to create it.
+exist then run the "bootstrap" script to create it.  If you need to run the
+bootstrap script, you will also need to read the "Notes for developers"
+section further down in this section.
 
 Once the configure script has been run, you can then type "make".
 This will create the following objects:
@@ -43,7 +45,7 @@ and external function packages (*.so) will be installed into
 /opt/ooRexx/lib/ooRexx.  The base path "/opt" can be changed by adding the
 --prefix=path (where path is the base path) to the configure command.  eg.
 to install ooRexx into your home directory: $HOME/bin and $HOME/lib/ooRexx,
-configure --prefix=$HOME ...  This is paticularly useful if you do not have
+configure --prefix=$HOME ...  This is particularly useful if you do not have
 root access on the machine on which you are building ooRexx.
 
 On most platforms, it is necessary to include the directory where shared
@@ -53,7 +55,7 @@ Under HP-UX this environment variable is SHLIB_PATH.
 Under SGI seems to be LD_LIBRARYN32_PATH.
 
 
-Platform Specifc Notes
+Platform Specific Notes
 ======================
 
 This version of ooRexx is NOT safe for 64-bit compilation!
@@ -159,12 +161,42 @@ name.
 
 Specific platform packaging notes...
 
-RPM - Linux RedHat/Fedora
--------------------------
-% make dist
-as root:
-% cp ooRexx-x.y.z.tar.gz /usr/src/redhat/SOURCES
-% rpmbuild -ba platform/unix/oorexx.spec
+RPM - Linux RedHat/Fedora and related systems
+---------------------------------------------
+A rpm target exists in the make file.  This target will build a binary
+install rpm of ooRexx on a Linux system that has the rpm building tools
+available.  This is well tested on RedHat / Fedora and SuSE / Open SuSE.  It
+should work on any Linux distribution where the rpm build tools work.
+
+% make rpm
+
+This will create a 'rpm' subdirectory off the root of the source tree.  The
+finished rpm file will be located in a subdirectory off of the rpm directory.
+
+Debian and related dpkg-based systems
+-------------------------------------
+A deb target exists in the make file.  This target will build a binary 'deb'
+install package on a Debian based system where the deb package creating
+tools are installed.  This is well tested on Debian, Ubuntu, and Kubuntu
+systems.  The debian package creating tools strictly enforce a directory
+naming convention.  To build the deb package you *must* name the root of
+directory of the source tree to conform to the naming convention.
+
+The root directory must be named:  oorexx-<versionNumber>  For example, when
+building the 3.2.0 version of ooRexx the root directory of the source tree
+must be named:  oorexx-3.2.0
+For the 3.1.2 version the name must be: oorexx-3.1.2
+
+After naming the root directory of the source tree correctly, build ooRexx
+as described above, then execute the deb make target.  I.e.:
+
+...
+% make
+% make deb
+
+At the finish of the deb package creation, the location of the deb package
+is printed out.  (Normally the location is the parent directory of the root
+directory of the source tree.)
 
 Solaris - PKG
 -------------
