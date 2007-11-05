@@ -387,7 +387,7 @@ self~next                              /* get the first line                */
 
 ::METHOD next                          /* step to next element              */
                                        /* access the state information      */
-expose stream position line available transient
+expose stream position line available transient close
 use strict arg
 
 if \available then                     /* already reached the end?          */
