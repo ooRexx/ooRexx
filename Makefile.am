@@ -240,8 +240,7 @@ aixExportFiles = $(rexutils_unix_dir)/*.exp \
                  $(rexutils_dir)/*.exp \
                  $(rexxapi_dir)/*.exp \
                  $(rxregexp_dir)/*.exp
-windowsDefFiles = $(kernel_dir)/*.def \
-                  $(kernel_platform_windows_dir)/*.def \
+windowsDefFiles = $(kernel_platform_windows_dir)/*.def \
                   $(lib_dir)/*.def \
                   $(rexutils_dir)/*.def \
                   $(rxregexp_dir)/*.def
