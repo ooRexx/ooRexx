@@ -41,7 +41,6 @@ rm -f /usr/bin/rexxc
 rm -f /usr/bin/rxqueue
 rm -f /usr/bin/rxsubcom
 rm -f /usr/bin/rxdelipc
-rm -f /usr/bin/rxmigrate
 rm -f /usr/bin/rexx.img
 rm -f /usr/bin/rexx.cat
 rm -f /usr/bin/rxregexp.cls
@@ -59,7 +58,6 @@ rm -f /usr/share/man/man1/rexx.1
 rm -f /usr/share/man/man1/rexxc.1
 rm -f /usr/share/man/man1/rxsubcom.1
 rm -f /usr/share/man/man1/rxqueue.1
-rm -f /usr/share/man/man1/rxmigrate.1
 rm -f /usr/include/rexx.h
 rm -f /usr/bin/rexxtry.rex
 rm -rf /usr/share/ooRexx

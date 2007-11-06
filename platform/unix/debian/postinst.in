@@ -49,7 +49,6 @@ if [ -d /opt/ooRexx ]; then
    ln -sf /opt/ooRexx/bin/rxqueue                          /usr/bin/rxqueue
    ln -sf /opt/ooRexx/bin/rxsubcom                         /usr/bin/rxsubcom
    ln -sf /opt/ooRexx/bin/rxdelipc                         /usr/bin/rxdelipc
-   ln -sf /opt/ooRexx/bin/rxmigrate                        /usr/bin/rxmigrate
    ln -sf /opt/ooRexx/bin/rexx.img                         /usr/bin/rexx.img
    ln -sf /opt/ooRexx/bin/rexx.cat                         /usr/bin/rexx.cat
    ln -sf /opt/ooRexx/bin/rxregexp.cls                     /usr/bin/rxregexp.cls
@@ -85,7 +84,6 @@ if [ -d /opt/ooRexx ]; then
    ln -sf /opt/ooRexx/man/man1/rexxc.1                     /usr/share/man/man1/rexxc.1
    ln -sf /opt/ooRexx/man/man1/rxsubcom.1                  /usr/share/man/man1/rxsubcom.1
    ln -sf /opt/ooRexx/man/man1/rxqueue.1                   /usr/share/man/man1/rxqueue.1
-   ln -sf /opt/ooRexx/man/man1/rxmigrate.1                 /usr/share/man/man1/rxmigrate.1
    ln -sf /opt/ooRexx/include/rexx.h                       /usr/include/rexx.h
    ln -sf /opt/ooRexx/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
 
