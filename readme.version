@@ -6,7 +6,6 @@ rexutils/rxftp.cls
 platform/unix/oorexx.spec.in
 platform/unix/rexx.1
 platform/unix/rexxc.1
-platform/unix/rxmigrate.1
 platform/unix/rxqueue.1
 platform/unix/rxsubcom.1
 CHANGES

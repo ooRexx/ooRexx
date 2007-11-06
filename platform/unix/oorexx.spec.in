@@ -114,7 +114,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/bin/rxqueue
 %{_prefix}/bin/rxsubcom
 %{_prefix}/bin/rxdelipc
-%{_prefix}/bin/rxmigrate
 %{_prefix}/bin/rexx.img
 %{_prefix}/bin/rexx.cat
 %{_prefix}/bin/rxregexp.cls
@@ -149,7 +148,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/share/man/man1/rexxc.1
 %{_prefix}/share/man/man1/rxsubcom.1
 %{_prefix}/share/man/man1/rxqueue.1
-%{_prefix}/share/man/man1/rxmigrate.1
 %{_prefix}/share/ooRexx/rexx.sh
 %{_prefix}/share/ooRexx/rexx.csh
 %{_prefix}/share/ooRexx/*.rex
@@ -175,7 +173,6 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/bin/rxqueue                          /usr/bin/rxqueue
    ln -sf %{_prefix}/bin/rxsubcom                         /usr/bin/rxsubcom
    ln -sf %{_prefix}/bin/rxdelipc                         /usr/bin/rxdelipc
-   ln -sf %{_prefix}/bin/rxmigrate                        /usr/bin/rxmigrate
    ln -sf %{_prefix}/bin/rexx.img                         /usr/bin/rexx.img
    ln -sf %{_prefix}/bin/rexx.cat                         /usr/bin/rexx.cat
    ln -sf %{_prefix}/bin/rxregexp.cls                     /usr/bin/rxregexp.cls
@@ -210,7 +207,6 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/share/man/man1/rexxc.1                     /usr/share/man/man1/rexxc.1
    ln -sf %{_prefix}/share/man/man1/rxsubcom.1                  /usr/share/man/man1/rxsubcom.1
    ln -sf %{_prefix}/share/man/man1/rxqueue.1                   /usr/share/man/man1/rxqueue.1
-   ln -sf %{_prefix}/share/man/man1/rxmigrate.1                 /usr/share/man/man1/rxmigrate.1
    ln -sf %{_prefix}/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
 # allow backwards compatibility to Object REXX 2.x
    ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.2
@@ -224,7 +220,6 @@ rm -f /usr/bin/rexxc
 rm -f /usr/bin/rxqueue
 rm -f /usr/bin/rxsubcom
 rm -f /usr/bin/rxdelipc
-rm -f /usr/bin/rxmigrate
 rm -f /usr/bin/rexx.img
 rm -f /usr/bin/rexx.cat
 rm -f /usr/bin/rxregexp.cls
@@ -240,7 +235,6 @@ rm -f /usr/share/man/man1/rexx.1
 rm -f /usr/share/man/man1/rexxc.1
 rm -f /usr/share/man/man1/rxsubcom.1
 rm -f /usr/share/man/man1/rxqueue.1
-rm -f /usr/share/man/man1/rxmigrate.1
 rm -f /usr/include/rexx.h
 rm -f /usr/bin/rexxtry.rex
 rm -rf /usr/share/ooRexx
