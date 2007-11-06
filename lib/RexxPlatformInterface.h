@@ -161,7 +161,7 @@ void SysThreadInit(void);              /* do system thread initialization   */
 #endif
 
 #ifndef SysQueryThreadID
-INT SysQueryThreadID(void);            /* query the current thread          */
+int SysQueryThreadID(void);            /* query the current thread          */
 #endif
 
 #ifndef SysGetThreadStackBase
@@ -189,11 +189,11 @@ void SysValidateAddressName(RexxString *);
 #endif
 
 #ifndef SysMessageText
-RexxString *SysMessageText (INT);      /* retrieve an error message         */
+RexxString *SysMessageText (int);      /* retrieve an error message         */
 #endif
 
 #ifndef SysMessageHeader
-RexxString *SysMessageHeader (INT);    /* get the header for an error msg   */
+RexxString *SysMessageHeader (int);    /* get the header for an error msg   */
 #endif
 
 #ifndef SysReadProgram
