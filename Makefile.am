@@ -248,6 +248,7 @@ miscFiles = $(top_srcdir)/CPLv1.0.txt \
             $(top_srcdir)/CHANGES \
             $(top_srcdir)/CONTRIBUTORS \
             $(top_srcdir)/oorexx.ver \
+            $(top_srcdir)/unix-like-build.txt \
             $(aixExportFiles) \
             $(platform_unix_dir)/oorexx.spec \
             $(platform_unix_dir)/makepkg.rex \
