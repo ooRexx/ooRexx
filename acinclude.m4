@@ -3,7 +3,7 @@ dnl Get the Subversion revision
 dnl
 AC_DEFUN([ORX_SVN_REV],
 [
-SVN_REV=$(svnversion)
+SVN_REV=$(svnversion .)
 SVN_REV=${SVN_REV%%[[:a-zA-Z]]*}
 if test -z "$SVN_REV"; then
    AC_MSG_WARN([setting Subversion Revision to 0])
