@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxActivity.hpp  */
+/* REXX Kernel                                              RexxActivity.hpp  */
 /*                                                                            */
 /* Primitive Activity Class Definitions                                       */
 /*                                                                            */
@@ -50,6 +50,7 @@
 #include "ExpressionStack.hpp"
 #include "RexxInternalStack.hpp"
 #include "RexxLocalVariables.hpp"
+#include "SourceLocation.hpp"
                                        /* interface values for the          */
                                        /* activity_queue method             */
 #define QUEUE_FIFO 1
@@ -124,7 +125,7 @@ typedef struct nestedinfo {
    RexxActivity(BOOL, long, RexxDirectory *);
    long error(size_t);
    BOOL        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, RexxDirectory *);
-   void        raiseException(wholenumber_t, LOCATIONINFO *, RexxSource *, RexxString *, RexxArray *, RexxObject *);
+   void        raiseException(wholenumber_t, SourceLocation *, RexxSource *, RexxString *, RexxArray *, RexxObject *);
    void        reportAnException(wholenumber_t, const char *);
    void        reportAnException(wholenumber_t, RexxObject *, const char *);
    void        reportAnException(wholenumber_t, RexxObject *, wholenumber_t);
@@ -254,7 +255,7 @@ typedef struct nestedinfo {
 
    RexxInternalStack  *activations;    /* stack of activations              */
    RexxActivationStack   frameStack;   /* our stack used for activation frames */
-   RexxObject         *save;           /* saved result across activity_yield*/
+   RexxObject         *saveValue;      /* saved result across activity_yield*/
    RexxDirectory      *local;          /* the local environment directory   */
    RexxDirectory      *conditionobj;   /* condition object for killed activi*/
    RexxObject         *processObj;     /* Process identifier Object.        */

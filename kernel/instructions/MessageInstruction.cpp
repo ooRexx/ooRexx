@@ -62,17 +62,17 @@ RexxInstructionMessage::RexxInstructionMessage(
   OrefSet(this, this->target, message->target);
   OrefSet(this, this->super, message->super);
                                        /* get the name                      */
-  OrefSet(this, this->name, message->u_name);
+  OrefSet(this, this->name, message->messageName);
                                        /* get the argument count            */
-  message_argument_count = message->argumentCount;
+  argumentCount = message->argumentCount;
                                        /* and pointer to arguments          */
   argument_pointer = (RexxObject **)message->arguments;
                                        /* copy each argument                */
-  for (i = 0; i < message_argument_count; i++)
+  for (i = 0; i < argumentCount; i++)
                                        /* into the message instruction      */
     OrefSet(this, this->arguments[i], argument_pointer[i]);
   if (message->doubleTilde)            /* double twiddle form?              */
-    i_flags |= message_i_double;       /* turn this on                      */
+    instructionFlags |= message_i_double;   /* turn this on                      */
 }
 
 RexxInstructionMessage::RexxInstructionMessage(
@@ -88,19 +88,19 @@ RexxInstructionMessage::RexxInstructionMessage(
                                        /* copy the message info             */
   OrefSet(this, this->target, message->target);
   OrefSet(this, this->super, message->super);
-  OrefSet(this, this->name, message->u_name);     /* get the name                      */
+  OrefSet(this, this->name, message->messageName);  /* get the name                      */
                                        /* get the argument count            */
-  message_argument_count = message->argumentCount + 1;
+  argumentCount = message->argumentCount + 1;
                                        /* and the argument pointer          */
   argument_pointer = (RexxObject **)message->arguments;
                                        /* make the expression the first     */
   OrefSet(this, this->arguments[0], expression);
                                        /* copy each argument                */
-  for (i = 1; i < message_argument_count; i++)
+  for (i = 1; i < argumentCount; i++)
                                        /* into the message instruction      */
     OrefSet(this, this->arguments[i], argument_pointer[i - 1]);
   if (message->doubleTilde)            /* double twiddle form?              */
-    i_flags |= message_i_double;       /* turn this on                      */
+    instructionFlags |= message_i_double; /* turn this on                      */
 }
 
 void RexxInstructionMessage::live()
@@ -116,7 +116,7 @@ void RexxInstructionMessage::live()
   memory_mark(this->name);
   memory_mark(this->target);
   memory_mark(this->super);
-  for (i = 0, count = message_argument_count; i < count; i++)
+  for (i = 0, count = argumentCount; i < count; i++)
     memory_mark(this->arguments[i]);
   cleanUpMemoryMark
 }
@@ -135,7 +135,7 @@ void RexxInstructionMessage::liveGeneral()
   memory_mark_general(this->name);
   memory_mark_general(this->target);
   memory_mark_general(this->super);
-  for (i = 0, count = message_argument_count; i < count; i++)
+  for (i = 0, count = argumentCount; i < count; i++)
     memory_mark_general(this->arguments[i]);
   cleanUpMemoryMarkGeneral
 }
@@ -154,7 +154,7 @@ void RexxInstructionMessage::flatten(RexxEnvelope *envelope)
   flatten_reference(newThis->name, envelope);
   flatten_reference(newThis->target, envelope);
   flatten_reference(newThis->super, envelope);
-  for (i = 0, count = message_argument_count; i < count; i++)
+  for (i = 0, count = argumentCount; i < count; i++)
     flatten_reference(newThis->arguments[i], envelope);
 
   cleanUpFlatten
@@ -187,7 +187,7 @@ void RexxInstructionMessage::execute (
   else
     _super = OREF_NULL;                 /* use the default lookup            */
 
-  argcount = message_argument_count;   /* get the argument count            */
+  argcount = argumentCount;            /* get the argument count            */
   for (i = 0; i < argcount; i++) {     /* loop through the argument list    */
                                        /* real argument?                    */
     if (this->arguments[i] != OREF_NULL) {
@@ -209,7 +209,7 @@ void RexxInstructionMessage::execute (
                                        /* evaluate the message w/override   */
     result = stack->send(this->name, _super, argcount);
   stack->popn(argcount);               /* remove any arguments              */
-  if (i_flags&message_i_double)        /* double twiddle form?              */
+  if (instructionFlags&message_i_double) /* double twiddle form?              */
     result = _target;                  /* get the target element            */
   if (result != OREF_NULL) {           /* result returned?                  */
     context->traceResult(result);      /* trace if necessary                */

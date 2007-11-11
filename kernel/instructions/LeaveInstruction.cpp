@@ -104,7 +104,7 @@ void RexxInstructionLeave::execute(
 {
   context->traceInstruction(this);     /* trace if necessary                */
                                        /* is it a LEAVE?                    */
-  if (this->instructionInfo.type == KEYWORD_LEAVE)
+  if (this->instructionType == KEYWORD_LEAVE)
                                        /* tell the activation to exit the   */
     context->leaveLoop(this->name);    /* appopriate loop                   */
   else

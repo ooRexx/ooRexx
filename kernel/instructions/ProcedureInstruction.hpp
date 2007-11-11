@@ -46,9 +46,6 @@
 
 #include "RexxInstruction.hpp"
 
-                                       /* count of expose variables         */
-#define procedure_variable_count i_ushort
-
 class RexxInstructionProcedure : public RexxInstruction {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};
@@ -59,6 +56,7 @@ class RexxInstructionProcedure : public RexxInstruction {
   void flatten(RexxEnvelope*);
   void execute(RexxActivation *, RexxExpressionStack *);
 
+  size_t variableCount;                // count of variables
   RexxVariableBase *variables[1];      /* list of exposed variables         */
 };
 #endif

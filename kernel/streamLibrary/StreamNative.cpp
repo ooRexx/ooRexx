@@ -1615,7 +1615,7 @@ RexxMethod4(REXXOBJECT, stream_charin,
 
    STREAM_INFO *stream_info;           /* stream information                */
    char        *buffer;                /* read buffer                       */
-   OREF         result;                /* returned result string            */
+   REXXOBJECT   result;                /* returned result string            */
 
    stream_info = get_stream_info();    /* get the stream block              */
    setup_read_stream(OREF_NULLSTRING); /* do needed setup                   */
@@ -1631,7 +1631,7 @@ RexxMethod4(REXXOBJECT, stream_charin,
      send_exception(Error_Incorrect_method);
    buffer = get_buffer(read_length);   /* get a read buffer                 */
                                        /*  issue the read                   */
-   result = (OREF)read_stream_line((RexxObject *)self, stream_info, buffer, read_length, !stream_info->flags.transient || stream_info->flags.binary);
+   result = (REXXOBJECT)read_stream_line((RexxObject *)self, stream_info, buffer, read_length, !stream_info->flags.transient || stream_info->flags.binary);
                                        /*  reset the line positionals       */
    stream_info->line_read_char_position = 0;
    stream_info->line_read_position = 0;

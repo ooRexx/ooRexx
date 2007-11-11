@@ -62,7 +62,7 @@
  */
 RexxExpressionLogical::RexxExpressionLogical(RexxSource *source, size_t count, RexxQueue  *list)
 {
-    ClearObject(this);                   /* initialize the object             */
+    this->clearObject();                 /* initialize the object             */
     expressionCount = count;
 
     // the parsed expressions are stored in a queue, so we process them in
@@ -184,7 +184,7 @@ void *RexxExpressionLogical::operator new(size_t size, size_t  count)
                                          /* Get new object                    */
     RexxObject *newObject = new_object(size + (count - 1) * sizeof(RexxObject *));
                                          /* Give new object its behaviour     */
-    BehaviourSet(newObject, TheLogicalBehaviour);
+    newObject->setBehaviour(TheLogicalBehaviour);
     return newObject;                    /* and return the function           */
 }
 

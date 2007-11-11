@@ -61,7 +61,10 @@ RexxInstructionQueue::RexxInstructionQueue(
 {
                                        /* process the expression            */
   OrefSet(this, this->expression, _expression);
-  queue_type = type;                   /* store the type                    */
+  if (type == QUEUE_LIFO)
+  {
+      instructionFlags |= queue_lifo;
+  }
 }
 
 void RexxInstructionQueue::execute(
@@ -84,7 +87,7 @@ void RexxInstructionQueue::execute(
     value =  OREF_NULLSTRING;          /* use a NULL string                 */
   context->traceResult(value);         /* trace if necessary                */
                                        /* write out the line                */
-  CurrentActivity->queue(context, value, queue_type);
+  CurrentActivity->queue(context, value, ((instructionFlags&queue_lifo) != 0) ? QUEUE_LIFO : QUEUE_FIFO);
   context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

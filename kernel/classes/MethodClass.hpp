@@ -44,13 +44,8 @@
 #ifndef Included_RexxMethod
 #define Included_RexxMethod
 
-#define PRIVATE_FLAG      0x01         /* private method                    */
-#define UNGUARDED_FLAG    0x02         /* Method can run with GUARD OFF     */
-#define INTERNAL_FLAG     0x04         /* method is part of saved image     */
-#define REXX_METHOD       0x08         /* method is a REXX method           */
-#define NATIVE_METHOD     0x10         /* method is a native C method       */
-#define PROTECTED_FLAG    0x40         /* method is protected               */
-#define KERNEL_CPP_METHOD 0x80         /* method is a kernel C++ meth       */
+#include "RexxCode.hpp"
+
 
  class RexxMethod : public RexxObject {
   public:
@@ -81,36 +76,60 @@
   RexxObject  *isPrivateRexx();
   RexxObject  *isProtectedRexx();
 
-   inline size_t methnum() {return this->methodInfo.methnum; };
-   inline size_t  arguments() {return this->methodInfo.arguments; };
-   inline size_t  flags() {return this->methodInfo.flags; };
-   inline void   setMethnum(size_t num) { this->methodInfo.methnum = num; };
-   inline void   setFlags(size_t newFlags) { this->methodInfo.flags = newFlags; };
-   inline void   setArguments(size_t args) { this->methodInfo.arguments = args; };
+   inline size_t getMethodIndex() {return this->methodIndex; };
+   inline size_t getArgumentCount() {return this->argumentCount; };
+   inline void   setMethodIndex(size_t num) { methodIndex = num; };
+   inline void   setArgumentCount(size_t args) { this->argumentCount = args; };
 
-   inline bool   isGuarded()      {return (this->methodInfo.flags & UNGUARDED_FLAG) == 0; };
-   inline bool   isInternal()     {return (this->methodInfo.flags & INTERNAL_FLAG) != 0; };
-   inline bool   isPrivate()      {return (this->methodInfo.flags & PRIVATE_FLAG) != 0;}
-   inline bool   isProtected()    {return (this->methodInfo.flags & PROTECTED_FLAG) != 0;}
-   inline bool   isSpecial()      {return (this->methodInfo.flags & (PROTECTED_FLAG | PRIVATE_FLAG)) != 0;}
+   inline bool   isGuarded()      {return (this->methodFlags & UNGUARDED_FLAG) == 0; };
+   inline bool   isInternal()     {return (this->methodFlags & INTERNAL_FLAG) != 0; };
+   inline bool   isPrivate()      {return (this->methodFlags & PRIVATE_FLAG) != 0;}
+   inline bool   isProtected()    {return (this->methodFlags & PROTECTED_FLAG) != 0;}
+   inline bool   isSpecial()      {return (this->methodFlags & (PROTECTED_FLAG | PRIVATE_FLAG)) != 0;}
 
-   inline bool   isRexxMethod()   {return (this->methodInfo.flags & REXX_METHOD) != 0; };
-   inline bool   isNativeMethod() {return (this->methodInfo.flags & NATIVE_METHOD) != 0; };
-   inline bool   isCPPMethod()    {return (this->methodInfo.flags & KERNEL_CPP_METHOD) != 0; };
+   inline bool   isRexxMethod()   {return (this->methodFlags & REXX_METHOD) != 0; };
+   inline bool   isNativeMethod() {return (this->methodFlags & NATIVE_METHOD) != 0; };
+   inline bool   isCPPMethod()    {return (this->methodFlags & KERNEL_CPP_METHOD) != 0; };
 
-   inline void   setUnGuarded()    {this->methodInfo.flags |= UNGUARDED_FLAG;};
-   inline void   setGuarded()      {this->methodInfo.flags &= ~UNGUARDED_FLAG;};
-   inline void   setInternal()     {this->methodInfo.flags |= INTERNAL_FLAG;};
-   inline void   setPrivate()      {this->methodInfo.flags |= (PRIVATE_FLAG | PROTECTED_FLAG);};
-   inline void   setProtected()    {this->methodInfo.flags |= PROTECTED_FLAG;};
-   inline void   setRexxMethod()   {this->methodInfo.flags |= REXX_METHOD; };
-   inline void   setNativeMethod() {this->methodInfo.flags |= NATIVE_METHOD; };
-   inline void   setCPPMethod()    {this->methodInfo.flags |= KERNEL_CPP_METHOD; };
+   inline void   setUnGuarded()    {this->methodFlags |= UNGUARDED_FLAG;};
+   inline void   setGuarded()      {this->methodFlags &= ~UNGUARDED_FLAG;};
+   inline void   setInternal()     {this->methodFlags |= INTERNAL_FLAG;};
+   inline void   setPrivate()      {this->methodFlags |= (PRIVATE_FLAG | PROTECTED_FLAG);};
+   inline void   setProtected()    {this->methodFlags |= PROTECTED_FLAG;};
+   inline void   setRexxMethod()   {this->methodFlags |= REXX_METHOD; };
+   inline void   setNativeMethod() {this->methodFlags |= NATIVE_METHOD; };
+   inline void   setCPPMethod()    {this->methodFlags |= KERNEL_CPP_METHOD; };
 
    RexxInteger *Private() { return  (this->isPrivate() ? TheTrueObject : TheFalseObject); };
    inline RexxObject *getCode() {return (RexxObject *)this->code;}
+   inline RexxCode   *getRexxCode() {return this->rexxCode;}
+   inline RexxNativeCode *getNativeCode() {return this->nativeCode;}
+   inline RexxSource *getSource() {return this->rexxCode->getSource();}
    inline RexxClass  *getScope() {return this->scope;}
+   inline void setLocalRoutines(RexxDirectory *r) { getSource()->setLocalRoutines(r); }
+   inline void setPublicRoutines(RexxDirectory *r) { getSource()->setPublicRoutines(r); }
+   inline RexxDirectory *getLocalRoutines() { return getSource()->getLocalRoutines(); }
+   inline RexxDirectory *getPublicRoutines() { return getSource()->getPublicRoutines(); }
 
+ protected:
+   enum
+   {
+       PRIVATE_FLAG      = 0x01,        // private method
+       UNGUARDED_FLAG    = 0x02,        // Method can run with GUARD OFF
+       INTERNAL_FLAG     = 0x04,        // method is part of saved image
+       REXX_METHOD       = 0x08,        // method is a REXX method
+       NATIVE_METHOD     = 0x10,        // method is a native C method
+       PROTECTED_FLAG    = 0x40,        // method is protected
+       KERNEL_CPP_METHOD = 0x80,        // method is a kernel C++ meth
+   };
+
+
+
+   // TODO:  the method number and arguments should be moved into a native code object rather than
+   // being in the method object.
+   uint16_t   methodIndex;           // kernel method number
+   uint8_t    argumentCount;         // argument count
+   uint8_t    methodFlags;           // method status flags
 
    RexxClass  *scope;                  /* pointer to the method scope       */
    RexxVariableBase *attribute;      /* method attribute info             */

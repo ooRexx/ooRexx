@@ -73,39 +73,23 @@
 /* include windows debugging function definition */
 #include "DebugOutput.h"
 
-//#define TRUE            1
-//#define FALSE           0
-
-//#define ULONG           unsigned long   // Unsigned long integer 32-bits
-//#define PULONG          ULONG *         // Pointer to an unsigned long (32 bits)
-//#define PVOID           void *          // Pointer to any type
-//#define SHORT           short           // Short integer
-//#define USHORT          unsigned short  // Unsigned short integer (16 bits)
-//#define PSHORT          SHORT *         // Pointer to a signed short (16 bits)
-//#define PUSHORT         USHORT *        // Pointer to an unsigned short (16 bits)
-//#define UCHAR           unsigned char   // Unsigned Windows character
-//#define PUCHAR          UCHAR *         // Pointer to an unsigned Windows character
-//#define CHAR            char            // Windows character
-//#define PCHAR           CHAR *          // Pointer to a Windows character
-//#define INT             int             // Signed integer
-//#define PINT            int *           // Pointer to a signed integer
-//#define PCH             PCHAR           // Pointer to a Windows character
-//#define PSZ             PCHAR           // Pointer to a null-terminated Windows character string
-//#define CONST           const           // Variable whose value is to remain constant during execution
-//#define BYTE            unsigned char   // Byte (8 bits)
-//#define BOOL            unsigned long   // Boolean variable (should be TRUE or FALSE)
 #define UBYTE           unsigned char     // Not defined in windows
-// #define TID             long           // defined in wintypes.h
-// #define PID             long
-//#define VOID            void            // any type
-#define near                              //
-#define far                               //
 #define _loadds                           //
 #define _Optlink
 #define SysCall _cdecl
 #define SysCallV __cdecl
 
+typedef          char  int8_t;
 typedef unsigned char uint8_t;
+typedef          short  int16_t;
+typedef unsigned short uint16_t;
+typedef          int    int32_t;
+typedef unsigned int   uint32_t;
+
+// NOTE:  the following are not correct, except for on a 32-system.  They are
+// defined here only temporarily.
+typedef          int    intptr_t;
+typedef unsigned int   uintptr_t;
 typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
 

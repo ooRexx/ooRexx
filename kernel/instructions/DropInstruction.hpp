@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   DropInstruction.hpp  */
+/* REXX Kernel                                           DropInstruction.hpp  */
 /*                                                                            */
 /* Primitive DROP instruction Class Definitions                               */
 /*                                                                            */
@@ -46,8 +46,6 @@
 
 #include "RexxInstruction.hpp"
                                        /* count of drop variables           */
-#define drop_variable_count i_ushort
-
 class RexxInstructionDrop : public RexxInstruction {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};
@@ -58,6 +56,7 @@ class RexxInstructionDrop : public RexxInstruction {
   void flatten(RexxEnvelope*);
   void execute(RexxActivation *, RexxExpressionStack *);
 
-  RexxVariableBase *variables[1];      /* list of exposed variables         */
+  size_t            variableCount;     // count of dropped
+  RexxVariableBase *variables[1];      // list of dropped variables
 };
 #endif

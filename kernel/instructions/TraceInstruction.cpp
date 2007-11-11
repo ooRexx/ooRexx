@@ -52,7 +52,7 @@ RexxInstructionTrace::RexxInstructionTrace(
     RexxObject *_expression,           /* TRACE VALUE expression            */
     unsigned short trace,              /* trace setting                     */
     size_t      debug_flags,           /* new debug setting                 */
-    LONG        debug_skip )           /* debug clauses to skip             */
+    int         debug_skip )           /* debug clauses to skip             */
 /******************************************************************************/
 /* Function:  Initialize a trace instruction                                  */
 /******************************************************************************/
@@ -60,8 +60,8 @@ RexxInstructionTrace::RexxInstructionTrace(
                                        /* process the expression            */
    OrefSet(this, this->expression, _expression);
    this->debugskip = debug_skip;       /* copy the skip value               */
-   i_flags = debug_flags;              /* save the debug flags              */
-   trace_setting = trace;              /* and the trace setting             */
+   instructionFlags = debug_flags;     /* save the debug flags              */
+   traceSetting = trace;               /* and the trace setting             */
 }
 
 void RexxInstructionTrace::live()
@@ -113,14 +113,14 @@ void RexxInstructionTrace::execute(
   int          debug;                  /* new debug setting                 */
 
   context->traceInstruction(this);     /* trace if necessary                */
-  if (trace_setting == 0)              /* interactive debug mode request?   */
+  if (traceSetting == 0)               /* interactive debug mode request?   */
                                        /* turn on the skip mode             */
-    context->debugSkip(this->debugskip, i_flags&trace_notrace);
+    context->debugSkip(this->debugskip, instructionFlags&trace_notrace);
                                        /* non-dynamic form?                 */
   else if (this->expression == OREF_NULL) {
     if (!context->inDebug())           /* not in debug mode?                */
                                        /* just change the setting           */
-      context->setTrace(trace_setting, i_flags & trace_debug_mask);
+      context->setTrace(traceSetting, instructionFlags & trace_debug_mask);
     else
       context->pauseInstruction();     /* do debug pause if necessary       */
   }
@@ -130,7 +130,7 @@ void RexxInstructionTrace::execute(
     value = REQUEST_STRING(result);    /* force to string form              */
     context->traceResult(result);      /* trace if necessary                */
                                        /* process the result                */
-    context->source->parseTraceSetting(value, &setting, &debug);
+    context->code->getSource()->parseTraceSetting(value, &setting, &debug);
     if (!context->inDebug())           /* not in debug mode?                */
                                        /* now change the setting            */
       context->setTrace(setting, debug);

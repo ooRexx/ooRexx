@@ -62,6 +62,7 @@ class RexxNativeCode : public RexxInternalObject {
    inline PFN         getEntry() { return this->entry; };
    inline void        setEntry(PFN v) { this->entry = v; };
 
+   RexxString *library;               // the library name
    RexxString *procedure;             /* External Procedur name            */
    PFN         entry;                 /* method entry point.               */
    LONG        index;                 /* internal native method            */

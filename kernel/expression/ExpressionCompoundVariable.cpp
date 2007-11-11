@@ -54,7 +54,7 @@
 #include "RexxVariable.hpp"
 
 RexxCompoundVariable::RexxCompoundVariable(
-    RexxString * stemName,             /* stem retriever                    */
+    RexxString * _stemName,            /* stem retriever                    */
     LONG         stemIndex,            /* stem lookaside index              */
     RexxQueue  * tailList,             /* list of tails                     */
     LONG         TailCount)            /* count of tails                    */
@@ -62,9 +62,9 @@ RexxCompoundVariable::RexxCompoundVariable(
 /* Function:  Complete compound variable initialization                       */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* initialize the object             */
+  this->clearObject();                 /* initialize the object             */
   this->tailCount= TailCount;          /* set the count (and hash value)    */
-  OrefSet(this, this->stem, stemName); /* save the associate value          */
+  OrefSet(this, this->stemName, _stemName); /* save the associate value          */
   this->index = stemIndex;             /* set the stem index                */
 
   while (TailCount > 0) {              /* loop through the variable list    */
@@ -155,7 +155,7 @@ void RexxCompoundVariable::live()
   setUpMemoryMark
   for (i = 0, count = this->tailCount; i < count; i++)
     memory_mark(this->tails[i]);
-  memory_mark(this->stem);
+  memory_mark(this->stemName);
   cleanUpMemoryMark
 }
 
@@ -170,7 +170,7 @@ void RexxCompoundVariable::liveGeneral()
   setUpMemoryMarkGeneral
   for (i = 0, count = this->tailCount; i < count; i++)
     memory_mark_general(this->tails[i]);
-  memory_mark_general(this->stem);
+  memory_mark_general(this->stemName);
   cleanUpMemoryMarkGeneral
 }
 
@@ -185,7 +185,7 @@ void RexxCompoundVariable::flatten(RexxEnvelope *envelope)
 
   setUpFlatten(RexxCompoundVariable)
 
-  flatten_reference(newThis->stem, envelope);
+  flatten_reference(newThis->stemName, envelope);
   for (i = 0, count = this->tailCount; i < count; i++)
     flatten_reference(newThis->tails[i], envelope);
 
@@ -202,7 +202,7 @@ RexxObject * RexxCompoundVariable::evaluate(
   RexxObject   *value;                 /* final variable value              */
 
                                        /* and ask it for the value          */
-  value = context->evaluateLocalCompoundVariable(stem, index, &tails[0], tailCount);
+  value = context->evaluateLocalCompoundVariable(stemName, index, &tails[0], tailCount);
 
   stack->push(value);                  /* place on the evaluation stack     */
   return value;                        /* return the located variable       */
@@ -215,7 +215,7 @@ RexxObject  *RexxCompoundVariable::getValue(
 /******************************************************************************/
 {
                                        /* resolve the tail element          */
-  return dictionary->getCompoundVariableValue(stem, &tails[0], tailCount);
+  return dictionary->getCompoundVariableValue(stemName, &tails[0], tailCount);
 }
 
 RexxObject  *RexxCompoundVariable::getValue(
@@ -225,7 +225,7 @@ RexxObject  *RexxCompoundVariable::getValue(
 /******************************************************************************/
 {
                                        /* resolve the tail element          */
-  return context->getLocalCompoundVariableValue(stem, index, &tails[0], tailCount);
+  return context->getLocalCompoundVariableValue(stemName, index, &tails[0], tailCount);
 }
 
 
@@ -237,7 +237,7 @@ void RexxCompoundVariable::set(
 /******************************************************************************/
 {
                                        /* the dictionary manages all of these details */
-  context->setLocalCompoundVariable(stem, index, &tails[0], tailCount, value);
+  context->setLocalCompoundVariable(stemName, index, &tails[0], tailCount, value);
 }
 
 
@@ -249,7 +249,7 @@ void RexxCompoundVariable::set(
 /******************************************************************************/
 {
                                        /* the dictionary manages all of these details */
-  dictionary->setCompoundVariable(stem, &tails[0], tailCount, value);
+  dictionary->setCompoundVariable(stemName, &tails[0], tailCount, value);
 }
 
 
@@ -261,7 +261,7 @@ BOOL RexxCompoundVariable::exists(
 {
                                        /* retrieve the variable value, and  */
                                        /* see it really exists              */
-  return context->localCompoundVariableExists(stem, index, &tails[0], tailCount);
+  return context->localCompoundVariableExists(stemName, index, &tails[0], tailCount);
 }
 
 void RexxCompoundVariable::assign(
@@ -273,7 +273,7 @@ void RexxCompoundVariable::assign(
 /******************************************************************************/
 {
     /* the context manages the assignment details */
-    context->assignLocalCompoundVariable(stem, index, (RexxObject **)&tails[0], tailCount, value);
+    context->assignLocalCompoundVariable(stemName, index, (RexxObject **)&tails[0], tailCount, value);
 }
 
 void RexxCompoundVariable::drop(
@@ -283,7 +283,7 @@ void RexxCompoundVariable::drop(
 /******************************************************************************/
 {
                                        /* set the compound value            */
-  context->dropLocalCompoundVariable(stem, index, &tails[0], tailCount);
+  context->dropLocalCompoundVariable(stemName, index, &tails[0], tailCount);
 }
 
 
@@ -297,14 +297,14 @@ void RexxCompoundVariable::procedureExpose(
 {
     /* first get (and possible create) the compound variable in the */
     /* parent context. */
-    RexxCompoundElement *variable = parent->exposeLocalCompoundVariable(stem, index, (RexxObject **)&tails[0], tailCount);
+    RexxCompoundElement *variable = parent->exposeLocalCompoundVariable(stemName, index, (RexxObject **)&tails[0], tailCount);
     /* get the stem index from the current level.  This may end up */
     /* creating the stem that holds the exposed value. */
-    RexxStem *stem_table = context->getLocalStem(stem, index);
+    RexxStem *stem_table = context->getLocalStem(stemName, index);
     /* have the stem expose this */
     stem_table->expose(variable);
     /* trace resolved compound name */
-    context->traceCompoundName(stem, (RexxObject **)&tails[0], tailCount, variable->getName());
+    context->traceCompoundName(stemName, (RexxObject **)&tails[0], tailCount, variable->getName());
 }
 
 
@@ -318,7 +318,7 @@ void RexxCompoundVariable::expose(
 /******************************************************************************/
 {
     /* get the stem in the source dictionary */
-    RexxStem *source_stem = object_dictionary->getStem(stem);
+    RexxStem *source_stem = object_dictionary->getStem(stemName);
                                           /* new tail for compound             */
     RexxCompoundTail resolved_tail(context, &tails[0], tailCount);
     /* first get (and possible create) the compound variable in the */
@@ -326,13 +326,13 @@ void RexxCompoundVariable::expose(
     RexxCompoundElement *variable = source_stem->exposeCompoundVariable(&resolved_tail);
     /* get the stem index from the current level.  This may end up */
     /* creating the stem that holds the exposed value. */
-    RexxStem *stem_table = context->getLocalStem(stem, index);
+    RexxStem *stem_table = context->getLocalStem(stemName, index);
     /* have the stem expose this */
     stem_table->expose(variable);
     /* tracing intermediate values?      */
     if (context->tracingIntermediates()) {
         /* trace resolved compound name */
-        context->traceCompoundName(stem, (RexxObject **)&tails[0], tailCount, variable->getName());
+        context->traceCompoundName(stemName, (RexxObject **)&tails[0], tailCount, variable->getName());
     }
 }
 
@@ -346,7 +346,7 @@ void RexxCompoundVariable::setGuard(
   RexxCompoundElement *variable;       /* compound variable object          */
 
                                        /* get the variable item             */
-  variable = context->getLocalCompoundVariable(stem, index, &tails[0], tailCount);
+  variable = context->getLocalCompoundVariable(stemName, index, &tails[0], tailCount);
   variable->inform(CurrentActivity);   /* mark the variable entry           */
 }
 
@@ -359,7 +359,7 @@ void RexxCompoundVariable::clearGuard(
   RexxCompoundElement *variable;       /* compound variable object          */
 
                                        /* get the variable item             */
-  variable = context->getLocalCompoundVariable(stem, index, &tails[0], tailCount);
+  variable = context->getLocalCompoundVariable(stemName, index, &tails[0], tailCount);
   variable->uninform(CurrentActivity); /* mark the variable entry           */
 }
 
@@ -373,7 +373,7 @@ void * RexxCompoundVariable::operator new(size_t size,
                                        /* Get new object                    */
   newObject = new_object(size + ((tailCount - 1) * sizeof(RexxObject *)));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheCompoundVariableBehaviour);
+  newObject->setBehaviour(TheCompoundVariableBehaviour);
   return newObject;                    /* return the new compound variable  */
 }
 

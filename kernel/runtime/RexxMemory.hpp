@@ -49,30 +49,6 @@ void memoryCreate();
 void memoryRestore(void);
 void memoryNewProcess (void);
 
-/* turn this on to get verbose GC output */
-//#define VERBOSE_GC
-
-
-#define LiveMask            0xFFFFFFFC
-#define MarkMask            0x00000003
-
-/* behaviour (used on restoreimage).  Not that this is overloaded */
-/* with the mark bits.  We don't need to use these at the same */
-/* time.  The IsNonPrimitive bit on has meaning in the saved image. */
-/* The mark bits only have meaning once the image has been */
-/* restored. */
-#define IsNonPrimitive  0x00000001
-#define MarkBit1        0x00000001     /* Second of the mark bits           */
-#define MarkBit2        0x00000002     /* Second of the mark bits           */
-#define MakeProxyObject 0x00000004     /* This object is a PROXY(String) Obj*/
-#define ProxyObject     0x00000008     /* This object is a PROXY(String) Obj*/
-#define OldSpaceBit     0x00000010     /* location of the OldSpace bit      */
-#define LargeObjectBit  0x00000020     /* This is a Large Object            */
-#define NoRefBit        0x00000040     /* location of No References Bit.    */
-#define Special         0x00000080     /* One bit available class specific usage */
-#define SizeMask        0xFFFFFF00     /* mask for object size              */
-#define TenureMask      0xFFFFFF00     /* mask for tenure....               */
-
 /* The minimum allocation unit for an object.   */
 #define ObjectGrain 8
 /* The unit of granularity for large allocation */
@@ -84,131 +60,25 @@ void memoryNewProcess (void);
 /* this is the granularity for objects greater than 16Mb. */
 #define VeryLargeObjectGrain    256
 
-/* This is the smallest object we'll allocate from storage.  Our */
-/* smallest possible object is smaller than this, but we get better */
-/* usage by allocating with a larger grain size. */
-#define MinimumObjectSize 24l
-/* The older minimum object size.  Tokenized images will contain */
-/* objects of this size, so we need to accomadate them. */
-#define OldMinimumObjectSize 20l
-#define ObjectHeaderSize 16l
+/* This is the smallest object we'll allocate from storage.  */
+#define MinimumObjectSize ((size_t)24)
 #define MaximumObjectSize ((size_t)0xfffffff0)
 
-/* bits to shift out for object size */
-#define ObjectSizeShift 8
 /* Or lower 8 bits for large obj size*/
 #define LargeObjectSizeMask 0xFFFFFF00
 /* Minimum size of a large object    */
 #define LargeObjectMinSize  0x01000000
 
-#define ObjectIsLive(o)     (memoryObject.objectIsLive((RexxObject *)(o)))
-#define ObjectIsNotLive(o)  (!ObjectIsLive(o))
-#define SetObjectLive(o)    (ObjectHeader(o) &= LiveMask); \
-                            (ObjectHeader(o) |= memoryObject.markWord)
-#define ObjectIsMarked(o)   (ObjectHeader(o) & headerMarkedValue)
-#define ClearObjectMark(o)  (ObjectHeader(o) &= LiveMask)
-
-#ifdef FORCE_GRAINING
+inline void SetObjectLive(void *o, uint16_t mark) {
+    ((RexxObject *)o)->setObjectLive(mark);
+}
 #define IsObjectGrained(o)  ((((size_t)o)%ObjectGrain) == 0)
 #define IsValidSize(s) ((s) >= MinimumObjectSize && ((s) % ObjectGrain) == 0)
-#else
-#define IsObjectGrained(o)  ((((size_t)o)%sizeof(void *)) == 0)
-#define IsValidSize(s) ((s) >= OldMinimumObjectSize && ((s) % sizeof(void *)) == 0)
-#endif
-
-/* Following Defines HEADINFO constants */
-
-/* NOTE: The following are used in places other than OKMEMORY, such */
-/* as OKTRACE/OKBEHAV/OKOBJECT use the ObjectSize/SetObjectSize */
-/* macros, but OKGDATA uses ObjectSizeShift directly.  If we change */
-/* defaults in object headers, be sure to check the above modules, */
-/* for possible changes.... */
-
-/* return the size of the object */
-#define ObjectSize(o)  ObjectSizeFunc(((RexxObject *)(o))->header)
-inline size_t ObjectSizeFunc(HEADINFO header) { return (header & LargeObjectBit) ? header & LargeObjectSizeMask : header>>ObjectSizeShift; }
-
-/* largest size we'll keep in the save stack on a mark */
-#define SaveStackThreshold   4096
-
-#define IsLargeObject(o)  (ObjectSize(o) > SaveStackThreshold)
-#define ObjectHeader(o)   (((RexxObject *)(o))->header)
-#define ClearObjectHeader(o) (ObjectHeader(o) = (HEADINFO)0)
-#define SetOldSpace(o)       (ObjectHeader(o) |= OldSpaceBit)
-
-#define SetSpecial(o)       (ObjectHeader(o) |= Special)
-#define ClearSpecial(o)     (ObjectHeader(o) &= (~Special))
-#define IsSpecial(o)        (ObjectHeader(o) & Special)
-
-#define ClearObjectSize(o) (ObjectHeader(o) &= (~(SizeMask | LargeObjectBit)))
-
-#define SmallObjectSize(s) (((size_t)(s)) << ObjectSizeShift)
-#define LargeObjectSize(s) (((size_t)(s) & LargeObjectSizeMask) | LargeObjectBit)
-
-#define SetSmallObjectSize(o,s)     (ObjectHeader(o) |= SmallObjectSize(s))
-#define SetLargeObjectSize(o,s)     (ObjectHeader(o) |= LargeObjectSize(s))
-/* set the size of the object in header */
-#define SetObjectSize(o, s) SetObjectSizeFunc((RexxObject *)(o), s)
-
-inline void SetObjectSizeFunc(RexxObject *o, size_t s)
-{
-#ifdef CHECKOREFS
-    if (!IsValidSize(s)) {
-        logic_error("Invalid object size");
-    }
-#endif
-
-    ClearObjectSize(o);
-    if (s >= LargeObjectMinSize)
-        SetLargeObjectSize(o, s);
-    else
-        SetSmallObjectSize(o, s);
-}
-
-#define SetNewSpace(o)               (ObjectHeader(o) &= (~OldSpaceBit))
-#define SetOldSpace(o)               (ObjectHeader(o) |= OldSpaceBit)
-
-#define SetObjectHasNoReferences(o)  (ObjectHeader(o) |= NoRefBit)
-#define SetObjectHasReferences(o)    (ObjectHeader(o) &= (~NoRefBit))
-#define ObjectHasNoReferences(o)     (ObjectHeader(o) & NoRefBit)
-#define ObjectHasReferences(o)       (!ObjectHasNoReferences(o))
-#define OldSpace(o)                  (ObjectHeader(o) & OldSpaceBit)
-
-#define NullOrOld(o)        (((RexxObject *)(o) == OREF_NULL) || OldSpace(o))
-
-#define ObjectIsNonPrimitive(o) (ObjectHeader(o) & IsNonPrimitive)
-#define SetNonPrimitive(o)  (ObjectHeader(o) |= IsNonPrimitive)
-#define ClearNonPrimitive(o)  (ObjectHeader(o) &= ~IsNonPrimitive)
-
-#define SetUpNewObject(o,s) {                         \
-    memoryObject.setObjectSize((RexxObject *)(o), s); \
-    setObjectVirtualFunctions(o);                     \
-    (o)->objectVariables = NULL;                      \
-    BehaviourSet(o, TheObjectBehaviour);              \
-}
-
-#define SetUpNewAllocation(o) {                       \
-    setObjectVirtualFunctions(o);                     \
-    (o)->objectVariables = NULL;                      \
-    BehaviourSet(o, TheObjectBehaviour);              \
-    SetObjectLive(o);                                 \
-}
 
 inline size_t roundObjectBoundary(size_t n) { return RXROUNDUP(n,ObjectGrain); }
 // inline size_t roundObjectBoundary(size_t n) { return (n + 7) & 0xFFFFFFF8; }
 inline size_t roundLargeObjectAllocation(size_t n) { return n > LargeObjectMinSize ? RXROUNDUP(n, VeryLargeAllocationUnit) : RXROUNDUP(n, LargeAllocationUnit); }
 inline size_t roundObjectResize(size_t n) { return n > LargeObjectMinSize ? RXROUNDUP(n, VeryLargeObjectGrain) : RXROUNDUP(n, ObjectGrain); }
-
-#define ObjectDataSize(o) (ObjectSize(o) - ObjectHeaderSize)
-#define ObjectDataSpace(o) (&((RexxObject *)(o))->objectVariables)
-
-/* Zero out the state data of an object */
-#define ClearObject(o)          memset((void *)ObjectDataSpace(o),'\0', ObjectDataSize(o));
-#define ClearObjectLength(o,l)  memset((void *)ObjectDataSpace(o),'\0', l - ObjectHeaderSize);
-
-/* restore/set the VirtualFunction table for the specified Object */
-#define setVirtualFunctions(o,t)  (*((void **)o) = VFTArray[t])
-#define setObjectVirtualFunctions(o)  (*((void **)o) = VFTArray[T_object])
 
 class RexxActivationFrameBuffer;
 class MemorySegment;
@@ -279,10 +149,10 @@ class RexxMemory : public RexxObject {
   MemorySegment *newSegment(size_t requestLength, size_t minLength);
   MemorySegment *newLargeSegment(size_t requestLength, size_t minLength);
   RexxObject *oldObject(size_t size);
-  RexxObject *newObject(size_t size);
+  inline RexxObject *newObject(size_t size) { return newObject(size, T_object); }
+  RexxObject *newObject(size_t size, size_t type);
   RexxObject *temporaryObject(size_t size);
   RexxArray  *newObjects(size_t size, size_t count, RexxBehaviour *behaviour);
-  RexxObject *clone(RexxObject *objr);
   void        reSize(RexxObject *, size_t);
   void        checkUninit(RexxTable *);
   void        checkSubClasses(RexxObjectTable *);
@@ -345,18 +215,6 @@ class RexxMemory : public RexxObject {
   inline void logObjectStats(RexxObject *obj) { imageStats->logObject(obj); }
   inline void pushSaveStack(RexxObject *obj) { saveStack->push(obj); }
   inline void removeSavedObject(RexxObject *obj) { saveStack->remove(obj); }
-  inline void setObjectSize(RexxObject *o, size_t s)
-  {
-      if (s <  LargeObjectMinSize) {
-          ObjectHeader(o) = SmallObjectSize(s) | markWord;
-      }
-      else {                                                                                                  \
-          ObjectHeader(o) = LargeObjectSize(s) | markWord;
-      }
-  }
-
-  inline BOOL objectIsLive(RexxObject *obj) {return ((ObjectHeader(obj) & MarkMask) == markWord); }
-  inline BOOL objectIsNotLive(RexxObject *obj) {return ((ObjectHeader(obj) & MarkMask) != markWord); }
   inline void disableOrefChecks() { checkSetOK = FALSE; }
   inline void enableOrefChecks() { checkSetOK = TRUE; }
   inline void clearSaveStack() {
@@ -364,7 +222,7 @@ class RexxMemory : public RexxObject {
                                        /* stack. to be really oo, this      */
                                        /* should be done in RexxSaveStack,  */
                                        /* but we do it here for speed...    */
-    memset(saveStack->stack, 0, sizeof(RexxObject*) * saveStack->u_size);
+    memset(saveStack->stack, 0, sizeof(RexxObject*) * saveStack->size);
   }
 /* Start of methods to build some specific REXX objects */
   RexxTable       *newHashCollection(size_t, size_t);
@@ -387,7 +245,7 @@ class RexxMemory : public RexxObject {
   void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
   void setUpMemoryTables(RexxObjectTable *old2newTable);
 
-  ULONG markWord;                      /* current marking counter           */
+  uint16_t markWord;                   /* current marking counter           */
   SMTX flattenMutex;                   /* locks for various memory processes */
   SMTX unflattenMutex;
   SMTX envelopeMutex;
@@ -410,8 +268,8 @@ private:
 
   inline void restoreObjectMark(RexxObject *markObject, RexxObject **pMarkObject) {
                                          /* update the object reference       */
-      markObject = (RexxObject *)((ULONG)markObject + objOffset);
-      SetObjectLive(markObject);         /* Then Mark this object as live.    */
+      markObject = (RexxObject *)((char *)markObject + objOffset);
+      markObject->setObjectLive(markWord); /* Then Mark this object as live.    */
       *pMarkObject = markObject;         /* now set this back again           */
   }
 
@@ -458,5 +316,45 @@ private:
   size_t allocations;                  /* number of allocations since last GC */
   size_t collections;                  /* number of garbage collections     */
 };
+
+
+/******************************************************************************/
+/* Memory management macros                                                   */
+/******************************************************************************/
+
+
+inline void save(RexxInternalObject *o) { memoryObject.saveObject((RexxObject *)o); }
+inline void discard(RexxInternalObject *o) { memoryObject.discardObject((RexxObject *)o); }
+inline void hold(RexxInternalObject *o) { memoryObject.holdObject((RexxObject *)o); }
+inline void discard_hold(RexxInternalObject *o) { memoryObject.discardHoldObject((RexxObject *)(o)); }
+
+
+inline RexxObject *new_object(size_t s) { return memoryObject.newObject(s); }
+inline RexxObject *new_object(size_t s, size_t t) { return memoryObject.newObject(s, t); }
+
+#define setUpMemoryMark                \
+ {                                     \
+   uint16_t headerMarkedValue = memoryObject.markWord | OldSpaceBit;
+
+#define cleanUpMemoryMark               \
+ }
+
+#define setUpMemoryMarkGeneral       {
+#define cleanUpMemoryMarkGeneral     }
+
+#define setUpFlatten(type)        \
+  {                               \
+  long  newSelf = envelope->currentOffset; \
+  type *newThis = (type *)this;
+
+#define cleanUpFlatten                    \
+ }
+
+#define ObjectNeedsMarking(oref) ((oref) != OREF_NULL && !((oref)->isObjectMarked(headerMarkedValue)) )
+#define memory_mark(oref)  if (ObjectNeedsMarking(oref)) memoryObject.mark((RexxObject *)(oref))
+#define memory_mark_general(oref) (memoryObject.markGeneral((void *)&(oref)))
+
+/* Following macros are for Flattening and unflattening of objects  */
+#define flatten_reference(oref,envel)  if (oref) envel->flattenReference((void *)&newThis, newSelf, (void *)&(oref))
 
 #endif

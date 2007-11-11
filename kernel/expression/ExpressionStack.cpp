@@ -148,7 +148,7 @@ RexxString *RexxExpressionStack::requiredStringArg(
   RexxString *newStr;                  /* converted value                   */
 
   argument = this->peek(position);     /* get the argument in question      */
-  if (OTYPE(String, argument))         /* string object already?            */
+  if (isOfClass(String, argument))         /* string object already?            */
     return (RexxString *)argument;     /* finished                          */
                                        /* get the string form, raising a    */
                                        /* NOSTRING condition if necessary   */
@@ -170,7 +170,7 @@ RexxString *RexxExpressionStack::optionalStringArg(
   argument = this->peek(position);     /* get the argument in question      */
   if (argument == OREF_NULL)           /* missing a required argument?      */
     return OREF_NULL;                  /* finished already                  */
-  if (OTYPE(String, argument))         /* string object already?            */
+  if (isOfClass(String, argument))         /* string object already?            */
     return (RexxString *)argument;     /* finished                          */
                                        /* get the string form, raising a    */
                                        /* NOSTRING condition if necessary   */
@@ -194,7 +194,7 @@ RexxInteger *RexxExpressionStack::requiredIntegerArg(
   LONG          tempCount;             /* actual function argument position */
 
   argument = this->peek(position);     /* get the argument in question      */
-  if (OTYPE(Integer, argument))        /* integer object already?           */
+  if (isOfClass(Integer, argument))        /* integer object already?           */
     return (RexxInteger *)argument;    /* finished                          */
                                        /* return the string form of argument*/
   long_value = REQUEST_LONG(argument, DEFAULT_DIGITS);
@@ -225,7 +225,7 @@ RexxInteger *RexxExpressionStack::optionalIntegerArg(
   argument = this->peek(position);     /* get the argument in question      */
   if (argument == OREF_NULL)           /* missing an optional argument?     */
     return OREF_NULL;                  /* nothing there                     */
-  if (OTYPE(Integer, argument))        /* integer object already?           */
+  if (isOfClass(Integer, argument))        /* integer object already?           */
     return (RexxInteger *)argument;    /* finished                          */
                                        /* return the string form of argument*/
   long_value = REQUEST_LONG(argument, DEFAULT_DIGITS);

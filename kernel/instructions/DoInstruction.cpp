@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              DoInstruction.c       */
+/* REXX Translator                                      DoInstruction.c       */
 /*                                                                            */
 /* Primitive Do Parse Class                                                   */
 /*                                                                            */
@@ -59,21 +59,21 @@ extern ACTIVATION_SETTINGS *current_settings;
 
 
 void RexxInstructionDo::matchLabel(
-     RexxInstructionEnd *_end,          /* end to match up                   */
+     RexxInstructionEnd *_end,         /* end to match up                   */
      RexxSource         *source )      /* parsed source file (for errors)   */
 /******************************************************************************/
 /* Function:  Verify that the name on an END and the END statement match      */
 /******************************************************************************/
 {
   RexxString   *name;                  /* name on the end statement         */
-  LOCATIONINFO  location;              /* location of the end               */
+  SourceLocation location;             /* location of the end               */
   size_t        lineNum;               /* instruction line number           */
 
-  name = _end->name;                    /* get then END name                 */
-  _end->getLocation(&location);         /* get location of END instruction   */
+  name = _end->name;                   /* get then END name                 */
+  location = _end->getLocation();      /* get location of END instruction   */
 
   if (name != OREF_NULL) {             /* was a name given?                 */
-    lineNum = this->lineNumber;        /* Instruction line number           */
+    lineNum = this->getLineNumber();   /* Instruction line number           */
     RexxString *myLabel = getLabel();
     if (myLabel == OREF_NULL)          /* name given on non-control form?   */
                                        /* have a mismatched end             */
@@ -245,14 +245,14 @@ void RexxInstructionDo::execute(
         doblock->setTo(result);        /* Anchor result in doBlock to keep  */
                                        /*  from GC.                         */
         context->traceResult(result);  /* trace if necessary                */
-        if (OTYPE(Array, result))      /* already an array item?            */
+        if (isOfClass(Array, result))      /* already an array item?            */
                                        /* get the non-sparse version        */
           array = ((RexxArray *)result)->makeArray();
         else {                         /* some other type of collection     */
                                        /* get the array version of this     */
           array = REQUEST_ARRAY(result);
                                        /* didn't convert ok?                */
-          if (array == TheNilObject || !OTYPE(Array, array) )
+          if (array == TheNilObject || !isOfClass(Array, array) )
                                        /* raise an error                    */
             reportException(Error_Execution_noarray, result);
         }
@@ -270,14 +270,14 @@ void RexxInstructionDo::execute(
                                        /* Anchor result in doBlock to keep  */
         doblock->setTo(result);        /*  from GC.                         */
         context->traceResult(result);  /* trace if necessary                */
-        if (OTYPE(Array, result))      /* already an array item?            */
+        if (isOfClass(Array, result))      /* already an array item?            */
                                        /* get the non-sparse version        */
           array = ((RexxArray *)result)->makeArray();
         else {                         /* some other type of collection     */
                                        /* get the array version of this     */
           array = REQUEST_ARRAY(result);
                                        /* didn't convert ok?                */
-          if (array == TheNilObject || !OTYPE(Array, array) )
+          if (array == TheNilObject || !isOfClass(Array, array) )
                                        /* raise an error                    */
             reportException(Error_Execution_noarray, result);
         }
@@ -297,7 +297,7 @@ void RexxInstructionDo::execute(
                                        /* an integer value already, and     */
                                        /* we're dealing with a "normal      */
                                        /* NUMERIC DIGITS setting            */
-        if (OTYPE(Integer, result) && context->digits() >= (long)DEFAULT_DIGITS) {
+        if (isOfClass(Integer, result) && context->digits() >= (long)DEFAULT_DIGITS) {
                                        /* get the value directly            */
           count = ((RexxInteger *)result)->getValue();
           context->traceResult(result);/* trace if necessary                */
@@ -330,7 +330,7 @@ void RexxInstructionDo::execute(
                                        /* an integer value already, and     */
                                        /* we're dealing with a "normal      */
                                        /* NUMERIC DIGITS setting            */
-        if (OTYPE(Integer, result) && context->digits() >= (long)DEFAULT_DIGITS) {
+        if (isOfClass(Integer, result) && context->digits() >= (long)DEFAULT_DIGITS) {
                                        /* get the value directly            */
           count = ((RexxInteger *)result)->getValue();
           context->traceResult(result);/* trace if necessary                */
@@ -477,7 +477,7 @@ void RexxInstructionDo::controlSetup(
                                        /* an integer value already, and     */
                                        /* we're dealing with a "normal      */
                                        /* NUMERIC DIGITS setting            */
-        if (OTYPE(Integer, result) && context->digits() >= (long)DEFAULT_DIGITS)
+        if (isOfClass(Integer, result) && context->digits() >= (long)DEFAULT_DIGITS)
           {
                                        /* get the value directly            */
           count = ((RexxInteger *)result)->getValue();

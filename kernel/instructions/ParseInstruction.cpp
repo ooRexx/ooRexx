@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ParseInstruction.c    */
+/* REXX Translator                                      ParseInstruction.c    */
 /*                                                                            */
 /* Primitive Parse Parse Class                                                */
 /*                                                                            */
@@ -67,8 +67,8 @@ RexxInstructionParse::RexxInstructionParse(
 {
                                        /* save the expression               */
   OrefSet(this, this->expression, _expression);
-  i_flags = flags;                     /* save the expression               */
-  parse_string_source = string_source; /* save the source information       */
+  instructionFlags = flags;            /* save the expression               */
+  stringSource = string_source;        // our instruction type is determined by the source
   this->trigger_count = templateCount; /* save the size                     */
   while (templateCount > 0)            /* loop through the template list    */
                                        /* copying each trigger              */
@@ -97,7 +97,7 @@ void RexxInstructionParse::execute(
   argList = OREF_NULL;                 /* neither is there an argument list */
   argCount = 0;
 
-  switch (parse_string_source) {       /* get data from variaous sources    */
+  switch (stringSource) {              /* get data from variaous sources    */
 
     case SUBKEY_PULL:                  /* PARSE PULL instruction            */
                                        /* read a line from the queue        */
@@ -151,7 +151,7 @@ void RexxInstructionParse::execute(
       break;
   }
                                        /* create the parse target           */
-  target.init(value, argList, argCount, i_flags&parse_translate, multiple, context, stack);
+  target.init(value, argList, argCount, instructionFlags&parse_translate, multiple, context, stack);
 
   size = this->trigger_count;          /* get the template size             */
   for (i = 0; i < size; i++) {         /* loop through the template list    */

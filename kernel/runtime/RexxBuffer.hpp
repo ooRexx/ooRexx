@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxBuffer.hpp  */
+/* REXX Kernel                                                RexxBuffer.hpp  */
 /*                                                                            */
 /* Primitive Buffer Class Definitions                                         */
 /*                                                                            */
@@ -52,10 +52,11 @@
   inline RexxBuffer(RESTORETYPE restoreType) { ; };
   RexxBuffer *expand(size_t);
 
-  inline size_t getLength(void) { return this->u_size; };
+  inline size_t getLength(void) { return this->size; };
   inline char *address(void) {return this->data; }
   inline void copyData(size_t offset, const char *string, size_t length) { memcpy(this->data + offset, string, length); }
 
+   size_t size;                        // size of the buffer
    char data[4];                       /* actual data length                */
  };
 

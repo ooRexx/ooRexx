@@ -472,8 +472,8 @@ RexxObject *RexxQueue::newRexx(RexxObject **init_args, size_t argCount)
 
   newObj =  new RexxQueue;             /* get a new queue                   */
                                        /* Initialize the new list instance  */
-  BehaviourSet(newObj, ((RexxClass *)this)->instanceBehaviour);
-  if (((RexxClass *)this)->uninitDefined()) {
+  newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
+  if (((RexxClass *)this)->hasUninitDefined()) {
     newObj->hasUninit();
   }
 
@@ -524,7 +524,7 @@ RexxQueue *RexxQueue::ofRexx(
       send_message1(newQueue, OREF_QUEUENAME, item);
     }
   }
-  discard(hold(newQueue));             /* release the collection lock       */
+  discard_hold(newQueue);              /* release the collection lock       */
   return newQueue;                     /* give back the list                */
 }
 
@@ -540,9 +540,7 @@ void *RexxQueue::operator new(size_t size)
                                        /* Get new object                    */
   newQueue = (RexxQueue *)new (INITIAL_LIST_SIZE, size) RexxListTable;
                                        /* Give new object its behaviour     */
-  BehaviourSet(newQueue, TheQueueBehaviour);
-                                       /* set the default hash value        */
-  newQueue->hashvalue = HASHOREF(newQueue);
+  newQueue->setBehaviour(TheQueueBehaviour);
   newQueue->init();                    /* finish initializing               */
   return newQueue;                     /* return the new list item          */
 }

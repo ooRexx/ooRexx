@@ -70,15 +70,15 @@ RexxMethod::RexxMethod(
 /******************************************************************************/
 {
 
-  ClearObject(this);                   /* start out fresh                   */
-  this->setFlags(0);                   /* clear all of the flags            */
-  this->setMethnum(method);            /* save the method code number       */
+  this->clearObject();                 /* start out fresh                   */
+  this->methodFlags = 0;               /* clear all of the flags            */
+  this->setMethodIndex(method);        /* save the method code number       */
   this->cppEntry = entry;              /* set the entry point               */
-  this->setArguments(argCount);        /* and the arguments                 */
+  this->setArgumentCount(argCount);    /* and the arguments                 */
                                        /* get the argument information      */
   OrefSet(this, this->code, codeObj);  /* store the code                    */
   if (code != OREF_NULL) {             /* have some sort of code?           */
-    if (OTYPE(RexxCode, code))         /* written in REXX?                  */
+    if (isOfClass(RexxCode, code))         /* written in REXX?                  */
       this->setRexxMethod();           /* turn on the REXX flag             */
     else
       this->setNativeMethod();    ;    /* this is a native method           */
@@ -113,7 +113,7 @@ void RexxMethod::liveGeneral()
   if (memoryObject.restoringImage()) { /* restoring the image?              */
     this->setInternal();               /* mark as an image method           */
                                        /* reset the method entry point      */
-    this->cppEntry = ExportedMethods[this->methnum()];
+    this->cppEntry = ExportedMethods[this->getMethodIndex()];
   }
 }
 
@@ -141,7 +141,7 @@ RexxObject * RexxMethod::unflatten(RexxEnvelope *envelope)
                                        /* if not then we haven't unflattened*/
   if (this->code == OREF_NULL)         /* is this a kernel method?          */
                                        /* reset the method entry point      */
-    this->cppEntry = ExportedMethods[this->methnum()];
+    this->cppEntry = ExportedMethods[this->getMethodIndex()];
   return (RexxObject *)this;           /* return ourself.                   */
 }
 
@@ -167,24 +167,24 @@ RexxObject *RexxMethod::run(
     methodEntry = this->cppEntry;      /* get the entry point               */
                                        /* expecting an array?               */
                                        /* expecting a pointer/count pair?   */
-    if (this->arguments() == A_COUNT) {
+    if (this->getArgumentCount() == A_COUNT) {
                                        /* we can pass this right on         */
       result = (receiver->*((PCPPMC1)methodEntry))(argPtr, count);
     }
     else {                             /* receiver expects fixed arguments  */
-      if (count > this->arguments())   /* too many arguments?               */
-        reportException(Error_Incorrect_method_maxarg, this->arguments());
-      if (count < this->arguments()) { /* need to pad these out?            */
+      if (count > this->getArgumentCount()) /* too many arguments?               */
+        reportException(Error_Incorrect_method_maxarg, this->getArgumentCount());
+      if (count < this->getArgumentCount()) { /* need to pad these out?            */
         for (i = 0; i < count; i++)    /* copy over the arguments so we     */
                                        /* don't clobber things in the caller*/
           argument_list[i] = argPtr[i];
                                        /* null out any missing arguments    */
-        for (i = count; i < this->arguments(); i++)
+        for (i = count; i < this->getArgumentCount(); i++)
           argument_list[i] = OREF_NULL;
         argPtr = &argument_list[0];    /* point at the new argument list    */
       }
 
-      switch (this->arguments()) {     /* switch based on number of args    */
+      switch (this->getArgumentCount()) { /* switch based on number of args    */
 
         case 0:                        /* zero                              */
           result = (receiver->*((PCPPM0)methodEntry))();
@@ -355,7 +355,7 @@ RexxObject *RexxMethod::setSecurityManager(
 {
   if (this->isRexxMethod()) {          /* this written in REXX?             */
                                        /* return associated source          */
-    this->rexxCode->u_source->setSecurityManager(manager);
+    this->getSource()->setSecurityManager(manager);
     return TheTrueObject;              /* this worked ok                    */
   }
   else                                 /* kernel/native code                */
@@ -447,14 +447,14 @@ RexxSmartBuffer *RexxMethod::saveMethod()
   RexxSmartBuffer   *envelopeBuffer;   /* enclosing buffer                  */
 
                                        /* Get new envelope object           */
-  envelope  = (RexxEnvelope *)save(new RexxEnvelope);
-
+  envelope = new RexxEnvelope;
+  save(envelope);
                                        /* now pack up the envelope for      */
                                        /* saving.                           */
   envelope->pack(this);
                                        /* pull out the buffer               */
   envelopeBuffer = envelope->getBuffer();
-  discard(hold(envelope));             /* release memory lock on envelope   */
+  discard_hold(envelope);              /* release memory lock on envelope   */
   return envelopeBuffer;               /* return the buffer                 */
 }
 
@@ -468,7 +468,7 @@ void *RexxMethod::operator new (size_t size)
                                        /* get a new method object           */
   newMethod = new_object(size);
                                        /* Give new object method behaviour  */
-  BehaviourSet(newMethod, TheMethodClass->getInstanceBehaviour());
+  newMethod->setBehaviour(TheMethodClass->getInstanceBehaviour());
   return newMethod;                    /* Initialize this new method        */
 }
 
@@ -543,7 +543,7 @@ RexxMethod *RexxMethodClass::newRexxCode(
         newSourceArray ->put(sourceString, counter);
       }
     }
-    discard(hold(newSourceArray));     /* release newSOurce obj.            */
+    discard_hold(newSourceArray);      /* release newSOurce obj.            */
   }
                                        /* create a source object            */
   newSource = new RexxSource (pgmname, newSourceArray);
@@ -551,12 +551,12 @@ RexxMethod *RexxMethodClass::newRexxCode(
   save(newSource);                     /* needed because newRexxMethod calls method() which discards this */
 //  return this->newRexxMethod(newSource, OREF_NULL);
   if (option != OREF_NULL) {
-    if (OTYPE(Method, option)) {
+    if (isOfClass(Method, option)) {
       result = this->newRexxMethod(newSource, OREF_NULL);
-      result->code->u_source->routines = ((RexxMethod*) option)->code->u_source->routines;
-      result->code->u_source->public_routines = ((RexxMethod*) option)->code->u_source->public_routines;
+      result->setLocalRoutines(((RexxMethod*) option)->getLocalRoutines());
+      result->setPublicRoutines(((RexxMethod*) option)->getPublicRoutines());
     } else {
-      if (!OTYPE(String, option))
+      if (!isOfClass(String, option))
         reportException(Error_Incorrect_method_argType, IntegerThree, "Method/String object");
       else {
         // default given? set option to NULL (see code below)
@@ -571,8 +571,8 @@ RexxMethod *RexxMethodClass::newRexxCode(
   else if (option == NULL) {
     result = this->newRexxMethod(newSource, OREF_NULL);
     // new default: insert program scope into method object
-    result->code->u_source->routines = CurrentActivity->currentActivation->source->routines;
-    result->code->u_source->public_routines = CurrentActivity->currentActivation->source->public_routines;
+    result->setLocalRoutines(CurrentActivity->currentActivation->getSource()->getLocalRoutines());
+    result->setPublicRoutines(CurrentActivity->currentActivation->getSource()->getPublicRoutines());
   }
 
   return result;
@@ -606,9 +606,9 @@ RexxMethod *RexxMethodClass::newRexx(
   newMethod = this->newRexxCode(nameString, source, IntegerTwo, option);
   save(newMethod);
                                        /* Give new object its behaviour     */
-  BehaviourSet(newMethod, this->instanceBehaviour);
-   if (this->uninitDefined()) {        /* does object have an UNINT method  */
-     newMethod->hasUninit();           /* Make sure everyone is notified.   */
+  newMethod->setBehaviour(this->getInstanceBehaviour());
+   if (this->hasUninitDefined()) {        /* does object have an UNINT method  */
+     newMethod->hasUninit();              /* Make sure everyone is notified.   */
    }
                                        /* now send an INIT message          */
   newMethod->sendMessage(OREF_INIT, init_args, initCount);
@@ -635,8 +635,8 @@ RexxMethod *RexxMethodClass::newFileRexx(
   save(newMethod);
   discard_hold(source);
                                        /* Give new object its behaviour     */
-  BehaviourSet(newMethod, this->instanceBehaviour);
-   if (this->uninitDefined()) {        /* does object have an UNINT method  */
+  newMethod->setBehaviour(this->getInstanceBehaviour());
+   if (this->hasUninitDefined()) {     /* does object have an UNINT method  */
      newMethod->hasUninit();           /* Make sure everyone is notified.   */
    }
                                        /* now send an INIT message          */
@@ -721,10 +721,11 @@ RexxMethod *RexxMethodClass::restore(
   RexxEnvelope *envelope;              /* containing envelope               */
 
                                        /* Get new envelope object           */
-  envelope  = (RexxEnvelope *)save(new_envelope());
+  envelope  = new_envelope();
+  save(envelope);
                                        /* now puff up the method object     */
   envelope->puff(buffer, startPointer);
-  discard(hold(envelope));             /* release the envelope now          */
+  discard_hold(envelope);              /* release the envelope now          */
                                        /* The receiver object is an envelope*/
                                        /* whose receiver is the actual      */
                                        /* method object we're restoring     */

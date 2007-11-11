@@ -47,7 +47,6 @@
 #include "RexxInstruction.hpp"
 
 #define guard_on_form 0x01             /* guard ON instruction              */
-#define guard_variable_count i_ushort  /* count of guard variables          */
 
 class RexxInstructionGuard : public RexxInstruction {
  public:
@@ -61,6 +60,7 @@ class RexxInstructionGuard : public RexxInstruction {
   void execute(RexxActivation *, RexxExpressionStack *);
 
   RexxObject       *expression;        /* guard expression                  */
+  size_t            variableCount;     // number of guard variables
   RexxVariableBase *variables[1];      /* set of guard variables            */
 };
 #endif

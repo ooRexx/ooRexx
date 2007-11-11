@@ -72,11 +72,11 @@ DeadObject *MemorySegment::lastDeadObject()
     /* the segment */
     for (objectPtr = start(), endPtr = end();
             objectPtr < endPtr;
-            objectPtr += ObjectSize(objectPtr)) {
+            objectPtr += ((RexxObject *)objectPtr)->getObjectSize()) {
         lastObjectPtr = objectPtr;
     }
 
-    if (!ObjectIsLive(lastObjectPtr)) {
+    if (!((RexxObject *)lastObjectPtr)->isObjectLive(memoryObject.markWord)) {
         return (DeadObject *)lastObjectPtr;
     }
     return NULL;
@@ -90,7 +90,7 @@ DeadObject *MemorySegment::firstDeadObject()
 /* in the segment for purposes of combining the segments.                     */
 /******************************************************************************/
 {
-    if (!ObjectIsLive(start())) {
+    if (!((RexxObject *)start())->isObjectLive(memoryObject.markWord)) {
         return (DeadObject *)start();
     }
     return NULL;
@@ -105,7 +105,7 @@ void MemorySegment::gatherObjectStats(MemoryStats *memStats, SegmentStats *stats
     char *op;
     char *ep;
                                        /* for all objects in this segment   */
-    for (op = start(), ep = end(); op < ep; op += ObjectSize(op)) {
+    for (op = start(), ep = end(); op < ep; op += ((RexxObject *)op)->getObjectSize()) {
         /* record the information about this object */
         stats->recordObject(memStats, op);
     }
@@ -371,7 +371,7 @@ void NormalSegmentSet::addDeadObject(DeadObject *object)
 /******************************************************************************/
 {
 //  checkObjectOverlap(object);
-    size_t length = ObjectSize(object);
+    size_t length = object->getObjectSize();
 
     /* if the length is larger than the biggest subpool we */
     /* maintain, we add this to the large block list. */
@@ -594,13 +594,13 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
         size_t deadLength;
         /* ok, sweep all of the objects in this segment, looking */
         /* for one large enough. */
-        for (objectPtr = segment->start(), endPtr = segment->end(), deadLength = ObjectSize(objectPtr);
+        for (objectPtr = segment->start(), endPtr = segment->end(), deadLength = ((RexxObject *)objectPtr)->getObjectSize();
              objectPtr < endPtr;
-             objectPtr += deadLength, deadLength = ObjectSize(objectPtr) ) {
+             objectPtr += deadLength, deadLength = ((RexxObject *)objectPtr)->getObjectSize()) {
             /* We're only interested in the dead objects.  Note */
             /* that since we've just finished a GC operation, we */
             /* shouldn't see any adjacent dead objects. */
-            if (!ObjectIsLive(objectPtr)) {
+            if (!((RexxObject *)objectPtr)->isObjectLive(memoryObject.markWord)) {
                 /* have we found an empty part large enough to */
                 /* convert into a segment? */
                 if (deadLength >= allocationLength && deadLength>= MinimumSegmentSize) {
@@ -765,9 +765,9 @@ void MemorySegmentSet::adjustLargeObject(DeadObject *obj, size_t size)
     /* chain */
     if (size >= LargeObjectMinSize)
     {
-        if ((diffLen = size - ObjectSize(obj)) > 0)
+        if ((diffLen = size - obj->getObjectSize()) > 0)
         {
-            addDeadObject((char *)obj + ObjectSize(obj), diffLen);
+            addDeadObject((char *)obj + obj->getObjectSize(), diffLen);
         }
     }
 }
@@ -1080,8 +1080,8 @@ void LargeSegmentSet::completeSweepOperation()
 #endif
 }
 
-inline BOOL objectIsLive(char *obj, size_t mark) {return ((ObjectHeader(obj) & MarkMask) == mark); }
-inline BOOL objectIsNotLive(char *obj, size_t mark) {return ((ObjectHeader(obj) & MarkMask) != mark); }
+inline bool objectIsLive(char *obj, size_t mark) {return ((RexxObject *)obj)->isObjectLive(mark); }
+inline bool objectIsNotLive(char *obj, size_t mark) {return ((RexxObject *)obj)->isObjectDead(mark); }
 
 void MemorySegmentSet::sweep()
 /******************************************************************************/
@@ -1110,7 +1110,7 @@ void MemorySegmentSet::sweep()
             /* this a live object?               */
             if (objectIsLive(objectPtr, mark)) {
                 /* Get size of object for stats and  */
-                bytes = ObjectSize(objectPtr);
+                bytes = ((RexxObject *)objectPtr)->getObjectSize();
                 /* do any reference checking         */
                 validateObject(bytes);
                 /* update our tracking counters */
@@ -1124,7 +1124,7 @@ void MemorySegmentSet::sweep()
             else
               {
                 /* get the object's size */
-                deadLength = ObjectSize(objectPtr);
+                deadLength = ((RexxObject *)objectPtr)->getObjectSize();
                 /* do any reference checking         */
                 validateObject(deadLength);
 
@@ -1132,7 +1132,7 @@ void MemorySegmentSet::sweep()
                     (nextObjectPtr < endPtr) && objectIsNotLive(nextObjectPtr, mark);
                     nextObjectPtr += bytes) {
                     /* get the object size */
-                    bytes = ObjectSize(nextObjectPtr);
+                    bytes = ((RexxObject *)nextObjectPtr)->getObjectSize();
                     /* do any reference checking         */
                     validateObject(bytes);
                     /* add in the size of this dead body */
@@ -1178,7 +1178,7 @@ RexxObject *MemorySegmentSet::splitDeadObject(
 /* the appropriate pool of dead objects.                                      */
 /******************************************************************************/
 {
-    size_t deadLength = object->size() - allocationLength;
+    size_t deadLength = object->getObjectSize() - allocationLength;
     /* we need to keep all of these sizes as ObjectGrain multiples, */
     /* so round it down...the allocation will get all of the extra. */
     /* deadLength = rounddown(deadLength, ObjectGrain);             */
@@ -1201,7 +1201,7 @@ RexxObject *MemorySegmentSet::splitDeadObject(
         addDeadObject((char *)largeObject, deadLength);
     }
     /* Adjust the size of this object to the requested allocation length */
-    SetObjectSize((RexxObject *)object, allocationLength);
+    ((RexxObject *)object)->setObjectSize(allocationLength);
     return (RexxObject *)object;
 }
 
@@ -1563,7 +1563,7 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
             /* we only do this if we can get a block of sufficient */
             /* size for the request we've received.  So see how */
             /* much we can reclaim first. */
-            size_t deadLength = lastBlock->size();
+            size_t deadLength = lastBlock->getObjectSize();
             /* now go to the next segment, but only continue if */
             /* they abutt */
             MemorySegment *nextSeg = segment->next;
@@ -1584,7 +1584,7 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
                 /* see if we have an empty block at the front of this */
                 DeadObject *firstBlock = nextSeg->firstDeadObject();
                 if (firstBlock != NULL) {
-                    deadLength += firstBlock->size() + MemorySegmentOverhead;
+                    deadLength += firstBlock->getObjectSize() + MemorySegmentOverhead;
                     tailSegment = nextSeg;
                 }
             }
@@ -1624,7 +1624,7 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
             }
 
             /* finally resize this block to the combined size. */
-            lastBlock->setSize(deadLength);
+            lastBlock->setObjectSize(deadLength);
             /* add this back into the chain as appropriate. */
             addDeadObject(lastBlock);
         }
@@ -1745,11 +1745,11 @@ void MemorySegment::markAllObjects()
 
         /* Does this object have other Obj   */
         /*refs?                              */
-        if (ObjectHasReferences(op)) {
+        if (((RexxObject *)op)->hasReferences()) {
             /*  yes, Then lets mark them         */
             ((RexxObject *)op)->liveGeneral();
         }
-        op += ObjectSize(op);              /* move to next object               */
+        op += ((RexxObject *)op)->getObjectSize();   /* move to next object               */
     }
 }
 

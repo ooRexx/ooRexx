@@ -56,7 +56,7 @@ RexxInstructionRaise::RexxInstructionRaise(
   RexxObject *_description,             /* description expression            */
   RexxObject *_additional,              /* additional expression             */
   RexxObject *_result,                  /* returned result                   */
-  size_t      arrayCount,              /* size of the array items           */
+  size_t      _arrayCount,             /* size of the array items           */
   RexxQueue  *array,                   /* array argument information        */
   BOOL        raiseReturn )            /* return/exit flag                  */
 /******************************************************************************/
@@ -68,20 +68,20 @@ RexxInstructionRaise::RexxInstructionRaise(
   OrefSet(this, this->expression, _expression);
   OrefSet(this, this->description, _description);
   OrefSet(this, this->result, _result);
-  if (arrayCount != (size_t)-1) {      /* array form?                       */
-    i_flags |= raise_array;            /* set the array form                */
+  if (_arrayCount != (size_t)-1) {     /* array form?                       */
+    instructionFlags |= raise_array;   /* set the array form                */
     /* get the array size                */
-    raise_array_count = (unsigned short)arrayCount;
-    while (arrayCount > 0)             /* loop through the expression list  */
+    arrayCount = _arrayCount;
+    while (_arrayCount > 0)            /* loop through the expression list  */
                                        /* copying each expression           */
-      OrefSet(this, this->additional[--arrayCount], array->pop());
+      OrefSet(this, this->additional[--_arrayCount], array->pop());
   }
   else {                               /* just the one item                 */
     OrefSet(this, this->additional[0], _additional);
-    raise_array_count = 1;             /* just the one item                 */
+    arrayCount = 1;                    /* just the one item                 */
   }
   if (raiseReturn)                     /* return form?                      */
-    i_flags |= raise_return;           /* turn on the return flag           */
+    instructionFlags |= raise_return;  /* turn on the return flag           */
 }
 
 void RexxInstructionRaise::live()
@@ -98,7 +98,7 @@ void RexxInstructionRaise::live()
   memory_mark(this->expression);
   memory_mark(this->description);
   memory_mark(this->result);
-  for (i = 0, count = raise_array_count; i < count; i++)
+  for (i = 0, count = arrayCount; i < count; i++)
     memory_mark(this->additional[i]);
   cleanUpMemoryMark
 }
@@ -118,7 +118,7 @@ void RexxInstructionRaise::liveGeneral()
   memory_mark_general(this->expression);
   memory_mark_general(this->description);
   memory_mark_general(this->result);
-  for (i = 0, count = raise_array_count; i < count; i++)
+  for (i = 0, count = arrayCount; i < count; i++)
     memory_mark_general(this->additional[i]);
   cleanUpMemoryMarkGeneral
 }
@@ -138,7 +138,7 @@ void RexxInstructionRaise::flatten(RexxEnvelope *envelope)
   flatten_reference(newThis->expression, envelope);
   flatten_reference(newThis->description, envelope);
   flatten_reference(newThis->result, envelope);
-  for (i = 0, count = raise_array_count; i < count; i++)
+  for (i = 0, count = arrayCount; i < count; i++)
     flatten_reference(this->additional[i], envelope);
 
   cleanUpFlatten
@@ -187,10 +187,10 @@ void RexxInstructionRaise::execute(
   if (this->description != OREF_NULL)  /* given a description?              */
                                        /* get the expression value          */
     _description = (RexxString *)this->description->evaluate(context, stack);
-  if (i_flags&raise_array) {           /* array form of additional?         */
-    count = raise_array_count;         /* get the array size                */
-    _additional = new_array(count);     /* get a result array                */
-    stack->push(_additional);           /* and protect it from collection    */
+  if (instructionFlags&raise_array) {  /* array form of additional?         */
+    count = arrayCount;                /* get the array size                */
+    _additional = new_array(count);    /* get a result array                */
+    stack->push(_additional);          /* and protect it from collection    */
     for (i = 0; i < count; i++) {      /* loop through the expression list  */
                                        /* real argument?                    */
       if (this->additional[i] != OREF_NULL)
@@ -232,7 +232,7 @@ void RexxInstructionRaise::execute(
         reportException(Error_Execution_syntax_additional);
     }
   }
-  if (i_flags&raise_return)            /* is this the exit form?            */
+  if (instructionFlags&raise_return)   /* is this the exit form?            */
                                        /* let activation handle as return   */
     context->raise(this->condition, rc, _description, _additional, _result, conditionobj);
   else

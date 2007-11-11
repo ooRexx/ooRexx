@@ -36,40 +36,87 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ExpressionVariable.hpp    */
+/* REXX Kernel                                                  Token.hpp  */
 /*                                                                            */
-/* Primitive Expression Variable Class Definitions                            */
+/* Primitive Translator Token Class Definitions                               */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxParseVariable
-#define Included_RexxParseVariable
+#ifndef Included_SourceLocation
+#define Included_SourceLocation
 
-#include "ExpressionBaseVariable.hpp"
 
-class RexxParseVariable : public RexxVariableBase {
- public:
-  void *operator new(size_t);
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline RexxParseVariable(RESTORETYPE restoreType) { ; };
-  RexxParseVariable(RexxString *, LONG);
-  void live();
-  void liveGeneral();
-  void flatten(RexxEnvelope *);
-  RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
-  RexxObject *getValue(RexxVariableDictionary *);
-  RexxObject *getValue(RexxActivation *);
-  BOOL exists(RexxActivation *);
-  void set(RexxActivation *, RexxObject *) ;
-  void set(RexxVariableDictionary *, RexxObject *) ;
-  void assign(RexxActivation *, RexxExpressionStack *, RexxObject *);
-  void drop(RexxActivation *);
-  void setGuard(RexxActivation *);
-  void clearGuard(RexxActivation *);
-  void expose(RexxActivation *, RexxExpressionStack *, RexxVariableDictionary *);
-  void procedureExpose(RexxActivation *, RexxActivation *, RexxExpressionStack *);
-  RexxString *getName();
+class SourceLocation                   /* token/clause location information */
+{
+public:
+    inline size_t getLineNumber() { return startLine; }
+    inline size_t getOffset()     { return startOffset; }
+    inline size_t getEndLine()    { return endLine; }
+    inline size_t getEndOffset()  { return endOffset; }
 
-  RexxString *variableName;            // name of the variable
-  LONG        index;                   /* lookaside table index             */
+    inline void setLineNumber(size_t l) { startLine = l; }
+    inline void setOffset(size_t l)     { startOffset = l; }
+    inline void setEndLine(size_t l)    { endLine = l; }
+    inline void setEndOffset(size_t l)  { endOffset = l; }
+
+    inline void setStart(SourceLocation &l)
+    {
+        startLine = l.getLineNumber();
+        startOffset = l.getOffset();
+    }
+
+    inline void setEnd(SourceLocation &l)
+    {
+        setEnd(l.getEndLine(), l.getEndOffset());
+    }
+
+    inline void   setStart(size_t line, size_t offset)
+    {
+        startLine = line;
+        startOffset = offset;
+    }
+
+    inline void   setEnd(size_t line, size_t offset)
+    {
+        // only set if this makes sense
+        if (line > startLine || (line == startLine && offset > startOffset))
+        {
+            endLine = line;
+            endOffset = offset;
+        }
+
+    }
+
+    inline void setLocation(size_t line, size_t offset, size_t end, size_t end_offset)
+    {
+        startLine = line;
+        startOffset = offset;
+        endLine = end;
+        endOffset = end_offset;
+    }
+
+    inline void setLocation(SourceLocation &l)
+    {
+        startLine = l.startLine;
+        startOffset = l.startOffset;
+        endLine = l.endLine;
+        endOffset = l.endOffset;
+    }
+
+    inline const SourceLocation & operator= (const SourceLocation &l)
+    {
+        startLine = l.startLine;
+        startOffset = l.startOffset;
+        endLine = l.endLine;
+        endOffset = l.endOffset;
+        return *this;
+    }
+
+protected:
+    size_t startLine;                    // file line start location
+    size_t startOffset;                  // offset within the file line
+    size_t endLine;                      // file line end location
+    size_t endOffset;                    // file end offset
 };
+
+
 #endif

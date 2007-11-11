@@ -67,6 +67,8 @@ RexxSupplier::RexxSupplier()
 /* Function:  Initialize a supplier                                         */
 /****************************************************************************/
 {
+    values = OREF_NULL;
+    indexes = OREF_NULL;
 }
 
 
@@ -178,17 +180,8 @@ void *RexxSupplier::operator new(size_t size)
 /* Function:  Create a new supplier object                                  */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-
                                        /* Get new object                    */
-  newObject = new_object(size);
-                                       /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheSupplierBehaviour);
-                                       /* fill in the hash value            */
-  newObject->hashvalue = HASHOREF(newObject);
-  ClearObject(newObject);              /* clear out the state data area     */
-                                       /* Initialize this new method        */
-  return newObject;                    /* return the new object             */
+    return new_object(size, T_supplier);
 }
 
 
@@ -234,8 +227,8 @@ RexxObject  *RexxSupplierClass::newRexx(
 /****************************************************************************/
 {
     RexxObject *newObj = new RexxSupplier();
-    BehaviourSet(newObj, this->instanceBehaviour);
-    if (this->uninitDefined())
+    newObj->setBehaviour(this->getInstanceBehaviour());
+    if (this->hasUninitDefined())
     {
         newObj->hasUninit();
     }

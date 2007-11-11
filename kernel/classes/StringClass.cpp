@@ -61,7 +61,7 @@ ULONG RexxString::hash()
 /* Function:  retrieve the hash value of a string object                      */
 /******************************************************************************/
 {
-  if (!OTYPE(String, this))            /*  a nonprimitive object?           */
+  if (!isOfClass(String, this))            /*  a nonprimitive object?           */
                                        /* see if == overridden.             */
     return this->sendMessage(OREF_STRICT_EQUAL)->requestString()->getHashValue();
   else
@@ -108,7 +108,7 @@ RexxObject *RexxString::unflatten(RexxEnvelope *envelope)
 /* Function:  unflatten an object                                             */
 /******************************************************************************/
 {
-  if (this->header & ProxyObject) {         /* is this a proxy object?              */
+  if (this->isProxyObject()) {        /* is this a proxy object?              */
       // just perform an environment lookup
       return TheEnvironment->entry(this);
   }
@@ -124,7 +124,7 @@ RexxString *RexxString::stringValue()
 /* Function:  Return the primitive string value of this object                */
 /******************************************************************************/
 {
-  if (OTYPE(String, this))             /* already a primitive string?       */
+  if (isOfClass(String, this))             /* already a primitive string?       */
     return this;                       /* just return our selves            */
   else                                 /* need to build a new string        */
     return new_string(this->getStringData(), this->getLength());
@@ -135,7 +135,7 @@ RexxString  *RexxString::makeString()
 /* Function:  Handle a REQUEST('STRING') request for a REXX string object     */
 /******************************************************************************/
 {
-  if (isPrimitive(this))               /* really a primitive string?        */
+  if (this->isBaseClass())             /* really a primitive string?        */
     return this;                       /* this is easy                      */
   else                                 /* need to create a new string       */
     return new_string(this->getStringData(), this->getLength());
@@ -169,7 +169,7 @@ long RexxString::longValue(
 {
   RexxNumberString *numberstring;      /* converted numberstring version    */
 
-  if (!(OTYPE(String, this)))          /* subclassed string object?         */
+  if (!(isOfClass(String, this)))          /* subclassed string object?         */
                                        /* get the string value's long value */
     return this->requestString()->longValue(digits);
   numberstring = this->fastNumberString(); /* get the number string version     */
@@ -209,12 +209,12 @@ RexxNumberString *RexxString::numberString()
   if (this->NumberString != OREF_NULL) /* see if we have already converted  */
     return this->NumberString;         /* return the numberString Object.   */
 
-  if (!OTYPE(String, this)) {          /* not truly a string type?          */
+  if (!isOfClass(String, this)) {          /* not truly a string type?          */
     newSelf = this->requestString();   /* do the conversion                 */
                                        /* get a new numberstring Obj        */
     OrefSet(newSelf, newSelf->NumberString, (RexxNumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
     if (this->NumberString != OREF_NULL)     /* Did number convert OK?            */
-      SetObjectHasReferences(newSelf); /* Make sure we are sent Live...     */
+      newSelf->setHasReferences();     /* Make sure we are sent Live...     */
   }
   else {                               /* real primitive string             */
                                        /* get a new numberstring Obj        */
@@ -222,7 +222,7 @@ RexxNumberString *RexxString::numberString()
     if (this->NumberString == OREF_NULL)     /* Did number convert OK?            */
       this->setNonNumeric();           /* mark as a nonnumeric              */
     else {
-      SetObjectHasReferences(this);    /* Make sure we are sent Live...     */
+      this->setHasReferences();        /* Make sure we are sent Live...     */
                                        /* connect the string and number     */
       this->NumberString->setString(this);
     }
@@ -237,13 +237,13 @@ RexxNumberString *RexxString::createNumberString()
 {
   RexxString       *newSelf;           /* converted string value            */
 
-  if (!OTYPE(String, this)) {          /* not truly a string type?          */
+  if (!isOfClass(String, this)) {          /* not truly a string type?          */
     newSelf = this->requestString();   /* do the conversion                 */
                                        /* get a new numberstring Obj        */
     OrefSet(newSelf, newSelf->NumberString, (RexxNumberString *)new_numberstring(newSelf->getStringData(), newSelf->getLength()));
                                        /* save the number string            */
     if (newSelf->NumberString != OREF_NULL)     /* Did number convert OK?            */
-      SetObjectHasReferences(newSelf); /* Make sure we are sent Live...     */
+      newSelf->setHasReferences();     /* Make sure we are sent Live...     */
     return newSelf->NumberString;
   }
   else {                               /* real primitive string             */
@@ -252,7 +252,7 @@ RexxNumberString *RexxString::createNumberString()
     if (this->NumberString == OREF_NULL)     /* Did number convert OK?            */
       this->setNonNumeric();           /* mark as a nonnumeric              */
     else {
-      SetObjectHasReferences(this);    /* Make sure we are sent Live...     */
+      this->setHasReferences();        /* Make sure we are sent Live...     */
                                        /* connect the string and number     */
       this->NumberString->setString(this);
     }
@@ -309,7 +309,7 @@ BOOL RexxString::isEqual(
   RexxString *other;                   /* converted string object           */
 
   required_arg(otherObj, ONE);         /* this is required.                 */
-  if (!isPrimitive(this))              /* not a primitive?                  */
+  if (!this->isBaseClass())            /* not a primitive?                  */
                                        /* do the full lookup compare        */
     return this->sendMessage(OREF_STRICT_EQUAL, otherObj)->truthValue(Error_Logical_value_method);
 
@@ -385,7 +385,7 @@ bool RexxString::primitiveCaselessIsEqual(RexxObject *otherObj)
  */
 wholenumber_t RexxString::compareTo(RexxObject *other )
 {
-    if (isPrimitive(this))
+    if (this->isBaseClass())
     {
         return compareToRexx((RexxString *)other, OREF_NULL, OREF_NULL)->getValue();
     }
@@ -1030,7 +1030,7 @@ BOOL RexxString::truthValue(long errorCode)
 {
   RexxString *testString;              /* string to test                    */
 
-  if (!OTYPE(String, this))            /*  a nonprimitive object?           */
+  if (!isOfClass(String, this))            /*  a nonprimitive object?           */
     testString = this->requestString();/* get the real string value         */
   else
     testString = this;                 /* just use the string directly      */
@@ -1342,9 +1342,9 @@ void RexxString::setNumberString(RexxObject *NumberRep)
   OrefSet(this, this->NumberString, (RexxNumberString *)NumberRep);
 
   if (NumberRep != OREF_NULL)          /* actually get one?                 */
-   SetObjectHasReferences(this);       /* Make sure we are sent Live...     */
+   this->setHasReferences();           /* Make sure we are sent Live...     */
   else
-   SetObjectHasNoReferences(this);     /* no more references                */
+   this->setHasNoReferences();         /* no more references                */
   return;
 }
 
@@ -1442,7 +1442,7 @@ RexxArray *RexxString::makeArray(RexxString *div)
                                        /* special separator given?          */
   if (div != OREF_NULL) {
                                        /* it must be a string object        */
-    if (!OTYPE(String, div)) {
+    if (!isOfClass(String, div)) {
       reportException(Error_Incorrect_method_nostring, IntegerOne);
     }
                                        /* it must only contain one character*/
@@ -1608,11 +1608,11 @@ RexxString *RexxString::newString(const char *string, size_t length)
                                        /* allocate the new object           */
   newObj = (RexxString *)new_object(size2);
                                        /* set the behaviour from the class*/
-  BehaviourSet(newObj, TheStringBehaviour);
+  newObj->setBehaviour(TheStringBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newObj, T_string);
+  newObj->setVirtualFunctions(VFTArray[T_string]);
                                        /* clear the front part              */
-  ClearObjectLength(newObj, sizeof(RexxString));
+  newObj->clearObject(sizeof(RexxString));
   newObj->setLength(length);           /* save the length                   */
                                        /* Null terminate, allows faster     */
                                        /* conversion to ASCII-Z string      */
@@ -1621,7 +1621,7 @@ RexxString *RexxString::newString(const char *string, size_t length)
   newObj->put(0, string, length);
   newObj->generateHash();              /* generate the hash value           */
                                        /* by  default, we don't need Live   */
-  SetObjectHasNoReferences(newObj);    /*sent                               */
+  newObj->setHasNoReferences();        /*sent                               */
                                        /* NOTE: That if we can set          */
                                        /*  this->NumebrString elsewhere     */
                                        /*we need to mark ourselves as       */
@@ -1644,17 +1644,17 @@ RexxString *RexxString::rawString(size_t length)
                                        /* allocate the new object           */
   newObj = (RexxString *)new_object(size2);
                                        /* set the behaviour from the class*/
-  BehaviourSet(newObj, TheStringBehaviour);
+  newObj->setBehaviour(TheStringBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newObj, T_string);
+  newObj->setVirtualFunctions(VFTArray[T_string]);
                                        /* clear the front part              */
-  ClearObjectLength(newObj, sizeof(RexxString));
+  newObj->clearObject(sizeof(RexxString));
   newObj->setLength(length);           /* save the length                   */
                                        /* Null terminate, allows faster     */
                                        /* conversion to ASCII-Z string      */
   newObj->putChar(length, '\0');
                                        /* by  default, we don't need Live   */
-  SetObjectHasNoReferences(newObj);    /*sent                               */
+  newObj->setHasNoReferences();        /*sent                               */
                                        /* NOTE: That if we can set          */
                                        /*  this->NumebrString elsewhere     */
                                        /*we need to mark ourselves as       */
@@ -1686,11 +1686,11 @@ RexxString *RexxString::newUpperString(const char * string, stringsize_t length)
     /* allocate the new object           */
     newObj = (RexxString *)new_object(size2);
     /* set the behaviour from the class*/
-    BehaviourSet(newObj, TheStringBehaviour);
+    newObj->setBehaviour(TheStringBehaviour);
     /* set the virtual function table    */
-    setVirtualFunctions(newObj, T_string);
+    newObj->setVirtualFunctions(VFTArray[T_string]);
     /* clear the front part              */
-    ClearObjectLength(newObj, sizeof(RexxString));
+    newObj->clearObject(sizeof(RexxString));
     newObj->length = length;             /* save the length                   */
     newObj->hashvalue = 0;               // make sure the hash value is zeroed
                                          /* create a new string               */
@@ -1711,7 +1711,7 @@ RexxString *RexxString::newUpperString(const char * string, stringsize_t length)
     newObj->putChar(length, '\0');
     newObj->generateHash();              /* generate the hash value           */
     /* by  default, we don't need Live   */
-    SetObjectHasNoReferences(newObj);    /*sent                               */
+    newObj->setHasNoReferences();        /*sent                               */
                                          /* NOTE: That if we can set          */
                                          /*  this->NumebrString elsewhere     */
                                          /*we need to mark ourselves as       */
@@ -1740,7 +1740,7 @@ RexxString *RexxString::newProxy(const char *string)
   sref = (RexxString *)new_string(string);
                                        /* here we need to identify this     */
                                        /*string                             */
-  sref->header |= ProxyObject;         /*  as being a proxy object          */
+  sref->makeProxiedObject();           /*  as being a proxy object          */
 
   return sref;
 }
@@ -1759,8 +1759,8 @@ RexxString *RexxString::newRexx(RexxObject **init_args, size_t argCount)
   RexxString *string = (RexxString *)REQUIRED_STRING(stringObj, ARG_ONE);
                                        /* create a new string object        */
   string = new_string(string->getStringData(), string->getLength());
-  BehaviourSet(string, ((RexxClass *)this)->instanceBehaviour);
-  if (((RexxClass *)this)->uninitDefined()) {
+  string->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
+  if (((RexxClass *)this)->hasUninitDefined()) {
     string->hasUninit();
   }
                                        /* Initialize the new instance       */

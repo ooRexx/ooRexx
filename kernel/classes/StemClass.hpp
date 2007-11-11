@@ -117,11 +117,12 @@ class RexxSupplier;
   BOOL        sort(RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
 
   inline bool compoundVariableExists(RexxCompoundTail *resolved_tail) { return realCompoundVariableValue(resolved_tail) != OREF_NULL; }
-  inline RexxString *getName() { return u_name; }
+  inline RexxString *getName() { return stemName; }
   inline RexxCompoundElement *first() { return tails.first(); }
-  inline RexxString *createCompoundName(RexxCompoundTail *tailPart) { return tailPart->createCompoundName(u_name); }
+  inline RexxString *createCompoundName(RexxCompoundTail *tailPart) { return tailPart->createCompoundName(stemName); }
 
 
+  RexxString *stemName;               // the name of the stem
   RexxCompoundTable tails;            /* the table of compound tails */
   RexxObject *value;                  /* value of the stem                 */
   BOOL dropped;                       /* stem has no explicit value        */

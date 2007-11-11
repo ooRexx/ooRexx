@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ForwardInstruction.c      */
+/* REXX Translator                                  ForwardInstruction.c      */
 /*                                                                            */
 /* Primitive Forward Translator Class                                         */
 /*                                                                            */
@@ -176,8 +176,8 @@ void RexxInstructionForward::execute(
     _arguments = stack->arguments(count);
   }
                                        /* go forward this                   */
-  result = context->forward(_target, _message, _superClass, _arguments, count, i_flags&forward_continue);
-  if (i_flags&forward_continue) {      /* not exiting?                      */
+  result = context->forward(_target, _message, _superClass, _arguments, count, instructionFlags&forward_continue);
+  if (instructionFlags&forward_continue) {  /* not exiting?                      */
     if (result != OREF_NULL) {         /* result returned?                  */
       context->traceResult(result);    /* trace if necessary                */
                                        /* set the RESULT variable to the    */

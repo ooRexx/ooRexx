@@ -506,7 +506,7 @@ RexxMethod * process_instore(
                                        /* copy source into the buffer       */
         memcpy(source_buffer->data, instore[0].strptr, instore[0].strlength);
                                        /* reconnect this with the source    */
-        ((RexxCode *)method->code)->u_source->setBufferedSource(source_buffer);
+        ((RexxCode *)method)->getSource()->setBufferedSource(source_buffer);
       }
       return method;                   /* go return it                      */
     }

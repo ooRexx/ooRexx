@@ -44,6 +44,8 @@
 #ifndef Included_RexxCode
 #define Included_RexxCode
 
+#include "SourceFile.hpp"
+
                                        /* various types of call or function */
                                        /* calls                             */
 #define INTERNAL_ROUTINE 1
@@ -62,13 +64,31 @@ class RexxCode : public RexxInternalObject {
    void flatten(RexxEnvelope *);
    RexxArray      * sourceRexx();
    RexxString     * getProgramName();
+   inline RexxSource *getSource() { return source; }
+   inline RexxInstruction *getFirstInstruction() { return start; }
+   inline RexxDirectory   *getLabels() { return labels; }
+   inline size_t getMaxStackSize() { return maxStack; }
+   inline size_t getLocalVariableSize() { return vdictSize; }
+   inline RexxDirectory *getLocalRoutines() { return source->getLocalRoutines(); }
+   inline RexxDirectory *getPublicRoutines() { return source->getPublicRoutines(); }
+   inline void setLocalRoutines(RexxDirectory *r) { source->setLocalRoutines(r); }
+   inline void setPublicRoutines(RexxDirectory *r) { source->setPublicRoutines(r); }
+   inline bool isTraceable() { return source->isTraceable(); }
+   inline bool isInterpret() { return source->isInterpret(); }
+   inline RexxString *extract(SourceLocation &l) { return source->extract(l); }
+   inline RexxObject *getSecurityManager() { return source->getSecurityManager(); }
+   inline void        install(RexxActivation *activation) { source->install(activation); }
+   inline RexxMethod *interpret(RexxString *s, size_t n) { return source->interpret(s, labels, n); }
+   inline RexxDirectory *getMethods() { return source->getMethods(); };
+   inline RexxMethod *resolveRoutine(RexxString *n) { return source->resolveRoutine(n); }
+   inline void        mergeRequired(RexxSource *s) { return source->mergeRequired(s); }
 
+protected:
+
+  RexxSource      * source;            // the source this code belongs to.
   RexxInstruction * start;             /* root of parse tree                */
   RexxDirectory   * labels;            /* root of label list                */
-  /* Note:  The following field is maintained as a short for */
-  /* historical reasons.  This needs to be kept this size for */
-  /* tokenized image compatibility with previous releases. */
-  unsigned short    maxStack;          /* maximum stack depth               */
+  size_t            maxStack;          /* maximum stack depth               */
   size_t            vdictSize;         /* size of variable dictionary       */
 
 };

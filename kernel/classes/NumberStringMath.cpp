@@ -119,7 +119,8 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
      discard(maxminobj);               /* Yes, no need to save old MAX/MIN  */
                                        /*  assign and protect our next      */
                                        /*  MAX/MIN                          */
-     maxminobj = (RexxNumberString *)save(compobj);
+     save(compobj);
+     maxminobj = (RexxNumberString *)compobj;
    }
   }
   else {                               /* invalid object type.              */

@@ -438,7 +438,7 @@ BOOL MacroSpaceSearch(
                                        /* run as a call                     */
     *result = Routine->call(activity, (RexxObject *)activation, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL);
     /* merge (class) definitions from macro with current settings */
-    activation->settings.parent_source->mergeRequired(Routine->code->u_source);
+    activation->settings.parent_code->mergeRequired(Routine->getSource());
     return TRUE;                       /* return success we found it flag   */
   }
   return FALSE;                        /* nope, nothing to find here        */

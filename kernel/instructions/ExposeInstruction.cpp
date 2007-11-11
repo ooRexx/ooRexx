@@ -49,17 +49,17 @@
 #include "ExpressionBaseVariable.hpp"
 
 RexxInstructionExpose::RexxInstructionExpose(
-    size_t      variableCount,         /* count of variables                */
+    size_t      varCount,              /* count of variables                */
     RexxQueue  *variable_list)         /* list of exposed variables         */
 /******************************************************************************/
 /* Function:  Complete initialization of an EXPOSE instruction object         */
 /******************************************************************************/
  {
                                        /* get the variable size             */
-  expose_variable_count = (unsigned short)variableCount;
-  while (variableCount > 0)            /* loop through the variable list    */
+  variableCount = varCount;
+  while (varCount > 0)                 /* loop through the variable list    */
                                        /* copying each variable             */
-    OrefSet(this, this->variables[--variableCount], (RexxVariableBase *)(variable_list->pop()));
+    OrefSet(this, this->variables[--varCount], (RexxVariableBase *)(variable_list->pop()));
 }
 
 void RexxInstructionExpose::live()
@@ -72,7 +72,7 @@ void RexxInstructionExpose::live()
 
   setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
-  for (i = 0, count = expose_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     memory_mark(this->variables[i]);
   cleanUpMemoryMark
 }
@@ -88,7 +88,7 @@ void RexxInstructionExpose::liveGeneral()
   setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
-  for (i = 0, count = expose_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     memory_mark_general(this->variables[i]);
   cleanUpMemoryMarkGeneral
 }
@@ -104,7 +104,7 @@ void RexxInstructionExpose::flatten(RexxEnvelope *envelope)
   setUpFlatten(RexxInstructionExpose)
 
   flatten_reference(newThis->nextInstruction, envelope);
-  for (i = 0, count = expose_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     flatten_reference(newThis->variables[i], envelope);
 
   cleanUpFlatten
@@ -123,7 +123,7 @@ void RexxInstructionExpose::execute(
     reportException(Error_Translation_expose);
 
   /* have the context expose these */
-  context->expose(variables, expose_variable_count);
+  context->expose(variables, variableCount);
   context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

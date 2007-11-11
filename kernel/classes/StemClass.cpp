@@ -71,13 +71,13 @@ RexxStem::RexxStem(
 /* Function:  Initialize a STEM class item                                    */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* start fresh                       */
+  this->clearObject();                 /* start fresh                       */
   if (name == OREF_NULL)               /* no explicit default value?        */
     name = OREF_NULLSTRING;            /* set a null string                 */
   else
                                        /* must get a string here            */
     name = REQUIRED_STRING(name, ARG_ONE);
-  OrefSet(this, this->u_name, name);   /* fill in the name                  */
+  OrefSet(this, this->stemName, name); /* fill in the name                  */
   OrefSet(this, this->value, name);    /* fill in the default value         */
   tails.init(this);                    /* initialize the tail table         */
                                        /* create a tails table              */
@@ -106,7 +106,7 @@ void RexxStem::live()
 {
   setUpMemoryMark
   memory_mark(this->value);
-  memory_mark(this->u_name);
+  memory_mark(this->stemName);
   memory_mark(this->objectVariables);
   markCompoundTable();
   cleanUpMemoryMark
@@ -119,7 +119,7 @@ void RexxStem::liveGeneral()
 {
   setUpMemoryMarkGeneral
   memory_mark_general(this->value);
-  memory_mark_general(this->u_name);
+  memory_mark_general(this->stemName);
   memory_mark_general(this->objectVariables);
   markGeneralCompoundTable();
   cleanUpMemoryMarkGeneral
@@ -133,7 +133,7 @@ void RexxStem::flatten(RexxEnvelope *envelope)
   setUpFlatten(RexxStem)
 
    flatten_reference(newThis->value, envelope);
-   flatten_reference(newThis->u_name, envelope);
+   flatten_reference(newThis->stemName, envelope);
    flatten_reference(newThis->objectVariables, envelope);
    flattenCompoundTable();
 
@@ -156,7 +156,7 @@ void RexxStem::dropValue()
 /******************************************************************************/
 {
                                        /* reset to the default value        */
-  OrefSet(this, this->value, this->u_name);
+  OrefSet(this, this->value, this->stemName);
   this->dropped = TRUE;                /* no explict value any more         */
 }
 
@@ -350,7 +350,7 @@ RexxObject *RexxStem::bracketEqual(
     reportException(Error_Incorrect_method_noarg, IntegerOne);
 
   if (argCount == 1) {                 /* just setting the default value?   */
-    if (OTYPE(Stem, new_value))        // stem value as default?  don't allow this as it leads to recursion loops
+    if (isOfClass(Stem, new_value))        // stem value as default?  don't allow this as it leads to recursion loops
     {
         reportException(Error_Execution_nostem);
     }
@@ -446,7 +446,7 @@ RexxObject *RexxStem::request(
   makeclass = REQUIRED_STRING(makeclass, ARG_ONE)->upper();
                                        /* array request?                    */
   if (makeclass->strCompare(CHAR_ARRAY)) {
-    if (OTYPE(Stem, this))             /* a real stem object?               */
+    if (isOfClass(Stem, this))             /* a real stem object?               */
                                        /* process here directly             */
       return (RexxObject *)this->makeArray();
     else                               /* go to the real make array method  */
@@ -469,9 +469,9 @@ RexxObject *RexxStem::newRexx(
                                        /* break up the arguments            */
   process_new_args(init_args, argCount, &init_args, &argCount, 1, (RexxObject **)&name, NULL);
   newObj = new RexxStem ((RexxString *)name);   /* get a new stem                    */
-  BehaviourSet(newObj, ((RexxClass *)this)->instanceBehaviour);
+  newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
                                        /* does object have an UNINT method  */
-  if (((RexxClass *)this)->uninitDefined())
+  if (((RexxClass *)this)->hasUninitDefined())
      newObj->hasUninit();              /* Make sure everyone is notified.   */
                                        /* Initialize the new instance       */
   newObj->sendMessage(OREF_INIT, init_args, argCount);
@@ -488,8 +488,8 @@ void *RexxStem::operator new(size_t size)
                                        /* Get new object                    */
   newObject = new_object(size);
                                        /* default to stem behaviour         */
-  BehaviourSet(newObject, TheStemBehaviour);
-  ClearObject(newObject);              /* ensure the state data is clean    */
+  newObject->setBehaviour(TheStemBehaviour);
+  newObject->clearObject();            /* ensure the state data is clean    */
   return newObject;                    /* and return                        */
 }
 
@@ -651,7 +651,7 @@ RexxObject *RexxStem::evaluateCompoundVariableValue(
       _value = this->value;            /* get the stems value               */
     else {                             /* need to use name                  */
                                        /* create a string version of the name */
-      tail_name = resolved_tail->createCompoundName(u_name);
+      tail_name = resolved_tail->createCompoundName(stemName);
                                        /* take care of any novalue situations */
       _value = handleNovalue(tail_name, context);
     }
@@ -661,7 +661,7 @@ RexxObject *RexxStem::evaluateCompoundVariableValue(
     _value = variable->getVariableValue();
     if (_value == OREF_NULL) {         /* explicitly dropped variable?      */
                                        /* create a string version of the name */
-      tail_name = resolved_tail->createCompoundName(u_name);
+      tail_name = resolved_tail->createCompoundName(stemName);
                                        /* take care of any novalue situations */
       _value = handleNovalue(tail_name, context);
     }
@@ -686,7 +686,7 @@ RexxObject *RexxStem::getCompoundVariableValue(
       return this->value;              /* get the stems value               */
     else {                             /* need to use name                  */
                                        /* create a string version of the name */
-      return (RexxObject *)resolved_tail->createCompoundName(u_name);
+      return (RexxObject *)resolved_tail->createCompoundName(stemName);
     }
   }
   else {
@@ -694,7 +694,7 @@ RexxObject *RexxStem::getCompoundVariableValue(
     _value = variable->getVariableValue();
     if (_value == OREF_NULL) {         /* explicitly dropped variable?      */
                                        /* create a string version of the name */
-      _value = (RexxObject *)resolved_tail->createCompoundName(u_name);
+      _value = (RexxObject *)resolved_tail->createCompoundName(stemName);
     }
   }
   return _value;                       /* and finally return the value */

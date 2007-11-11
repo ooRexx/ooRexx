@@ -52,17 +52,19 @@
 #include "RexxBuffer.hpp"
 
 RexxInstructionDrop::RexxInstructionDrop(
-    size_t     variableCount,          /* number of variables to process    */
+    size_t     varCount,               /* number of variables to process    */
     RexxQueue *variable_list)          /* list of variables to drop         */
 /******************************************************************************/
 /* Complete initialization of a DROP instruction                              */
 /******************************************************************************/
 {
                                        /* get the variable size             */
-  drop_variable_count = variableCount; /* save the variable count           */
-  while (variableCount > 0)            /* loop through the variable list    */
+  variableCount = varCount;            /* save the variable count           */
+  while (varCount > 0)                 /* loop through the variable list    */
+  {
                                        /* copying each variable             */
-    OrefSet(this, this->variables[--variableCount], (RexxVariableBase *)variable_list->pop());
+      OrefSet(this, this->variables[--varCount], (RexxVariableBase *)variable_list->pop());
+  }
 }
 
 void RexxInstructionDrop::live()
@@ -75,7 +77,7 @@ void RexxInstructionDrop::live()
 
   setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
-  for (i = 0, count = drop_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     memory_mark(this->variables[i]);
   cleanUpMemoryMark
 }
@@ -91,7 +93,7 @@ void RexxInstructionDrop::liveGeneral()
   setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
-  for (i = 0, count = drop_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     memory_mark_general(this->variables[i]);
   cleanUpMemoryMarkGeneral
 }
@@ -107,7 +109,7 @@ void RexxInstructionDrop::flatten(RexxEnvelope *envelope)
   setUpFlatten(RexxInstructionDrop)
 
   flatten_reference(newThis->nextInstruction, envelope);
-  for (i = 0, count = drop_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     flatten_reference(newThis->variables[i], envelope);
 
   cleanUpFlatten
@@ -125,7 +127,7 @@ void RexxInstructionDrop::execute(
 
   context->traceInstruction(this);     /* trace if necessary                */
                                        /* get the array size                */
-  size = drop_variable_count;          /* get the variable list size        */
+  size = variableCount;                /* get the variable list size        */
 
   for (i = 0; i < size; i++) {         /* loop through the variable list    */
     /* have the variable drop itself */

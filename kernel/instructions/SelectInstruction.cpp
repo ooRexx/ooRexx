@@ -276,15 +276,14 @@ void RexxInstructionSelect::matchEnd(
 /******************************************************************************/
 {
   RexxInstructionIf    *when;          /* target WHEN clause                */
-  LOCATIONINFO          location;      /* location of the end               */
-  LONG                  lineNum;       /* Instruction line number           */
+  SourceLocation        location;      /* location of the end               */
+  size_t                lineNum;       /* Instruction line number           */
 
-  partner->getLocation(&location);     /* get location of END instruction   */
-  lineNum = this->lineNumber;          /* get the instruction line number   */
+  location = partner->getLocation();   /* get location of END instruction   */
+  lineNum = this->getLineNumber();     /* get the instruction line number   */
 
   RexxString *name = partner->name;    /* get then END name                 */
   if (name != OREF_NULL) {             /* was a name given?                 */
-    lineNum = this->lineNumber;        /* Instruction line number           */
     RexxString *myLabel = getLabel();
     if (myLabel == OREF_NULL)          /* name given on non-control form?   */
     {
@@ -301,7 +300,7 @@ void RexxInstructionSelect::matchEnd(
   when = (RexxInstructionIf *)(this->when_list->pullRexx());
                                        /* nothing there?                    */
   if (when == (RexxInstructionIf *)TheNilObject) {
-    this->getLocation(&location);      /* get the location info             */
+    location = this->getLocation();    /* get the location info             */
                                        /* need at least one WHEN here       */
     CurrentActivity->raiseException(Error_When_expected_when, &location, source, OREF_NULL, new_array(new_integer(lineNum)), OREF_NULL);
   }

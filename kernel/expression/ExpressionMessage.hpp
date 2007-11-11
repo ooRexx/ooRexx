@@ -46,21 +46,22 @@
 
 class RexxExpressionMessage : public RexxVariableBase {
  public:
-  RexxExpressionMessage(RexxObject *, RexxString *, RexxObject *, size_t, RexxQueue *, int);
+  RexxExpressionMessage(RexxObject *, RexxString *, RexxObject *, size_t, RexxQueue *, bool);
   inline RexxExpressionMessage(RESTORETYPE restoreType) { ; };
   void        live();
   void        liveGeneral();
   void        flatten(RexxEnvelope *);
-  void       *operator new(size_t, LONG);
+  void       *operator new(size_t, size_t);
   inline void       *operator new(size_t size, void *ptr) {return ptr;};
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
   void assign(RexxActivation *, RexxExpressionStack *, RexxObject *);
   void makeAssignment(RexxSource *source);
 
   RexxObject * target;                 /* target subexpression              */
+  RexxString * messageName;            // the message name
   RexxObject * super;                  /* super class target                */
-  short doubleTilde;                   /* single or double tilde form       */
-  short argumentCount;                 /* number of message arguments       */
+  size_t argumentCount;                /* number of message arguments       */
+  bool   doubleTilde;                  // this is the double tilde form
   RexxObject * arguments[1];           /* list of argument subexpressions   */
 };
 #endif

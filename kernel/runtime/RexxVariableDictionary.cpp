@@ -63,7 +63,7 @@ RexxObject  *RexxVariableDictionary::copy()
 
   /* create a new object               */
   copyObj = new_variableDictionary(contents->mainSlotsSize());
-  ClearObject(copyObj);                /* clear this out                    */
+  copyObj->clearObject();              /* clear this out                    */
                                        /* copy the behaviour pointer        */
   OrefSet(copyObj, copyObj->behaviour, this->behaviour);
   save(copyObj);                       /* protect from garbage collect      */
@@ -72,7 +72,7 @@ RexxObject  *RexxVariableDictionary::copy()
   /* make sure we copy the scope too */
   OrefSet(copyObj, copyObj->scope, this->scope);
   copyObj->copyValues();               /* copy all of the variables         */
-  discard(hold(copyObj));              /* unlock the copy                   */
+  discard_hold(copyObj);               /* unlock the copy                   */
   return (RexxObject *)copyObj;        /* return the new vdict              */
 }
 
@@ -430,9 +430,9 @@ RexxVariableDictionary *RexxMemory::newVariableDictionary(
                                        /* get a new object and hash         */
   newObj = (RexxVariableDictionary *)new_hashCollection(hashTabSize, sizeof(RexxVariableDictionary));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObj, TheVariableDictionaryBehaviour);
+  newObj->setBehaviour(TheVariableDictionaryBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newObj, T_vdict);
+  newObj->setVirtualFunctions(VFTArray[T_vdict]);
   return newObj;                       /* return the new vdict              */
 }
 
@@ -460,8 +460,8 @@ RexxVariableDictionary *RexxMemory::newVariableDictionary(
   newObj = (RexxVariableDictionary *)new_hashCollection(hashTabSize, sizeof(RexxVariableDictionary));
   newObj->scope = scope;               /* fill in the scope */
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObj, TheVariableDictionaryBehaviour);
+  newObj->setBehaviour(TheVariableDictionaryBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newObj, T_vdict);
+  newObj->setVirtualFunctions(VFTArray[T_vdict]);
   return newObj;                       /* return the new vdict              */
 }

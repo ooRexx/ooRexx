@@ -1612,7 +1612,7 @@ BUILTIN(SYMBOL) {
   if (variable == OREF_NULL)           /* invalid variable name?            */
                                        /* return the 'BAD' result           */
     result = (RexxString *)new_string(CHAR_BAD);
-  else if (OTYPE(String, variable))    /* directly returned a string?       */
+  else if (isOfClass(String, variable))    /* directly returned a string?       */
                                        /* this is a literal value           */
     result = (RexxString *)new_string(CHAR_LIT);
   else {                               /* need to perform lookup            */
@@ -1643,7 +1643,7 @@ BUILTIN(VAR) {
   retriever = context->getVariableRetriever(variable);
   if (retriever == OREF_NULL)          /* invalid variable name?            */
     result = TheFalseObject;           /* return the 'BAD' result           */
-  else if (OTYPE(String, retriever))   /* directly returned a string?       */
+  else if (isOfClass(String, retriever))   /* directly returned a string?       */
     result = TheFalseObject;           /* this doesn't exist either         */
   else {                               /* need to perform lookup            */
                                        /* get the variable value            */
@@ -1716,11 +1716,11 @@ BUILTIN(ABS) {
     fix_args(ABS);                       /* check on required number of args  */
     /* get the argument in question      */
     RexxObject *argument = get_arg(ABS, n);
-    if (OTYPE(Integer, argument)) {      /* integer object already?           */
+    if (isOfClass(Integer, argument)) {      /* integer object already?           */
         /* we can process this without conversion */
         return ((RexxInteger *)argument)->abs();
     }
-    else if (OTYPE(NumberString, argument)) { /* how about already numeric?        */
+    else if (isOfClass(NumberString, argument)) { /* how about already numeric?        */
         /* we can process this without conversion */
         return ((RexxNumberString *)argument)->abs();
     }
@@ -1737,11 +1737,11 @@ BUILTIN(SIGN) {
     fix_args(SIGN);                       /* check on required number of args  */
     /* get the argument in question      */
     RexxObject *argument = get_arg(SIGN, n);
-    if (OTYPE(Integer, argument)) {       /* integer object already?           */
+    if (isOfClass(Integer, argument)) {       /* integer object already?           */
         /* we can process this without conversion */
         return ((RexxInteger *)argument)->sign();
     }
-    else if (OTYPE(NumberString, argument)) { /* how about already numeric?        */
+    else if (isOfClass(NumberString, argument)) { /* how about already numeric?        */
         /* we can process this without conversion */
         return ((RexxNumberString *)argument)->Sign();
     }
@@ -1788,7 +1788,7 @@ BUILTIN(MAX) {
   check_args(MAX);                     /* check on required args            */
   /* get the argument in question      */
   RexxObject *argument = get_arg(MAX, target);
-  if (OTYPE(NumberString, argument)) { /* how about already numeric?        */
+  if (isOfClass(NumberString, argument)) { /* how about already numeric?        */
       /* we can process this without conversion */
       return ((RexxNumberString *)argument)->Max(stack->arguments(argcount - 1), argcount - 1);
   }
@@ -1806,7 +1806,7 @@ BUILTIN(MIN) {
   check_args(MIN);                     /* check on required args            */
   /* get the argument in question      */
   RexxObject *argument = get_arg(MIN, target);
-  if (OTYPE(NumberString, argument)) { /* how about already numeric?        */
+  if (isOfClass(NumberString, argument)) { /* how about already numeric?        */
       /* we can process this without conversion */
       return ((RexxNumberString *)argument)->Min(stack->arguments(argcount - 1), argcount - 1);
   }
@@ -1861,7 +1861,7 @@ BUILTIN(TRACE) {
   setting = optional_string(TRACE, setting);
   result = context->traceSetting();    /* get the existing trace setting    */
   if (setting != OREF_NULL) {          /* have a new setting?               */
-    context->source->parseTraceSetting(setting, &newsetting, &debug);
+    context->code->getSource()->parseTraceSetting(setting, &newsetting, &debug);
                                        /* now change the setting            */
     context->setTrace(newsetting, debug);
   }

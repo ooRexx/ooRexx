@@ -510,10 +510,8 @@ BOOL MacroSpaceSearch(
                                        /* run as a call                     */
       APICLEANUP(MACROCHAIN);          /* now we have a copy of the routine */
       if (Routine == OREF_NULL) return FALSE;
-//  *result = Routine->call(activity, (RexxObject *)activation, target, argarray, calltype, OREF_NULL, EXTERNALCALL);
     *result = Routine->call(activity, (RexxObject *)activation, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL);
-    /* @CHM014A - merge (class) definitions from macro with current settings */
-    activation->settings.parent_source->mergeRequired(Routine->code->u_source);
+    activation->settings.parent_code->mergeRequired(Routine->getSource());
     return TRUE;                       /* return success we found it flag   */
   }
   return FALSE;                        /* nope, nothing to find here        */

@@ -55,13 +55,13 @@ RexxInstructionIf::RexxInstructionIf(
 /* Function:  Complete IF instruction initialization                          */
 /******************************************************************************/
 {
-  LOCATIONINFO location;               /* clause token location             */
+  SourceLocation location;             /* clause token location             */
 
                                        /* save the condition                */
   OrefSet(this, this->condition, _condition);
-  token->getLocation(&location);       /* get the token location info       */
+  location = token->getLocation();     /* get the token location info       */
                                        /* update the end location           */
-  this->setEnd(location.line, location.offset);
+  this->setEnd(location.getLineNumber(), location.getOffset());
 }
 
 void RexxInstructionIf::setEndInstruction(

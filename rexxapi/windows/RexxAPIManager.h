@@ -330,9 +330,9 @@ ULONG  RxGetModAddress( PSZ       dll_name,
                         PFN *     function_address,
                         PULONG    call_type);
 ULONG get_session(void);
-ULONG Initialize( VOID ) ;
+BOOL  Initialize( VOID ) ;
 
-extern __declspec(dllexport) SECURITY_ATTRIBUTES * SetSecurityDesc(SECURITY_ATTRIBUTES * sa);
+extern _declspec(dllexport) SECURITY_ATTRIBUTES * SetSecurityDesc(SECURITY_ATTRIBUTES * sa);
 LRESULT MySendMessage(UINT msg, WPARAM wP, LPARAM lP);
 
 #endif

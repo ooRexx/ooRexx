@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ExpressionMessage.c      */
+/* REXX Translator                                   ExpressionMessage.c      */
 /*                                                                            */
 /* Primitive Message Instruction Parse Class                                  */
 /*                                                                            */
@@ -56,26 +56,23 @@ RexxExpressionMessage::RexxExpressionMessage(
     RexxObject *_super,                 /* message super class               */
     size_t      argCount,              /* count of arguments                */
     RexxQueue  *arglist,               /* message argument list             */
-    int         classId)               /* type of message send              */
+    bool        double_form)           /* type of message send              */
 /******************************************************************************/
 /*  Function:  Create a new message expression object                         */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* start completely clean            */
+  this->clearObject();                 /* start completely clean            */
                                        /* also make sure name is cleared    */
                                        /* name doubles as hash so ClearObjec*/
-  this->u_name = OREF_NULL;            /* doesn't clear hash field.         */
+  this->messageName = OREF_NULL;            /* doesn't clear hash field.         */
 
   OrefSet(this, this->target, _target); /* fill in the target                */
                                        /* the message name                  */
-  OrefSet(this, this->u_name, name->upper());
+  OrefSet(this, this->messageName, name->upper());
   OrefSet(this, this->super, _super);   /* the super class target            */
-  if (classId == TOKEN_TILDE)          /* single twiddle form?              */
-    this->doubleTilde = FALSE;         /* not a double twiddle form         */
-  else
-    this->doubleTilde = TRUE;          /* target is return value            */
+  doubleTilde = double_form;           // set the argument form
   /* get the count of arguments        */
-  this->argumentCount = (short)argCount;
+  this->argumentCount = argCount;
   while (argCount > 0) {               /* now copy the argument pointers    */
                                        /* in reverse order                  */
     OrefSet(this, this->arguments[--argCount], arglist->pop());
@@ -91,7 +88,7 @@ RexxObject *RexxExpressionMessage::evaluate(
 {
   RexxObject *result;                  /* message expression result         */
   RexxObject *_super;                  /* target super class                */
-  LONG        argcount;                /* count of arguments                */
+  size_t      argcount;                /* count of arguments                */
   RexxObject *_target;                 /* message target                    */
   size_t      i;                       /* loop counter                      */
 
@@ -127,10 +124,10 @@ RexxObject *RexxExpressionMessage::evaluate(
   }
   if (_super == OREF_NULL)             /* no super class override?          */
                                        /* issue the fast message            */
-    result = stack->send(this->u_name, argcount);
+    result = stack->send(this->messageName, argcount);
   else
                                        /* evaluate the message w/override   */
-    result = stack->send(this->u_name, _super, argcount);
+    result = stack->send(this->messageName, _super, argcount);
   stack->popn(argcount);               /* remove any arguments              */
   if (this->doubleTilde)               /* double twiddle form?              */
     result = _target;                  /* get the target element            */
@@ -139,9 +136,9 @@ RexxObject *RexxExpressionMessage::evaluate(
 
   if (result == OREF_NULL)             /* in an expression and need a result*/
                                        /* need to raise an exception        */
-    reportException(Error_No_result_object_message, this->u_name);
+    reportException(Error_No_result_object_message, this->messageName);
                                        /* trace if necessary                */
-  context->traceMessage(u_name, result);
+  context->traceMessage(messageName, result);
   return result;                       /* return the result                 */
 }
 
@@ -154,7 +151,7 @@ void RexxExpressionMessage::live()
   size_t  count;                       /* argument count                    */
 
   setUpMemoryMark
-  memory_mark(this->u_name);
+  memory_mark(this->messageName);
   memory_mark(this->target);
   memory_mark(this->super);
   for (i = 0, count = this->argumentCount; i < count; i++)
@@ -171,7 +168,7 @@ void RexxExpressionMessage::liveGeneral()
   size_t  count;                       /* argument count                    */
 
   setUpMemoryMarkGeneral
-  memory_mark_general(this->u_name);
+  memory_mark_general(this->messageName);
   memory_mark_general(this->target);
   memory_mark_general(this->super);
   for (i = 0, count = this->argumentCount; i < count; i++)
@@ -189,7 +186,7 @@ void RexxExpressionMessage::flatten(RexxEnvelope *envelope)
 
   setUpFlatten(RexxExpressionMessage)
 
-  flatten_reference(newThis->u_name, envelope);
+  flatten_reference(newThis->messageName, envelope);
   flatten_reference(newThis->target, envelope);
   flatten_reference(newThis->super, envelope);
   for (i = 0, count = this->argumentCount; i < count; i++)
@@ -199,7 +196,7 @@ void RexxExpressionMessage::flatten(RexxEnvelope *envelope)
 }
 
 void *RexxExpressionMessage::operator new(size_t size,
-    LONG  argCount)                    /* count of arguments                */
+    size_t argCount)                   /* count of arguments                */
 /******************************************************************************/
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
@@ -209,7 +206,7 @@ void *RexxExpressionMessage::operator new(size_t size,
                                        /* Get new object                    */
   newObject = new_object(size + (argCount - 1) * sizeof(RexxObject *));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheMessageSendBehaviour);
+  newObject->setBehaviour(TheMessageSendBehaviour);
   return newObject;
 }
 
@@ -265,12 +262,12 @@ void RexxExpressionMessage::assign(
     if (_super == OREF_NULL)
     {
         // normal message send
-        result = stack->send(this->u_name, argcount + 1);
+        result = stack->send(this->messageName, argcount + 1);
     }
     else
     {
         // send with an override
-        result = stack->send(this->u_name, _super, argcount + 1);
+        result = stack->send(this->messageName, _super, argcount + 1);
     }
     // remove all arguments
     stack->popn(argcount + 1);
@@ -287,6 +284,6 @@ void RexxExpressionMessage::assign(
 void RexxExpressionMessage::makeAssignment(RexxSource *source)
 {
     // add an equal sign to the name
-    u_name = source->commonString(u_name->concat(OREF_EQUAL));
+    messageName = source->commonString(messageName->concat(OREF_EQUAL));
 }
 

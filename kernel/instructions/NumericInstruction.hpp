@@ -47,7 +47,12 @@
 #include "RexxInstruction.hpp"
 
 #define numeric_engineering 0x01       /* this is form engineering          */
-#define numeric_type i_ushort          /* type of instruction               */
+#define numeric_digits      0x02
+#define numeric_fuzz        0x04
+#define numeric_form        0x08
+
+#define numeric_type_mask   0x0e
+
 class RexxInstructionNumeric : public RexxInstructionExpression {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};

@@ -45,28 +45,14 @@
 #define Included_RexxBehaviour
 
 void behaviour_setup (void);
-                                       /* This flags is TRUE once a         */
-                                       /* Behaviour is copied               */
-#define NON_PRIMITIVE_BEHAVIOUR 0x0001
-#define ENHANCED_OBJECT         0x0002 /* this is an enhanced object        */
-#define BEHAVIOUR_NOT_RESOLVED  0x0010
-#define RESET_BEHAVIOUR_RESOLVED  0xFFEF
 
-#define resolveNonPrimitiveBehaviour(o)                                            \
-       if (o->isBehaviourNotResolved() ){                                          \
-                                       /* Nope, turn off not resolved       */     \
-         o->setBehaviourResolved();                                                \
-                                       /* Resolve address of                */     \
-                                       /*  all kernel methods for behav     */     \
-                                       /*  all oper   methods for behav     */     \
-         o->operatorMethods = pbehav[o->typenum()].operatorMethods;                \
-       }
+
 
  class RexxBehaviour : public RexxInternalObject {
   public:
-  void *operator new(size_t, short);
+  void *operator new(size_t, size_t);
   inline void *operator new(size_t size, void *ptr) {return ptr;};
-  RexxBehaviour(HEADINFO, short, PCPPM *);
+  RexxBehaviour(size_t, PCPPM *);
   inline RexxBehaviour() {;};
   inline RexxBehaviour(RESTORETYPE restoreType) { ; };
   void live();
@@ -92,6 +78,8 @@ void behaviour_setup (void);
   void        subclass(RexxBehaviour *);
   RexxSupplier *getMethods(RexxObject *scope);
 
+  void        resolveNonPrimitiveBehaviour();
+
   void merge( RexxBehaviour *);
   void methodDictionaryMerge( RexxTable *);
 
@@ -103,27 +91,44 @@ void behaviour_setup (void);
    inline RexxTable  *getInstanceMethodDictionary()   { return this->instanceMethodDictionary; };
    inline RexxClass  *getCreateClass()        { return this->createClass;};
    inline void        setClass(RexxClass *c)  { OrefSet(this, this->createClass,  c); };
-   inline short typenum()                 { return this->behaviourInfo.typeNum; };
-   inline short flags()                   { return this->behaviourInfo.behaviourFlags; };
-   inline void  setFlags(short v)         { this->behaviourInfo.behaviourFlags = v; };
-   inline void  setTypenum(short typenumber) { this->behaviourInfo.typeNum = typenumber; };
 
-   inline BOOL  isPrimitiveBehaviour()    {  return ! this->isNonPrimitiveBehaviour(); };
-   inline BOOL  isNonPrimitiveBehaviour() {  return this->behaviourInfo.behaviourFlags & NON_PRIMITIVE_BEHAVIOUR; };
-   inline BOOL  isBehaviourResolved()     {  return ! this->isBehaviourNotResolved(); };
-   inline BOOL  isBehaviourNotResolved()  {  return this->behaviourInfo.behaviourFlags & BEHAVIOUR_NOT_RESOLVED; };
-   inline BOOL  isEnhanced()              {  return this->behaviourInfo.behaviourFlags & ENHANCED_OBJECT; };
-   inline void  setBehaviourResolved()    {  this->behaviourInfo.behaviourFlags &= RESET_BEHAVIOUR_RESOLVED; };
-   inline void  setBehaviourNotResolved() {  this->behaviourInfo.behaviourFlags |= BEHAVIOUR_NOT_RESOLVED; };
-   inline void  setEnhanced()             {  this->behaviourInfo.behaviourFlags |= ENHANCED_OBJECT; };
-   inline void  setNonPrimitiveBehaviour(){  this->behaviourInfo.behaviourFlags |= NON_PRIMITIVE_BEHAVIOUR; };
+   inline void setClassType(size_t n) { classType = (uint16_t)n; }
+   inline size_t getClassType()  { return (size_t)classType; }
+   inline bool  isPrimitive()    {  return (behaviourFlags & NON_PRIMITIVE_BEHAVIOUR) == 0; };
+   inline bool  isNonPrimitive() {  return (behaviourFlags & NON_PRIMITIVE_BEHAVIOUR) != 0; };
+   inline bool  isNotResolved()  {  return (behaviourFlags & BEHAVIOUR_NOT_RESOLVED) != 0; };
+   inline bool  isResolved()     {  return (behaviourFlags & BEHAVIOUR_NOT_RESOLVED) == 0; };
+   inline bool  isEnhanced()     {  return (behaviourFlags & ENHANCED_OBJECT) != 0; };
+   inline void  setResolved()    {  behaviourFlags &= ~BEHAVIOUR_NOT_RESOLVED; };
+   inline void  setNotResolved() {  behaviourFlags |= BEHAVIOUR_NOT_RESOLVED; };
+   inline void  setEnhanced()    {  behaviourFlags |= ENHANCED_OBJECT; };
+   inline void  setNonPrimitive() {  behaviourFlags |= NON_PRIMITIVE_BEHAVIOUR; };
 
+   inline PCPPM getOperatorMethod(size_t index) { return operatorMethods[index]; }
+   static inline RexxBehaviour *getPrimitiveBehaviour(size_t index) { return &primitiveBehaviours[index]; }
+   static inline PCPPM *getOperatorMethods(size_t index) { return getPrimitiveBehaviour(index)->operatorMethods; }
+   // table of primitive behaviour objects
+   static RexxBehaviour primitiveBehaviours[];
+
+ protected:
+
+   enum
+   {
+      NON_PRIMITIVE_BEHAVIOUR = 0x0001,
+      ENHANCED_OBJECT         = 0x0002,
+      BEHAVIOUR_NOT_RESOLVED  = 0x0010
+   };
+
+
+   uint16_t classType;         // primitive class identifier
+   uint16_t behaviourFlags;    // various behaviour flag types
    RexxObjectTable  *scopes;           /* scopes table                      */
    RexxTable  *methodDictionary;       /* method dictionary                 */
    PCPPM      *operatorMethods;        /* operator look-a-side table        */
    RexxClass  *createClass;            /* class that created this object    */
                                        /* methods added via SETMETHOD       */
    RexxTable  *instanceMethodDictionary;
+
  };
 
 #endif

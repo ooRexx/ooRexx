@@ -47,13 +47,13 @@
 
 #define get_string(s, p) REQUIRED_STRING(s, p)
 #define optional_string(o, d, p) (o == OREF_NULL ? d : get_string(o, p))
-size_t get_length(OREF, size_t);
+size_t get_length(RexxObject *, size_t);
 #define optional_length(o, d, p) (o == OREF_NULL ? d : get_length(o, p))
-size_t get_position(OREF, size_t);
+size_t get_position(RexxObject *, size_t);
 #define optional_position(o, d, p) (o == OREF_NULL ? d : get_position(o, p))
-char get_pad_character(OREF, size_t);
+char get_pad_character(RexxObject *, size_t);
 #define get_pad(o, d, p) (o == OREF_NULL ? d : get_pad_character(o, p))
-char get_option_character(OREF, size_t);
+char get_option_character(RexxObject *, size_t);
 #define option_character(o, d, p) (o == OREF_NULL ? d : get_option_character(o, p))
 #define optionalNonNegative(o, d, p) (o == OREF_NULL ? d : o->requiredNonNegative(p))
 #define optionalPositive(o, d, p) (o == OREF_NULL ? d : o->requiredPositive(p))

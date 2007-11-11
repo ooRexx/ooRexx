@@ -89,11 +89,11 @@ RexxHashTable *RexxMemory::newHashTable(
                                        /* Get new object                    */
   newHash = (RexxHashTable *)new_object(bytes);
                                        /* Give new object its behaviour     */
-  BehaviourSet(newHash, TheHashTableBehaviour);
+  newHash->setBehaviour(TheHashTableBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newHash, T_hashtab);
-  ClearObject(newHash);                /* clear things out                  */
-  newHash->u_size = bucketSize;        /* record the size                   */
+  newHash->setVirtualFunctions(VFTArray[T_hashtab]);
+  newHash->clearObject();              /* clear things out                  */
+  newHash->size = bucketSize;          /* record the size                   */
   newHash->free = entries - 1;         /* and the first free slot           */
   return newHash;                      /* and return it                     */
 }
@@ -128,26 +128,20 @@ RexxTable *RexxMemory::newHashCollection(
   companionSize = roundObjectBoundary(companionSize);
                                        /* Get space for two objects         */
   newObj = (RexxTable *)new_object(bytes + companionSize);
-  ClearObject(newObj);                 /* clear the entire lot              */
+  newObj->clearObject();               /* clear the entire lot              */
                                        /* address the hash table            */
   newHash = (RexxHashTable *)(((char *)newObj) + companionSize);
                                        /* compute total size of the hash    */
                                        /* table (allowing for possible      */
                                        /* over allocation by the memory     */
                                        /* manager                           */
-  bytes = ObjectSize(newObj) - companionSize;
-  SetUpNewObject((RexxObject *)newHash, bytes); /* make this an object               */
+  bytes = newObj->getObjectSize() - companionSize;
+
+  // initialize the hash table object
+  ((RexxObject *)newHash)->initializeNewObject(bytes, memoryObject.markWord, VFTArray[T_hashtab], TheHashTableBehaviour);
                                        /* reduce the companion size         */
-  SetObjectSize(newObj, companionSize);
-                                       /* do a dummy new against the hash   */
-                                       /* table to get the correct virtual  */
-                                       /* function table set up             */
-  newHash = new ((void *)newHash) RexxHashTable;
-                                       /* Give new object its behaviour     */
-  BehaviourSet(newHash, TheHashTableBehaviour);
-                                       /* set the virtual function table    */
-  setVirtualFunctions(newHash, T_hashtab);
-  newHash->u_size = bucketSize;        /* record the size                   */
+  newObj->setObjectSize(companionSize);
+  newHash->size = bucketSize;          /* record the size                   */
   newHash->free = entries - 1;         /* and the first free slot           */
                                        /* hook the hash into the companion  */
                                        /* OrefSet is not used, because the  */
@@ -164,11 +158,11 @@ void RexxHashTable::live(void)
   TABENTRY *ep;                        /* table element pointer             */
   TABENTRY *endp;
                                        /* hash table size                   */
-  size_t size = this->totalSlotsSize();
+  size_t count = this->totalSlotsSize();
 
   setUpMemoryMark
                                        /* loop through all of the entries   */
-  for (ep = this->entries, endp = ep+size; ep < endp; ep++) {
+  for (ep = this->entries, endp = ep + count; ep < endp; ep++) {
     if (ep->index != OREF_NULL) {      /* have a value here?                */
       memory_mark(ep->index);          /* mark both the index and the       */
       memory_mark(ep->value);          /* value                             */
@@ -184,11 +178,11 @@ void RexxHashTable::liveGeneral(void)
 {
   TABENTRY *ep;                        /* table element pointer             */
                                        /* hash table size                   */
-  size_t size = this->totalSlotsSize();
+  size_t count = this->totalSlotsSize();
 
   setUpMemoryMarkGeneral
                                        /* loop through all of the entries   */
-  for (ep = this->entries; ep < this->entries+size; ep++) {
+  for (ep = this->entries; ep < this->entries + count; ep++) {
     if (ep->index != OREF_NULL) {      /* have a value here?                */
       memory_mark_general(ep->index);  /* mark both the index and the       */
       memory_mark_general(ep->value);  /* value                             */
@@ -203,11 +197,11 @@ void RexxHashTable::flatten(RexxEnvelope *envelope)
 /******************************************************************************/
 {
   setUpFlatten(RexxHashTable)
-  size_t size = this->totalSlotsSize();  /* hash table size                   */
+  size_t count = this->totalSlotsSize();  /* hash table size                   */
 
   size_t i;
 
-   for (i=0; i < size ; i++) {
+   for (i=0; i < count ; i++) {
      if (this->entries[i].index != OREF_NULL) {
        flatten_reference(newThis->entries[i].index, envelope);
        flatten_reference(newThis->entries[i].value, envelope);
@@ -558,10 +552,10 @@ RexxObject *RexxHashTable::hasItem(
 RexxObject *RexxHashTable::hasItem(RexxObject *_value)
 {
     // our size
-    size_t size = this->totalSlotsSize();
+    size_t count = this->totalSlotsSize();
 
     TABENTRY *ep = this->entries;
-    TABENTRY *endp = ep + size;
+    TABENTRY *endp = ep + count;
                                          /* loop through all of the entries   */
     for (; ep < endp; ep++)
     {
@@ -589,10 +583,10 @@ RexxObject *RexxHashTable::hasItem(RexxObject *_value)
 RexxObject *RexxHashTable::removeItem(RexxObject *_value)
 {
     // our size
-    size_t size = this->totalSlotsSize();
+    size_t count = this->totalSlotsSize();
 
     TABENTRY *ep = this->entries;
-    TABENTRY *endp = ep + size;
+    TABENTRY *endp = ep + count;
                                          /* loop through all of the entries   */
     for (; ep < endp; ep++)
     {

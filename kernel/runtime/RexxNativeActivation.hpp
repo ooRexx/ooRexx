@@ -66,7 +66,7 @@ class RexxNativeActivation : public RexxActivationBase {
   PVOID  buffer();
   PVOID  pointer(RexxObject *);
   RexxObject *dispatch();
-  RexxObject *getReceiver() {return  this->u_receiver;}
+  RexxObject *getReceiver() {return  this->receiver;}
   void   traceBack(RexxList *);
   long   digits();
   long   fuzz();
@@ -101,6 +101,7 @@ class RexxNativeActivation : public RexxActivationBase {
 
   RexxMethod     *method;              /* Method to run                     */
   RexxString     *msgname;             /* name of the message running       */
+  RexxObject     *receiver;            // the object receiving the message
   RexxActivity   *activity;            /* current activity                  */
   RexxActivation *activation;          /* parent activation                 */
   RexxObject    **arglist;             /* copy of the argument list         */

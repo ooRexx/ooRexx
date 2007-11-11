@@ -66,10 +66,10 @@ void SegmentStats::recordObject(MemoryStats *memStats, char *obj)
 /******************************************************************************/
 {
     /* get size of this object           */
-    size_t bytes = ObjectSize(obj);
+    size_t bytes = ((RexxObject *)obj)->getObjectSize();
     totalBytes += bytes;
     /* Is this object alive?             */
-    if (ObjectIsLive(obj)) {
+    if (((RexxObject *)obj)->isObjectLive(memoryObject.markWord)) {
       /* update the type specific counters */
       memStats->logObject((RexxObject *)obj);
       /* update total live bytes           */
@@ -165,5 +165,5 @@ void MemoryStats::logObject(RexxObject *obj)
 /* Function:  Log the memory statistics for an individual object              */
 /******************************************************************************/
 {
-    objectStats[ObjectTypeNumber(obj)].logObject(obj);
+    objectStats[obj->getObjectTypeNumber()].logObject(obj);
 }

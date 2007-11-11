@@ -44,6 +44,7 @@
 #ifndef Included_RexxSource
 #define Included_RexxSource
 
+#include "SourceLocation.hpp"
 #include "ListClass.hpp"
 #include "QueueClass.hpp"
 #include "StackClass.hpp"
@@ -87,7 +88,7 @@ class RexxSource : public RexxInternalObject {
   inline RexxSource(RESTORETYPE restoreType) { ; };
   void        initBuffered(RexxObject *);
   void        initFile();
-  BOOL        reconnect();
+  bool        reconnect();
   void        setReconnect();
   void        setBufferedSource(RexxBuffer *newSource) { this->initBuffered((RexxObject *)newSource); discard(this);}
   void        interpretLine(size_t);
@@ -95,16 +96,16 @@ class RexxSource : public RexxInternalObject {
   void        needVariable(RexxToken *);
   void        needVariableOrDotSymbol(RexxToken *);
   BOOL        terminator(int, RexxObject *);
-  int         resolveKeyword(RexxString *token, KeywordEntry *Table, int Table_Size);
-  int         subKeyword(RexxToken *);
-  int         keyword(RexxToken *);
-  int         builtin(RexxToken *);
-  int         resolveBuiltin(RexxString *);
-  int         condition(RexxToken *);
-  int         parseOption(RexxToken *);
-  int         keyDirective(RexxToken *);
-  int         subDirective(RexxToken *);
-  int         precedence(RexxToken *);
+  static int  resolveKeyword(RexxString *token, KeywordEntry *Table, int Table_Size);
+  static int  subKeyword(RexxToken *);
+  static int  keyword(RexxToken *);
+  static int  builtin(RexxToken *);
+  static int  resolveBuiltin(RexxString *);
+  static int  condition(RexxToken *);
+  static int  parseOption(RexxToken *);
+  static int  keyDirective(RexxToken *);
+  static int  subDirective(RexxToken *);
+  static int  precedence(RexxToken *);
   void        nextLine();
   void        position(size_t, size_t);
   void        live();
@@ -114,12 +115,12 @@ class RexxSource : public RexxInternalObject {
   RexxString *get(size_t);
   void        nextClause();
   RexxToken  *sourceNextToken(RexxToken *);
-  RexxString *traceBack(PLOCATIONINFO, size_t, BOOL);
-  RexxString *extract(PLOCATIONINFO);
-  RexxArray  *extractSource(PLOCATIONINFO);
-  void        startLocation(PLOCATIONINFO);
-  void        endLocation(PLOCATIONINFO);
-  BOOL        nextSpecial(unsigned int, PLOCATIONINFO);
+  RexxString *traceBack(SourceLocation &, size_t, bool);
+  RexxString *extract(SourceLocation &);
+  RexxArray  *extractSource(SourceLocation &);
+  void        startLocation(SourceLocation &);
+  void        endLocation(SourceLocation &);
+  bool        nextSpecial(unsigned int, SourceLocation &);
   unsigned int locateToken(RexxToken *);
   void        globalSetup();
   RexxString *packLiteral(int, int, int);
@@ -173,7 +174,7 @@ class RexxSource : public RexxInternalObject {
   RexxObject *function(RexxToken *, RexxToken *, int);
   RexxObject *collectionMessage(RexxToken *, RexxObject *, int);
   RexxToken  *getToken(int, int);
-  RexxObject *message(RexxObject *, int, int);
+  RexxObject *message(RexxObject *, bool, int);
   RexxObject *messageTerm();
   RexxObject *variableOrMessageTerm();
   RexxObject *messageSubterm(int);
@@ -201,7 +202,8 @@ class RexxSource : public RexxInternalObject {
   RexxObject *parseLogical(RexxToken *first, int terminators);
 
   BOOL        terminator(int, RexxToken *);
-  BOOL        traceable(void);
+  bool        isTraceable();
+  inline bool isInterpret() { return (flags & _interpret) != 0; }
 
   inline void        install(RexxActivation *activation) { if (this->flags&_install) this->processInstall(activation); };
   inline void        addReference(RexxObject *reference) { this->calls->addLast(reference); }
@@ -279,6 +281,12 @@ class RexxSource : public RexxInternalObject {
   void        saveObject(RexxObject *object) { this->savelist->put(object, object); };
   void        removeObj(RexxObject *object) { if (object != OREF_NULL) this->savelist->remove(object); };
   void        setSecurityManager(RexxObject *manager) { OrefSet(this, this->securityManager, manager); }
+  RexxObject *getSecurityManager() { return securityManager; }
+
+  inline RexxDirectory *getLocalRoutines() { return routines; }
+  inline RexxDirectory *getPublicRoutines() { return public_routines; }
+  inline void setLocalRoutines(RexxDirectory *r) { routines = r; }
+  inline void setPublicRoutines(RexxDirectory *r) { public_routines = r; }
 
   static inline bool isSymbolCharacter(char ch)
   {
@@ -293,6 +301,10 @@ class RexxSource : public RexxInternalObject {
       // treated as negative numbers and returning bogus values.
       return characterTable[((unsigned int)ch) & 0xff];
   }
+
+
+
+protected:
 
   LONG  flags;                         /* parsing flags                     */
   RexxArray  *sourceArray;             /* source lines for this code        */
@@ -351,7 +363,6 @@ class RexxSource : public RexxInternalObject {
 
 
 
-protected:
 
     // Tables of different keywords using in various contexts.
     static KeywordEntry directives[];

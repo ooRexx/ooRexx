@@ -131,8 +131,8 @@ RexxObject *RexxHashTableCollection::copy(void)
                                        /* make a copy of ourself (this also */
                                        /* copies the object variables       */
   newObj = (RexxHashTableCollection *)this->RexxObject::copy();
-                                       /* fill in the hash value            */
-  newObj->hashvalue = HASHOREF(newObj);
+  // we've got the same hash value as the copy...override to our own value
+  newObj->setDefaultHash();
                                        /* We copy the Hash table as well    */
   OrefSet(newObj, newObj->contents, (RexxHashTable *)this->contents->copy());
   return newObj;                       /* return the new object             */

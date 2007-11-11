@@ -115,8 +115,8 @@ typedef size_t HashLink;
    RexxHashTable *insert(RexxObject *value, RexxObject *index, HashLink position, LONG type);
    RexxObject    *nextItem(RexxObject *, RexxObject *);
    RexxObject    *primitiveNextItem(RexxObject *, RexxObject *);
-   inline size_t  mainSlotsSize()  { return this->u_size; };
-   inline size_t  totalSlotsSize() { return this->u_size * 2; };
+   inline size_t  mainSlotsSize()  { return this->size; };
+   inline size_t  totalSlotsSize() { return this->size * 2; };
    inline BOOL    available(HashLink position) { return (size_t)position < this->totalSlotsSize(); };
    inline HashLink hashIndex(RexxObject *obj) { return (HashLink)(obj->hash() % this->mainSlotsSize()); }
    // NB:  Ideally, hashPrimitiveIndex() would be best served by using the identityHash().  Unfortunately,
@@ -127,6 +127,7 @@ typedef size_t HashLink;
    inline HashLink hashPrimitiveIndex(RexxObject *obj) { return (HashLink)(obj->getHashValue() % this->mainSlotsSize()); }
    inline HashLink hashStringIndex(RexxObject *obj) { return (HashLink)(obj->hash() % this->mainSlotsSize()); }
 
+   size_t   size;                      // size of the hash table
    HashLink free;                      /* first free element                */
    TABENTRY entries[1];                /* hash table entries                */
  };

@@ -57,7 +57,7 @@ RexxParseVariable::RexxParseVariable(
 /* Complete initialization of a variable object                               */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* start completely clean            */
+  this->clearObject();                 /* start completely clean            */
                                        /* set the name value                */
   OrefSet(this, this->variableName, variable_name);
   this->index = var_index;             /* save the index                    */
@@ -325,7 +325,7 @@ void *RexxParseVariable::operator new(size_t size)
 
   newObject = new_object(size);        /* Get new object                    */
                                        /* object parse_assignment behaviour */
-  BehaviourSet(newObject, TheParseVariableBehaviour);
+  newObject->setBehaviour(TheParseVariableBehaviour);
   return newObject;
 }
 

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                     RexxInstruction.c */
+/* REXX Kernel                                              RexxInstruction.c */
 /*                                                                            */
 /* Primitive Translator Abstract Instruction Code                             */
 /*                                                                            */
@@ -53,23 +53,18 @@ RexxInstruction::RexxInstruction(
 /* Function:  Common initialization for instruction objects                   */
 /******************************************************************************/
 {
-  LOCATIONINFO clauseLocation;         /* clause location information       */
-
-  ClearObject(this);                   /* start out clean                   */
-  this->hashvalue = 0;                 /* clear out the instruction info    */
+  this->clearObject();                 /* start out clean                   */
                                        /* record the instruction type       */
-  this->instructionInfo.type = (uint8_t)type;
+  this->instructionType = type;
   if (clause != OREF_NULL) {           /* have a clause object?             */
                                        /* fill in default location info     */
-    clause->getLocation(&clauseLocation);
-                                       /* copy the location information     */
-    this->lineNumber = clauseLocation.line;
-    this->offset = clauseLocation.offset;
-    this->endLine = clauseLocation.endline;
-    this->endOffset = clauseLocation.endoffset;
+      instructionLocation = clause->getLocation();
   }
   else
-    this->lineNumber = 0;              /* zero the line number              */
+  {
+      // zero the location
+      instructionLocation.setStart(0, 0);
+  }
 }
 
 void RexxInstruction::live(void)
@@ -110,11 +105,7 @@ void * RexxInstruction::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxObject *newObject;
-  newObject = new_object(size);        /* Get new object                    */
-                                       /* object parse_assignment behaviour */
-  OrefSet(newObject,newObject->behaviour, TheInstructionBehaviour);
-  return newObject;
+  return new_object(size, T_parse_instruction); /* Get new object                    */
 }
 
 void RexxInstructionExpression::live(void)
@@ -153,26 +144,3 @@ void RexxInstructionExpression::flatten(RexxEnvelope *envelope)
   cleanUpFlatten
 }
 
-void RexxInstruction::getLocation(
-    PLOCATIONINFO outLocation)         /* returned location                 */
-/******************************************************************************/
-/* Function:  Retrieve an instructions location information                   */
-/******************************************************************************/
-{
-  outLocation->line = this->lineNumber;/* copy each field over              */
-  outLocation->offset = this->offset;
-  outLocation->endline = this->endLine;
-  outLocation->endoffset = this->endOffset;
-}
-
-void RexxInstruction::setLocation(
-    PLOCATIONINFO newLocation)         /* new location information          */
-/******************************************************************************/
-/* Function:  Set an instructions location information                        */
-/******************************************************************************/
-{
-  this->lineNumber = newLocation->line;/* copy each field over              */
-  this->offset = newLocation->offset;
-  this->endLine = newLocation->endline;
-  this->endOffset = newLocation->endoffset;
-}

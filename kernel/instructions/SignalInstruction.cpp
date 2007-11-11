@@ -61,7 +61,7 @@ RexxInstructionSignal::RexxInstructionSignal(
   OrefSet(this, this->expression, _expression);
   OrefSet(this, this->condition, _condition);
   OrefSet(this, this->name, _name);
-  i_flags = flags;
+  instructionFlags = flags;
 }
 
 void RexxInstructionSignal::live()
@@ -135,7 +135,7 @@ void RexxInstructionSignal::execute(
 
   context->traceInstruction(this);     /* trace if necessary                */
   if (this->condition != OREF_NULL) {  /* is this the ON/OFF form?          */
-    if (i_flags&signal_on)             /* ON form?                          */
+    if (instructionFlags&signal_on)    /* ON form?                          */
                                        /* turn on the trap                  */
       context->trapOn(this->condition, (RexxInstructionCallBase *)this);
     else

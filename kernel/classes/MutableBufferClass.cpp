@@ -117,12 +117,11 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
                                         /* allocate the new object           */
   newBuffer = (RexxMutableBuffer *)new_object(sizeof(RexxMutableBuffer));
                                         /* set the behaviour from the class  */
-  BehaviourSet(newBuffer, this->instanceBehaviour);
+  newBuffer->setBehaviour(this->getInstanceBehaviour());
                                         /* set the virtual function table    */
-  setVirtualFunctions(newBuffer, T_mutablebuffer);
+  newBuffer->setVirtualFunctions(VFTArray[T_mutablebuffer]);
                                         /* clear the front part              */
-  ClearObjectLength(newBuffer, sizeof(RexxMutableBuffer));
-  newBuffer->hashvalue = (long) newBuffer;
+  newBuffer->clearObject(sizeof(RexxMutableBuffer));
   newBuffer->bufferLength = bufferLength;/* save the length of the buffer    */
   newBuffer->defaultSize  = defaultSize; /* store the default buffer size    */
                                         /* create a string of that length    */

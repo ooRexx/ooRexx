@@ -109,7 +109,7 @@ void * RexxActivation::operator new(size_t size)
                                        /* Get new object                    */
   newObject = (RexxActivation *)new_object(size);
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheActivationBehaviour);
+  newObject->setBehaviour(TheActivationBehaviour);
   return (RexxObject *)newObject;      /* return the new object             */
 }
 
@@ -128,7 +128,7 @@ RexxActivation::RexxActivation(
 /*            from garbage collection during the INIT method.                 */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* start with a fresh object         */
+  this->clearObject();                 /* start with a fresh object         */
   if (context == DEBUGPAUSE) {         /* actually a debug pause?           */
     this->debug_pause = TRUE;          /* set up for debugging intercepts   */
     context = INTERPRET;               /* this is really an interpret       */
@@ -137,8 +137,7 @@ RexxActivation::RexxActivation(
   this->activation_context = context;  /* save the context                  */
   this->receiver = _receiver;          /* save the message receiver         */
   this->method = _method;              /* save the method pointer           */
-  this->code = _method->rexxCode;      /* get the REXX method object        */
-  this->source = this->code->u_source; /* save the source                   */
+  this->code = _method->getRexxCode(); /* get the REXX method object        */
   this->activity = _activity;          /* save the activity pointer         */
                                        /* save the sender activation        */
   this->sender = _activity->currentAct();
@@ -148,13 +147,13 @@ RexxActivation::RexxActivation(
   this->settings.calltype = OREF_METHODNAME;
   /* create a new evaluation stack.  This must be done before a */
   /* local variable frame is created. */
-  SetObjectHasNoReferences(this);      /* during allocateStack..            */
+  this->setHasNoReferences();          /* during allocateStack..            */
                                        /* a live marking can happen without */
                                        /* a properly set up stack (::live() */
                                        /* is called). Setting the NoRefBit  */
                                        /* when creating the stack avoids it.*/
-  _activity->allocateStackFrame(&this->stack, this->code->maxStack);
-  SetObjectHasReferences(this);
+  _activity->allocateStackFrame(&this->stack, this->code->getMaxStackSize());
+  this->setHasReferences();
   if (context&INTERNAL_LEVEL_CALL) {   /* internal call or interpret?       */
                                        /* inherit parents settings          */
     activation->putSettings(&this->settings);
@@ -176,10 +175,10 @@ RexxActivation::RexxActivation(
                                        /* set up for internal calls         */
     this->settings.parent_method = this->method;
                                        /* save the source also              */
-    this->settings.parent_source = this->source;
+    this->settings.parent_code = this->code;
 
     /* allocate a frame for the local variables from activity stack */
-    settings.local_variables.init(this, code->vdictSize);
+    settings.local_variables.init(this, code->getLocalVariableSize());
     this->activity->allocateLocalVariableFrame(&settings.local_variables);
                                        /* set the initial and initial       */
                                        /* alternate address settings        */
@@ -188,7 +187,7 @@ RexxActivation::RexxActivation(
                                        /* get initial random seed value     */
     this->random_seed = this->activity->nestedInfo.randomSeed;
                                        /* copy the source security manager  */
-    this->settings.securityManager = this->source->securityManager;
+    this->settings.securityManager = this->code->getSecurityManager();
                                        /* default to method for now         */
     this->settings.calltype = OREF_METHODNAME;
   }
@@ -245,8 +244,8 @@ RexxObject * RexxActivation::run(
                                        /* access                            */
       settings.parent_arglist = arglist;
       settings.parent_argcount = argcount;
-      this->source->install(this);     /* do any required installations     */
-      this->next = this->code->start;  /* ask the method for the start point*/
+      this->code->install(this);       /* do any required installations     */
+      this->next = this->code->getFirstInstruction();  /* ask the method for the start point*/
       this->current = this->next;      /* set the current too (for errors)  */
                                        /* not an internal method?           */
       if (this->activation_context&PROGRAM_LEVEL_CALL) {
@@ -258,7 +257,7 @@ RexxObject * RexxActivation::run(
                                        /* guarded method?                   */
         if (this->method->isGuarded()) {
                                        /* get the object variables          */
-          this->settings.object_variables = this->receiver->getObjectVariables(this->method->scope);
+          this->settings.object_variables = this->receiver->getObjectVariables(this->method->getScope());
                                        /* reserve the variable scope        */
           this->settings.object_variables->reserve(this->activity);
                                        /* and remember for later            */
@@ -267,12 +266,12 @@ RexxObject * RexxActivation::run(
                                        /* initialize the this variable      */
         this->setLocalVariable(OREF_SELF, VARIABLE_SELF, this->receiver);
                                        /* initialize the SUPER variable     */
-        this->setLocalVariable(OREF_SUPER, VARIABLE_SUPER, this->receiver->superScope(this->method->scope));
+        this->setLocalVariable(OREF_SUPER, VARIABLE_SUPER, this->receiver->superScope(this->method->getScope()));
       }
     }
     else {
       if (start == OREF_NULL)          /* no starting location given?       */
-        this->next = this->code->start;/* ask the method for the start point*/
+        this->next = this->code->getFirstInstruction();  /* ask the method for the start point*/
       else
         this->next = start;            /* set that as the current           */
       this->current = this->next;      /* set the current too (for errors)  */
@@ -291,10 +290,10 @@ RexxObject * RexxActivation::run(
   if (this->activation_context == INTERNALCALL) {
     start = this->next;                /* get the starting point            */
                                        /* scan over the internal labels     */
-    while (start != OREF_NULL && start->instructionInfo.type == KEYWORD_LABEL)
+    while (start != OREF_NULL && start->isType(KEYWORD_LABEL))
       start = start->nextInstruction;  /* step to the next one              */
                                        /* this a procedure instruction      */
-    if (start != OREF_NULL && start->instructionInfo.type == KEYWORD_PROCEDURE)
+    if (start != OREF_NULL && start->isType(KEYWORD_PROCEDURE))
                                        /* flip on the procedure flag        */
       this->settings.flags |= procedure_valid;
   }
@@ -662,9 +661,9 @@ void RexxActivation::live()
 /******************************************************************************/
 {
   setUpMemoryMark
+  memory_mark(this->receiver);
   memory_mark(this->method);
   memory_mark(this->code);
-  memory_mark(this->source);
   memory_mark(this->settings.securityManager);
   memory_mark(this->receiver);
   memory_mark(this->activity);
@@ -684,7 +683,7 @@ void RexxActivation::live()
   memory_mark(this->settings.traps);
   memory_mark(this->settings.conditionObj);
   memory_mark(this->settings.parent_method);
-  memory_mark(this->settings.parent_source);
+  memory_mark(this->settings.parent_code);
   memory_mark(this->settings.current_env);
   memory_mark(this->settings.alternate_env);
   memory_mark(this->settings.msgname);
@@ -715,8 +714,8 @@ void RexxActivation::liveGeneral()
 {
   setUpMemoryMarkGeneral
   memory_mark_general(this->method);
+  memory_mark_general(this->receiver);
   memory_mark_general(this->code);
-  memory_mark_general(this->source);
   memory_mark_general(this->settings.securityManager);
   memory_mark_general(this->receiver);
   memory_mark_general(this->activity);
@@ -736,7 +735,7 @@ void RexxActivation::liveGeneral()
   memory_mark_general(this->settings.traps);
   memory_mark_general(this->settings.conditionObj);
   memory_mark_general(this->settings.parent_method);
-  memory_mark_general(this->settings.parent_source);
+  memory_mark_general(this->settings.parent_code);
   memory_mark_general(this->settings.current_env);
   memory_mark_general(this->settings.alternate_env);
   memory_mark_general(this->settings.msgname);
@@ -920,7 +919,7 @@ long RexxActivation::currentLine()
 /******************************************************************************/
 {
   if (this->current != OREF_NULL)      /* have a current line?              */
-    return this->current->getLine();   /* return the line number            */
+    return this->current->getLineNumber(); /* return the line number            */
   else
     return 1;                          /* error on the loading              */
 }
@@ -1303,7 +1302,7 @@ RexxVariableDictionary * RexxActivation::getObjectVariables()
                                        /* no retrieved yet?                 */
   if (this->settings.object_variables == OREF_NULL) {
                                        /* get the object variables          */
-    this->settings.object_variables = this->receiver->getObjectVariables(this->method->scope);
+    this->settings.object_variables = this->receiver->getObjectVariables(this->method->getScope());
     if (this->method->isGuarded()) {   /* guarded method?                   */
                                        /* reserve the variable scope        */
       this->settings.object_variables->reserve(this->activity);
@@ -1351,7 +1350,7 @@ void RexxActivation::signalTo(
   }
   else {
                                        /* initialize the SIGL variable      */
-    lineNum = this->current->getLine();/* get the instruction line number   */
+    lineNum = this->current->getLineNumber();/* get the instruction line number   */
     this->setLocalVariable(OREF_SIGL, VARIABLE_SIGL, new_integer(lineNum));
     this->next = target;               /* set the new target location       */
     this->dostack = OREF_NULL;         /* clear the do loop stack           */
@@ -1432,7 +1431,7 @@ void RexxActivation::guardOn()
                                        /* not retrieved yet?                */
     if (this->settings.object_variables == OREF_NULL)
                                        /* get the object variables          */
-      this->settings.object_variables = this->receiver->getObjectVariables(this->method->scope);
+      this->settings.object_variables = this->receiver->getObjectVariables(this->method->getScope());
                                        /* lock the variable dictionary      */
     this->settings.object_variables->reserve(this->activity);
                                        /* set the state here also           */
@@ -1605,7 +1604,7 @@ BOOL RexxActivation::trap(             /* trap a condition                  */
                                        /* get the handler info              */
       handler = (RexxInstructionCallBase *)traphandler->get(1);
                                        /* condition not trappable with CALL?*/
-      if (handler->instructionInfo.type == KEYWORD_CALL &&
+      if (handler->isType(KEYWORD_CALL) &&
           (condition->strCompare(CHAR_SYNTAX) ||
            condition->strCompare(CHAR_NOVALUE) ||
            condition->strCompare(CHAR_LOSTDIGITS) ||
@@ -1629,7 +1628,7 @@ BOOL RexxActivation::trap(             /* trap a condition                  */
                                        /* and a handler queue               */
       this->handler_queue = new_queue();
     }
-    if (handler->instructionInfo.type == KEYWORD_SIGNAL)
+    if (handler->isType(KEYWORD_SIGNAL))
       instruction = OREF_SIGNAL;       /* this is trapped by a SIGNAL       */
     else
       instruction = OREF_CALL;         /* this is trapped by a CALL         */
@@ -1643,7 +1642,7 @@ BOOL RexxActivation::trap(             /* trap a condition                  */
     this->pending_count++;             /* bump pending condition count      */
                                        /* is this a signal instruction      */
                                        /* no the non-returnable PROPAGATE?  */
-    if (handler->instructionInfo.type == KEYWORD_SIGNAL) {
+    if (handler->isType(KEYWORD_SIGNAL)) {
                                        /* not an Interpret instruction?     */
       if (this->activation_context != INTERPRET)
         longjmp(this->conditionjump,1);/* unwind and process the trap       */
@@ -1728,7 +1727,7 @@ RexxActivation * RexxActivation::senderAct()
                                        /* get the sender from the activity  */
   _sender = (RexxActivation *)this->getSender();
                                        /* spin down to non-native activation*/
-  while (_sender != (RexxActivation *)TheNilObject && OTYPE(NativeActivation,sender))
+  while (_sender != (RexxActivation *)TheNilObject && isOfClass(NativeActivation,sender))
     _sender = (RexxActivation *)_sender->getSender();
   return _sender;                      /* return that activation            */
 }
@@ -1746,7 +1745,7 @@ void RexxActivation::interpret(
 
   this->activity->stackSpace();        /* perform a stack space check       */
                                        /* translate the code                */
-  newMethod = this->source->interpret(codestring, this->getLabels(), this->current->getLine());
+  newMethod = this->code->interpret(codestring, this->current->getLineNumber());
                                        /* create a new activation           */
   newActivation = TheActivityClass->newActivation(this->receiver, newMethod, this->activity, this->settings.msgname, this, INTERPRET);
   this->activity->push(newActivation); /* push on the activity stack        */
@@ -1779,7 +1778,7 @@ void RexxActivation::debugInterpret(   /* interpret interactive debug input */
     return;                            /* this is finished                  */
   }
                                        /* translate the code                */
-  newMethod = this->source->interpret(codestring, this->getLabels(), this->current->getLine());
+  newMethod = this->code->interpret(codestring, this->current->getLineNumber());
 
   /* if debug exit is set, debug_pause must also be set during execution */
   if (!(this->activity->nestedInfo.exitset && this->settings.dbg_flags&dbg_trace))
@@ -1806,7 +1805,7 @@ RexxObject * RexxActivation::rexxVariable(   /* retrieve a program entry        
 {
   if (name->strCompare(CHAR_METHODS)) {/* is this ".methods"                */
                                        /* get the methods directory         */
-    return (RexxObject *)this->settings.parent_source->getMethods();
+    return (RexxObject *)this->settings.parent_code->getMethods();
   }
   else if (name->strCompare(CHAR_RS)) {/* command return status (".rs")?    */
     if (this->settings.flags&return_status_set)
@@ -1826,7 +1825,7 @@ RexxObject * RexxActivation::rexxVariable(   /* retrieve a program entry        
       else
       {
 
-          return new_integer(this->current->getLine());
+          return new_integer(this->current->getLineNumber());
       }
   }
   return OREF_NULL;                    // not recognized
@@ -1850,7 +1849,7 @@ RexxObject * RexxActivation::externalCall(
                                        /* get the arguments array           */
   _arguments = _stack->arguments(_argcount);
                                        /* see if we have a ::ROUTINE here   */
-  routine = this->settings.parent_source->resolveRoutine(target);
+  routine = this->settings.parent_code->resolveRoutine(target);
   if (routine == OREF_NULL) {          /* still not found?                  */
                                        /* if exit declines call             */
     if (this->activity->sysExitFunc(this, target, calltype, &resultObj, _arguments, _argcount)) {
@@ -1928,7 +1927,7 @@ BOOL RexxActivation::callExternalRexx(
                                        /* run as a call                     */
       *resultObj = routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, this->settings.current_env, EXTERNALCALL);
                                        /* now merge all of the public info  */
-      this->settings.parent_source->mergeRequired(routine->code->u_source);
+      this->settings.parent_code->mergeRequired(routine->getSource());
       discard(routine);
       return TRUE;                     /* Return routine found flag         */
     }
@@ -2034,7 +2033,7 @@ RexxObject * RexxActivation::loadRequired(
                                        /* No longer installing routine.     */
   this->activity->removeRunningRequires(fullname);
                                        /* now merge all of the info         */
-  this->settings.parent_source->mergeRequired(_method->code->u_source);
+  this->settings.parent_code->mergeRequired(_method->getSource());
   discard(_method);
   return _method;                      /* return the method  (but not needed!)  */
 }
@@ -2053,7 +2052,7 @@ RexxObject * RexxActivation::internalCall(
   RexxObject *     returnObject;
   RexxObject **    _arguments = _stack->arguments(_argcount);
 
-  lineNum = this->current->getLine();  /* get the current line number       */
+  lineNum = this->current->getLineNumber();  /* get the current line number       */
                                        /* initialize the SIGL variable      */
   this->setLocalVariable(OREF_SIGL, VARIABLE_SIGL, new_integer(lineNum));
                                        /* create a new activation           */
@@ -2082,7 +2081,7 @@ RexxObject * RexxActivation::internalCallTrap(
   size_t lineNum;                      /* source line number                */
 
   this->stack.push(conditionObj);      /* protect the condition object      */
-  lineNum = this->current->getLine();  /* get the current line number       */
+  lineNum = this->current->getLineNumber();  /* get the current line number       */
                                        /* initialize the SIGL variable      */
   this->setLocalVariable(OREF_SIGL, VARIABLE_SIGL, new_integer(lineNum));
                                        /* create a new activation           */
@@ -2157,8 +2156,8 @@ void RexxActivation::traceBack(
   RexxSource   * _source;              /* current method source             */
   RexxString   * line;                 /* traceback line                    */
 
-  _source = this->code->u_source;       /* get the source object             */
-  if (_source->traceable()) {           /* if we still have real source      */
+  _source = this->code->getSource();    /* get the source object             */
+  if (_source->isTraceable()) {         /* if we still have real source      */
     line = this->formatTrace(this->current, _source);
     if (line != OREF_NULL)             /* have a real line?                 */
       traceback_list->addLast(line);   /* add the next traceback item       */
@@ -2370,7 +2369,7 @@ void RexxActivation::traceValue(       /* trace an intermediate value       */
   if (this->settings.flags&trace_suppress || this->debug_pause || value == OREF_NULL)
     return;                            /* just ignore this call             */
 
-  if (!this->source->traceable())      /* if we don't have real source      */
+  if (!this->code->isTraceable())      /* if we don't have real source      */
     return;                            /* just ignore for this              */
                                        /* get the string version            */
   stringvalue = value->stringValue();
@@ -2412,7 +2411,7 @@ void RexxActivation::traceTaggedValue(int prefix, const char *tagPrefix, bool qu
 {
     // the trace settings would normally require us to trace this, but there are conditions
     // where we just skip doing this anyway.
-    if (this->settings.flags&trace_suppress || this->debug_pause || value == OREF_NULL || !source->traceable())
+    if (this->settings.flags&trace_suppress || this->debug_pause || value == OREF_NULL || !code->isTraceable())
     {
         return;
     }
@@ -2435,7 +2434,7 @@ void RexxActivation::traceTaggedValue(int prefix, const char *tagPrefix, bool qu
     // now other conditionals
     outLength += quoteTag ? QUOTES_OVERHEAD : 0;
     // this is usually null, but dot variables add a "." to the tag.
-    outLength += tagPrefix == NULL ? 0 : strlen((char *)tagPrefix);
+    outLength += tagPrefix == NULL ? 0 : strlen(tagPrefix);
 
     // now get a buffer to write this out into
     RexxString *buffer = raw_string(outLength);
@@ -2457,7 +2456,7 @@ void RexxActivation::traceTaggedValue(int prefix, const char *tagPrefix, bool qu
     // is the tag prefixed?  Add this before the name
     if (tagPrefix != NULL)
     {
-        stringsize_t prefixLength = strlen((char *)tagPrefix);
+        stringsize_t prefixLength = strlen(tagPrefix);
         buffer->put(dataOffset, tagPrefix, prefixLength);
         dataOffset += prefixLength;
     }
@@ -2511,7 +2510,7 @@ void RexxActivation::traceOperatorValue(int prefix, const char *tag, RexxObject 
 {
     // the trace settings would normally require us to trace this, but there are conditions
     // where we just skip doing this anyway.
-    if (this->settings.flags&trace_suppress || this->debug_pause || value == OREF_NULL || !source->traceable())
+    if (this->settings.flags&trace_suppress || this->debug_pause || value == OREF_NULL || !code->isTraceable())
     {
         return;
     }
@@ -2595,7 +2594,7 @@ void RexxActivation::traceCompoundValue(int prefix, RexxString *stemName, RexxOb
 {
     // the trace settings would normally require us to trace this, but there are conditions
     // where we just skip doing this anyway.
-    if (this->settings.flags&trace_suppress || this->debug_pause || value == OREF_NULL || !source->traceable())
+    if (this->settings.flags&trace_suppress || this->debug_pause || value == OREF_NULL || !code->isTraceable())
     {
         return;
     }
@@ -2709,19 +2708,18 @@ RexxString * RexxActivation::formatTrace(
 /* Function:  Format a source line for traceback or tracing                   */
 /******************************************************************************/
 {
-  LOCATIONINFO  location;              /* location of the clause            */
-
   if (instruction == OREF_NULL)        /* no current instruction?           */
     return OREF_NULL;                  /* nothing to trace here             */
-  instruction->getLocation(&location); /* get the instruction location      */
+  // get the instruction location
+  SourceLocation location = instruction->getLocation();
   if (this->settings.traceindent < 0)  /* indentation go negative somehow?  */
     this->settings.traceindent = 0;    /* reset to zero                     */
                                        /* extract the source string         */
                                        /* (formatted for tracing)           */
   if (this->settings.traceindent < MAX_TRACEBACK_INDENT)
-      return _source->traceBack(&location, this->settings.traceindent, TRUE);
+      return _source->traceBack(location, this->settings.traceindent, TRUE);
   else
-      return _source->traceBack(&location, MAX_TRACEBACK_INDENT, TRUE);
+      return _source->traceBack(location, MAX_TRACEBACK_INDENT, TRUE);
 }
 
                                        /* process clause boundary stuff     */
@@ -2885,7 +2883,7 @@ BOOL RexxActivation::debugPause(RexxInstruction * instr)
     this->settings.flags &= ~trace_suppress;
   }
   else {                               /* real work to do                   */
-    if (!this->source->traceable())    /* if we don't have real source      */
+    if (!this->code->isTraceable())    /* if we don't have real source      */
       return FALSE;                    /* just ignore for this              */
                                        /* newly into debug mode?            */
     if (!(this->settings.flags&debug_prompt_issued)) {
@@ -2941,10 +2939,10 @@ void RexxActivation::traceClause(      /* trace a REXX instruction          */
                                        /* tracing currently suppressed?     */
   if (this->settings.flags&trace_suppress || this->debug_pause)
     return;                            /* just ignore this call             */
-  if (!this->source->traceable())      /* if we don't have real source      */
+  if (!this->code->isTraceable())      /* if we don't have real source      */
     return;                            /* just ignore for this              */
                                        /* format the line                   */
-  line = this->formatTrace(clause, this->code->u_source);
+  line = this->formatTrace(clause, this->code->getSource());
   if (line != OREF_NULL) {             /* have a source line?               */
                                        /* newly into debug mode?            */
     if ((this->settings.flags&trace_debug && !(this->settings.flags&debug_prompt_issued))
@@ -3045,7 +3043,7 @@ RexxDirectory * RexxActivation::getLabels()
 /* Function:  Return the directory of labels for this method                  */
 /******************************************************************************/
 {
-  return this->code->labels;           /* get the labels from the code      */
+  return this->code->getLabels();      /* get the labels from the code      */
 }
 
 RexxString * RexxActivation::sourceString()
@@ -3170,7 +3168,6 @@ void RexxActivation::sysDbgSubroutineCall(BOOL enter)
   RexxString   *filename;              /* Exit routine name                 */
   RexxString   *routine;               /* Exit routine name                 */
   RXDBGTST_PARM exit_parm;             /* exit parameters                   */
-  LOCATIONINFO  location;              /* location of the clause            */
 
                                        /* get the exit handler              */
   exitname = activity->querySysExits(RXDBG);
@@ -3179,15 +3176,13 @@ void RexxActivation::sysDbgSubroutineCall(BOOL enter)
     exit_parm.rxdbg_flags.rxftrace = 0;
     filename = this->code->getProgramName();
         MAKERXSTRING(exit_parm.rxdbg_filename, filename->getWritableData(), filename->getLength());
-    exit_parm.rxdbg_line = this->getCurrent()->lineNumber;
-    this->getCurrent()->getLocation(&location); /* get the instruction location      */
-    if (this->source)
+    exit_parm.rxdbg_line = this->getCurrent()->getLineNumber();
+    SourceLocation location = this->getCurrent()->getLocation(); /* get the instruction location      */
+    routine = code->extract(location);
+    if (routine != OREF_NULL)
     {
-        routine = this->source->extract(&location);
         MAKERXSTRING(exit_parm.rxdbg_routine, routine->getWritableData(), routine->getLength());
     }
-    else
-        MAKERXSTRING(exit_parm.rxdbg_routine, const_cast<char *>("no info available"), 17);
 
                                        /* call the handler                  */
     SysExitHandler(activity, this, exitname, RXDBG, (enter ? RXDBGENTERSUB : RXDBGLEAVESUB), (PVOID)&exit_parm, FALSE);
@@ -3207,13 +3202,15 @@ void RexxActivation::sysDbgLineLocate(RexxInstruction * instr)
                                        /* get the exit handler              */
   exitname = activity->querySysExits(RXDBG);
   if (exitname != OREF_NULL) {         /* exit enabled?                     */
-    if (!this->code->u_source->traceable() || (this->code->u_source->flags&_interpret)
-        || (this->code->u_source->sourceBuffer == OREF_NULL)) return;
+    if (!this->code->isTraceable() || this->code->isInterpret())
+    {
+        return;
+    }
     exit_parm.rxdbg_flags.rxftrace = 0;
     filename = this->code->getProgramName();
         MAKERXSTRING(exit_parm.rxdbg_filename, filename->getWritableData(), filename->getLength());
     if (instr == OREF_NULL) instr = this->getCurrent();
-    exit_parm.rxdbg_line = instr->lineNumber;
+    exit_parm.rxdbg_line = instr->getLineNumber();
                                        /* call the handler                  */
     SysExitHandler(activity, this, exitname, RXDBG, RXDBGLOCATELINE, (PVOID)&exit_parm, FALSE);
   }

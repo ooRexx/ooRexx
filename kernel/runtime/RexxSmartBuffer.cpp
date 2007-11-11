@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxSmartBuffer.c    */
+/* REXX Kernel                                           RexxSmartBuffer.c    */
 /*                                                                            */
 /* Primitive Smart Buffer Class                                               */
 /*                                                                            */
@@ -52,8 +52,7 @@ RexxSmartBuffer::RexxSmartBuffer(size_t startSize)
 /* Function:  Initialize a smart buffer object                                */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* start out fresh                   */
-  this->hashvalue = HASHOREF(this);    /* set a hash value                  */
+  this->clearObject();                 /* start out fresh                   */
                                        /* default initial buffersize, 1 page*/
                                        /* for buffer + data.                */
   OrefSet(this, this->buffer, (RexxBuffer *)new_buffer(startSize));
@@ -122,7 +121,7 @@ void   *RexxSmartBuffer::operator new(size_t size)
 
   newObject = new_object(size);        /* get storage for a new object      */
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheSmartBufferBehaviour);
+  newObject->setBehaviour(TheSmartBufferBehaviour);
   return (void *)newObject;            /* return the new object             */
 }
 

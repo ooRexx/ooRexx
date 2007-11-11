@@ -49,6 +49,7 @@
                                        /* various activation settings       */
 #include "RexxLocalVariables.hpp"        /* local variable cache definitions  */
 #include "RexxDateTime.hpp"
+#include "RexxCode.hpp"
 
 #define trace_debug         0x00000001 /* interactive trace mode flag       */
 #define trace_all           0x00000002 /* trace all instructions            */
@@ -114,7 +115,7 @@ class ACTSETTINGS {
       RexxObject   ** parent_arglist;      /* arguments to top level program    */
       size_t          parent_argcount;     /* number of arguments to the top level program */
       RexxMethod    * parent_method;       /* method object for top level       */
-      RexxSource    * parent_source;       /* source of the parent method       */
+      RexxCode      * parent_code;         /* source of the parent method       */
       RexxString    * current_env;         /* current address environment       */
       RexxString    * alternate_env;       /* alternate address environment     */
       RexxString    * msgname;             /* message sent to the receiver      */
@@ -311,14 +312,14 @@ RexxObject * activation_find  (void);
    inline void              setCallType(RexxString *type) {this->settings.calltype = type; }
    inline RexxObject      * getReceiver() { return this->receiver; };
    inline void              pushBlock(RexxDoBlock *block) { block->setPrevious(this->dostack); this->dostack = block; }
-   inline void              popBlock() { RexxDoBlock *temp; temp = this->dostack; this->dostack = temp->previous; SetObjectHasNoReferences(temp); }
+   inline void              popBlock() { RexxDoBlock *temp; temp = this->dostack; this->dostack = temp->previous; temp->setHasNoReferences(); }
    inline RexxDoBlock     * topBlock() { return this->dostack; }
    inline void              terminateBlock(size_t _indent) { this->popBlock(); this->blockNest--; this->settings.traceindent = _indent; }
    inline void              newDo(RexxDoBlock *block) { this->pushBlock(block); this->blockNest++; this->settings.traceindent++;}
    inline void              removeBlock() { this->blockNest--; };
    inline void              addBlock()    { this->blockNest++; };
    inline BOOL              inMethod()  {return this->activation_context == METHODCALL; }
-   inline RexxSource *      getSource() {return this->settings.parent_source; };
+   inline RexxSource *      getSource() {return this->settings.parent_code->getSource(); };
    inline void              indent() {this->settings.traceindent++; };
    inline void              unindent() {this->settings.traceindent--; };
    inline void              setIndent(long v) {this->settings.traceindent=(v); };
@@ -669,7 +670,6 @@ RexxObject * activation_find  (void);
    RexxExpressionStack  stack;         /* current evaluation stack          */
    RexxMethod          *method;        /* executed method                   */
    RexxCode            *code;          /* rexx method object                */
-   RexxSource          *source;        /* rexx method object                */
    RexxObject          *receiver;      /* target of a message invocation    */
    RexxActivity        *activity;      /* current running activation        */
    RexxActivation      *sender;        /* previous running activation       */

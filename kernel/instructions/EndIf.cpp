@@ -58,11 +58,11 @@ RexxInstructionEndIf::RexxInstructionEndIf(
   OrefSet(this, this->parent, _parent);/* remember parent IF/WHEN/ELSE      */
   parent->setEndInstruction(this);     /* hook up with the parent object    */
                                        /* is this the ELSE end?             */
-  if (parent->instructionInfo.type == KEYWORD_ELSE)
+  if (parent->instructionType == KEYWORD_ELSE)
 
     this->setType(KEYWORD_ENDELSE);    /* change this into an ELSE end      */
                                        /* is this the ELSE end?             */
-  else if (parent->instructionInfo.type == KEYWORD_WHENTHEN)
+  else if (parent->instructionType == KEYWORD_WHENTHEN)
     this->setType(KEYWORD_ENDWHEN);    /* change this into an WHEN end      */
 }
 
@@ -126,7 +126,7 @@ void RexxInstructionEndIf::execute(
   context->unindent();                 /* unindent the context              */
   context->unindent();                 /* unindent for the total            */
                                        /* this the end of a WHEN block?     */
-  if (this->instructionInfo.type == KEYWORD_ENDWHEN) {
+  if (this->instructionType == KEYWORD_ENDWHEN) {
     context->removeBlock();            /* remove item from block stack      */
     context->unindent();               /* unindent for the SELECT           */
                                        /* set the restart point             */

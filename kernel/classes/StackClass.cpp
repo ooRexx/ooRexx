@@ -46,25 +46,25 @@
 #include "StackClass.hpp"
 
 RexxStack::RexxStack(
-    size_t size)                       /* elements in the stack             */
+    size_t _size)                  /* elements in the stack             */
 /******************************************************************************/
 /* Function:  Initialize a primitive stack.                                   */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* clear entire stack                */
-  this->u_size = size;                 /* set the size                      */
+  this->clearObject();                 /* clear entire stack                */
+  this->size = _size;                  /* set the size                      */
   this->top = 0;                       /* and we're set at the top          */
 }
 
 
 void RexxStack::init(
-    size_t size)                       /* elements in the stack             */
+    size_t _size)                      /* elements in the stack             */
 /******************************************************************************/
 /* Function:  Initialize a primitive stack early in memory set up             */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* clear entire stack                */
-  this->u_size = size;                 /* set the size                      */
+  this->clearObject();                 /* clear entire stack                */
+  this->size = _size;                  /* set the size                      */
   this->top = 0;                       /* and we're set at the top          */
 }
 
@@ -168,7 +168,7 @@ void *RexxStack::operator new(
                                        /* Get new object                    */
     newObject = memoryObject.temporaryObject(size + ((stksize-1) * sizeof(RexxObject *)));
                                        /* set the behaviour                 */
-  BehaviourSet(newObject, TheStackBehaviour);
+  newObject->setBehaviour(TheStackBehaviour);
   return newObject;                    /* return the new object             */
 }
 
@@ -185,14 +185,14 @@ RexxSaveStack::RexxSaveStack(
 }
 
 void RexxSaveStack::init(
-    size_t size,                       /* elements in the stack             */
+    size_t _size,                      /* elements in the stack             */
     size_t aSize)                      /* size to allocate                  */
 /******************************************************************************/
 /* Function:  Initialize a primitive stack early in memory set up             */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* clear entire stack                */
-  this->u_size = size;                 /* set the size                      */
+  this->clearObject();                 /* clear entire stack                */
+  this->size = _size;                  /* set the size                      */
   this->top = 0;                       /* set the element to the top        */
   this->allocSize = aSize;
 }
@@ -210,7 +210,7 @@ void *RexxSaveStack::operator new(
   newObject = new_object(size + ((allocSize-1) * sizeof(RexxObject *)));
 
                                        /* set the behaviour                 */
-  BehaviourSet(newObject, TheStackBehaviour);
+  newObject->setBehaviour(TheStackBehaviour);
   return newObject;                    /* return the new object             */
 }
 
@@ -221,7 +221,7 @@ void RexxSaveStack::extend(
 /******************************************************************************/
 {
    if (newSize < this->allocSize)
-     this->u_size = newSize;
+     this->size = newSize;
 }
 
 void RexxSaveStack::remove(
@@ -243,7 +243,7 @@ void RexxSaveStack::remove(
    } else
      /* not top element, search it if requested */
      if (search)
-       for (i=0; i<this->u_size; i++)
+       for (i=0; i<this->size; i++)
          if (this->stack[i] == element) {
            this->stack[i] = OREF_NULL;
            break;
@@ -267,43 +267,10 @@ void RexxSaveStack::live()
         continue;                      /* an empty entry? just go on */
     }
                                        /* if the object has already been marked, */
-    else if (ObjectIsMarked(thisObject)) {
+    else if (thisObject->isObjectMarked(memoryObject.markWord)) {
         *rp = OREF_NULL;               /* we can clear this out now, rather than keeping it in the stack */
     }
     else {
-                                       /* if this is a large, unmarked object, we */
-                                       /* do some additional tests.  If this is a String */
-                                       /* then we check the position within the stack.  If */
-                                       /* it is not near the top of the stack, then this is */
-                                       /* an already dead object.  We will clear this out */
-                                       /* now to prevent GC thrashing */
-        if (IsLargeObject(thisObject)) {
-//          printf("Large object on save stack encountered of size %d\n", ObjectSize(thisObject));
-                                       /* is this a large string? */
-            if (OTYPE(String, thisObject)) {
-                                       /* if the pointer is less than the top, we don't */
-                                       /* need to worry about wrapping now */
-                if (rp < this->stack + this->top) {
-                                       /* if in the save range, continue */
-                    if (rp < this->stack + this->top - SAVE_THRESHOLD) {
-                        *rp = OREF_NULL;  /* we can clear this out now, rather than keeping it in the stack */
-//                      printf("Zeroing out SaveStack reference to marked object %p\n", thisObject);
-                        continue;
-                    }
-                }
-                else {
-                                       /* see if we've wrapped recently */
-                    long wrap = this->top - SAVE_THRESHOLD;
-                    if (wrap < 0) {    /* check to see if this is in the top range */
-                        if (rp < this->stack + (this->top - wrap)) {
-                            *rp = OREF_NULL;  /* we can clear this out now, rather than keeping it in the stack */
-//                          printf("Zeroing out SaveStack reference to unmarked object %p\n", thisObject);
-                            continue;
-                        }
-                    }
-                }
-            }
-        }
         /* this is an object we need to keep alive, but we'll only */
         /* do this for one GC cycle.  We'll clear this out now, to */
         /* make sure we don't keep this pinned longer than */

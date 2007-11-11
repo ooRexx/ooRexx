@@ -52,18 +52,16 @@ RexxToken::RexxToken(
     int            _classId,            /* class of token                    */
     int            _subclass,           /* token subclass                    */
     RexxString     *_value,             /* token value                       */
-    PLOCATIONINFO  _location)           /* token location descriptor         */
+    SourceLocation &_location)          /* token location descriptor         */
 /******************************************************************************/
 /* Function:  Complete set up of a TOKEN object                               */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* initialize the object             */
-  this->hashvalue = HASHOREF(this);    /* fill in the hash value            */
+  this->clearObject();                  /* initialize the object             */
   OrefSet(this, this->value, _value);   /* use the provided string value     */
   this->classId = _classId;             /* no assigned token class           */
   this->subclass = _subclass;           /* no specialization yet             */
-  if (_location != NULL)                /* have location data?               */
-    this->location = *_location;        /* copy it over                      */
+  this->tokenLocation = _location;      /* copy it over                      */
 }
 
 void RexxToken::live()
@@ -98,33 +96,6 @@ void RexxToken::flatten(RexxEnvelope *envelope)
   cleanUpFlatten
 }
 
-void RexxToken::setStart(
-    size_t  line,                       /* starting line number              */
-    size_t offset)                      /* starting line offset              */
-/******************************************************************************/
-/* Function:  Set a token's starting position as a line/offset pair           */
-/******************************************************************************/
-{
-  this->location.line = line;          /* set the starting line             */
-  this->location.offset = offset;      /* and the starting character        */
-}
-
-void RexxToken::setEnd(
-    size_t  line,                      /* ending line number                */
-    size_t  offset)                    /* ending line offset                */
-/******************************************************************************/
-/* Function:  Set a token's ending position as a line/offset pair             */
-/******************************************************************************/
-{
-  /* Def.2714: set ending position only if it is larger than beginning! CHM */
-  if ( (line > this->location.line) ||
-       ((line == this->location.line) && (offset > this->location.offset)) )
-  {
-    this->location.endline = line;       /* set the starting line             */
-    this->location.endoffset = offset;   /* and the ending character          */
-  } /* endif */
-}
-
 
 /**
  * Check and update this token for the special assignment forms
@@ -135,7 +106,7 @@ void RexxToken::setEnd(
 void RexxToken::checkAssignment(RexxSource *source, RexxString *newValue)
 {
     // check if the next character is a special assignment shortcut
-    if (source->nextSpecial('=', &location))
+    if (source->nextSpecial('=', tokenLocation))
     {
         // this is a special type, which uses the same subtype.
         classId = TOKEN_ASSIGNMENT;
@@ -155,7 +126,7 @@ void *RexxToken::operator new(size_t size)
                                        /* Get new object                    */
   newToken = new_object(sizeof(RexxToken));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newToken, TheTokenBehaviour);
+  newToken->setBehaviour(TheTokenBehaviour);
   return newToken;                     /* and return                        */
 }
 

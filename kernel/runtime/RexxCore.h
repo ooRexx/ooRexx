@@ -154,7 +154,7 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 
 /* Object Reference Assignment */
 #ifndef CHECKOREFS
-#define OrefSet(o,r,v) (OldSpace(o) ? memoryObject.setOref((void *)&(r),(RexxObject *)v) : (RexxObject *)(r=v))
+#define OrefSet(o,r,v) ((o)->isOldSpace() ? memoryObject.setOref((void *)&(r),(RexxObject *)v) : (RexxObject *)(r=v))
 #else
 #define OrefSet(o,r,v) memoryObject.checkSetOref((RexxObject *)o, (RexxObject **)&(r), (RexxObject *)v, __FILE__, __LINE__)
 #endif
@@ -193,7 +193,6 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 #define new_method(i,e,a,c)               (new RexxMethod (i, e, a, c))
 #define new_CPPmethod(p,s,c)              (new RexxMethod (p, s, c))
 #define new_nmethod(p,l)                  (TheNativeCodeClass->newClass(p, l))
-#define new_object(s)                     (memoryObject.newObject((long)(s)))
 #define new_arrayofObject(s,c,b)          (memoryObject.newObjects(s, c, b))
 #define new_pointer(p)                    (TheIntegerClass->newCache((LONG)p))
 #define new_smartbuffer()                 (new RexxSmartBuffer(1024))
@@ -216,37 +215,9 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 #define new_token(c,s,v,l)                (new RexxToken (c, s, v, l))
 #define new_arrayOfTokens(n)              (memoryObject.newObjects(sizeof(RexxToken), n, TheTokenBehaviour))
 
-/******************************************************************************/
-/* Function prototypes for different message dispatch types                   */
-/******************************************************************************/
-
-typedef RexxObject *  (far *PMF0)(RexxObject *);
-typedef RexxObject *  (far *PMF1)(RexxObject *, RexxObject *);
-typedef RexxObject *  (far *PMF2)(RexxObject *, RexxObject *, RexxObject *);
-typedef RexxObject *  (far *PMF3)(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-typedef RexxObject *  (far *PMF4)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-typedef RexxObject *  (far *PMF5)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-typedef RexxObject *  (far *PMF6)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-typedef RexxObject *  (far *PMF7)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-
-                                       /* pointer to method function        */
-typedef RexxObject *  (far VLAENTRY *PMF) ( RexxObject *,...);
-
-typedef PMF   near *NPPMF;             /* near pointer to above             */
-
-typedef ULONG HEADINFO;                /* Object Header information         */
-
 #define MCPP   0                       /* C++ method start index            */
 #define MSSCPP 0                       /* C++ class method start index      */
 
-typedef struct locationinfo {          /* token/clause location information */
-  size_t line;                         /* file line location                */
-  size_t offset;                       /* token location within the line    */
-  size_t endline;                      /* ending line location              */
-  size_t endoffset;                    /* ending offset location (+1)       */
-} LOCATIONINFO;
-
-typedef LOCATIONINFO *PLOCATIONINFO;   /* pointer to location information   */
 
 typedef struct internalmethodentry {   /* internal method table entry       */
   const char *entryName;               /* internal entry point name         */
@@ -278,25 +249,7 @@ typedef RexxObject *builtin_func(RexxActivation *, int, RexxExpressionStack *);
 typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
 
                                        /*  as "overLoading" of hashValue  */
-typedef struct {
-  short typeNum;
-  short behaviourFlags;
-} BEHAVIOURINFO;
 
-typedef struct {
-  unsigned short methnum;              /* kernel method number            */
-  uint8_t arguments;
-  uint8_t flags;                       /* flag information                */
-} METHODINFO;
-
-typedef struct {
-  uint8_t type;                        /* name of the instruction           */
-  uint8_t flags;                       /* general flag area                 */
-  unsigned short general;              /* general reusable short value      */
-} INSTRUCTIONINFO;
-
-                                       /* used ofor special constructor   */
-typedef enum {RESTOREIMAGE, MOBILEUNFLATTEN, METHODUNFLATTEN} RESTORETYPE;
 
 /******************************************************************************/
 /* Change EXTERN definition if not already created by GDATA                   */
@@ -330,7 +283,7 @@ typedef enum {RESTOREIMAGE, MOBILEUNFLATTEN, METHODUNFLATTEN} RESTORETYPE;
                                        /* restore a class from its          */
                                        /* associated primitive behaviour    */
                                        /* (already restored by memory_init) */
-#define RESTORE_CLASS(name, location, className) The##name##Class = (className *)pbehav[T_##location].restoreClass();
+#define RESTORE_CLASS(name, location, className) The##name##Class = (className *)RexxBehaviour::getPrimitiveBehaviour(T_##location)->restoreClass();
 
 
 
@@ -577,119 +530,117 @@ EXTERN RexxInteger * IntegerMinusOne INITGLOBALPTR;  /* Static integer -1       
 /* Global Objects - Primitive Behaviour                                       */
 /******************************************************************************/
 #ifndef GDATA
-                                       /* table of primitive behaviours     */
-EXTERN RexxBehaviour pbehav[highest_T+1];
 EXTERN void *VFTArray[highest_T];      /* table of virtual functions        */
 
 #endif
 
-#define TheActivationBehaviour      ((RexxBehaviour *)(&pbehav[T_activation]))
-#define TheActivityBehaviour        ((RexxBehaviour *)(&pbehav[T_activity]))
-#define TheActivityClassBehaviour   ((RexxBehaviour *)(&pbehav[T_activity_class]))
-#define TheArrayBehaviour           ((RexxBehaviour *)(&pbehav[T_array]))
-#define TheArrayClassBehaviour      ((RexxBehaviour *)(&pbehav[T_array_class]))
-#define TheBehaviourBehaviour       ((RexxBehaviour *)(&pbehav[T_behaviour]))
-#define TheBufferBehaviour          ((RexxBehaviour *)(&pbehav[T_buffer]))
-#define TheClassBehaviour           ((RexxBehaviour *)(&pbehav[T_class]))
-#define TheClassClassBehaviour      ((RexxBehaviour *)(&pbehav[T_class_class]))
-#define TheCorralBehaviour          ((RexxBehaviour *)(&pbehav[T_corral]))
-#define TheDirectoryBehaviour       ((RexxBehaviour *)(&pbehav[T_directory]))
-#define TheDirectoryClassBehaviour  ((RexxBehaviour *)(&pbehav[T_directory_class]))
-#define TheEnvelopeBehaviour        ((RexxBehaviour *)(&pbehav[T_envelope]))
-#define TheHashTableBehaviour       ((RexxBehaviour *)(&pbehav[T_hashtab]))
-#define TheIntegerBehaviour         ((RexxBehaviour *)(&pbehav[T_integer]))
-#define TheIntegerClassBehaviour    ((RexxBehaviour *)(&pbehav[T_integer_class]))
-#define TheListBehaviour            ((RexxBehaviour *)(&pbehav[T_list]))
-#define TheListClassBehaviour       ((RexxBehaviour *)(&pbehav[T_list_class]))
-#define TheListTableBehaviour       ((RexxBehaviour *)(&pbehav[T_listtable]))
-#define TheMemoryBehaviour          ((RexxBehaviour *)(&pbehav[T_memory]))
-#define TheMessageBehaviour         ((RexxBehaviour *)(&pbehav[T_message]))
-#define TheMessageClassBehaviour    ((RexxBehaviour *)(&pbehav[T_message_class]))
-#define TheMethodBehaviour          ((RexxBehaviour *)(&pbehav[T_method]))
-#define TheMethodClassBehaviour     ((RexxBehaviour *)(&pbehav[T_method_class]))
-#define TheNativeCodeBehaviour      ((RexxBehaviour *)(&pbehav[T_nmethod]))
-#define TheNativeCodeClassBehaviour ((RexxBehaviour *)(&pbehav[T_nmethod_class]))
-#define TheRexxCodeBehaviour        ((RexxBehaviour *)(&pbehav[T_rexxmethod]))
-#define TheNativeActivationBehaviour ((RexxBehaviour *)(&pbehav[T_nativeact]))
-#define TheNumberStringBehaviour    ((RexxBehaviour *)(&pbehav[T_numberstring]))
-#define TheNumberStringClassBehaviour  ((RexxBehaviour *)(&pbehav[T_numberstring_class]))
-#define TheObjectBehaviour          ((RexxBehaviour *)(&pbehav[T_object]))
-#define TheObjectClassBehaviour     ((RexxBehaviour *)(&pbehav[T_object_class]))
-#define TheQueueBehaviour           ((RexxBehaviour *)(&pbehav[T_queue]))
-#define TheQueueClassBehaviour      ((RexxBehaviour *)(&pbehav[T_queue_class]))
-#define TheSmartBufferBehaviour     ((RexxBehaviour *)(&pbehav[T_smartbuffer]))
-#define TheStackBehaviour           ((RexxBehaviour *)(&pbehav[T_stack]))
-#define TheStemBehaviour            ((RexxBehaviour *)(&pbehav[T_stem]))
-#define TheStemClassBehaviour       ((RexxBehaviour *)(&pbehav[T_stem_class]))
-#define TheStringBehaviour          ((RexxBehaviour *)(&pbehav[T_string]))
-#define TheStringClassBehaviour     ((RexxBehaviour *)(&pbehav[T_string_class]))
-#define TheSupplierBehaviour        ((RexxBehaviour *)(&pbehav[T_supplier]))
-#define TheSupplierClassBehaviour   ((RexxBehaviour *)(&pbehav[T_supplier_class]))
-#define TheTableBehaviour           ((RexxBehaviour *)(&pbehav[T_table]))
-#define TheTableClassBehaviour      ((RexxBehaviour *)(&pbehav[T_table_class]))
-#define TheRelationBehaviour        ((RexxBehaviour *)(&pbehav[T_relation]))
-#define TheRelationClassBehaviour   ((RexxBehaviour *)(&pbehav[T_relation_class]))
-#define TheVariableBehaviour        ((RexxBehaviour *)(&pbehav[T_variable]))
-#define TheCompoundElementBehaviour ((RexxBehaviour *)(&pbehav[T_compound_element]))
-#define TheVariableDictionaryBehaviour ((RexxBehaviour *)(&pbehav[T_vdict]))
-#define TheMutableBufferBehaviour   ((RexxBehaviour *)(&pbehav[T_mutablebuffer]))
-#define TheMutableBufferClassBehaviour ((RexxBehaviour *)(&pbehav[T_mutablebuffer_class]))
+#define TheActivationBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_activation]))
+#define TheActivityBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_activity]))
+#define TheActivityClassBehaviour   ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_activity_class]))
+#define TheArrayBehaviour           ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_array]))
+#define TheArrayClassBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_array_class]))
+#define TheBehaviourBehaviour       ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_behaviour]))
+#define TheBufferBehaviour          ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_buffer]))
+#define TheClassBehaviour           ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_class]))
+#define TheClassClassBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_class_class]))
+#define TheCorralBehaviour          ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_corral]))
+#define TheDirectoryBehaviour       ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_directory]))
+#define TheDirectoryClassBehaviour  ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_directory_class]))
+#define TheEnvelopeBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_envelope]))
+#define TheHashTableBehaviour       ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_hashtab]))
+#define TheIntegerBehaviour         ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_integer]))
+#define TheIntegerClassBehaviour    ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_integer_class]))
+#define TheListBehaviour            ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_list]))
+#define TheListClassBehaviour       ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_list_class]))
+#define TheListTableBehaviour       ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_listtable]))
+#define TheMemoryBehaviour          ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_memory]))
+#define TheMessageBehaviour         ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_message]))
+#define TheMessageClassBehaviour    ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_message_class]))
+#define TheMethodBehaviour          ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_method]))
+#define TheMethodClassBehaviour     ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_method_class]))
+#define TheNativeCodeBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_nmethod]))
+#define TheNativeCodeClassBehaviour ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_nmethod_class]))
+#define TheRexxCodeBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_rexxmethod]))
+#define TheNativeActivationBehaviour ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_nativeact]))
+#define TheNumberStringBehaviour    ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_numberstring]))
+#define TheNumberStringClassBehaviour  ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_numberstring_class]))
+#define TheObjectBehaviour          ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_object]))
+#define TheObjectClassBehaviour     ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_object_class]))
+#define TheQueueBehaviour           ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_queue]))
+#define TheQueueClassBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_queue_class]))
+#define TheSmartBufferBehaviour     ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_smartbuffer]))
+#define TheStackBehaviour           ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_stack]))
+#define TheStemBehaviour            ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_stem]))
+#define TheStemClassBehaviour       ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_stem_class]))
+#define TheStringBehaviour          ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_string]))
+#define TheStringClassBehaviour     ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_string_class]))
+#define TheSupplierBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_supplier]))
+#define TheSupplierClassBehaviour   ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_supplier_class]))
+#define TheTableBehaviour           ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_table]))
+#define TheTableClassBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_table_class]))
+#define TheRelationBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_relation]))
+#define TheRelationClassBehaviour   ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_relation_class]))
+#define TheVariableBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_variable]))
+#define TheCompoundElementBehaviour ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_compound_element]))
+#define TheVariableDictionaryBehaviour ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_vdict]))
+#define TheMutableBufferBehaviour   ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_mutablebuffer]))
+#define TheMutableBufferClassBehaviour ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_mutablebuffer_class]))
 
-#define TheAddressInstructionBehaviour      ((RexxBehaviour *)(&pbehav[T_parse_address]))
-#define TheAssignmentInstructionBehaviour   ((RexxBehaviour *)(&pbehav[T_parse_assignment]))
-#define TheDoBlockBehaviour                 ((RexxBehaviour *)(&pbehav[T_parse_block]))
-#define TheCallInstructionBehaviour         ((RexxBehaviour *)(&pbehav[T_parse_call]))
-#define TheCommandInstructionBehaviour      ((RexxBehaviour *)(&pbehav[T_parse_command]))
-#define TheCompoundVariableBehaviour        ((RexxBehaviour *)(&pbehav[T_parse_compound]))
-#define TheDoInstructionBehaviour           ((RexxBehaviour *)(&pbehav[T_parse_do]))
-#define TheDotVariableBehaviour             ((RexxBehaviour *)(&pbehav[T_parse_dot_variable]))
-#define TheDropInstructionBehaviour         ((RexxBehaviour *)(&pbehav[T_parse_drop]))
-#define TheElseInstructionBehaviour         ((RexxBehaviour *)(&pbehav[T_parse_else]))
-#define TheEndInstructionBehaviour          ((RexxBehaviour *)(&pbehav[T_parse_end]))
-#define TheEndIfInstructionBehaviour        ((RexxBehaviour *)(&pbehav[T_parse_endif]))
-#define TheExitInstructionBehaviour         ((RexxBehaviour *)(&pbehav[T_parse_exit]))
-#define TheExposeInstructionBehaviour       ((RexxBehaviour *)(&pbehav[T_parse_expose]))
-#define TheForwardInstructionBehaviour      ((RexxBehaviour *)(&pbehav[T_parse_forward]))
-#define TheFunctionBehaviour                ((RexxBehaviour *)(&pbehav[T_parse_function]))
-#define TheLogicalBehaviour                 ((RexxBehaviour *)(&pbehav[T_parse_logical]))
-#define TheGuardInstructionBehaviour        ((RexxBehaviour *)(&pbehav[T_parse_guard]))
-#define TheIfInstructionBehaviour           ((RexxBehaviour *)(&pbehav[T_parse_if]))
-#define TheInstructionBehaviour             ((RexxBehaviour *)(&pbehav[T_parse_instruction]))
-#define TheInterpretInstructionBehaviour    ((RexxBehaviour *)(&pbehav[T_parse_interpret]))
-#define TheLabelInstructionBehaviour        ((RexxBehaviour *)(&pbehav[T_parse_label]))
-#define TheLeaveInstructionBehaviour        ((RexxBehaviour *)(&pbehav[T_parse_leave]))
-#define TheMessageInstructionBehaviour      ((RexxBehaviour *)(&pbehav[T_parse_message]))
-#define TheMessageSendBehaviour             ((RexxBehaviour *)(&pbehav[T_parse_message_send]))
-#define TheNopInstructionBehaviour          ((RexxBehaviour *)(&pbehav[T_parse_nop]))
-#define TheNumericInstructionBehaviour      ((RexxBehaviour *)(&pbehav[T_parse_numeric]))
-#define TheOperatorBehaviour                ((RexxBehaviour *)(&pbehav[T_parse_operator]))
-#define TheUnaryOperatorBehaviour           ((RexxBehaviour *)(&pbehav[T_parse_unary_operator]))
-#define TheBinaryOperatorBehaviour          ((RexxBehaviour *)(&pbehav[T_parse_binary_operator]))
-#define TheOptionsInstructionBehaviour      ((RexxBehaviour *)(&pbehav[T_parse_options]))
-#define TheOtherWiseInstructionBehaviour    ((RexxBehaviour *)(&pbehav[T_parse_otherwise]))
-#define TheParseInstructionBehaviour        ((RexxBehaviour *)(&pbehav[T_parse_parse]))
-#define TheProcedureInstructionBehaviour    ((RexxBehaviour *)(&pbehav[T_parse_procedure]))
-#define TheQueueInstructionBehaviour        ((RexxBehaviour *)(&pbehav[T_parse_queue]))
-#define TheRaiseInstructionBehaviour        ((RexxBehaviour *)(&pbehav[T_parse_raise]))
-#define TheReplyInstructionBehaviour        ((RexxBehaviour *)(&pbehav[T_parse_reply]))
-#define TheReturnInstructionBehaviour       ((RexxBehaviour *)(&pbehav[T_parse_return]))
-#define TheSayInstructionBehaviour          ((RexxBehaviour *)(&pbehav[T_parse_say]))
-#define TheSelectInstructionBehaviour       ((RexxBehaviour *)(&pbehav[T_parse_select]))
-#define TheLabeledSelectInstructionBehaviour ((RexxBehaviour *)(&pbehav[T_parse_labeled_select]))
-#define TheSignalInstructionBehaviour       ((RexxBehaviour *)(&pbehav[T_parse_signal]))
-#define TheStemVariableBehaviour            ((RexxBehaviour *)(&pbehav[T_parse_stem]))
-#define TheThenInstructionBehaviour         ((RexxBehaviour *)(&pbehav[T_parse_then]))
-#define TheTraceInstructionBehaviour        ((RexxBehaviour *)(&pbehav[T_parse_trace]))
-#define TheParseTriggerBehaviour            ((RexxBehaviour *)(&pbehav[T_parse_trigger]))
-#define TheUseInstructionBehaviour          ((RexxBehaviour *)(&pbehav[T_parse_use]))
-#define TheUseStrictInstructionBehaviour    ((RexxBehaviour *)(&pbehav[T_parse_use_strict]))
-#define TheParseVariableBehaviour           ((RexxBehaviour *)(&pbehav[T_parse_variable]))
-#define TheVariableReferenceBehaviour       ((RexxBehaviour *)(&pbehav[T_parse_varref]))
-#define TheSourceBehaviour                  ((RexxBehaviour *)(&pbehav[T_source]))
-#define TheClauseBehaviour                  ((RexxBehaviour *)(&pbehav[T_clause]))
-#define TheTokenBehaviour                   ((RexxBehaviour *)(&pbehav[T_token]))
-#define TheInternalStackBehaviour           ((RexxBehaviour *)(&pbehav[T_intstack]))
-#define TheActivationFrameBufferBehaviour   ((RexxBehaviour *)(&pbehav[T_activation_frame_buffer]))
+#define TheAddressInstructionBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_address]))
+#define TheAssignmentInstructionBehaviour   ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_assignment]))
+#define TheDoBlockBehaviour                 ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_block]))
+#define TheCallInstructionBehaviour         ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_call]))
+#define TheCommandInstructionBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_command]))
+#define TheCompoundVariableBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_compound]))
+#define TheDoInstructionBehaviour           ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_do]))
+#define TheDotVariableBehaviour             ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_dot_variable]))
+#define TheDropInstructionBehaviour         ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_drop]))
+#define TheElseInstructionBehaviour         ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_else]))
+#define TheEndInstructionBehaviour          ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_end]))
+#define TheEndIfInstructionBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_endif]))
+#define TheExitInstructionBehaviour         ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_exit]))
+#define TheExposeInstructionBehaviour       ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_expose]))
+#define TheForwardInstructionBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_forward]))
+#define TheFunctionBehaviour                ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_function]))
+#define TheLogicalBehaviour                 ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_logical]))
+#define TheGuardInstructionBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_guard]))
+#define TheIfInstructionBehaviour           ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_if]))
+#define TheInstructionBehaviour             ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_instruction]))
+#define TheInterpretInstructionBehaviour    ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_interpret]))
+#define TheLabelInstructionBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_label]))
+#define TheLeaveInstructionBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_leave]))
+#define TheMessageInstructionBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_message]))
+#define TheMessageSendBehaviour             ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_message_send]))
+#define TheNopInstructionBehaviour          ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_nop]))
+#define TheNumericInstructionBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_numeric]))
+#define TheOperatorBehaviour                ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_operator]))
+#define TheUnaryOperatorBehaviour           ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_unary_operator]))
+#define TheBinaryOperatorBehaviour          ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_binary_operator]))
+#define TheOptionsInstructionBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_options]))
+#define TheOtherWiseInstructionBehaviour    ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_otherwise]))
+#define TheParseInstructionBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_parse]))
+#define TheProcedureInstructionBehaviour    ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_procedure]))
+#define TheQueueInstructionBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_queue]))
+#define TheRaiseInstructionBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_raise]))
+#define TheReplyInstructionBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_reply]))
+#define TheReturnInstructionBehaviour       ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_return]))
+#define TheSayInstructionBehaviour          ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_say]))
+#define TheSelectInstructionBehaviour       ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_select]))
+#define TheLabeledSelectInstructionBehaviour ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_labeled_select]))
+#define TheSignalInstructionBehaviour       ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_signal]))
+#define TheStemVariableBehaviour            ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_stem]))
+#define TheThenInstructionBehaviour         ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_then]))
+#define TheTraceInstructionBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_trace]))
+#define TheParseTriggerBehaviour            ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_trigger]))
+#define TheUseInstructionBehaviour          ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_use]))
+#define TheUseStrictInstructionBehaviour    ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_use_strict]))
+#define TheParseVariableBehaviour           ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_variable]))
+#define TheVariableReferenceBehaviour       ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_parse_varref]))
+#define TheSourceBehaviour                  ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_source]))
+#define TheClauseBehaviour                  ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_clause]))
+#define TheTokenBehaviour                   ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_token]))
+#define TheInternalStackBehaviour           ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_intstack]))
+#define TheActivationFrameBufferBehaviour   ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_activation_frame_buffer]))
 
 /******************************************************************************/
 /* Utility Macros                                                             */
@@ -703,31 +654,11 @@ EXTERN void *VFTArray[highest_T];      /* table of virtual functions        */
 #define THIS_BEHAVIOUR (this->behaviour)
 #define PASTE3(a1,a2,a3) a1##a2##a3
 
-#define ObjectType(r) (((RexxObject *)(r))->behaviour)
-#define ObjectTypeNumber(r) (ObjectType(r)->typenum())
-                                       /* check the object type             */
-#define OTYPE(t,r) (ObjectType(r) == The##t##Behaviour)
-#define OTYPENUM(t,r) (ObjectTypeNumber(r) == T_##t)
-#define IsSameType(me, you) (ObjectType(me) == ObjectType(you))
+#define isOfClass(t,r) (r)->isObjectType(The##t##Behaviour)
+#define isOfClassType(t,r) (r)->isObjectType(T_##t)
 
-                                       /* current object's behaviour        */
-#define objectType(r) (((RexxObject *)(r))->behaviour)
-#define objectTypeNumber(r) (objectType(r)->typenum())
-                                       /* check the object type             */
-#define isOfClass(t,r) (objectType(r) == The##t##Behaviour)
-#define hasTypeNumber(t, r) (objectTypeNumber(r) == T_##t)
-#define isSameType(me, you) (objectType(me) == objectType(you))
-
-
-/* assign a new behaviour */
-#define BehaviourSet(o, b)  (o)->behaviour = (RexxBehaviour *)b
-
-                                       /* verify an objects behaviour       */
-#define HASBEHAV(b,r) (((r)->behaviour) == b)
                                        /* access an object's hash value     */
 #define HASHVALUE(r) ((ULONG)((r)->hashvalue))
-                                       /* generate hash value from OREF     */
-#define HASHOREF(r) ((long)((ULONG)r>>3))
 
 /******************************************************************************/
 /* Utility Functions                                                          */
@@ -978,7 +909,7 @@ inline bool isMethod(RexxObject *o) { return isOfClass(Method, o); }
 #ifndef GDATA
 inline RexxString *REQUEST_STRING(RexxObject *object)
 {
-  return (OTYPE(String, object) ? (RexxString *)object : (object)->requestString());
+  return (isOfClass(String, object) ? (RexxString *)object : (object)->requestString());
 }
 #endif
 
@@ -1009,11 +940,6 @@ inline long REQUEST_LONG(RexxObject *obj, int precision) { return ((obj)->reques
 inline long REQUIRED_LONG(RexxObject *obj, int precision, int position) { return ((obj)->requiredLong(position, precision)); }
 
 /******************************************************************************/
-/* Function:  Test for primitive method status of an object                   */
-/******************************************************************************/
-inline BOOL isPrimitive(RexxObject *object) { return object->behaviour->isPrimitiveBehaviour(); }
-
-/******************************************************************************/
 /* Floating-point conversions                                                 */
 /******************************************************************************/
 
@@ -1029,49 +955,12 @@ BOOL double2Float(double value, float *newValue);
 RexxString *version_number (void);
 
 /******************************************************************************/
-/* Memory management macros                                                   */
-/******************************************************************************/
-
-
-#define save(oref)    memoryObject.saveObject((RexxObject*)(oref))
-#define discard(oref) memoryObject.discardObject((RexxObject *)(oref))
-#define hold(oref)    memoryObject.holdObject((RexxObject *)(oref))
-#define discard_hold(oref) memoryObject.discardHoldObject((RexxObject *)(oref))
-
-#define setUpMemoryMark                \
- {                                     \
-   long headerMarkedValue = memoryObject.markWord | OldSpaceBit;
-
-#define cleanUpMemoryMark               \
- }
-
-#define setUpMemoryMarkGeneral       {
-#define cleanUpMemoryMarkGeneral     }
-
-#define setUpFlatten(type)        \
-  {                               \
-  long  newSelf = envelope->currentOffset; \
-  type *newThis = (type *)this;
-
-#define cleanUpFlatten                    \
- }
-
-#define ObjectNeedsMarking(oref) ((oref) != OREF_NULL && !ObjectIsMarked(oref))
-#define memory_mark(oref)  if (ObjectNeedsMarking(oref)) memoryObject.mark((RexxObject *)(oref))
-#define memory_mark_general(oref) (memoryObject.markGeneral((void *)&(oref)))
-
-/* Following macros are for Flattening and unflattening of objects  */
-#define flatten_reference(oref,envel)  if (oref) envel->flattenReference((void *)&newThis, newSelf, (void *)&(oref))
-
-/******************************************************************************/
 /* Typed method invocation macros                                             */
 /******************************************************************************/
 
 inline RexxObject * callOperatorMethod(RexxObject *object, LONG methodOffset, RexxObject *argument) {
-  PCPPM cppEntry;                      /* kernel method entry point         */
-
                                        /* get the entry point               */
-  cppEntry = object->behaviour->operatorMethods[methodOffset];
+  PCPPM cppEntry = object->behaviour->getOperatorMethod(methodOffset);
                                        /* go issue the method               */
   return (object->*((PCPPM1)cppEntry))(argument);
 }

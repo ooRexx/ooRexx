@@ -120,7 +120,7 @@ size_t RexxList::getFree(void)
                                        /* If either of the objects are in   */
                                        /* OldSpace,  we need to OrefSet     */
                                        /* each copied element               */
-    if (OldSpace(this) || OldSpace(newLTable)) {
+    if (this->isOldSpace() || newLTable->isOldSpace()) {
       element = ENTRY_POINTER(0);      /* point at the first element        */
                                        /* copy each element into new buffer */
       for (i = 0; i < this->size; i++) {
@@ -267,7 +267,7 @@ RexxObject *RexxList::section(
   if (element == NULL)                 /* index doesn't exist?              */
                                        /* raise an error                    */
     reportException(Error_Incorrect_method_index, _index);
-  if (!OTYPE(List, this))              /* actually a list subclass?         */
+  if (!isOfClass(List, this))              /* actually a list subclass?         */
                                        /* need to do this the slow way      */
     return this->sectionSubclass(element, counter);
   result = new RexxList;               /* create a new list                 */
@@ -282,7 +282,7 @@ RexxObject *RexxList::section(
                                        /* step to the next item             */
     element = ENTRY_POINTER(element->next);
   }
-  discard(hold(result));               /* release the save lock             */
+  discard_hold(result);                /* release the save lock             */
   return result;                       /* return the sectioned list         */
 }
 
@@ -694,7 +694,7 @@ RexxArray *RexxList::requestArray()
 /* Function:  Primitive level request('ARRAY') fast path                      */
 /******************************************************************************/
 {
-  if (OTYPE(List, this))               /* primitive level object?           */
+  if (isOfClass(List, this))               /* primitive level object?           */
     return this->makeArray();          /* just do the makearray             */
   else                                 /* need to so full request mechanism */
     return (RexxArray *)send_message1(this, OREF_REQUEST, OREF_ARRAYSYM);
@@ -923,7 +923,7 @@ RexxArray  *RexxList::makeArrayIndices()
     array->put((RexxObject *)new_integer(nextEntry), i);
     nextEntry = element->next;         /* get the next pointer              */
   }
-  discard(hold(array));                /* release the GC lock               */
+  discard_hold(array);                 /* release the GC lock               */
   return array;                        /* return the array element          */
 }
 
@@ -961,9 +961,7 @@ void *RexxList::operator new(size_t size)
                                        /* Get new object                    */
   newList = (RexxList *)new (INITIAL_LIST_SIZE, size) RexxListTable;
                                        /* Give new object its behaviour     */
-  BehaviourSet(newList, TheListBehaviour);
-                                       /* set the default hash value        */
-  newList->hashvalue = HASHOREF(newList);
+  newList->setBehaviour(TheListBehaviour);
   newList->init();                     /* finish initializing               */
   return newList;                      /* return the new list item          */
 }
@@ -984,8 +982,8 @@ RexxList *RexxListClass::newRexx(
                                        /* subclass                          */
   newList = new RexxList;
                                        /* Give new object its behaviour     */
-  BehaviourSet(newList, this->instanceBehaviour);
-  if (this->uninitDefined()) {
+  newList->setBehaviour(this->getInstanceBehaviour());
+  if (this->hasUninitDefined()) {
     newList->hasUninit();
   }
                                        /* Initialize the new list instance  */
@@ -1036,7 +1034,7 @@ RexxList *RexxListClass::classOf(
       send_message1(newList, OREF_INSERT, item);
     }
   }
-  discard(hold(newList));              /* release the collection lock       */
+  discard_hold(newList);               /* release the collection lock       */
   return newList;                      /* give back the list                */
 }
 

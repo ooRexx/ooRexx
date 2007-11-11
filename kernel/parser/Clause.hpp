@@ -44,6 +44,8 @@
 #ifndef Included_RexxClause
 #define Included_RexxClause
 
+#include "SourceLocation.hpp"
+
 #include "ArrayClass.hpp"
 #include "Token.hpp"
 
@@ -60,17 +62,17 @@ class RexxClause : public RexxInternalObject {
   void        setEnd(size_t, size_t);
   void        trim();
   void        newClause();
-  RexxToken  *newToken(int, int, RexxString *, PLOCATIONINFO);
+  RexxToken  *newToken(int, int, RexxString *, SourceLocation &);
   RexxToken  *nextRealToken();
   inline void        firstToken() {this->current = this->first;};
-  inline void        getLocation(PLOCATIONINFO l) { *l = this->location; }
-  inline void        setLocation(PLOCATIONINFO l) { this->location = *l; }
+  inline const SourceLocation &getLocation() { return clauseLocation; }
+  inline void  setLocation(SourceLocation &l) { clauseLocation = l; }
   inline void        previous() { this->current--; }
   inline RexxToken  *next() { return (RexxToken *)this->tokens->get(this->current++); }
   inline size_t      mark() { return current; }
   inline void        reset(size_t position) { current = position; }
 
-  LOCATIONINFO location;               /* position of the clause            */
+  SourceLocation clauseLocation;       /* position of the clause            */
   size_t current;                      /* index of current token of clause  */
   size_t first;                        /* first token of clause             */
   RexxArray  *tokens;                  /* array of tokens in the clause     */

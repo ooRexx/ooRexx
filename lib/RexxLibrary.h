@@ -114,9 +114,6 @@
   class RexxVariableDictionary;
   class MemorySegmentPool;
 
-typedef RexxObject *OREF;              /* reference to a REXX object        */
-typedef OREF *POREF;                   /* Pointer to a REXX object reference*/
-
 #define OREF_NULL NULL                 /* definition of a NULL REXX object  */
 
 typedef double *PDBL;                  /* pointer to double                 */

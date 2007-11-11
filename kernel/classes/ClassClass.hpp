@@ -44,12 +44,6 @@
 #ifndef Included_RexxClass
 #define Included_RexxClass
 
-#define REXX_DEFINED      0x00000001    /* this class is a native rexx class */
-#define MIXIN             0x00000004    /* this is a mixin class             */
-#define HAS_UNINIT        0x00000008    /* this class has an uninit method   */
-#define META_CLASS        0x00000010    /* this class is a meta class        */
-#define PRIMITIVE_CLASS   0x00000020    /* this is a primitive class         */
-#define PARENT_HAS_UNINIT 0x00000040
 
 void class_create (void);
 
@@ -77,6 +71,7 @@ void class_create (void);
    RexxClass   *getMetaClass();
    RexxClass   *getSuperClass();
    RexxArray   *getSuperClasses();
+   RexxArray   *getClassSuperClasses() { return classSuperClasses; }
    RexxArray   *getSubClasses();
    void         defmeths(RexxTable *);
    void         setInstanceBehaviour(RexxBehaviour *);
@@ -107,40 +102,53 @@ void class_create (void);
    RexxString  *defaultNameRexx();
 
 
-   inline BOOL         rexxDefined() { return this->class_info & REXX_DEFINED; };
-   inline BOOL         queryMixin()  { return this->class_info & MIXIN; };
-   inline BOOL         queryMeta()   { return this->class_info & META_CLASS; };
-   inline BOOL         uninitDefined()   { return this->class_info & HAS_UNINIT; };
-   inline BOOL         parentUninitDefined()   { return this->class_info & PARENT_HAS_UNINIT; };
-   inline void         parentHasUninit()   { this->class_info |= PARENT_HAS_UNINIT; };
-   inline BOOL         isPrimitive() { return this->class_info & PRIMITIVE_CLASS; }
-   inline void         setMixinClass() { this->class_info |= MIXIN; }
-   inline void         setNotPrimitive(){this->class_info &= ~PRIMITIVE_CLASS; return;};
+   inline bool         isRexxDefined() { return (classFlags & REXX_DEFINED) != 0; };
+   inline bool         isMixinClass()  { return (classFlags & MIXIN) != 0; };
+   inline bool         isMetaClass() { return (classFlags & META_CLASS) != 0; };
+   inline bool         hasUninitDefined()   { return (classFlags & HAS_UNINIT) != 0; };
+   inline void         setHasUninitDefined()   { classFlags |= HAS_UNINIT; };
+   inline void         clearHasUninitDefined()   { classFlags &= ~HAS_UNINIT; };
+   inline bool         parentHasUninitDefined()   { return (classFlags & PARENT_HAS_UNINIT) != 0; };
+   inline void         setParentHasUninitDefined()   { classFlags |= PARENT_HAS_UNINIT; };
+   inline bool         isPrimitiveClass() { return (classFlags & PRIMITIVE_CLASS) != 0; }
+   inline void         setMixinClass() { classFlags |= MIXIN; }
+   inline void         setNonPrimitive() { classFlags &= ~PRIMITIVE_CLASS; };
    inline RexxBehaviour *getInstanceBehaviour() {return this->instanceBehaviour;};
-   inline void         setMeta() { this->class_info |= META_CLASS; }
-   inline void         addSubClass(RexxClass *);
+   inline void         setMetaClass() { classFlags |= META_CLASS; }
+          void         addSubClass(RexxClass *);
 
-                                       /* Subclassable and subclassed       */
-    RexxString    *id;                 /* classes will have a name string   */
-                                       /* class methods specific to this    */
-                                       /* class                             */
-    RexxTable     *classMethodDictionary;
-                                       /* instances of this class inherit   */
-    RexxBehaviour *instanceBehaviour;  /* this behaviour                    */
-                                       /* methods added to this class       */
-    RexxTable     *instanceMethodDictionary;
-    RexxClass     *baseClass;          /* Baseclass of this class           */
-    RexxArray     *metaClass;          /* Metaclass of this class           */
-                                       /* Metaclass mdict                   */
-    RexxArray     *metaClassMethodDictionary;
-    RexxObjectTable *metaClassScopes;  /* Metaclass scopes                  */
-                                       /* The superclass and any inherited  */
-    RexxArray     *classSuperClasses;  /* mixins for class behaviour        */
-                                       /* The superclass and any inherited  */
-                                       /* mixins for instance behaviour     */
-    RexxArray     *instanceSuperClasses;
-                                       /* class specific information        */
-                                       /* defines for this field are at the */
-    ULONG class_info;                  /* top of this header file           */
+ protected:
+     enum
+     {
+        REXX_DEFINED      = 0x00000001,   // this class is a native rexx class
+        MIXIN             = 0x00000004,   // this is a mixin class
+        HAS_UNINIT        = 0x00000008,   // this class has an uninit method
+        META_CLASS        = 0x00000010,   // this class is a meta class
+        PRIMITIVE_CLASS   = 0x00000020,   // this is a primitive class
+        PARENT_HAS_UNINIT = 0x00000040
+     };
+
+                                        /* Subclassable and subclassed       */
+     RexxString    *id;                 /* classes will have a name string   */
+                                        /* class methods specific to this    */
+                                        /* class                             */
+     RexxTable     *classMethodDictionary;
+                                        /* instances of this class inherit   */
+     RexxBehaviour *instanceBehaviour;  /* this behaviour                    */
+                                        /* methods added to this class       */
+     RexxTable     *instanceMethodDictionary;
+     RexxClass     *baseClass;          /* Baseclass of this class           */
+     RexxArray     *metaClass;          /* Metaclass of this class           */
+                                        /* Metaclass mdict                   */
+     RexxArray     *metaClassMethodDictionary;
+     RexxObjectTable *metaClassScopes;  /* Metaclass scopes                  */
+                                        /* The superclass and any inherited  */
+     RexxArray     *classSuperClasses;  /* mixins for class behaviour        */
+                                        /* The superclass and any inherited  */
+                                        /* mixins for instance behaviour     */
+     RexxArray     *instanceSuperClasses;
+                                        /* class specific information        */
+                                        /* defines for this field are at the */
+     uint32_t       classFlags;         /* top of this header file           */
  };
  #endif

@@ -52,9 +52,6 @@
 #include "RexxEnvelope.hpp"
 #include "MethodClass.hpp"
 
-#ifdef AIX
-extern void ic_setVirtualFunctions(char *,int);
-#endif
 extern void *VFTArray[highest_T];      /* table of virtual function tables  */
 
 RexxEnvelope::RexxEnvelope()
@@ -62,8 +59,7 @@ RexxEnvelope::RexxEnvelope()
 /* Function:  Initialize a REXX envelope object                               */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* just clear and                    */
-  this->hashvalue = HASHOREF(this);    /* set the hash                      */
+  this->clearObject();                 /* just clear and                    */
 }
 
 void RexxEnvelope::live()
@@ -169,7 +165,7 @@ void RexxEnvelope::flattenReference(
 
         // if this is a proxied object, we need to convert it to a proxy and
         // copy that object into the buffer and the reference table
-        if (obj->header & MakeProxyObject)
+        if (obj->isProxyObject())
         {
             // get a proxy and make sure it's in our protection table
             RexxObject *proxyObj = obj->makeProxy(this);
@@ -232,7 +228,7 @@ RexxEnvelope *RexxEnvelope::pack(
     // this is a bit of a hack, but necessary.  This allows us to store
     // object offsets into a hashtable without having the hashtable
     // attempt to mark the references.
-    SetObjectHasNoReferences(this->duptable->contents);
+    duptable->contents->setHasNoReferences();
     OrefSet(this, this->buffer, new_smartbuffer());
     // get a flatten stack from the memory object
     this->flattenStack = memoryObject.getFlattenStack();
@@ -286,7 +282,7 @@ void RexxEnvelope::puff(
 
     char *bufferPointer = startPointer;  /* copy the starting point           */
                                          /* point to end of buffer            */
-    char *endPointer = (char *)sourceBuffer + ObjectSize(sourceBuffer);
+    char *endPointer = (char *)sourceBuffer + sourceBuffer->getObjectSize();
 
     /* Set objoffset to the real address of the new objects.  This tells              */
     /* mark_general to fix the object's refs and set their live flags.                */
@@ -305,11 +301,11 @@ void RexxEnvelope::puff(
             /* Yes, lets get the behaviour Object*/
             RexxBehaviour *objBehav = (RexxBehaviour *)(((long)(puffObject->behaviour) & ~BEHAVIOUR_NON_PRIMITIVE) + sourceBuffer->address());
             /* Resolve the static behaviour info */
-            resolveNonPrimitiveBehaviour(objBehav);
+            objBehav->resolveNonPrimitiveBehaviour();
             /* Set this objects behaviour.       */
             puffObject->behaviour = objBehav;
             /* get the behaviour's type number   */
-            primitiveTypeNum = objBehav->typenum();
+            primitiveTypeNum = objBehav->getClassType();
 
         }
         else
@@ -318,35 +314,19 @@ void RexxEnvelope::puff(
             /* type number is the behaviour      */
             primitiveTypeNum = (int)(puffObject->behaviour);
             /* was a primitive, stays a primitive*/
-            puffObject->behaviour = &pbehav[primitiveTypeNum];
+            puffObject->behaviour = RexxBehaviour::getPrimitiveBehaviour(primitiveTypeNum);
         }
         /* Force fix-up of                   */
         /*VirtualFunctionTable,              */
-#ifdef AIX
-/* The very first thing of an Object is its VFT. It seems, that if this VFT */
-/* of an Object is used several times, the AIX-optimizer stores it in a     */
-/* new register, as it is assumed, that the VFT-pointer of an Object can    */
-/* never change. For tokenized scripts we do not know the VFT of the object */
-/* as we do not no what kind of object we have. With the primitiveTypeNum   */
-/* we are able to set the VFT-pointer for the object. (The VFT is stored    */
-/* in the rexx.img and restored at startup-time).                           */
-/* The AIX-optimizer seems to store the VFT to a special register           */
-/* so that a change of the pointer has no affect. If the routine is exe-    */
-/* cuted in a separate module the optimizer is not able to do so,           */
-/* overrides the pointer to the VFT in the tokenized script and uses the    */
-/* correct on. This behaviour is only seen in AIX                           */
-        ic_setVirtualFunctions(bufferPointer, primitiveTypeNum);
-#else
-        setVirtualFunctions(bufferPointer, primitiveTypeNum);
-#endif
-        SetObjectLive(puffObject);         /* Then Mark this object as live.    */
+        ((RexxObject *)bufferPointer)->setVirtualFunctions(VFTArray[primitiveTypeNum]);
+        puffObject->setObjectLive(memoryObject.markWord);  /* Then Mark this object as live.    */
                                            /* Mark other referenced objs        */
                                            /* Note that this flavor of          */
                                            /* mark_general should update the    */
                                            /* mark fields in the objects.       */
         puffObject->liveGeneral();
         /* Point to next object in image.    */
-        bufferPointer += ObjectSize(puffObject);
+        bufferPointer += puffObject->getObjectSize();
     }
     memoryObject.setObjectOffset(0);     /* all done with the fixups!         */
 
@@ -356,16 +336,16 @@ void RexxEnvelope::puff(
                                          /* envelope.  This also keeps a      */
                                          /* reference to original envelope so */
                                          /* we don't loose it.                */
-    OrefSet(this,this->receiver,(RexxObject *)(startPointer + ObjectSize(startPointer)));
+    OrefSet(this,this->receiver, (RexxObject *)(startPointer + ((RexxObject *)startPointer)->getObjectSize()));
     /* chop off end of buffer to reveal  */
     /* its contents to memory obj        */
 
-    SetObjectSize(sourceBuffer, (char *)startPointer - (char *)sourceBuffer + ObjectSize(startPointer));
+    sourceBuffer->setObjectSize((char *)startPointer - (char *)sourceBuffer + ((RexxObject *)startPointer)->getObjectSize());
     /* HOL: otherwise an object with 20 bytes will be left */
 
 
     /* move past header to envelope    */
-    bufferPointer = startPointer + ObjectSize(startPointer);
+    bufferPointer = startPointer + ((RexxObject *)startPointer)->getObjectSize();
     /* Set envelope to the real address of the new objects.  This tells               */
     /* mark_general to send unflatten to run any proxies.                             */
     memoryObject.setEnvelope(this);      /* tell memory to send unflatten     */
@@ -380,7 +360,7 @@ void RexxEnvelope::puff(
         /*  reference it may have already    */
         /*  run and gotten the info from it  */
         /*  and no longer reference it.      */
-        if (ObjectIsLive(bufferPointer))
+        if (((RexxObject *)bufferPointer)->isObjectLive(memoryObject.markWord))
             /* Mark other referenced objs        */
             ((RexxObject *)bufferPointer)->liveGeneral();
         /* Note that this flavor of          */
@@ -388,7 +368,7 @@ void RexxEnvelope::puff(
         /* created by unflatten and fixup    */
         /* the refs to them.                 */
         /* Point to next object in image.    */
-        bufferPointer += ObjectSize(bufferPointer);
+        bufferPointer += ((RexxObject *)bufferPointer)->getObjectSize();
     }
 
     /* Tell memory we're done            */
@@ -416,12 +396,12 @@ size_t RexxEnvelope::copyBuffer(
 {
     // copy the object into the buffer, which might cause the buffer to
     // resize itself.
-    size_t objOffset = this->buffer->copyData((void *)obj, ObjectSize(obj));
+    size_t objOffset = this->buffer->copyData((void *)obj, obj->getObjectSize());
     // get a reference to the copied object
     RexxObject *newObj = (RexxObject *) (this->buffer->getBuffer()->address() + objOffset);
     // if this is a non-primative behaviour, we need to flatten it as well.  The
     // offset is tagged as being a non-primitive behaviour that needs later inflating.
-    if (newObj->behaviour->isNonPrimitiveBehaviour())
+    if (newObj->behaviour->isNonPrimitive())
     {
         void *behavPtr = &newObj->behaviour;
 
@@ -432,11 +412,11 @@ size_t RexxEnvelope::copyBuffer(
     {
         // just replace the behaviour with its type number.  This will be used
         // to restore it later.
-        newObj->behaviour = (RexxBehaviour *)newObj->behaviour->typenum();
+        newObj->behaviour = (RexxBehaviour *)newObj->behaviour->getClassType();
     }
     // if we flattened an object from oldspace, we just copied everything.  Make sure
     // this is no longer marked as oldspace
-    SetNewSpace(newObj);
+    newObj->setNewSpace();
     // the offset is what we need
     return objOffset;
 }
@@ -515,7 +495,7 @@ void *RexxEnvelope::operator new(size_t size)
                                        /* Get new object                    */
   newObject = new_object(sizeof(RexxEnvelope));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheEnvelopeBehaviour);
+  newObject->setBehaviour(TheEnvelopeBehaviour);
   return newObject;                    /* return the new object             */
 }
 

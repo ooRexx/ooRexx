@@ -61,7 +61,7 @@ void RexxCompoundTail::buildTail(
       /* get the tail value */
       RexxObject *tailPiece = tails[0]->getValue(dictionary);
       /* if it is an integer type, we might be able to address the string representation directly. */
-      if (OTYPE(Integer, tailPiece)) {
+      if (isOfClass(Integer, tailPiece)) {
           RexxString *rep = ((RexxInteger *)tailPiece)->getStringrep();
           if (rep != OREF_NULL) {
               /* point directly to the value       */
@@ -74,7 +74,7 @@ void RexxCompoundTail::buildTail(
           }
       }
       /* if this is directly a string, we can use this directly */
-      if (OTYPE(String, tailPiece)) {
+      if (isOfClass(String, tailPiece)) {
           /* point directly to the value       */
           /* and the length */
           this->tail = ((RexxString *)tailPiece)->getWritableData();
@@ -115,7 +115,7 @@ void RexxCompoundTail::buildTail(
       /* get the tail value */
       RexxObject *tailPiece = tails[0]->getValue(context);
       /* if it is an integer type, we might be able to address the string representation directly. */
-      if (OTYPE(Integer, tailPiece)) {
+      if (isOfClass(Integer, tailPiece)) {
           RexxString *rep = ((RexxInteger *)tailPiece)->getStringrep();
           if (rep != OREF_NULL) {
               /* point directly to the value       */
@@ -128,7 +128,7 @@ void RexxCompoundTail::buildTail(
           }
       }
       /* if this is directly a string, we can use this directly */
-      if (OTYPE(String, tailPiece)) {
+      if (isOfClass(String, tailPiece)) {
           /* point directly to the value       */
           /* and the length */
           this->tail = ((RexxString *)tailPiece)->getWritableData();
@@ -203,7 +203,7 @@ void RexxCompoundTail::buildUnresolvedTail(
       if (part != OREF_NULL)
       {
           // if this is a variable, just copy the name.  Otherwixe, copy the value
-          if (OTYPE(ParseVariable, part))
+          if (isOfClass(ParseVariable, part))
           {
               ((RexxParseVariable *)part)->getName()->copyIntoTail(this);
           }

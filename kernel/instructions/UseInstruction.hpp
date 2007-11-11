@@ -46,8 +46,6 @@
 
 #include "RexxInstruction.hpp"
 
-#define use_variable_count i_ushort    /* count of use variables            */
-
 class RexxInstructionUse : public RexxInstruction {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};
@@ -58,6 +56,7 @@ class RexxInstructionUse : public RexxInstruction {
   void flatten(RexxEnvelope *);
   void execute(RexxActivation *, RexxExpressionStack *);
 
+  size_t variableCount;                // count of variables for USE
   RexxVariableBase *variables[1];      /* List of variables for USE         */
 };
 #endif

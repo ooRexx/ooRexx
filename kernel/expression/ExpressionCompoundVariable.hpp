@@ -69,8 +69,9 @@ class RexxCompoundVariable : public RexxVariableBase {
   void clearGuard(RexxActivation *);
   void expose(RexxActivation *, RexxExpressionStack *, RexxVariableDictionary *);
   void procedureExpose(RexxActivation *, RexxActivation *, RexxExpressionStack *);
-  inline RexxString * variableStem() {return this->stem;};
+  inline RexxString * variableStem() {return this->stemName;};
 
+  RexxString *stemName;                // the stem variable name
   LONG        index;                   /* lookaside table index             */
   LONG        tailCount;               /* count of tails.                   */
   RexxObject *tails[1];                /* array of tail elements            */

@@ -54,10 +54,10 @@ RexxInstructionElse::RexxInstructionElse(
 /* Function:  Complete ELSE instruction initialization                        */
 /******************************************************************************/
 {
-  LOCATIONINFO location;               /* clause token location             */
+  SourceLocation location;             /* clause token location             */
 
-  token->getLocation(&location);       /* get the token location info       */
-  this->setLocation(&location);        /* set the clause location also      */
+  location = token->getLocation();     /* get the token location info       */
+  this->setLocation(location);         /* set the clause location also      */
 }
 
 void  RexxInstructionElse::setParent(

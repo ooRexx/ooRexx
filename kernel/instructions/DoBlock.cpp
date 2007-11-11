@@ -53,7 +53,7 @@ RexxDoBlock::RexxDoBlock(
 /* Function:  complete BLOCK instruction initialization                       */
 /******************************************************************************/
 {
-  ClearObject(this);                   /*Clear the object.                  */
+  this->clearObject();                 /*Clear the object.                  */
   OrefSet(this, this->parent, _parent); /* remember the parent block         */
   this->indent = _indent;               /* save the indentation level        */
 }
@@ -108,7 +108,7 @@ void * RexxDoBlock::operator new(size_t size)
                                        /* Get new object                    */
   newObject = new_object(sizeof(RexxDoBlock));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheDoBlockBehaviour);
+  newObject->setBehaviour(TheDoBlockBehaviour);
   return newObject;                    /* return the new method             */
 }
 

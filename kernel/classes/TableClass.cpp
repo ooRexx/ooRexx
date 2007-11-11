@@ -70,7 +70,7 @@ RexxObject *RexxTable::addOffset(
                                        /* even though the indices are objs  */
                                        /* we don't need to mark this Hash.  */
                                        /* Trust me !!!                      */
-    SetObjectHasNoReferences(newHash);
+    newHash->setHasNoReferences();
                                        /* hook on the new hash table        */
     OrefSet(this, this->contents, newHash);
   }
@@ -121,7 +121,7 @@ RexxArray  *RexxTable::requestArray()
 /* Function:  Primitive level request('ARRAY') fast path                      */
 /******************************************************************************/
 {
-  if (OTYPE(Table, this))              /* primitive level object?           */
+  if (isOfClass(Table, this))              /* primitive level object?           */
     return this->makeArray();          /* just do the makearray             */
   else                                 /* need to so full request mechanism */
     return (RexxArray *)send_message1(this, OREF_REQUEST, OREF_ARRAYSYM);
@@ -179,9 +179,9 @@ RexxObject *RexxTable::newRexx(
   RexxTable * newObj;                  /* newly created table object        */
 
   newObj = new_table();                /* get a new table                   */
-  BehaviourSet(newObj, ((RexxClass *)this)->instanceBehaviour);
+  newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
                                        /* does object have an UNINT method  */
-  if (((RexxClass *)this)->uninitDefined()) {
+  if (((RexxClass *)this)->hasUninitDefined()) {
      newObj->hasUninit();              /* Make sure everyone is notified.   */
   }
                                        /* call any rexx level init's        */
@@ -199,12 +199,9 @@ RexxTable *RexxMemory::newTable()
                                        /* get a new object                  */
   newObj = (RexxTable *)new_hashCollection(DEFAULT_HASH_SIZE, sizeof(RexxTable));
                                        /* set the new behaviour             */
-  BehaviourSet(newObj, TheTableBehaviour);
+  newObj->setBehaviour(TheTableBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newObj, T_table);
-                                       /* fill in the hash value            */
-  newObj->hashvalue = HASHOREF(newObj);
-                                       /* create the initial hash table     */
+  newObj->setVirtualFunctions(VFTArray[T_table]);
   return newObj;                       /* return the new table              */
 }
 
@@ -218,11 +215,9 @@ RexxObjectTable *RexxMemory::newObjectTable(size_t size)
                                        /* get a new object                  */
   newObj = (RexxObjectTable *)new_hashCollection(size, sizeof(RexxObjectTable));
                                        /* set the new behaviour             */
-  BehaviourSet(newObj, TheTableBehaviour);
+  newObj->setBehaviour(TheTableBehaviour);
                                        /* set the virtual function table    */
-  setVirtualFunctions(newObj, T_table);
-                                       /* fill in the hash value            */
-  newObj->hashvalue = HASHOREF(newObj);
+  newObj->setVirtualFunctions(VFTArray[T_table]);
                                        /* create the initial hash table     */
   return newObj;                       /* return the new table              */
 }

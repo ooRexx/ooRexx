@@ -63,6 +63,7 @@ class RexxExpressionFunction : public RexxInternalObject {
   inline void       *operator new(size_t size, void *ptr) {return ptr;};
   RexxObject *evaluate(RexxActivation*, RexxExpressionStack *);
 
+  RexxString *functionName;            // the name of the function
   RexxInstruction *target;             /* routine to call                   */
   short builtin_index;                 /* builtin function index            */
   BYTE  flags;                         /* bypass internal routine calls     */

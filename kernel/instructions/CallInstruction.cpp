@@ -69,10 +69,10 @@ RexxInstructionCall::RexxInstructionCall(
   OrefSet(this, this->name, (RexxString *)_name);
                                        /* and the condition                 */
   OrefSet(this, this->condition, _condition);
-  i_flags = flags;                     /* copy the flags                    */
-  call_builtin_index = builtin_index;  /* and the builtin function index    */
+  instructionFlags = flags;                   /* copy the flags                    */
+  builtinIndex = builtin_index;        /* and the builtin function index    */
                                        /* no arguments                      */
-  call_argument_count = (uint8_t)argCount;
+  argumentCount = argCount;
   while (argCount > 0) {               /* now copy the argument pointers    */
                                        /* in reverse order                  */
     OrefSet(this, this->arguments[--argCount], argList->pop());
@@ -92,7 +92,7 @@ void RexxInstructionCall::live()
   memory_mark(this->name);
   memory_mark(this->target);
   memory_mark(this->condition);
-  for (i = 0, count = call_argument_count; i < count; i++)
+  for (i = 0, count = argumentCount; i < count; i++)
     memory_mark(this->arguments[i]);
   cleanUpMemoryMark
 }
@@ -111,7 +111,7 @@ void RexxInstructionCall::liveGeneral()
   memory_mark_general(this->name);
   memory_mark_general(this->target);
   memory_mark_general(this->condition);
-  for (i = 0, count = call_argument_count; i < count; i++)
+  for (i = 0, count = argumentCount; i < count; i++)
     memory_mark_general(this->arguments[i]);
   cleanUpMemoryMarkGeneral
 }
@@ -130,7 +130,7 @@ void RexxInstructionCall::flatten(RexxEnvelope *envelope)
   flatten_reference(newThis->name, envelope);
   flatten_reference(newThis->target, envelope);
   flatten_reference(newThis->condition, envelope);
-  for (i = 0, count = call_argument_count; i < count; i++)
+  for (i = 0, count = argumentCount; i < count; i++)
     flatten_reference(newThis->arguments[i], envelope);
 
   cleanUpFlatten
@@ -144,24 +144,24 @@ void RexxInstructionCall::resolve(
 {
   if (this->name == OREF_NULL)         /* not a name target form?           */
     return;                            /* just return                       */
-  if (i_flags&call_dynamic)   {        // can't resolve now
+  if (instructionFlags&call_dynamic)   {        // can't resolve now
       return;                          //
   }
-  if (!(i_flags&call_nointernal)) {    /* internal routines allowed?        */
+  if (!(instructionFlags&call_nointernal)) {    /* internal routines allowed?        */
     if (labels != OREF_NULL)           /* have a labels table?              */
                                        /* check the label table             */
       OrefSet(this, this->target, (RexxInstruction *)labels->at((RexxString *)this->name));
-    i_flags |= call_internal;          /* this is an internal call          */
+    instructionFlags |= call_internal;          /* this is an internal call          */
   }
   if (this->target == OREF_NULL) {     /* not found yet?                    */
                                        /* have a builtin function?          */
-    if (call_builtin_index != NO_BUILTIN) {
-      i_flags |= call_builtin;         /* this is a builtin function        */
+    if (builtinIndex != NO_BUILTIN) {
+      instructionFlags |= call_builtin;         /* this is a builtin function        */
                                        /* cast off the routine name         */
       OrefSet(this, this->name, OREF_NULL);
     }
     else
-      i_flags |= call_external;        /* have an external routine          */
+      instructionFlags |= call_external;        /* have an external routine          */
   }
 }
 
@@ -175,7 +175,7 @@ void RexxInstructionCall::execute(
   size_t  argcount;                    /* count of arguments                */
   size_t  i;                           /* loop counter                      */
   int     type;                        /* type of call                      */
-  int     builtin_index;               /* builtin function index            */
+  size_t  builtin_index;               /* builtin function index            */
   RexxObject       *result = OREF_NULL;/* returned result                   */
   RexxInstruction  *_target;            /* resolved call target              */
   RexxString       *_name;              /* resolved function name            */
@@ -184,7 +184,7 @@ void RexxInstructionCall::execute(
   context->activity->stackSpace();     /* check if enough stack is there    */
   context->traceInstruction(this);     /* trace if necessary                */
   if (this->condition != OREF_NULL) {  /* is this the ON/OFF form?          */
-    if (i_flags&call_on_off)           /* ON form?                          */
+    if (instructionFlags&call_on_off)           /* ON form?                          */
                                        /* turn on the trap                  */
       context->trapOn(this->condition, (RexxInstructionCallBase *)this);
     else
@@ -192,14 +192,14 @@ void RexxInstructionCall::execute(
       context->trapOff(this->condition);
   }
   else {                               /* normal form of CALL               */
-    if (i_flags&call_dynamic) {        /* dynamic form of call?             */
+    if (instructionFlags&call_dynamic) {        /* dynamic form of call?             */
                                        /* evaluate the variable             */
       result = this->name->evaluate(context, stack);
       stack->toss();                   /* toss the top item                 */
       _name = REQUEST_STRING(result);   /* force to string form              */
       context->traceResult(name);      /* trace if necessary                */
                                        /* resolve potential builtins        */
-      builtin_index = context->source->resolveBuiltin(_name);
+      builtin_index = RexxSource::resolveBuiltin(_name);
       _target = OREF_NULL;              /* clear out the target              */
       labels = context->getLabels();   /* get the labels table              */
       if (labels != OREF_NULL)         /* have labels in the program?       */
@@ -218,11 +218,11 @@ void RexxInstructionCall::execute(
       _target = this->target;           /* copy the target                   */
       _name = (RexxString *)this->name; /* the name value                    */
                                        /* and the builtin index             */
-      builtin_index = call_builtin_index;
-      type = i_flags&call_type_mask;   /* just copy the type info           */
+      builtin_index = builtinIndex;
+      type = instructionFlags&call_type_mask;   /* just copy the type info           */
     }
 
-    argcount = call_argument_count;    /* get the argument count            */
+    argcount = argumentCount;          /* get the argument count            */
     for (i = 0; i < argcount; i++) {   /* loop through the argument list    */
                                        /* real argument?                    */
       if (this->arguments[i] != OREF_NULL) {
@@ -278,7 +278,7 @@ void RexxInstructionCall::trap(
   RexxObject * result;
   context->trapDelay(this->condition); /* put trap into delay state         */
 
-  switch (i_flags&call_type_mask) {    /* process various call types        */
+  switch (instructionFlags&call_type_mask) {    /* process various call types        */
 
     case call_internal:                /* need to process internal routine  */
                                        /* go process the internal call      */
@@ -288,7 +288,7 @@ void RexxInstructionCall::trap(
 
     case call_builtin:                 /* builtin function call             */
                                        /* call the function                 */
-      (*(builtin_table[call_builtin_index]))(context, 0, &context->stack);
+      (*(builtin_table[builtinIndex]))(context, 0, &context->stack);
       break;
 
     case call_external:                /* need to call externally           */

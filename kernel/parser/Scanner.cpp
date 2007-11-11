@@ -128,8 +128,7 @@ RexxSource::RexxSource(
 /* Function:  Initialize a source object                                      */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* start completely clean            */
-  this->hashvalue = HASHOREF(this);    /* fill in the hash value            */
+  this->clearObject();                 /* start completely clean            */
                                        /* fill in the name                  */
   OrefSet(this, this->programName, programname);
                                        /* fill in the source array          */
@@ -182,42 +181,38 @@ int RexxSource::characterTable[]={
                                        /* things a little more readable     */
 #define GETCHAR()  ((unsigned char)(this->current[this->line_offset]))
 #define MORELINE() (this->line_offset < this->current_length)
-#define OPERATOR(op) (this->clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, (RexxString *)OREF_##op, &location))
+#define OPERATOR(op) (this->clause->newToken(TOKEN_OPERATOR, OPERATOR_##op, (RexxString *)OREF_##op, location))
 #define CHECK_ASSIGNMENT(op, token) (token->checkAssignment(this, (RexxString *)OREF_ASSIGNMENT_##op))
 
 void RexxSource::endLocation(
-  LOCATIONINFO *location )             /* token location information        */
+  SourceLocation &location )           /* token location information        */
 /****************************************************************************/
 /* Function:  Record a tokens ending location                               */
 /****************************************************************************/
 {
-                                       /* record the ending line            */
-  location->endline = this->line_number;
-                                       /* record the ending position        */
-  location->endoffset = this->line_offset;
+    // copy the end line location
+    location.setEnd(line_number, line_offset);
 }
 
-BOOL RexxSource::nextSpecial(
+bool RexxSource::nextSpecial(
   unsigned int  target,                /* desired target character          */
-  LOCATIONINFO *location )             /* token location information        */
+  SourceLocation &location )           /* token location information        */
 /****************************************************************************/
 /* Function:  Find the next special character and verify against a target   */
 /****************************************************************************/
 {
   unsigned int inch;                   /* next character                    */
-  BOOL         found;                  /* found the target flag             */
 
-  found = FALSE;                       /* default to not found              */
   inch = this->locateToken(OREF_NULL); /* find the next token               */
                                        /* have something else on this line? */
   if (inch != CLAUSEEND_EOF && inch != CLAUSEEND_EOL) {
     if (GETCHAR() == target) {         /* is the next character a match?    */
       this->line_offset++;             /* step over the next                */
       this->endLocation(location);     /* update the end location part      */
-      found = TRUE;                    /* got what we need!                 */
+      return true;                     /* got what we need!                 */
     }
   }
-  return found;                        /* give back the flag                */
+  return false;                        // didn't find the one we're looking for
 }
 
 void RexxSource::comment()
@@ -579,7 +574,7 @@ RexxToken *RexxSource::sourceNextToken(
  LONG   j;                             /* loop counter                      */
  int    subclass;                      /* sub type of the token             */
  int    numeric;                       /* numeric type flag                 */
- LOCATIONINFO  location;               /* token location information        */
+ SourceLocation location;              /* token location information        */
  char   tran;                          /* translated character              */
  char   badchar[4];                    /* working buffer for errors         */
  char   hexbadchar[4];                 /* working buffer for errors         */
@@ -597,24 +592,19 @@ RexxToken *RexxSource::sourceNextToken(
   for (;;) {                           /* loop until we find a significant  */
                                        /* token                             */
     inch = this->locateToken(previous);/* locate the next token position    */
-                                       /* save the starting point and the   */
-                                       /* default ending point              */
-    location.line = this->line_number; /* record the starting line          */
-                                       /* record the offset position        */
-    location.offset = this->line_offset;
-                                       /* record the ending line            */
-    location.endline = this->line_number;
-                                       /* record the ending position        */
-    location.endoffset = this->line_offset + 1;
+
+    // record a starting location.
+    location.setLocation(line_number, line_offset, line_number, line_offset + 1);
+
     if (inch == CLAUSEEND_EOF) {       /* reach the end of the source?      */
       token = OREF_NULL;               /* no token to return                */
       break;                           /* finished                          */
     }
     else if (inch == CLAUSEEND_EOL) {  /* some other end-of-clause          */
                                        /* make end the end of the line      */
-      location.endoffset = this->current_length;
+      location.setEndOffset(current_length);
                                        /* return a clause terminator        */
-      token = this->clause->newToken(TOKEN_EOC, CLAUSEEND_EOL, OREF_NULL, &location);
+      token = this->clause->newToken(TOKEN_EOC, CLAUSEEND_EOL, OREF_NULL, location);
       this->nextLine();                /* step to the next line             */
       break;                           /* have something to return          */
     }
@@ -629,7 +619,7 @@ RexxToken *RexxSource::sourceNextToken(
           inch == '('  ||              /* or a left parenthesis             */
           inch == '[')) {              /* or a left square bracket          */
                                        /* return blank token                */
-        token = this->clause->newToken(TOKEN_BLANK, OPERATOR_BLANK, (RexxString *)OREF_BLANK, &location);
+        token = this->clause->newToken(TOKEN_BLANK, OPERATOR_BLANK, (RexxString *)OREF_BLANK, location);
       }
       else                             /* non-significant blank             */
         continue;                      /* just loop around again            */
@@ -810,9 +800,9 @@ RexxToken *RexxSource::sourceNextToken(
               subclass = SYMBOL_COMPOUND;
           }
         }
-        this->endLocation(&location);  /* record the end position           */
+        this->endLocation(location);   /* record the end position           */
                                        /* get a symbol token                */
-        token = this->clause->newToken(TOKEN_SYMBOL, subclass, value, &location);
+        token = this->clause->newToken(TOKEN_SYMBOL, subclass, value, location);
         token->setNumeric(numeric);    /* record any numeric side info      */
       }
                                        /* start of a quoted string?         */
@@ -894,9 +884,9 @@ RexxToken *RexxSource::sourceNextToken(
                                        /* now force to a common string      */
           value = this->commonString(value);
         }
-        this->endLocation(&location);  /* record the end position           */
+        this->endLocation(location);  /* record the end position           */
                                        /* get a string token                */
-        token = this->clause->newToken(TOKEN_LITERAL, 0, value, &location);
+        token = this->clause->newToken(TOKEN_LITERAL, 0, value, location);
       }
       else {                           /* other special character           */
        this->line_offset++;            /* step past it                      */
@@ -905,52 +895,52 @@ RexxToken *RexxSource::sourceNextToken(
 
          case ')':                     /* right parenthesis?                */
                                        /* this is a special character class */
-           token = this->clause->newToken(TOKEN_RIGHT, 0, OREF_NULL, &location);
+           token = this->clause->newToken(TOKEN_RIGHT, 0, OREF_NULL, location);
            break;
 
          case ']':                     /* right square bracket              */
                                        /* this is a special character class */
-           token = this->clause->newToken(TOKEN_SQRIGHT, 0, OREF_NULL, &location);
+           token = this->clause->newToken(TOKEN_SQRIGHT, 0, OREF_NULL, location);
            break;
 
          case '(':                     /* left parenthesis                  */
                                        /* this is a special character class */
-           token = this->clause->newToken(TOKEN_LEFT, 0, OREF_NULL, &location);
+           token = this->clause->newToken(TOKEN_LEFT, 0, OREF_NULL, location);
            break;
 
          case '[':                     /* left square bracket               */
                                        /* this is a special character class */
-           token = this->clause->newToken(TOKEN_SQLEFT, 0, OREF_NULL, &location);
+           token = this->clause->newToken(TOKEN_SQLEFT, 0, OREF_NULL, location);
            break;
 
          case ',':                     /* comma                             */
                                        /* this is a special character class */
-           token = this->clause->newToken(TOKEN_COMMA, 0, OREF_NULL, &location);
+           token = this->clause->newToken(TOKEN_COMMA, 0, OREF_NULL, location);
            break;
 
          case ';':                     /* semicolon                         */
                                        /* this is a special character class */
-           token = this->clause->newToken(TOKEN_EOC, CLAUSEEND_SEMICOLON, OREF_NULL, &location);
+           token = this->clause->newToken(TOKEN_EOC, CLAUSEEND_SEMICOLON, OREF_NULL, location);
            break;
 
          case ':':                     /* colon                             */
                                        /* next one a colon also?            */
-           if (this->nextSpecial(':', &location))
+           if (this->nextSpecial(':', location))
                                        /* this is a special character class */
-             token = this->clause->newToken(TOKEN_DCOLON, 0, OREF_NULL, &location);
+             token = this->clause->newToken(TOKEN_DCOLON, 0, OREF_NULL, location);
            else
                                        /* this is a special character class */
-             token = this->clause->newToken(TOKEN_COLON, 0, OREF_NULL, &location);
+             token = this->clause->newToken(TOKEN_COLON, 0, OREF_NULL, location);
            break;
 
          case '~':                     /* message send?                     */
                                        /* next one a tilde also?            */
-           if (this->nextSpecial('~', &location))
+           if (this->nextSpecial('~', location))
                                        /* this is a special character class */
-             token = this->clause->newToken(TOKEN_DTILDE, 0, OREF_NULL, &location);
+             token = this->clause->newToken(TOKEN_DTILDE, 0, OREF_NULL, location);
            else
                                        /* this is a special character class */
-             token = this->clause->newToken(TOKEN_TILDE, 0, OREF_NULL, &location);
+             token = this->clause->newToken(TOKEN_TILDE, 0, OREF_NULL, location);
            break;
 
          case '+':                     /* plus sign                         */
@@ -974,7 +964,7 @@ RexxToken *RexxSource::sourceNextToken(
          case '/':                     /* forward slash                     */
                                        /* this is division                  */
                                        /* next one a slash also?            */
-           if (this->nextSpecial('/', &location))
+           if (this->nextSpecial('/', location))
            {
 
                token = OPERATOR(REMAINDER);
@@ -991,7 +981,7 @@ RexxToken *RexxSource::sourceNextToken(
          case '*':                     /* asterisk?                         */
                                        /* this is multiply                  */
                                        /* next one a star also?             */
-           if (this->nextSpecial('*', &location))
+           if (this->nextSpecial('*', location))
            {
                token = OPERATOR(POWER);  /* this is an operator class         */
                CHECK_ASSIGNMENT(POWER, token);  // this is allowed as an assignment shortcut
@@ -1007,7 +997,7 @@ RexxToken *RexxSource::sourceNextToken(
          case '&':                     /* ampersand?                        */
                                        /* this is the and operator          */
                                        /* next one an ampersand also?       */
-           if (this->nextSpecial('&', &location))
+           if (this->nextSpecial('&', location))
            {
 
                token = OPERATOR(XOR);    /* this is an operator class         */
@@ -1023,7 +1013,7 @@ RexxToken *RexxSource::sourceNextToken(
          case '|':                     /* vertical bar?                     */
                                        /* this is an or operator            */
                                        /* next one a vertical bar also?     */
-           if (this->nextSpecial('|', &location))
+           if (this->nextSpecial('|', location))
            {
                                        /* this is a concatenation           */
                token = OPERATOR(CONCATENATE);
@@ -1040,7 +1030,7 @@ RexxToken *RexxSource::sourceNextToken(
          case '=':                     /* equal sign?                       */
                                        /* set this an an equal              */
                                        /* next one an equal sign also?      */
-           if (this->nextSpecial('=', &location))
+           if (this->nextSpecial('=', location))
                                        /* this is an operator class         */
              token = OPERATOR(STRICT_EQUAL);
            else                        /* this is an operator class         */
@@ -1049,20 +1039,20 @@ RexxToken *RexxSource::sourceNextToken(
 
          case '<':                     /* less than sign?                   */
                                        /* next one a less than also?        */
-           if (this->nextSpecial('<', &location)) {
+           if (this->nextSpecial('<', location)) {
                                        /* have an equal sign after that?    */
-             if (this->nextSpecial('=', &location))
+             if (this->nextSpecial('=', location))
                                        /* this is an operator class         */
                token = OPERATOR(STRICT_LESSTHAN_EQUAL);
              else                      /* this is an operator class         */
                token = OPERATOR(STRICT_LESSTHAN);
            }
                                        /* next one an equal sign?           */
-           else if (this->nextSpecial('=', &location))
+           else if (this->nextSpecial('=', location))
                                        /* this is the <= operator           */
              token = OPERATOR(LESSTHAN_EQUAL);
                                        /* next one a greater than sign?     */
-           else if (this->nextSpecial('>', &location))
+           else if (this->nextSpecial('>', location))
                                        /* this is the <> operator           */
              token = OPERATOR(LESSTHAN_GREATERTHAN);
            else                        /* this simply the < operator        */
@@ -1071,20 +1061,20 @@ RexxToken *RexxSource::sourceNextToken(
 
          case '>':                     /* greater than sign?                */
                                        /* next one a greater than also?     */
-           if (this->nextSpecial('>', &location)) {
+           if (this->nextSpecial('>', location)) {
                                        /* have an equal sign after that?    */
-             if (this->nextSpecial('=', &location))
+             if (this->nextSpecial('=', location))
                                        /* this is the >>= operator          */
                token = OPERATOR(STRICT_GREATERTHAN_EQUAL);
              else                      /* this is the >> operator           */
                token = OPERATOR(STRICT_GREATERTHAN);
            }
                                        /* next one an equal sign?           */
-           else if (this->nextSpecial('=', &location))
+           else if (this->nextSpecial('=', location))
                                        /* this is the >= operator           */
              token = OPERATOR(GREATERTHAN_EQUAL);
                                        /* next one a less than sign?        */
-           else if (this->nextSpecial('<', &location))
+           else if (this->nextSpecial('<', location))
                                        /* this is the <> operator           */
              token = OPERATOR(GREATERTHAN_LESSTHAN);
            else                        /* this simply the > operator        */
@@ -1093,27 +1083,27 @@ RexxToken *RexxSource::sourceNextToken(
 
          case '\\':                    /* backslash                         */
                                        /* next one an equal sign?           */
-           if (this->nextSpecial('=', &location)) {
+           if (this->nextSpecial('=', location)) {
                                        /* have an equal sign after that?    */
-             if (this->nextSpecial('=', &location))
+             if (this->nextSpecial('=', location))
                                        /* this is the \== operator          */
                token = OPERATOR(STRICT_BACKSLASH_EQUAL);
              else                      /* this is the \= operator           */
                token = OPERATOR(BACKSLASH_EQUAL);
            }
                                        /* next one a greater than sign?     */
-           else if (this->nextSpecial('>', &location)) {
+           else if (this->nextSpecial('>', location)) {
                                        /* have another greater than next?   */
-             if (this->nextSpecial('>', &location))
+             if (this->nextSpecial('>', location))
                                        /* this is the \>> operator          */
                token = OPERATOR(STRICT_BACKSLASH_GREATERTHAN);
              else                      /* this is the \> operator           */
                token = OPERATOR(BACKSLASH_GREATERTHAN);
            }
                                        /* next one a less than sign?        */
-           else if (this->nextSpecial('<', &location)) {
+           else if (this->nextSpecial('<', location)) {
                                        /* have another less than next?      */
-             if (this->nextSpecial('<', &location))
+             if (this->nextSpecial('<', location))
                                        /* this is the \<< operator          */
                token = OPERATOR(STRICT_BACKSLASH_LESSTHAN);
              else                      /* this is the \< operator           */
@@ -1125,27 +1115,27 @@ RexxToken *RexxSource::sourceNextToken(
 
          case (unsigned char)'ª':      /* logical not  (need unsigned cast) */
                                        /* next one an equal sign?           */
-           if (this->nextSpecial('=', &location)) {
+           if (this->nextSpecial('=', location)) {
                                        /* have an equal sign after that?    */
-             if (this->nextSpecial('=', &location))
+             if (this->nextSpecial('=', location))
                                        /* this is the \== operator          */
                token = OPERATOR(STRICT_BACKSLASH_EQUAL);
              else                      /* this is the \= operator           */
                token = OPERATOR(BACKSLASH_EQUAL);
            }
                                        /* next one a greater than sign?     */
-           else if (this->nextSpecial('>', &location)) {
+           else if (this->nextSpecial('>', location)) {
                                        /* have another greater than next?   */
-             if (this->nextSpecial('>', &location))
+             if (this->nextSpecial('>', location))
                                        /* this is the \>> operator          */
                token = OPERATOR(STRICT_BACKSLASH_GREATERTHAN);
              else                      /* this is the \> operator           */
                token = OPERATOR(BACKSLASH_GREATERTHAN);
            }
                                        /* next one a less than sign?        */
-           else if (this->nextSpecial('<', &location)) {
+           else if (this->nextSpecial('<', location)) {
                                        /* have another less than next?      */
-             if (this->nextSpecial('<', &location))
+             if (this->nextSpecial('<', location))
                                        /* this is the \<< operator          */
                token = OPERATOR(STRICT_BACKSLASH_LESSTHAN);
              else                      /* this is the \< operator           */

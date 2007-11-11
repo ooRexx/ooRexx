@@ -84,8 +84,9 @@ class RexxVariable : public RexxInternalObject {
   inline void cache(RexxVariable *next) { reset(OREF_NULL); variableValue = (RexxObject *)next; }
   inline BOOL isLocal(RexxActivation *act) { return act == creator; }
 
-  RexxActivation *creator;             /* the activation that created this variable */
   RexxString *variable_name;           /* the name of the variable       */
+  RexxObject *variableValue;           // the assigned value of the variable.
+  RexxActivation *creator;             /* the activation that created this variable */
   RexxObjectTable  *dependents;        /* guard expression dependents       */
 };
 #endif

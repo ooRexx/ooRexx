@@ -306,7 +306,7 @@ void *RexxActivity::operator new(size_t size)
                                        /* get the new activity storage      */
    newActivity  = (RexxActivity *)new_object(size);
                                        /* Give new object its behaviour     */
-   BehaviourSet(newActivity, TheActivityBehaviour);
+   newActivity->setBehaviour(TheActivityBehaviour);
    return newActivity;                 /* and return it                     */
 }
 
@@ -320,8 +320,7 @@ RexxActivity::RexxActivity(
 /******************************************************************************/
 {
   if (!recycle) {                      /* if this is the first time         */
-    ClearObject(this);                 /* globally clear the object         */
-    this->hashvalue = HASHOREF(this);  /* set the hash value                */
+    this->clearObject();               /* globally clear the object         */
     this->local = _local;              /* set the local environment         */
                                        /* Set ProcessName now, before       */
     this->processObj = ProcessName;    /* any more allocations.             */
@@ -477,7 +476,7 @@ BOOL RexxActivity::raiseCondition(
                                        /*  also give 1st activation a shot. */
   for (activation = this->current() ; activation != (RexxActivation *)TheNilObject; activation = this->sender(activation)) {
     handled = activation->trap(condition, conditionObj);
-    if (OTYPE(Activation, activation)) /* reached our 1st activation yet.   */
+    if (isOfClass(Activation, activation)) /* reached our 1st activation yet.   */
       break;                           /* yes, break out of loop            */
   }
 
@@ -689,7 +688,7 @@ void RexxActivity::reportAnException(
 
 void RexxActivity::raiseException(
     wholenumber_t  errcode,            /* REXX error code                   */
-    LOCATIONINFO  *location,           /* location information              */
+    SourceLocation *location,          /* location information              */
     RexxSource    *source,             /* source file to process            */
     RexxString    *description,        /* descriptive information           */
     RexxArray     *additional,         /* substitution information          */
@@ -725,7 +724,7 @@ void RexxActivity::raiseException(
     longjmp(this->stringError, 1);     /* just jump back                    */
 
   activation = this->currentAct();     /* get the current activation        */
-  while (OTYPE(Activation, activation) && activation->isForwarded()) {
+  while (isOfClass(Activation, activation) && activation->isForwarded()) {
     activation->termination();         /* do activation termiantion process */
     this->pop(FALSE);                  /* pop the top activation off        */
     activation = this->currentAct();   /* and get the new current one       */
@@ -793,8 +792,7 @@ void RexxActivity::raiseException(
 
   if (location != NULL) {              /* have clause information available?*/
                                        /* add the line number information   */
-    newVal = location->line;
-    position = new_integer(newVal);
+    position = new_integer(location->getLineNumber());
   }
                                        /* have an activation?               */
   else if (activation != (RexxActivation *)TheNilObject) {
@@ -811,12 +809,12 @@ void RexxActivity::raiseException(
   exobj->put(traceback, OREF_TRACEBACK);
   if (source != OREF_NULL)             /* have source for this?             */
                                        /* extract and add clause in error   */
-    traceback->addLast(source->traceBack(location, 0, FALSE));
+    traceback->addLast(source->traceBack(*location, 0, FALSE));
                                        /* have predecessors?                */
   if (activation != (RexxActivation *)TheNilObject)
     activation->traceBack(traceback);  /* have them add lines to the list   */
   if (source != OREF_NULL)             /* have source for this?             */
-    programname = source->programName; /* extract program name              */
+    programname = source->getProgramName(); /* extract program name              */
                                        /* have predecessors?                */
   else if (activation != (RexxActivation *)TheNilObject)
                                        /* extract program name from activa. */
@@ -1050,7 +1048,7 @@ RexxObject *RexxActivity::display(RexxDirectory *exobj)
                                        /* write out the line                */
         this->traceOutput(this->currentActivation, text);
     }
-    discard(hold(trace_back));         /* ok, let gc have it                */
+    discard_hold(trace_back);          /* ok, let gc have it                */
   }
   rc = exobj->at(OREF_RC);             /* get the error code                */
                                        /* get the message number            */
@@ -1163,7 +1161,7 @@ void RexxActivity::live()
   memory_mark(this->activations);
   memory_mark(this->topActivation);
   memory_mark(this->currentActivation);
-  memory_mark(this->save);
+  memory_mark(this->saveValue);
   memory_mark(this->local);
   memory_mark(this->conditionobj);
   memory_mark(this->requiresTable);
@@ -1189,7 +1187,7 @@ void RexxActivity::liveGeneral()
   memory_mark_general(this->activations);
   memory_mark_general(this->topActivation);
   memory_mark_general(this->currentActivation);
-  memory_mark_general(this->save);
+  memory_mark_general(this->saveValue);
   memory_mark_general(this->local);
   memory_mark_general(this->conditionobj);
   memory_mark_general(this->requiresTable);
@@ -1252,7 +1250,7 @@ void RexxActivity::push(
   this->activations->push((RexxObject *)new_activation);
   this->topActivation = new_activation;/* set this as the top one           */
                                        /* new REXX activation?              */
-  if (OTYPE(Activation, new_activation)) {
+  if (isOfClass(Activation, new_activation)) {
                                        /* this is the top REXX one too      */
     this->currentActivation = (RexxActivation *)new_activation;
                                        /* get the activation settings       */
@@ -1327,7 +1325,7 @@ void RexxActivity::pop(
                                        /* this is the top one               */
     this->topActivation = old_activation;
                                        /* popping a REXX activation?        */
-    if (OTYPE(Activation, top_activation)) {
+    if (isOfClass(Activation, top_activation)) {
                                        /* clear this out                    */
       old_activation = (RexxActivationBase *)TheNilObject;
                                        /* spin down the stack               */
@@ -1335,7 +1333,7 @@ void RexxActivity::pop(
                                        /* get the next item                 */
         tempAct = (RexxActivationBase *)activationStack->peek(i);
                                        /* find a REXX one?                  */
-        if (OTYPE(Activation, tempAct)) {
+        if (isOfClass(Activation, tempAct)) {
           old_activation = tempAct; /* save this one                     */
           break;                       /* and exit the loop                 */
         }
@@ -1398,7 +1396,7 @@ void RexxActivity::popNil()
                                        /* get the next item                 */
       tempAct = (RexxActivationBase *)activationStack->peek(i);
                                        /* find a REXX one?                  */
-      if (OTYPE(Activation, tempAct)) {
+      if (isOfClass(Activation, tempAct)) {
         old_activation = tempAct;   /* save this one                     */
         break;                         /* and exit the loop                 */
       }
@@ -1459,7 +1457,7 @@ void RexxActivity::checkDeadLock(
                                        /* currently waiting on something?   */
   if (this->waitingObject != OREF_NULL) {
                                        /* waiting on a message object?      */
-    if (OTYPE(Message, this->waitingObject))
+    if (isOfClass(Message, this->waitingObject))
                                        /* get the activity message is on    */
       owningActivity = ((RexxMessage *)this->waitingObject)->startActivity;
     else
@@ -1581,11 +1579,11 @@ void RexxActivity::yield(RexxObject *result)
 {
                                        /* other's waiting to go?            */
   if (TheActivityClass->waitingActivity() != OREF_NULL) {
-    this->save = result;               /* save the result value             */
+    this->saveValue = result;          /* save the result value             */
                                        /* now join the line                 */
     TheActivityClass->addWaitingActivity(this, TRUE);
     hold(result);                      /* hold the result                   */
-    this->save = OREF_NULL;            /* release the saved value           */
+    this->saveValue = OREF_NULL;       /* release the saved value           */
   }
 }
 
@@ -2369,7 +2367,7 @@ BOOL  RexxActivity::sysExitDbgTst(
                                        /* get the exit handler              */
   exitname = this->querySysExits(RXDBG);
   if (exitname != OREF_NULL) {         /* exit enabled?                     */
-    if (!activation->code->u_source->traceable() || (activation->code->u_source->sourceBuffer == OREF_NULL))
+    if (!activation->code->isTraceable())
        return TRUE;
     if (EndStepOut_Over)
         exit_parm.rxdbg_flags.rxftrace = RXDBGENDSTEP;
@@ -2379,7 +2377,7 @@ BOOL  RexxActivity::sysExitDbgTst(
     filename = activation->code->getProgramName();
     MAKERXSTRING(exit_parm.rxdbg_filename, filename->getWritableData(), filename->getLength());
     if (activation->getCurrent() != OREF_NULL)
-        exit_parm.rxdbg_line = activation->getCurrent()->lineNumber;
+        exit_parm.rxdbg_line = activation->getCurrent()->getLineNumber();
     else
         exit_parm.rxdbg_line = 0;
     exit_parm.rxdbg_routine.strlength = 0;
@@ -2720,7 +2718,7 @@ void RexxActivityClass::init()
   RexxObjectTable *subClassTable;      /* existing subclass table           */
 
   subClassTable = this->subClasses;    /* save this before clearing         */
-  ClearObject(this);                   /* clear the activity class          */
+  this->clearObject();                 /* clear the activity class          */
   OrefSet(this,this->classUsedActivities,new_object_table());
   OrefSet(this,this->classFreeActivities,new_object_table());
   OrefSet(this,this->classAllActivities,new_object_table());
@@ -2950,7 +2948,7 @@ RexxActivation *RexxActivityClass::newActivation(
                                        /* get the top cached entry          */
     resultActivation = (RexxActivation *)this->activations->stackTop();
                                        /* reactivate this                   */
-    SetObjectHasReferences(resultActivation);
+    resultActivation->setHasReferences();
     resultActivation = new (resultActivation) RexxActivation (receiver, runMethod, activity, msgname, activation, context);
     this->activations->pop();          /* Remove reused activation from stac*/
   }
@@ -2970,7 +2968,7 @@ void RexxActivityClass::cacheActivation(
                                        /* still room in the cache?          */
   if (this->activationCacheSize < ACTIVATION_CACHE_SIZE) {
                                        /* free everything for reclamation   */
-    SetObjectHasNoReferences(activation);
+    activation->setHasNoReferences();
     this->activationCacheSize++;       /* add the this to the count         */
                                        /* and add the activation            */
     this->activations->push((RexxObject *)activation);
@@ -3550,7 +3548,7 @@ void process_message_arguments(
   LONG     i;                          /* loop counter/array index          */
   PVOID    tempPointer;                /* temp converted pointer            */
   RXSTRING tempRXSTRING;               /* temp argument rxstring            */
-  OREF     tempOREF;                   /* temp argument object reference    */
+  RexxObject *tempOREF;                /* temp argument object reference    */
   LONG     tempLong;                   /* temp converted long               */
   ULONG    tempULong;                  /* temp converted long               */
   char     tempChar;                   /* temp character value              */
@@ -3623,7 +3621,7 @@ void process_message_arguments(
 
       case 'o':                        /* REXX object reference             */
                                        /* get the OREF                      */
-        tempOREF = va_arg(*arguments, OREF);
+        tempOREF = va_arg(*arguments, RexxObject *);
                                        /* insert directly into the array    */
         argument_list->addLast(tempOREF);
         break;
@@ -3729,7 +3727,7 @@ void process_message_result(
 
       case 'o':                        /* REXX object reference             */
                                        /* copy the value directly           */
-        (*((OREF *)return_pointer)) = value;
+        (*((RexxObject **)return_pointer)) = value;
         break;
 
       case 'n':                        /* pointer to somId                  */
@@ -3861,11 +3859,13 @@ LONG VLAREXXENTRY RexxSendMessage (
                                        /* get the argument list start       */
     va_start(arguments, result_pointer);
                                        /* create an argument list           */
-    argument_list  = (RexxList *)save(new_list());
+    argument_list  = new_list();
+    save(argument_list);
                                        /* go convert the arguments          */
     process_message_arguments(&arguments, interfacedefn, argument_list);
                                        /* now convert to an array           */
-    argument_array = (RexxArray *)save(argument_list->makeArray());
+    argument_array = argument_list->makeArray();
+    save(argument_array);
     discard(argument_list);            /* No longer need the list.          */
     va_end(arguments);                 /* end of argument processing        */
     if (start_class == OREF_NULL)      /* no start scope given?             */
@@ -3878,7 +3878,7 @@ LONG VLAREXXENTRY RexxSendMessage (
           argument_array->size(), argument_array->data(), start_class);
     discard(argument_array);           /* no longer need the argument array */
     if (result != OREF_NULL) {         /* if we got a result, protect it.   */
-      result = save(result);           /* because might not have references */
+      save(result);                    /* because might not have references */
                                        /* convert the return result         */
       process_message_result(result, result_pointer, returnType);
     }
@@ -3897,7 +3897,7 @@ LONG VLAREXXENTRY RexxSendMessage (
                                        /* Need to keep result obj around.   */
        send_message0(ProcessLocalServer, (RexxString *)new_string("SAVE_RESULT"));
 
-     discard(hold(result));            /* release it and hole a bit longer  */
+     discard_hold(result);             /* release it and hole a bit longer  */
   }
   activity->popNil();                  /* remove the nil marker             */
                                        /* release our activity usage        */

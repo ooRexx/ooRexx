@@ -243,7 +243,7 @@ ULONG SysVariablePool(
         self->resetNext();             /* reset any next operations         */
                                        /* have a non-name retriever         */
                                        /* and a new variable?               */
-        if (!OTYPE(String, retriever) && !retriever->exists(activation))
+        if (!isOfClass(String, retriever) && !retriever->exists(activation))
                                        /* flag this in the block            */
           pshvblock->shvret |= RXSHV_NEWV;
 
@@ -252,7 +252,7 @@ ULONG SysVariablePool(
           case RXSHV_SYFET:            /* fetch operations                  */
           case RXSHV_FETCH:
                                        /* have a non-name retriever?        */
-            if (OTYPE(String, retriever))
+            if (isOfClass(String, retriever))
                                        /* the value is the retriever        */
               value = (RexxObject *)retriever;
             else
@@ -265,7 +265,7 @@ ULONG SysVariablePool(
           case RXSHV_SYSET:            /* set operations                    */
           case RXSHV_SET:
                                        /* have a non-name retriever?        */
-            if (OTYPE(String, retriever))
+            if (isOfClass(String, retriever))
                                        /* this is bad                       */
               pshvblock->shvret = RXSHV_BADN;
             else
@@ -276,7 +276,7 @@ ULONG SysVariablePool(
           case RXSHV_SYDRO:            /* drop operations                   */
           case RXSHV_DROPV:
                                        /* have a non-name retriever?        */
-            if (OTYPE(String, retriever))
+            if (isOfClass(String, retriever))
                                        /* this is bad                       */
               pshvblock->shvret = RXSHV_BADN;
             else

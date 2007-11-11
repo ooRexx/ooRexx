@@ -3,8 +3,7 @@
 
 Please read ALL of these notes, to be sure you understand your options,
 before building ooRexx.  These notes cover building the 3.x versions of
-ooRexx.  (In this document the term "builder" is used to refer to the person
-building ooRexx from source.)
+ooRexx.
 
 Obtaining the source
 ====================
@@ -73,7 +72,7 @@ uses stouch.exe which is provided in the build-utilities package.
 
 Nothing is needed if building from a Release Source File archive.  The
 proper files have already been 'touched' in the archive.  (Unless the
-builder makes changes to the messages source in the build source tree.)
+builder makes changes to the messages source in the archive.)
 
 Xalan/Xerces is needed if the builder is making changes to the ooRexx
 message files.  This would be a *rare* case.  However, pre-compiled versions
@@ -111,8 +110,8 @@ Initial set up
 * If using the build utilities, download the current Windows package and
 place the binaries somewhere in the path.
 
-* If using Xalan download the Xalan and Xerces binaries and unzip them into
-their desired location.  Add the bin directory of both packages to the path.
+* If using Xalan download the Xalan and Xerces binaries and place them
+somewhere in the path.
 
 * If creating the Windows Installer package, download and configure NSIS.
 
@@ -123,20 +122,9 @@ Environment set up
 
 Depending on how the builder has installed these tools, the environment
 variables may be already set in the System environment.  However, it is more
-common to run the batch files provided by the tools.
-
-The environment variables for the C++ compiler and the Platform SDK *MUST*
-be set correctly to build ooRexx.
-
-Over the years Microsoft has changed the name and location of the batch files
-provided with the compiler and SDK tools.  Plus this process is dependent on
-the options the individual chooses when installing the tools.  Because of
-this it is not feasible to describe every single variation of how to proper-
-ly set the environment for the Microsoft tools.
-
-Nevertheless, the general procedure is the same.  Run the compiler batch
-file first, then the SDK batch file.  The builder needs to determine the
-exact steps for her specific system, but as an example:
+common to run the batch files provided by the tools.  Run the compiler batch
+file first, then the SDK batch file.  The builder will need to determine
+what is needed for her specific system, but as an example:
 
 F:\>call F:\Tools\MsVisualStudio.2005\VC\vcvarsall.bat x86
 F:\>call F:\Tools\MsPlatformSDK\SetEnv.cmd  /XP32 /RETAIL
@@ -176,74 +164,28 @@ Build Notes and Caveats
 makeorx.bat
 ----------
 
-makeorx takes one required argument and two optional arguments.  If your
-execute makeorx without any arguments, the correct syntax will be printed.
-That in and of itself may be sufficient to use the makeorx batch correctly.
-The following is more detail on the arguments.
-
-The first required argument is exactly one of: NODEBUG DEBUG BOTH.
-
-The second optional argument, if used, must be exactly: PACKAGE.
-
-The third optional argument can be the path where the ooRexx documentation
-files can be located if they are not in the default location.  See the
-PACKAGE notes a little further down for more detail.
-
-First option: NODEBUG DEBUG BOTH
+makeorx takes one required argument and one optional argument.  The first
+required argument is exactly one of: NODEBUG DEBUG BOTH.  The second
+optional argument, if used, must be exactly: PACKAGE.
 
 NODEBUG causes a non-debug version to be built, DEBUG causes a debug version
-to be built, and BOTH will build both.  For a non-debug version, the built
-files are placed in .\Win32Rel, for instance E:\interpreter-3.x\Win32Rel.
-Debug version files are placed in .\Win32Dbg.
+to be built, and BOTH will build both.  The optional PACKAGE argument will
+first run the build(s) and then create the Windows installer package.
+(See the NSIS notes for details on setting NSIS up correctly.)
 
-Second option: PACKAGE
+For a non-debug version, the built files are placed in .\Win32Rel, for
+instance E:\interpreter-3.x\Win32Rel.  Debug version files are placed in
+.\Win32Dbg.
 
-The optional PACKAGE argument will first run the build(s) and then create
-the Windows installer package.  (See the NSIS notes for details on setting
-NSIS up correctly.) The installer package files will be placed in the
-top-level source directory and will be named: ooRexx<version>_<svn>.exe or
-ooRexx<version>_<svn>-debug.exe, where svn is the svn revision number of the
-source. For example: ooRexx312_892.exe or ooRexx312_892-debug.exe
+The installer package files will be placed in the top-level source directory
+and will be named:  ooRexx<version>.exe or ooRexx<version>-debug.exe.  For
+example: ooRexx312.exe or ooRexx312-debug.exe
 
-In order for the installer package to be built, the ooRexx PDF documentation
-files must be in the 'doc' directory of the source tree.  These files and
-the doc directory itself do not exist in the source tree, the builder needs
-to manually add them.
+The output of the build process is redirected into a log file.  The log file
+is named Win32Rel.log or Win32Dbg.log depending on the type of build and
+will be located in the .\Win32Rel or .\Win32Dbg directory as appropriate.
 
-Before using the PACKAGE option, create the doc directory in the root of the
-source tree.  The copy the PDF files into that directory.  Alternatively,
-the third option to makeorx can be used to specify a location where the PDF
-are located.  makeorx will then create the doc directory and attempt to copy
-the files from that location into that directory.
-
-Third option: <Location of documentation files>
-
-The third option can be used to point makeorx to the documentation files if
-they are not located in the source tree.  For example, say the PDF files are
-located in the C:\ooRexx.3.2.0.release.docs directory.  The following could
-be used to build ooRexx and create the installer package without the need to
-copy the PDF files into the source tree:
-
-E:\work.ooRexx\makeorx NODEBUG PACKAGE C:\ooRexx.3.2.0.release.docs
-
-Rather than specify the doc location on the command line, an environment
-variable can be used.  The following is equivalent to the above command:
-
-E:\work.ooRexx\set DOC_LOCATION=C:\ooRexx.3.2.0.release.docs
-E:\work.ooRexx\makeorx NODEBUG PACKAGE
-
-Miscellaneous details:
-
-* The output of the build process is redirected into a log file.  The log
-file is named Win32Rel.log or Win32Dbg.log depending on the type of build
-and will be located in the .\Win32Rel or .\Win32Dbg directory as
-appropriate.  This redirection to a log file can be turned of by setting an
-environment variable.  If NO_BUILD_LOG is set to 1, the build output will
-not be redirected:
-
-E:\work.ooRexx\set NO_BUILD_LOG=1
-
-* There is no 'clean' option at this time.  To ensure a completely clean
+There is no 'clean' option at this time.  To ensure a completely clean
 build, delete the respective build directory.  For example, from the
 top-level source directory, the following command will ensure a complete
 rebuild of the release version:

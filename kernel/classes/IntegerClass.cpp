@@ -72,7 +72,7 @@ ULONG RexxInteger::hash()
 {
   RexxString * string;                 /* integer string value              */
 
-  if (!OTYPE(Integer, this))           /*  a nonprimitive object?           */
+  if (!isOfClass(Integer, this))           /*  a nonprimitive object?           */
                                        /* see if == overridden.             */
     return this->sendMessage(OREF_STRICT_EQUAL)->requestString()->hash();
   else {
@@ -154,7 +154,7 @@ RexxString *RexxInteger::primitiveMakeString()
   string = new_string(stringBuffer, strlen(stringBuffer));
                                        /* cache this away for later         */
   OrefSet(this, this->stringrep, string);
-  SetObjectHasReferences(this);        /* we now have references            */
+  this->setHasReferences();            // now have references that need marking
   return string;                       /* return the new string             */
 }
 
@@ -174,7 +174,7 @@ RexxString *RexxInteger::stringValue()
   string = new_string(stringBuffer, strlen(stringBuffer));
                                        /* cache this away for later         */
   OrefSet(this, this->stringrep, string);
-  SetObjectHasReferences(this);        /* we now have references            */
+  this->setHasReferences();            /* we now have references            */
   return string;                       /* return the new string             */
 }
 
@@ -252,7 +252,7 @@ void RexxInteger::setString(
 {
                                        /* set the strign                    */
    OrefSet(this, this->stringrep, string);
-   SetObjectHasReferences(this);       /* we now have references            */
+   this->setHasReferences();           /* we now have references            */
 }
 
 BOOL RexxInteger::truthValue(
@@ -372,7 +372,7 @@ RexxObject *RexxInteger::plus(
   if (other == OREF_NULL)              /* unary                             */
     return this;                       /* just return ourselves             */
   else {                               /* binary                            */
-    if (OTYPE(Integer, other)) {       /* adding two integers together?     */
+    if (isOfClass(Integer, other)) {       /* adding two integers together?     */
                                        /* add the numbers                   */
       tempVal = this->value + other->value;
                                        /* result still within range?        */
@@ -402,7 +402,7 @@ RexxObject *RexxInteger::minus(
     return new_integer(tempVal);       /* and return a new integer          */
   }
   else {                               /* binary subtraction operation      */
-    if (OTYPE(Integer, other)) {       /* subtracting two integers?         */
+    if (isOfClass(Integer, other)) {       /* subtracting two integers?         */
                                        /* subtract the numbers              */
       tempVal = this->value - other->value;
                                        /* result still within range?        */
@@ -430,7 +430,7 @@ RexxObject *RexxInteger::multiply(
   required_arg(other, ONE);            /* make sure the argument is there   */
                                        /* is the other an integer and will  */
                                        /* the result be in a good range?    */
-  if (OTYPE(Integer, other) && labs((int)this->value) <= 99999 &&
+  if (isOfClass(Integer, other) && labs((int)this->value) <= 99999 &&
       labs((int)(otherval = other->value)) <= 9999) {
     tempVal = this->value * otherval;  /* multiply directly                 */
     return new_integer(tempVal);       /* and return as an integer          */
@@ -464,7 +464,7 @@ RexxObject *RexxInteger::integerDivide(
     return integer_forward(this, integerDivide, other);
   required_arg(other, ONE);            /* make sure this is really there    */
 
-  if (OTYPE(Integer, other)) {         /* is right object an integer?       */
+  if (isOfClass(Integer, other)) {         /* is right object an integer?       */
                                        /* is right number 0?                */
     if ((otherval = other->value) != 0) {
       tempVal = this->value / otherval;/* nope, do the division....         */
@@ -493,7 +493,7 @@ RexxObject *RexxInteger::remainder(
     return integer_forward(this, remainder, other);
   required_arg(other, ONE);            /* make sure this is really there    */
 
-  if (OTYPE(Integer, other)) {         /* is right object an integer?       */
+  if (isOfClass(Integer, other)) {         /* is right object an integer?       */
                                        /* is right number 0?                */
     if ((otherval = other->value) != 0) {
       tempVal = this->value % otherval;/* nope, do the division....         */
@@ -524,11 +524,13 @@ BOOL RexxInteger::isEqual(
 /*            only strict equality, not greater or less than values.          */
 /******************************************************************************/
 {
-  if (!isPrimitive(this))              /* not a primitive?                  */
+  if (this->isSubClassOrEnhanced())      /* not a primitive?                  */
+  {
                                        /* do the full lookup compare        */
-    return this->sendMessage(OREF_STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
+      return this->sendMessage(OREF_STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
+  }
 
-  if (OTYPE(Integer, other))           /* two integers?                     */
+  if (isOfClass(Integer, other))           /* two integers?                     */
                                        /* just directly compare the values  */
     return this->value == ((RexxInteger *)other)->value;
                                        /* go do a string compare            */
@@ -546,7 +548,7 @@ long RexxInteger::strictComp(
 /******************************************************************************/
 {
   required_arg(other, ONE);            /* make sure this is really there    */
-  if (OTYPE(Integer, other))           /* string compare is simple          */
+  if (isOfClass(Integer, other))           /* string compare is simple          */
                                        /* just return their difference      */
     return this->value - ((RexxInteger *)other)->value;
   else                                 /* go do a string compare            */
@@ -814,7 +816,7 @@ RexxObject *RexxInteger::Max(
                                        /* Yes, report the error.            */
       reportException(Error_Incorrect_method_noarg, arg);
 
-    if (OTYPE(Integer, argument)) {    /* is this an INTEGER object?        */
+    if (isOfClass(Integer, argument)) {    /* is this an INTEGER object?        */
                                        /* yes, gets its value.              */
       int v = ((RexxInteger *)argument)->getValue();
       if (v > maxvalue)                /* is this number larger than max?   */
@@ -870,7 +872,7 @@ RexxObject *RexxInteger::Min(
                                        /* Yes, report the error.            */
       reportException(Error_Incorrect_method_noarg, arg);
 
-    if (OTYPE(Integer, argument)) {    /* is this an INTEGER object?        */
+    if (isOfClass(Integer, argument)) {    /* is this an INTEGER object?        */
                                        /* yes, gets its value.              */
       int v = ((RexxInteger *)argument)->getValue();
       if (v < minvalue)                /* is this number larger than min?   */
@@ -1037,9 +1039,9 @@ void *RexxInteger::operator new(size_t size)
   newObject = new_object(size);        /* get a new object                  */
                                        /* add in the integer behaviour, and */
                                        /* make sure old2new knows about it  */
-  BehaviourSet(newObject, TheIntegerBehaviour);
-  ClearObject(newObject);              /* clear the object                  */
-  SetObjectHasNoReferences(newObject); /* Tell GC, not to bother with Live  */
+  newObject->setBehaviour(TheIntegerBehaviour);
+  newObject->clearObject();            /* clear the object                  */
+  newObject->setHasNoReferences();     /* Tell GC, not to bother with Live  */
   return newObject;                    /* return the new object.            */
 }
 

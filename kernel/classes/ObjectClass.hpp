@@ -45,6 +45,8 @@
 #ifndef Included_RexxObject
 #define Included_RexxObject
 
+#include <stddef.h>
+
 /* default size of the scope table...these are normally very small */
 #define DEFAULT_SCOPE_SIZE  6
 
@@ -58,6 +60,92 @@
   class RexxInternalStack;
   class RexxSupplier;
 
+
+  enum
+  {
+      LiveMask         =  0xFFFC,    // mask for the checking the mark bits
+      MarkMask         =  0x0003,    // mask use for checking the mark bits
+      OldSpaceBit      =  0x0010,    // location of the OldSpace bit
+  };
+
+
+                                       /* used ofor special constructor   */
+typedef enum {RESTOREIMAGE, MOBILEUNFLATTEN, METHODUNFLATTEN} RESTORETYPE;
+
+
+class ObjectHeader
+{
+public:
+    inline ObjectHeader & operator= (ObjectHeader &h)
+    {
+        // copy the relevant state
+        objectSize = h.objectSize;
+        flags = h.flags;
+        return *this;
+    }
+
+    inline size_t getObjectSize() { return (size_t)objectSize; }
+    inline void setObjectSize(size_t l) { objectSize = l; }
+
+    inline void makeProxiedObject() { flags |= ProxiedObject; }
+    inline bool requiresProxyObject() { return (flags & ProxiedObject) != 0; }
+    inline void makeProxy() { flags |= ProxyObject; }
+    inline bool isProxyObject() { return (flags & ProxyObject) != 0; }
+    inline void clearObjectMark() { flags &= LiveMask; }
+    inline void setObjectMark(uint16_t mark) { clearObjectMark(); flags |= mark; }
+    inline bool isObjectMarked(uint32_t mark) { return (flags & mark) != 0; }
+    inline bool isObjectLive(uint32_t mark) { return (flags & MarkMask) == mark; }
+    inline bool isObjectDead(uint32_t mark) { return (flags & MarkMask) != mark; }
+    inline void clear() { objectSize = 0; flags = 0; }
+    inline void setOldSpace() { flags |= OldSpaceBit; }
+    inline void clearOldSpace() { flags &= ~OldSpaceBit; }
+    inline void setNewSpace() { clearOldSpace(); }
+    inline bool isOldSpace() { return (flags & OldSpaceBit) != 0; }
+    inline bool isNewSpace() { return (flags & OldSpaceBit) == 0; }
+    inline void setHasNoReferences() { flags |= NoRefBit; }
+    inline void setHasReferences() { flags &= ~NoRefBit; }
+    inline bool hasReferences() { return (flags & NoRefBit) == 0; }
+    inline bool hasNoReferences() { return (flags & NoRefBit) != 0; }
+    inline void setNonPrimitive() { flags |= IsNonPrimitive; }
+    inline void setPrimitive() { flags &= ~IsNonPrimitive; }
+    inline bool isNonPrimitive() { return (flags & IsNonPrimitive) != 0; }
+    inline bool isPrimitive() { return (flags & IsNonPrimitive) == 0; }
+    inline void initHeader(size_t l, uint32_t mark)
+    {
+        objectSize = l;
+        flags = (uint16_t)mark;    // the flags are cleared except for the mark.
+    }
+    inline void initHeader(uint32_t mark)
+    {
+        flags = (uint16_t)mark;    // the flags are cleared except for the mark.
+    }
+
+protected:
+    enum
+
+      {
+        IsNonPrimitive   =  0x0001,    // use for flattened objects to indicated behaviour status
+        MarkBit1         =  0x0001,    // location of the first mark bit.  Note:  shared with IsNonPrimitive
+        MarkBit2         =  0x0002,    // Second of the mark bits
+        ProxiedObject    =  0x0004,    // This requires a proxy
+        ProxyObject      =  0x0008,    // This object is a PROXY(String) Obj
+        NoRefBit         =  0x0020     // location of No References Bit.
+
+    };
+
+
+    // TODO:  Once all portable types are available for the build, the sizes of these
+    // fields need to be changed to unintptr_t for force them to be pointer sized.
+    size_t    objectSize;              // allocated size of the object
+    union
+    {
+        uint16_t   flags;              // the object flag/type information
+        size_t     sizePadding;        // padding to make sure this is a full pointer size
+    };
+
+};
+
+
   class RexxVirtualBase {              /* create first base level class     */
                                        /* dummy virtual function to force   */
                                        /* the virtual function table to a   */
@@ -70,6 +158,11 @@
      virtual ~RexxVirtualBase() { ; }
      virtual void      baseVirtual() {;}
   };
+
+
+#define OREFSHIFT 3
+                                       /* generate hash value from OREF     */
+inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHIFT; }
                                        /* Base Object REXX class            */
   class RexxInternalObject : public RexxVirtualBase{
     public:
@@ -86,6 +179,51 @@
      virtual ~RexxInternalObject() {;};
 
      inline operator RexxObject*() { return (RexxObject *)this; };
+
+     inline size_t getObjectSize() { return header.getObjectSize(); }
+     inline void   setObjectSize(size_t s) { header.setObjectSize(s); }
+     // NB:  I hope this doesn't add any padding
+     static inline size_t getObjectHeaderSize() { return sizeof(RexxInternalObject); }
+     inline size_t getObjectDataSize() { return getObjectSize() - getObjectHeaderSize(); }
+     inline void  *getObjectDataSpace() { return ((char *)this) + getObjectHeaderSize(); }
+     // these clear everything after the hash value.
+     inline void   clearObject() { memset(getObjectDataSpace(), '\0', getObjectDataSize()); }
+     inline void   clearObject(size_t l) { memset(getObjectDataSpace(), '\0', l - getObjectHeaderSize()); }
+     inline void   setVirtualFunctions(void *t) { *((void **)this) = t; }
+     inline void   setDefaultHash() { hashvalue = identityHash(); }
+
+     inline void   setInitHeader(size_t s, uint16_t markword)  { header.initHeader(s, markword); }
+     inline void   setInitHeader(uint16_t markword)  { header.initHeader(markword); }
+
+     inline void   setObjectLive(uint16_t markword)  { header.setObjectMark(markword); }
+     inline void   setHasReferences() { header.setHasReferences(); }
+     inline void   setHasNoReferences() { header.setHasNoReferences(); }
+     inline bool   hasReferences() { return header.hasReferences(); }
+     inline bool   hasNoReferences() { return header.hasNoReferences(); }
+     inline void   setPrimitive() { header.setPrimitive(); }
+     inline void   setNonPrimitive() { header.setNonPrimitive(); }
+     inline bool   isPrimitive() { return header.isPrimitive(); }
+     inline bool   isNonPrimitive() { return header.isNonPrimitive(); }
+     inline bool   isObjectMarked(uint16_t markword) { return header.isObjectMarked(markword); }
+     inline void   setObjectMark(uint16_t markword) { header.setObjectMark(markword); }
+     inline void   clearObjectMark() { header.clearObjectMark(); }
+     inline bool   isObjectLive(uint32_t mark) { return header.isObjectLive(mark); }
+     inline bool   isObjectDead(uint32_t mark) { return header.isObjectDead(mark); }
+     inline bool   isOldSpace() { return header.isOldSpace(); }
+     inline bool   isNewSpace() { return header.isNewSpace(); }
+     inline void   setNewSpace() { header.setNewSpace(); }
+     inline void   setOldSpace() { header.setOldSpace(); }
+     inline void   makeProxiedObject() { header.makeProxiedObject(); }
+     inline bool   isProxyObject() { return header.isProxyObject(); }
+            bool   isSubClassOrEnhanced();
+            bool   isBaseClass();
+            size_t getObjectTypeNumber();
+     inline RexxBehaviour *getObjectType() { return behaviour; }
+     inline bool   isObjectType(RexxBehaviour *b) { return b == behaviour; }
+     inline bool   isObjectType(size_t t) { return getObjectTypeNumber() == t; }
+     inline bool   isSameType(RexxInternalObject *o) { return behaviour == o->getObjectType(); }
+     inline void   setBehaviour(RexxBehaviour *b) { behaviour = b; }
+
                                        /* the following are virtual         */
                                        /* functions required for every      */
                                        /* class                             */
@@ -125,35 +263,19 @@
              RexxObject  *hasUninit();
              void         removedUninit();
              void         printObject();
+             RexxObject  *clone();
 
 
+     ObjectHeader header;              /* memory management header          */
      RexxBehaviour *behaviour;         /* the object's behaviour            */
-     HEADINFO header;                  /* memory management header          */
                                        /* Following defined as union to     */
                                        /*  Allow for overloading of         */
                                        /*  hashValue usage/value by         */
                                        /*  other classes.                   */
-     union {
-       long hashvalue;                 /* Default usage.                    */
-       size_t u_size;                  /* used by many variable sized Objs  */
-//     long lookaside_size;            /* size of the lookaside table -VDICT */
-       BEHAVIOURINFO behaviourInfo;    /* Used by RexxBehaviour.            */
-       METHODINFO    methodInfo;       /* Used by RexxMethod                */
-       size_t      lineNumber;         /* instruction line number info      */
-       RexxMethod *u_method;           /* executed method - Activation      */
-       RexxString *library;            /* external Library of Method -NMETH */
-       RexxSource *u_source;           /* Source code object - RexxMethod   */
-       RexxObject *u_receiver;         /* Receiver object - RexxNativeCode  */
-       RexxObject *variableValue;      /* value of variable - OKVAR         */
-                                       /* name of function/message          */
-       RexxString *u_name;             /* Name for Stem Variable - RexxStem */
-       RexxString *variableName;       /* retriever of indirect variable    */
-       RexxString *stem;               /* name of stem - OTVSTEM            */
-       RexxObject *u_left_term;        /* left term of the operator         */
-                                       /* variable retriever                */
-       RexxVariableBase *variableObject;
-     };
+     size_t hashvalue;                 /* Default usage.                    */
   };
+
+
 
 class RexxObject : public RexxInternalObject {
   public:
@@ -174,6 +296,44 @@ class RexxObject : public RexxInternalObject {
                                        /*  Functiosn table.               */
                                        /* So it doesn't need to do anythin*/
      inline RexxObject(RESTORETYPE restoreType) { ; };
+
+
+     // The following two methods probably should be on RexxInternalObject, but they
+     // need to reference the objectVariables field.  That field could be moved to
+     // RexxInternalObject, but it would increase the size of all internal objects
+     // by 4 bytes.  Since the minimum object size is large enough to always have
+     // that field, it's safe to clear this here.
+     inline void initializeNewObject(size_t size, uint32_t mark, void *vft, RexxBehaviour *b)
+     {
+         // we need to make this a function object of some type in case
+         // a GC cycle gets triggered before this is complete.  By default,
+         // we make this a generic object
+         setVirtualFunctions(vft);
+         setBehaviour(b);
+         // this has a clean set of flags, except for the live mark
+         header.initHeader(size, mark);
+         // make sure the object variables are cleared in case this has to get marked
+         objectVariables = OREF_NULL;
+         // set the default hash in case there's nothing special being used
+         setDefaultHash();
+     }
+
+     inline void initializeNewObject(uint32_t mark, void *vft, RexxBehaviour *b)
+     {
+         // we need to make this a function object of some type in case
+         // a GC cycle gets triggered before this is complete.  By default,
+         // we make this a generic object
+         setVirtualFunctions(vft);
+         setBehaviour(b);
+         // this has a clean set of flags, except for the live mark
+         header.initHeader(mark);
+         // make sure the object variables are cleared in case this has to get marked
+         objectVariables = OREF_NULL;
+         // set the default hash in case there's nothing special being used
+         setDefaultHash();
+     }
+
+
      virtual ~RexxObject(){;};
 
      virtual RexxMethod  *methodObject(RexxString *);
@@ -236,7 +396,7 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *messageSend(RexxString *, LONG, RexxObject **);
      RexxObject  *messageSend(RexxString *, LONG, RexxObject **, RexxObject *);
      RexxMethod  *checkPrivate(RexxMethod *);
-     RexxObject  *processUnknown(RexxString *, LONG, RexxObject **);
+     RexxObject  *processUnknown(RexxString *, size_t, RexxObject **);
      RexxObject  *processProtectedMethod(RexxString *, LONG, RexxObject **);
      RexxObject  *sendMessage(RexxString *, RexxArray *);
      inline RexxObject  *sendMessage(RexxString *message) { return this->messageSend(message, 0, OREF_NULL); };
@@ -263,7 +423,6 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *setMdict(RexxObject *);
      inline RexxBehaviour *behaviourObject() { return this->behaviour; }
 
-     short        ptype();
      const char  *idString();
      RexxString  *id();
      RexxMethod  *methodLookup(RexxString *name );
@@ -335,6 +494,24 @@ class RexxObject : public RexxInternalObject {
    RexxVariableDictionary *objectVariables;   /* set of object variables           */
 };
 
+
+/******************************************************************************/
+/* Method pointer special types                                               */
+/******************************************************************************/
+
+ typedef RexxObject *  (RexxObject::*PCPPM0)();
+ typedef RexxObject *  (RexxObject::*PCPPM1)(RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPM2)(RexxObject *, RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPM3)(RexxObject *, RexxObject *, RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPM4)(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPM5)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPM6)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPM7)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPMA1)(RexxArray *);
+ typedef RexxObject *  (RexxObject::*PCPPMC1)(RexxObject **, size_t);
+
+ typedef int          (RexxObject::*DispatchMethod)(RexxActivity *, void *);
+
 class RexxNilObject : public RexxObject {
   public:
      RexxNilObject();
@@ -343,6 +520,7 @@ class RexxNilObject : public RexxObject {
      RexxString * nilString();
 
 };
+
 
 class RexxActivationBase : public RexxInternalObject{
   public:

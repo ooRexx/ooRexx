@@ -58,6 +58,7 @@ class RexxDotVariable : public RexxVariableBase {
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
   RexxObject *getValue(RexxActivation *);
 
-                                       /* name of the variable is in hash   */
+  RexxString *variableName;     // name of the environment symbol
+
 };
 #endif

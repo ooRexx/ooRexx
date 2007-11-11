@@ -237,7 +237,7 @@ RexxInstruction *RexxSource::callNew()
   else if (token->isSymbol()) {
     _keyword = this->subKeyword(token); /* check for the subkeywords         */
     if (_keyword == SUBKEY_ON) {        /* CALL ON instruction?              */
-      _flags |= call_on_off;            /* this is a CALL ON                 */
+      _flags |= RexxInstructionCall::call_on_off;  /* this is a CALL ON                 */
       token = nextReal();              /* get the next token                */
                                        /* no condition specified or not a   */
                                        /* symbol?                           */
@@ -364,11 +364,11 @@ RexxInstruction *RexxSource::callNew()
     builtin_index = this->builtin(token);
                                        /* process the argument list         */
     argCount = this->argList(OREF_NULL, TERM_EOC);
-    _flags |= call_nointernal;          /* do not check for internal routines*/
+    _flags |= RexxInstructionCall::call_nointernal;          /* do not check for internal routines*/
   }
                                        /* indirect call case?               */
   else if (token->classId == TOKEN_LEFT) {
-    _flags |= call_dynamic;             /* going to be indirect              */
+    _flags |= RexxInstructionCall::call_dynamic;             /* going to be indirect              */
     name = this->parenExpression(token); // this is a full expression
                                        /* process the argument list         */
     argCount = this->argList(OREF_NULL, TERM_EOC);
@@ -380,10 +380,10 @@ RexxInstruction *RexxSource::callNew()
                                        /* this is an error                  */
     report_error(Error_Symbol_or_string_call);
                                        /* create a new translator object    */
-  newObject = new_variable_instruction(CALL, Call, sizeof(RexxInstructionCallBase) + argCount * sizeof(OREF));
+  newObject = new_variable_instruction(CALL, Call, sizeof(RexxInstructionCallBase) + argCount * sizeof(RexxObject *));
                                        /* Initialize this new object        */
   new ((void *)newObject) RexxInstructionCall(name, _condition, argCount, this->subTerms, _flags, builtin_index);
-  if (!(flags&call_dynamic))           /* static name resolution?           */
+  if (!(flags&RexxInstructionCall::call_dynamic))           /* static name resolution?           */
     this->addReference(newObject);     /* add to table of references        */
   return (RexxInstruction *)newObject; /* done, return this                 */
 }
@@ -932,7 +932,7 @@ void RexxSource::RexxInstructionForwardCreate(
           report_error(Error_Invalid_subkeyword_continue);
         returnContinue = TRUE;         /* not valid again                   */
                                        /* remember this                     */
-        newObject->instructionInfo.flags |= forward_continue;
+        newObject->instructionFlags |= forward_continue;
         break;
 
       default:                         /* invalid subkeyword                */
@@ -1102,7 +1102,7 @@ RexxInstruction *RexxSource::labelNew()
   RexxObject *newObject;               /* newly create object               */
   RexxToken  *token;                   /* current working token             */
   RexxString *name;                    /* label name                        */
-  LOCATIONINFO  location;              /* location information              */
+  SourceLocation location;             /* location information              */
 
   token = nextToken();                 /* get the next token                */
   name = token->value;                 /* get the label name                */
@@ -1111,9 +1111,10 @@ RexxInstruction *RexxSource::labelNew()
                                        /* add to the label list             */
   this->addLabel((RexxInstruction *)newObject, name);
   token = nextReal();                  /* get the colon token               */
-  token->getLocation(&location);       /* get the token location            */
+
+  location = token->getLocation();     /* get the token location            */
                                        /* the clause ends with the colon    */
-  ((RexxInstruction *)newObject)->setEnd(location.endline, location.endoffset);
+  ((RexxInstruction *)newObject)->setEnd(location.getEndLine(), location.getEndOffset());
   new ((void *)newObject) RexxInstructionLabel();
   return (RexxInstruction *)newObject; /* done, return this                 */
 }
@@ -1168,7 +1169,7 @@ RexxInstruction *RexxSource::messageNew(
 
   hold(_message);                      /* lock this temporarily             */
                                        /* allocate a new object             */
-  newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount - 1) * sizeof(OREF));
+  newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount - 1) * sizeof(RexxObject *));
                                        /* Initialize this new method        */
   new ((void *)newObject) RexxInstructionMessage(_message);
   return (RexxInstruction *)newObject; /* done, return this                 */
@@ -1184,7 +1185,7 @@ RexxInstruction *RexxSource::messageAssignmentNew(
   hold(_message);                       /* lock this temporarily             */
   _message->makeAssignment(this);       // convert into an assignment message
   // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
-  RexxObject *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount) * sizeof(OREF));
+  RexxObject *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount) * sizeof(RexxObject *));
                                        /* Initialize this new method        */
   new ((void *)newObject) RexxInstructionMessage(_message, _expression);
   return (RexxInstruction *)newObject; /* done, return this                 */
@@ -1216,7 +1217,7 @@ RexxInstruction *RexxSource::messageAssignmentOpNew(RexxExpressionMessage *_mess
   _expression = (RexxObject *)new RexxBinaryOperator(operation->subclass, retriever, _expression);
 
   // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
-  RexxObject *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount) * sizeof(OREF));
+  RexxObject *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount) * sizeof(RexxObject *));
                                        /* Initialize this new method        */
   new ((void *)newObject) RexxInstructionMessage(_message, _expression);
   return (RexxInstruction *)newObject; /* done, return this                 */
@@ -1650,7 +1651,7 @@ RexxInstruction *RexxSource::procedureNew()
     variableCount = this->processVariableList(KEYWORD_PROCEDURE);
   }
                                        /* create a new translator object    */
-  newObject = new_variable_instruction(PROCEDURE, Procedure, sizeof(RexxInstructionProcedure) + (variableCount - 1) * sizeof(OREF));
+  newObject = new_variable_instruction(PROCEDURE, Procedure, sizeof(RexxInstructionProcedure) + (variableCount - 1) * sizeof(RexxObject *));
                                        /* Initialize this new method        */
   new ((void *)newObject) RexxInstructionProcedure(variableCount, this->subTerms);
   return (RexxInstruction *)newObject; /* done, return this                 */
@@ -1831,7 +1832,7 @@ RexxInstruction *RexxSource::raiseNew()
   }
   if (arrayCount != -1)                /* have the array version?           */
                                        /* create a new translator object    */
-    newObject = new_variable_instruction(RAISE, Raise, sizeof(RexxInstructionRaise) + (arrayCount - 1) * sizeof(OREF));
+    newObject = new_variable_instruction(RAISE, Raise, sizeof(RexxInstructionRaise) + (arrayCount - 1) * sizeof(RexxObject *));
   else                                 /* static instruction size           */
     newObject = new_instruction(RAISE, Raise);
                                        /* now complete this                 */

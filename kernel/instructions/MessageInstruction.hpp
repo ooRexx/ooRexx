@@ -47,7 +47,6 @@
 #include "RexxInstruction.hpp"
 
 #define message_i_double  0x01         /* message is the double form        */
-#define message_argument_count i_ushort/* message argument count            */
 
 class RexxInstructionMessage : public RexxInstruction {
  public:
@@ -63,6 +62,7 @@ class RexxInstructionMessage : public RexxInstruction {
   RexxString *name;                    /* name of the message               */
   RexxObject *target;                  /* target subexpression              */
   RexxObject *super;                   /* super class target                */
+  size_t      argumentCount;           // number of arguments
   RexxObject *arguments[1];            /* list of argument subexpressions   */
 };
 #endif

@@ -54,10 +54,10 @@ RexxInstructionOtherWise::RexxInstructionOtherWise(
 /* Function:  Complete initialization of an OTHERWISE                         */
 /******************************************************************************/
 {
-  LOCATIONINFO location;               /* clause location information       */
+  SourceLocation location;             /* clause location information       */
 
-  token->getLocation(&location);       /* get the token location info       */
-  this->setLocation(&location);        /* set the clause location also      */
+  location = token->getLocation();     /* get the token location info       */
+  this->setLocation(location);         /* set the clause location also      */
 }
 
 void RexxInstructionOtherWise::execute(

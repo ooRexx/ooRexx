@@ -397,7 +397,7 @@ APIRET REXXENTRY RexxCopyMethod(const char *dirname, RexxObject * method, RexxOb
                                        /* (will create one if necessary)    */
 
   activity = TheActivityClass->getActivity();
-  if (OTYPENUM(method, method)) {      /* Make sure this is a method object */
+  if (isOfClass(Method, method)) {      /* Make sure this is a method object */
 
     if ((*pmethod = (RexxMethod *)method->copy()) != OREF_NULL) {
 
@@ -1176,7 +1176,7 @@ RexxMethod * process_instore(
                                        /* copy source into the buffer       */
         memcpy(source_buffer->data, instore[0].strptr, instore[0].strlength);
                                        /* reconnect this with the source    */
-        ((RexxCode *)method->code)->u_source->setBufferedSource(source_buffer);
+        ((RexxCode *)method)->getSource()->setBufferedSource(source_buffer);
       }
       return method;                   /* go return it                      */
     }

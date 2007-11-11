@@ -582,9 +582,9 @@ void kernelInit (void)
                                        /*  moved to another system, rather  */
                                        /*  will re-establish themselves on  */
                                        /*  the remote system.               */
-  TheEnvironment->header |= MakeProxyObject;
-  TheKernel->header |= MakeProxyObject;
-  TheSystem->header |= MakeProxyObject;
+  TheEnvironment->makeProxiedObject();
+  TheKernel->makeProxiedObject();
+  TheSystem->makeProxiedObject();
 
   ThePublicRoutines = new_directory();
   TheStaticRequires = new_directory();
@@ -1577,7 +1577,8 @@ bool kernel_setup (void)
   /* set up the kernel methods that will be defined on OBJECT classes in  */
   /*  BaseClasses.ORX and ORYXJ.ORX.                                            */
                                        /* create a kernel methods directory */
-  kernel_methods = (RexxDirectory *)save(new_directory());
+  kernel_methods = new_directory();
+  save(kernel_methods);
   kernel_methods->put(createKernelMethod(CPPMLOC(RexxLocal::local), 0), kernel_name(CHAR_LOCAL));
   kernel_methods->put(createKernelMethod(CPPMLOC(RexxLocal::runProgram), 1), kernel_name(CHAR_RUN_PROGRAM));
   kernel_methods->put(createKernelMethod(CPPMLOC(RexxLocal::callString), A_COUNT), kernel_name(CHAR_CALL_STRING));
@@ -1651,7 +1652,8 @@ void createImage(void)
 {
   kernelInit();                        /* initialize the kernel             */
                                        /* get the local environment         */
-  ProcessLocalEnv = (RexxDirectory *)save(new_directory());
+  ProcessLocalEnv = new_directory();
+  save(ProcessLocalEnv);
                                        /* Find an activity for this thread  */
   TheActivityClass->getActivity();     /* (will create one if necessary)    */
   // go build the rest of the image, but don't save if there is a failure.

@@ -49,17 +49,17 @@
 #include "ExpressionBaseVariable.hpp"
 
 RexxInstructionProcedure::RexxInstructionProcedure(
-    size_t     variableCount,          /* number of variables               */
+    size_t     varCount,               /* number of variables               */
     RexxQueue *variable_list)          /* supplied variable list            */
 /******************************************************************************/
 /* Function:  Complete initialization of a PROCEDURE instruction object       */
 /******************************************************************************/
 {
                                        /* get the variable size             */
-  procedure_variable_count = (unsigned short)variableCount;
+  variableCount = varCount;
   while (variableCount > 0)            /* loop through the variable list    */
                                        /* copying each variable             */
-    OrefSet(this, this->variables[--variableCount], (RexxVariableBase *)variable_list->pop());
+    OrefSet(this, this->variables[--varCount], (RexxVariableBase *)variable_list->pop());
 }
 
 void RexxInstructionProcedure::live()
@@ -72,7 +72,7 @@ void RexxInstructionProcedure::live()
 
   setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
-  for (i = 0, count = procedure_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     memory_mark(this->variables[i]);
   cleanUpMemoryMark
 }
@@ -89,7 +89,7 @@ void RexxInstructionProcedure::liveGeneral()
   setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
-  for (i = 0, count = procedure_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     memory_mark_general(this->variables[i]);
   cleanUpMemoryMarkGeneral
 }
@@ -105,7 +105,7 @@ void RexxInstructionProcedure::flatten(RexxEnvelope *envelope)
   setUpFlatten(RexxInstructionProcedure)
 
   flatten_reference(newThis->nextInstruction, envelope);
-  for (i = 0, count = procedure_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
      flatten_reference(newThis->variables[i], envelope);
 
   cleanUpFlatten
@@ -120,7 +120,7 @@ void RexxInstructionProcedure::execute(
 {
   context->traceInstruction(this);     /* trace if necessary                */
   /* have the context expose these */
-  context->procedureExpose(variables, procedure_variable_count);
+  context->procedureExpose(variables, variableCount);
   context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

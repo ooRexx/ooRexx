@@ -46,21 +46,6 @@
 
 #include "RexxInstruction.hpp"
 
-typedef struct callshortoverlay {
-  uint8_t  builtin_index;              /* builtin function index            */
-  uint8_t  argument_count;             /* count of arguments                */
-} CALLSHORTOVERLAY;
-
-#define call_nointernal  0x01          /* bypass internal routine calls     */
-#define call_type_mask   0x0e          /* type of call                      */
-#define call_internal    0x02          /* internal call                     */
-#define call_builtin     0x06          /* builtin call                      */
-#define call_external    0x0e          /* external call                     */
-#define call_dynamic     0x10          /* dynamic call                      */
-#define call_on_off      0x20          /* call ON/OFF instruction           */
-                                       /* builtin function call index       */
-#define call_builtin_index  (((CALLSHORTOVERLAY *)(&(this->instructionInfo.general)))->builtin_index)
-#define call_argument_count (((CALLSHORTOVERLAY *)(&(this->instructionInfo.general)))->argument_count)
 
 class RexxInstructionCallBase : public RexxInstruction {
  public:
@@ -71,10 +56,22 @@ class RexxInstructionCallBase : public RexxInstruction {
   RexxObject      * name;              /* name to call                      */
   RexxInstruction * target;            /* routine to call                   */
   RexxString      * condition;         /* condition trap name               */
+  uint16_t     argumentCount;          // number of arguments
+  uint16_t     builtinIndex;           // builtin function index
 };
 
 class RexxInstructionCall : public RexxInstructionCallBase {
  public:
+     enum
+     {
+         call_nointernal  = 0x01,         // bypass internal routine calls
+         call_type_mask   = 0x0e,         // type of call
+         call_internal    = 0x02,         // internal call
+         call_builtin     = 0x06,         // builtin call
+         call_external    = 0x0e,         // external call
+         call_dynamic     = 0x10,         // dynamic call
+         call_on_off      = 0x20,         // call ON/OFF instruction
+     };
 
   inline void *operator new(size_t size, void *ptr) {return ptr;};
   RexxInstructionCall(RexxObject *, RexxString *, size_t, RexxQueue *, size_t, size_t);
@@ -86,6 +83,8 @@ class RexxInstructionCall : public RexxInstructionCallBase {
   void resolve(RexxDirectory *);
   void trap(RexxActivation *, RexxDirectory *);
 
-  RexxObject * arguments[1];           /* argument list                     */
+protected:
+
+    RexxObject * arguments[1];           // argument list
 };
 #endif

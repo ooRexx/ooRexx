@@ -84,10 +84,10 @@ void *RexxBuffer::operator new(size_t size,
                                        /* Get new object                    */
   newBuffer = (RexxBuffer *) new_object(size + length - sizeof(char[4]));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newBuffer, TheBufferBehaviour);
+  newBuffer->setBehaviour(TheBufferBehaviour);
                                        /* Initialize this new buffer        */
-  newBuffer->u_size = length;          /* set the length of the buffer      */
-  SetObjectHasNoReferences(newBuffer); /* this has no references            */
+  newBuffer->size = length;            /* set the length of the buffer      */
+  newBuffer->setHasNoReferences();     /* this has no references            */
   return (void *)newBuffer;            /* return the new buffer             */
 }
 

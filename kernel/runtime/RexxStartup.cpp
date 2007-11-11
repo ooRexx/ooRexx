@@ -201,8 +201,12 @@ void start_rexx_environment(void)
   activity_lock_kernel();              /* lock the kernel                   */
   kernelNewProcess();                  /* do new process initialization     */
   if (ProcessLocalEnv == OREF_NULL)    /* need a new local environment?     */
+  {
+      ProcessLocalEnv = new_directory();
+      save(ProcessLocalEnv);
+
+  }
                                        /* get the local environment         */
-    ProcessLocalEnv = (RexxDirectory *)save(new_directory());
                                        /* get the server class              */
   server_class = env_find(new_string("!SERVER"));
   activity_unlock_kernel();            /* now unlock the kernel             */

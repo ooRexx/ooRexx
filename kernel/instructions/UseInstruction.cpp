@@ -50,17 +50,17 @@
 #include "ExpressionBaseVariable.hpp"
 
 RexxInstructionUse::RexxInstructionUse(
-    size_t     variableCount,          /* count of variables                */
+    size_t     varCount,               /* count of variables                */
     RexxQueue *variable_list)          /* variables                         */
 /******************************************************************************/
 /* Function:  Complete set up of a USE instruction object                     */
 /******************************************************************************/
 {
   /* save the variable count           */
-  use_variable_count = (unsigned short)variableCount;
-  while (variableCount > 0)            /* loop through the variable list    */
+  variableCount = varCount;
+  while (varCount > 0)                 /* loop through the variable list    */
                                        /* copying each variable             */
-    OrefSet(this, this->variables[--variableCount], (RexxVariableBase *)variable_list->pop());
+    OrefSet(this, this->variables[--varCount], (RexxVariableBase *)variable_list->pop());
 }
 
 void RexxInstructionUse::live()
@@ -73,7 +73,7 @@ void RexxInstructionUse::live()
 
   setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
-  for (i = 0, count = use_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     memory_mark(this->variables[i]);
   cleanUpMemoryMark
 }
@@ -89,7 +89,7 @@ void RexxInstructionUse::liveGeneral()
   setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
-  for (i = 0, count = use_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     memory_mark_general(this->variables[i]);
   cleanUpMemoryMarkGeneral
 }
@@ -105,7 +105,7 @@ void RexxInstructionUse::flatten(RexxEnvelope *envelope)
   setUpFlatten(RexxInstructionUse)
 
   flatten_reference(newThis->nextInstruction, envelope);
-  for (i = 0, count = use_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
       flatten_reference(newThis->variables[i], envelope);
 
   cleanUpFlatten
@@ -129,7 +129,7 @@ void RexxInstructionUse::execute(
   /* get the current argument list     */
   arglist = context->getMethodArgumentList();
   argcount = context->getMethodArgumentCount();
-  size = use_variable_count;           /* get the variable list size        */
+  size = variableCount;                /* get the variable list size        */
   for (i = 0; i < size; i++) {         /* process each variable in the list */
     variable = this->variables[i];     /* get the current retriever         */
     if (variable != OREF_NULL) {       /* if we have a real entry           */

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   RexxInstruction.hpp */
+/* REXX Kernel                                            RexxInstruction.hpp */
 /*                                                                            */
 /* Primitive Abstract Instruction Class Definitions                           */
 /*                                                                            */
@@ -47,8 +47,7 @@
 class RexxInstructionEnd;
 class RexxSource;
 
-#define i_flags  (this->instructionInfo.flags)
-#define i_ushort (this->instructionInfo.general)
+#include "SourceLocation.hpp"
 
 class RexxInstruction : public RexxInternalObject {
  public:
@@ -61,26 +60,26 @@ class RexxInstruction : public RexxInternalObject {
   void live();
   void liveGeneral();
   void flatten(RexxEnvelope *);
-  void getLocation(PLOCATIONINFO location);
-  void setLocation(PLOCATIONINFO location);
+  inline const SourceLocation &getLocation() { return instructionLocation; }
+  inline void  setLocation(SourceLocation &l) { instructionLocation = l; }
 
   virtual void execute(RexxActivation *, RexxExpressionStack *) { ; };
 
   inline void setNext(RexxInstruction *next) { OrefSet(this, this->nextInstruction, next); };
-  void        setStart(size_t line, size_t off) {this->lineNumber = line;
-                                                this->offset = off; };
-  void        setEnd(size_t line, size_t off) { this->endLine = line;
-                                                this->endOffset = off; };
-  inline      void        setType(size_t type) {this->instructionInfo.type = type; };
-  inline      size_t      getType(void)        {return this->instructionInfo.type; };
-  inline      size_t      getLine() { return this->lineNumber; };
+  void        setStart(size_t line, size_t off) { instructionLocation.setStart(line, off); }
+  void        setEnd(size_t line, size_t off) { instructionLocation.setEnd(line, off); }
+  inline      void        setType(size_t type) { instructionType = type; };
+  inline      size_t      getType()            { return instructionType;  };
+  inline      bool        isType(size_t type)  { return instructionType == type; }
+  inline      size_t      getLineNumber()      { return instructionLocation.getLineNumber(); }
 
-  size_t            offset;            /* offset of instruction start       */
-  size_t            endLine;           /* end line of the instruction       */
-  size_t            endOffset;         /* end offset of the instruction     */
-  INSTRUCTIONINFO   instructionInfo;   /* instruction common information    */
-  RexxInstruction  *nextInstruction;   /* next instruction object           */
+  uint16_t    instructionType;            // name of the instruction           */
+  uint16_t    instructionFlags;           // general flag area
+
+  SourceLocation    instructionLocation;  // location of the instruction in its source
+  RexxInstruction  *nextInstruction;      // the next instruction object in the assembled chain.
 };
+
 
 class RexxDoBlock;
 

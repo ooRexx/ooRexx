@@ -64,17 +64,19 @@ RexxInstructionGuard::RexxInstructionGuard(
                                        /* save the guard expression         */
   OrefSet(this, this->expression, _expression);
   if (on_off)                          /* this the ON form?                 */
-    i_flags |= guard_on_form;          /* turn on the flag                  */
+    instructionFlags |= guard_on_form; /* turn on the flag                  */
   if (variable_list != OREF_NULL) {    /* got a guard expression?           */
                                        /* get the variable size             */
-    guard_variable_count = variable_list->size();
+    variableCount = variable_list->size();
                                        /* loop through the variable list    */
-    for (i = 1; i <= guard_variable_count; i++)
+    for (i = 1; i <= variableCount; i++)
                                        /* copying each variable             */
       OrefSet(this, this->variables[i-1], (RexxVariableBase *)(variable_list->get(i)));
   }
   else
-    guard_variable_count = 0;          /* no extra variables                */
+  {
+      variableCount = 0;                 /* no extra variables                */
+  }
 }
 
 //extern RexxActivityCurrentActivity;  /* expose current activity object    */
@@ -101,13 +103,13 @@ void RexxInstructionGuard::execute(
                                        /* non-expression form?              */
   else if (this->expression == OREF_NULL) {
 
-    if (!(i_flags&guard_on_form))      /* is this the OFF form?             */
+    if (!(instructionFlags&guard_on_form))      /* is this the OFF form?             */
       context->guardOff();             /* set unguarded status in activation*/
     else
       context->guardOn();              /* set guarded status in activation  */
   }
   else {
-    size = guard_variable_count;       /* get variable list count           */
+    size = variableCount;              /* get variable list count           */
     for (i = 0; i < size; i++) {       /* loop through the variable list    */
                                        /* set a guard on each variable,     */
                                        /* counting the guards on each       */
@@ -115,7 +117,7 @@ void RexxInstructionGuard::execute(
       this->variables[i]->setGuard(context);
     }
 
-    if (!(i_flags&guard_on_form))      /* is this the OFF form?             */
+    if (!(instructionFlags&guard_on_form)) /* is this the OFF form?             */
       context->guardOff();             /* set unguarded status in activation*/
     else
       context->guardOn();              /* set guarded status in activation  */
@@ -169,7 +171,7 @@ void RexxInstructionGuard::live()
 
   setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
-  for (i = 0, count = guard_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     memory_mark(this->variables[i]);
   memory_mark(this->expression);
   cleanUpMemoryMark
@@ -189,7 +191,7 @@ void RexxInstructionGuard::liveGeneral()
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->expression);
-  for (i = 0, count = guard_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     memory_mark_general(this->variables[i]);
   cleanUpMemoryMarkGeneral
 }
@@ -206,7 +208,7 @@ void RexxInstructionGuard::flatten(RexxEnvelope *envelope)
 
   flatten_reference(newThis->nextInstruction, envelope);
   flatten_reference(newThis->expression, envelope);
-  for (i = 0, count = guard_variable_count; i < count; i++)
+  for (i = 0, count = variableCount; i < count; i++)
     flatten_reference(newThis->variables[i], envelope);
 
   cleanUpFlatten

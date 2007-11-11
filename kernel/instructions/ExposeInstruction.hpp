@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   ExposeInstruction.hpp */
+/* REXX Kernel                                          ExposeInstruction.hpp */
 /*                                                                            */
 /* Primitive EXPOSE instruction Class Definitions                             */
 /*                                                                            */
@@ -45,8 +45,6 @@
 #define Included_RexxInstructionExpose
 
 #include "RexxInstruction.hpp"
-
-#define expose_variable_count i_ushort /* count of expose variables         */
 
 class RexxInstructionExpose : public RexxInstruction {
  public:
@@ -58,6 +56,7 @@ class RexxInstructionExpose : public RexxInstruction {
   void flatten(RexxEnvelope*);
   void execute(RexxActivation *, RexxExpressionStack *);
 
-  RexxVariableBase *variables[1];      /* list of variables for EXPOSE      */
+  size_t            variableCount;     // number of variables to expose
+  RexxVariableBase *variables[1];      // list of variables for EXPOSE
 };
 #endif

@@ -63,6 +63,7 @@ class RexxInstructionParse : public RexxInstruction {
   void liveGeneral();
   void flatten(RexxEnvelope*);
 
+  int               stringSource;      // where the parsed data originates
   RexxObject       *expression;        /* parse value expression            */
   size_t            trigger_count;     /* number of triggers                */
   RexxTrigger *triggers[1];            /* parsing triggers                  */

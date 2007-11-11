@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ExpressionStem.hpp   */
+/* REXX Kernel                                           ExpressionStem.hpp   */
 /*                                                                            */
 /* Primitive Expression Stem Class Definitions                                */
 /*                                                                            */
@@ -71,7 +71,7 @@ class RexxStemVariable : public RexxVariableBase {
   BOOL sort(RexxActivation *context, RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
   inline LONG getIndex() {return this->index;};
 
-                                       /* name of stem is in hash value     */
+  RexxString  *stem;                   // the stem variable name
   LONG        index;                   /* lookaside table index             */
 };
 #endif

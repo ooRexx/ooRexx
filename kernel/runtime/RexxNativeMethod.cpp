@@ -152,7 +152,7 @@ void * RexxNativeCode::operator new(
 
   newMethod = new_object(size);        /* Get new object                    */
                                        /* Give new object its behaviour     */
-  BehaviourSet(newMethod, TheNativeCodeBehaviour);
+  newMethod->setBehaviour(TheNativeCodeBehaviour);
   return newMethod;                    /* and return the new method         */
 }
 

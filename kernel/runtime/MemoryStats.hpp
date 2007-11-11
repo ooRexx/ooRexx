@@ -53,7 +53,7 @@ class ObjectStats {
     inline ObjectStats() : count(0), size(0) {}
 
     inline void clear() { count = 0; size = 0; }
-    inline void logObject(RexxObject *obj) { count++; size += ObjectSize(obj); }
+    inline void logObject(RexxObject *obj) { count++; size += obj->getObjectSize(); }
     void   printStats(int type);
 
   protected:

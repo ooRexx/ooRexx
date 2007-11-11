@@ -138,7 +138,7 @@ RexxNumberString::RexxNumberString(size_t len)
 /* Function:  low level copy of a number string object                        */
 /******************************************************************************/
 {
-   ClearObject(this);
+   this->clearObject();
    this->NumDigits = number_digits();
    this->sign = 1;
    this->length = len;
@@ -154,7 +154,7 @@ RexxNumberString *RexxNumberString::clone()
   RexxNumberString *newObj;            /* new copy of the object            */
 
                                        /* first clone ourselves             */
-  newObj = (RexxNumberString *)memoryObject.clone(this);
+  newObj = (RexxNumberString *)this->RexxInternalObject::clone();
                                        /* don't keep the original string    */
   OrefSet(newObj, newObj->stringObject, OREF_NULL);
                                        /* or the OVD fields                 */
@@ -169,7 +169,7 @@ ULONG   RexxNumberString::hash()
 {
   RexxString * string;                 /* integer string value              */
 
-  if (!OTYPE(NumberString, this))      /*  a nonprimitive object?           */
+  if (!isOfClass(NumberString, this))      /*  a nonprimitive object?           */
                                        /* see if == overridden.             */
     return this->sendMessage(OREF_STRICT_EQUAL)->requestString()->hash();
   else {
@@ -224,7 +224,7 @@ void RexxNumberString::setString(
 {
                                        /* set the new string value          */
    OrefSet(this, this->stringObject, stringObj);
-   SetObjectHasReferences(this);       /* we now have to garbage collect    */
+   this->setHasReferences();           /* we now have to garbage collect    */
 }
 
 RexxString *RexxNumberString::makeString()
@@ -276,7 +276,7 @@ RexxString *RexxNumberString::stringValue()
     {              /* is the number zero?               */
                    /* Yes, return a 0 string.           */
         OrefSet(this, this->stringObject, OREF_ZERO_STRING);
-        SetObjectHasReferences(this);       /* we now have to garbage collect    */
+        this->setHasReferences();           /* we now have to garbage collect    */
         return this->stringObject;          /* and return now                    */
     }
     else
@@ -505,7 +505,7 @@ RexxString *RexxNumberString::stringValue()
     StringObj->setNumberString(this);    /* lookaside right away              */
                                          /* and also save this string         */
     OrefSet(this, this->stringObject, StringObj);
-    SetObjectHasReferences(this);        /* we now have to garbage collect    */
+    this->setHasReferences();            /* we now have to garbage collect    */
     return StringObj;                    /* all done, return new string       */
 }
 
@@ -1891,11 +1891,13 @@ BOOL RexxNumberString::isEqual(
 /*            only strict equality, not greater or less than values.          */
 /******************************************************************************/
 {
-  if (!isPrimitive(this))              /* not a primitive?                  */
-                                       /* do the full lookup compare        */
-    return this->sendMessage(OREF_STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
+    if (this->isSubClassOrEnhanced())      /* not a primitive?                  */
+    {
+                                           /* do the full lookup compare        */
+        return this->sendMessage(OREF_STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
+    }
                                        /* go do a string compare            */
-  return this->stringValue()->isEqual(other);
+    return this->stringValue()->isEqual(other);
 }
 
 long RexxNumberString::strictComp(RexxObject *other)
@@ -2695,9 +2697,9 @@ void  *RexxNumberString::operator new(size_t size, size_t length)
   newNumber = (RexxNumberString *)new_object(size + length);
   newNumber->hashvalue = 0;            /* Undefine the hash value           */
                                        /* Give new object its behaviour     */
-  BehaviourSet(newNumber, TheNumberStringBehaviour);
+  newNumber->setBehaviour(TheNumberStringBehaviour);
                                        /* initialize the new object         */
-  SetObjectHasNoReferences(newNumber); /* Let GC know no to bother with LIVE*/
+  newNumber->setHasNoReferences();     /* Let GC know no to bother with LIVE*/
   return newNumber;                    /* return the new numberstring       */
 }
 

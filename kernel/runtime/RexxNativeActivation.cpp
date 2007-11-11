@@ -94,7 +94,7 @@ void RexxNativeActivation::live()
 {
   setUpMemoryMark
   memory_mark(this->argArray);
-  memory_mark(this->u_receiver);
+  memory_mark(this->receiver);
   memory_mark(this->method);
   memory_mark(this->activity);
   memory_mark(this->activation);
@@ -125,7 +125,7 @@ void RexxNativeActivation::liveGeneral()
 {
   setUpMemoryMarkGeneral
   memory_mark_general(this->argArray);
-  memory_mark_general(this->u_receiver);
+  memory_mark_general(this->receiver);
   memory_mark_general(this->method);
   memory_mark_general(this->activity);
   memory_mark_general(this->activation);
@@ -157,7 +157,7 @@ void RexxNativeActivation::flatten(RexxEnvelope *envelope)
   setUpFlatten(RexxNativeActivation)
 
      flatten_reference(newThis->argArray, envelope);
-     flatten_reference(newThis->u_receiver, envelope);
+     flatten_reference(newThis->receiver, envelope);
      flatten_reference(newThis->method, envelope);
      flatten_reference(newThis->activity, envelope);
      flatten_reference(newThis->activation, envelope);
@@ -198,7 +198,7 @@ RexxObject *RexxNativeActivation::run(
   this->argcount = _argcount;          /* set the argument count            */
   used_arglist = FALSE;                /* no arglist requested              */
                                        /* get the entry point address       */
-  methp = (PNMF)this->method->nativeCode->getEntry();
+  methp = (PNMF)this->method->getNativeCode()->getEntry();
   itypes = (*methp)(0);                /* get type information from method  */
   *ivalues = ibufp;
   ibufp += tsize[(int)(*itypes)];      /* step over first type              */
@@ -210,7 +210,7 @@ RexxObject *RexxNativeActivation::run(
     switch (*tp) {                     /* switch based on this type         */
 
       case REXXD_OSELF:                /* reference to SELF                 */
-        *((RexxObject **)*ivalp) = this->u_receiver;
+        *((RexxObject **)*ivalp) = this->receiver;
         break;
 
       case REXXD_CSELF:                /* reference to CSELF                */
@@ -279,7 +279,7 @@ RexxObject *RexxNativeActivation::run(
                                          /* make it safe                      */
                   this->saveObject(temp);
                                          /* set the result in                 */
-                *((OREF *)*ivalp) = temp;
+                *((RexxObject **)*ivalp) = temp;
                 break;
 
             }
@@ -341,7 +341,7 @@ RexxObject *RexxNativeActivation::run(
     this->guardOff();                  /* release any variable locks        */
     this->argcount = 0;                /* make sure we don't try to mark any arguments */
     this->activity->pop(FALSE);        /* pop this from the activity        */
-    SetObjectHasNoReferences(this);    /* mark this as not having references in case we get marked */
+    this->setHasNoReferences();        /* mark this as not having references in case we get marked */
     return this->result;               /* and finished                      */
   }
 
@@ -350,7 +350,7 @@ RexxObject *RexxNativeActivation::run(
   RequestKernelAccess(this->activity); /* now in unsafe mode again          */
 
   /* give up reference to receiver so that it can be garbage collected */
-  this->u_receiver = OREF_NULL;
+  this->receiver = OREF_NULL;
 
   // set a default result
   result = OREF_NULL;
@@ -423,7 +423,7 @@ RexxObject *RexxNativeActivation::run(
   this->guardOff();                    /* release any variable locks        */
   this->argcount = 0;                  /* make sure we don't try to mark any arguments */
   this->activity->pop(FALSE);          /* pop this from the activity        */
-  SetObjectHasNoReferences(this);      /* mark this as not having references in case we get marked */
+  this->setHasNoReferences();          /* mark this as not having references in case we get marked */
   return (RexxObject *)result;         /* and finished                      */
 }
 
@@ -457,13 +457,13 @@ RexxVariableDictionary *RexxNativeActivation::methodVariables()
                                        /* first retrieval?                  */
   if (this->objectVariables == OREF_NULL) {
                                        /* is the receiver an activation?    */
-    if (OTYPE(Activation,this->u_receiver))
+    if (isOfClass(Activation,this->receiver))
                                        /* retrieve the method variables     */
-      this->objectVariables = ((RexxActivation *)this->u_receiver)->getLocalVariables();
+      this->objectVariables = ((RexxActivation *)this->receiver)->getLocalVariables();
     else {
                                        /* must be wanting the ovd set of    */
                                        /*variables                          */
-      this->objectVariables = (RexxVariableDictionary *)this->u_receiver->getObjectVariables(this->method->scope);
+      this->objectVariables = (RexxVariableDictionary *)this->receiver->getObjectVariables(this->method->getScope());
                                        /* guarded method?                   */
       if (this->object_scope == SCOPE_RELEASED && this->method->isGuarded()) {
                                        /* reserve the variable scope        */
@@ -690,13 +690,13 @@ void RexxNativeActivation::guardOn()
 /******************************************************************************/
 {
     /* is the receiver an activation?  Just return without locking */
-    if (OTYPE(Activation,this->u_receiver)) {
+    if (isOfClass(Activation,this->receiver)) {
         return;
     }
     /* first retrieval? */
     if (this->objectVariables == OREF_NULL) {
         /* grab the object variables associated with this object */
-        this->objectVariables = (RexxVariableDictionary *)this->u_receiver->getObjectVariables(this->method->scope);
+        this->objectVariables = (RexxVariableDictionary *)this->receiver->getObjectVariables(this->method->getScope());
     }
     /* not currently holding the lock? */
     if (this->object_scope == SCOPE_RELEASED) {
@@ -762,7 +762,7 @@ BOOL RexxNativeActivation::fetchNext(
 
   for (;;) {                           /* loop until we get something       */
     stemVar = nextStem();              /* see if we're processing a stem variable */
-    if (stem != OREF_NULL) {           /* were we in the middle of processing a stem? */
+    if (stemVar != OREF_NULL) {        /* were we in the middle of processing a stem? */
         compound = stemVar->nextVariable(this);
         if (compound != OREF_NULL) {   /* if we still have elements here */
                                        /* create a full stem name           */
@@ -786,7 +786,7 @@ BOOL RexxNativeActivation::fetchNext(
                                        /* get the value                     */
       RexxObject *variable_value = variable->getVariableValue();
                                        /* found a stem item?                */
-      if (OTYPE(Stem, variable_value)) {
+      if (isOfClass(Stem, variable_value)) {
                                        /* we are not on a stem              */
         setNextStem((RexxStem *)variable_value);
         setCompoundElement(((RexxStem *)variable_value)->first());
@@ -855,9 +855,9 @@ void * RexxNativeActivation::operator new(size_t size,
                                        /* Get new object                    */
   newObject = (RexxNativeActivation *)new_object(size);
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheNativeActivationBehaviour);
-  ClearObject(newObject);              /* clear out at start                */
-  newObject->u_receiver = receiver;    /* the receiving object              */
+  newObject->setBehaviour(TheNativeActivationBehaviour);
+  newObject->clearObject();            /* clear out at start                */
+  newObject->receiver = receiver;      /* the receiving object              */
   newObject->method = method;          /* the method to run                 */
   newObject->activity = activity;      /* the activity running on           */
   newObject->msgname = msgname;        /* the message name                  */
@@ -890,7 +890,7 @@ nativei0 (REXXOBJECT, RECEIVER)
   native_entry;                        /* synchronize access                */
                                        /* pick up current activation        */
   self = (RexxNativeActivation *)CurrentActivity->current();
-  return_oref(this->u_receiver);       /* just forward and return           */
+  return_oref(this->receiver);         /* just forward and return           */
 }
 
 nativei1 (int, INTEGER, REXXOBJECT, object)
@@ -952,7 +952,7 @@ nativei1 (BOOL, ISASTRING,
   native_entry;                        /* synchronize access                */
                                        /* check that this has correct       */
                                        /* instance behavior                 */
-  result = HASBEHAV(TheStringBehaviour, (RexxObject *)object);
+  result = ((RexxObject *)object)->getObjectType() == TheStringBehaviour;
   return_value(result);                /* return indicator                  */
 }
 
@@ -1037,7 +1037,7 @@ nativei2 (REXXOBJECT, SUPER,
                                        /* copying each OREF                 */
     argarray[i-1] = args->get(i);
                                        /* now send the message              */
-  return_oref(this->u_receiver->messageSend((RexxString *)new_string(msgname), count, argarray, this->u_receiver->superScope(this->method->scope)));
+  return_oref(this->receiver->messageSend((RexxString *)new_string(msgname), count, argarray, this->receiver->superScope(this->method->getScope())));
 }
 
 nativei2 (REXXOBJECT, SETVAR,
@@ -1093,7 +1093,6 @@ nativei2 (REXXOBJECT, SETFUNC,
 
   RexxActivity           * activity;
   RexxActivation         * activation;
-  RexxDirectory          * labels;
   RexxString             * methodName;
 
   native_entry;                        /* synchronize access                */
@@ -1105,21 +1104,18 @@ nativei2 (REXXOBJECT, SETFUNC,
   activation = self->activity->currentAct();
 
   // get the directory of external functions
-  labels = activation->settings.parent_source->routines;
+  RexxDirectory *routines = activation->settings.parent_code->getLocalRoutines();
 
   // if it does not exist, it will be created
-  if (!labels) {
-    OrefSet(activation->settings.parent_source,
-            activation->settings.parent_source->routines,
-            new_directory());
-    labels = activation->settings.parent_source->routines;
+  if (routines == OREF_NULL) {
+
+    activation->settings.parent_code->getSource()->setLocalRoutines(new_directory());
+    routines = activation->settings.parent_code->getLocalRoutines();
   }
 
-  if (labels) {
-    methodName = new_string(name);
-    // if a method by that name exists, it will be OVERWRITTEN!
-    labels->setEntry(methodName, (RexxMethod *) value);
-  }
+  methodName = new_string(name);
+  // if a method by that name exists, it will be OVERWRITTEN!
+  routines->setEntry(methodName, (RexxMethod *) value);
 
   return_oref(OREF_NULL);              /* return nothing                    */
 }
@@ -1150,9 +1146,9 @@ nativei2 (REXXOBJECT, GETFUNCTIONNAMES,
   activation = self->activity->currentAct();
 
   *num = 0;
-  if (activation->source->public_routines) {
-    funcArray = activation->source->public_routines->makeArray();
-    if (funcArray) {
+  if (activation->code->getPublicRoutines() != OREF_NULL) {
+    funcArray = activation->code->getPublicRoutines()->makeArray();
+    if (funcArray != OREF_NULL) {
       *num = j = funcArray->numItems();
       *names = (char**) SysAllocateExternalMemory(sizeof(char*)*j);
       for (i=0;i<j;i++) {
@@ -1365,7 +1361,7 @@ BOOL REXXENTRY REXX_ISDIRECTORY(REXXOBJECT object)
 /******************************************************************************/
 {
                                        /* do the validation                 */
-  return object != NULL && OTYPE(Directory, object);
+  return object != NULL && isOfClass(Directory, object);
 }
 
 REXXOBJECT REXXENTRY REXX_NIL(void)
@@ -1432,9 +1428,9 @@ nativei3(ULONG, EXECUTIONINFO,
   {
         if (!self->next)
      {
-         *line = self->code->start->lineNumber;
+         *line = self->code->getFirstInstruction()->getLineNumber();
       }
-     else *line = self->next->lineNumber;
+     else *line = self->next->getLineNumber();
 
       r = self->code->getProgramName();
      strncpy(fname, r->getStringData(), r->getLength());
@@ -1446,7 +1442,7 @@ nativei3(ULONG, EXECUTIONINFO,
      r = self->code->getProgramName();
      strncpy(fname, r->getStringData(), r->getLength());
       fname[r->getLength()] = '\0';
-      *line = self->getCurrent()->lineNumber;
+      *line = self->getCurrent()->getLineNumber();
       result = 0;
   }
 
@@ -1492,7 +1488,7 @@ nativei7 (ULONG, STEMSORT,
 
   /* this must be a stem variable in order for the sorting to work. */
 
-  if ( (!OTYPE(StemVariable, retriever)) && (!OTYPE(CompoundVariable, retriever)) )
+  if ( (!isOfClass(StemVariable, retriever)) && (!isOfClass(CompoundVariable, retriever)) )
   {
       return FALSE;
   }
@@ -1501,7 +1497,7 @@ nativei7 (ULONG, STEMSORT,
   RexxString *tail = OREF_NULLSTRING ;
   this->saveObject(tail);
 
-  if (OTYPE(CompoundVariable, retriever))
+  if (isOfClass(CompoundVariable, retriever))
   {
     length = variable->getLength();      /* get the string length             */
     position = 0;                        /* start scanning at first character */

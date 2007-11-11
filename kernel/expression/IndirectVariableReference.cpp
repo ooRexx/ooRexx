@@ -58,7 +58,7 @@ RexxVariableReference::RexxVariableReference(
 /* Function:  Complete initialization of a variable reference object          */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* initialize the object             */
+  this->clearObject();                 /* initialize the object             */
                                        /* set the name value                */
   OrefSet(this, this->variableObject, variable);
 }
@@ -69,7 +69,7 @@ void RexxVariableReference::live()
 /******************************************************************************/
 {
   setUpMemoryMark
-  memory_mark(this->variableName);
+  memory_mark(this->variableObject);
   cleanUpMemoryMark
 }
 
@@ -79,7 +79,7 @@ void RexxVariableReference::liveGeneral()
 /******************************************************************************/
 {
   setUpMemoryMarkGeneral
-  memory_mark_general(this->variableName);
+  memory_mark_general(this->variableObject);
   cleanUpMemoryMarkGeneral
 }
 
@@ -90,7 +90,7 @@ void RexxVariableReference::flatten(RexxEnvelope *envelope)
 {
   setUpFlatten(RexxVariableReference)
 
-  flatten_reference(newThis->variableName, envelope);
+  flatten_reference(newThis->variableObject, envelope);
 
   cleanUpFlatten
 }
@@ -234,7 +234,7 @@ void *RexxVariableReference::operator new(size_t size)
                                        /* Get new object                        */
   newObject = (RexxObject *)new_object(size);
                                        /* object parse_assignment behaviour     */
-  BehaviourSet(newObject, TheVariableReferenceBehaviour);
+  newObject->setBehaviour(TheVariableReferenceBehaviour);
                                        /* Initialize this new method            */
   return newObject;
 }

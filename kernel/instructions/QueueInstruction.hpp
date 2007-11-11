@@ -46,7 +46,7 @@
 
 #include "RexxInstruction.hpp"
 
-#define queue_type i_ushort            /* save the queuing type             */
+#define queue_lifo 0x01
 
 class RexxInstructionQueue : public RexxInstructionExpression {
  public:

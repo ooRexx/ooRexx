@@ -56,17 +56,17 @@ RexxInstructionThen::RexxInstructionThen(
 /* Function:  Initialize a THEN object                                        */
 /******************************************************************************/
 {
-  LOCATIONINFO location;               /* clause token location             */
+  SourceLocation location;             /* clause token location             */
 
   OrefSet(this, this->parent, _parent); /* remember the parent IF instruction*/
                                        /* parent an IF instruction?         */
-  if (this->parent->instructionInfo.type == KEYWORD_IF)
+  if (this->parent->instructionType == KEYWORD_IF)
                                        /* this is an IF ... THEN clause     */
-    this->instructionInfo.type = KEYWORD_IFTHEN;
+    this->instructionType = KEYWORD_IFTHEN;
   else                                 /* actually a WHEN                   */
-    this->instructionInfo.type = KEYWORD_WHENTHEN;
-  token->getLocation(&location);       /* get the token location info       */
-  this->setLocation(&location);        /* set the clause location also      */
+    this->instructionType = KEYWORD_WHENTHEN;
+  location = token->getLocation();     /* get the token location info       */
+  this->setLocation(location);         /* set the clause location also      */
 }
 
 void  RexxInstructionThen::setEndInstruction(

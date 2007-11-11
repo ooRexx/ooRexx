@@ -74,9 +74,9 @@ DeadObject *DeadObjectPool::findBestFit(size_t length)
     DeadObject *newObject = anchor.next;
     DeadObject *largest = NULL;
     size_t largestSize = 0;
-    size_t deadLength = newObject->size();
+    size_t deadLength = newObject->getObjectSize();
 
-    for (; deadLength != 0; deadLength = newObject->size()) {
+    for (; deadLength != 0; deadLength = newObject->getObjectSize()) {
         if (deadLength >= length) {
             /* if within an allocation unit of the request size (which should */
             /* be common, since we round to a higher boundary for */
@@ -118,7 +118,7 @@ DeadObject *DeadObjectPool::findSmallestFit(size_t minSize)
     size_t smallestSize = MaximumObjectSize;
 
     while (newObject->isReal()) {
-        size_t deadLength = newObject->size();
+        size_t deadLength = newObject->getObjectSize();
         /* does this fit the request size? */
         if (deadLength >= minSize && deadLength < smallestSize) {
             /* remember this for the end. */
@@ -156,12 +156,12 @@ void DeadObjectPool::addSortedBySize(DeadObject *obj)
     /* loop immediately and use the anchor as the insertion point, */
     /* which gives us the result we want. */
     DeadObject *insertPoint = anchor.next;
-    size_t size = obj->size();
+    size_t size = obj->getObjectSize();
 
     while (insertPoint->isReal()) {
         /* if the current block is larger than the one we're */
         /* inserting, we've found our spot. */
-        if (insertPoint->size() >= size) {
+        if (insertPoint->getObjectSize() >= size) {
             break;
         }
         insertPoint = insertPoint->next;
@@ -216,7 +216,7 @@ void DeadObjectPool::checkObjectOverlap(DeadObject *obj)
 
     while (check != NULL && check->isReal()) {
         if (check->overlaps(obj)) {
-            printf("Object at %p for length %d overlaps object at %p for length %d\n", obj, obj->size(), check, check->size());
+            printf("Object at %p for length %d overlaps object at %p for length %d\n", obj, obj->getObjectSize(), check, check->getObjectSize());
             logic_error("Overlapping dead objects added to the cache.");
         }
         check = check->next;

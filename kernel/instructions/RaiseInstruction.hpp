@@ -48,7 +48,6 @@
 
 #define raise_return  0x01             /* doing a return rather than exit   */
 #define raise_array   0x02             /* additional info is an array       */
-#define raise_array_count i_ushort     /* size of the array item            */
 
 class RexxInstructionRaise : public RexxInstruction {
  public:
@@ -64,6 +63,7 @@ class RexxInstructionRaise : public RexxInstruction {
   RexxString *condition;               /* condition trap name               */
   RexxObject *description;             /* condition description             */
   RexxObject *result;                  /* condition result                  */
+  size_t      arrayCount;              // count of additional items
   RexxObject *additional[1];           /* additional specified information  */
 };
 #endif

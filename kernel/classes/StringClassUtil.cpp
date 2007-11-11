@@ -64,7 +64,7 @@ size_t get_length(
 
  if (argument == OREF_NULL)            /* have a real argument?             */
    missing_argument(position);         /* raise an error                    */
- if (OTYPE(Integer, argument))         /* already an integer?               */
+ if (isOfClass(Integer, argument))         /* already an integer?               */
                                        /* get this directly                 */
    value = ((RexxInteger *)argument)->getValue();
  else
@@ -89,7 +89,7 @@ size_t get_position(
 
  if (argument == OREF_NULL)            /* have a real argument?             */
    missing_argument(position);         /* raise an error                    */
- if (OTYPE(Integer, argument))         /* already an integer?               */
+ if (isOfClass(Integer, argument))         /* already an integer?               */
                                        /* get this directly                 */
    value = ((RexxInteger *)argument)->getValue();
  else

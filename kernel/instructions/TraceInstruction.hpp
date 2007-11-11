@@ -46,7 +46,6 @@
 
 #include "RexxInstruction.hpp"
 
-#define trace_setting i_ushort         /* location of the trace setting     */
 #define trace_debug_on      DEBUG_ON   /* want debug                        */
 #define trace_debug_off     DEBUG_OFF  /* turn off debug                    */
                                        /* don't touch the debug state       */
@@ -59,7 +58,7 @@
 class RexxInstructionTrace : public RexxInstruction {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};
-  RexxInstructionTrace(RexxObject *, unsigned short, size_t, LONG);
+  RexxInstructionTrace(RexxObject *, unsigned short, size_t, int);
   inline RexxInstructionTrace(RESTORETYPE restoreType) { ; };
   void live();
   void liveGeneral();
@@ -67,6 +66,7 @@ class RexxInstructionTrace : public RexxInstruction {
   void execute(RexxActivation *, RexxExpressionStack *);
 
   RexxObject *expression;              /* trace value expression            */
-  LONG        debugskip;               /* clauses to skip                   */
+  int         debugskip;               /* clauses to skip                   */
+  int         traceSetting;            // new trace setting
 };
 #endif

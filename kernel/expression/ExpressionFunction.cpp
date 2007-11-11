@@ -65,12 +65,12 @@ RexxExpressionFunction::RexxExpressionFunction(
 /* Function:  Create a function expression object                             */
 /******************************************************************************/
 {
-  ClearObject(this);                   /* initialize the object             */
+  this->clearObject();                 /* initialize the object             */
                                        /* NOTE: the name oref needs to      */
                                        /* be filled in prior to doing any   */
                                        /* thing that might cause a gc       */
                                        /* set the default target            */
-  OrefSet(this, this->u_name, function_name);
+  OrefSet(this, this->functionName, function_name);
   /* save the argument count           */
   this->argument_count = (uint8_t)argCount;
   while (argCount > 0) {               /* now copy the argument pointers    */
@@ -95,7 +95,7 @@ void RexxExpressionFunction::resolve(
   if (!(this->flags&function_nointernal)) {
     if (labels != OREF_NULL)           /* have a labels table?              */
                                        /* check the label table             */
-      OrefSet(this, this->target, (RexxInstruction *)labels->at(this->u_name));
+      OrefSet(this, this->target, (RexxInstruction *)labels->at(this->functionName));
     this->flags |= function_internal;  /* this is an internal call          */
   }
   if (this->target == OREF_NULL) {     /* not found yet?                    */
@@ -117,7 +117,7 @@ void RexxExpressionFunction::live()
   size_t count;                        /* argument count                    */
 
   setUpMemoryMark
-  memory_mark(this->u_name);
+  memory_mark(this->functionName);
   memory_mark(this->target);
   for (i = 0, count = this->argument_count; i < count; i++)
     memory_mark(this->arguments[i]);
@@ -133,7 +133,7 @@ void RexxExpressionFunction::liveGeneral()
   size_t count;                        /* argument count                    */
 
   setUpMemoryMarkGeneral
-  memory_mark_general(this->u_name);
+  memory_mark_general(this->functionName);
   memory_mark_general(this->target);
   for (i = 0, count = this->argument_count; i < count; i++)
     memory_mark_general(this->arguments[i]);
@@ -150,7 +150,7 @@ void RexxExpressionFunction::flatten(RexxEnvelope *envelope)
 
   setUpFlatten(RexxExpressionFunction)
 
-  flatten_reference(newThis->u_name, envelope);
+  flatten_reference(newThis->functionName, envelope);
   flatten_reference(newThis->target, envelope);
   for (i = 0, count = this->argument_count; i < count; i++)
     flatten_reference(newThis->arguments[i], envelope);
@@ -205,20 +205,20 @@ RexxObject *RexxExpressionFunction::evaluate(
 
     case function_external:            /* need to call externally           */
                                        /* go process the internal call      */
-      result = context->externalCall(this->u_name, argcount, stack, OREF_FUNCTIONNAME);
+      result = context->externalCall(this->functionName, argcount, stack, OREF_FUNCTIONNAME);
       break;
   }
   if (result == OREF_NULL)             /* result returned?                  */
                                        /* raise an error                    */
-    if (this->u_name)
-      reportException(Error_Function_no_data_function, this->u_name);
+    if (this->functionName)
+      reportException(Error_Function_no_data_function, this->functionName);
     else
       reportException(Error_Function_no_data);  // no name => don't try to print one out...!
   stack->setTop(stacktop);             /* remove arguments from the stack   */
   stack->push(result);                 /* push onto the stack               */
   if ((this->flags&function_type_mask) != function_builtin) discard(result);
                                        /* trace if necessary                */
-  context->traceFunction(u_name, result);
+  context->traceFunction(functionName, result);
   return result;                       /* and return this to the caller     */
 }
 
@@ -233,6 +233,6 @@ void *RexxExpressionFunction::operator new(size_t size,
                                        /* Get new object                    */
   newObject = new_object(size + (argCount - 1) * sizeof(RexxObject *));
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheFunctionBehaviour);
+  newObject->setBehaviour(TheFunctionBehaviour);
   return newObject;                    /* and return the function           */
 }

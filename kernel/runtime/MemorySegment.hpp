@@ -519,7 +519,7 @@ class NormalSegmentSet : public MemorySegmentSet
         }
         /* Convert this from a dead object into a real one of the */
         /* given size. */
-        SetObjectSize((RexxObject *)object, allocationLength);
+        ((RexxObject *)object)->setObjectSize(allocationLength);
         return (RexxObject *)object;
     }
 

@@ -52,18 +52,17 @@
 extern PCPPM objectOperatorMethods[];
 
 RexxBehaviour::RexxBehaviour(
-    HEADINFO        newHeader,
-    short           newTypenum,        /* class type number                 */
+    size_t          newTypenum,        /* class type number                 */
     PCPPM *         operator_methods ) /* operator lookaside table          */
 /******************************************************************************/
 /* Function:  Construct C++ methods in OKGDATA.C                              */
 /******************************************************************************/
 {
-  this->behaviour = &pbehav[T_behaviour];
-  this->header  = newHeader;
-  this->hashvalue = HASHOREF(this);
-  this->setTypenum(newTypenum);
-  this->setFlags(0);
+  this->behaviour = getPrimitiveBehaviour(T_behaviour);
+  this->header.setObjectSize(sizeof(RexxBehaviour));
+  this->hashvalue = this->identityHash();
+  this->setClassType(newTypenum);
+  this->behaviourFlags = 0;
   this->scopes = OREF_NULL;
   this->methodDictionary = OREF_NULL;
   this->operatorMethods = operator_methods;
@@ -90,21 +89,20 @@ void RexxBehaviour::liveGeneral()
 /******************************************************************************/
 {
                                        /* Save image processing?        */
-  if (memoryObject.savingImage() && this->isNonPrimitiveBehaviour()) {
-                                       /* Yes, mark the behaviour object*/
-    this->setBehaviourNotResolved();
+  if (memoryObject.savingImage() && this->isNonPrimitive())
+  {
+      // mark this as needing resolution when restored.
+      this->setNotResolved();
   }
-  else
-                                       /* Working with a primitive behav*/
-                                       /* or a copy?                    */
-    if (memoryObject.restoringImage() && this->isNonPrimitiveBehaviour()) {
-                                       /* Working with a copy, don't use*/
-                                       /* PBEHAV verison.               */
-                                       /* Make sure static behaviour inf*/
-                                       /* is resolved before using the  */
-                                       /* Behaviour.                    */
-     resolveNonPrimitiveBehaviour(this);
-    }
+  // the other side of the process?
+  else if (memoryObject.restoringImage())
+  {
+      // if we have a non-primitive here on a restore image, we need to fix this up.
+      if (isNonPrimitive())
+      {
+          resolveNonPrimitiveBehaviour();
+      }
+  }
 
   setUpMemoryMarkGeneral
   memory_mark_general(this->methodDictionary);
@@ -127,13 +125,29 @@ void RexxBehaviour::flatten(RexxEnvelope *envelope)
    flatten_reference(newThis->createClass, envelope);
 
                                        /* Is this a non-primitive behav */
-   if (this->isNonPrimitiveBehaviour()) {
+   if (this->isNonPrimitive())
+   {
                                        /* yes, mark that we need to be  */
                                        /*  resolved on the puff.        */
-     newThis->setBehaviourNotResolved();
+       newThis->setNotResolved();
    }
   cleanUpFlatten
 }
+
+/**
+ * Do fix ups for non-primitive behaviours, ensuring they
+ * get all of the appropriate information from their parent
+ * primitive behaviour types.
+ */
+void RexxBehaviour::resolveNonPrimitiveBehaviour()
+{
+    if (isNotResolved())
+    {
+        setResolved();
+        operatorMethods = getOperatorMethods(getClassType());
+    }
+}
+
 
 RexxObject *RexxBehaviour::copy()
 /******************************************************************************/
@@ -148,7 +162,7 @@ RexxObject *RexxBehaviour::copy()
   /* initialized by memory.                                                 */
 
                                        /* first, clone the existing object  */
-  newBehaviour = (RexxBehaviour *)memoryObject.clone((RexxObject *)this);
+  newBehaviour = (RexxBehaviour *)this->clone();
                                        /* have an method dictionary         */
   if (this->methodDictionary != OREF_NULL)
                                        /* make a copy of this too           */
@@ -164,7 +178,7 @@ RexxObject *RexxBehaviour::copy()
   newBehaviour->operatorMethods = (PCPPM *)objectOperatorMethods;
                                        /* all copied behaviours are         */
                                        /* non-primitive ones                */
-  newBehaviour->setNonPrimitiveBehaviour();
+  newBehaviour->setNonPrimitive();
   return (RexxObject *)newBehaviour;   /* return the copied behaviour       */
 }
 
@@ -322,7 +336,7 @@ void RexxBehaviour::subclass(
 /******************************************************************************/
 {
                                        /* replace the typenum               */
-  this->setTypenum(subclass_behaviour->typenum());
+  this->setClassType(subclass_behaviour->getClassType());
 }
 
 void RexxBehaviour::restore(
@@ -332,10 +346,10 @@ void RexxBehaviour::restore(
 /******************************************************************************/
 {
                                        /* set the behaviour behaviour       */
-  BehaviourSet(this, (RexxBehaviour *)(&pbehav[T_behaviour]));
+  this->setBehaviour(getPrimitiveBehaviour(T_behaviour));
                                        /* set proper size                   */
-  SetObjectSize(this, roundObjectBoundary(sizeof(RexxBehaviour)));
-  SetOldSpace(this);                   /* pbehav behaviours are old space   */
+  this->setObjectSize(roundObjectBoundary(sizeof(RexxBehaviour)));
+  this->setOldSpace();
                                        /* Make sure we pick up additional   */
                                        /*  methods defined during saveimage */
                                        /* Don't use OrefSet here            */
@@ -356,17 +370,18 @@ RexxClass *RexxBehaviour::restoreClass()
   /* primitive objects, not subject to sweeping.  We do a direct */
   /* assignment to avoid creating a reference entry in the old2new */
   /* table. */
-  this->createClass->instanceBehaviour = this;
+  this->createClass->setInstanceBehaviour(this);
   return this->createClass;            /* return the associated class       */
 }
 
 void *RexxBehaviour::operator new(size_t size,
-    short typenum)                     /* target behaviour type number      */
+    size_t typenum)                     /* target behaviour type number      */
 /******************************************************************************/
 /* Function:  Create and initialize a target primitive behaviour              */
 /******************************************************************************/
 {
-  return (void *)(&pbehav[typenum]);   /* just return the primitive one     */
+    // return a pointer to the static primitive one
+    return (void *)getPrimitiveBehaviour(typenum);
 }
 
 RexxObject * RexxBehaviour::superScope(
@@ -568,7 +583,8 @@ void RexxBehaviour::merge(
   else {
                                        /* get a copy of the source mdict    */
                                        /* for the merge                     */
-    newMethods = (RexxTable *)save(source_behav->methodDictionary->copy());
+    newMethods = (RexxTable *)source_behav->methodDictionary->copy();
+    save(newMethods);
                                        /* merge this mdict with the copy    */
     this->methodDictionary->merge(newMethods);
                                        /* and put it into this behaviour    */
@@ -599,7 +615,8 @@ void RexxBehaviour::methodDictionaryMerge(
 
                                        /* get a copy of the target mdict    */
                                        /* for the merge                     */
-    newDictionary = (RexxTable *)save(this->methodDictionary->copy());
+    newDictionary = (RexxTable *)this->methodDictionary->copy();
+    save(newDictionary);
                                        /* merge the source mdict and copy   */
     sourceDictionary->merge(newDictionary);
                                        /* and put it into this behaviour    */

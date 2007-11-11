@@ -153,7 +153,7 @@ void RexxStemVariable::set(
 
                                        /* look up the name                  */
   variable = context->getLocalStemVariable(stem, index);
-  if (OTYPE(Stem, value)) {            /* stem to stem assignment           */
+  if (isOfClass(Stem, value)) {            /* stem to stem assignment           */
     variable->set(value);              /* overlay the reference stem object */
   }
   else {
@@ -177,7 +177,7 @@ void RexxStemVariable::set(
 
                                        /* look up the name                  */
   variable = dictionary->getStemVariable(this->stem);
-  if (OTYPE(Stem, value)) {            /* stem to stem assignment           */
+  if (isOfClass(Stem, value)) {            /* stem to stem assignment           */
     variable->set(value);              /* overlay the reference stem object */
   }
   else {
@@ -212,7 +212,7 @@ void RexxStemVariable::assign(
 
                                        /* look up the name                  */
   variable = context->getLocalStemVariable(stem, index);
-  if (OTYPE(Stem, value)) {            /* stem to stem assignment           */
+  if (isOfClass(Stem, value)) {            /* stem to stem assignment           */
     variable->set(value);              /* overlay the reference stem object */
   }
   else {
@@ -321,7 +321,7 @@ void *RexxStemVariable::operator new(size_t size)
                                        /* Get new object                    */
   newObject = (RexxObject *)new_object(size);
                                        /* Give new object its behaviour     */
-  BehaviourSet(newObject, TheStemVariableBehaviour);
+  newObject->setBehaviour(TheStemVariableBehaviour);
   return newObject;                    /* return the new object             */
 }
 

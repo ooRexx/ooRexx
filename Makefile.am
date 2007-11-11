@@ -177,6 +177,7 @@ instructionsHeaders = $(instructions_dir)/AddressInstruction.hpp \
                       $(instructions_dir)/UseStrictInstruction.hpp
 parserHeaders = $(parser_dir)/Clause.hpp \
                 $(parser_dir)/SourceFile.hpp \
+                $(parser_dir)/SourceLocation.hpp \
                 $(parser_dir)/Token.hpp
 platformHeaders = $(kernel_platform_unix_dir)/APIDefinitions.h \
                   $(kernel_platform_unix_dir)/PlatformDefinitions.h \
@@ -667,6 +668,7 @@ librxregexp_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
                           -I$(expression_dir) \
                           -I$(classes_dir) \
                           -I$(messages_dir) \
+                          -I$(parser_dir) \
                           -I$(kernel_platform_common_dir) \
                           -I$(runtime_dir) \
                           -I$(kernel_platform_unix_dir) \

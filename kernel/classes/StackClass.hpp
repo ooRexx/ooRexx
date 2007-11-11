@@ -65,15 +65,16 @@
    RexxObject *fpop();
 
    inline void        fastPush(RexxObject *element) { this->stack[++(this->top)] = element; };
-   inline BOOL        checkRoom() { return this->top < this->u_size-1; }
+   inline BOOL        checkRoom() { return this->top < this->size-1; }
    inline RexxObject *fastPop() { return this->stack[(this->top)--]; };
-   inline size_t      stackSize() { return this->u_size; };
+   inline size_t      stackSize() { return this->size; };
    inline RexxObject *stackTop() { return (*(this->stack + this->top)); };
-   inline void        decrementTop() { top = (top == 0) ? u_size - 1 : top - 1; }
-   inline void        incrementTop() { if (++top >= u_size) top = 0; }
+   inline void        decrementTop() { top = (top == 0) ? size - 1 : top - 1; }
+   inline void        incrementTop() { if (++top >= size) top = 0; }
                                                                                                                                                           /* (other->size + 1) was wrong !? */
-   inline void        copyEntries(RexxStack *other) { memcpy((char *)this->stack, other->stack, other->u_size * sizeof(RexxObject *)); this->top = other->top; }
+   inline void        copyEntries(RexxStack *other) { memcpy((char *)this->stack, other->stack, other->size * sizeof(RexxObject *)); this->top = other->top; }
 
+   size_t   size;                      // the stack size
    size_t   top;                       /* top position on the stack         */
    RexxObject *stack[1];               /* stack entries                     */
  };

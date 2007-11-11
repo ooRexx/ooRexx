@@ -139,7 +139,6 @@ RexxMethod *SysRestoreProgram(
   RexxBuffer  * Buffer;                /* Buffer to unflatten               */
   size_t        BufferSize;            /* size of the buffer                */
   size_t        BytesRead;             /* actual bytes read                 */
-  RexxCode    * Code;                  /* parent rexx method                */
   RexxSource  * Source;                /* REXX source object                */
   RexxActivity *activity;              /* the current activity              */
   void         *MethodInfo;
@@ -207,7 +206,7 @@ RexxMethod *SysRestoreProgram(
   RequestKernelAccess(activity);       /* get the lock back                 */
   Buffer = new_buffer(BufferSize);     /* get a new buffer                  */
                                        /* position relative to the end      */
-  StartPointer = ((char *)Buffer + ObjectSize(Buffer)) - BufferSize;
+  StartPointer = ((char *)Buffer + Buffer->getObjectSize()) - BufferSize;
   memcpy(StartPointer, MethodInfo, BufferSize);
   GlobalFree(MethodInfo);              /* done with the tokenize buffer     */
   save(Buffer);                        /* protect the buffer                */
@@ -216,8 +215,7 @@ RexxMethod *SysRestoreProgram(
   save(Method);                        /* protect the method code           */
   discard(Buffer);                     /* release the buffer protection     */
                         /* buffer need not to be holded because it is now an envelope and referenced by Method */
-  Code = (RexxCode *)Method->code;     /* get the REXX code object          */
-  Source = Code->u_source;             /* and now the source object         */
+  Source = Method->getSource();        /* and now the source object         */
                                        /* switch the file name (this might  */
                                        /* be different than the name        */
   Source->setProgramName(FileName);    /* originally saved under            */
@@ -324,7 +322,6 @@ RexxMethod *SysRestoreProgramBuffer(
   RexxBuffer   *Buffer;                /* Buffer to unflatten               */
   LONG          BufferSize;            /* size of the buffer                */
   RexxMethod   *Method;                /* unflattened method                */
-  RexxCode     *Code;                  /* parent rexx method                */
   RexxSource   *Source;                /* REXX source object                */
 
                                        /* address the control information   */
@@ -339,14 +336,13 @@ RexxMethod *SysRestoreProgramBuffer(
   BufferSize = InBuffer->strlength - CONTROLSZ;
   Buffer = new_buffer(BufferSize);     /* get a new buffer                  */
                                        /* position relative to the end      */
-  StartPointer = ((char *)Buffer + ObjectSize(Buffer)) - BufferSize;
+  StartPointer = ((char *)Buffer + Buffer->getObjectSize()) - BufferSize;
                                        /* fill in the buffer                */
   memcpy(StartPointer, MethodInfo, BufferSize);
   save(Buffer);                        /* protect the buffer                */
                                        /* "puff" this out usable form       */
   Method = TheMethodClass->restore(Buffer, StartPointer);
-  Code = (RexxCode *)Method->code;     /* get the REXX code object          */
-  Source = Code->u_source;             /* and now the source object         */
+  Source = Method->getSource();        /* and now the source object         */
                                        /* switch the file name (this might  */
                                        /* be different than the name        */
   Source->setProgramName(Name);        /* originally saved under            */
@@ -504,7 +500,6 @@ RexxMethod *SysRestoreTranslatedProgram(
   LONG          BufferSize;            /* size of the buffer                */
   ULONG         BytesRead;             /* actual bytes read                 */
   RexxMethod   *Method;                /* unflattened method                */
-  RexxCode     *Code;                  /* parent rexx method                */
   RexxSource   *Source;                /* REXX source object                */
   RexxActivity *activity;              /* the current activity              */
                                        /* temporary read buffer             */
@@ -535,7 +530,7 @@ RexxMethod *SysRestoreTranslatedProgram(
   Buffer = new_buffer(BufferSize);     /* get a new buffer                  */
   save(Buffer);                        /* protect the buffer                */
                                        /* position relative to the end      */
-  StartPointer = ((char *)Buffer + ObjectSize(Buffer)) - BufferSize;
+  StartPointer = ((char *)Buffer + Buffer->getObjectSize()) - BufferSize;
   ReleaseKernelAccess(activity);       /* release the access                */
                                        /* read the flattened method         */
   BytesRead = fread(StartPointer, 1, BufferSize, Handle);
@@ -546,8 +541,7 @@ RexxMethod *SysRestoreTranslatedProgram(
   save(Method);                        /* protect the method code           */
   discard(Buffer);                     /* release the buffer protection     */
                         /* buffer need not to be holded because it is now an envelope and referenced by Method */
-  Code = (RexxCode *)Method->code;     /* get the REXX code object          */
-  Source = Code->u_source;             /* and now the source object         */
+  Source = Method->getSource();        /* and now the source object         */
                                        /* switch the file name (this might  */
                                        /* be different than the name        */
   Source->setProgramName(FileName);    /* originally saved under            */

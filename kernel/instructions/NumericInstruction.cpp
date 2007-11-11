@@ -58,8 +58,19 @@ RexxInstructionNumeric::RexxInstructionNumeric(
 {
                                        /* copy the expression               */
   OrefSet(this, this->expression, _expression);
-  numeric_type = type;                 /* the type                          */
-  i_flags = flags;                     /* and the flag settings             */
+  instructionFlags = flags;
+  switch (type)
+  {
+      case SUBKEY_DIGITS:
+          instructionFlags |= numeric_digits;
+          break;
+      case SUBKEY_FUZZ:
+          instructionFlags |= numeric_fuzz;
+          break;
+      case SUBKEY_FORM:
+          instructionFlags |= numeric_form;
+          break;
+  }
 }
 
 void RexxInstructionNumeric::execute(
@@ -76,9 +87,9 @@ void RexxInstructionNumeric::execute(
 
   context->traceInstruction(this);     /* trace if necessary                */
                                        /* process the different types of    */
-  switch (numeric_type) {              /* numeric instruction               */
-
-    case SUBKEY_DIGITS:                /* NUMERIC DIGITS instruction        */
+  switch (instructionFlags & numeric_type_mask)           /* numeric instruction               */
+  {
+    case numeric_digits:               /* NUMERIC DIGITS instruction        */
                                        /* resetting to default digits?      */
       if (this->expression == OREF_NULL)
                                        /* just set it to the default        */
@@ -103,7 +114,7 @@ void RexxInstructionNumeric::execute(
       }
       break;
 
-    case SUBKEY_FUZZ:                  /* NUMERIC FUZZ instruction          */
+    case numeric_fuzz:                 /* NUMERIC FUZZ instruction          */
                                        /* resetting to default fuzz?        */
       if (this->expression == OREF_NULL)
         context->setFuzz(DEFAULT_FUZZ);/* just set it to the default        */
@@ -127,11 +138,11 @@ void RexxInstructionNumeric::execute(
       }
       break;
 
-    case SUBKEY_FORM:                  /* NUMERIC FORM instruction          */
+    case numeric_form:                 /* NUMERIC FORM instruction          */
                                        /* non-VALUE form?                   */
       if (this->expression == OREF_NULL)
                                        /* just set it to the default        */
-        context->setForm(i_flags&numeric_engineering ? FORM_ENGINEERING : FORM_SCIENTIFIC);
+        context->setForm(instructionFlags&numeric_engineering ? FORM_ENGINEERING : FORM_SCIENTIFIC);
       else {                           /* need to evaluate an expression    */
                                        /* get the expression value          */
         result = this->expression->evaluate(context, stack);
