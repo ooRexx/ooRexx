@@ -1592,7 +1592,6 @@ BUILTIN(XRANGE) {
   result = raw_string(length);         /* get a result string               */
   for (i = 0; i < length; i++)         /* loop through result length        */
     result->putChar(i, startchar++);   /* inserting each character          */
-  result->generateHash();              /* rebuild the hash value            */
   return result;                       /* finished                          */
 }
 
@@ -1943,18 +1942,16 @@ RexxObject *resolve_stream(            /* resolve a stream name             */
           return stream;               /* return the stream object          */
         }
       }
-//    stack->push(qualifiedName);      /* Protect from GC;moved up          */
                                        /* get the stream class              */
       streamClass = TheEnvironment->at(OREF_STREAM);
                                        /* create a new stream object        */
-      stream = send_message1(streamClass, OREF_NEW, name);
+      stream = streamClass->sendMessage(OREF_NEW, name);
 
       if (added) {                     /* open the stream?   begin          */
                                        /* add to the streams table          */
         streamTable->put(stream, qualifiedName);
         *added = TRUE;                 /* mark it as added to stream table  */
       }
-//    streamTable->put(stream, name);  /* under both names                  */
     }
   }
 
@@ -1999,7 +1996,7 @@ BUILTIN(LINEIN) {
                                        /* get the default output stream     */
         stream = CurrentActivity->local->at(OREF_REXXQUEUE);
                                        /* pull from the queue               */
-        result = (RexxString *)send_message0(stream, OREF_LINEIN);
+        result = (RexxString *)stream->sendMessage(OREF_LINEIN);
     }
   }
   else {
@@ -2008,13 +2005,13 @@ BUILTIN(LINEIN) {
     switch (argcount) {                /* process according to argcount     */
       case 0:                          /* no name                           */
       case 1:                          /* name only                         */
-        result = (RexxString *)send_message0(stream, OREF_LINEIN);
+        result = (RexxString *)stream->sendMessage(OREF_LINEIN);
         break;
       case 2:                          /* name and start                    */
-        result = (RexxString *)send_message1(stream, OREF_LINEIN, line);
+        result = (RexxString *)stream->sendMessage(OREF_LINEIN, line);
         break;
       case 3:                          /* name, start and count             */
-        result = (RexxString *)send_message2(stream, OREF_LINEIN, line, count);
+        result = (RexxString *)stream->sendMessage(OREF_LINEIN, line, count);
         break;
     }
   }
@@ -2051,13 +2048,13 @@ BUILTIN(CHARIN) {
   switch (argcount) {                  /* process according to argcount     */
     case 0:                            /* no name                           */
     case 1:                            /* name only                         */
-      result = (RexxString *)send_message0(stream, OREF_CHARIN);
+      result = (RexxString *)stream->sendMessage(OREF_CHARIN);
       break;
     case 2:                            /* name and string                   */
-      result = (RexxString *)send_message1(stream, OREF_CHARIN, position);
+      result = (RexxString *)stream->sendMessage(OREF_CHARIN, position);
       break;
     case 3:                            /* name, string and line             */
-      result = (RexxString *)send_message2(stream, OREF_CHARIN, position, count);
+      result = (RexxString *)stream->sendMessage(OREF_CHARIN, position, count);
       break;
   }
   return result;                       /* return final result               */
@@ -2092,7 +2089,7 @@ BUILTIN(LINEOUT) {
                                        /* get the default output stream     */
         stream = CurrentActivity->local->at(OREF_REXXQUEUE);
                                        /* push onto the queue               */
-        result = (RexxString *)send_message1(stream, OREF_QUEUENAME, string);
+        result = (RexxString *)stream->sendMessage(OREF_QUEUENAME, string);
       }
       else
                                        /* always a zero residual            */
@@ -2105,13 +2102,13 @@ BUILTIN(LINEOUT) {
     switch (argcount) {                /* process according to argcount     */
       case 0:                          /* no name                           */
       case 1:                          /* name only                         */
-        result = (RexxString *)send_message0(stream, OREF_LINEOUT);
+        result = (RexxString *)stream->sendMessage(OREF_LINEOUT);
         break;
       case 2:                          /* name and string                   */
-        result = (RexxString *)send_message1(stream, OREF_LINEOUT, string);
+        result = (RexxString *)stream->sendMessage(OREF_LINEOUT, string);
         break;
       case 3:                          /* name, string and line             */
-        result = (RexxString *)send_message2(stream, OREF_LINEOUT, string, line);
+        result = (RexxString *)stream->sendMessage(OREF_LINEOUT, string, line);
         break;
     }
   }
@@ -2148,13 +2145,13 @@ BUILTIN(CHAROUT) {
   switch (argcount) {                  /* process according to argcount     */
     case 0:                            /* no name                           */
     case 1:                            /* name only                         */
-      result = (RexxString *)send_message0(stream, OREF_CHAROUT);
+      result = (RexxString *)stream->sendMessage(OREF_CHAROUT);
       break;
     case 2:                            /* name and string                   */
-      result = (RexxString *)send_message1(stream, OREF_CHAROUT, string);
+      result = (RexxString *)stream->sendMessage(OREF_CHAROUT, string);
       break;
     case 3:                            /* name, string and line             */
-      result = (RexxString *)send_message2(stream, OREF_CHAROUT, string, position);
+      result = (RexxString *)stream->sendMessage(OREF_CHAROUT, string, position);
       break;
   }
   return result;                       /* all finished                      */
@@ -2180,7 +2177,7 @@ BUILTIN(LINES) {
                                        /* get the default output stream     */
     stream = CurrentActivity->local->at(OREF_REXXQUEUE);
                                        /* return count on the queue         */
-    result = (RexxInteger *)send_message0(stream, OREF_QUERY);
+    result = (RexxInteger *)stream->sendMessage(OREF_QUERY);
   }
   else
   {
@@ -2207,7 +2204,7 @@ BUILTIN(LINES) {
     }
 
     /* use modified LINES method with quick flag       */
-    result = (RexxInteger *)send_message1(stream, OREF_LINES, option);
+    result = (RexxInteger *)stream->sendMessage(OREF_LINES, option);
   }
                                        /* for compatibility this needs      */
                                        /* to only return 0 or 1             */
@@ -2234,7 +2231,7 @@ BUILTIN(CHARS) {
     reportException(Error_Incorrect_call_queue_no_char, OREF_CHARS);
                                        /* get a stream for this name        */
   stream = resolve_stream(name, context, stack, TRUE, NULL, &added);
-  return send_message0(stream, OREF_CHARS);
+  return stream->sendMessage(OREF_CHARS);
 }
 
 #define STREAM_MIN 1
@@ -2295,7 +2292,7 @@ BUILTIN(STREAM) {
       }
       stream = resolve_stream(name, context, stack, TRUE, NULL, NULL);
                                        /* get the stream state              */
-      result = send_message0(stream, OREF_STATE);
+      result = stream->sendMessage(OREF_STATE);
       break;
 
     case STREAM_DESCRIPTION:           /* stream(name, d)                   */
@@ -2305,7 +2302,7 @@ BUILTIN(STREAM) {
       }
       stream = resolve_stream(name, context, stack, TRUE, NULL, NULL);
                                        /* get the stream description        */
-      result = send_message0(stream, OREF_DESCRIPTION);
+      result = stream->sendMessage(OREF_DESCRIPTION);
       break;
 
     case STREAM_COMMAND:               /* stream(name, c, command)          */
@@ -2336,7 +2333,7 @@ BUILTIN(STREAM) {
       else
         stream = resolve_stream(name, context, stack, TRUE, NULL, NULL);
 
-      result = send_message1(stream, OREF_COMMAND, command);
+      result = stream->sendMessage(OREF_COMMAND, command);
 
       /* this repairs the removed code below */
       if (fClose) {
@@ -2373,7 +2370,7 @@ BUILTIN(QUEUED) {
   if (CurrentActivity->sysExitMsqSiz(context, &queuesize)) {
     queue = CurrentActivity->local->at(OREF_REXXQUEUE);
                                        /* return count on the queue         */
-    return send_message0(queue, OREF_QUEUED);
+    return queue->sendMessage(OREF_QUEUED);
   }
   else
     return queuesize;                  /* return count from system exit     */

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              Clause.c    */
+/* REXX Translator                                                Clause.c    */
 /*                                                                            */
 /* Primitive Translator Clause Class                                          */
 /*                                                                            */
@@ -57,7 +57,7 @@ RexxClause::RexxClause()
 {
   this->clearObject();                 /* initialize the object             */
                                        /* an array for the tokens           */
-  OrefSet(this, this->tokens, memoryObject.newObjects(sizeof(RexxToken), INITIAL_SIZE, TheTokenBehaviour));
+  OrefSet(this, this->tokens, new_arrayOfObject(sizeof(RexxToken), INITIAL_SIZE, T_token));
   this->first = 1;                     /* first token is the start          */
   this->current = 1;                   /* no current token                  */
   this->size = INITIAL_SIZE;           /* set the token cache size          */
@@ -160,7 +160,7 @@ RexxToken *RexxClause::newToken(
   if (this->free > this->size) {       /* need to extend our cache?         */
                                        /* allocate a larger array  */
                                        /* first a bulk array of tokens      */
-    RexxArray *newTokens = (RexxArray *)memoryObject.newObjects(sizeof(RexxToken), EXTEND_SIZE, TheTokenBehaviour);
+    RexxArray *newTokens = new_arrayOfObject(sizeof(RexxToken), EXTEND_SIZE, T_token);
     save(newTokens);                   /* the join operation may trigger a GC, so protect it */
     RexxArray *newarray = (RexxArray *)this->tokens->join(newTokens);
     discard(newTokens);                /* we're finished with the array part */

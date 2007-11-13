@@ -55,14 +55,15 @@ class RexxActivationFrameBuffer : public RexxInternalObject {
      void liveGeneral();
      void flatten(RexxEnvelope *);
 
-     inline BOOL hasCapacity(size_t entries) { return size - next >= entries; }
+     inline bool hasCapacity(size_t entries) { return size - next >= entries; }
      inline RexxObject **allocateFrame(size_t entries)
      {
          RexxObject **frame = &buffer[next];
          next += entries;
          return frame;
      }
-     inline BOOL contains(RexxObject **frame)
+
+     inline bool contains(RexxObject **frame)
      {
          return frame >= &buffer[0] && frame <= &buffer[size];
      }
@@ -71,6 +72,20 @@ class RexxActivationFrameBuffer : public RexxInternalObject {
      {
          next = frame - &buffer[0];
      }
+
+     inline void push(RexxActivationFrameBuffer *p)
+     {
+         previous = p;    // chain this up
+     }
+
+
+     inline void reset() { next = 0; }    // reset a cached frame buffer
+
+     inline RexxActivationFrameBuffer *getPrevious() { return previous; }
+
+     static RexxActivationFrameBuffer *newInstance(size_t);
+
+protected:
 
 
      size_t size;                        /* size of the buffer (in slots) */
@@ -108,12 +123,13 @@ class RexxActivationStack {
         while (!current->contains(frame)) {
             /* we need to pop at least one buffer off of the stack */
             RexxActivationFrameBuffer *released = current;
-            current = released->previous;
+            current = released->getPrevious();
             /* we'll keep at least one buffer around for reuse.  If */
             /* we've already got one in the cache, just let this one */
             /* get GCed. */
             if (unused == OREF_NULL) {
                 unused = released;
+                unused->reset();   // reset to clean state
             }
         }
 
@@ -121,7 +137,13 @@ class RexxActivationStack {
         current->releaseFrame(frame);
     }
 
+protected:
+
   RexxActivationFrameBuffer *current;
   RexxActivationFrameBuffer *unused;
 };
+
+
+inline RexxActivationFrameBuffer *new_activationFrameBuffer(size_t s) { return RexxActivationFrameBuffer::newInstance(s); }
+
 #endif

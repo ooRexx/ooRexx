@@ -633,7 +633,7 @@ RexxObject * activation_find  (void);
            newVariable->reset(name);
        }
        else {
-           newVariable = memoryObject.newVariable(name);
+           newVariable = new_variable(name);
        }
        newVariable->setCreator(this);
        return newVariable;

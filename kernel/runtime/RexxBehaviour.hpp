@@ -59,6 +59,7 @@ void behaviour_setup (void);
   void liveGeneral();
   void flatten(RexxEnvelope*);
   RexxObject *copy();
+  void        copyBehaviour(RexxBehaviour *source);
   RexxObject *define(RexxString *, RexxMethod *);
   void        addMethod(RexxString *, RexxMethod *);
   void        removeMethod(RexxString *);
@@ -89,8 +90,8 @@ void behaviour_setup (void);
    inline void        setMethodDictionary(RexxTable * m) { OrefSet(this, this->methodDictionary, m); };
    inline void        setInstanceMethodDictionary(RexxTable * m) { OrefSet(this, this->instanceMethodDictionary, m); };
    inline RexxTable  *getInstanceMethodDictionary()   { return this->instanceMethodDictionary; };
-   inline RexxClass  *getCreateClass()        { return this->createClass;};
-   inline void        setClass(RexxClass *c)  { OrefSet(this, this->createClass,  c); };
+   inline RexxClass  *getOwningClass()        { return this->owningClass;};
+   inline void        setOwningClass(RexxClass *c)  { OrefSet(this, this->owningClass,  c); };
 
    inline void setClassType(size_t n) { classType = (uint16_t)n; }
    inline size_t getClassType()  { return (size_t)classType; }
@@ -125,7 +126,7 @@ void behaviour_setup (void);
    RexxObjectTable  *scopes;           /* scopes table                      */
    RexxTable  *methodDictionary;       /* method dictionary                 */
    PCPPM      *operatorMethods;        /* operator look-a-side table        */
-   RexxClass  *createClass;            /* class that created this object    */
+   RexxClass  *owningClass;            /* class that created this object    */
                                        /* methods added via SETMETHOD       */
    RexxTable  *instanceMethodDictionary;
 

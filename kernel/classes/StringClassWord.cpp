@@ -247,8 +247,6 @@ RexxString *RexxString::delWord(RexxInteger *position,
       if (Length)                      /* any string left?                  */
                                        /* copy what's left                  */
         memcpy(Current, NextSite, Length);
-                                       /* done building the string          */
-      Retval->generateHash();
     }
   }
   return Retval;                       /* return deleted string             */
@@ -324,8 +322,6 @@ RexxString *RexxString::space(RexxInteger *space_count,
     }
                                        /* copy the word over                */
     memcpy(Current, Word, (size_t)WordLength);
-                                       /* done building the string          */
-    Retval->generateHash();
   }
   return Retval;                       /* return spaced string              */
 }

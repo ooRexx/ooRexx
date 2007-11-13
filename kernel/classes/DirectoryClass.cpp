@@ -749,19 +749,12 @@ RexxObject *RexxDirectory::newRexx(
   return newDirectory;                 /* return the new directory          */
 }
 
-RexxDirectory *RexxMemory::newDirectory()
+RexxDirectory *RexxDirectory::newInstance()
 /******************************************************************************/
 /* Create a new directory item                                                */
 /******************************************************************************/
 {
-  RexxDirectory *newObj;               /* new directory object              */
-
                                        /* get a new object and hash         */
-  newObj = (RexxDirectory *)new_hashCollection(DEFAULT_HASH_SIZE, sizeof(RexxDirectory));
-                                       /* Give new object its behaviour     */
-  newObj->setBehaviour(TheDirectoryBehaviour);
-                                       /* set the virtual function table    */
-  newObj->setVirtualFunctions(VFTArray[T_directory]);
-  return newObj;                       /* return the new directory          */
+  return (RexxDirectory *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxDirectory), T_directory);
 }
 

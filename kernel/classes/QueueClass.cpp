@@ -511,7 +511,7 @@ RexxQueue *RexxQueue::ofRexx(
   else {
     arraysize = argCount;              /* get the array size                */
                                        /* get a new list                    */
-    newQueue = (RexxQueue *)send_message0(this, OREF_NEW);
+    newQueue = (RexxQueue *)this->sendMessage(OREF_NEW);
     save(newQueue);                    /* protect from garbage collection   */
     for (i = 0; i < arraysize; i++) {  /* step through the array            */
       item = args[i];                  /* get the next item                 */
@@ -521,7 +521,7 @@ RexxQueue *RexxQueue::ofRexx(
         reportException(Error_Incorrect_method_noarg, i + 1);
       }
                                        /* add this to the list end          */
-      send_message1(newQueue, OREF_QUEUENAME, item);
+      newQueue->sendMessage(OREF_QUEUENAME, item);
     }
   }
   discard_hold(newQueue);              /* release the collection lock       */

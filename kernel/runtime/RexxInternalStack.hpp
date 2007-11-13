@@ -67,11 +67,18 @@ class RexxInternalStack : public RexxInternalObject {
   inline size_t       location() {return this->top - this->stack;};
   inline void         setTop(size_t v) {this->top = this->stack + v;};
   inline void         toss() { this->top--; };
-  inline BOOL         isEmpty() { return top == stack; }
-  inline BOOL         isFull() { return top >= stack + size; }
+  inline bool         isEmpty() { return top == stack; }
+  inline bool         isFull() { return top >= stack + size; }
+
+  static RexxInternalStack *newInstance(size_t s);
+
+protected:
 
   size_t size;                         /* size of the expstack              */
   RexxObject **top;                    /* current expstack top location     */
   RexxObject *stack[1];                /* actual stack values               */
 };
+
+
+inline RexxInternalStack *new_internalstack(size_t s) { return RexxInternalStack::newInstance(s); }
 #endif

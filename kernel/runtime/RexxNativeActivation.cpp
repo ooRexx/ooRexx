@@ -1013,7 +1013,7 @@ nativei3 (REXXOBJECT, SEND,
 /******************************************************************************/
 {
   native_entry;                        /* synchronize access                */
-  return_oref(send_message((RexxObject *)receiver,(RexxString *)new_string(msgname),(RexxArray *)arguments));
+  return_oref((RexxObject *)receiver->sendMessage((RexxString *)new_string(msgname), (RexxArray *)arguments));
 }
 
 nativei2 (REXXOBJECT, SUPER,

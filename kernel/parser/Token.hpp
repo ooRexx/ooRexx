@@ -398,4 +398,9 @@ class RexxToken : public RexxInternalObject {
   int         subclass;                /* specialized type of token         */
   int         numeric;                 /* even further specialization       */
 };
+
+
+inline RexxArray *new_arrayOfTokens(size_t n) { return memoryObject.newObjects(sizeof(RexxToken), n, T_token); }
+inline RexxToken *new_token(int c, int s, RexxString *v, SourceLocation &l) { return new RexxToken (c, s, v, l); }
+
 #endif

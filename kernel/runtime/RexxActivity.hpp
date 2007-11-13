@@ -253,6 +253,9 @@ typedef struct nestedinfo {
        locals->setFrame(frameStack.allocateFrame(locals->size));
    }
 
+   static void createClass();
+   static void restoreClass();
+
    RexxInternalStack  *activations;    /* stack of activations              */
    RexxActivationStack   frameStack;   /* our stack used for activation frames */
    RexxObject         *saveValue;      /* saved result across activity_yield*/
@@ -283,8 +286,6 @@ typedef struct nestedinfo {
    BOOL     exitObjects;               // return ptrs to objects for exit handlers
    BOOL     requestingString;          /* in error handling currently       */
    SEV      guardsem;                  /* guard expression semaphore        */
-   SYSWINDOWINFO  *windowInfo;         /* Information needed for windowing  */
-                                       /* system  on an Activity basis      */
    LONG     nestedCount;               /* extent of the nesting             */
    nestedActivityInfo nestedInfo;      /* info saved and restored on calls  */
    jmp_buf  stringError;               /* string request error buffer       */
@@ -295,7 +296,7 @@ typedef struct nestedinfo {
    RexxActivityClass(RESTORETYPE restoreType) { ; };
    RexxActivityClass() { this->init(); }
    void *operator new(size_t size, void *ptr) {return ptr;};
-   void *operator new(size_t size, long size1, RexxBehaviour *classBehave, RexxBehaviour *instance) { return new (size, classBehave, instance) RexxClass; }
+   void *operator new(size_t size, size_t size1, const char *className, RexxBehaviour *classBehave, RexxBehaviour *instance) { return new (size, className, classBehave, instance) RexxClass; }
    RexxActivity *newActivity( long, RexxObject *);
    RexxActivation *newActivation(RexxObject *, RexxMethod *, RexxActivity *, RexxString *, RexxActivation *, int);
    void            cacheActivation(RexxActivation *);
@@ -470,8 +471,6 @@ inline void reportHalt(RexxString *description)
   }
 }
 
-void activity_create (void);
-void activity_restore (void);
 BOOL activity_halt (LONG, RexxString *);
 BOOL activity_set_trace (LONG, BOOL);
 void activity_set_yield(void);

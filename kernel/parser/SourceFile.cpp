@@ -766,7 +766,6 @@ RexxString *RexxSource::traceBack(
                                        /* copy in the line number           */
   buffer->put(LINENUMBER - outlength, linepointer, outlength);
   buffer->put(PREFIX_OFFSET, "*-*", PREFIX_LENGTH);
-  buffer->generateHash();              /* rebuild the hash value            */
   return buffer;                       /* return formatted buffer           */
 }
 
@@ -1323,7 +1322,7 @@ void RexxSource::processInstall(
                                        /* not found in environment, error!  */
             reportException(Error_Execution_noclass, subclass_name);
                                        /* do the actual inheritance         */
-          send_message1(classObject, OREF_INHERIT, subclass);
+          classObject->sendMessage(OREF_INHERIT, subclass);
         }
       }
       if (_instanceMethods != OREF_NULL)/* have instance methods to add?     */

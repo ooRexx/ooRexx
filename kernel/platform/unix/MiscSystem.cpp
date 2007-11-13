@@ -249,7 +249,7 @@ RexxString * SysGetCurrentQueue(void)
     queue_name = OREF_SESSION;         /* use the default name              */
   else
                                        /* get the actual queue name         */
-    queue_name = (RexxString *)send_message0(queue, OREF_GET);
+    queue_name = (RexxString *)queue->sendMessage(OREF_GET);
   return queue_name;                   /* return the name                   */
 }
 
@@ -295,9 +295,12 @@ RexxString * SysSourceString(
   *outPtr++ = ' ';                     /* put a blank between               */
                                        /* copy the system name              */
   memcpy(outPtr, programName->getStringData(), programName->getLength());
-  source_string->generateHash();       /* now create the hash value         */
   return source_string;                /* return the source string          */
 }
+
+// these routines are NOPs
+void SysRegisterExceptions(SYSEXCEPTIONBLOCK *exception_info) { ; }
+void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *exception_info) { ; }
 
 
 void SysRegisterSignals(
@@ -346,79 +349,6 @@ void SysDeregisterSignals(
     DosSetSignalExceptionFocus(SIG_UNSETFOCUS, &NestingLevel);
                                        /* remove the exception handler      */
   DosUnsetExceptionHandler(exception_info);
-#endif  // AIX and LINUX
-}
-
-SYSWINDOWINFO *SysInitializeWindowEnv()
-/******************************************************************************/
-/* Function:  Initialize a PM thread for possible WIN message later.          */
-/******************************************************************************/
-{
-  SYSWINDOWINFO *windowInfo = NULL;    /* PM specific thread info           */
-#if !defined(AIX) && !defined(LINUX)
-  PTIB   tibp;                         /* process information block         */
-  PPIB   pibp;                         /* thread information block          */
-
-  DosGetInfoBlocks(&tibp, &pibp);      /* get the process and thread blocks */
-                                       /* running in a PM session?          */
-  if (pibp->pib_ultype == SSF_TYPE_PM) {
-                                       /* Yes, get a block for PM info      */
-    windowInfo = (SYSWINDOWINFO *)malloc(sizeof(SYSWINDOWINFO));
-                                       /* Initialize the thread for PM      */
-    windowInfo->hAnchorBlock = WinInitialize(0);
-                                       /* Did we get our HAB?               */
-    if (windowInfo->hAnchorBlock) {
-                                       /* Yes, make sure we do a WinTerminat*/
-      windowInfo->mustTerminate = TRUE;
-    }
-    else {
-      windowInfo->hAnchorBlock = WinQueryAnchorBlock(HWND_DESKTOP);
-      windowInfo->mustTerminate = FALSE;
-    }
-
-
-                                       /* Create a message Queue for PM     */
-    windowInfo->messageQueue = WinCreateMsgQueue(windowInfo->hAnchorBlock, 0);
-                                       /* able to create a MessageQueue?    */
-    if (windowInfo->messageQueue) {
-                                       /* Make sure we cancel ShutdownMsg   */
-                                       /* for this msgQueue. Avoid Shutudown*/
-                                       /* hangs.                            */
-      WinCancelShutdown(windowInfo->messageQueue, TRUE);
-    }
-#ifdef DEBUG
-    else {                             /* Create failed, make see if error  */
-                                       /* was that is already exists.       */
-     if (PMERR_MSG_QUEUE_ALREADY_EXISTS != WinGetLastError(windowInfo->hAnchorBlock)) {
-       printf("Error: could not create Message Queue for PM Thread id %u\n", tibp->tib_ptib2->tib2_ultid);
-     }
-    }
-#endif
-  }
-#endif  // AIX and LINUX
-return windowInfo;
-}
-
-void SysTerminateWindowEnv(SYSWINDOWINFO *windowInfo)
-/******************************************************************************/
-/* Function:  Initialize a PM thread for possible WIN message later.          */
-/******************************************************************************/
-{
-#if !defined(AIX) && !defined(LINUX)
-                                       /* Were we even passed an INfo Block?*/
-  if (windowInfo) {
-                                       /* Yes, Free up resources.           */
-                                       /* Do we have our own MessageQueue?  */
-    if (windowInfo->messageQueue)
-                                       /* Yes, destory the messageQueue     */
-      WinDestroyMsgQueue(windowInfo->messageQueue);
-                                       /* Do we have a HAB to free?         */
-    if (windowInfo->mustTerminate)
-                                       /* Yes, Terminate our PM session     */
-      WinTerminate(windowInfo->hAnchorBlock);
-                                       /* now free the info block.          */
-    free(windowInfo);
-  }
 #endif  // AIX and LINUX
 }
 

@@ -119,8 +119,6 @@ extern _declspec(dllimport) SECURITY_DESCRIPTOR SD_NullAcl;      /* let RXAPI.EX
 BOOL AllocComBlock(int chain, int size, int modifer, SECURITY_ATTRIBUTES * sa);
 void FreeComBlock(int chain);
 
-extern _declspec(dllimport) SECURITY_ATTRIBUTES * SetSecurityDesc(SECURITY_ATTRIBUTES * sa);
-
 extern _declspec(dllimport) APIRET APIAddMacro(BOOL updateIfExists);
 extern _declspec(dllimport) APIRET APIDropMacro(void);
 extern _declspec(dllimport) APIRET APIClearMacroSpace(void);

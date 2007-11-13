@@ -319,8 +319,6 @@ RexxString *PackHex(
       StringLength -= n;               /* reduce the length                 */
       Nibbles -= b;                    /* decrement the count               */
     }
-                                       /* done building the string          */
-    Retval->generateHash();
   }
   else
                                        /* this is a null string             */
@@ -409,7 +407,6 @@ RexxString *RexxString::encodeBase64()
             destination++;
         }
     }                                  /* done building the string          */
-    retval->generateHash();
     return retval;                       /* return converted string           */
 }
 
@@ -501,7 +498,6 @@ RexxString *RexxString::decodeBase64()
         source += 4;
         inputLength -= 4;
     }                                  /* done building the string          */
-    retval->generateHash();
     return retval;                       /* return converted string           */
 }
 
@@ -539,8 +535,6 @@ RexxString *RexxString::c2x()
                  /***********************************************************/
       *Destination++ = IntToHexDigit(ch  & 0xF);
     }
-                                       /* done building the string          */
-    Retval->generateHash();
   }
   return Retval;                       /* return converted string           */
 }
@@ -788,7 +782,6 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
     *Scan++ = '-';                     /* add to the front                  */
                                        /* copy in the number                */
   memcpy(Scan, Accumulator - DecLength + 1, DecLength);
-  Retval->generateHash();              /* done building the string          */
   return Retval;                       /* return converted string           */
 }
 
@@ -832,8 +825,6 @@ RexxString *RexxString::b2x()
       Length -= Jump;                  /* reduce remaining length           */
       Bits -= Excess;                  /* reduce remaining amount           */
     }
-                                       /* done building the string          */
-    Retval->generateHash();
   }
   return Retval;                       /* return packed string              */
 }
@@ -883,8 +874,6 @@ RexxString *RexxString::x2b()
         Nibbles--;                     /* Reduce nibbles count              */
       }
     }
-                                       /* done building the string          */
-    Retval->generateHash();
   }
   return Retval;                       /* return the expanded string        */
 }

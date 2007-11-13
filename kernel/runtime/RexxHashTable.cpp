@@ -56,19 +56,22 @@
 /* index pointer to a value such as -1.                                       */
 /*                                                                            */
 /******************************************************************************/
-#define NO_MORE 0
-#define NO_LINK 0xffffffff             /* used for traversals               */
+
+// link terminator
+const HashLink NO_MORE = 0;
+// indicates not linked
+const HashLink NO_LINK = ~((HashLink)0);
 
                                        /* compare a value item to the value */
                                        /* at the specified position         */
-BOOL inline EQUAL_VALUE(RexxObject *value, RexxObject *other)
+bool inline EQUAL_VALUE(RexxObject *value, RexxObject *other)
 {
                                        /* true for either direct identity or*/
                                        /* real equality ("==")              */
   return (value == other) || value->isEqual(other);
 }
 
-RexxHashTable *RexxMemory::newHashTable(
+RexxHashTable *RexxHashTable::newInstance(
   size_t entries )                     /* number of entries in the table    */
 /******************************************************************************/
 /* Function:  Create a new hash table                                         */
@@ -87,20 +90,17 @@ RexxHashTable *RexxMemory::newHashTable(
 
   bytes = sizeof(RexxHashTable) + (sizeof(TABENTRY) * (entries - 1));
                                        /* Get new object                    */
-  newHash = (RexxHashTable *)new_object(bytes);
-                                       /* Give new object its behaviour     */
-  newHash->setBehaviour(TheHashTableBehaviour);
-                                       /* set the virtual function table    */
-  newHash->setVirtualFunctions(VFTArray[T_hashtab]);
+  newHash = (RexxHashTable *)new_object(bytes, T_hashtab);
   newHash->clearObject();              /* clear things out                  */
   newHash->size = bucketSize;          /* record the size                   */
   newHash->free = entries - 1;         /* and the first free slot           */
   return newHash;                      /* and return it                     */
 }
 
-RexxTable *RexxMemory::newHashCollection(
+RexxTable *RexxHashTable::newInstance(
   size_t entries,                      /* number of entries in the table    */
-  size_t companionSize )               /* size of companion "table" object  */
+  size_t companionSize,                /* size of companion "table" object  */
+  size_t type)                         // type of collection we're creating
 /******************************************************************************/
 /* Function:  Create a hash table object and a "companion" table, vdict,      */
 /*            directory, or relation object all in one shot.                  */
@@ -127,7 +127,7 @@ RexxTable *RexxMemory::newHashCollection(
   /* make sure we've got proper sizes for each of the object parts. */
   companionSize = roundObjectBoundary(companionSize);
                                        /* Get space for two objects         */
-  newObj = (RexxTable *)new_object(bytes + companionSize);
+  newObj = (RexxTable *)new_object(bytes + companionSize, type);
   newObj->clearObject();               /* clear the entire lot              */
                                        /* address the hash table            */
   newHash = (RexxHashTable *)(((char *)newObj) + companionSize);
@@ -924,8 +924,8 @@ RexxObject *RexxHashTable::primitiveGet(
 RexxHashTable *RexxHashTable::insert(
     RexxObject *_value,                 /* value to insert                   */
     RexxObject * _index,                /* index to insert                   */
-    HashLink position,                 /* insertion position                */
-    LONG   type )                      /* string type insertion             */
+    HashLink position,                  /* insertion position                */
+    int    type )                       /* string type insertion             */
 /******************************************************************************/
 /* Function:  Insert an element into an overflow location of a hash table     */
 /******************************************************************************/

@@ -149,11 +149,9 @@
                                        /*  last one accessed.               */
 extern MemorySegmentPool *ProcessCurrentPool;
 extern MemorySegmentPool *GlobalCurrentPool;
-#define ACT_STACK_SIZE 10
-#define ACTIVATION_CACHE_SIZE 5
-//#define MIN_C_STACK 1024*16
-//#define TOTAL_STACK_SIZE 1024*512
-//#define C_STACK_SIZE 60000
+
+const size_t ACT_STACK_SIZE = 10;
+const size_t ACTIVATION_CACHE_SIZE = 5;
 
 extern RexxObject * ProcessLocalServer;
 extern int  ProcessNumActs;            /* number of active activities       */
@@ -214,9 +212,6 @@ void activity_thread (
                                        /* establish the stack base pointer  */
   objp->nestedInfo.stackptr = SysGetThreadStackBase(TOTAL_STACK_SIZE);
   SysRegisterExceptions(&exreg);       /* create needed exception handlers  */
-                                       /* Do any initialization for Windowin*/
-                                       /*  That may be necessary.           */
-  objp->windowInfo = SysInitializeWindowEnv();
                                        /* establish the longjmp return point*/
   jmprc = setjmp(objp->nestedInfo.jmpenv);
   for (;;) {
@@ -260,9 +255,6 @@ void activity_thread (
   }
   RequestKernelAccess(objp);           /* get the kernel access             */
 
-                                       /* Cleanup any window resources      */
-  SysTerminateWindowEnv(objp->windowInfo);
-  objp->windowInfo = NULL;             /* Clear out the SysWindowINfo Ptr   */
   SysDeregisterExceptions(&exreg);     /* remove exception trapping         */
   SysEnterResourceSection();           /* now in a critical section         */
   number_activities = --ProcessNumActs;/* get the current activity count    */
@@ -1462,7 +1454,7 @@ void RexxActivity::checkDeadLock(
       owningActivity = ((RexxMessage *)this->waitingObject)->startActivity;
     else
                                        /* get the locking activity for vdict*/
-      owningActivity = ((RexxVariableDictionary *)this->waitingObject)->reservingActivity;
+      owningActivity = ((RexxVariableDictionary *)this->waitingObject)->getReservingActivity();
                                        /* have a circular wait              */
     if (owningActivity == targetActivity)
                                        /* have a deaklock                   */
@@ -1719,7 +1711,7 @@ void RexxActivity::sysExitInit(
                                        /* if variable was not changed, then */
                                        /* remove it from the var. pool again*/
     if (sourceStr == pgmName->getVariableValue()) {
-      vdict->contents->remove(varName);
+      vdict->remove(varName);
     }
   }
 }
@@ -3359,20 +3351,20 @@ void activity_set_yield(void)
   MTXRL(resource_semaphore);           /* unlock the resources              */
 }
 
-void activity_create (void)
+void RexxActivity::createClass()
 /******************************************************************************/
 /* Function:  Create the activity class during save image processing          */
 /******************************************************************************/
 {
                                        /* create the class object           */
-  create_udsubClass(Activity, RexxActivityClass);
+  SUBCLASS_CREATE(Activity, "Activity", RexxActivityClass);
                                        /* and do class-specific init        */
   new (TheActivityClass) RexxActivityClass();
                                        /* hook up the class and behaviour   */
-  ((RexxBehaviour *)TheActivityBehaviour)->setClass((RexxClass *)TheActivityClass);
+  ((RexxBehaviour *)TheActivityBehaviour)->setOwningClass((RexxClass *)TheActivityClass);
 }
 
-void activity_restore (void)
+void RexxActivity::restoreClass()
 /******************************************************************************/
 /* Function:  Restore the activity class during start up                      */
 /******************************************************************************/
@@ -3781,8 +3773,6 @@ LONG RexxActivity::messageSend(
   startDepth = this->depth;            /* Remember activation stack depth   */
 
   SysRegisterSignals(&exreg);          /* register our signal handlers      */
-                                       /* INitialize and Windowing stuff    */
-  this->windowInfo = SysInitializeWindowEnv();
                                        /* set up setjmp environment         */
   jmprc = setjmp(this->nestedInfo.jmpenv);
   if (jmprc != 0)                      /* did we get an error return?       */
@@ -3798,9 +3788,6 @@ LONG RexxActivity::messageSend(
   TheMemoryObject->collect();          /* locks from the UNINIT table       */
   TheActivityClass->runUninits();      /* be sure to finish UNINIT methods  */
   this->restoreNestedInfo(&saveInfo);  /* now restore to previous nesting   */
-                                       /* Do WIndow cleanup stuff.          */
-  SysTerminateWindowEnv(this->windowInfo);
-  this->windowInfo = NULL;             /* and clean up the window info      */
   SysDeregisterSignals(&exreg);        /* deregister the signal handlers    */
   this->popNil();                      /* remove the nil marker             */
   return rc;                           /* return the error code             */
@@ -3845,8 +3832,6 @@ LONG VLAREXXENTRY RexxSendMessage (
   activity->pushNil();                 /* what level we entered.            */
   startDepth = activity->depth;        /* Remember activation stack depth   */
   SysRegisterSignals(&exreg);          /* register our signal handlers      */
-                                       /* INitialize and Windowing stuff    */
-  activity->windowInfo = SysInitializeWindowEnv();
                                        /* set up setjmp environment         */
   jmprc = setjmp(activity->nestedInfo.jmpenv);
   if (jmprc != 0) {                    /* did we get an error return?       */
@@ -3886,16 +3871,13 @@ LONG VLAREXXENTRY RexxSendMessage (
   TheActivityClass->runUninits();      /* be sure to finish UNINIT methods  */
                                        /* restore the nested information    */
   activity->restoreNestedInfo(&saveInfo);
-                                       /* Do WIndow cleanup stuff.          */
-  SysTerminateWindowEnv(activity->windowInfo);
-  activity->windowInfo = NULL;         /* clear the window info             */
   SysDeregisterSignals(&exreg);        /* deregister the signal handlers    */
                                        /* if had a real result object       */
                                        /*  and not returning an OREF....    */
   if (result != OREF_NULL) {
     if (returnType == 'o' || returnType == 'z')
                                        /* Need to keep result obj around.   */
-       send_message0(ProcessLocalServer, (RexxString *)new_string("SAVE_RESULT"));
+       ProcessLocalServer->sendMessage(new_string("SAVE_RESULT"));
 
      discard_hold(result);             /* release it and hole a bit longer  */
   }

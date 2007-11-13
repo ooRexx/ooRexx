@@ -60,13 +60,12 @@ RexxBehaviour::RexxBehaviour(
 {
   this->behaviour = getPrimitiveBehaviour(T_behaviour);
   this->header.setObjectSize(sizeof(RexxBehaviour));
-  this->hashvalue = this->identityHash();
   this->setClassType(newTypenum);
   this->behaviourFlags = 0;
   this->scopes = OREF_NULL;
   this->methodDictionary = OREF_NULL;
   this->operatorMethods = operator_methods;
-  this->createClass = OREF_NULL;
+  this->owningClass = OREF_NULL;
   this->instanceMethodDictionary = OREF_NULL;
 }
 
@@ -79,7 +78,7 @@ void RexxBehaviour::live()
   memory_mark(this->methodDictionary);
   memory_mark(this->instanceMethodDictionary);
   memory_mark(this->scopes);
-  memory_mark(this->createClass);
+  memory_mark(this->owningClass);
   cleanUpMemoryMark
 }
 
@@ -108,7 +107,7 @@ void RexxBehaviour::liveGeneral()
   memory_mark_general(this->methodDictionary);
   memory_mark_general(this->instanceMethodDictionary);
   memory_mark_general(this->scopes);
-  memory_mark_general(this->createClass);
+  memory_mark_general(this->owningClass);
   cleanUpMemoryMarkGeneral
 }
 
@@ -122,7 +121,7 @@ void RexxBehaviour::flatten(RexxEnvelope *envelope)
    flatten_reference(newThis->methodDictionary, envelope);
    flatten_reference(newThis->instanceMethodDictionary, envelope);
    flatten_reference(newThis->scopes, envelope);
-   flatten_reference(newThis->createClass, envelope);
+   flatten_reference(newThis->owningClass, envelope);
 
                                        /* Is this a non-primitive behav */
    if (this->isNonPrimitive())
@@ -180,6 +179,30 @@ RexxObject *RexxBehaviour::copy()
                                        /* non-primitive ones                */
   newBehaviour->setNonPrimitive();
   return (RexxObject *)newBehaviour;   /* return the copied behaviour       */
+}
+
+
+void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
+/******************************************************************************/
+/*  Function:  Copy the source behaviour object into this, inheriting all of  */
+/*             the method dictionaries.                                       */
+/******************************************************************************/
+{
+                                       /* have an method dictionary         */
+  if (source->methodDictionary != OREF_NULL)
+                                       /* make a copy of this too           */
+    OrefSet(this, this->methodDictionary, (RexxTable *)source->methodDictionary->copy());
+  if (source->scopes != OREF_NULL)       /* scope information?                */
+                                       /* make a copy of it too             */
+    OrefSet(this, this->scopes, (RexxObjectTable *)source->scopes->copy());
+                                       /* do we have added methods?         */
+  if (source->instanceMethodDictionary != OREF_NULL)
+                                       /* copy those also                   */
+    OrefSet(this, this->instanceMethodDictionary, (RexxTable *)source->instanceMethodDictionary->copy());
+  // this is the same class as the source also
+  OrefSet(this, this->owningClass, source->owningClass);
+                                       /* use default operator methods set  */
+  this->operatorMethods = (PCPPM *)source->operatorMethods;
 }
 
 RexxObject *RexxBehaviour::define(
@@ -356,7 +379,7 @@ void RexxBehaviour::restore(
   this->methodDictionary = saved->getMethodDictionary();
   this->scopes = saved->getScopes();   /* and the scopes that are there     */
                                        /* copy over the associated class    */
-  this->createClass = saved->getCreateClass();
+  this->owningClass = saved->getOwningClass();
 }
 
 RexxClass *RexxBehaviour::restoreClass()
@@ -370,8 +393,8 @@ RexxClass *RexxBehaviour::restoreClass()
   /* primitive objects, not subject to sweeping.  We do a direct */
   /* assignment to avoid creating a reference entry in the old2new */
   /* table. */
-  this->createClass->setInstanceBehaviour(this);
-  return this->createClass;            /* return the associated class       */
+  this->owningClass->setInstanceBehaviour(this);
+  return this->owningClass;            /* return the associated class       */
 }
 
 void *RexxBehaviour::operator new(size_t size,

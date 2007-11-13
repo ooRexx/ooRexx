@@ -136,10 +136,26 @@ RexxObject *RexxClass::makeProxy(RexxEnvelope *envelope)
  *
  * @return A "hashed hash" that can be used by the map collections.
  */
-ULONG RexxClass::hash()
+HashCode RexxClass::hash()
 {
-    // always, always, always return the hash value
-    return HASHVALUE(this);
+    // always, always, always return the hash value, which will be the
+    // hash value of our id string.  This is important, since we need to
+    // have a hash value that will be the same before and after the image save
+    return getHashValue();
+}
+
+
+/**
+ * Get the primitive hash value of this String object.
+ *
+ * @return The calculated string hash for the string.
+ */
+HashCode RexxClass::getHashValue()
+{
+    // always, always, always return the hash value, which will be the
+    // hash value of our id string.  This is important, since we need to
+    // have a hash value that will be the same before and after the image save
+    return id->getHashValue();
 }
 
 
@@ -377,7 +393,7 @@ RexxTable *RexxClass::getBehaviourDictionary()
  *                   creation, so we delay setting this attribute until the
  *                   class is fully constructed.
  */
-void RexxClass::subClassable(const char *class_id, bool restricted)
+void RexxClass::subClassable(bool restricted)
 {
                                        /* get a copy of the class instance   */
                                        /* behaviour mdict before the merge   */
@@ -471,13 +487,11 @@ void RexxClass::subClassable(const char *class_id, bool restricted)
     if (this != TheIntegerClass && this != TheNumberStringClass)
       TheObjectClass->addSubClass(this);
   }
-                                       /* initialize the class id            */
-  OrefSet(this, this->id, new_string(class_id));
                                        /* and point the instance behaviour   */
                                        /* back to this class                 */
-  this->instanceBehaviour->setClass(this);
+  this->instanceBehaviour->setOwningClass(this);
                                        /* and the class behaviour to CLASS   */
-  this->behaviour->setClass(TheClassClass);
+  this->behaviour->setOwningClass(TheClassClass);
                                        /* these are primitive classes       */
   this->classFlags |= PRIMITIVE_CLASS;
 
@@ -636,7 +650,7 @@ RexxSupplier *RexxClass::methods(
   if (this->behaviour->checkScope(class_object))
                                        /*  let the class specified return   */
                                        /*  it's own methods                 */
-    return (RexxSupplier *)send_message1(class_object, OREF_METHODS, TheNilObject);
+    return (RexxSupplier *)class_object->sendMessage(OREF_METHODS, TheNilObject);
                                        /* or just return a null supplier    */
   return (RexxSupplier *)TheNullArray->supplier();
 }
@@ -1052,7 +1066,7 @@ RexxObject *RexxClass::enhanced(
                                        /* change the create_class in the    */
                                        /* instance behaviour to point to the*/
                                        /* original class object             */
-  enhanced_object->behaviour->setClass(this);
+  enhanced_object->behaviour->setOwningClass(this);
                                        /* remember it was enhanced          */
   enhanced_object->behaviour->setEnhanced();
   discard(dummy_subclass);             /* now the dummy is not needed       */
@@ -1108,7 +1122,6 @@ RexxClass  *RexxClass::subclass(
                                        /* get a copy of the metaclass class */
   new_class = (RexxClass *)meta_class->sendMessage(OREF_NEW, class_id);
   save(new_class);
-  new_class->setDefaultHash();
   if (this->isMetaClass()) {           /* if the superclass is a metaclass  */
     new_class->setMetaClass();         /* mark the new class as a meta class*/
                                        /* and if the metaclass lists haven't */
@@ -1153,7 +1166,7 @@ RexxClass  *RexxClass::subclass(
   new_class->createClassBehaviour(new_class->behaviour);
                                        /* set the class behaviour created    */
                                        /* class to the meta class            */
-  new_class->behaviour->setClass(meta_class);
+  new_class->behaviour->setOwningClass(meta_class);
                                        /* create the instance behaviour from */
                                        /* the instance superclass list       */
   new_class->instanceBehaviour->setMethodDictionary(OREF_NULL);
@@ -1161,7 +1174,7 @@ RexxClass  *RexxClass::subclass(
   new_class->createInstanceBehaviour(new_class->instanceBehaviour);
                                        /* set the instance behaviour created */
                                        /* class to the reciever class        */
-  new_class->instanceBehaviour->setClass(new_class);
+  new_class->instanceBehaviour->setOwningClass(new_class);
                                        /* update the receiver class' subclass*/
 
   this->addSubClass(new_class);        /* list to reflect the new class     */
@@ -1262,9 +1275,9 @@ RexxString *RexxClass::defaultNameRexx()
 }
 
 
-
 void  *RexxClass::operator new(size_t size,
-    long size1,                        /* additional size                   */
+    size_t size1,                      /* additional size                   */
+    const char *className,             // The id string of the class
     RexxBehaviour *class_behaviour,    /* new class behaviour               */
     RexxBehaviour *instanceBehaviour)  /* instance behaviour info           */
 /*****************************************************************************/
@@ -1282,14 +1295,16 @@ void  *RexxClass::operator new(size_t size,
                                        /* use the specified size            */
     new_class = (RexxClass *)new_object(size1);
   new_class->clearObject();            /* clear out the state data          */
+                                       // set this value immediately
+  new_class->id = new_string(className);
                                        /* set the class specific behaviour  */
   new_class->setBehaviour(class_behaviour);
                                        /* set the class into the behaviour  */
-  new_class->behaviour->setClass(new_class);
+  new_class->behaviour->setOwningClass(new_class);
                                        /* set the instance behaviour        */
   OrefSet(new_class, new_class->instanceBehaviour, instanceBehaviour);
                                        /* and the class of this behaviour   */
-  new_class->instanceBehaviour->setClass(new_class);
+  new_class->instanceBehaviour->setOwningClass(new_class);
                                        /* tell the mobile support to just   */
   new_class->makeProxiedObject();      /* make a proxy for this class       */
   return (void *)new_class;            /* should be ready                   */
@@ -1313,8 +1328,12 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
   class_id = REQUIRED_STRING(class_id, ARG_ONE);   /* and that it can be a string       */
                                        /* get a copy of this class object   */
   new_class = (RexxClass *)this->clone();
+
+  // NOTE:  we do this before save() is called.  The class object hash value
+  // is based off of the string name, so we need to set this before we
+  // attempt putting this into a hash collection.
+  OrefSet(new_class, new_class->id, class_id);
                                        /* update cloned hashvalue           */
-  new_class->setDefaultHash();
   save(new_class);                     /* better protect this               */
                                        /* make this into an instance of the */
                                        /* meta class                        */
@@ -1324,7 +1343,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
   OrefSet(new_class, new_class->classMethodDictionary, new_table());
                                        /* make this class the superclass     */
   OrefSet(new_class, new_class->classSuperClasses, new_array(this));
-  new_class->behaviour->setClass(this);/* and set the behaviour class       */
+  new_class->behaviour->setOwningClass(this);/* and set the behaviour class       */
                                        /* if this is a primitive class then  */
                                        /* there isn't any metaclass info     */
   if (this->isPrimitiveClass()) {      /* set up yet                        */
@@ -1362,7 +1381,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
                                        /* with OBJECT in it                  */
   OrefSet(new_class, new_class->instanceSuperClasses, new_array(TheObjectClass));
                                        /* and set the behaviour class        */
-  new_class->instanceBehaviour->setClass(TheObjectClass);
+  new_class->instanceBehaviour->setOwningClass(TheObjectClass);
                                        /* and the instance behaviour scopes  */
   new_class->instanceBehaviour->setScopes(new_object_table());
                                        /* set the scoping info               */
@@ -1373,11 +1392,9 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
                                        /* set the new class as it's own      */
                                        /* baseclass                          */
   OrefSet(new_class, new_class->baseClass, new_class);
-                                       /* set the id into the class object   */
-  OrefSet(new_class, new_class->id, class_id);
                                        /* clear the info area except for     */
                                        /* uninit                             */
-  new_class->clearHasUninitDefined();
+  new_class->setInitialFlagState();
   /* if the class object has an UNINIT method defined, make sure we */
   /* add this to the table of classes to be processed. */
   if (new_class->hasUninitDefined()) {
@@ -1389,7 +1406,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
   return new_class;                    /* return the new class              */
 }
 
-void class_create (void)
+void RexxClass::createClass()
 /******************************************************************************/
 /* Function:  Create the initial class object                                 */
 /******************************************************************************/
@@ -1400,6 +1417,11 @@ void class_create (void)
   TheClassClass->setBehaviour(TheClassClassBehaviour);
                                        /* set the instance behaviour         */
   TheClassClass->setInstanceBehaviour(TheClassBehaviour);
+
+  // the initial class needs to have an ID before it can be used for
+  // other purposes.
+  TheClassClass->id = new_string("Class");
+
                                        /* tell the mobile support to just    */
                                        /* make a proxy for this class        */
   TheClassClass->makeProxiedObject();

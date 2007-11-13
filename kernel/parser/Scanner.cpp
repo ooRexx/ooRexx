@@ -509,7 +509,6 @@ RexxString *RexxSource::packLiteral(
       value->putChar(outpointer, byte);/* store this in the output position */
       outpointer++;                    /* step to the next position         */
     }
-    value->generateHash();             /* rebuild the hash value            */
     value = this->commonString(value); /* now force to a common string      */
   }
   else {                               /* convert to binary                 */
@@ -544,7 +543,6 @@ RexxString *RexxSource::packLiteral(
       value->putChar(outpointer, byte);/* store this in the output position */
       outpointer++;                    /* step to the next position         */
     }
-    value->generateHash();             /* rebuild the hash value            */
     value = this->commonString(value); /* now force to a common string      */
   }
  }
@@ -756,7 +754,6 @@ RexxToken *RexxSource::sourceNextToken(
           value->putChar(i, inch);
         }
         value->setUpperOnly();         /* only contains uppercase           */
-        value->generateHash();         /* rebuild the has value             */
                                        /* now force to a common string      */
         value = this->commonString(value);
                                        /* record current position in clause */
@@ -880,7 +877,6 @@ RexxToken *RexxSource::sourceNextToken(
               j++;                     /* step one extra                    */
             value->putChar(i, inch);   /* copy over the literal data        */
           }
-          value->generateHash();       /* rebuild the has value             */
                                        /* now force to a common string      */
           value = this->commonString(value);
         }

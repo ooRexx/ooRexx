@@ -96,7 +96,7 @@ void RexxCompoundElement::flatten(RexxEnvelope *envelope)
 }
 
 
-RexxCompoundElement *RexxMemory::newCompoundElement(
+RexxCompoundElement *RexxCompoundElement::newInstance(
     RexxString *name)                  /* the name of the variable          */
 /****************************************************************************/
 /* Function:  Create a new REXX compound variable object                    */
@@ -106,15 +106,7 @@ RexxCompoundElement *RexxMemory::newCompoundElement(
   RexxCompoundElement *newObj;
 
                                        /* Get new object                    */
-  newObj = (RexxCompoundElement *)new_object(sizeof(RexxCompoundElement));
-                                       /* Give new object its behaviour     */
-  newObj->setBehaviour(TheCompoundElementBehaviour);
-                                       /* set the virtual function table    */
-  newObj->setVirtualFunctions(VFTArray[T_compound_element]);
-  /* Explicitly clear out the variable value, which is not cleared */
-  /* by ClearObject call.  Note that we don't use OREF_SET here, as */
-  /* this field is likely to be garbage. */
-  newObj->variableValue = OREF_NULL;
+  newObj = (RexxCompoundElement *)new_object(sizeof(RexxCompoundElement), T_compound_element);
   newObj->clearObject();               /* clear everything out              */
   newObj->variable_name = name;        /* fill in the name                  */
 

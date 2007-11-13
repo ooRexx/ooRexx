@@ -82,11 +82,19 @@ class RexxVariable : public RexxInternalObject {
   inline void setCreator(RexxActivation *creatorActivation) { this->creator = creatorActivation; }
   inline RexxVariable *getNext() { return (RexxVariable *)variableValue; }
   inline void cache(RexxVariable *next) { reset(OREF_NULL); variableValue = (RexxObject *)next; }
-  inline BOOL isLocal(RexxActivation *act) { return act == creator; }
+  inline bool isLocal(RexxActivation *act) { return act == creator; }
+
+  static RexxVariable *newInstance(RexxString *name);
+
+protected:
 
   RexxString *variable_name;           /* the name of the variable       */
   RexxObject *variableValue;           // the assigned value of the variable.
   RexxActivation *creator;             /* the activation that created this variable */
   RexxObjectTable  *dependents;        /* guard expression dependents       */
 };
+
+
+inline RexxVariable *new_variable(RexxString *n) { return RexxVariable::newInstance(n); }
+
 #endif

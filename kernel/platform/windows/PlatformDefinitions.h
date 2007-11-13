@@ -198,7 +198,7 @@ typedef unsigned __int64 uint64_t;
 /* doesn't apply.                                                             */
 /******************************************************************************/
 
-#define SYSEXCEPTIONBLOCK LONG
+typedef int SYSEXCEPTIONBLOCK;
 
 /******************************************************************************/
 /* REQUIRED:  Define the REXX type for a "thread function" that starts off    */
@@ -411,14 +411,6 @@ LONG line_write_check(const char * , LONG , FILE * );
 #define SYSREXXSAA "REXX.H"
 
 /******************************************************************************/
-/* REQUIRED:  Define the REXX type to hold information for a WIndow Environmen*/
-/* These can be system specifc handles/etc for messageQueuue/Windows/etc      */
-/* or any place holder type if this doesn't apply                             */
-/******************************************************************************/
-typedef PVOID SYSWINDOWINFO;
-
-
-/******************************************************************************/
 /* REQUIRED:  Name of the file used to store the external message repository  */
 /******************************************************************************/
 #define REXXMESSAGEFILE    "winatab.rc"
@@ -515,15 +507,14 @@ int SysCreateThread (
 void SysTermination();              // No initialization / termination yet
 
 #define SysInitialize();               //
-                                       // our exception handling
-#define SysRegisterExceptions(SYSEXCEPTIONBLOCK) HandleException = TRUE;
-#define SysDeregisterExceptions(SYSEXCEPTIONBLOCK) HandleException = FALSE;
-                                       // no signal handling
-#define SysDeregisterSignals(SYSEXCEPTIONBLOCK)
-#define SysRegisterSignals(SYSEXCEPTIONBLOCK)
-                                       // no wps environment, please port!
-#define SysInitializeWindowEnv() NULL  // activi.c has an assignment
-#define SysTerminateWindowEnv(SYSWINDOWINFO)
+extern BOOL HandleException;
+
+                                       // our signal handling
+inline void SysRegisterSignals(SYSEXCEPTIONBLOCK *e) { HandleException = TRUE; }
+inline void SysDeregisterSignals(SYSEXCEPTIONBLOCK *e) { HandleException = FALSE; }
+
+inline void SysRegisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
+inline void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
                                        //Temp workaround for message handling
 #define SysMessageHeader(int) OREF_NULL
 //#define SysSaveProgram(a,b)            // Unable to save a program image

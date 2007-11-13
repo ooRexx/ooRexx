@@ -65,25 +65,17 @@ RexxObject *RexxInteger::##method(RexxObject *operand)\
      return (RexxObject *)this->string()->method(operand);\
  }
 
-ULONG RexxInteger::hash()
-/******************************************************************************/
-/* Function:  retrieve the hash value of an integer object                    */
-/******************************************************************************/
-{
-  RexxString * string;                 /* integer string value              */
 
-  if (!isOfClass(Integer, this))           /*  a nonprimitive object?           */
-                                       /* see if == overridden.             */
-    return this->sendMessage(OREF_STRICT_EQUAL)->requestString()->hash();
-  else {
-    if (this->hashvalue == 0) {        /* no hash generated yet?            */
-      string = this->stringValue();    /* generate the string value         */
-                                       /* get the string's hash value       */
-      this->hashvalue = string->getHashValue();
-    }
-    return HASHVALUE(this);            /* return the string hash            */
-  }
+/**
+ * Get the primitive hash value of this String object.
+ *
+ * @return The calculated string hash for the string.
+ */
+HashCode RexxInteger::getHashValue()
+{
+    return stringValue()->getHashValue();
 }
+
 
 void RexxInteger::live()
 /******************************************************************************/
@@ -1045,7 +1037,7 @@ void *RexxInteger::operator new(size_t size)
   return newObject;                    /* return the new object.            */
 }
 
-void integer_create (void)
+void RexxInteger::createClass()
 /******************************************************************************/
 /* Function:  Create the integer class and set up the integer cache           */
 /******************************************************************************/
@@ -1055,7 +1047,7 @@ void integer_create (void)
                                        /*  and needs to override the NEW    */
                                        /*  method to provide caching        */
                                        /*  support for integers.            */
-  create_udsubClass(Integer, RexxIntegerClass);
+  SUBCLASS_CREATE(Integer, "String", RexxIntegerClass);
                                        /*  initialize our static array of   */
                                        /*  cached integers                  */
   new (TheIntegerClass) RexxIntegerClass();

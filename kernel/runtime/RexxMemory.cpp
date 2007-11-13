@@ -115,8 +115,6 @@ RexxMemory::RexxMemory()
 #else
   this->orphanCheck = FALSE;           /* default value for OREF checking   */
 #endif
-
-  this->setDefaultHash();
                                        /* OR'ed into object headers to      */
                                        /*mark                               */
   this->markWord = 1;
@@ -861,7 +859,7 @@ RexxObject *RexxMemory::newObject(size_t requestLength, size_t type)
 RexxArray  *RexxMemory::newObjects(
                 size_t         size,
                 size_t         count,
-                RexxBehaviour *newBehaviour)
+                size_t         objectType)
 /******************************************************************************/
 /* Arguments:  size of individual objects,                                    */
 /*             number of objects to get                                       */
@@ -950,7 +948,7 @@ RexxArray  *RexxMemory::newObjects(
   /* Otherwise OrefOK (CHECKOREFS) will fail */
 
   // initialize the hash table object
-  largeObject->initializeNewObject(objSize, markWord, VFTArray[newBehaviour->getClassType()], newBehaviour);
+  largeObject->initializeNewObject(objSize, markWord, VFTArray[objectType], RexxBehaviour::getPrimitiveBehaviour(objectType));
 
   for (i=1 ;i < count ; i++ ) {
     /* IH: Loop one time less than before because first object is initialized
@@ -1997,13 +1995,13 @@ void memoryCreate()
 
   /* Make sure memory is cleared!      */
   memoryObject.init(false);
-  class_create();                      /* get the CLASS class created       */
-  integer_create();                    /* moved here from OKINIT, because we*/
+  RexxClass::createClass();            /* get the CLASS class created       */
+  RexxInteger::createClass();          /* moved here from OKINIT, because we*/
                                        /* create string first               */
-  CLASS_CREATE(String, RexxStringClass);
-  CLASS_CREATE(Object, RexxClass);
-  CLASS_CREATE(Table, RexxClass);
-  CLASS_CREATE(Relation, RexxClass);
+  CLASS_CREATE(String, "String", RexxStringClass);
+  CLASS_CREATE(Object, "Object", RexxClass);
+  CLASS_CREATE(Table, "Table", RexxClass);
+  CLASS_CREATE(Relation, "Relation", RexxClass);
 
   TheFunctionsDirectory = new_directory();
   TheGlobalStrings = new_directory();
@@ -2028,7 +2026,7 @@ void memoryCreate()
 
   pMemoryObject->setBehaviour(TheMemoryBehaviour);
 
-  TheNilObject = new (TheObjectClass) RexxObject;
+  TheNilObject = new RexxNilObject;
                                        /* We don't move the NIL object, we  */
                                        /*will use the remote systems NIL    */
                                        /*object.                            */

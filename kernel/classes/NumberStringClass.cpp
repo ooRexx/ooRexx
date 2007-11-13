@@ -162,23 +162,15 @@ RexxNumberString *RexxNumberString::clone()
   return newObj;                       /* return this                       */
 }
 
-ULONG   RexxNumberString::hash()
-/******************************************************************************/
-/* Function:  retrieve the hash value of an integer object                    */
-/******************************************************************************/
-{
-  RexxString * string;                 /* integer string value              */
 
-  if (!isOfClass(NumberString, this))      /*  a nonprimitive object?           */
-                                       /* see if == overridden.             */
-    return this->sendMessage(OREF_STRICT_EQUAL)->requestString()->hash();
-  else {
-    if (this->hashvalue == 0) {        /* no hash generated yet?            */
-      string = this->stringValue();    /* generate the string value         */
-      this->hashvalue = string->hash();/* get the string's hash value       */
-    }
-    return HASHVALUE(this);            /* return the string hash            */
-  }
+/**
+ * Get the primitive hash value of this String object.
+ *
+ * @return The calculated string hash for the string.
+ */
+HashCode RexxNumberString::getHashValue()
+{
+    return stringValue()->getHashValue();
 }
 
 void RexxNumberString::live()
@@ -311,7 +303,6 @@ RexxString *RexxNumberString::stringValue()
                 num = this->number[numindex] + ch_ZERO;
                 StringObj->putChar(charpos++, num);
             }                                  /* Done with Fast Path....           */
-            StringObj->generateHash();         /* done building the string          */
         }
         else
         {                              /* We need to do this the long way   */
@@ -447,7 +438,6 @@ RexxString *RexxNumberString::stringValue()
                     StringObj->putChar(--charpos, ch_ONE);
                 else                             /* or 0. if no carry.                */
                     StringObj->putChar(--charpos, ch_ZERO);
-                StringObj->generateHash();       /* done building the string          */
             }
             /* do we need to add zeros at end?   */
             else if ((size_t)temp >= LenValue)
@@ -499,7 +489,6 @@ RexxString *RexxNumberString::stringValue()
             }
         }                                   /* end of non-fast path conversion.  */
     }                                    /* End of conversion of number       */
-    StringObj->generateHash();           /* force the object to have a hash   */
                                          /* since string is created from      */
                                          /* number string, we can set the     */
     StringObj->setNumberString(this);    /* lookaside right away              */
@@ -1050,8 +1039,6 @@ RexxObject *RexxNumberString::truncInternal(
       strcpy(resultPtr, "0.");         /* copy the leading part             */
                                        /* fill in the trailing zeros        */
       memset(resultPtr + 2, '0', needed_digits);
-                                       /* generate a hash value             */
-      result->generateHash();
       return result;                   /* return the result                 */
     }
   }
@@ -1157,8 +1144,6 @@ RexxObject *RexxNumberString::truncInternal(
         }
       }
     }
-                                       /* go finish off the string          */
-    result->generateHash();
   }
   return result;                       /* return the formatted number       */
 }
@@ -1493,7 +1478,6 @@ RexxString *RexxNumberString::formatInternal(
     resultPtr += mathexp;              /* and step past them                */
                                        /* add on the spaces                 */
   }
-  result->generateHash();              /* go generate the hash              */
   return result;                       /* return the result                 */
 }
 
@@ -1797,7 +1781,7 @@ RexxObject *RexxNumberString::unknown(RexxString *msgname, RexxArray *arguments)
 /*            representation                                                  */
 /******************************************************************************/
 {
-  return send_message((RexxObject *)this->stringValue(), msgname, arguments);
+  return this->stringValue()->sendMessage(msgname, arguments);
 }
 
 
@@ -2694,10 +2678,7 @@ void  *RexxNumberString::operator new(size_t size, size_t length)
 {
   RexxNumberString *newNumber;
 
-  newNumber = (RexxNumberString *)new_object(size + length);
-  newNumber->hashvalue = 0;            /* Undefine the hash value           */
-                                       /* Give new object its behaviour     */
-  newNumber->setBehaviour(TheNumberStringBehaviour);
+  newNumber = (RexxNumberString *)new_object(size + length, T_numberstring);
                                        /* initialize the new object         */
   newNumber->setHasNoReferences();     /* Let GC know no to bother with LIVE*/
   return newNumber;                    /* return the new numberstring       */

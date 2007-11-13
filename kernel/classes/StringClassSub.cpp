@@ -103,8 +103,6 @@ RexxString *RexxString::center(RexxInteger *_length,
       memset(Retval->getWritableData() + LeftPad + Len,
              PadChar,
              RightPad);
-                                       /* done building the string          */
-      Retval->generateHash();
     }
     else {                             /* requested smaller than            */
                                        /* input                             */
@@ -162,8 +160,6 @@ RexxString *RexxString::delstr(RexxInteger *position,
                                        /* copy that over                    */
       memcpy(Current, this->getStringData() + DeletePos + DeleteLen, BackLen);
     }
-                                       /* done building the string          */
-    Retval->generateHash();
   }
   return Retval;                       /* return the new string             */
 }
@@ -262,7 +258,6 @@ RexxString *RexxString::insert(RexxString  *newStrObj,
                                        /* copy the leading part             */
     memcpy(Current, this->getStringData() + FCharLen, BCharLen);
   }
-  Retval->generateHash();              /* done building the string          */
   return Retval;                       /* Return the new string             */
 }
 
@@ -304,8 +299,6 @@ RexxString *RexxString::left(RexxInteger *_length,
     if (Size > Length)                 /* need to pad?                      */
                                        /* pad the string                    */
       memset(Current, PadChar, Size - Length);
-                                       /* done building the string          */
-    Retval->generateHash();
   }
   return Retval;                       /* return string piece               */
 }
@@ -397,7 +390,6 @@ RexxString *RexxString::overlay(
                                        /* copy the string                   */
     memcpy(Current, this->getStringData() + OverlayPos + OverlayLen - 1, BackLen);
   }
-  Retval->generateHash();              /* done building the string          */
   return Retval;                       /* return new string                 */
 }
 
@@ -425,7 +417,6 @@ RexxString *RexxString::reverse()
     while (Length--)                   /* reverse entire string           */
       *String++ = *End--;              /* copy a single char              */
                                        /* done building the string          */
-    Retval->generateHash();
   }
   else                                 /* if null input                     */
     Retval = OREF_NULLSTRING;          /* return null output                */
@@ -472,8 +463,6 @@ RexxString *RexxString::right(RexxInteger *_length,
     if (CopyLength)                    /* have real data?                   */
                                        /* copy it                           */
       memcpy(Current, this->getStringData() + Length - CopyLength, CopyLength);
-                                       /* done building the string          */
-    Retval->generateHash();
   }
   return Retval;                       /* return string piece               */
 }
@@ -632,8 +621,6 @@ RexxString *RexxString::substr(RexxInteger *position,
     if (PadCount)                      /* padding needed?                   */
                                        /* add the pad characters            */
       memset(Retval->getWritableData() + SubstrLength, PadChar, PadCount);
-                                       /* done building the string          */
-    Retval->generateHash();
   }
   return Retval;                       /* return extracted string           */
 }

@@ -47,6 +47,7 @@
 #include "RexxVariable.hpp"
 #include "RexxCompoundTail.hpp"
 #include "StemClass.hpp"
+#include "RexxHashTable.hpp"
 
 #define DEFAULT_OBJECT_DICTIONARY_SIZE 7
 
@@ -111,21 +112,29 @@ class RexxVariableDictionary : public RexxInternalObject {
     }
 
   inline RexxArray *getAllVariables() { return contents->allItems(); }
+  inline void remove(RexxString *n) { contents->remove(n); }
 
   RexxVariable *nextVariable(RexxNativeActivation *);
   void         set(RexxString *, RexxObject *);
   void         reserve(RexxActivity *);
   void         release(RexxActivity *);
-  BOOL         transfer(RexxActivity *);
+  bool         transfer(RexxActivity *);
 
   RexxCompoundElement *getCompoundVariable(RexxString *stemName, RexxObject **tail, LONG tailCount);
   RexxObject  *getCompoundVariableValue(RexxString *stemName, RexxObject **tail, LONG        tailCount);
 
   RexxObject  *realStemValue(RexxString *stemName);
 
-  inline BOOL isScope(RexxObject *otherScope) { return this->scope == otherScope; }
+  inline bool isScope(RexxObject *otherScope) { return this->scope == otherScope; }
   inline RexxVariableDictionary *getNextDictionary() { return next; }
+  inline RexxActivity *getReservingActivity() { return reservingActivity; }
+
   void setNextDictionary(RexxVariableDictionary *next);
+
+  static RexxVariableDictionary *newInstance(size_t);
+  static RexxVariableDictionary *newInstance(RexxObject *);
+
+protected:
 
   RexxActivity  *reservingActivity;    /* current reserving activity        */
   RexxHashTable *contents;             /* vdict hashtable                   */
@@ -135,4 +144,8 @@ class RexxVariableDictionary : public RexxInternalObject {
   RexxVariableDictionary *next;        /* chained object dictionary         */
   RexxObject *scope;                   /* scopy of this object dictionary   */
 };
+
+
+inline RexxVariableDictionary *new_variableDictionary(size_t s) { return RexxVariableDictionary::newInstance(s); }
+inline RexxVariableDictionary *new_objectVariableDictionary(RexxObject *s) { return RexxVariableDictionary::newInstance(s); }
 #endif

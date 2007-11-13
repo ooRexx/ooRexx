@@ -200,16 +200,6 @@ RexxString *SysMessageHeader (int);    /* get the header for an error msg   */
 RexxBuffer *SysReadProgram (const char *); /* read a program into storage       */
 #endif
 
-#ifndef SysInitializeWindowEnv
-                                       /* Initialize a window environemnt   */
-SYSWINDOWINFO * SysInitializeWindowEnv(void);
-#endif
-
-#ifndef SysTerminateWindowEnv
-                                       /* Termiante  a window environemnt   */
-void SysTerminateWindowEnv(SYSWINDOWINFO *);
-#endif
-
 #ifndef SysGetCurrentQueue
 RexxString *SysGetCurrentQueue(void);  /* Get the current queue name        */
 #endif

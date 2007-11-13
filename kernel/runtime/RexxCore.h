@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxCore.h      */
+/* REXX Kernel                                                RexxCore.h      */
 /*                                                                            */
 /* Global Declarations                                                        */
 /******************************************************************************/
@@ -160,32 +160,16 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 #endif
 
 /******************************************************************************/
-/* Internal Message Send Functions                                            */
-/******************************************************************************/
-#define send_message(r,m,a) ((r)->sendMessage((RexxString *)(m), (RexxArray *)(a)))
-#define send_message0(r,m) ((r)->sendMessage((RexxString *)(m)))
-#define send_message1(r,m,a1) ((r)->sendMessage((RexxString *)(m), (RexxObject *)(a1)))
-#define send_message2(r,m,a1,a2) ((r)->sendMessage((RexxString *)(m), (RexxObject *)(a1), (RexxObject *)(a2)))
-#define send_message3(r,m,a1,a2,a3) ((r)->sendMessage((RexxString *)(m), (RexxObject *)(a1), (RexxObject *)(a2), (RexxObject *)(a3)))
-#define send_message4(r,m,a1,a2,a3,a4) ((r)->sendMessage((RexxString *)(m), (RexxObject *)(a1), (RexxObject *)(a2), (RexxObject *)(a3), (RexxObject *)(a4)))
-#define send_message5(r,m,a1,a2,a3,a4,a5) ((r)->sendMessage((RexxString *)(m), (RexxObject *)(a1), (RexxObject *)(a2), (RexxObject *)(a3), (RexxObject *)(a4), (RexxObject *)(a5)))
-
-/******************************************************************************/
 /* Object creation macros                                                     */
 /******************************************************************************/
 
 #define kernel_public(name, object, dir)  ((RexxDirectory *)dir)->setEntry(kernel_name(name), (RexxObject *)object)
-#define create_udclass(c)                 The##c##Class = new (sizeof(RexxClass), The##c##ClassBehaviour, The##c##Behaviour) RexxClass
-#define create_udsubClass(c,t)            The##c##Class = new (sizeof(t), The##c##ClassBehaviour, The##c##Behaviour) t
 #define new_activity(l)                   (TheActivityClass->newActivity(MEDIUM_PRIORITY, l))
 #define new_behaviour(t)                  (new (t) RexxBehaviour)
 #define new_buffer(s)                     (new (s) RexxBuffer)
 #define new_clause()                      (new RexxClause)
 #define new_counter(v)                    (new RexxInteger (v))
-#define new_directory()                   (memoryObject.newDirectory())
 #define new_envelope()                    (new RexxEnvelope)
-#define new_hashtab(s)                    (memoryObject.newHashTable(s))
-#define new_hashCollection(s, s2)         (memoryObject.newHashCollection(s, s2))
 #define new_list()                        (new RexxList)
 #define new_queue()                       (new RexxQueue)
 #define new_integer(v)                    (TheIntegerClass->newCache(v))
@@ -193,27 +177,13 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 #define new_method(i,e,a,c)               (new RexxMethod (i, e, a, c))
 #define new_CPPmethod(p,s,c)              (new RexxMethod (p, s, c))
 #define new_nmethod(p,l)                  (TheNativeCodeClass->newClass(p, l))
-#define new_arrayofObject(s,c,b)          (memoryObject.newObjects(s, c, b))
 #define new_pointer(p)                    (TheIntegerClass->newCache((LONG)p))
 #define new_smartbuffer()                 (new RexxSmartBuffer(1024))
 #define new_sizedSmartBuffer(size)        (new RexxSmartBuffer(size))
 #define new_stack(s)                      (new(s) RexxStack (s))
 #define new_savestack(s,a)                (new(a) RexxSaveStack (s, a))
-#define new_internalstack(s)              (memoryObject.newInternalStack(s))
-#define new_activationFrameBuffer(s)      (memoryObject.newActivationFrameBuffer(s))
-#define new_variableDictionary(s)         (memoryObject.newVariableDictionary(s))
-#define new_objectVariableDictionary(s)   (memoryObject.newVariableDictionary(s))
-#define new_stemDictionary(s)             (memoryObject.newStemDictionary(s))
-#define new_variable(n)                   (memoryObject.newVariable(n))
-#define new_compoundElement(s)            (memoryObject.newCompoundElement(s))
 #define new_instance()                    (TheObjectClass->newObject())
-#define new_table()                       (memoryObject.newTable())
-#define new_object_table()                (memoryObject.newObjectTable(DEFAULT_HASH_SIZE))
-#define new_scope_table()                 (memoryObject.newObjectTable(DEFAULT_SCOPE_SIZE))
-#define new_relation()                    (memoryObject.newRelation())
 #define new_supplier(c,f)                 (new RexxSupplier (c,f))
-#define new_token(c,s,v,l)                (new RexxToken (c, s, v, l))
-#define new_arrayOfTokens(n)              (memoryObject.newObjects(sizeof(RexxToken), n, TheTokenBehaviour))
 
 #define MCPP   0                       /* C++ method start index            */
 #define MSSCPP 0                       /* C++ class method start index      */
@@ -279,7 +249,8 @@ typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
                                        /* declare a class creation routine  */
                                        /* for classes with their own        */
                                        /* explicit class objects            */
-#define CLASS_CREATE(name, className) The##name##Class = (className *)new (0, The##name##ClassBehaviour, The##name##Behaviour) RexxClass;
+#define CLASS_CREATE(name, id, className) The##name##Class = (className *)new (0, id, The##name##ClassBehaviour, The##name##Behaviour) RexxClass;
+#define SUBCLASS_CREATE(c, id, t)         The##c##Class = new (sizeof(t), id, The##c##ClassBehaviour, The##c##Behaviour) t;
                                        /* restore a class from its          */
                                        /* associated primitive behaviour    */
                                        /* (already restored by memory_init) */
@@ -420,13 +391,16 @@ EXTERN RexxInteger * IntegerMinusOne INITGLOBALPTR;  /* Static integer -1       
 #define T_mutablebuffer              T_memory                     + 1
 #define T_mutablebuffer_class        T_mutablebuffer              + 1
 
+// nil object is a one-off.  It doesn't have a special class object
+
                                        /* define to the top point for       */
                                        /* classes of objects that are       */
                                        /* exposed as REXX objects           */
 
 #define highest_exposed_T            T_mutablebuffer_class
 
-#define T_intstack                   highest_exposed_T            + 1
+#define T_nil_object                 highest_exposed_T            + 1
+#define T_intstack                   T_nil_object                 + 1
 #define T_activation                 T_intstack                   + 1
 #define T_activity                   T_activation                 + 1
 #define T_activity_class             T_activity                   + 1

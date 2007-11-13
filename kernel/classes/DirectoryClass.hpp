@@ -88,5 +88,11 @@ class RexxDirectory : public RexxHashTableCollection {
 
   RexxTable  *method_table;            /* table of added methods            */
   RexxMethod *unknown_method;          /* unknown method entry              */
+
+  static RexxDirectory *newInstance();
 };
+
+
+inline RexxDirectory *new_directory() { return RexxDirectory::newInstance(); }
+
 #endif

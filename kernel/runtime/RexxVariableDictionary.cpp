@@ -339,7 +339,7 @@ void RexxVariableDictionary::release(
 }
 
 
-BOOL RexxVariableDictionary::transfer(
+bool RexxVariableDictionary::transfer(
   RexxActivity *activity)              /* new reserving activity            */
 /******************************************************************************/
 /* Function:  Transfer a vdict lock to another activity                       */
@@ -409,16 +409,12 @@ void RexxVariableDictionary::flatten(RexxEnvelope *envelope)
 }
 
 
-RexxVariableDictionary *RexxMemory::newVariableDictionary(
+RexxVariableDictionary *RexxVariableDictionary::newInstance(
      size_t looksize)                  /* expected size of the vdict        */
 /******************************************************************************/
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxVariableDictionary *newObj;      /* newly created object              */
-  size_t hashTabSize;                  /* size of hash table to allocate    */
-
-  hashTabSize = looksize * 2;          /* create entries for twice size     */
                                        /* Get new object                    */
                                        /* NOTE:  there is one extra         */
                                        /* lookaside element allocated,      */
@@ -428,16 +424,11 @@ RexxVariableDictionary *RexxMemory::newVariableDictionary(
                                        /* some special optimization of the  */
                                        /* look ups                          */
                                        /* get a new object and hash         */
-  newObj = (RexxVariableDictionary *)new_hashCollection(hashTabSize, sizeof(RexxVariableDictionary));
-                                       /* Give new object its behaviour     */
-  newObj->setBehaviour(TheVariableDictionaryBehaviour);
-                                       /* set the virtual function table    */
-  newObj->setVirtualFunctions(VFTArray[T_vdict]);
-  return newObj;                       /* return the new vdict              */
+  return (RexxVariableDictionary *)new_hashCollection(looksize * 2, sizeof(RexxVariableDictionary), T_vdict);
 }
 
 
-RexxVariableDictionary *RexxMemory::newVariableDictionary(
+RexxVariableDictionary *RexxVariableDictionary::newInstance(
      RexxObject *scope)                /* expected size of the vdict        */
 /******************************************************************************/
 /* Function:  Create a new translator object                                  */
@@ -457,11 +448,7 @@ RexxVariableDictionary *RexxMemory::newVariableDictionary(
                                        /* some special optimization of the  */
                                        /* look ups                          */
                                        /* get a new object and hash         */
-  newObj = (RexxVariableDictionary *)new_hashCollection(hashTabSize, sizeof(RexxVariableDictionary));
+  newObj = (RexxVariableDictionary *)new_hashCollection(hashTabSize, sizeof(RexxVariableDictionary), T_vdict);
   newObj->scope = scope;               /* fill in the scope */
-                                       /* Give new object its behaviour     */
-  newObj->setBehaviour(TheVariableDictionaryBehaviour);
-                                       /* set the virtual function table    */
-  newObj->setVirtualFunctions(VFTArray[T_vdict]);
   return newObj;                       /* return the new vdict              */
 }

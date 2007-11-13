@@ -152,7 +152,7 @@ class RexxMemory : public RexxObject {
   inline RexxObject *newObject(size_t size) { return newObject(size, T_object); }
   RexxObject *newObject(size_t size, size_t type);
   RexxObject *temporaryObject(size_t size);
-  RexxArray  *newObjects(size_t size, size_t count, RexxBehaviour *behaviour);
+  RexxArray  *newObjects(size_t size, size_t count, size_t objectType);
   void        reSize(RexxObject *, size_t);
   void        checkUninit(RexxTable *);
   void        checkSubClasses(RexxObjectTable *);
@@ -224,20 +224,6 @@ class RexxMemory : public RexxObject {
                                        /* but we do it here for speed...    */
     memset(saveStack->stack, 0, sizeof(RexxObject*) * saveStack->size);
   }
-/* Start of methods to build some specific REXX objects */
-  RexxTable       *newHashCollection(size_t, size_t);
-  RexxHashTable   *newHashTable(size_t);
-  RexxTable       *newTable();
-  RexxObjectTable *newObjectTable(size_t size);
-  RexxDirectory   *newDirectory();
-  RexxRelation    *newRelation();
-  RexxVariableDictionary *newVariableDictionary(size_t s);
-  RexxVariableDictionary *newVariableDictionary(RexxObject *scope);
-  RexxCompoundElement *newCompoundElement(RexxString *name);
-  RexxVariable    *newVariable(RexxString *name);
-
-  RexxInternalStack *newInternalStack(size_t);
-  RexxActivationFrameBuffer *newActivationFrameBuffer(size_t);
 
   void        checkAllocs();
   RexxObject *dumpImageStats();
@@ -331,6 +317,8 @@ inline void discard_hold(RexxInternalObject *o) { memoryObject.discardHoldObject
 
 inline RexxObject *new_object(size_t s) { return memoryObject.newObject(s); }
 inline RexxObject *new_object(size_t s, size_t t) { return memoryObject.newObject(s, t); }
+
+inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memoryObject.newObjects(s, c, t); }
 
 #define setUpMemoryMark                \
  {                                     \

@@ -213,20 +213,13 @@ RexxObject *RexxRelation::newRexx(
   return newObj;                       /* return the new object             */
 }
 
-RexxRelation *RexxMemory::newRelation()
+RexxRelation *RexxRelation::newInstance()
 /******************************************************************************/
 /* Function:  Create a new relation item                                      */
 /******************************************************************************/
 {
-  RexxRelation *newObj;
-
                                        /* Get new object                    */
                                        /* get a new object and hash         */
-  newObj = (RexxRelation *)new_hashCollection(DEFAULT_HASH_SIZE, sizeof(RexxRelation));
-                                       /* Give new object its behaviour     */
-  newObj->setBehaviour(TheRelationBehaviour);
-                                       /* set the virtual function table    */
-  newObj->setVirtualFunctions(VFTArray[T_relation]);
-  return newObj;                       /* return the new object             */
+  return (RexxRelation *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxRelation), T_relation);
 }
 

@@ -92,7 +92,7 @@ void RexxInternalStack::flatten(RexxEnvelope * envelope)
   cleanUpFlatten
 }
 
-RexxInternalStack *RexxMemory::newInternalStack(
+RexxInternalStack *RexxInternalStack::newInstance(
     size_t stackSize)                 /* stack size                        */
 /******************************************************************************/
 /* Function:  Create a new expression stack                                   */
@@ -101,11 +101,7 @@ RexxInternalStack *RexxMemory::newInternalStack(
   RexxInternalStack* newObj;          /* newly create stack                */
 
                                        /* Get new object                    */
-  newObj = (RexxInternalStack *)new_object(sizeof(RexxInternalStack) + (stackSize * sizeof(RexxObject *)));
-                                       /* Give new object its behaviour     */
-  newObj->setBehaviour(TheInternalStackBehaviour);
-                                       /* set the virtual function table    */
-  newObj->setVirtualFunctions(VFTArray[T_intstack]);
+  newObj = (RexxInternalStack *)new_object(sizeof(RexxInternalStack) + (stackSize * sizeof(RexxObject *)), T_intstack);
   newObj->size = stackSize;            /* set the size                      */
   newObj->top  = newObj->stack;        /* set the top element               */
                                        /* set marker for "end of object" to */

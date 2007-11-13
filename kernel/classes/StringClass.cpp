@@ -56,17 +56,67 @@ extern ACTIVATION_SETTINGS *current_settings;
 
 #include "RexxBuiltinFunctions.h"                          /* Gneral purpose BIF Header file       */
 
-ULONG RexxString::hash()
+HashCode RexxString::hash()
 /******************************************************************************/
 /* Function:  retrieve the hash value of a string object                      */
 /******************************************************************************/
 {
-  if (!isOfClass(String, this))            /*  a nonprimitive object?           */
+  if (!isString(this))            /*  a nonprimitive object?           */
                                        /* see if == overridden.             */
-    return this->sendMessage(OREF_STRICT_EQUAL)->requestString()->getHashValue();
+    return this->sendMessage(OREF_STRICT_EQUAL)->requestString()->getStringHash();
   else
-    return HASHVALUE(this);            /* return the string hash            */
+  {
+      return this->getHashValue();       /* return the string hash            */
+  }
 }
+
+
+/**
+ * Get the primitive hash value of this String object.
+ *
+ * @return The calculated string hash for the string.
+ */
+HashCode RexxString::getHashValue()
+{
+    // this will calculate the hash if it hasn't been done yet
+    return getStringHash();
+}
+
+
+/**
+ * Convert a string returned from an object HashCode() method into
+ * a binary hashcode suitable for the hash collections.
+ *
+ * @return A binary hash code from a string value.
+ */
+HashCode RexxString::getObjectHashCode()
+{
+    HashCode h;
+
+    // ok, we need to pick this string apart and turn this into a numeric code
+    // a null string is simple.
+    if (getLength() == 0)
+    {
+        h = 1;
+    }
+
+    // if we have at least 4 characters, use them as binary, since that's
+    // what is normally returned here.
+    else if (getLength() >= sizeof(HashCode))
+    {
+        h = *((HashCode *)getStringData());
+    }
+
+    else
+    {
+        // either 1 or 2 characters.  Just pick up a short value, which will
+        // also pick up terminating null if only a single character
+        h = *((short *)getStringData());
+    }
+    return h;
+}
+
+
 
 void RexxString::live()
 /******************************************************************************/
@@ -315,9 +365,6 @@ BOOL RexxString::isEqual(
 
   other = REQUEST_STRING(otherObj);    /* force into string form            */
   otherLen = other->getLength();            /* get length of second string.      */
-                                       /* do quick compare on the hash      */
-  if (this->hashvalue != other->hashvalue)
-    return FALSE;                      /* can't be equal                    */
   if (otherLen != this->getLength())        /* lengths different?                */
     return FALSE;                      /* also unequal                      */
                                        /* now compare the actual string     */
@@ -342,9 +389,6 @@ BOOL RexxString::primitiveIsEqual(
 
   other = REQUEST_STRING(otherObj);    /* force into string form            */
   otherLen = other->getLength();            /* get length of second string.      */
-                                       /* do quick compare on the hash      */
-  if (this->hashvalue != other->hashvalue)
-    return FALSE;                      /* can't be equal                    */
   if (otherLen != this->getLength())        /* lengths different?                */
     return FALSE;                      /* also unequal                      */
                                        /* now compare the actual string     */
@@ -888,7 +932,6 @@ RexxString *RexxString::concat(RexxString *other)
                                        /* copy the front part               */
   memcpy(data, this->getStringData(), len1);
   memcpy(data + len1, other->getStringData(), len2);
-  result->generateHash();              /* done building the string          */
   return result;                       /* return the result                 */
 
 }
@@ -929,7 +972,6 @@ RexxString *RexxString::concatRexx(RexxObject *otherObj)
   if (len2 != 0)                       /* have a second length              */
                                        /* and the second part               */
     memcpy(data, other->getStringData(), len2);
-  result->generateHash();              /* done building the string          */
   return result;                       /* return the result                 */
 }
 
@@ -950,7 +992,6 @@ RexxString *RexxString::concatToCstring(const char *other)
   memcpy(result->getWritableData(), other, len2);
                                        /* and the second part               */
   memcpy(result->getWritableData() + len2, this->getStringData(), len1);
-  result->generateHash();              /* done building the string          */
   return result;
 }
 
@@ -971,7 +1012,6 @@ RexxString *RexxString::concatWithCstring(const char *other)
   memcpy(result->getWritableData(), this->getStringData(), len1);
                                        /* copy the ASCII-Z string           */
   memcpy(result->getWritableData() + len1, other, len2);
-  result->generateHash();              /* done building the string          */
   return result;
 }
 
@@ -1018,7 +1058,6 @@ RexxString *RexxString::concatBlank(RexxObject *otherObj)
   if (len2 != 0)                       /* have a second string?             */
                                        /* and the second part               */
     memcpy(data, other->getStringData(), len2);
-  result->generateHash();              /* rebuild the hash value            */
   return result;
 }
 
@@ -1092,7 +1131,6 @@ RexxString *RexxString::upper()
       data++;                          /* step the position                 */
       outdata++;                       /* and the output position           */
     }
-    newstring->generateHash();         /* rebuild the hash value            */
     newstring->setUpperOnly();         /* flag the string as uppercased     */
     return newstring;                  /* return the new string             */
   }
@@ -1140,7 +1178,6 @@ RexxString *RexxString::stringTrace()
         *outptr = '?';                 /* yes, change to question           */
       outptr++;                        /* step the pointer                  */
   }
-  newCopy->generateHash();             /* rebuild the hash value            */
   return newCopy;                      /* return the converted string       */
 }
 
@@ -1178,7 +1215,6 @@ RexxString *RexxString::lower()
       data++;                          /* step the position                 */
       outdata++;                       /* and the output position           */
     }
-    newstring->generateHash();         /* rebuild the hash value            */
   }
   else
     newstring = this;                  /* return untranslated string        */
@@ -1275,7 +1311,6 @@ RexxString *RexxString::lower(size_t offset, size_t _length)
         *data = tolower(*data);
         data++;
     }
-    newstring->generateHash();              /* done building the string          */
     return newstring;
 }
 
@@ -1304,7 +1339,6 @@ RexxString *RexxString::upper(size_t offset, size_t _length)
         *data = toupper(*data);
         data++;
     }
-    newstring->generateHash();              /* done building the string          */
     return newstring;
 }
 
@@ -1373,7 +1407,6 @@ RexxString *RexxString::concatWith(RexxString *other,
   if (len2 != 0)                       /* have a second string?             */
                                        /* and the second part               */
     memcpy(data, other->getStringData(), len2);
-  result->generateHash();              /* rebuild the hash value            */
   return result;
 }
 
@@ -1614,12 +1647,12 @@ RexxString *RexxString::newString(const char *string, size_t length)
                                        /* clear the front part              */
   newObj->clearObject(sizeof(RexxString));
   newObj->setLength(length);           /* save the length                   */
+  newObj->hashValue = 0;               // make sure the hash value is zeroed
                                        /* Null terminate, allows faster     */
                                        /* conversion to ASCII-Z string      */
   newObj->putChar(length, '\0');
                                        /* copy it over                      */
   newObj->put(0, string, length);
-  newObj->generateHash();              /* generate the hash value           */
                                        /* by  default, we don't need Live   */
   newObj->setHasNoReferences();        /*sent                               */
                                        /* NOTE: That if we can set          */
@@ -1650,6 +1683,7 @@ RexxString *RexxString::rawString(size_t length)
                                        /* clear the front part              */
   newObj->clearObject(sizeof(RexxString));
   newObj->setLength(length);           /* save the length                   */
+  newObj->hashValue = 0;               // make sure the hash value is zeroed
                                        /* Null terminate, allows faster     */
                                        /* conversion to ASCII-Z string      */
   newObj->putChar(length, '\0');
@@ -1692,7 +1726,7 @@ RexxString *RexxString::newUpperString(const char * string, stringsize_t length)
     /* clear the front part              */
     newObj->clearObject(sizeof(RexxString));
     newObj->length = length;             /* save the length                   */
-    newObj->hashvalue = 0;               // make sure the hash value is zeroed
+    newObj->hashValue = 0;               // make sure the hash value is zeroed
                                          /* create a new string               */
                                          /* point to output data              */
     char *outdata = newObj->getWritableData();
@@ -1709,7 +1743,6 @@ RexxString *RexxString::newUpperString(const char * string, stringsize_t length)
                                          /* Null terminate, allows faster     */
                                          /* conversion to ASCII-Z string      */
     newObj->putChar(length, '\0');
-    newObj->generateHash();              /* generate the hash value           */
     /* by  default, we don't need Live   */
     newObj->setHasNoReferences();        /*sent                               */
                                          /* NOTE: That if we can set          */

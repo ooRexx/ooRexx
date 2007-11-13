@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  IntegerClass.hpp     */
+/* REXX Kernel                                           IntegerClass.hpp     */
 /*                                                                            */
 /* Primitive Integer Class Definitions                                        */
 /*                                                                            */
@@ -52,13 +52,13 @@ void integer_create (void);
 class RexxInteger : public RexxObject {
  public:
   inline RexxInteger(RESTORETYPE restoreType) { ; };
-  inline RexxInteger(long intValue) { this->value = intValue; this->hashvalue = 0; };
+  inline RexxInteger(long intValue) { this->value = intValue; };
   inline void *operator new(size_t size, void *ptr) {return ptr;};
   void *operator new(size_t);
   void live();
   void liveGeneral();
   void flatten(RexxEnvelope*);
-  ULONG        hash();
+  virtual HashCode getHashValue();
 
   long         longValue(size_t);
   RexxNumberString *numberString();
@@ -142,12 +142,14 @@ class RexxInteger : public RexxObject {
   inline int  decrementValue() {return --this->value;}
   inline RexxString *getStringrep() {return this->stringrep;}
 
+  static void createClass();
+
 protected:
 
-  RexxString *stringrep;               /* integer string representation     */
-  int  value;                          /* actual integer value              */
+    RexxString *stringrep;              /* integer string representation     */
+    int  value;                         /* actual integer value              */
 
-  static int validMaxWhole[];          // table of maximum values per digits setting
+    static int validMaxWhole[];         // table of maximum values per digits setting
 };
 
 class RexxIntegerClass : public RexxClass {
@@ -155,7 +157,7 @@ class RexxIntegerClass : public RexxClass {
   RexxIntegerClass(RESTORETYPE restoreType) { ; };
   void *operator new(size_t size, void *ptr) {return ptr;};
   void *operator new (size_t);
-  void *operator new(size_t size, long size1, RexxBehaviour *classBehave, RexxBehaviour *instance) { return new (size, classBehave, instance) RexxClass; }
+  void *operator new(size_t size, size_t size1, const char *className, RexxBehaviour *classBehave, RexxBehaviour *instance) { return new (size, className, classBehave, instance) RexxClass; }
   RexxIntegerClass();
   RexxInteger *newCache(int value) {if (value >= INTEGERCACHELOW && value < INTEGERCACHESIZE)
                                        return this->integercache[value - INTEGERCACHELOW];

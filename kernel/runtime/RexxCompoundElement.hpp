@@ -48,6 +48,8 @@
 #include "StringClass.hpp"
 
 class RexxCompoundElement : public RexxVariable {
+ friend class RexxCompoundTable;        // allow the compound table to access innards.
+
  public:
   inline RexxCompoundElement(RESTORETYPE restoreType) { ; };
   inline void       *operator new(size_t size, void *ptr) { return ptr; };
@@ -64,6 +66,10 @@ class RexxCompoundElement : public RexxVariable {
   inline RexxString *createCompoundName(RexxString *stemName) { return stemName->concat(getName()); }
   inline void setValue(RexxObject *value) { set(value); }
 
+  static RexxCompoundElement *newInstance(RexxString *name);
+
+protected:
+
   RexxCompoundElement *left;             /* the left child */
   RexxCompoundElement *right;            /* the right child */
   RexxCompoundElement *parent;           /* the parent entry to this node */
@@ -71,4 +77,8 @@ class RexxCompoundElement : public RexxVariable {
   unsigned short rightdepth;              /* depth on the right side */
   RexxCompoundElement *real_element;      /* a potential expose indirection */
 };
+
+
+inline RexxCompoundElement *new_compoundElement(RexxString *s) { return RexxCompoundElement::newInstance(s); }
+
 #endif

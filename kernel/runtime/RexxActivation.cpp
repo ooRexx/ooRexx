@@ -2388,7 +2388,6 @@ void RexxActivation::traceValue(       /* trace an intermediate value       */
                                        /* copy the string value             */
   buffer->put(TRACE_OVERHEAD - 1 + this->settings.traceindent * INDENT_SPACING, stringvalue->getStringData(), stringvalue->getLength());
   buffer->putChar(outlength - 1, '\"');/* add the trailing quotation mark   */
-  buffer->generateHash();              /* done building the string          */
                                        /* write out the line                */
   this->activity->traceOutput(this, buffer);
   discard(buffer);
@@ -2487,8 +2486,6 @@ void RexxActivation::traceTaggedValue(int prefix, const char *tagPrefix, bool qu
     // and finally, the trailing quote
     buffer->putChar(dataOffset, '\"');
     dataOffset++;
-
-    buffer->generateHash();              /* done building the string          */
                                        /* write out the line                */
     this->activity->traceOutput(this, buffer);
     discard(buffer);
@@ -2571,8 +2568,6 @@ void RexxActivation::traceOperatorValue(int prefix, const char *tag, RexxObject 
     // and finally, the trailing quote
     buffer->putChar(dataOffset, '\"');
     dataOffset++;
-
-    buffer->generateHash();              /* done building the string          */
                                        /* write out the line                */
     this->activity->traceOutput(this, buffer);
     discard(buffer);
@@ -2659,8 +2654,6 @@ void RexxActivation::traceCompoundValue(int prefix, RexxString *stemName, RexxOb
     // and finally, the trailing quote
     buffer->putChar(dataOffset, '\"');
     dataOffset++;
-
-    buffer->generateHash();              /* done building the string          */
                                        /* write out the line                */
     this->activity->traceOutput(this, buffer);
     discard(buffer);
@@ -2695,7 +2688,6 @@ void RexxActivation::traceSourceString()
                                        /* copy the string value             */
   buffer->put(INSTRUCTION_OVERHEAD + 1, string->getStringData(), string->getLength());
   buffer->putChar(outlength - 1, '\"');/* add the trailing quotation mark   */
-  buffer->generateHash();              /* done building the string          */
                                        /* write out the line                */
   this->activity->traceOutput(this, buffer);
 }
@@ -3250,7 +3242,7 @@ RexxObject  *RexxActivation::novalueHandler(
   novalue_handler = CurrentActivity->local->fastAt(OREF_NOVALUE);
   if (novalue_handler != OREF_NULL)    /* have a novalue handler?           */
                                        /* ask it to process this            */
-    return send_message1(novalue_handler, OREF_NOVALUE, name);
+    return novalue_handler->sendMessage(OREF_NOVALUE, name);
   return TheNilObject;                 /* return the handled result         */
 }
 

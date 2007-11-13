@@ -353,9 +353,9 @@ RexxSupplier *RexxObject::instanceMethodsRexx(RexxClass *class_object)
 RexxObject *RexxObject::hashCode()
 {
     // get the hash value directly, then turn it into a binary string value
-    unsigned long h = HASHVALUE(this);
+    HashCode h = getHashValue();
                                          /* create a string value             */
-    return (RexxObject *)new_string((char *)&h, sizeof(long));
+    return (RexxObject *)new_string((char *)&h, sizeof(HashCode));
 }
 
 
@@ -366,43 +366,19 @@ RexxObject *RexxObject::hashCode()
  *
  * @return A "hashed hash" that can be used by the map collections.
  */
-ULONG RexxObject::hash()
+HashCode RexxObject::hash()
 {
-    // if this is a primitive object, we can just return the stored hash code.
+    // if this is a primitive object, we can just return the primitive hash code.
     if (this->isBaseClass())
     {
-        return HASHVALUE(this);
+        return getHashValue();
     }
     else
     {
-        ULONG h;
-
         // we have some other type of object, so we need to request a hash code
         // by sending the HASHCODE() message.
-        RexxString *hashString = this->sendMessage(OREF_HASHCODE)->stringValue();
-
-        // ok, we need to pick this string apart and turn this into a numeric code
-        // a null string is simple.
-        if (hashString->getLength() == 0)
-        {
-            h = 1;
-        }
-
-        // if we have at least 4 characters, use them as binary, since that's
-        // what is normally returned here.
-        else if (hashString->getLength() >= sizeof(LONG))
-        {
-            h = *((PULONG)hashString->getStringData());
-        }
-
-        else
-        {
-            // either 1 or 2 characters.  Just pick up a short value, which will
-            // also pick up terminating null if only a single character
-            h = *((short *)hashString->getStringData());
-        }
-        return h;
-  }
+        return this->sendMessage(OREF_HASHCODE)->stringValue()->getObjectHashCode();
+    }
 }
 
 
@@ -1367,7 +1343,7 @@ RexxString  *RexxObject::defaultName()
 
                                        /* use the class id as the default   */
                                        /* name                              */
-  defaultname = this->behaviour->getCreateClass()->getId();
+  defaultname = this->behaviour->getOwningClass()->getId();
                                        /* check if it is from an enhanced   */
   if (this->behaviour->isEnhanced()) { /* class                             */
                                        /* return the 'enhanced' id          */
@@ -1411,7 +1387,7 @@ RexxClass   *RexxObject::classObject()
 /******************************************************************************/
 {
                                        /* just return class from behaviour  */
-  return this->behaviour->getCreateClass();
+  return this->behaviour->getOwningClass();
 }
 
 RexxObject  *RexxObject::setMethod(
@@ -1749,7 +1725,7 @@ RexxObject  *RexxObject::defMethod(
                                        /* got an option? */
     if (option) {
       if (!stricmp("OBJECT",option->getStringData()))
-        targetClass = this->behaviour->getCreateClass();
+        targetClass = this->behaviour->getOwningClass();
       else
         reportException(Error_Incorrect_call_list, CHAR_SETMETHOD, IntegerThree, "\"FLOAT\", \"OBJECT\"", option);
     }
@@ -1909,7 +1885,7 @@ RexxString *RexxObject::id(void)
   RexxClass *createClass;              /* class associated with the object  */
 
                                        /* get the class                     */
-  createClass = this->behaviourObject()->getCreateClass();
+  createClass = this->behaviourObject()->getOwningClass();
   if (createClass == OREF_NULL)        /* no class object?                  */
     return OREF_NULL;                  /* return nothing                    */
   else
@@ -2193,6 +2169,40 @@ void RexxInternalObject::printObject()
 {
     printf("Object at %p, of type %d\n", this, this->getObjectTypeNumber());
 }
+
+/**
+ * Create the NIL object instance.
+ */
+RexxNilObject::RexxNilObject()
+{
+    // use the initial identify hash and save this.
+    hashValue = identityHash();
+}
+
+/**
+ * Override of the default hash value method.
+ */
+HashCode RexxNilObject::getHashValue()
+{
+    return hashValue;
+}
+
+
+/**
+ * new operator for creating a RexxNilObject
+ */
+void *RexxNilObject::operator new(size_t size)
+{
+    // At this point, this will be an instance of object.  After we've removed
+    // some of the methods during setup but before the image save, we'll update the
+    // behaviour type information so that it will restore with the correct virtual
+    // function table pointer.
+    RexxObject *newObj = new_object(size, T_object);
+    // we need to switch the virtual method table pointer new.
+    newObj->setVirtualFunctions(VFTArray[T_nil_object]);
+    return newObj;
+}
+
 
 #include "RexxNativeAPI.h"
 

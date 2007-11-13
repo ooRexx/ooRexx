@@ -770,17 +770,17 @@ RexxObject *RexxArray::sectionSubclass(
 
   if (_start > this->size())           /* too big?                          */
                                        /* return a zero element one         */
-    newArray = (RexxArray *)this->behaviour->getCreateClass()->sendMessage(OREF_NEW, IntegerZero);
+    newArray = (RexxArray *)this->behaviour->getOwningClass()->sendMessage(OREF_NEW, IntegerZero);
   else {
     if (_end > this->size() - _start + 1)
                                        /* go past the bounds?               */
       _end = this->size() - _start + 1;/* truncate to the end               */
     if (_end == 0)                     /* requesting zero?                  */
                                        /* return a zero element one         */
-      newArray = (RexxArray *)this->behaviour->getCreateClass()->sendMessage(OREF_NEW, IntegerZero);
+      newArray = (RexxArray *)this->behaviour->getOwningClass()->sendMessage(OREF_NEW, IntegerZero);
     else {                             /* real sectioning to do             */
                                        /* create a new array                */
-      newArray = (RexxArray *)this->behaviour->getCreateClass()->sendMessage(OREF_NEW, new_integer(_end));
+      newArray = (RexxArray *)this->behaviour->getOwningClass()->sendMessage(OREF_NEW, new_integer(_end));
       save(newArray);                  /* protect the new one               */
       for (i = 1; i <= _end; i++) {     /* loop through the elements         */
                                        /* copy an element                   */
@@ -1803,7 +1803,7 @@ void *   RexxArray::operator new(size_t size, RexxObject **args, size_t argCount
                                        /*  create an empty array.           */
     temp = new ((size_t)0, arrayClass) RexxArray;
     save(temp);                        /* protect new object from GC        */
-    send_message0(temp, OREF_INIT);    /* call any rexx init's              */
+    temp->sendMessage(OREF_INIT);      /* call any rexx init's              */
     discard(temp);                     /* protect new object from GC        */
     return temp;
   }
@@ -1831,7 +1831,7 @@ void *   RexxArray::operator new(size_t size, RexxObject **args, size_t argCount
                                        /* can't change Dimensions.          */
       OrefSet(temp, temp->dimensions, new_array(IntegerZero));
     }
-    send_message0(temp, OREF_INIT);    /* call any rexx init's              */
+    temp->sendMessage(OREF_INIT);      /* call any rexx init's              */
     discard(temp);                     /* protect new object from GC        */
     return temp;                       /* Return the new array.             */
   }
@@ -1864,7 +1864,7 @@ void *   RexxArray::operator new(size_t size, RexxObject **args, size_t argCount
                                        /* put dimension array in new arr    */
   OrefSet(temp, temp->dimensions, dim_array);
   save(temp);                          /* protect new object from GC        */
-  send_message0(temp, OREF_INIT);      /* call any rexx init's              */
+  temp->sendMessage(OREF_INIT);        /* call any rexx init's              */
   discard(temp);
   return temp;
 }
@@ -2440,15 +2440,17 @@ RexxObject  *RexxArray::of(RexxObject **args, size_t argCount)
   if (TheArrayClass != (RexxClass *)this) {
                                        /* nope, better create properly      */
                                        /* send new to actual class.         */
-    newArray = (RexxArray *)send_message1(this, OREF_NEW, new_integer(argCount));
+    newArray = (RexxArray *)this->sendMessage(OREF_NEW, new_integer(argCount));
+    save(newArray);
                                        /* For each argument to of, send a   */
                                        /* put message                       */
     for (i = 0; i < argCount; i++) {
        item = args[i];                 /* get the item                      */
        if (item != OREF_NULL)          /* have a real item here?            */
                                        /* place it in the target array      */
-         send_message2(newArray, OREF_PUT, item, new_integer(i+1));
+         newArray->sendMessage(OREF_PUT, item, new_integer(i+1));
     }
+    discard_hold(newArray);
     return newArray;
   }
   else {

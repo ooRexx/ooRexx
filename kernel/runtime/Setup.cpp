@@ -567,11 +567,12 @@ void kernelInit (void)
   kernelBuildVirtualFunctionTableArray();
   memoryCreate();                      /* create initial memory stuff       */
                                        /* RexxNumberString                  */
-  CLASS_CREATE(NumberString, RexxNumberStringClass);
-  CLASS_CREATE(Array, RexxClass);      /* RexxArray                         */
+  // NOTE:  The number string class lies about its identity
+  CLASS_CREATE(NumberString, "String", RexxNumberStringClass);
+  CLASS_CREATE(Array, "Array", RexxClass);  /* RexxArray                         */
   TheNullArray = new_array((size_t)0); /* set up a null array               */
 
-  CLASS_CREATE(Directory, RexxClass);  /* RexxDirectory                     */
+  CLASS_CREATE(Directory, "Directory", RexxClass);  /* RexxDirectory                     */
   TheEnvironment = new_directory();    /* create the environment directory  */
                                        /* setup OREF_ENV as the mark start  */
                                        /* point                             */
@@ -591,16 +592,16 @@ void kernelInit (void)
 
   createStrings();                     /* create all of the OREF_ strings   */
                                        /* RexxMethod                        */
-  CLASS_CREATE(Method, RexxMethodClass);
-  nmethod_create();                    /* RexxNativeCode                    */
-  CLASS_CREATE(Queue, RexxClass);      /* RexxQueue                         */
+  CLASS_CREATE(Method, "Method", RexxMethodClass);
+  RexxNativeCode::createClass();       /* RexxNativeCode                    */
+  CLASS_CREATE(Queue, "Queue", RexxClass);      /* RexxQueue                         */
   TheNullPointer = new_pointer(NULL);  /* a NULL pointer object             */
-  CLASS_CREATE(List, RexxListClass);   /* RexxList                          */
-  CLASS_CREATE(Stem, RexxClass);       /* RexxStem                          */
-  activity_create();                   /* RexxActivity                      */
-  CLASS_CREATE(Supplier, RexxClass);   /* RexxSupplier                      */
-  CLASS_CREATE(Message, RexxClass);    /* RexxMessage                       */
-  CLASS_CREATE(MutableBuffer, RexxClass);
+  CLASS_CREATE(List, "List", RexxListClass);   /* RexxList                          */
+  CLASS_CREATE(Stem, "Stem", RexxClass);       /* RexxStem                          */
+  RexxActivity::createClass();         /* RexxActivity                      */
+  CLASS_CREATE(Supplier, "Supplier", RexxClass);   /* RexxSupplier                      */
+  CLASS_CREATE(Message, "Message", RexxClass);    /* RexxMessage                       */
+  CLASS_CREATE(MutableBuffer, "MutableBuffer", RexxClass);
 
                                        /* build the common retriever tables */
   TheCommonRetrievers = (RexxDirectory *)new_directory();
@@ -805,8 +806,8 @@ bool kernel_setup (void)
   TheObjectBehaviour->setMethodDictionaryScope(TheObjectClass);
                                        /* Now call the class subclassable   */
                                        /* method for OBJECT then CLASS      */
-  TheObjectClass->subClassable("Object", true);
-  TheClassClass->subClassable("Class", true);
+  TheObjectClass->subClassable(true);
+  TheClassClass->subClassable(true);
 
   /************************************** The rest of the classes can now be */
   /************************************** set up.                            */
@@ -857,7 +858,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheArrayClass->subClassable("Array", false);
+  TheArrayClass->subClassable(false);
 
   /***************************************************************************/
   /*           DIRECTORY                                                     */
@@ -899,7 +900,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheDirectoryClass->subClassable("Directory", false);
+  TheDirectoryClass->subClassable(false);
 
 
   /***************************************************************************/
@@ -946,7 +947,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheListClass->subClassable("List", false);
+  TheListClass->subClassable(false);
 
   /***************************************************************************/
   /*           MESSAGE                                                       */
@@ -980,7 +981,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheMessageClass->subClassable("Message", true);
+  TheMessageClass->subClassable(true);
 
   /***************************************************************************/
   /*           METHOD                                                        */
@@ -1011,7 +1012,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheMethodClass->subClassable("Method", true);
+  TheMethodClass->subClassable(true);
 
   /***************************************************************************/
   /*           QUEUE                                                         */
@@ -1062,7 +1063,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheQueueClass->subClassable("Queue", false);
+  TheQueueClass->subClassable(false);
 
   /***************************************************************************/
   /*           RELATION                                                      */
@@ -1103,7 +1104,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheRelationClass->subClassable("Relation", false);
+  TheRelationClass->subClassable(false);
 
   /***************************************************************************/
   /*           STEM                                                          */
@@ -1153,7 +1154,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheStemClass->subClassable("Stem", false);
+  TheStemClass->subClassable(false);
 
   /***************************************************************************/
   /*           STRING                                                        */
@@ -1275,7 +1276,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheStringClass->subClassable("String", false);
+  TheStringClass->subClassable(false);
 
 
   /***************************************************************************/
@@ -1313,7 +1314,7 @@ bool kernel_setup (void)
   TheMutableBufferBehaviour->setMethodDictionaryScope(TheMutableBufferClass);
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheMutableBufferClass->subClassable("MutableBuffer", true);
+  TheMutableBufferClass->subClassable(true);
 
   /***************************************************************************/
   /*             INTEGER                                                     */
@@ -1378,7 +1379,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheIntegerClass->subClassable("String", true);
+  TheIntegerClass->subClassable(true);
 
   /***************************************************************************/
   /*             NUMBERSTRING                                                */
@@ -1443,7 +1444,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheNumberStringClass->subClassable("String", true);
+  TheNumberStringClass->subClassable(true);
 
 
   /***************************************************************************/
@@ -1472,7 +1473,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheSupplierClass->subClassable("Supplier", false);
+  TheSupplierClass->subClassable(false);
 
   /***************************************************************************/
   /*           TABLE                                                         */
@@ -1511,7 +1512,7 @@ bool kernel_setup (void)
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheTableClass->subClassable("Table", false);
+  TheTableClass->subClassable(false);
 
   /***************************************************************************/
   /***************************************************************************/
@@ -1598,6 +1599,7 @@ bool kernel_setup (void)
                                        /* create a method object out of this*/
   meth = TheMethodClass->newFile(programName);
 
+
   RexxObject *args = kernel_methods;   // temporary to avoid type-punning warnings
                                        /* now call BaseClasses to finish the image*/
   ((RexxObject *)CurrentActivity)->shriekRun(meth, OREF_NULL, OREF_NULL, (RexxObject **)&args, 1);
@@ -1607,6 +1609,11 @@ bool kernel_setup (void)
   TheNilObject->defMethod(kernel_name(CHAR_COPY), (RexxMethod *)TheNilObject);
   TheNilObject->defMethod(kernel_name(CHAR_START), (RexxMethod *)TheNilObject);
   TheNilObject->defMethod(kernel_name(CHAR_OBJECTNAMEEQUALS), (RexxMethod *)TheNilObject);
+
+  // ok, .NIL has been constructed.  As a last step before saving the image, we need to change
+  // the type identifier in the so that this will get the correct virtual function table
+  // restored when the image reloads.
+  TheNilObject->behaviour->setClassType(T_nil_object);
 
   RexxClass *ordered = (RexxClass *)TheEnvironment->get(kernel_name(CHAR_ORDEREDCOLLECTION));
 

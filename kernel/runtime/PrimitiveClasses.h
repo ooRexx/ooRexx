@@ -99,6 +99,8 @@ CLASS_EXTERNAL(memory, RexxObject)
 CLASS_EXTERNAL(mutablebuffer, RexxMutableBuffer) // warning: order important!!!
 CLASS_EXTERNAL(mutablebuffer_class, RexxClass)   // RexxMutableBufferClass
 
+CLASS_EXTERNAL(nil_object, RexxNilObject)
+
 /* start of internal only classes */
 CLASS_INTERNAL(intstack, RexxInternalStack)
 

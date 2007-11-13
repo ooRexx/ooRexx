@@ -314,7 +314,6 @@ RexxString * SysSourceString(
   *outPtr++ = ' ';                     /* put a blank between               */
                                        /* copy the system name              */
   memcpy(outPtr, programName->getStringData(), programName->getLength());
-  source_string->generateHash();       /* now create the hash value         */
   return source_string;                /* return the source string          */
 }
 

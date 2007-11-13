@@ -296,7 +296,7 @@ RexxObject *RexxList::sectionSubclass(
   RexxList *newList;                   /* returned array                    */
 
                                        /* create a new list                 */
-  newList = (RexxList *)this->behaviour->getCreateClass()->sendMessage(OREF_NEW);
+  newList = (RexxList *)this->behaviour->getOwningClass()->sendMessage(OREF_NEW);
   save(newList);                       /* protect this                      */
                                        /* while still more to go and not at */
                                        /* the end of the list               */
@@ -695,9 +695,9 @@ RexxArray *RexxList::requestArray()
 /******************************************************************************/
 {
   if (isOfClass(List, this))               /* primitive level object?           */
-    return this->makeArray();          /* just do the makearray             */
-  else                                 /* need to so full request mechanism */
-    return (RexxArray *)send_message1(this, OREF_REQUEST, OREF_ARRAYSYM);
+    return this->makeArray();              /* just do the makearray             */
+  else                                     /* need to so full request mechanism */
+    return (RexxArray *)this->sendMessage( OREF_REQUEST, OREF_ARRAYSYM);
 }
 
 
@@ -1021,7 +1021,7 @@ RexxList *RexxListClass::classOf(
   else {
     size = argCount;                   /* get the array size                */
                                        /* get a new list                    */
-    newList = (RexxList *)send_message0(this, OREF_NEW);
+    newList = (RexxList *)this->sendMessage(OREF_NEW);
     save(newList);                     /* protect from garbage collection   */
     for (i = 0; i < size; i++) {       /* step through the array            */
       item = args[i];                  /* get the next item                 */
@@ -1031,7 +1031,7 @@ RexxList *RexxListClass::classOf(
         reportException(Error_Incorrect_method_noarg, i + 1);
       }
                                        /* add this to the list end          */
-      send_message1(newList, OREF_INSERT, item);
+      newList->sendMessage(OREF_INSERT, item);
     }
   }
   discard_hold(newList);               /* release the collection lock       */

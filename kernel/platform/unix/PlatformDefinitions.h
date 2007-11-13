@@ -285,7 +285,7 @@ extern int SecureFlag;
 /* doesn't apply.                                                             */
 /******************************************************************************/
 
-#define SYSEXCEPTIONBLOCK LONG
+typedef int SYSEXCEPTIONBLOCK;
 
 /******************************************************************************/
 /* REQUIRED:  Define the REXX type for a "thread function" that starts off    */
@@ -461,14 +461,6 @@ void SysStartTimeSlice( void );
 #define SYSREXXSAA "rexx.h"
 
 /******************************************************************************/
-/* REQUIRED:  Define the REXX type to hold information for a WIndow Environmen*/
-/* These can be system specifc handles/etc for messageQueuue/Windows/etc      */
-/* or any place holder type if this doesn't apply                             */
-/******************************************************************************/
-
-typedef PVOID SYSWINDOWINFO;
-
-/******************************************************************************/
 /* Priority values used for adjusting thead priorities                        */
 /******************************************************************************/
 
@@ -584,8 +576,6 @@ typedef char *(far *REXXENTRY PNMF)(void **);
 //#define SysCreateThread(PTHREADFN, int, PVOID) LinThreadCreate(PTHREADFN, int, PVOID)
 #define SysInitialAddressName() OREF_INITIALADDRESS
 
-#define SysRegisterExceptions(SYSEXCEPTIONBLOCK)
-#define SysDeregisterExceptions(SYSEXCEPTIONBLOCK)
 #define SysGetTempFileName()  tmpnam(NULL)
 /******************************************************************************/
 /* REQUIRED:  Define the macro for pointer subtraction                        */

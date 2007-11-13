@@ -293,19 +293,19 @@ RexxDirectory *RexxNativeCodeClass::load(
   return LibraryInfo;                  /* return the library information    */
 }
 
-void nmethod_create (void)
+void RexxNativeCode::createClass()
 /******************************************************************************/
 /* Function:  Create the nmethod class during save image processing           */
 /******************************************************************************/
 {
                                        /* create the class object           */
-  create_udsubClass(NativeCode, RexxNativeCodeClass);
+  SUBCLASS_CREATE(NativeCode, "NativeCode", RexxNativeCodeClass);
   TheNativeCodeClass->init();          /* and do class-specific init        */
                                        /* hook up the class and behaviour   */
-  TheNativeCodeBehaviour->setClass(TheNativeCodeClass);
+  TheNativeCodeBehaviour->setOwningClass(TheNativeCodeClass);
 }
 
-void nmethod_restore (void)
+void RexxNativeCode::restoreClass()
 /******************************************************************************/
 /* Function:  Restore the nmethod class during start up                       */
 /******************************************************************************/

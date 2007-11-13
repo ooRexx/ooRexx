@@ -124,7 +124,7 @@ RexxArray  *RexxTable::requestArray()
   if (isOfClass(Table, this))              /* primitive level object?           */
     return this->makeArray();          /* just do the makearray             */
   else                                 /* need to so full request mechanism */
-    return (RexxArray *)send_message1(this, OREF_REQUEST, OREF_ARRAYSYM);
+    return (RexxArray *)this->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
 }
 
 RexxObject *RexxTable::itemsRexx(void)
@@ -143,7 +143,7 @@ void RexxTable::reset()
 /* Function:  Reset a table by clearing out the old contents table            */
 /******************************************************************************/
 {
-  OrefSet(this, this->contents, (RexxHashTable *)new_hashtab(DEFAULT_HASH_SIZE));
+  OrefSet(this, this->contents, new_hashtab(RexxHashTable::DEFAULT_HASH_SIZE));
 }
 
 RexxObject *RexxTable::putNodupe(RexxObject *_value, RexxObject *_index)
@@ -189,37 +189,21 @@ RexxObject *RexxTable::newRexx(
   return newObj;                       /* return the new object             */
 }
 
-RexxTable *RexxMemory::newTable()
+RexxTable *RexxTable::newInstance()
 /******************************************************************************/
 /* Function:  Create an instance of a table                                   */
 /******************************************************************************/
 {
-  RexxTable *newObj;                   /* new object created                */
-
-                                       /* get a new object                  */
-  newObj = (RexxTable *)new_hashCollection(DEFAULT_HASH_SIZE, sizeof(RexxTable));
-                                       /* set the new behaviour             */
-  newObj->setBehaviour(TheTableBehaviour);
-                                       /* set the virtual function table    */
-  newObj->setVirtualFunctions(VFTArray[T_table]);
-  return newObj;                       /* return the new table              */
+  return (RexxTable *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxTable), T_table);
 }
 
-RexxObjectTable *RexxMemory::newObjectTable(size_t size)
+RexxObjectTable *RexxObjectTable::newInstance(size_t size)
 /******************************************************************************/
 /* Function:  Create an instance of an object table                           */
 /******************************************************************************/
 {
-  RexxObjectTable *newObj;             /* new object created                */
-
                                        /* get a new object                  */
-  newObj = (RexxObjectTable *)new_hashCollection(size, sizeof(RexxObjectTable));
-                                       /* set the new behaviour             */
-  newObj->setBehaviour(TheTableBehaviour);
-                                       /* set the virtual function table    */
-  newObj->setVirtualFunctions(VFTArray[T_table]);
-                                       /* create the initial hash table     */
-  return newObj;                       /* return the new table              */
+  return (RexxObjectTable *)new_hashCollection(size, sizeof(RexxObjectTable), T_table);
 }
 
 RexxObject *RexxObjectTable::put(

@@ -44,9 +44,6 @@
 #ifndef Included_RexxNativeCode
 #define Included_RexxNativeCode
 
-void nmethod_create(void);
-void nmethod_restore(void);
-
 class RexxNativeCode : public RexxInternalObject {
   public:
    inline RexxNativeCode(RESTORETYPE restoreType) { ; };
@@ -61,7 +58,10 @@ class RexxNativeCode : public RexxInternalObject {
 
    inline PFN         getEntry() { return this->entry; };
    inline void        setEntry(PFN v) { this->entry = v; };
+   static void        createClass();
+   static void        restoreClass();
 
+protected:
    RexxString *library;               // the library name
    RexxString *procedure;             /* External Procedur name            */
    PFN         entry;                 /* method entry point.               */
@@ -74,7 +74,7 @@ class RexxNativeCodeClass : public RexxClass {
    RexxNativeCodeClass();
 
    void       *operator new(size_t size, void *ptr) { return ptr; };
-   void       *operator new(size_t size, long size1, RexxBehaviour *classBehave, RexxBehaviour *instance) { return new (size, classBehave, instance) RexxClass; }
+   void       *operator new(size_t size, size_t size1, const char *className, RexxBehaviour *classBehave, RexxBehaviour *instance) { return new (size, className, classBehave, instance) RexxClass; }
    RexxNativeCode *newClass(RexxString *, RexxString *);
 
    void        restore();
@@ -84,6 +84,8 @@ class RexxNativeCodeClass : public RexxClass {
    RexxDirectory  * load(RexxString *);
    RexxNativeCode * newInternal(LONG);
    inline RexxDirectory  * getLibraries() { return this->libraries; };
+
+protected:
 
    RexxDirectory *libraries;           /* directory of loaded libraries     */
 };

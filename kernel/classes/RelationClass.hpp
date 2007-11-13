@@ -64,5 +64,9 @@ class RexxRelation : public RexxTable {
 
    RexxObject   *newRexx(RexxObject **, size_t);
 
+   static RexxRelation *newInstance();
 };
+
+inline RexxRelation *new_relation() { return RexxRelation::newInstance(); }
+
 #endif

@@ -200,8 +200,8 @@ void kernelRestore(void)
   IntegerNine   = new_integer(9L);
   IntegerMinusOne = new_integer(-1);
   restoreStrings();                    /* restore the global strings        */
-  nmethod_restore();                   /* fix up native methods             */
-  activity_restore();                  /* do activity restores              */
+  RexxNativeCode::restoreClass();      /* fix up native methods             */
+  RexxActivity::restoreClass();        /* do activity restores              */
   memoryObject.enableOrefChecks();     /* enable setCheckOrefs...           */
 }
 

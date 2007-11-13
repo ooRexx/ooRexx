@@ -308,7 +308,6 @@ RexxString *RexxCompoundTail::createCompoundName(RexxString *stem)
   if (length != 0)                     /* have a second length              */
                                        /* and the second part               */
     memcpy(data, tail, length);
-  result->generateHash();              /* done building the string          */
   return result;                       /* return the result                 */
 
 }

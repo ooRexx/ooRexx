@@ -113,7 +113,6 @@ RexxString *RexxString::bitAnd(RexxString *string2,
     *Target = *Target & PadChar;
     Target++;                          /* step the target                   */
   }
-  Retval->generateHash();
   return Retval;                       /* return result string              */
 }
 
@@ -179,7 +178,6 @@ RexxString *RexxString::bitOr(RexxString *string2,
     *Target = *Target | PadChar;
     Target++;                          /* step the target                   */
   }
-  Retval->generateHash();
   return Retval;                       /* return result string              */
 }
 
@@ -245,7 +243,6 @@ RexxString *RexxString::bitXor(RexxString *string2,
     *Target = *Target ^ PadChar;
     Target++;                          /* step the target                   */
   }
-  Retval->generateHash();
   return Retval;                       /* return result string              */
 }
 

@@ -80,7 +80,30 @@ class RexxStringClass : public RexxClass {
    void        flatten(RexxEnvelope *envelope);
    RexxObject *unflatten(RexxEnvelope *);
 
-   ULONG       hash();
+   virtual HashCode hash();
+   virtual HashCode getHashValue();
+
+   inline HashCode getStringHash()
+   {
+       if (hashValue == 0)                // if we've never generated this, the code is zero
+       {
+           stringsize_t len = this->getLength();
+
+           HashCode h = 0;
+           // the hash code is generated from all of the string characters.
+           // we do this in a lazy fashion, since most string objects never need to
+           // calculate a hash code, particularly the long ones.
+           // This hashing algorithm is very similar to that used for Java strings.
+           for (stringsize_t i = 0; i < len; i++)
+           {
+               h = 31 * h + this->stringData[i];
+           }
+           this->hashValue = h;
+       }
+       return hashValue;
+   }
+   HashCode getObjectHashCode();
+
    long        longValue(size_t);
    RexxNumberString *numberString();
    double      doubleValue();
@@ -267,25 +290,6 @@ class RexxStringClass : public RexxClass {
    inline bool  memCompare(const char * s, size_t l) { return l == this->length && memcmp(s, this->stringData, l) == 0; }
    inline bool  memCompare(RexxString *other) { return other->length == this->length && memcmp(other->stringData, this->stringData, length) == 0; }
    inline void  memCopy(char * s) { memcpy(s, stringData, length); }
-   inline void  generateHash() {
-                                       /* the following logic is duplicated */
-                                       /* in the operator new function.  Any*/
-                                       /* changes to the hashing must be    */
-                                       /* reflected in both locations       */
-     if (this->length == 0)            /* nullstring?                       */
-       this->hashvalue = 1;            /* use 1 for the hash value          */
-                                       /* got a long string?                */
-     else if (this->length >= sizeof(this->hashvalue))
-                                       /* just pick up the first 4 bytes and*/
-                                       /* add in the length                 */
-       this->hashvalue = *((PLONG)this->stringData) + this->length + this->stringData[this->length-1];
-     else
-                                       /* just pick up the first 2 bytes and*/
-                                       /* add in the length (this may pick  */
-                                       /* up the trailing NULL if only one  */
-                                       /* character long                    */
-       this->hashvalue = *((short *)this->stringData) + this->length + this->stringData[this->length-1];
-   }
 
    RexxNumberString *createNumberString();
 
@@ -412,9 +416,10 @@ class RexxStringClass : public RexxClass {
 
  protected:
 
+   HashCode hashValue;                 // stored has value
    size_t length;                      /* string length                   */
    RexxNumberString *NumberString;     /* lookaside information           */
-   ULONG Attributes;                   /* string attributes               */
+   size_t Attributes;                  /* string attributes               */
    char stringData[4];                 /* Start of the string data part   */
  };
 

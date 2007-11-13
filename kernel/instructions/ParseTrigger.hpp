@@ -65,10 +65,11 @@ class RexxTrigger : public RexxInternalObject {
   void        live();
   void        liveGeneral();
   void        flatten(RexxEnvelope *);
-  inline long        getType()     { return this->hashvalue; } ;
-  inline void        setType(int v) { this->hashvalue = (long) v; } ;
+  inline int         getType()     { return this->triggerType; }
+  inline void        setType(int v) { this->triggerType = v; }
 
-  LONG        variableCount;           /* type of trigger                   */
+  int         triggerType;             // type if trigger
+  size_t      variableCount;           /* count of variables                */
   RexxObject *value;                   /* value associated with trigger     */
   RexxVariableBase *variables[1];      /* list of variables to assign       */
 };

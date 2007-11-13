@@ -594,8 +594,6 @@ RexxString *RexxString::copies(RexxInteger *_copies)
         Temp += Len;
       }
     }
-                                       /* done building the string          */
-    Retval->generateHash();
   }
   return Retval;                       /* return copied string              */
 }
@@ -927,7 +925,6 @@ RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, Rex
   if (_start < this->getLength())      /* some remainder left?              */
                                        /* add it on                         */
     memcpy(copyPtr, source + _start, this->getLength() - _start);
-  result->generateHash();              /* now finishe off this string       */
   return result;                       /* finished                          */
 }
 
@@ -988,7 +985,6 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
   if (_start < this->getLength())            /* some remainder left?              */
                                        /* add it on                         */
     memcpy(copyPtr, source + _start, this->getLength() - _start);
-  result->generateHash();              /* now finishe off this string       */
   return result;                       /* finished                          */
 }
 
@@ -1185,7 +1181,6 @@ RexxString *RexxString::translate(
    }
    ScanPtr++;                          /* step the pointer                  */
  }
- Retval->generateHash();               /* generate the new hash value       */
  return Retval;                        /* return translated string          */
 }
 

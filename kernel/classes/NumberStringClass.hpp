@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  NumberStringClass.hpp  */
+/* REXX Kernel                                         NumberStringClass.hpp  */
 /*                                                                            */
 /* Primitive NumberString Class Definitions                                   */
 /*                                                                            */
@@ -105,7 +105,7 @@ int number_create_integer(const char *, size_t, int, int);
     inline void  *operator new(size_t size, void *ptr) {return ptr;};
     RexxNumberString(size_t) ;
     inline RexxNumberString(RESTORETYPE restoreType) { ; };
-    ULONG       hash();
+    virtual HashCode getHashValue();
     void        live();
     void        liveGeneral();
     void        flatten(RexxEnvelope *);

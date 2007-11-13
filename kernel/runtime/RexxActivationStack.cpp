@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                         RexxActivationStack.c    */
+/* REXX Kernel                                       RexxActivationStack.c    */
 /*                                                                            */
 /* Primitive Activation Frame Stack support classes                           */
 /*                                                                            */
@@ -133,25 +133,23 @@ void RexxActivationStack::expandCapacity(size_t entries)
     entries = max(entries, DefaultFrameBufferSize);
     /* do we have an unused one we're holding ready that has enough */
     /* room? */
-    if (unused != OREF_NULL && unused->size >= entries) {
+    if (unused != OREF_NULL && unused->hasCapacity(entries)) {
         /* just activate this one for use */
         next = unused;
         unused = OREF_NULL;
-        /* set the top element before reusing this */
-        next->next = 0;
     }
     else {
         /* create a new frame buffer */
         next = new_activationFrameBuffer(entries);
     }
     /* chain the existing buffer off of the new one */
-    next->previous = current;
+    next->push(current);
     /* set this up as the new current stack */
     current = next;
 }
 
 
-RexxActivationFrameBuffer *RexxMemory::newActivationFrameBuffer(
+RexxActivationFrameBuffer *RexxActivationFrameBuffer::newInstance(
     size_t entries)                   /* space for entries in the fame     */
 /******************************************************************************/
 /* Function:  Create a new expression stack                                   */

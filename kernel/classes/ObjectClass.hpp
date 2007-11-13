@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ObjectClass.hpp  */
+/* REXX Kernel                                               ObjectClass.hpp  */
 /*                                                                            */
 /* Primitive Object Class Definitions                                         */
 /*                                                                            */
@@ -46,9 +46,6 @@
 #define Included_RexxObject
 
 #include <stddef.h>
-
-/* default size of the scope table...these are normally very small */
-#define DEFAULT_SCOPE_SIZE  6
 
 #define getAttributeIndex 0            /* location of getAttribute method   */
 #define setAttributeIndex 1            /* location of setAttribute method   */
@@ -68,6 +65,7 @@
       OldSpaceBit      =  0x0010,    // location of the OldSpace bit
   };
 
+typedef size_t HashCode;            // a hash code value
 
                                        /* used ofor special constructor   */
 typedef enum {RESTOREIMAGE, MOBILEUNFLATTEN, METHODUNFLATTEN} RESTORETYPE;
@@ -190,7 +188,6 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
      inline void   clearObject() { memset(getObjectDataSpace(), '\0', getObjectDataSize()); }
      inline void   clearObject(size_t l) { memset(getObjectDataSpace(), '\0', l - getObjectHeaderSize()); }
      inline void   setVirtualFunctions(void *t) { *((void **)this) = t; }
-     inline void   setDefaultHash() { hashvalue = identityHash(); }
 
      inline void   setInitHeader(size_t s, uint16_t markword)  { header.initHeader(s, markword); }
      inline void   setInitHeader(uint16_t markword)  { header.initHeader(markword); }
@@ -237,10 +234,10 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
      virtual RexxObject  *getValue(RexxActivation *) { return OREF_NULL; }
      virtual RexxObject  *getValue(RexxVariableDictionary *) { return OREF_NULL; }
      virtual void         uninit() {;}
-     virtual ULONG        hash()  { return HASHVALUE(this); }
-             ULONG        getHashValue()  { return HASHVALUE(this); }
+     virtual HashCode     hash()  { return getHashValue(); }
+     virtual HashCode     getHashValue()  { return identityHash(); }
 
-     inline  ULONG        identityHash() { return HASHOREF(this); }
+     inline  HashCode     identityHash() { return HASHOREF(this); }
 
      virtual BOOL         truthValue(LONG);
      virtual RexxString  *makeString();
@@ -265,14 +262,8 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
              void         printObject();
              RexxObject  *clone();
 
-
      ObjectHeader header;              /* memory management header          */
      RexxBehaviour *behaviour;         /* the object's behaviour            */
-                                       /* Following defined as union to     */
-                                       /*  Allow for overloading of         */
-                                       /*  hashValue usage/value by         */
-                                       /*  other classes.                   */
-     size_t hashvalue;                 /* Default usage.                    */
   };
 
 
@@ -314,8 +305,6 @@ class RexxObject : public RexxInternalObject {
          header.initHeader(size, mark);
          // make sure the object variables are cleared in case this has to get marked
          objectVariables = OREF_NULL;
-         // set the default hash in case there's nothing special being used
-         setDefaultHash();
      }
 
      inline void initializeNewObject(uint32_t mark, void *vft, RexxBehaviour *b)
@@ -329,8 +318,6 @@ class RexxObject : public RexxInternalObject {
          header.initHeader(mark);
          // make sure the object variables are cleared in case this has to get marked
          objectVariables = OREF_NULL;
-         // set the default hash in case there's nothing special being used
-         setDefaultHash();
      }
 
 
@@ -349,7 +336,7 @@ class RexxObject : public RexxInternalObject {
      void liveGeneral();
      void flatten(RexxEnvelope *);
      RexxObject  *copy();
-     ULONG        hash();
+     HashCode     hash();
      BOOL         truthValue(LONG);
      long         longValue(size_t);
      long         longValueNoNOSTRING(size_t);
@@ -512,13 +499,22 @@ class RexxObject : public RexxInternalObject {
 
  typedef int          (RexxObject::*DispatchMethod)(RexxActivity *, void *);
 
+
 class RexxNilObject : public RexxObject {
-  public:
-     RexxNilObject();
-     inline RexxNilObject(RESTORETYPE restoreType) { ; };
+public:
+    void * operator new(size_t);
+    void * operator new(size_t size, void *objectPtr) { return objectPtr; };
+    inline void   operator delete(void *) { ; }
+    RexxNilObject();
+    inline RexxNilObject(RESTORETYPE restoreType) { ; };
+    virtual ~RexxNilObject() {;};
 
-     RexxString * nilString();
+    virtual HashCode getHashValue();
 
+protected:
+    // we want .NIL to have a static hash value after the image restore, so
+    // this needs to be included in the object state
+    HashCode hashValue;
 };
 
 

@@ -67,6 +67,8 @@ class RexxTable : public RexxHashTableCollection {
    inline       RexxObject * stringGet(RexxString *key) {return this->contents->stringGet(key); };
 
    RexxObject *newRexx(RexxObject **, size_t);
+   static RexxTable  *newInstance();
+
 };
 
 class RexxObjectTable : public RexxTable {
@@ -83,5 +85,12 @@ class RexxObjectTable : public RexxTable {
    RexxObject   *add(RexxObject *, RexxObject *);
    inline RexxArray    *allAt(RexxObject *key) {return this->contents->primitiveGetAll(key);}
    inline RexxObject * findSuperScope(RexxObject *v) { return this->contents->primitiveNextItem(v, TheNilObject); };
+
+   static RexxObjectTable  *newInstance(size_t size);
 };
+
+
+inline RexxTable *new_table()             { return RexxTable::newInstance(); }
+inline RexxObjectTable *new_object_table() { return RexxObjectTable::newInstance(RexxHashTable::DEFAULT_HASH_SIZE); }
+
 #endif

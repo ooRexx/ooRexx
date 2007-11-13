@@ -151,7 +151,6 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
                                         /* set the string length to the      */
                                         /* original length                   */
   newBuffer->data->setLength(string->getLength());
-  newBuffer->data->generateHash();      /* recalculate hash value            */
 
   save(newBuffer);                      /* protect new object from GC        */
   newBuffer->hasUninit();               /* important! we have an UNINT method*/
@@ -219,9 +218,6 @@ RexxObject *RexxMutableBuffer::copy()
 
   newObj->defaultSize = this->defaultSize;
   newObj->bufferLength = this->bufferLength;
-
-  newObj->hashvalue = (long) newObj;
-
   return newObj;
 }
 
