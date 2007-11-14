@@ -325,7 +325,7 @@ REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 :GENERATE_VERSION_FILE
 
 REM  First parse oorexx.ver to get the existing version numbers.
-for /F "eol=# delims== tokens=1,2*" %%i in (oorexx.ver) do (
+for /F "eol=# delims== tokens=1,2,3*" %%i in (oorexx.ver) do (
  if %%i == ORX_MAJOR set MAJOR_NUM=%%j
  if %%i == ORX_MINOR set MINOR_NUM=%%j
  if %%i == ORX_MOD_LVL set LVL_NUM=%%j
@@ -346,35 +346,35 @@ if %SVN_REV%x == x (
 
 REM Now write out oorexx.ver.incl
 if exist oorexx.ver.incl del /F /Q oorexx.ver.incl
-for /F "delims== tokens=1,2*" %%i in (oorexx.ver) do (
+for /F "delims== tokens=1,2,3*" %%i in (oorexx.ver) do (
  if %%i == ORX_BLD_LVL (
-   echo %%i=%SVN_REV% >> oorexx.ver.incl
+   echo %%i=%SVN_REV%>> oorexx.ver.incl
    set BLD_NUM=%SVN_REV%
  ) else (
    if %%i == ORX_VER_STR (
-     echo %%i="%MAJOR_NUM%.%MINOR_NUM%.%LVL_NUM%.%SVN_REV%" >> oorexx.ver.incl
+     echo %%i="%MAJOR_NUM%.%MINOR_NUM%.%LVL_NUM%.%SVN_REV%">> oorexx.ver.incl
    ) else (
      if %%jx == x (
-       echo %%i >> oorexx.ver.incl
+       echo %%i>> oorexx.ver.incl
      ) else (
-       echo %%i=%%j >> oorexx.ver.incl
+       echo %%i=%%j>> oorexx.ver.incl
      )
    )
  )
 )
-echo SVN_REVSION=%SVN_REV% >> oorexx.ver.incl
+echo SVN_REVSION=%SVN_REV%>> oorexx.ver.incl
 goto CHECK_BUILD_TYPE
 
 :NOSVN
 if exist oorexx.ver.incl (
-   for /F "eol=# delims== tokens=1,2*" %%i in (oorexx.ver.incl) do (
+   for /F "eol=# delims== tokens=1,2,3*" %%i in (oorexx.ver.incl) do (
     if %%i == ORX_BLD_LVL set BLD_NUM=%%j
     if %%i == SVN_REVISION set SVN_REV=%%j
    )
 ) else (
   copy oorexx.ver oorexx.ver.incl 1>nul 2>&1
   set SVN_REV=%BLD_NUM%
-  echo SVN_REVSION=%SVN_REV% >> oorexx.ver.incl
+  echo SVN_REVSION=%SVN_REV%>> oorexx.ver.incl
 )
 
 goto CHECK_BUILD_TYPE
