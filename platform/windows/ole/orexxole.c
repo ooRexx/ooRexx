@@ -3047,6 +3047,7 @@ RexxMethod3(REXXOBJECT,                // Return type
       /* yes, then change the REXX object to a new state */
       RexxObject  *outObject;
       RexxObject  *outArray=(RexxObject*) REXX_GETVAR("!OUTARRAY");
+      RexxObject  *rxIndex;
       int         index=1;
       char        indexBuffer[32];
 
@@ -3055,8 +3056,8 @@ RexxMethod3(REXXOBJECT,                // Return type
         REXX_SETVAR("!OUTARRAY",outArray);
       }
       else {
-        arrItem = RexxSend0(outArray, "LAST");
-        pszRxString = string_data((RexxString*) RexxSend0(arrItem,"STRING"));
+        rxIndex = RexxSend0(outArray, "LAST");
+        pszRxString = string_data((RexxString*) RexxSend0(rxIndex,"STRING"));
         sscanf(pszRxString, "%d", &index);
         index++; // next entry
       }
