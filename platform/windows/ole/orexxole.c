@@ -1928,7 +1928,7 @@ BOOL fExploreTypeInfo( ITypeInfo *pTypeInfo, POLECLASSINFO pClsInfo )
     j=uTypeLibIndex;   // this block should contain all info on the object
     // for (j = 0; j < (INT) iTypeInfoCount; j++)
     {
-      hResult = pTypeLib->GetTypeInfisOfClass(j, &iTypeInfoType);
+      hResult = pTypeLib->GetTypeInfoType(j, &iTypeInfoType);
 
       hResult = pTypeLib->GetTypeInfo(j, &pTypeInfo2);
 
