@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   ElseInstruction.hpp  */
+/* REXX Kernel                                           ElseInstruction.hpp  */
 /*                                                                            */
 /* Primitive ELSE instruction Class Definitions                               */
 /*                                                                            */
@@ -49,7 +49,10 @@
 class RexxInstructionElse : public RexxInstructionSet {
  public:
 
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void operator delete(void *) { }
+  inline void operator delete(void *, void *) { }
+
   RexxInstructionElse(RexxToken *);
   inline RexxInstructionElse(RESTORETYPE restoreType) { ; };
   void live();

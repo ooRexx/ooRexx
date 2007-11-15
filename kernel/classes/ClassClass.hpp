@@ -47,10 +47,15 @@
 
  class RexxClass : public RexxObject {
   public:
-   inline RexxClass(){;};
-   inline RexxClass(RESTORETYPE restoreType) { ; };
    void *operator new(size_t, size_t, const char *, RexxBehaviour *, RexxBehaviour *);
    inline void *operator new(size_t size, void *ptr) {return ptr;};
+   inline void operator delete(void *) { }
+   inline void operator delete(void *, void *) { }
+   inline void operator delete(void *, size_t, const char *, RexxBehaviour *, RexxBehaviour *) { }
+
+   inline RexxClass(){;};
+   inline RexxClass(RESTORETYPE restoreType) { ; };
+
    void live();
    void liveGeneral();
    void flatten(RexxEnvelope*);

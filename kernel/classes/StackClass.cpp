@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  StackClass.c     */
+/* REXX Kernel                                               StackClass.c     */
 /*                                                                            */
 /* Primitive Stack Class                                                      */
 /*                                                                            */
@@ -154,7 +154,7 @@ RexxObject  *RexxStack::fpop()
 void *RexxStack::operator new(
      size_t size,                      /* Object size                       */
      size_t stksize,                   /* stack size                        */
-     BOOL   temporary )                /* this is a temporary one           */
+     bool   temporary )                /* this is a temporary one           */
 /******************************************************************************/
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
@@ -174,9 +174,9 @@ void *RexxStack::operator new(
 
 
 RexxSaveStack::RexxSaveStack(
-    size_t size,                       /* elements in the stack             */
+    size_t _size,                      /* elements in the stack             */
     size_t aSize)                      /* size to allocate!                 */
-      : RexxStack(size)
+      : RexxStack(_size)
 /******************************************************************************/
 /* Function:  Initialize a primitive stack.                                   */
 /******************************************************************************/

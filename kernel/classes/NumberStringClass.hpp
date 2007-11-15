@@ -102,7 +102,11 @@ int number_create_integer(const char *, size_t, int, int);
  class RexxNumberString : public RexxNumberStringBase {
    public:
     void         *operator new(size_t, size_t);
-    inline void  *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  *operator new(size_t size, void *ptr) {return ptr;}
+    inline void   operator delete(void *, size_t) { }
+    inline void   operator delete(void *, void *) { }
+
+
     RexxNumberString(size_t) ;
     inline RexxNumberString(RESTORETYPE restoreType) { ; };
     virtual HashCode getHashValue();

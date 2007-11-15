@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                     UseInstruction.hpp */
+/* REXX Kernel                                             UseInstruction.hpp */
 /*                                                                            */
 /* Primitive USE instruction Class Definitions                                */
 /*                                                                            */
@@ -48,7 +48,10 @@
 
 class RexxInstructionUse : public RexxInstruction {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void  operator delete(void *, void *) { }
+  inline void  operator delete(void *) { }
+
   RexxInstructionUse(size_t, RexxQueue *);
   inline RexxInstructionUse(RESTORETYPE restoreType) { ; };
   void live();

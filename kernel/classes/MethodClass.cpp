@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  MethodClass.c    */
+/* REXX Kernel                                               MethodClass.c    */
 /*                                                                            */
 /* Primitive Method Class                                                     */
 /*                                                                            */
@@ -44,7 +44,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <setjmp.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"

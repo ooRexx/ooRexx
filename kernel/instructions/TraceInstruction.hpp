@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   TraceInstruction.hpp */
+/* REXX Kernel                                           TraceInstruction.hpp */
 /*                                                                            */
 /* Primitive TRACE instruction Class Definitions                              */
 /*                                                                            */
@@ -57,7 +57,10 @@
 
 class RexxInstructionTrace : public RexxInstruction {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void  operator delete(void *) { }
+  inline void  operator delete(void *, void *) { }
+
   RexxInstructionTrace(RexxObject *, unsigned short, size_t, int);
   inline RexxInstructionTrace(RESTORETYPE restoreType) { ; };
   void live();

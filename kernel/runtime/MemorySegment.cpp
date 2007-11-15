@@ -319,7 +319,7 @@ void MemorySegmentSet::activateEmptySegments()
 }
 
 
-BOOL MemorySegmentSet::newSegment(size_t requestLength, size_t minimumLength)
+bool MemorySegmentSet::newSegment(size_t requestLength, size_t minimumLength)
 /******************************************************************************/
 /* Function:  Allocate a segment and add it to the segment pool               */
 /******************************************************************************/
@@ -330,9 +330,9 @@ BOOL MemorySegmentSet::newSegment(size_t requestLength, size_t minimumLength)
     MemorySegment *segment = allocateSegment(requestLength, minimumLength);
     if (segment != NULL) {
         addSegment(segment);
-        return TRUE;
+        return true;
     }
-    return FALSE;
+    return false;
 }
 
 

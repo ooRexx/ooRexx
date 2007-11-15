@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxSmartBuffer.hpp  */
+/* REXX Kernel                                           RexxSmartBuffer.hpp  */
 /*                                                                            */
 /* Primitive Smart Buffer Class Definitions                                   */
 /*                                                                            */
@@ -48,6 +48,9 @@
   public:
   void *operator new(size_t);
   inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *) { ; }
+  inline void  operator delete(void *, void *) { ; }
+
   RexxSmartBuffer(size_t);
   inline RexxSmartBuffer(RESTORETYPE restoreType) { ; };
   void live();

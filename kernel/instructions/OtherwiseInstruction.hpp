@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   OtherwiseInstruction.hpp */
+/* REXX Kernel                                       OtherwiseInstruction.hpp */
 /*                                                                            */
 /* Primitive OTHERWISE instruction Class Definitions                          */
 /*                                                                            */
@@ -48,7 +48,10 @@
 
 class RexxInstructionOtherWise : public RexxInstruction {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void operator delete(void *) { }
+  inline void operator delete(void *, void *) { }
+
   RexxInstructionOtherWise(RexxToken *);
   inline RexxInstructionOtherWise(RESTORETYPE restoreType) { ; };
   void execute(RexxActivation *, RexxExpressionStack *);

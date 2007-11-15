@@ -36,13 +36,12 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxNativeActivation.c    */
+/* REXX Kernel                                      RexxNativeActivation.c    */
 /*                                                                            */
 /* Primitive Native Activation Class                                          */
 /*                                                                            */
 /******************************************************************************/
 #define INCL_REXXSAA
-#include <setjmp.h>
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
@@ -333,7 +332,6 @@ RexxObject *RexxNativeActivation::run(
   if (i < argcount && !used_arglist)   /* extra, unwanted arguments?        */
                                        /* got too many                      */
     reportException(Error_Incorrect_method_maxarg, i);
-
                                        /* get a RAISE type return?          */
   if (setjmp(this->conditionjump) != 0) {
     if (this->result != OREF_NULL)     /* have a value?                     */
@@ -824,8 +822,6 @@ BOOL RexxNativeActivation::trap(
                                        /* yes, send error message and       */
                                        /* condition to the object           */
       this->objnotify->error(exception_object);
-    if (this->syntaxHandler != NULL)   /* have a syntax handler?            */
-      longjmp(*this->syntaxHandler, 1);/* jump back to the handler          */
   }
   return FALSE;                        /* this wasn't handled               */
 }
@@ -1223,6 +1219,12 @@ nativei4 (void, RAISE,
   this->result = (RexxObject *)result; /* save the result                   */
                                        /* go raise the condition            */
   CurrentActivity->raiseCondition(new_string(condition), OREF_NULL, (RexxString *)description, (RexxObject *)additional, (RexxObject *)result, OREF_NULL);
+
+  // Using throw would be preferred here, but the compiler won't allow us to
+  // do a throw across the C function call boundary.  We need to use longjmp
+  // instead. This won't effect our object unwinding yet, as we're in control
+  // of things.  It would be better if the functions used RAISE and then
+  // returned to the caller, but that's a bit more involved at this point.
   longjmp(this->conditionjump, 1);     /* now go process the return         */
 }
 
@@ -1472,11 +1474,6 @@ nativei7 (ULONG, STEMSORT,
       return FALSE;
   }
 
-  jmp_buf syntaxHandler;               /* syntax return point               */
-
-  if (setjmp(syntaxHandler) != 0) {    /* get a storage error?              */
-      return FALSE;                    /* return a failure                  */
-  }
   /* get the REXX activation */
   RexxActivation *activation = self->activity->currentAct();
 

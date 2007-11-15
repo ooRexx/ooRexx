@@ -112,6 +112,9 @@ class MemorySegmentPool : public MemorySegmentPoolHeader {
  public:
    void          *operator new(size_t size, size_t minSize);
    void          *operator new(size_t size, void *pool) { return pool;}
+   inline void    operator delete(void *, size_t) { }
+   inline void    operator delete(void *, void *) { }
+
    MemorySegmentPool();
    MemorySegment *newSegment(size_t minSize);
    MemorySegment *newLargeSegment(size_t minSize);

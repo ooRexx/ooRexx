@@ -46,14 +46,17 @@
 
 class RexxExpressionOperator : public RexxInternalObject {
  public:
+  void  *operator new(size_t);
+  inline void  *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *) { ; }
+  inline void  operator delete(void *, void *) { ; }
+
   inline RexxExpressionOperator() { ; }
   RexxExpressionOperator(int, RexxObject *, RexxObject *);
   inline RexxExpressionOperator(RESTORETYPE restoreType) { ; };
   void   live();
   void   liveGeneral();
   void   flatten(RexxEnvelope *);
-  void  *operator new(size_t);
-  inline void  *operator new(size_t size, void *ptr) {return ptr;};
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
 
   inline const char *operatorName() { return operatorNames[oper - 1]; }
@@ -68,21 +71,27 @@ class RexxExpressionOperator : public RexxInternalObject {
 
 class RexxBinaryOperator : public RexxExpressionOperator {
  public:
+  void  *operator new(size_t);
+  inline void  *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *) { ; }
+  inline void  operator delete(void *, void *) { ; }
+
   inline RexxBinaryOperator(int op, RexxObject *left, RexxObject *right)
       : RexxExpressionOperator(op, left, right) { ; }
   inline RexxBinaryOperator(RESTORETYPE restoreType) { ; };
-  void  *operator new(size_t);
-  inline void  *operator new(size_t size, void *ptr) {return ptr;};
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
 };
 
 class RexxUnaryOperator : public RexxExpressionOperator {
  public:
+  void  *operator new(size_t);
+  inline void  *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *) { ; }
+  inline void  operator delete(void *, void *) { ; }
+
   inline RexxUnaryOperator(int op, RexxObject *left)
       : RexxExpressionOperator(op, left, OREF_NULL) { ; }
   inline RexxUnaryOperator(RESTORETYPE restoreType) { ; };
-  void  *operator new(size_t);
-  inline void  *operator new(size_t size, void *ptr) {return ptr;};
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
 };
 #endif

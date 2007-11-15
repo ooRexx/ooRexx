@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  StackClass.hpp   */
+/* REXX Kernel                                               StackClass.hpp   */
 /*                                                                            */
 /* Primitive Stack Class Definitions                                          */
 /*                                                                            */
@@ -46,11 +46,14 @@
 
  class RexxStack : public RexxInternalObject {
   public:
+   inline void *operator new(size_t size, void *ptr) { return ptr; }
+   void        *operator new(size_t, size_t, bool temporary = false);
+   inline void  operator delete(void *) { }
+   inline void  operator delete(void *, void *) { }
+   inline void  operator delete(void *, size_t, bool temporary) { };
+
    inline RexxStack(RESTORETYPE restoreType) { ; };
    RexxStack(size_t size);
-
-   inline void       *operator new(size_t size, void *ptr) { return ptr; };
-   void       *operator new(size_t, size_t, BOOL temporary = FALSE);
 
    void        init(size_t);
    void        live();
@@ -81,8 +84,10 @@
 
  class RexxSaveStack : public RexxStack {
   public:
-   RexxSaveStack(size_t, size_t);
    void       *operator new(size_t, size_t);
+   inline void operator delete(void *, size_t) { }
+
+   RexxSaveStack(size_t, size_t);
    void        live();
    void        init(size_t, size_t);
    void        extend(size_t);

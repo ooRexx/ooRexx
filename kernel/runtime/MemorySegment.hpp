@@ -141,6 +141,9 @@ class MemorySegment : public MemorySegmentHeader {
 
  public:
    inline void *operator new(size_t size, void *segment) { return segment; }
+   inline void  operator delete(void *) { }
+   inline void  operator delete(void *, void *) { }
+
    inline MemorySegment(size_t segSize) {
        segmentSize = segSize - sizeof(MemorySegmentHeader);
    }
@@ -177,7 +180,7 @@ class MemorySegment : public MemorySegmentHeader {
        remove();
    }
 
-   inline BOOL isInSegment(RexxObject * object) {
+   inline bool isInSegment(RexxObject * object) {
        return (((char *)object >= segmentStart) && ((char *)object <= segmentStart + segmentSize));
    }
 
@@ -186,16 +189,16 @@ class MemorySegment : public MemorySegmentHeader {
    inline DeadObject *firstObject() { return (DeadObject *)segmentStart; }
    inline void combine(MemorySegment *nextSegment) { segmentSize += nextSegment->segmentSize + MemorySegmentOverhead; }
    inline void shrink(size_t delta) { segmentSize -= delta; }
-   inline BOOL isAdjacentTo(MemorySegment *seg) { return end() == (char *)seg; }
-   inline BOOL isLastBlock(char *addr, size_t length) { return (addr + length) == end(); }
-   inline BOOL isFirstBlock(char *addr) { return addr == start(); }
+   inline bool isAdjacentTo(MemorySegment *seg) { return end() == (char *)seg; }
+   inline bool isLastBlock(char *addr, size_t length) { return (addr + length) == end(); }
+   inline bool isFirstBlock(char *addr) { return addr == start(); }
 
    inline size_t size() { return segmentSize; }
    inline size_t realSize() { return segmentSize + MemorySegmentOverhead; }
    inline char *start() { return segmentStart; }
    inline char *end() { return segmentStart + segmentSize; }
-   inline BOOL isReal() { return segmentSize != 0; }
-   inline BOOL isEmpty() { return liveObjects == 0; }
+   inline bool isReal() { return segmentSize != 0; }
+   inline bool isEmpty() { return liveObjects == 0; }
    void   dump(const char *owner, size_t counter, FILE *keyfile, FILE *dumpfile);
    DeadObject *lastDeadObject();
    DeadObject *firstDeadObject();
@@ -238,7 +241,10 @@ class MemorySegmentSet {
       }
 
       virtual ~MemorySegmentSet() { ; }
-      inline void *operator new(size_t size, void *segment) { return segment; };
+      inline void *operator new(size_t size, void *segment) { return segment; }
+      inline void  operator delete(void * size) { }
+      inline void  operator delete(void * size, void *segment) { }
+
       /* Following is a static constructor, called during */
       /* RexxMemeory initialization */
 
@@ -294,7 +300,7 @@ class MemorySegmentSet {
       void dumpSegments(FILE *keyfile, FILE *dumpfile);
       void addSegment(MemorySegment *segment, BOOL createDeadObject = 1);
       void sweep();
-      inline BOOL is(SegmentSetID id) { return owner == id; }
+      inline bool is(SegmentSetID id) { return owner == id; }
       void gatherStats(MemoryStats *memStats, SegmentStats *stats);
 
 
@@ -323,7 +329,7 @@ class MemorySegmentSet {
       void adjustMemorySize();
       void releaseEmptySegments(size_t releaseSize);
       void releaseSegment(MemorySegment *segment);
-      BOOL newSegment(size_t requestLength, size_t minimumLength);
+      bool newSegment(size_t requestLength, size_t minimumLength);
 
       virtual MemorySegment *allocateSegment(size_t requestLength, size_t minimumLength);
       inline float freeMemoryPercentage() {return (float)deadObjectBytes/(float)(deadObjectBytes + liveObjectBytes);  }

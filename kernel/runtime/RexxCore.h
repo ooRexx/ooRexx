@@ -48,7 +48,6 @@
 #define RexxCore_INCLUDED
 
 /* ANSI C definitions */
-#include <setjmp.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>

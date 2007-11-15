@@ -48,7 +48,10 @@
 
 class RexxInstructionExpose : public RexxInstruction {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void operator delete(void *) { }
+  inline void operator delete(void *, void *) { }
+
   RexxInstructionExpose(size_t, RexxQueue *);
   inline RexxInstructionExpose(RESTORETYPE restoreType) { ; };
   void live();

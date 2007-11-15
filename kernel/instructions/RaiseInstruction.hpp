@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   RaiseInstruction.hpp */
+/* REXX Kernel                                           RaiseInstruction.hpp */
 /*                                                                            */
 /* Primitive RAISE instruction Class Definitions                              */
 /*                                                                            */
@@ -51,7 +51,10 @@
 
 class RexxInstructionRaise : public RexxInstruction {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void  operator delete(void *) { }
+  inline void  operator delete(void *, void *) { }
+
   inline RexxInstructionRaise(RESTORETYPE restoreType) { ; };
   RexxInstructionRaise(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, size_t, RexxQueue *, BOOL);
   void execute(RexxActivation *, RexxExpressionStack *);

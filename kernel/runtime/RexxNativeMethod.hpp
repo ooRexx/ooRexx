@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxNativeMethod.hpp   */
+/* REXX Kernel                                         RexxNativeMethod.hpp   */
 /*                                                                            */
 /* Primitive Native Code Class Definitions                                    */
 /*                                                                            */
@@ -46,10 +46,13 @@
 
 class RexxNativeCode : public RexxInternalObject {
   public:
+   inline void *operator new(size_t size, void *ptr) { return ptr; }
+   void        *operator new(size_t size);
+   inline void  operator delete(void *) { ; }
+   inline void  operator delete(void *, void *) { ; }
+
    inline RexxNativeCode(RESTORETYPE restoreType) { ; };
    RexxNativeCode(RexxString *, RexxString *, PFN, LONG);
-   inline void       *operator new(size_t size, void *ptr) { return ptr; };
-   void       *operator new(size_t size);
    void        reinit(RexxInteger *);
    void        live();
    void        liveGeneral();

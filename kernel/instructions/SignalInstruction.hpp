@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   SignalInstruction.hpp */
+/* REXX Kernel                                          SignalInstruction.hpp */
 /*                                                                            */
 /* Primitive SIGNAL instruction Class Definitions                             */
 /*                                                                            */
@@ -51,7 +51,10 @@
 
 class RexxInstructionSignal : public RexxInstructionCallBase {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void  operator delete(void *) { }
+  inline void  operator delete(void *, void *) { }
+
   RexxInstructionSignal(RexxObject *, RexxString *, RexxString *, size_t);
   inline RexxInstructionSignal(RESTORETYPE restoreType) { ; };
   void execute(RexxActivation *, RexxExpressionStack *);

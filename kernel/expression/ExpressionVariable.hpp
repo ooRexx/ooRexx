@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ExpressionVariable.hpp    */
+/* REXX Kernel                                      ExpressionVariable.hpp    */
 /*                                                                            */
 /* Primitive Expression Variable Class Definitions                            */
 /*                                                                            */
@@ -50,6 +50,9 @@ class RexxParseVariable : public RexxVariableBase {
  public:
   void *operator new(size_t);
   inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *) { ; }
+  inline void  operator delete(void *, void *) { ; }
+
   inline RexxParseVariable(RESTORETYPE restoreType) { ; };
   RexxParseVariable(RexxString *, LONG);
   void live();

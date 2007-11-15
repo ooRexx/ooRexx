@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxListTable.hpp  */
+/* REXX Kernel                                             RexxListTable.hpp  */
 /*                                                                            */
 /* Primitive List Table Class Definitions                                     */
 /*                                                                            */
@@ -55,6 +55,9 @@ typedef struct listentry {
    void * operator new(size_t, size_t);
    void * operator new(size_t, size_t, size_t);
    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
+   inline void operator delete(void *, size_t) { }
+   inline void operator delete(void *, size_t, size_t) { }
+   inline void operator delete(void *, void *) { }
 
    inline RexxListTable(RESTORETYPE restoreType) { ; };
    inline RexxListTable() {;};

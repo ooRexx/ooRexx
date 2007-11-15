@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxVariable.hpp     */
+/* REXX Kernel                                           RexxVariable.hpp     */
 /*                                                                            */
 /* Primitive Variable Class Definition                                        */
 /*                                                                            */
@@ -46,9 +46,12 @@
 
 class RexxVariable : public RexxInternalObject {
  public:
+  inline void *operator new(size_t size, void *ptr) { return ptr; }
+  inline void  operator delete(void *) { }
+  inline void  operator delete(void *, void *) { }
+
   inline RexxVariable() {;};
   inline RexxVariable(RESTORETYPE restoreType) { ; };
-  inline void       *operator new(size_t size, void *ptr) { return ptr; };
 
   void         live();
   void         liveGeneral();

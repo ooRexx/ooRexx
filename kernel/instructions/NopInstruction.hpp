@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                     NopInstruction.hpp */
+/* REXX Kernel                                             NopInstruction.hpp */
 /*                                                                            */
 /* Primitive NOP instruction Class Definitions                                */
 /*                                                                            */
@@ -49,7 +49,10 @@
 
 class RexxInstructionNop : public RexxInstruction {
  public:
-  inline void *operator new(size_t size, void *newObject) {return newObject;};
+  inline void *operator new(size_t size, void *newObject) {return newObject;}
+  inline void operator delete(void *) { }
+  inline void operator delete(void *, void *) { }
+
   inline RexxInstructionNop() { ; };
   inline RexxInstructionNop(RESTORETYPE restoreType) { ; };
   void execute(RexxActivation *, RexxExpressionStack *);

@@ -82,8 +82,10 @@ public:
 
 class RexxSource : public RexxInternalObject {
  public:
-  void       *operator new(size_t);
-  inline void       *operator new(size_t size, void *ptr) {return ptr;};
+  void        *operator new(size_t);
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void  operator delete(void *) { ; }
+  inline void  operator delete(void *, void *) { ; }
   RexxSource(RexxString *, RexxArray *);
   inline RexxSource(RESTORETYPE restoreType) { ; };
   void        initBuffered(RexxObject *);

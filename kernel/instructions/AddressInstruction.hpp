@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   AddressInstruction.h    */
+/* REXX Kernel                                      AddressInstruction.hpp    */
 /*                                                                            */
 /* Primitive ADDRESS instruction Class Definitions                            */
 /*                                                                            */
@@ -48,7 +48,10 @@
 
 class RexxInstructionAddress : public RexxInstruction {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void operator delete(void *) { }
+  inline void operator delete(void *, void *ptr) { }
+
   RexxInstructionAddress(RexxObject *, RexxString *, RexxObject *);
   inline RexxInstructionAddress(RESTORETYPE restoreType) { ; };
   void live();

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                     OptionsInstruction.hpp */
+/* REXX Kernel                                         OptionsInstruction.hpp */
 /*                                                                            */
 /* Primitive OPTIONS instruction Class Definitions                            */
 /*                                                                            */
@@ -48,7 +48,10 @@
 
 class RexxInstructionOptions : public RexxInstructionExpression {
  public:
-  inline void *operator new(size_t size, void *ptr){ return ptr; };
+  inline void *operator new(size_t size, void *ptr){ return ptr; }
+  inline void operator delete(void *) { }
+  inline void operator delete(void *, void *) { }
+
   inline RexxInstructionOptions(RESTORETYPE restoreType) { ; };
   RexxInstructionOptions(RexxObject *);
   void execute(RexxActivation *, RexxExpressionStack *);

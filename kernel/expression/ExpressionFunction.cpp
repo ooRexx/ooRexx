@@ -223,7 +223,7 @@ RexxObject *RexxExpressionFunction::evaluate(
 }
 
 void *RexxExpressionFunction::operator new(size_t size,
-    LONG  argCount)                    /* count of arguments                */
+    int   argCount)                    /* count of arguments                */
 /******************************************************************************/
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/

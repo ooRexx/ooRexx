@@ -1817,7 +1817,7 @@ RexxStack *RexxMemory::getFlattenStack(void)
     RequestKernelAccess(currentActivity);
   }
                                        /* create a temporary stack          */
-  this->flattenStack = new (LiveStackSize, TRUE) RexxStack (LiveStackSize);
+  this->flattenStack = new (LiveStackSize, true) RexxStack (LiveStackSize);
   return this->flattenStack;           /* return flatten Stack              */
 }
 

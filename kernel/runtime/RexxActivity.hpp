@@ -60,6 +60,14 @@
 #define dispatchable_activities (TheActivityClass->class_waitacts)
 #endif
 
+
+typedef enum
+{
+    RecursiveStringError,              // a recursion problem in error handling
+    FatalError,                        // bad problem
+    UnhandledCondition                 // we had an unhandled condition.
+} ActivityException;
+
 #define resource_semaphore     rexx_resource_semaphore
 #define kernel_semaphore       rexx_kernel_semaphore
 #define start_semaphore        rexx_start_semaphore
@@ -105,7 +113,6 @@ typedef struct nestedinfo {
    ULONG       randomSeed;             /* random number seed                */
    BOOL        exitset;                /* halt/trace sys exit not set ==> 1 */
    RexxString *sysexits[LAST_EXIT];    /* Array to hold system exits        */
-   jmp_buf     jmpenv;                 /* setjmp buffer                     */
 }  nestedActivityInfo;
 
                                        /* NOTE:  The following object       */
@@ -119,9 +126,12 @@ typedef struct nestedinfo {
                                        /* methods                           */
  class RexxActivity : public RexxInternalObject {
   public:
-   inline RexxActivity(RESTORETYPE restoreType) { ; };
    void *operator new(size_t);
    inline void *operator new(size_t size, void *ptr) {return ptr;};
+   inline void  operator delete(void *) { ; }
+   inline void  operator delete(void *, void *) { ; }
+
+   inline RexxActivity(RESTORETYPE restoreType) { ; };
    RexxActivity(BOOL, long, RexxDirectory *);
    long error(size_t);
    BOOL        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, RexxDirectory *);
@@ -288,7 +298,6 @@ typedef struct nestedinfo {
    SEV      guardsem;                  /* guard expression semaphore        */
    LONG     nestedCount;               /* extent of the nesting             */
    nestedActivityInfo nestedInfo;      /* info saved and restored on calls  */
-   jmp_buf  stringError;               /* string request error buffer       */
  };
 
  class RexxActivityClass : public RexxClass {

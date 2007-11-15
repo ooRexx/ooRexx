@@ -81,6 +81,18 @@ typedef struct copyElelmentParm {
    void * operator new(size_t, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
    void * operator new(size_t, size_t, RexxObject **);
    void * operator new(size_t, size_t, RexxClass *cls = TheArrayClass);
+
+   inline void operator delete(void *) {;}
+   inline void operator delete(void *, void *) {;}
+   inline void operator delete(void *, RexxObject **, arraysize_t, RexxClass *) {;}
+   inline void operator delete(void *, RexxObject *) {;}
+   inline void operator delete(void *, RexxObject *, RexxObject *) {;}
+   inline void operator delete(void *, RexxObject *, RexxObject *, RexxObject *) {;}
+   inline void operator delete(void *, RexxObject *, RexxObject *, RexxObject *, RexxObject *) {;}
+   inline void operator delete(void *, arraysize_t, RexxObject **) {;}
+   inline void operator delete(void *, arraysize_t, RexxClass *cls) {;}
+   inline void operator delete(void *, RexxObject **) { ; }
+
    inline RexxArray(RESTORETYPE restoreType) { ; };
    inline RexxArray() { ; };
    inline ~RexxArray() { ; };

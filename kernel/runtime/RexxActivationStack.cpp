@@ -48,7 +48,6 @@
 /*                                                                            */
 /******************************************************************************/
 #include <ctype.h>
-#include <setjmp.h>
 #include <string.h>
 #include "RexxCore.h"
 #include "RexxActivationStack.hpp"

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxActivityc    */
+/* REXX Kernel                                               RexxActivity     */
 /*                                                                            */
 /* Primitive Activity Class                                                   */
 /*                                                                            */
@@ -47,79 +47,6 @@
 /*        used to maintain this situation.                                    */
 /*                                                                            */
 /******************************************************************************/
-/* Change History                                                             */
-/*                                                                            */
-/* HOL001 - defect 217: out of stack using recursion 96/07/25                 */
-/* HOL002 - feature 254 + 312:                            96/10/02 + 97/02/10 */
-/*             Add a new system exit to ask for trace before execution        */
-/* HOL003 - defect 269:                                             96/11/21  */
-/*             Close all semaphores to allow RexxStart to be used iteratively */
-/* CHM004 - feature 283:                                             01/16/97 */
-/*          Remove pragma checkout from REXXSAA.H                             */
-/* MAE005 - feature 317:                                             02/13/97 */
-/*          Code restructuring for threading in OS/2, WIN, and AIX/LIN        */
-/* WEI006 - defect 321:                                              02/27/97 */
-/*          trap when executing windows concurrency tests                     */
-/* HOL007 - feature 369:                                             97/06/26 */
-/*          do thread management in sequentail table                          */
-/* CHM008 - feature 391:                                             97/08/12 */
-/*          Prepare source files for compact compile                          */
-/* HOL009 - feature 399:                                             97/09/02 */
-/*             A few performance improvements                                 */
-/* HOL010 - feature 421:                                             97/10/21 */
-/*             Dynamic savestack and static requires                          */
-/* MAE011 - feature 387:                                             97/10/30 */
-/*          Code restructering for AIX port of the Linux Code                 */
-/*          --> rename variable conflicting with pthreads                     */
-/* CHM012 - feature 427:                                             97/11/06 */
-/*             Need a special semaphore for savestack manipulation            */
-/* HOL013 - feature 519:   NLS Japan 2 + OPTIONS EXMODE              98/05/27 */
-/* HOL014 - defect 531:                                              98/06/23 */
-/*            Missing NULL ptr check in RexxActivityClass::addWaitingActivity */
-/* CHM015 - defect 251:                                              98/09/16 */
-/*             Drop and reuse of the same variable name                       */
-/* HOL016 - defect 581:                                              98/10/13 */
-/*             RXFNC and RegExternalFunction were limited to 20 arguments     */
-/* HOL017 - defect 618:                                             98/12/09  */
-/*          WB: Line still located although Trace Off was selected            */
-/* MAE018 - defect 648:                                             99/02/19  */
-/*          Linux: Signal on HALT kills the whole process                     */
-/* CHM019 - defect 656:                                              99/03/16 */
-/*         Performance degredation dropping many objects in one statement     */
-/* THU020 - feature 752:                                             00/01/12 */
-/*            memory leaks with the REXXSTART API                             */
-/* THU021 - defect 866:                                              00/11/06 */
-/*          RXSTRING initialization for Interactive debug trace exit          */
-/* MIC022 - feature 871:                                             00/11/10 */
-/*            Circumvention for GNU compiler 2.95.2 bug ( u_ added to name )  */
-/* ENG023 - feature 892:                                             01/01/15 */
-/*          object passing thru classical interface & extra exit              */
-/* ENG024 - feature 900:                                             01/01/29 */
-/*          improved random seed generation for activities (Windows)          */
-/* ENG025 - feature 906:                                             01/02/19 */
-/*          change in extra exit (engine call)                                */
-/* ENG026 - defect 915:                                              01/03/19 */
-/*          access violation when using stream funcs                          */
-/* ENG027 - defect 1033:                                             02/01/21 */
-/*          exits are deinstalled before some UNINITs of activity run         */
-/* MIC028 - feature 1042:                                            02/02/11 */
-/*          Changes for SUN/Solaris                                           */
-/* ENG029 - defect 1063:                                             02/04/04 */
-/*          UNINIT bug (memory leak) for subclasses of ARRAY with UNINIT meth.*/
-/* THU030 - defect 1067:                                             02/04/19 */
-/*          Thread exhausted when calling REXX from API several times         */
-/* ENG031 - feature 1068:                                            02/04/24 */
-/*          removal of compiler warnings                                      */
-/* ENG032 - defect 1069:                                             02/04/26 */
-/*          fix ANSI-C violation with va_arg()                                */
-/* ENG033 - feature 1079:                                            02/06/12 */
-/*          RXINI: temporarily provide script name in variable of var. pool   */
-/* MIC034 - feature 1085:                                            02/07/01 */
-/*            DRIVER build updates                                            */
-/* ENG035 - defect 1126:                                             02/09/27 */
-/*          GC protection rework (see changes for feature 892)                */
-/*                                                                            */
-#include <setjmp.h>
 #include <stdlib.h>
 #include <ctype.h>
 #if defined(OPSYS_SUN)
@@ -203,89 +130,97 @@ void activity_thread (
 /*                                                                            */
 /******************************************************************************/
 {
-  int  jmprc;                          /* setjmp return code                */
-  LONG number_activities;              /* count of activities               */
+    LONG number_activities;              /* count of activities               */
 
-  SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
+    SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
 
-  SysInitializeThread();               /* system specific thread init       */
-                                       /* establish the stack base pointer  */
-  objp->nestedInfo.stackptr = SysGetThreadStackBase(TOTAL_STACK_SIZE);
-  SysRegisterExceptions(&exreg);       /* create needed exception handlers  */
-                                       /* establish the longjmp return point*/
-  jmprc = setjmp(objp->nestedInfo.jmpenv);
-  for (;;) {
-    if (jmprc == 0) {                  /* if no error                       */
-      EVWAIT(objp->runsem);            /* wait for run permission           */
-      if (objp->exit)                  /* told to exit?                     */
-        break;                         /* we're out of here                 */
-                                       /* set our priority appropriately    */
+    SysInitializeThread();               /* system specific thread init       */
+                                         /* establish the stack base pointer  */
+    objp->nestedInfo.stackptr = SysGetThreadStackBase(TOTAL_STACK_SIZE);
+    SysRegisterExceptions(&exreg);       /* create needed exception handlers  */
+    for (;;)
+    {
+        try
+        {
+            EVWAIT(objp->runsem);            /* wait for run permission           */
+            if (objp->exit)                  /* told to exit?                     */
+            {
+                break;                       /* we're out of here                 */
+            }
+            /* set our priority appropriately    */
 #ifdef THREADHANDLE
-      SysSetThreadPriority(objp->threadid, objp->hThread, objp->priority);
+            SysSetThreadPriority(objp->threadid, objp->hThread, objp->priority);
 #else
-      SysSetThreadPriority(objp->threadid, objp->priority);
+            SysSetThreadPriority(objp->threadid, objp->priority);
 #endif
 
-      RequestKernelAccess(objp);       /* now get the kernel lock           */
-                                       /* get the top activation            */
-      objp->topActivation->dispatch(); /* go dispatch it                    */
-    }                                  /* had an error return               */
-    else {
-      jmprc = 0;                       /* reset the jmp point               */
-                                       /* do error cleanup, clean all       */
-                                       /*activiations, this is top activity */
-      objp->error(0);
+            RequestKernelAccess(objp);       /* now get the kernel lock           */
+                                             /* get the top activation            */
+            objp->topActivation->dispatch(); /* go dispatch it                    */
+
+        }
+        catch (ActivityException)    // we've had a termination event, raise an error
+        {
+            objp->error(0);
+        }
+
+
+        TheActivityClass->runUninits();    /* run any needed UNINIT methods now */
+
+        EVSET(objp->runsem);               /* reset the run semaphore and the   */
+        EVSET(objp->guardsem);             /* guard semaphore                   */
+
+        if (!ProcessTerminating)
+        {         /* Are we terminating?               */
+            SysEnterResourceSection();      /* now in a critical section         */
+                                            /* add this as a free activity       */
+            TheActivityClass->classFreeActivities->add((RexxObject *)objp, ProcessName);
+            SysExitResourceSection();       /* end of the critical section       */
+        }
+        ReleaseKernelAccess(objp);         /* release the kernel lock           */
+        if (ProcessTerminating)
+        {          /* Are we terminating?               */
+            break;                           /* yup, go do termination stuff      */
+        }
+    }
+    RequestKernelAccess(objp);           /* get the kernel access             */
+
+    SysDeregisterExceptions(&exreg);     /* remove exception trapping         */
+    SysEnterResourceSection();           /* now in a critical section         */
+    number_activities = --ProcessNumActs;/* get the current activity count    */
+    SysExitResourceSection();            /* end of the critical section       */
+    if (number_activities == 0)          /* are we the last thread?           */
+    {
+        objp->checkUninits();              /* process uninits                   */
     }
 
-    TheActivityClass->runUninits();    /* run any needed UNINIT methods now */
-
-    EVSET(objp->runsem);               /* reset the run semaphore and the   */
-    EVSET(objp->guardsem);             /* guard semaphore                   */
-
-    if (!ProcessTerminating) {         /* Are we terminating?               */
-       SysEnterResourceSection();      /* now in a critical section         */
-                                       /* add this as a free activity       */
-       TheActivityClass->classFreeActivities->add((RexxObject *)objp, ProcessName);
-       SysExitResourceSection();       /* end of the critical section       */
-    }
-    ReleaseKernelAccess(objp);         /* release the kernel lock           */
-    if (ProcessTerminating) {          /* Are we terminating?               */
-      break;                           /* yup, go do termination stuff      */
-    }
-  }
-  RequestKernelAccess(objp);           /* get the kernel access             */
-
-  SysDeregisterExceptions(&exreg);     /* remove exception trapping         */
-  SysEnterResourceSection();           /* now in a critical section         */
-  number_activities = --ProcessNumActs;/* get the current activity count    */
-  SysExitResourceSection();            /* end of the critical section       */
-  if (number_activities == 0)          /* are we the last thread?           */
-    objp->checkUninits();              /* process uninits                   */
-
-  SysTerminateThread((TID)objp->threadid);  /* system specific thread termination*/
-  thrdCount--;
-  SysEnterResourceSection();           /* now in a critical section         */
-  if (ProcessTerminating)
-  {
-      if (TheActivityClass->classFreeActivities->hasItem((RexxObject *)objp, ProcessName) != OREF_NULL)
-          TheActivityClass->classFreeActivities->removeItem((RexxObject *)objp, ProcessName);
-      EVCLOSE(objp->runsem);
-      EVCLOSE(objp->guardsem);
+    SysTerminateThread((TID)objp->threadid);  /* system specific thread termination*/
+    thrdCount--;
+    SysEnterResourceSection();           /* now in a critical section         */
+    if (ProcessTerminating)
+    {
+        if (TheActivityClass->classFreeActivities->hasItem((RexxObject *)objp, ProcessName) != OREF_NULL)
+        {
+            TheActivityClass->classFreeActivities->removeItem((RexxObject *)objp, ProcessName);
+        }
+        EVCLOSE(objp->runsem);
+        EVCLOSE(objp->guardsem);
 #ifdef THREADHANDLE
-      EVCLOSE(objp->hThread);
+        EVCLOSE(objp->hThread);
 #endif
-      ProcessLocalActs->put(OREF_NULL, objp->threadid);
-  }
-                                       /* remove this activity from usage   */
-  TheActivityClass->classUsedActivities->remove((RexxObject *)objp);
-  SysExitResourceSection();            /* end of the critical section       */
-  ReleaseKernelAccess(objp);           /* and release the kernel lock       */
-                                       /* Are we terminating?               */
+        ProcessLocalActs->put(OREF_NULL, objp->threadid);
+    }
+    /* remove this activity from usage   */
+    TheActivityClass->classUsedActivities->remove((RexxObject *)objp);
+    SysExitResourceSection();            /* end of the critical section       */
+    ReleaseKernelAccess(objp);           /* and release the kernel lock       */
+                                         /* Are we terminating?               */
 
-  if (ProcessTerminating && number_activities == 0)
-    kernelShutdown();                  /* time to shut things down          */
-
-return;                              /* finished                          */
+    if (ProcessTerminating && number_activities == 0)
+    {
+        kernelShutdown();                /* time to shut things down          */
+    }
+    return;                              /* finished                          */
 }
 
 void *RexxActivity::operator new(size_t size)
@@ -712,8 +647,14 @@ void RexxActivity::raiseException(
   char             work[10];           /* temp buffer for formatting        */
   int              newVal;
 
-  if (this->requestingString)          /* recursive entry to error handler? */
-    longjmp(this->stringError, 1);     /* just jump back                    */
+  // during error processing, we need to request the string value of message
+  // substitution objects.  It is possible that the string process will also
+  // cause a syntax error, resulting in a recursion loop.  We snip that off here,
+  // by disallowing a nested error condition.
+  if (requestingString)
+  {
+      throw RecursiveStringError;
+  }
 
   activation = this->currentAct();     /* get the current activation        */
   while (isOfClass(Activation, activation) && activation->isForwarded()) {
@@ -894,11 +835,15 @@ RexxString *RexxActivity::messageSubstitution(
           this->requestingString = TRUE;
           this->stackcheck = FALSE;    /* disable the checking              */
                                        /* now protect against reentry       */
-          if (setjmp(this->stringError) == 0)
+          try
+          {
                                        /* force to character form           */
-            stringVal = value->stringValue();
-          else                         /* bad string method, use default    */
-            stringVal = value->defaultName();
+              stringVal = value->stringValue();
+          }
+          catch (ActivityException)
+          {
+              stringVal = value->defaultName();
+          }
                                        /* we're safe again                  */
           this->requestingString = FALSE;
           this->stackcheck = TRUE;     /* disable the checking              */
@@ -1529,7 +1474,7 @@ void RexxActivity::kill(
 /******************************************************************************/
 {
   this->conditionobj = conditionObj;   /* save the condition object         */
-  longjmp(this->nestedInfo.jmpenv,1);  /* jump back to the error handler    */
+  throw UnhandledCondition;            // we have a fatal error condition
 }
 
 RexxActivationBase *RexxActivity::sender(
@@ -2642,7 +2587,7 @@ void  RexxActivity::checkUninits()
 {
   RexxObjectTable  * uninittable;      /* uninit table for this process     */
   RexxObject * zombieObj;              /* obj that needs uninit run.        */
-  long iterTable;                      /* iterator for table.             */
+  HashLink iterTable;                  /* iterator for table.             */
 
                                        /* retrive the UNINIT table for    */
                                        /*  process.                       */
@@ -2660,9 +2605,13 @@ void  RexxActivity::checkUninits()
     for (iterTable = uninittable->first();
          (zombieObj = uninittable->index(iterTable)) != OREF_NULL;
          iterTable = uninittable->next(iterTable)) {
-                                       /* establish the longjmp return point*/
-      if (setjmp(this->nestedInfo.jmpenv) == 0)
-        zombieObj->uninit();           /* run the UNINIT method           */
+        try
+        {
+            zombieObj->uninit();           /* run the UNINIT method           */
+        }
+        catch (ActivityException)
+        {
+        }
     }                                  /* now go check next object in tabl*/
 
                                        /* all UNINITed, remove uninit tabl*/
@@ -3755,7 +3704,6 @@ LONG RexxActivity::messageSend(
 /*              method will do any needed activity setup before hand.         */
 /******************************************************************************/
 {
-  int     jmprc;                       /* setjmp return code                */
   LONG    rc;                          /* message return code               */
   SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
   long    startDepth;                  /* starting depth of activation stack*/
@@ -3773,13 +3721,17 @@ LONG RexxActivity::messageSend(
   startDepth = this->depth;            /* Remember activation stack depth   */
 
   SysRegisterSignals(&exreg);          /* register our signal handlers      */
-                                       /* set up setjmp environment         */
-  jmprc = setjmp(this->nestedInfo.jmpenv);
-  if (jmprc != 0)                      /* did we get an error return?       */
-    rc = this->error(startDepth);      /* do error cleanup                  */
-  else
+
+  try
+  {
                                        /* issue a straight message send     */
-    *result = receiver->messageSend(msgname, count, arguments);
+      *result = receiver->messageSend(msgname, count, arguments);
+
+  }
+  catch (ActivityException)
+  {
+      rc = this->error(startDepth);      /* do error cleanup                  */
+  }
                                        /* objects with UNINIT defined may be*/
                                        /* on the savestack. to ensure that  */
                                        /* UNINIT can run, the stack has to  */
@@ -3808,7 +3760,6 @@ LONG VLAREXXENTRY RexxSendMessage (
 /*            interface string.                                               */
 /******************************************************************************/
 {
-  int  jmprc;                          /* setjmp return code                */
   RexxActivity *activity;              /* target activity                   */
   RexxObject *result;                  /* returned result object            */
   RexxArray  *argument_array;          /* array of arguments                */
@@ -3820,7 +3771,6 @@ LONG VLAREXXENTRY RexxSendMessage (
   nestedActivityInfo saveInfo;         /* saved activity info               */
   long startDepth;
 
-  jmprc = 0;
   rc = 0;                              /* default to a clean return         */
                                        /* Find an activity for this thread  */
                                        /* (will create one if necessary)    */
@@ -3832,41 +3782,41 @@ LONG VLAREXXENTRY RexxSendMessage (
   activity->pushNil();                 /* what level we entered.            */
   startDepth = activity->depth;        /* Remember activation stack depth   */
   SysRegisterSignals(&exreg);          /* register our signal handlers      */
-                                       /* set up setjmp environment         */
-  jmprc = setjmp(activity->nestedInfo.jmpenv);
-  if (jmprc != 0) {                    /* did we get an error return?       */
-                                       /* do error cleanup                  */
-    rc = activity->error(startDepth);
-    result = OREF_NULL;                /* no result in this case            */
+  try
+  {
+      returnType = *interfacedefn++;     /* Get the return type.              */
+                                         /* get the argument list start       */
+      va_start(arguments, result_pointer);
+                                         /* create an argument list           */
+      argument_list  = new_list();
+      save(argument_list);
+                                         /* go convert the arguments          */
+      process_message_arguments(&arguments, interfacedefn, argument_list);
+                                         /* now convert to an array           */
+      argument_array = argument_list->makeArray();
+      save(argument_array);
+      discard(argument_list);            /* No longer need the list.          */
+      va_end(arguments);                 /* end of argument processing        */
+      if (start_class == OREF_NULL)      /* no start scope given?             */
+                                         /* issue a straight message send     */
+        result = receiver->messageSend(new_string(msgname)->upper(),
+            argument_array->size(), argument_array->data());
+      else
+                                         /* go issue the message with override*/
+        result = receiver->messageSend(new_string(msgname)->upper(),
+            argument_array->size(), argument_array->data(), start_class);
+      discard(argument_array);           /* no longer need the argument array */
+      if (result != OREF_NULL) {         /* if we got a result, protect it.   */
+        save(result);                    /* because might not have references */
+                                         /* convert the return result         */
+        process_message_result(result, result_pointer, returnType);
+      }
   }
-  else {
-    returnType = *interfacedefn++;     /* Get the return type.              */
-                                       /* get the argument list start       */
-    va_start(arguments, result_pointer);
-                                       /* create an argument list           */
-    argument_list  = new_list();
-    save(argument_list);
-                                       /* go convert the arguments          */
-    process_message_arguments(&arguments, interfacedefn, argument_list);
-                                       /* now convert to an array           */
-    argument_array = argument_list->makeArray();
-    save(argument_array);
-    discard(argument_list);            /* No longer need the list.          */
-    va_end(arguments);                 /* end of argument processing        */
-    if (start_class == OREF_NULL)      /* no start scope given?             */
-                                       /* issue a straight message send     */
-      result = receiver->messageSend(new_string(msgname)->upper(),
-          argument_array->size(), argument_array->data());
-    else
-                                       /* go issue the message with override*/
-      result = receiver->messageSend(new_string(msgname)->upper(),
-          argument_array->size(), argument_array->data(), start_class);
-    discard(argument_array);           /* no longer need the argument array */
-    if (result != OREF_NULL) {         /* if we got a result, protect it.   */
-      save(result);                    /* because might not have references */
-                                       /* convert the return result         */
-      process_message_result(result, result_pointer, returnType);
-    }
+  catch (ActivityException)
+  {
+                                       /* do error cleanup                  */
+      rc = activity->error(startDepth);
+      result = OREF_NULL;                /* no result in this case            */
   }
   TheActivityClass->runUninits();      /* be sure to finish UNINIT methods  */
                                        /* restore the nested information    */

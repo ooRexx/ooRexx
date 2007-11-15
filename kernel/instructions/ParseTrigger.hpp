@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   ParseTrigger.hpp */
+/* REXX Kernel                                               ParseTrigger.hpp */
 /*                                                                            */
 /* Primitive PARSE instruction parsing trigger Class Definitions              */
 /*                                                                            */
@@ -55,8 +55,12 @@
 
 class RexxTrigger : public RexxInternalObject {
  public:
-  void       *operator new(size_t, LONG);
-  inline void       *operator new(size_t size, void *ptr) {return ptr;};
+  void        *operator new(size_t, int);
+  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *) { }
+  inline void  operator delete(void *, int) { }
+  inline void  operator delete(void *, void *) { ; }
+
   RexxTrigger(int, RexxObject *, LONG, RexxQueue *);
   inline RexxTrigger(RESTORETYPE restoreType) { ; };
   long        integerTrigger(RexxObject *);

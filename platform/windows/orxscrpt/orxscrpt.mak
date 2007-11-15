@@ -101,4 +101,4 @@ $(OR_OUTDIR)\ORXSCRPT.dll : $(CPPOBJS) $(RXDBG_OBJ) $(OR_OUTDIR)\ORXSCRPT.lib \
 $(CPPOBJS):  $(@B).cpp
     @ECHO .
     @ECHO Compiling $(@B).cpp
-    $(OR_CC) $(cflags_common) /GX $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_ORYXAXSCRIPT)\$(@B).cpp
+    $(OR_CC) $(cflags_common) /EHsc $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_ORYXAXSCRIPT)\$(@B).cpp

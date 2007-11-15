@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   QueueInstruction.hpp */
+/* REXX Kernel                                           QueueInstruction.hpp */
 /*                                                                            */
 /* Primitive QUEUE instruction Class Definitions                              */
 /*                                                                            */
@@ -50,7 +50,10 @@
 
 class RexxInstructionQueue : public RexxInstructionExpression {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void  operator delete(void *) { }
+  inline void  operator delete(void *, void *) { }
+
   inline RexxInstructionQueue(RESTORETYPE restoreType) { ; };
   RexxInstructionQueue(RexxObject *, int);
   void execute(RexxActivation *, RexxExpressionStack *);

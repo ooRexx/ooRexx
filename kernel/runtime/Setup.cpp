@@ -1591,19 +1591,22 @@ bool kernel_setup (void)
   programName = SysResolveProgramName(symb, OREF_NULL);
                                        /* Push marker onto stack so we know */
   CurrentActivity->pushNil();          /* what level we entered.            */
-                                       /* set up setjmp environment         */
-  if (setjmp(CurrentActivity->nestedInfo.jmpenv)) {
-    CurrentActivity->error(0);         /* do error cleanup                  */
-    return false;                      /* this is a setup failure           */
+  try
+  {
+                                           /* create a method object out of this*/
+      meth = TheMethodClass->newFile(programName);
+
+
+      RexxObject *args = kernel_methods;   // temporary to avoid type-punning warnings
+                                           /* now call BaseClasses to finish the image*/
+      ((RexxObject *)CurrentActivity)->shriekRun(meth, OREF_NULL, OREF_NULL, (RexxObject **)&args, 1);
+      discard(kernel_methods);             /* release the directory lock        */
   }
-                                       /* create a method object out of this*/
-  meth = TheMethodClass->newFile(programName);
-
-
-  RexxObject *args = kernel_methods;   // temporary to avoid type-punning warnings
-                                       /* now call BaseClasses to finish the image*/
-  ((RexxObject *)CurrentActivity)->shriekRun(meth, OREF_NULL, OREF_NULL, (RexxObject **)&args, 1);
-  discard(kernel_methods);             /* release the directory lock        */
+  catch (ActivityException )
+  {
+      CurrentActivity->error(0);         /* do error cleanup                  */
+      return false;                      /* this is a setup failure           */
+  }
 
   /* define and suppress methods in the nil object */
   TheNilObject->defMethod(kernel_name(CHAR_COPY), (RexxMethod *)TheNilObject);

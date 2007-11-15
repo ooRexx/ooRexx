@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                     DoInstruction.hpp  */
+/* REXX Kernel                                             DoInstruction.hpp  */
 /*                                                                            */
 /* Primitive DO instruction Class Definitions                                 */
 /*                                                                            */
@@ -68,7 +68,11 @@ class RexxInstructionDo : public RexxBlockInstruction
 {
  public:
 
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void operator delete(void *) { }
+  inline void operator delete(void *, void *) { }
+
+
   inline RexxInstructionDo(void) { ; }
   inline RexxInstructionDo(RESTORETYPE restoreType) { ; };
 

@@ -171,6 +171,9 @@ RexxObject * activation_find  (void);
   public:
    void *operator new(size_t);
    inline void *operator new(size_t size, void *ptr) {return ptr;};
+   inline void  operator delete(void *) { ; }
+   inline void  operator delete(void *, void *) { ; }
+
    inline RexxActivation(RESTORETYPE restoreType) { ; };
    RexxActivation(RexxObject *, RexxMethod *, RexxActivity *, RexxString *, RexxActivation *, int);
    void init(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, int);
@@ -682,7 +685,6 @@ RexxObject * activation_find  (void);
    int                  object_scope;  /* reserve/release state of variables*/
    RexxObject          *result;        /* result of execution               */
    RexxArray           *trapinfo;      /* current trap handler              */
-   jmp_buf              conditionjump; /* condition trap recovery location  */
                                        /* current activation state          */
    int                  execution_state;
                                        /* type of activation activity       */

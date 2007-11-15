@@ -73,7 +73,10 @@ class RexxInstructionCall : public RexxInstructionCallBase {
          call_on_off      = 0x20,         // call ON/OFF instruction
      };
 
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void operator delete(void *) { }
+  inline void operator delete(void *, void *) { }
+
   RexxInstructionCall(RexxObject *, RexxString *, size_t, RexxQueue *, size_t, size_t);
   inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
   void live();

@@ -273,7 +273,10 @@ class RexxObject : public RexxInternalObject {
      void * operator new(size_t, RexxClass *);
      void * operator new(size_t, RexxClass *, RexxObject **, size_t);
      void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-     void   operator delete(void *);
+     inline void  operator delete(void *, void *) {;}
+     inline void  operator delete(void *) {;}
+     inline void operator delete(void *, RexxClass *) {;}
+     inline void operator delete(void *, RexxClass *, RexxObject **, size_t) {;}
                                        // Followin are used to create new objects.
                                        // Assumed that the message is sent to a class Object
                                        // These may move to RexxClass in the future......
@@ -505,6 +508,7 @@ public:
     void * operator new(size_t);
     void * operator new(size_t size, void *objectPtr) { return objectPtr; };
     inline void   operator delete(void *) { ; }
+    inline void   operator delete(void *, void *) { ; }
     RexxNilObject();
     inline RexxNilObject(RESTORETYPE restoreType) { ; };
     virtual ~RexxNilObject() {;};

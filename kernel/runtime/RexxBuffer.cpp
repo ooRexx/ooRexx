@@ -43,7 +43,6 @@
 /******************************************************************************/
 #include <stdlib.h>
 #include <string.h>
-#include <setjmp.h>
 #include "RexxCore.h"
 #include "RexxActivity.hpp"
 #include "RexxBuffer.hpp"

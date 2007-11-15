@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   ReplyInstruction.hpp */
+/* REXX Kernel                                           ReplyInstruction.hpp */
 /*                                                                            */
 /* Primitive REPLY instruction Class Definitions                              */
 /*                                                                            */
@@ -49,7 +49,10 @@
 class RexxInstructionReply : public RexxInstructionExpression {
  public:
 
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void  operator delete(void *) { }
+  inline void  operator delete(void *, void *) { }
+
   RexxInstructionReply(RexxObject*);
   inline RexxInstructionReply(RESTORETYPE restoreType) { ; };
   void execute(RexxActivation *, RexxExpressionStack *);

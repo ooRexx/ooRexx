@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ExpressionCompoundVariable.hpp   */
+/* REXX Kernel                               ExpressionCompoundVariable.hpp   */
 /*                                                                            */
 /* Primitive Expression Compound Variable Class Definitions                   */
 /*                                                                            */
@@ -50,8 +50,12 @@
 
 class RexxCompoundVariable : public RexxVariableBase {
  public:
-  void *operator new(size_t, LONG);
+  void *operator new(size_t, int);
   inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *) { ; }
+  inline void  operator delete(void *, int) { ; }
+  inline void  operator delete(void *, void *) { ; }
+
   RexxCompoundVariable(RexxString *, LONG, RexxQueue *, LONG);
   inline RexxCompoundVariable(RESTORETYPE restoreType) { ; };
   void live();

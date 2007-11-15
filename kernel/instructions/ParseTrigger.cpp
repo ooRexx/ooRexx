@@ -250,7 +250,7 @@ void RexxTrigger::flatten(RexxEnvelope *envelope)
 }
 
 void  *RexxTrigger::operator new(size_t size,
-    LONG  variableCount)               /* list of variables                 */
+    int    variableCount)              /* list of variables                 */
 /******************************************************************************/
 /* Function:  Create a new parsing trigger object                             */
 /******************************************************************************/

@@ -46,13 +46,16 @@
 
 class RexxExpressionMessage : public RexxVariableBase {
  public:
+  void *operator new(size_t, size_t);
+  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *, size_t) { ; }
+  inline void  operator delete(void *, void *) { ; }
+
   RexxExpressionMessage(RexxObject *, RexxString *, RexxObject *, size_t, RexxQueue *, bool);
   inline RexxExpressionMessage(RESTORETYPE restoreType) { ; };
   void        live();
   void        liveGeneral();
   void        flatten(RexxEnvelope *);
-  void       *operator new(size_t, size_t);
-  inline void       *operator new(size_t size, void *ptr) {return ptr;};
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
   void assign(RexxActivation *, RexxExpressionStack *, RexxObject *);
   void makeAssignment(RexxSource *source);

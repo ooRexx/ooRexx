@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                     IfInstruction.hpp  */
+/* REXX Kernel                                             IfInstruction.hpp  */
 /*                                                                            */
 /* Primitive IF instruction Class Definitions                                 */
 /*                                                                            */
@@ -49,7 +49,10 @@
 
 class RexxInstructionIf : public RexxInstructionSet {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void operator delete(void *) { }
+  inline void operator delete(void *, void *) { }
+
   RexxInstructionIf(RexxObject *, RexxToken *);
   inline RexxInstructionIf(RESTORETYPE restoreType) { ; };
   void live();

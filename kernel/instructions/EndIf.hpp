@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  EndIf.hpp  */
+/* REXX Kernel                                                     EndIf.hpp  */
 /*                                                                            */
 /* Primitive End If instruction Class Definitions                             */
 /*                                                                            */
@@ -49,7 +49,10 @@
 class RexxInstructionEndIf : public RexxInstructionSet {
  public:
 
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void operator delete(void *) { }
+  inline void operator delete(void *, void *) { }
+
   RexxInstructionEndIf(RexxInstructionIf *);
   inline RexxInstructionEndIf(RESTORETYPE restoreType) { ; };
   void live();

@@ -364,7 +364,7 @@ void RexxCompoundVariable::clearGuard(
 }
 
 void * RexxCompoundVariable::operator new(size_t size,
-    LONG tailCount)                    /* count of tails                    */
+    int  tailCount)                    /* count of tails                    */
 /******************************************************************************/
 /* Function:  Create a new compound variable object                           */
 /******************************************************************************/

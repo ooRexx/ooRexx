@@ -371,6 +371,11 @@
 
 class RexxToken : public RexxInternalObject {
  public:
+  void      *operator new(size_t);
+  inline void      *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *) { ; }
+  inline void  operator delete(void *, void *) { ; }
+
   RexxToken(int, int, RexxString *, SourceLocation &);;
   inline RexxToken(RESTORETYPE restoreType) { ; };
   void       live();
@@ -378,8 +383,6 @@ class RexxToken : public RexxInternalObject {
   void       flatten(RexxEnvelope *);
   inline void setStart(size_t l, size_t o) { tokenLocation.setStart(l, o); }
   inline void setEnd(size_t l, size_t o) { tokenLocation.setEnd(l, o); }
-  void      *operator new(size_t);
-  inline void      *operator new(size_t size, void *ptr) {return ptr;};
 
   inline bool       isVariable() { return (this->subclass == SYMBOL_VARIABLE || this->subclass == SYMBOL_STEM || this->subclass == SYMBOL_COMPOUND); };
   inline bool       isLiteral()  { return (this->classId == TOKEN_LITERAL); };

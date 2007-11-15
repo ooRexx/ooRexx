@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxBehaviour.hpp   */
+/* REXX Kernel                                            RexxBehaviour.hpp   */
 /*                                                                            */
 /* Primitive Behaviour Class Definitions                                      */
 /*                                                                            */
@@ -52,6 +52,9 @@ void behaviour_setup (void);
   public:
   void *operator new(size_t, size_t);
   inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *) { ; }
+  inline void  operator delete(void *, void *) { ; }
+
   RexxBehaviour(size_t, PCPPM *);
   inline RexxBehaviour() {;};
   inline RexxBehaviour(RESTORETYPE restoreType) { ; };

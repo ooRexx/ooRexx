@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxActivation.c    */
+/* REXX Kernel                                            RexxActivation.c    */
 /*                                                                            */
 /* Primitive Activation Class                                                 */
 /*                                                                            */
@@ -49,7 +49,6 @@
 /******************************************************************************/
 /******************************************************************************/
 #include <ctype.h>
-#include <setjmp.h>
 #include <string.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
@@ -217,235 +216,296 @@ RexxObject * RexxActivation::run(
 /*            interpreter that makes the whole thing run!                     */
 /******************************************************************************/
 {
-  RexxActivationBase*activation;       /* used for unwinding activations    */
-  size_t             i;                /* loop counter                      */
-  RexxActivity      *oldActivity;      /* old activity                      */
-#ifndef FIXEDTIMERS                    /* currently disabled                */
-  LONG               instructionCount; /* instructions without yielding     */
+    RexxActivationBase*activation;       /* used for unwinding activations    */
+    size_t             i;                /* loop counter                      */
+    RexxActivity      *oldActivity;      /* old activity                      */
+#ifndef FIXEDTIMERS                      /* currently disabled                */
+    size_t             instructionCount; /* instructions without yielding     */
 #endif
-  BOOL                fDebuggerSet;    /* debug exits installed?            */
-  RexxObject *resultObj = OREF_NULL;
+    BOOL                fDebuggerSet;    /* debug exits installed?            */
+    RexxObject *resultObj = OREF_NULL;
 
-                                       /* not a reply restart situation?    */
-  if (this->execution_state != REPLIED) {
-                                       /* exits possible?                   */
-    if (!this->method->isInternal() && this->activity->querySet()) {
-                                       /* check at the end of each clause   */
-      this->settings.flags |= clause_boundary;
-                                       /* remember that we have sys exits   */
-      this->settings.flags |= clause_exits;
-    }
-    this->arglist = _arglist;           /* set the argument list             */
-    this->argcount = _argcount;
-                                       /* first entry into here?            */
-    if (this->activation_context&TOP_LEVEL_CALL) {
-                                       /* save entry argument list for      */
-                                       /* variable pool fetch private       */
-                                       /* access                            */
-      settings.parent_arglist = arglist;
-      settings.parent_argcount = argcount;
-      this->code->install(this);       /* do any required installations     */
-      this->next = this->code->getFirstInstruction();  /* ask the method for the start point*/
-      this->current = this->next;      /* set the current too (for errors)  */
-                                       /* not an internal method?           */
-      if (this->activation_context&PROGRAM_LEVEL_CALL) {
-                                       /* run initialization exit           */
-        this->activity->sysExitInit(this);
-        SysSetupProgram(this);         /* do any system specific setup      */
-      }
-      else {
-                                       /* guarded method?                   */
-        if (this->method->isGuarded()) {
-                                       /* get the object variables          */
-          this->settings.object_variables = this->receiver->getObjectVariables(this->method->getScope());
-                                       /* reserve the variable scope        */
-          this->settings.object_variables->reserve(this->activity);
-                                       /* and remember for later            */
-          this->object_scope = SCOPE_RESERVED;
+    /* not a reply restart situation?    */
+    if (this->execution_state != REPLIED)
+    {
+        /* exits possible?                   */
+        if (!this->method->isInternal() && this->activity->querySet())
+        {
+            /* check at the end of each clause   */
+            this->settings.flags |= clause_boundary;
+            /* remember that we have sys exits   */
+            this->settings.flags |= clause_exits;
         }
-                                       /* initialize the this variable      */
-        this->setLocalVariable(OREF_SELF, VARIABLE_SELF, this->receiver);
-                                       /* initialize the SUPER variable     */
-        this->setLocalVariable(OREF_SUPER, VARIABLE_SUPER, this->receiver->superScope(this->method->getScope()));
-      }
+        this->arglist = _arglist;           /* set the argument list             */
+        this->argcount = _argcount;
+        /* first entry into here?            */
+        if (this->activation_context&TOP_LEVEL_CALL)
+        {
+            /* save entry argument list for      */
+            /* variable pool fetch private       */
+            /* access                            */
+            settings.parent_arglist = arglist;
+            settings.parent_argcount = argcount;
+            this->code->install(this);       /* do any required installations     */
+            this->next = this->code->getFirstInstruction();  /* ask the method for the start point*/
+            this->current = this->next;      /* set the current too (for errors)  */
+                                             /* not an internal method?           */
+            if (this->activation_context&PROGRAM_LEVEL_CALL)
+            {
+                /* run initialization exit           */
+                this->activity->sysExitInit(this);
+                SysSetupProgram(this);         /* do any system specific setup      */
+            }
+            else
+            {
+                /* guarded method?                   */
+                if (this->method->isGuarded())
+                {
+                    /* get the object variables          */
+                    this->settings.object_variables = this->receiver->getObjectVariables(this->method->getScope());
+                    /* reserve the variable scope        */
+                    this->settings.object_variables->reserve(this->activity);
+                    /* and remember for later            */
+                    this->object_scope = SCOPE_RESERVED;
+                }
+                /* initialize the this variable      */
+                this->setLocalVariable(OREF_SELF, VARIABLE_SELF, this->receiver);
+                /* initialize the SUPER variable     */
+                this->setLocalVariable(OREF_SUPER, VARIABLE_SUPER, this->receiver->superScope(this->method->getScope()));
+            }
+        }
+        else
+        {
+            if (start == OREF_NULL)          /* no starting location given?       */
+            {
+                this->next = this->code->getFirstInstruction();  /* ask the method for the start point*/
+            }
+            else
+            {
+                this->next = start;            /* set that as the current           */
+            }
+            this->current = this->next;      /* set the current too (for errors)  */
+        }
     }
-    else {
-      if (start == OREF_NULL)          /* no starting location given?       */
-        this->next = this->code->getFirstInstruction();  /* ask the method for the start point*/
-      else
-        this->next = start;            /* set that as the current           */
-      this->current = this->next;      /* set the current too (for errors)  */
+    else
+    {                               /* resuming after a reply            */
+                                    /* need to reaquire the lock?        */
+        if (this->settings.flags&transfer_failed)
+        {
+            /* re-lock the variable dictionary   */
+            this->settings.object_variables->reserve(this->activity);
+            /* turn off the failure flag         */
+            this->settings.flags &= ~transfer_failed;
+        }
     }
-  }
-  else {                               /* resuming after a reply            */
-                                       /* need to reaquire the lock?        */
-    if (this->settings.flags&transfer_failed) {
-                                       /* re-lock the variable dictionary   */
-      this->settings.object_variables->reserve(this->activity);
-                                       /* turn off the failure flag         */
-      this->settings.flags &= ~transfer_failed;
+    /* internal call?                    */
+    if (this->activation_context == INTERNALCALL)
+    {
+        start = this->next;                /* get the starting point            */
+                                           /* scan over the internal labels     */
+        while (start != OREF_NULL && start->isType(KEYWORD_LABEL))
+        {
+            start = start->nextInstruction;  /* step to the next one              */
+        }
+                                             /* this a procedure instruction      */
+        if (start != OREF_NULL && start->isType(KEYWORD_PROCEDURE))
+        {
+            /* flip on the procedure flag        */
+            this->settings.flags |= procedure_valid;
+        }
     }
-  }
-                                       /* internal call?                    */
-  if (this->activation_context == INTERNALCALL) {
-    start = this->next;                /* get the starting point            */
-                                       /* scan over the internal labels     */
-    while (start != OREF_NULL && start->isType(KEYWORD_LABEL))
-      start = start->nextInstruction;  /* step to the next one              */
-                                       /* this a procedure instruction      */
-    if (start != OREF_NULL && start->isType(KEYWORD_PROCEDURE))
-                                       /* flip on the procedure flag        */
-      this->settings.flags |= procedure_valid;
-  }
-  this->execution_state = ACTIVE;      /* we are now actively processing    */
-                                       /* have we had a condition or        */
-                                       /* exception of some kind raised?    */
-  if (setjmp(this->conditionjump) != 0) {
-                                       /* unwind the activation stack       */
-    while ((activation = this->activity->current()) != this) {
-      activation->termination();       /* prepare the activation for termin */
-      this->activity->pop(FALSE);      /* pop the activation off the stack  */
-    }
-    this->stack.clear();               /* Force the stack clear             */
-                                       /* invalidate the timestamp          */
-    this->settings.timestamp.valid = FALSE;
-    if (this->debug_pause) {           /* in a debug pause?                 */
-      this->execution_state = RETURNED;/* cause termination                 */
-      this->next = OREF_NULL;          /* turn off execution engine         */
-    }
-                                       /* have pending conditions?          */
-    if (this->condition_queue != OREF_NULL)
-                                       /* get the pending count             */
-      this->pending_count = this->condition_queue->getSize();
-    if (this->pending_count != 0) {    /* do we have trapped conditions?    */
-      this->processTraps();            /* go dispatch the traps             */
-      if (this->pending_count != 0)    /* have deferred conditions?         */
-                                       /* need to check each time around    */
-        this->settings.flags |= clause_boundary;
-    }
-                                       /* now fall back into processing loop*/
-  }
-  RexxExpressionStack *localStack = &this->stack;                /* load up the stack                 */
-#ifndef FIXEDTIMERS                    /* currently disabled                */
-  instructionCount = 0;                /* no instructions yet               */
-#endif
-  RexxInstruction *nextInst = this->next;  /* get the next instruction          */
-  SysClauseBoundary(this);             /* take one shot at clause stuff     */
+    this->execution_state = ACTIVE;      /* we are now actively processing    */
 
-                                       /* if no debug exit is set, calls in */
-                                       /* the execution loop can be skipped */
-  fDebuggerSet = this->activity->nestedInfo.exitset;
-                                       /* loop until we get a terminating   */
-  while (nextInst != OREF_NULL) {      /* condition                         */
+    while (true)                         // loop until we get a terminating condition
+    {
+        try
+        {
+            RexxExpressionStack *localStack = &this->stack;                /* load up the stack                 */
+#ifndef FIXEDTIMERS                    /* currently disabled                */
+            instructionCount = 0;                /* no instructions yet               */
+#endif
+            RexxInstruction *nextInst = this->next;  /* get the next instruction          */
+            SysClauseBoundary(this);             /* take one shot at clause stuff     */
+
+                                                 /* if no debug exit is set, calls in */
+                                                 /* the execution loop can be skipped */
+            fDebuggerSet = this->activity->nestedInfo.exitset;
+            /* loop until we get a terminating   */
+            while (nextInst != OREF_NULL)
+            {      /* condition                         */
 
 #ifdef FIXEDTIMERS                     /* currently disabled (active on Win)*/
-                                       /* has time Slice expired?           */
-    if (SysTimeSliceElapsed()) {
-      this->activity->relinquish();    /* yield control to the activity     */
-    }
+                /* has time Slice expired?           */
+                if (SysTimeSliceElapsed())
+                {
+                    this->activity->relinquish();    /* yield control to the activity     */
+                }
 #else
-                                       /* need to give someone else a shot? */
-    if (++instructionCount > MAX_INSTRUCTIONS) {
-      this->activity->relinquish();    /* yield control to the activity     */
-      instructionCount = 0;            /* reset to zero                     */
-    }
+                /* need to give someone else a shot? */
+                if (++instructionCount > MAX_INSTRUCTIONS)
+                {
+                    this->activity->relinquish();    /* yield control to the activity     */
+                    instructionCount = 0;            /* reset to zero                     */
+                }
 #endif
 
-    this->current = nextInst;          /* set the next instruction          */
-    this->next = nextInst->nextInstruction;/* prefetch the next clause          */
+                this->current = nextInst;          /* set the next instruction          */
+                this->next = nextInst->nextInstruction;/* prefetch the next clause          */
 
-    if (fDebuggerSet && !(this->settings.dbg_flags&dbg_trace)) this->callDbgExit();
+                if (fDebuggerSet && !(this->settings.dbg_flags&dbg_trace))
+                {
+                    this->callDbgExit();
+                }
 
-    nextInst->execute(this, localStack);  /* execute the instruction           */
-    localStack->clear();                  /* Force the stack clear             */
-    if (fDebuggerSet)
-      this->dbgCheckEndStepOver();       /* clear stepover flag */
+                nextInst->execute(this, localStack);  /* execute the instruction           */
+                localStack->clear();                  /* Force the stack clear             */
+                if (fDebuggerSet)
+                {
+                    this->dbgCheckEndStepOver();       /* clear stepover flag */
+                }
 
-    this->settings.timestamp.valid = FALSE;
+                this->settings.timestamp.valid = FALSE;
 
-    SysClauseBoundary(this);           /* process any required system stuff */
-                                       /* need to process inter-clause stuff*/
-    if (this->settings.flags&clause_boundary)
-      this->processClauseBoundary();   /* go do the clause boundary stuff   */
+                SysClauseBoundary(this);           /* process any required system stuff */
+                                                   /* need to process inter-clause stuff*/
+                if (this->settings.flags&clause_boundary)
+                {
+                    this->processClauseBoundary();   /* go do the clause boundary stuff   */
+                }
+                nextInst = this->next;             /* get the next instruction          */
+            }
 
-    nextInst = this->next;             /* get the next instruction          */
-  }
+            if (fDebuggerSet)
+            {
+                this->dbgCheckEndStepOut();
+            }
 
-  if (fDebuggerSet)
-    this->dbgCheckEndStepOut();
+            if (this->execution_state == ACTIVE) /* implicit exit?                    */
+            {
+                this->implicitExit();              /* treat this like an EXIT           */
+            }
+                                                   /* is this a return situation?       */
+            if (this->execution_state == RETURNED)
+            {
+                this->termination();               /* do activation termination process */
+                if (this->activation_context == INTERPRET)
+                {
+                    /* save the nested setting */
+                    BOOL nested = this->sender->settings.local_variables.isNested();
+                    /* propagate parent's settings back  */
+                    this->sender->getSettings(&this->settings);
+                    if (!nested)
+                    {
+                        /* if our calling variable context was not nested, we */
+                        /* need to clear it. */
+                        this->sender->settings.local_variables.clearNested();
+                    }
+                    /* merge any pending conditions      */
+                    this->sender->mergeTraps(this->condition_queue, this->handler_queue);
+                }
+                resultObj = this->result;  /* save the result                   */
+                if (resultObj != OREF_NULL) save(resultObj);
+                this->activity->pop(FALSE);        /* now pop the current activity      */
+                /* now go run the uninit stuff       */
+                TheActivityClass->checkUninitQueue();
+            }
+            else
+            {                               /* execution_state is REPLIED        */
+                resultObj = this->result;          /* save the result                   */
+                if (resultObj != OREF_NULL)
+                {
+                    save(resultObj);
+                }
+                /* reset the next instruction        */
+                this->next = this->current->nextInstruction;
+                oldActivity = this->activity;      /* save the current activity         */
+                                                   /* clone the current activity        */
+                this->activity = new_activity(oldActivity->local);
+                for (i = 1; i <= LAST_EXIT; i++)   /* copy any exit handlers            */
+                {
+                                                   /* from old activity to the new one  */
+                    this->activity->setSysExit(i, oldActivity->querySysExits(i));
+                }
 
-  if (this->execution_state == ACTIVE) /* implicit exit?                    */
-    this->implicitExit();              /* treat this like an EXIT           */
-                                       /* is this a return situation?       */
-  if (this->execution_state == RETURNED) {
-    this->termination();               /* do activation termination process */
-    if (this->activation_context == INTERPRET) {
-      /* save the nested setting */
-      BOOL nested = this->sender->settings.local_variables.isNested();
-                                       /* propagate parent's settings back  */
-      this->sender->getSettings(&this->settings);
-      if (!nested) {
-          /* if our calling variable context was not nested, we */
-          /* need to clear it. */
-          this->sender->settings.local_variables.clearNested();
-      }
-                                       /* merge any pending conditions      */
-      this->sender->mergeTraps(this->condition_queue, this->handler_queue);
+                /* save the pointer to the start of our stack frame.  We're */
+                /* going to need to release this after we migrate everything */
+                /* over. */
+                RexxObject **framePtr = localStack->getFrame();
+                /* migrate the local variables and the expression stack to the */
+                /* new activity.  NOTE:  these must be done in this order to */
+                /* get them allocated from the new activity in the correct */
+                /* order. */
+                localStack->migrate(this->activity);
+                settings.local_variables.migrate(this->activity);
+                /* if we have arguments, we need to migrate those also, as they are subject to overwriting once we return to the parent activation.  */
+                if (argcount > 0)
+                {
+                    RexxObject **newArguments = activity->allocateFrame(argcount);
+                    memcpy(newArguments, arglist, sizeof(RexxObject *) * argcount);
+                    this->arglist = newArguments;  /* must be set on "this"  */
+                    settings.parent_arglist = newArguments;
+                }
+
+                /* return our stack frame space back to the old activity. */
+                oldActivity->releaseStackFrame(framePtr);
+
+                this->activity->push(this);        /* push it on to the activity stack  */
+                oldActivity->pop(TRUE);            /* pop existing one off the stack    */
+                                                   /* is the scope reserved?            */
+                if (this->object_scope == SCOPE_RESERVED)
+                {
+                    /* transfer the reservation          */
+                    if (!this->settings.object_variables->transfer(this->activity))
+                        /* remember the failure              */
+                        this->settings.flags |= transfer_failed;
+                }
+                /* we're now the top activation      */
+                this->sender = (RexxActivation *)TheNilObject;
+                this->activity->run();             /* continue running the new activity */
+                oldActivity->yield(OREF_NULL);     /* give other activity a chance to go*/
+            }
+            return resultObj;                    /* return the result object          */
+        }
+        catch (RexxActivation *t)
+        {
+            // if we're not the target of this throw, we've already been unwound
+            // keep throwing this until it reaches the target activation.
+            if (t != this )
+            {
+                throw;
+            }
+
+            /* unwind the activation stack       */
+            while ((activation = this->activity->current()) != this)
+            {
+                activation->termination();       /* prepare the activation for termin */
+                this->activity->pop(FALSE);      /* pop the activation off the stack  */
+            }
+            this->stack.clear();               /* Force the stack clear             */
+                                               /* invalidate the timestamp          */
+            this->settings.timestamp.valid = FALSE;
+            if (this->debug_pause)
+            {           /* in a debug pause?                 */
+                this->execution_state = RETURNED;/* cause termination                 */
+                this->next = OREF_NULL;          /* turn off execution engine         */
+            }
+            /* have pending conditions?          */
+            if (this->condition_queue != OREF_NULL)
+            {
+                /* get the pending count             */
+                this->pending_count = this->condition_queue->getSize();
+            }
+            if (this->pending_count != 0)
+            {    /* do we have trapped conditions?    */
+                this->processTraps();            /* go dispatch the traps             */
+                if (this->pending_count != 0)    /* have deferred conditions?         */
+                {
+                                                 /* need to check each time around    */
+                    this->settings.flags |= clause_boundary;
+                }
+            }
+        }
     }
-    resultObj = this->result;  /* save the result                   */
-    if (resultObj != OREF_NULL) save(resultObj);
-    this->activity->pop(FALSE);        /* now pop the current activity      */
-    /* now go run the uninit stuff       */
-    TheActivityClass->checkUninitQueue();
-  }
-  else {                               /* execution_state is REPLIED        */
-    resultObj = this->result;          /* save the result                   */
-    if (resultObj != OREF_NULL) save(resultObj);
-                                       /* reset the next instruction        */
-    this->next = this->current->nextInstruction;
-    oldActivity = this->activity;      /* save the current activity         */
-                                       /* clone the current activity        */
-    this->activity = new_activity(oldActivity->local);
-    for (i = 1; i <= LAST_EXIT; i++)   /* copy any exit handlers            */
-                                       /* from old activity to the new one  */
-      this->activity->setSysExit(i, oldActivity->querySysExits(i));
-
-    /* save the pointer to the start of our stack frame.  We're */
-    /* going to need to release this after we migrate everything */
-    /* over. */
-    RexxObject **framePtr = localStack->getFrame();
-    /* migrate the local variables and the expression stack to the */
-    /* new activity.  NOTE:  these must be done in this order to */
-    /* get them allocated from the new activity in the correct */
-    /* order. */
-    localStack->migrate(this->activity);
-    settings.local_variables.migrate(this->activity);
-    /* if we have arguments, we need to migrate those also, as they are subject to overwriting once we return to the parent activation.  */
-    if (argcount > 0) {
-        RexxObject **newArguments = activity->allocateFrame(argcount);
-        memcpy(newArguments, arglist, sizeof(RexxObject *) * argcount);
-        this->arglist = newArguments;  /* must be set on "this"  */
-        settings.parent_arglist = newArguments;
-    }
-
-    /* return our stack frame space back to the old activity. */
-    oldActivity->releaseStackFrame(framePtr);
-
-    this->activity->push(this);        /* push it on to the activity stack  */
-    oldActivity->pop(TRUE);            /* pop existing one off the stack    */
-                                       /* is the scope reserved?            */
-    if (this->object_scope == SCOPE_RESERVED) {
-                                       /* transfer the reservation          */
-      if (!this->settings.object_variables->transfer(this->activity))
-                                       /* remember the failure              */
-        this->settings.flags |= transfer_failed;
-    }
-                                       /* we're now the top activation      */
-    this->sender = (RexxActivation *)TheNilObject;
-    this->activity->run();             /* continue running the new activity */
-    oldActivity->yield(OREF_NULL);     /* give other activity a chance to go*/
-  }
-  return resultObj;                    /* return the result object          */
 }
 
 void RexxActivation::processTraps()
@@ -1035,40 +1095,47 @@ void RexxActivation::exitFrom(
 /* Function:  Process a REXX exit instruction                                 */
 /******************************************************************************/
 {
-  RexxActivation *activation;          /* unwound activation                */
+    RexxActivation *activation;          /* unwound activation                */
 
-  this->execution_state = RETURNED;    /* this is an EXIT for real          */
-  this->next = OREF_NULL;              /* turn off execution engine         */
-  this->result = resultObj;            /* save the result value             */
-                                       /* switch debug off to avoid debug   */
-                                       /* pause after exit entered from an  */
-  this->settings.flags &= ~trace_debug;/* interactive debug prompt          */
-  this->settings.flags |= debug_bypass;/* let debug prompt know of changes  */
-                                       /* at a main program level?          */
-  if (this->activation_context&TOP_LEVEL_CALL) {
-                                       /* already had a reply issued?       */
-    if (this->settings.flags&reply_issued && result != OREF_NULL)
-                                       /* flag this as an error             */
-      reportException(Error_Execution_reply_exit);
-                                       /* real program call?                */
-    if (this->activation_context&PROGRAM_LEVEL_CALL)
-                                       /* run termination exit              */
-      this->activity->sysExitTerm(this);
-  }
-  else {                               /* internal routine or Interpret     */
-    /* start terminating with this level */
-    activation = this;
-    do {
-      activation->termination();       /* make sure this level cleans up    */
-      CurrentActivity->pop(FALSE);     /* pop this level off                */
-                                       /* get the next level                */
-      activation = CurrentActivity->currentAct();
-    } while (!activation->isTopLevel());
+    this->execution_state = RETURNED;    /* this is an EXIT for real          */
+    this->next = OREF_NULL;              /* turn off execution engine         */
+    this->result = resultObj;            /* save the result value             */
+                                         /* switch debug off to avoid debug   */
+                                         /* pause after exit entered from an  */
+    this->settings.flags &= ~trace_debug;/* interactive debug prompt          */
+    this->settings.flags |= debug_bypass;/* let debug prompt know of changes  */
+                                         /* at a main program level?          */
+    if (this->activation_context&TOP_LEVEL_CALL)
+    {
+        /* already had a reply issued?       */
+        if (this->settings.flags&reply_issued && result != OREF_NULL)
+        {
+            /* flag this as an error             */
+            reportException(Error_Execution_reply_exit);
+        }
+        /* real program call?                */
+        if (this->activation_context&PROGRAM_LEVEL_CALL)
+        {
+            /* run termination exit              */
+            this->activity->sysExitTerm(this);
+        }
+    }
+    else
+    {                               /* internal routine or Interpret     */
+        /* start terminating with this level */
+        activation = this;
+        do
+        {
+            activation->termination();       /* make sure this level cleans up    */
+            CurrentActivity->pop(FALSE);     /* pop this level off                */
+                                             /* get the next level                */
+            activation = CurrentActivity->currentAct();
+        } while (!activation->isTopLevel());
 
-    activation->exitFrom(resultObj);   /* tell this level to terminate      */
-                                       /* unwind and process the termination*/
-    longjmp(activation->conditionjump,1);
-  }
+        activation->exitFrom(resultObj);   /* tell this level to terminate      */
+                                           /* unwind and process the termination*/
+        throw activation;                  // throw this as an exception to start the unwinding
+    }
 }
 
 #if 0
@@ -1235,63 +1302,82 @@ void RexxActivation::raise(
 /* Function:  Raise a give REXX condition                                     */
 /******************************************************************************/
 {
-  RexxActivation *_sender;              /* "invoker" of current activation   */
-  BOOL            propagated;          /* propagated syntax condition       */
+    RexxActivation *_sender;              /* "invoker" of current activation   */
+    bool            propagated;          /* propagated syntax condition       */
 
-                                       /* propagating an existing condition?*/
-  if (condition->strCompare(CHAR_PROPAGATE)) {
-                                       /* get the original condition name   */
-    condition = (RexxString *)conditionobj->at(OREF_CONDITION);
-    propagated = TRUE;                 /* this is propagated                */
-                                       /* fill in the propagation status    */
-    conditionobj->put(TheTrueObject, OREF_PROPAGATED);
-    if (resultObj == OREF_NULL)        /* no result specified?              */
-      resultObj = conditionobj->at(OREF_RESULT);
-  }
-  else {                               /* build a condition object          */
-    conditionobj = new_directory();    /* get a new directory               */
-                                       /* put in the condition name         */
-    conditionobj->put(condition, OREF_CONDITION);
-                                       /* fill in default description       */
-    conditionobj->put(OREF_NULLSTRING, OREF_DESCRIPTION);
-                                       /* fill in the propagation status    */
-    conditionobj->put(TheFalseObject, OREF_PROPAGATED);
-    propagated = FALSE;                /* remember for later                */
-  }
-  if (rc != OREF_NULL)                 /* have an RC value?                 */
-    conditionobj->put(rc, OREF_RC);    /* add to the condition argument     */
-  if (description != OREF_NULL)        /* any description to add?           */
-    conditionobj->put(description, OREF_DESCRIPTION);
-  if (additional != OREF_NULL)         /* or additional information         */
-    conditionobj->put(additional, OREF_ADDITIONAL);
-  if (resultObj != OREF_NULL)          /* or a result object                */
-    conditionobj->put(resultObj, OREF_RESULT);
-
-                                       /* fatal SYNTAX error?               */
-  if (condition->strCompare(CHAR_SYNTAX)) {
-    hold(this);                        /* move the activation to hold stack */
-    if (propagated) {                  /* reraising a condition?            */
-      this->termination();             /* do the termination cleanup on ourselves */
-      this->activity->pop(FALSE);      /* pop ourselves off active list     */
-                                       /* go propagate the condition        */
-      CurrentActivity->reraiseException(conditionobj);
+                                         /* propagating an existing condition?*/
+    if (condition->strCompare(CHAR_PROPAGATE))
+    {
+        /* get the original condition name   */
+        condition = (RexxString *)conditionobj->at(OREF_CONDITION);
+        propagated = TRUE;                 /* this is propagated                */
+                                           /* fill in the propagation status    */
+        conditionobj->put(TheTrueObject, OREF_PROPAGATED);
+        if (resultObj == OREF_NULL)        /* no result specified?              */
+        {
+            resultObj = conditionobj->at(OREF_RESULT);
+        }
     }
     else
-                                       /* go raise the error                */
-      CurrentActivity->raiseException(((RexxInteger *)rc)->getValue(), NULL, OREF_NULL, description, (RexxArray *)additional, resultObj);
-  }
-  else {                               /* normal condition trapping         */
-                                       /* get the sender object (if any)    */
-    _sender = this->senderAct();
-                                       /* do we have a sender that is       */
-                                       /* trapping this condition?          */
-                                       /* do we have a sender?              */
-    if (_sender != (RexxActivation *)TheNilObject)
-                                       /* "tickle them" with this           */
-      this->sender->trap(condition, conditionobj);
-    this->returnFrom(resultObj);       /* process the return part           */
-    longjmp(this->conditionjump,1);    /* unwind and process the termination*/
-  }
+    {                               /* build a condition object          */
+        conditionobj = new_directory();    /* get a new directory               */
+                                           /* put in the condition name         */
+        conditionobj->put(condition, OREF_CONDITION);
+        /* fill in default description       */
+        conditionobj->put(OREF_NULLSTRING, OREF_DESCRIPTION);
+        /* fill in the propagation status    */
+        conditionobj->put(TheFalseObject, OREF_PROPAGATED);
+        propagated = FALSE;                /* remember for later                */
+    }
+    if (rc != OREF_NULL)                 /* have an RC value?                 */
+    {
+        conditionobj->put(rc, OREF_RC);    /* add to the condition argument     */
+    }
+    if (description != OREF_NULL)        /* any description to add?           */
+    {
+        conditionobj->put(description, OREF_DESCRIPTION);
+    }
+    if (additional != OREF_NULL)         /* or additional information         */
+    {
+        conditionobj->put(additional, OREF_ADDITIONAL);
+    }
+    if (resultObj != OREF_NULL)          /* or a result object                */
+    {
+        conditionobj->put(resultObj, OREF_RESULT);
+    }
+
+    /* fatal SYNTAX error?               */
+    if (condition->strCompare(CHAR_SYNTAX))
+    {
+        hold(this);                        /* move the activation to hold stack */
+        if (propagated)
+        {                  /* reraising a condition?            */
+            this->termination();             /* do the termination cleanup on ourselves */
+            this->activity->pop(FALSE);      /* pop ourselves off active list     */
+                                             /* go propagate the condition        */
+            CurrentActivity->reraiseException(conditionobj);
+        }
+        else
+        {
+            /* go raise the error                */
+            CurrentActivity->raiseException(((RexxInteger *)rc)->getValue(), NULL, OREF_NULL, description, (RexxArray *)additional, resultObj);
+        }
+    }
+    else
+    {                               /* normal condition trapping         */
+                                    /* get the sender object (if any)    */
+        _sender = this->senderAct();
+        /* do we have a sender that is       */
+        /* trapping this condition?          */
+        /* do we have a sender?              */
+        if (_sender != (RexxActivation *)TheNilObject)
+        {
+            /* "tickle them" with this           */
+            this->sender->trap(condition, conditionobj);
+        }
+        this->returnFrom(resultObj);       /* process the return part           */
+        throw this;                        /* unwind and process the termination*/
+    }
 }
 
 RexxVariableDictionary * RexxActivation::getObjectVariables()
@@ -1553,112 +1639,139 @@ BOOL RexxActivation::trap(             /* trap a condition                  */
 /******************************************************************************/
 /* Function:  Check the activation to see if this is trapping a condition.    */
 /*            For SIGNAL traps, control goes back to the point of the trap    */
-/*            via longjmp.  For CALL ON traps, the condition is saved, and    */
+/*            via throw.  For CALL ON traps, the condition is saved, and      */
 /*            the method returns TRUE to indicate the trap was handled.       */
 /******************************************************************************/
 {
-  RexxArray     *traphandler;          /* trap handler instruction          */
-  BOOL           handled;              /* condition has been trapped        */
-  RexxInstructionCallBase * handler;   /* actual trapping instruction       */
-  RexxString    *instruction;          /* actual trapping instruction       */
-  RexxActivation *activation;          /* predecessor activation            */
+    RexxArray     *traphandler;          /* trap handler instruction          */
+    BOOL           handled;              /* condition has been trapped        */
+    RexxInstructionCallBase * handler;   /* actual trapping instruction       */
+    RexxString    *instruction;          /* actual trapping instruction       */
+    RexxActivation *activation;          /* predecessor activation            */
 
-  if (this->settings.flags&forwarded) {/* in the act of forwarding?         */
-    activation = this->sender;         /* get the sender activation         */
-                                       /* have a predecessor?               */
-    while (activation != (RexxActivation *)TheNilObject) {
-      if (!activation->isForwarded())  /* non forwarded?                    */
-                                       /* pretend he is we                  */
-        return activation->trap(condition, exception_object);
-      activation = activation->sender; /* step to the next one              */
+    if (this->settings.flags&forwarded)
+    {/* in the act of forwarding?         */
+        activation = this->sender;         /* get the sender activation         */
+                                           /* have a predecessor?               */
+        while (activation != (RexxActivation *)TheNilObject)
+        {
+            if (!activation->isForwarded())  /* non forwarded?                    */
+            {
+                                             /* pretend he is we                  */
+                return activation->trap(condition, exception_object);
+            }
+            activation = activation->sender; /* step to the next one              */
+        }
+        return FALSE;                      /* not really here, can't handle     */
     }
-    return FALSE;                      /* not really here, can't handle     */
-  }
-                                       /* do we need to notify a message    */
-                                       /*obj?                               */
-  if (this->objnotify != OREF_NULL && condition->strCompare(CHAR_SYNTAX)) {
-                                       /* yes, send error message and       */
-                                       /*condition object                   */
-    this->objnotify->error(exception_object);
-  }
-  handled = FALSE;                     /* not handled yet                   */
-  traphandler = OREF_NULL;             /* no traps to process yet           */
-  if (this->debug_pause) {             /* working from the debug prompt?    */
-                                       /* non-terminal condition?           */
-    if (!condition->strCompare(CHAR_SYNTAX))
-      return FALSE;                    /* flag as not-handled               */
-                                       /* go display the messages           */
-    this->activity->displayDebug(exception_object);
-    longjmp(this->conditionjump,1);    /* unwind and process the trap       */
-  }
-                                       /* no trap table yet?                */
-  if (this->settings.traps == OREF_NULL)
-    return FALSE;                      /* can't very well handle this!      */
-                                       /* see if this one is enabled        */
-  traphandler = (RexxArray *)this->settings.traps->at(condition);
+    /* do we need to notify a message    */
+    /*obj?                               */
+    if (this->objnotify != OREF_NULL && condition->strCompare(CHAR_SYNTAX))
+    {
+        /* yes, send error message and       */
+        /*condition object                   */
+        this->objnotify->error(exception_object);
+    }
+    handled = FALSE;                     /* not handled yet                   */
+    traphandler = OREF_NULL;             /* no traps to process yet           */
+    if (this->debug_pause)
+    {             /* working from the debug prompt?    */
+                  /* non-terminal condition?           */
+        if (!condition->strCompare(CHAR_SYNTAX))
+        {
+            return FALSE;                    /* flag as not-handled               */
+        }
+                                             /* go display the messages           */
+        this->activity->displayDebug(exception_object);
+        throw this;                        /* unwind and process the trap       */
+    }
+    /* no trap table yet?                */
+    if (this->settings.traps == OREF_NULL)
+    {
+        return FALSE;                      /* can't very well handle this!      */
+    }
+                                           /* see if this one is enabled        */
+    traphandler = (RexxArray *)this->settings.traps->at(condition);
 
-  if (traphandler == OREF_NULL) {      /* not there?  try for an ANY handler*/
-                                       /* get this from the same table      */
-    traphandler = (RexxArray *)this->settings.traps->at(OREF_ANY);
-    if (traphandler != OREF_NULL) {    /* have an any handler?              */
-                                       /* get the handler info              */
-      handler = (RexxInstructionCallBase *)traphandler->get(1);
-                                       /* condition not trappable with CALL?*/
-      if (handler->isType(KEYWORD_CALL) &&
-          (condition->strCompare(CHAR_SYNTAX) ||
-           condition->strCompare(CHAR_NOVALUE) ||
-           condition->strCompare(CHAR_LOSTDIGITS) ||
-           condition->strCompare(CHAR_NOMETHOD) ||
-           condition->strCompare(CHAR_NOSTRING)))
-        return FALSE;                  /* not trapped                       */
+    if (traphandler == OREF_NULL)
+    {      /* not there?  try for an ANY handler*/
+           /* get this from the same table      */
+        traphandler = (RexxArray *)this->settings.traps->at(OREF_ANY);
+        if (traphandler != OREF_NULL)
+        {    /* have an any handler?              */
+             /* get the handler info              */
+            handler = (RexxInstructionCallBase *)traphandler->get(1);
+            /* condition not trappable with CALL?*/
+            if (handler->isType(KEYWORD_CALL) &&
+                (condition->strCompare(CHAR_SYNTAX) ||
+                 condition->strCompare(CHAR_NOVALUE) ||
+                 condition->strCompare(CHAR_LOSTDIGITS) ||
+                 condition->strCompare(CHAR_NOMETHOD) ||
+                 condition->strCompare(CHAR_NOSTRING)))
+            {
+                return FALSE;                  /* not trapped                       */
+            }
+        }
     }
-  }
-  /* if the condition is being trapped, do the CALL or SIGNAL */
-  if (traphandler != OREF_NULL) {      /* have a trap for this?             */
-                                       /* if this is a HALT                 */
-    if (condition->strCompare(CHAR_HALT))
-                                       /* call the sys exit to clear it     */
-      this->activity->sysExitHltClr(this);
-                                       /* get the handler info              */
-    handler = (RexxInstructionCallBase *)traphandler->get(1);
-                                       /* no condition queue yet?           */
-    if (this->condition_queue == OREF_NULL) {
-                                       /* create a pending queue            */
-      this->condition_queue = new_queue();
-                                       /* and a handler queue               */
-      this->handler_queue = new_queue();
+    /* if the condition is being trapped, do the CALL or SIGNAL */
+    if (traphandler != OREF_NULL)
+    {      /* have a trap for this?             */
+           /* if this is a HALT                 */
+        if (condition->strCompare(CHAR_HALT))
+        {
+            /* call the sys exit to clear it     */
+            this->activity->sysExitHltClr(this);
+        }
+        /* get the handler info              */
+        handler = (RexxInstructionCallBase *)traphandler->get(1);
+        /* no condition queue yet?           */
+        if (this->condition_queue == OREF_NULL)
+        {
+            /* create a pending queue            */
+            this->condition_queue = new_queue();
+            /* and a handler queue               */
+            this->handler_queue = new_queue();
+        }
+        if (handler->isType(KEYWORD_SIGNAL))
+        {
+            instruction = OREF_SIGNAL;       /* this is trapped by a SIGNAL       */
+        }
+        else
+        {
+            instruction = OREF_CALL;         /* this is trapped by a CALL         */
+        }
+                                             /* add the instruction trap info     */
+        exception_object->put(instruction, OREF_INSTRUCTION);
+        /* create a new condition object and */
+        /* add the condition object to queue */
+        this->condition_queue->addLast(exception_object);
+        /* and the corresponding trap info   */
+        this->handler_queue->addLast(traphandler);
+        this->pending_count++;             /* bump pending condition count      */
+                                           /* is this a signal instruction      */
+                                           /* no the non-returnable PROPAGATE?  */
+        if (handler->isType(KEYWORD_SIGNAL))
+        {
+            /* not an Interpret instruction?     */
+            if (this->activation_context != INTERPRET)
+            {
+                throw this;                    /* unwind and process the trap       */
+            }
+            else
+            {                           /* unwind interpret activations      */
+                                        /* merge the traps                   */
+                this->sender->mergeTraps(this->condition_queue, this->handler_queue);
+                this->sender->unwindTrap(this);/* go unwind this                    */
+            }
+        }
+        else
+        {
+            handled = TRUE;                  /* tell caller we're processing later*/
+                                             /* tell clause boundary to process   */
+            this->settings.flags |= clause_boundary;
+        }
     }
-    if (handler->isType(KEYWORD_SIGNAL))
-      instruction = OREF_SIGNAL;       /* this is trapped by a SIGNAL       */
-    else
-      instruction = OREF_CALL;         /* this is trapped by a CALL         */
-                                       /* add the instruction trap info     */
-    exception_object->put(instruction, OREF_INSTRUCTION);
-                                       /* create a new condition object and */
-                                       /* add the condition object to queue */
-    this->condition_queue->addLast(exception_object);
-                                       /* and the corresponding trap info   */
-    this->handler_queue->addLast(traphandler);
-    this->pending_count++;             /* bump pending condition count      */
-                                       /* is this a signal instruction      */
-                                       /* no the non-returnable PROPAGATE?  */
-    if (handler->isType(KEYWORD_SIGNAL)) {
-                                       /* not an Interpret instruction?     */
-      if (this->activation_context != INTERPRET)
-        longjmp(this->conditionjump,1);/* unwind and process the trap       */
-      else {                           /* unwind interpret activations      */
-                                       /* merge the traps                   */
-        this->sender->mergeTraps(this->condition_queue, this->handler_queue);
-        this->sender->unwindTrap(this);/* go unwind this                    */
-      }
-    }
-    else {
-      handled = TRUE;                  /* tell caller we're processing later*/
-                                       /* tell clause boundary to process   */
-      this->settings.flags |= clause_boundary;
-    }
-  }
-  return handled;                      /* let call know if we've handled    */
+    return handled;                      /* let call know if we've handled    */
 }
 
 
@@ -1713,7 +1826,7 @@ void RexxActivation::unwindTrap(
   else {                               /* reached the "parent" level        */
                                        /* pull back the settings            */
     child->putSettings(&this->settings);
-    longjmp(this->conditionjump,1);    /* unwind and process the trap       */
+    throw this;                        /* unwind and process the trap       */
   }
 }
 
@@ -1762,39 +1875,45 @@ void RexxActivation::debugInterpret(   /* interpret interactive debug input */
 /* Function:  Interpret a string created for interactive debug                */
 /******************************************************************************/
 {
-  RexxMethod     * newMethod;          /* new method to process             */
-  RexxActivation * newActivation;      /* new activation for call           */
-  jmp_buf  previous_jump;              /* target error handler              */
-  RexxObject     * resultObj;
+    RexxMethod     * newMethod;          /* new method to process             */
+    RexxActivation * newActivation;      /* new activation for call           */
+    RexxObject     * resultObj;
 
-                                       /* save previous jump handler        */
-  memcpy(&previous_jump, &this->conditionjump, sizeof(jmp_buf));
-  this->debug_pause = TRUE;            /* now in debug pause                */
-                                       /* translation error?                */
-  if (setjmp(this->conditionjump) != 0) {
-    this->debug_pause = FALSE;         /* no longer in debug                */
-                                       /* restore the jump handler          */
-    memcpy(&this->conditionjump, &previous_jump, sizeof(jmp_buf));
-    return;                            /* this is finished                  */
-  }
-                                       /* translate the code                */
-  newMethod = this->code->interpret(codestring, this->current->getLineNumber());
+    this->debug_pause = TRUE;            /* now in debug pause                */
+    try
+    {
+        /* translate the code                */
+        newMethod = this->code->interpret(codestring, this->current->getLineNumber());
 
-  /* if debug exit is set, debug_pause must also be set during execution */
-  if (!(this->activity->nestedInfo.exitset && this->settings.dbg_flags&dbg_trace))
-      this->debug_pause = FALSE;           /* no longer in debug                */
-                                       /* restore the jump handler          */
-  memcpy(&this->conditionjump, &previous_jump, sizeof(jmp_buf));
-                                       /* create a new activation           */
-  newActivation = TheActivityClass->newActivation(this->receiver, newMethod, this->activity, this->settings.msgname, this, DEBUGPAUSE);
-  this->activity->push(newActivation); /* push on the activity stack        */
-                                       /* run the internal routine on the   */
-                                       /* new activation                    */
-  resultObj = newActivation->run(arglist, argcount, OREF_NULL);
-  if (resultObj != OREF_NULL) discard(resultObj);
+        /* if debug exit is set, debug_pause must also be set during execution */
+        if (!(this->activity->nestedInfo.exitset && this->settings.dbg_flags&dbg_trace))
+            this->debug_pause = FALSE;           /* no longer in debug                */
+        /* create a new activation           */
+        newActivation = TheActivityClass->newActivation(this->receiver, newMethod, this->activity, this->settings.msgname, this, DEBUGPAUSE);
+        this->activity->push(newActivation); /* push on the activity stack        */
+                                             /* run the internal routine on the   */
+                                             /* new activation                    */
+        resultObj = newActivation->run(arglist, argcount, OREF_NULL);
+        if (resultObj != OREF_NULL)
+        {
+            discard_hold(resultObj);
+        }
 
-  if (this->activity->nestedInfo.exitset && this->settings.dbg_flags&dbg_trace)
-      this->debug_pause = FALSE;           /* no longer in debug                */
+        if (this->activity->nestedInfo.exitset && this->settings.dbg_flags&dbg_trace)
+        {
+            this->debug_pause = FALSE;           /* no longer in debug                */
+        }
+    }
+    catch (RexxActivation *t)
+    {
+        // if we're not the target of this throw, we've already been unwound
+        // keep throwing this until it reaches the target activation.
+        if (t != this )
+        {
+            throw;
+        }
+        this->debug_pause = FALSE;         /* no longer in debug                */
+    }
 }
 
 RexxObject * RexxActivation::rexxVariable(   /* retrieve a program entry          */

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  Clause.hpp  */
+/* REXX Kernel                                                    Clause.hpp  */
 /*                                                                            */
 /* Primitive Translator Clause Class Definitions                              */
 /*                                                                            */
@@ -51,10 +51,14 @@
 
 class RexxClause : public RexxInternalObject {
  public:
-  RexxClause();
-  inline RexxClause(RESTORETYPE restoreType) { ; };
   void        *operator new(size_t);
   inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *) { ; }
+  inline void  operator delete(void *, void *) { ; }
+
+  RexxClause();
+  inline RexxClause(RESTORETYPE restoreType) { ; };
+
   void        live();
   void        liveGeneral();
   void        flatten(RexxEnvelope *);

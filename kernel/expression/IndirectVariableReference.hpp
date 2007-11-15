@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  IndirectVariableReference.hpp   */
+/* REXX Kernel                                IndirectVariableReference.hpp   */
 /*                                                                            */
 /* Primitive Expression Parsing Variable Reference Class Definitions          */
 /*                                                                            */
@@ -48,8 +48,11 @@
 
 class RexxVariableReference : public RexxVariableBase {
  public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
   void *operator new(size_t);
+  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *) { ; }
+  inline void  operator delete(void *, void *) { ; }
+
   inline RexxVariableReference(RESTORETYPE restoreType) { ; };
   RexxVariableReference(RexxVariableBase *);
   void live();

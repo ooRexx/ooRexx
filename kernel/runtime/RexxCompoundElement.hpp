@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxCompoundElement.hpp    */
+/* REXX Kernel                                     RexxCompoundElement.hpp    */
 /*                                                                            */
 /* Primitive CompoundVariable Class Definition                                */
 /*                                                                            */
@@ -51,9 +51,11 @@ class RexxCompoundElement : public RexxVariable {
  friend class RexxCompoundTable;        // allow the compound table to access innards.
 
  public:
-  inline RexxCompoundElement(RESTORETYPE restoreType) { ; };
-  inline void       *operator new(size_t size, void *ptr) { return ptr; };
+  inline void *operator new(size_t size, void *ptr) { return ptr; };
+  inline void  operator delete(void *) { ; }
+  inline void  operator delete(void *, void *) { ; }
 
+  inline RexxCompoundElement(RESTORETYPE restoreType) { ; };
   void         live();
   void         liveGeneral();
   void         flatten(RexxEnvelope *);

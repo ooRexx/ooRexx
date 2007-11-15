@@ -2061,14 +2061,6 @@ void *RexxObject::operator new(size_t size, RexxClass *classObject, RexxObject *
   return newObject;                    /* and returnthe new object          */
 }
 
-void RexxObject::operator delete(void *arg)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
-{
-  ;                                    // no explicit delete
-}
-
 
 /**
  * Concatentation operation supported by the Object class.  This

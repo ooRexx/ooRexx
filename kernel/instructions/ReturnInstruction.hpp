@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                     ReturnInstruction.hpp */
+/* REXX Kernel                                          ReturnInstruction.hpp */
 /*                                                                            */
 /* Primitive RETURN instruction Class Definitions                             */
 /*                                                                            */
@@ -49,7 +49,10 @@
 class RexxInstructionReturn : public RexxInstructionExpression {
  public:
 
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void *operator new(size_t size, void *ptr) {return ptr;}
+  inline void  operator delete(void *) { }
+  inline void  operator delete(void *, void *) { }
+
   RexxInstructionReturn(RexxObject*);
   inline RexxInstructionReturn(RESTORETYPE restoreType) { ; };
   void execute(RexxActivation *, RexxExpressionStack *);

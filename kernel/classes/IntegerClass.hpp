@@ -158,6 +158,10 @@ class RexxIntegerClass : public RexxClass {
   void *operator new(size_t size, void *ptr) {return ptr;};
   void *operator new (size_t);
   void *operator new(size_t size, size_t size1, const char *className, RexxBehaviour *classBehave, RexxBehaviour *instance) { return new (size, className, classBehave, instance) RexxClass; }
+  inline void operator delete(void *, void *ptr) { }
+  inline void operator delete (void *) { }
+  inline void operator delete(void *, size_t, const char *, RexxBehaviour *, RexxBehaviour *) { }
+
   RexxIntegerClass();
   RexxInteger *newCache(int value) {if (value >= INTEGERCACHELOW && value < INTEGERCACHESIZE)
                                        return this->integercache[value - INTEGERCACHELOW];

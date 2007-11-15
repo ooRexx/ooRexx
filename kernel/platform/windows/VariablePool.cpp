@@ -199,20 +199,12 @@ ULONG SysVariablePool(
   int                code;             /* variable request code             */
   PSHVBLOCK          pshvblock;        /* variable pool request block       */
   LONG               tempSize;
-  jmp_buf            syntaxHandler;    /* syntax return point               */  // retrofit by IH
 
  retcode = 0;                          /* initialize composite rc           */
 
  pshvblock = (PSHVBLOCK)requests;      /* copy the request block pointer    */
                                        /* get the REXX activation           */
  activation = self->activity->currentAct();
-
- if (setjmp(syntaxHandler) != 0) {     /* get a storage error?              */
-                                       /* set failure in current            */
-   pshvblock->shvret |= RXSHV_MEMFL;
-   retcode |= pshvblock->shvret;       /* OR with the composite             */
-   return retcode;                     /* stop processing requests now      */
- }
 
  while (pshvblock) {                   /* while more request blocks         */
   pshvblock->shvret = 0;               /* set the block return code         */

@@ -44,13 +44,18 @@
 #ifndef Included_RexxNativeActivation
 #define Included_RexxNativeActivation
 
+#include <setjmp.h>
 #include "RexxActivity.hpp"
 
 class RexxNativeActivation : public RexxActivationBase {
  public:
-  inline RexxNativeActivation(RESTORETYPE restoreType) { ; };
-  void *operator new(size_t, RexxObject *, RexxMethod *, RexxActivity *, RexxString *, RexxActivationBase *);
+         void *operator new(size_t, RexxObject *, RexxMethod *, RexxActivity *, RexxString *, RexxActivationBase *);
   inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *, RexxObject *, RexxMethod *, RexxActivity *, RexxString *, RexxActivationBase *) { }
+  inline void  operator delete(void *, void *) { ; }
+  inline void  operator delete(void *) { ; }
+
+  inline RexxNativeActivation(RESTORETYPE restoreType) { ; };
   inline RexxNativeActivation() {;};
   void live();
   void liveGeneral();
@@ -96,7 +101,6 @@ class RexxNativeActivation : public RexxActivationBase {
   inline void        setNextCurrent(RexxVariableDictionary *vdict)     {this->nextcurrent = vdict;}
   inline void        setNextStem(RexxStem *stemVar)     {this->nextstem = stemVar;}
   inline void        setCompoundElement(RexxCompoundElement *element)     {this->compoundelement = element;}
-  inline void        setSyntaxHandler(jmp_buf *buf)     {this->syntaxHandler = buf;}
 
 
   RexxMethod     *method;              /* Method to run                     */
@@ -120,6 +124,5 @@ class RexxNativeActivation : public RexxActivationBase {
   bool            vpavailable;         /* Variable pool access flag         */
   int             object_scope;        /* reserve/release state of variables*/
   jmp_buf         conditionjump;       /* condition trap recovery location  */
-  jmp_buf        *syntaxHandler;       /* syntax/memory trapper             */
 };
 #endif

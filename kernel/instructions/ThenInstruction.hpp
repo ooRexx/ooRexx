@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                     ThenInstruction.hpp*/
+/* REXX Kernel                                             ThenInstruction.hpp*/
 /*                                                                            */
 /* Primitive THEN instruction Class Definitions                               */
 /*                                                                            */
@@ -49,6 +49,9 @@
 class RexxInstructionThen : public RexxInstructionSet {
  public:
   inline void *operator new(size_t size, void *ptr) {return ptr;};
+  inline void  operator delete(void *) { }
+  inline void  operator delete(void *, void *) { }
+
   RexxInstructionThen(RexxToken *, RexxInstructionIf *);
   inline RexxInstructionThen(RESTORETYPE restoreType) { ; };
   void live();
