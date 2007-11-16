@@ -84,7 +84,7 @@ class RexxCode : public RexxInternalObject {
    inline RexxMethod *interpret(RexxString *s, size_t n) { return source->interpret(s, labels, n); }
    inline RexxDirectory *getMethods() { return source->getMethods(); };
    inline RexxMethod *resolveRoutine(RexxString *n) { return source->resolveRoutine(n); }
-   inline void        mergeRequired(RexxSource *s) { return source->mergeRequired(s); }
+   inline void        mergeRequired(RexxSource *s) { source->mergeRequired(s); }
 
 protected:
 
