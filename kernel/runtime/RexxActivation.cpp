@@ -3265,7 +3265,7 @@ BOOL RexxActivation::callSecurityManager(
   this->stack.pop();                   /* free up the arguments             */
   hold(_arguments);                    /* protect them for a bit            */
                                        /* return the pass/handled flag      */
-  return result->truthValue(Error_Logical_value_authorization);
+  return resultObj->truthValue(Error_Logical_value_authorization);
 }
 
 
