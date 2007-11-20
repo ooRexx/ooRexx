@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxActivation.hpp  */
+/* REXX Kernel                                            RexxActivation.hpp  */
 /*                                                                            */
 /* Primitive Activation Class Definitions                                     */
 /*                                                                            */
@@ -44,9 +44,9 @@
 #ifndef Included_RexxActivation
 #define Included_RexxActivation
 
-#include "ExpressionStack.hpp"                /* needs expression stack            */
-#include "DoBlock.hpp"                /* need do block definition          */
-                                       /* various activation settings       */
+#include "ExpressionStack.hpp"           /* needs expression stack            */
+#include "DoBlock.hpp"                   /* need do block definition          */
+                                         /* various activation settings       */
 #include "RexxLocalVariables.hpp"        /* local variable cache definitions  */
 #include "RexxDateTime.hpp"
 #include "RexxCode.hpp"
@@ -201,6 +201,14 @@ RexxObject * activation_find  (void);
         this->object_scope = SCOPE_RELEASED;
       }
     }
+
+
+   inline bool isInterpret() { return activation_context == INTERPRET; }
+   inline bool isInternalCall() { return activation_context == INTERNALCALL; }
+   inline bool isMethod() { return activation_context == METHODCALL; }
+   inline bool isTopLevelCall() { return activation_context == METHODCALL; }
+   inline bool isNestedCall() { return (activation_context & INTERNAL_LEVEL_CALL) != 0; }
+
    RexxObject      * run(RexxObject **, size_t, RexxInstruction *);
    void              reply(RexxObject *);
    RexxObject      * forward(RexxObject *, RexxString *, RexxObject *, RexxObject **, size_t, BOOL);
@@ -650,7 +658,17 @@ RexxObject * activation_find  (void);
 
    inline void cleanupLocalVariables()
    {
-       if (!settings.local_variables.isNested()) {
+       /* if we're nested, we need to make sure that any variable */
+       /* dictionary created at this level is propagated back to */
+       /* the caller. */
+       if (isNestedCall() && settings.local_variables.isNested())
+       {
+           sender->setLocalVariableDictionary(settings.local_variables.getNestedDictionary());
+       }
+       else
+       {
+           // we need to cleanup the local variables and return them to the
+           // cache.
            size_t i;
            for (i = 0; i < settings.local_variables.size; i++) {
                RexxVariable *var = settings.local_variables.get(i);
@@ -658,12 +676,6 @@ RexxObject * activation_find  (void);
                    cacheLocalVariable(var);
                }
            }
-       }
-       /* if we're nested, we need to make sure that any variable */
-       /* dictionary created at this level is propagated back to */
-       /* the caller. */
-       else {
-           sender->setLocalVariableDictionary(settings.local_variables.getNestedDictionary());
        }
    }
 
