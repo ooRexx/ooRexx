@@ -100,6 +100,7 @@ VOID Rexx2Variant(RexxObject *RxObject, VARIANT *pVariant, VARTYPE DestVt, INT i
 BOOL fIsRexxArray(RexxObject *TestObject);
 BOOL fIsOLEObject(RexxObject *TestObject);
 BOOL fIsOleVariant(RexxObject *TestObject);
+BOOL createEmptySafeArray(VARIANT FAR *);
 BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, INT iArgPos);
 BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO pClsInfo );
 VARTYPE getUserDefinedVT( ITypeInfo *pTypeInfo, HREFTYPE hrt );
@@ -1614,6 +1615,34 @@ BOOL fIsOleVariant(RexxObject *TestObject)
     return FALSE;
 }
 
+/**
+ * Creates an empty safe array and configures the variant, VarArray, to contain
+ * it.
+ *
+ * @param VarArray  The variant to contain the empty safe array.
+ *
+ * @return True always.
+ */
+BOOL createEmptySafeArray(VARIANT FAR *VarArray)
+{
+    SAFEARRAY      *pSafeArray;
+    SAFEARRAYBOUND *pArrayBound;
+
+    pArrayBound = (SAFEARRAYBOUND*)ORexxOleAlloc(sizeof(SAFEARRAYBOUND));
+    pArrayBound->cElements = 0;
+    pArrayBound->lLbound = 0;
+
+    pSafeArray = SafeArrayCreate(VT_VARIANT, 1, pArrayBound);
+    if ( ! pSafeArray )
+        send_exception(Error_System_resources);
+
+    V_VT(VarArray) = VT_ARRAY | VT_VARIANT;
+    V_ARRAY(VarArray) = pSafeArray;
+
+    return true;
+}
+
+
 BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, INT iArgPos)
 {
   BOOL            fDone = FALSE;
@@ -1640,6 +1669,15 @@ BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, INT iArgPo
   if (sscanf(pString,"%ld",&lDimensions) != 1)
   {
     send_exception(Error_Interpretation_initialization);
+  }
+
+  /* OLE Automation objects can require an argument to IDispatch::Invoke be sent
+   * as an array (VT_ARRAY | VT_XXX)  There are definitely cases where an empty
+   * array is valid.
+   */
+  if ( lDimensions == 0 )
+  {
+      return createEmptySafeArray(VarArray);
   }
 
   /* alloc an array of lDimensions LONGs to hold the indices */
