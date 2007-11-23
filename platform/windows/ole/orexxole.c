@@ -109,6 +109,7 @@ BOOL checkForOverride( VARIANT *, RexxObject *, VARTYPE, RexxObject **, VARTYPE 
 BOOL isOutParam( RexxObject *, POLEFUNCINFO, INT );
 VOID handleVariantClear( VARIANT *, RexxObject * );
 __inline BOOL okayToClear( RexxObject * );
+static void formatDispatchException(EXCEPINFO *, char *);
 
 int (__stdcall *creationCallback)(CLSID, IUnknown*) = NULL;
 void setCreationCallback(int (__stdcall *f)(CLSID, IUnknown*))
@@ -3136,8 +3137,7 @@ RexxMethod3(REXXOBJECT,                // Return type
   }
   else
   {
-    BSTR bstrUnavail;
-    /* error occured */
+    /* An error occured */
     switch (hResult)
     {
       case DISP_E_BADPARAMCOUNT:
@@ -3147,23 +3147,8 @@ RexxMethod3(REXXOBJECT,                // Return type
         send_exception(Error_Invalid_Variant);
         break;
       case DISP_E_EXCEPTION:
-        bstrUnavail= lpAnsiToUnicode("unavailable", sizeof("unavailable"));
-        /* if there is a routine for deferred fill-in, call it */
-        if (sExc.pfnDeferredFillIn) {
-          (*sExc.pfnDeferredFillIn)(&sExc);
-          sprintf(szBuffer, "Code: %04x Source: %S Description: %S",
-                  sExc.wCode, sExc.bstrSource , sExc.bstrDescription);
-          SysFreeString(sExc.bstrSource);
-          SysFreeString(sExc.bstrDescription);
-          SysFreeString(sExc.bstrHelpFile);
-        } else {
-          sprintf(szBuffer, "Code: %08x Source: %S Description: %S",
-            sExc.wCode==0?sExc.scode:sExc.wCode,
-            sExc.bstrSource==NULL?bstrUnavail:sExc.bstrSource,
-            sExc.bstrDescription==NULL?bstrUnavail:sExc.bstrDescription);
-        }
-        ORexxOleFree(bstrUnavail);
-        send_exception1(Error_OLE_Exception,RexxArray1(RexxString(szBuffer)));
+        formatDispatchException(&sExc, szBuffer);
+        send_exception1(Error_OLE_Exception, RexxArray1(RexxString(szBuffer)));
         break;
       case DISP_E_MEMBERNOTFOUND:
         send_exception(Error_Unknown_OLE_Method);
@@ -3429,6 +3414,36 @@ __inline BOOL okayToClear( RexxObject *RxObject )
     return (RexxSend0(RxObject, "!CLEARVARIANT_") == RexxTrue);
   }
   return TRUE;
+}
+
+/**
+ * Convenience function to format the information returned from
+ * IDispatch::Invoke for DISP_E_EXCEPTION.
+ *
+ * @param pInfo   The exception information structure.
+ * @param buffer  Buffer in which to return the formatted information.
+ */
+static void formatDispatchException(EXCEPINFO *pInfo, char *buffer)
+{
+    const char *fmt = "Code: %08x Source: %S Description: %S";
+    BSTR bstrUnavail = lpAnsiToUnicode("unavailable", sizeof("unavailable"));
+
+    /* If there is a deferred fill-in routine, call it */
+    if ( pInfo->pfnDeferredFillIn )
+        pInfo->pfnDeferredFillIn(pInfo);
+
+    if ( pInfo->wCode )
+        fmt = "Code: %04x Source: %S Description: %S";
+
+    sprintf(buffer, fmt,
+            pInfo->wCode ? pInfo->wCode : pInfo->scode,
+            pInfo->bstrSource == NULL ? bstrUnavail : pInfo->bstrSource,
+            pInfo->bstrDescription == NULL ? bstrUnavail : pInfo->bstrDescription);
+
+    SysFreeString(pInfo->bstrSource);
+    SysFreeString(pInfo->bstrDescription);
+    SysFreeString(pInfo->bstrHelpFile);
+    ORexxOleFree(bstrUnavail);
 }
 
 //******************************************************************************
