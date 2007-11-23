@@ -3732,13 +3732,6 @@ LONG RexxActivity::messageSend(
   {
       rc = this->error(startDepth);      /* do error cleanup                  */
   }
-                                       /* objects with UNINIT defined may be*/
-                                       /* on the savestack. to ensure that  */
-                                       /* UNINIT can run, the stack has to  */
-                                       /* be cleared and a GC cycle has to  */
-  TheMemoryObject->clearSaveStack();   /* be forced to remove any potential */
-  TheMemoryObject->collect();          /* locks from the UNINIT table       */
-  TheActivityClass->runUninits();      /* be sure to finish UNINIT methods  */
   this->restoreNestedInfo(&saveInfo);  /* now restore to previous nesting   */
   SysDeregisterSignals(&exreg);        /* deregister the signal handlers    */
   this->popNil();                      /* remove the nil marker             */

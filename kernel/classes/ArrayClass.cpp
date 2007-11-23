@@ -87,6 +87,7 @@ void RexxArray::init(size_t _size, size_t maxSize)
   this->clearObject();                 /* initialize the object             */
   this->arraySize = _size;
   this->maximumSize = maxSize;
+  this->lastElement = 0;               // no elements set yet
                                        /* no expansion yet, use ourself     */
   OrefSet(this, this->expansionArray, this);
 }
@@ -172,6 +173,11 @@ void RexxArray::put(RexxObject * eref, size_t pos)
 /******************************************************************************/
 {
   OrefSet(this->expansionArray, (this->data())[pos -1], eref);
+  // check the last set element
+  if (pos > lastElement)
+  {
+      lastElement = pos;
+  }
 }
 
 RexxObject  *RexxArray::putRexx(RexxObject **arguments, size_t argCount)
@@ -219,6 +225,8 @@ RexxObject *RexxArray::empty()
             OrefSet(this, this->objects[i], OREF_NULL);
         }
     }
+    // no element set yet
+    lastElement = 0;
     return OREF_NULL;     // no real return value
 }
 
@@ -252,20 +260,7 @@ RexxObject  *RexxArray::append(RexxObject *value)
         reportException(Error_Incorrect_method_array_dimension, CHAR_APPEND);
     }
 
-    RexxObject *lastIndex = lastRexx();
-
-    size_t newIndex;
-
-    // empty array, so just insert at the first element
-    if (lastIndex == TheNilObject)
-    {
-        newIndex = 1;
-    }
-    else
-    {
-        // the index requires validation
-        newIndex = ((RexxInteger *)lastIndex)->getValue() + 1;
-    }
+    size_t newIndex = lastElement + 1;
 
     ensureSpace(newIndex);
     put(value, newIndex);
@@ -306,6 +301,17 @@ RexxObject *RexxArray::remove(size_t _index)
     result = *(this->data() + _index - 1);
                                        /* clear it out                      */
     OrefSet(this->expansionArray, *(this->data() + _index - 1), OREF_NULL);
+    // if we removed the last element, we need to scan backwards to find
+    // the last one
+    if (_index == lastElement)
+    {
+        // back off at least one position, then scan for the new last one
+        lastElement--;
+        while (lastElement != 0 && *(this->data() + lastElement - 1) == OREF_NULL)
+        {
+            lastElement--;
+        }
+    }
     return result;                     /* and return                        */
   }
   else
@@ -331,6 +337,15 @@ RexxObject  *RexxArray::removeRexx(RexxObject **arguments, size_t argCount)
     result = *(this->data() + position - 1);
                                        /* remove the item from the array    */
     OrefSet(this->expansionArray, *(this->data() + position - 1), OREF_NULL);
+    if (position == lastElement)
+    {
+        // back off at least one position, then scan for the new last one
+        lastElement--;
+        while (lastElement != 0 && *(this->data() + lastElement - 1) == OREF_NULL)
+        {
+            lastElement--;
+        }
+    }
     if (result == OREF_NULL)           /* no existing value?                */
       result = TheNilObject;           /* return .nil instead               */
   }
@@ -825,23 +840,22 @@ RexxObject  *RexxArray::lastRexx(void)
 /* Function:  Return the index of the last array item as an integer object    */
 /******************************************************************************/
 {
-  size_t i;                            /* counter for the loop              */
-  RexxObject *result;
-  RexxObject **thisObject;
+    // for an empy array, the index is .nil
+    if (lastElement == 0)
+    {
+        return TheNilObject;
+    }
 
-                                       /* get the address of the first      */
-                                       /*element in the array               */
-  thisObject = this->data();
-                                       /* find last position in the array   */
-                                       /*with data                          */
-  for (i = this->size() ; i > 0 && thisObject[i-1] == OREF_NULL; i--);
+    // return as an object
+    return (RexxObject *)convertIndex(lastElement);
+}
 
-  if (i == 0)                           /* if array is empty?                */
-    result = TheNilObject;             /* return nil object                 */
-  else
-                                       /* return index to the last entry    */
-    result = (RexxObject *)convertIndex(i);
-  return result;
+size_t RexxArray::lastIndex()
+/******************************************************************************/
+/* Function:  Return the index of the last array item as an integer object    */
+/******************************************************************************/
+{
+    return lastElement;       // we've kept track of this
 }
 
 RexxObject  *RexxArray::nextRexx(RexxObject **arguments, size_t argCount)

@@ -180,18 +180,14 @@ const char *mempbrk(
 /*  Function:  Find first occurence of set member in memory          */
 /*********************************************************************/
 {
-  const char *    Retval;              /* returned value                    */
-
-  Retval = NULL;                       /* nothing found yet                 */
   while (Length-- > 0) {               /* search through string             */
 
     if (strchr(Set, *String)) {        /* find a match in ref set?          */
-      Retval = String;                 /* copy position                     */
-      break;                           /* quit the loop                     */
+        return String;
     }
     String++;                          /* step the pointer                  */
   }
-  return Retval;                       /* return matched position           */
+  return NULL;                         /* return matched position           */
 }
 
 RexxObject *native_release(

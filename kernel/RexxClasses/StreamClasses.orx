@@ -234,22 +234,24 @@ notready:                              /* standard notready handler         */
   else
       raise syntax 93                  /* raise an error                    */
 
-  queue = .queue~new                   /* create a queue item               */
-  /* Begin - change loop logic */
-  if linein then
-    do while self~lines > 0            /* while lines are available         */
-      queue~queue(self~linein)         /* read a line                       */
-    end
-  else
-    do while self~chars > 0            /* while characters are available    */
-      queue~queue(self~charin)         /* read a character                  */
-    end
+  array = .array~new                   -- we work directly on an array
 
-  return (queue~makearray)             /* return result                     */
+  signal on notready                   -- the notready trap is a better means of
+                                       -- handling this.
+  if linein then do
+      do forever
+          array~append(self~linein)
+      end
+  end
+  else do
+      do forever
+          array~append(self~charin)
+      end
+  end
 
-notready:                              /* notready handler                  */
-                                       /* return the array we've got so far */
-  raise propagate return (queue~makearray)
+notready:
+  return array
+
 
 ::METHOD command                       /* process a stream command          */
   expose stream_name                   /* access the stream name            */

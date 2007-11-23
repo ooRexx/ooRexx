@@ -107,13 +107,6 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
 /* must be forced                                                            */
   counter += bufferLength;
 
-  if (counter > CRIT_SIZE )
-  {
-     counter = 0;
-     TheMemoryObject->clearSaveStack();   /* be forced to remove any potential */
-     TheMemoryObject->collect();          /* locks from the UNINIT table       */
-     TheActivityClass->runUninits();      /* be sure to finish UNINIT methods  */
-  }
                                         /* allocate the new object           */
   newBuffer = (RexxMutableBuffer *)new_object(sizeof(RexxMutableBuffer));
                                         /* set the behaviour from the class  */
@@ -240,14 +233,6 @@ RexxMutableBuffer *RexxMutableBuffer::append(RexxObject *obj)
       bufferLength = resultLength;
     }
     counter = counter + bufferLength;
-//    if(bufferLength > CRIT_SIZE)            /* see comments in object creation method THU004A begin*/
-    if(counter > CRIT_SIZE)            /* see comments in object creation method THU004A begin*/
-    {
-       counter = 0;
-       TheMemoryObject->clearSaveStack();   /* be forced to remove any potential */
-       TheMemoryObject->collect();          /* locks from the UNINIT table       */
-       TheActivityClass->runUninits();      /* be sure to finish UNINIT methods  */
-    }                                       /* THU004A end */
                                          /* see the comments in ::newRexx()!! */
     this->data = (RexxString *) realloc(this->data, bufferLength + sizeof(RexxString));
   }

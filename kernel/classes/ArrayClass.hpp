@@ -123,6 +123,7 @@ typedef struct copyElelmentParm {
    RexxInteger *sizeRexx();
    RexxObject  *firstRexx();
    RexxObject  *lastRexx();
+   size_t       lastIndex();
    RexxObject  *nextRexx(RexxObject **, size_t);
    RexxObject  *previousRexx(RexxObject **, size_t);
    RexxArray   *section(size_t, size_t);
@@ -182,6 +183,7 @@ typedef struct copyElelmentParm {
 
    size_t arraySize;                   /* current size of array         */
    size_t maximumSize;                 /* Maximum size array can grow   */
+   size_t lastElement;                 // location of last set element
    RexxArray *dimensions;              /* Array containing dimensions - null if 1-dimensional */
    RexxArray *expansionArray;          /* actual array containing data  */
    RexxObject  *objects[1];            /* Data.                         */
