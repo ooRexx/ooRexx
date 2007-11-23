@@ -3039,6 +3039,11 @@ RexxMethod3(REXXOBJECT,                // Return type
   dp.rgvarg = pVarArgs;
   VariantInit(&sResult);
 
+  /* Zero out the exception structure, some OLE Automation objects are not well
+   * behaved.
+   */
+  ZeroMemory(&sExc, sizeof(EXCEPINFO));
+
   pResult = &sResult;
   if (pTypeInfo && pFuncInfo)
   {
