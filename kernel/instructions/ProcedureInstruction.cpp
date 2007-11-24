@@ -57,7 +57,7 @@ RexxInstructionProcedure::RexxInstructionProcedure(
 {
                                        /* get the variable size             */
   variableCount = varCount;
-  while (variableCount > 0)            /* loop through the variable list    */
+  while (varCount > 0)            /* loop through the variable list    */
                                        /* copying each variable             */
     OrefSet(this, this->variables[--varCount], (RexxVariableBase *)variable_list->pop());
 }
