@@ -49,6 +49,7 @@
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
+#include "ActivityManager.hpp"
 
 #define  SELECTOR  "ENVIRONMENT"    /* environment selector               */
 #define  AXENGINE1 "WSHPROPERTY"    /* scripting engine selector          */

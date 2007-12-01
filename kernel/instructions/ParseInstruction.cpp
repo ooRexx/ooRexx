@@ -53,7 +53,6 @@
 #include "ParseTarget.hpp"
 #include "Token.hpp"
 
-extern RexxActivity *CurrentActivity;  /* current activity                  */
 
 RexxInstructionParse::RexxInstructionParse(
   RexxObject *_expression,             /* string expression source          */
@@ -101,13 +100,13 @@ void RexxInstructionParse::execute(
 
     case SUBKEY_PULL:                  /* PARSE PULL instruction            */
                                        /* read a line from the queue        */
-      value = CurrentActivity->pullInput(context);
+      value = ActivityManager::currentActivity->pullInput(context);
       stack->push(value);              /* add the value to the stack        */
       break;
 
     case SUBKEY_LINEIN:                /* PARSE LINEIN instruction          */
                                        /* read a line from the stream       */
-      value = CurrentActivity->lineIn(context);
+      value = ActivityManager::currentActivity->lineIn(context);
       stack->push(value);              /* add the value to the stack        */
       break;
 

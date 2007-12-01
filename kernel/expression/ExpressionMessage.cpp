@@ -96,7 +96,7 @@ RexxObject *RexxExpressionMessage::evaluate(
   _target = this->target->evaluate(context, stack);
   if (this->super != OREF_NULL) {      /* have a message lookup override?   */
 
-    if (_target != context->receiver)   /* sender and receiver different?    */
+    if (_target != context->getReceiver())   /* sender and receiver different?    */
                                        /* this is an error                  */
       reportException(Error_Execution_super);
                                        /* get the variable value            */
@@ -225,7 +225,7 @@ void RexxExpressionMessage::assign(
     if (this->super != OREF_NULL)
     {
         // in this context, the value needs to be SELF
-        if (_target != context->receiver)
+        if (_target != context->getReceiver())
         {
             reportException(Error_Execution_super);
         }

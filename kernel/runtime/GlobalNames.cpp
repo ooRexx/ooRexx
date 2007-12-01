@@ -44,29 +44,39 @@
 #include "RexxCore.h"
 #include "DirectoryClass.hpp"
 #include "ArrayClass.hpp"
-RexxString *kernel_name (const char* value);
-
-void createStrings (void)
+void RexxMemory::createStrings()
 /******************************************************************************/
 /* Function:  Create all globally available string objects                    */
 /******************************************************************************/
 {
-  LONG        stringCount;             /* number of strings                 */
-  RexxArray * stringArray;             /* saved array of strings            */
-
+    // if we're calling this, then we're building the image.  Make sure the
+    // global string directory is created first.
+    globalStrings = new_directory();
                                        /* redefine the GLOBAL_NAME macro    */
-                                       /* to create and give a count of the */
-                                       /* strings created                   */
+                                       /* to create each of the strings     */
+#undef GLOBAL_NAME
+#define GLOBAL_NAME(name, value) OREF_##name = getGlobalName(value);
+
+#include "GlobalNames.h"             /* now create the strings            */
+}
+
+
+RexxArray *RexxMemory::saveStrings()
+/******************************************************************************/
+/* Function:  Create all globally available string objects                    */
+/******************************************************************************/
+{
+                                       /* redefine the GLOBAL_NAME macro    */
+                                       /* to count the number of string     */
+                                       /* objects we need to save           */
   #undef GLOBAL_NAME
-  #define GLOBAL_NAME(name, value) OREF_##name = kernel_name(value); stringCount++;
+  #define GLOBAL_NAME(name, value) stringCount++;
 
-  stringCount = 0;                     /* no strings yet                    */
-  #include "GlobalNames.h"                 /* now create the strings            */
+  size_t stringCount = 0;              /* no strings yet                    */
+  #include "GlobalNames.h"             /* now create the strings            */
 
-  stringArray = new_array(stringCount);/* get a large array                 */
-                                       /* save the strings                  */
-  kernel_public(CHAR_NAME_STRINGS, stringArray, TheKernel);
-
+  // get an array to contain all of the string values
+  RexxArray *stringArray = new_array(stringCount);
                                        /* redefine the GLOBAL_NAME macro    */
                                        /* to save each string in the array  */
                                        /* at its relative offset            */
@@ -74,27 +84,22 @@ void createStrings (void)
   #define GLOBAL_NAME(name, value) stringArray->put((RexxObject *)OREF_##name, stringCount); stringCount++;
 
   stringCount = 1;                     /* start with the first string       */
-  #include "GlobalNames.h"                 /* now save the strings              */
+  #include "GlobalNames.h"             /* now save the strings              */
+
+  return stringArray;                  // and return the saved string array
 }
 
-void restoreStrings (void)
+void RexxMemory::restoreStrings(RexxArray *stringArray)
 /******************************************************************************/
 /* Function:  Create all globally available string objects                    */
 /******************************************************************************/
 {
-  RexxArray * stringArray;             /* array of strings                  */
-  RexxString **strings;                /* pointer to individual strings     */
-  long         stringCount;
-
                                        /* redefine the GLOBAL_NAME macro    */
                                        /* to create and give a count of the */
                                        /* strings created                   */
   #undef GLOBAL_NAME
   #define GLOBAL_NAME(name, value) OREF_##name = *strings++;
 
-  stringCount = 0;                     /* start with the first string       */
-  stringArray = (RexxArray *)TheSaveArray->get(saveArray_NAME_STRINGS);
-                                       /* point to the actual array data    */
-  strings = (RexxString **)stringArray->data();
+  RexxString **strings = (RexxString **)stringArray->data();
   #include "GlobalNames.h"                 /* now restore the strings           */
 }

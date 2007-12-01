@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxHashTable.c      */
+/* REXX Kernel                                           RexxHashTable.c      */
 /*                                                                            */
 /* Primitive Hash Table Class                                                 */
 /*                                                                            */
@@ -45,6 +45,7 @@
 #include "RexxHashTable.hpp"
 #include "ArrayClass.hpp"
 #include "SupplierClass.hpp"
+#include "ProtectedObject.hpp"
 
 /******************************************************************************/
 /*                                                                            */
@@ -138,7 +139,7 @@ RexxTable *RexxHashTable::newInstance(
   bytes = newObj->getObjectSize() - companionSize;
 
   // initialize the hash table object
-  ((RexxObject *)newHash)->initializeNewObject(bytes, memoryObject.markWord, VFTArray[T_hashtab], TheHashTableBehaviour);
+  ((RexxObject *)newHash)->initializeNewObject(bytes, memoryObject.markWord, RexxMemory::VFTArray[T_hashtab], TheHashTableBehaviour);
                                        /* reduce the companion size         */
   newObj->setObjectSize(companionSize);
   newHash->size = bucketSize;          /* record the size                   */
@@ -960,6 +961,7 @@ RexxHashTable *RexxHashTable::insert(
   }
                                        /* allocate a larger hash table      */
   newHash = new_hashtab(this->totalSlotsSize() * 2);
+  ProtectedObject p(newHash);
   switch (type) {                      /* remerge based on the type         */
 
     case STRING_TABLE:                 /* string based table                */
@@ -971,9 +973,7 @@ RexxHashTable *RexxHashTable::insert(
       break;
 
     case FULL_TABLE:                   /* full table look ups               */
-      save(newHash);                   /* secure to prevent garb.col.       */
       this->reMerge(newHash);          /* do a normal merge                 */
-      discard_hold(newHash);           /* release  again                    */
       break;
   }
 

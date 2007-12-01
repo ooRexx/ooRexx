@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
-/* REXX Kernel                                                  RexxVariable.c     */
+/* REXX Kernel                                           RexxVariable.c     */
 /*                                                                          */
 /* Primitive Variable Class                                                 */
 /*                                                                          */
@@ -44,6 +44,7 @@
 #include "RexxCore.h"
 #include "RexxVariable.hpp"
 #include "RexxActivity.hpp"
+#include "ActivityManager.hpp"
 
 void RexxVariable::live()
 /******************************************************************************/
@@ -136,9 +137,9 @@ void RexxVariable::notify()
     }
                                        /* yield control and allow the       */
                                        /* waiting guard to run too          */
-    activity = CurrentActivity;        /* get the current activity          */
-    ReleaseKernelAccess(activity);     /* release the lock                  */
-    RequestKernelAccess(activity);     /* get it back again                 */
+    activity = ActivityManager::currentActivity;        /* get the current activity          */
+    activity->releaseAccess();         /* release the lock                  */
+    activity->requestAccess();         /* get it back again                 */
   }
 }
 

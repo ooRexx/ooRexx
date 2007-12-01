@@ -283,7 +283,7 @@ void RexxStemVariable::setGuard(
 
                                        /* look up the name                  */
   variable = context->getLocalStemVariable(this->stem, this->index);
-  variable->inform(CurrentActivity);   /* mark the variable entry           */
+  variable->inform(ActivityManager::currentActivity);   /* mark the variable entry           */
 }
 
 void RexxStemVariable::clearGuard(
@@ -296,7 +296,7 @@ void RexxStemVariable::clearGuard(
 
                                        /* look up the name                  */
   variable = context->getLocalStemVariable(this->stem, this->index);
-  variable->uninform(CurrentActivity); /* mark the variable entry           */
+  variable->uninform(ActivityManager::currentActivity); /* mark the variable entry           */
 }
 BOOL RexxStemVariable::sort(
     RexxActivation *context, RexxString *prefix, int order, int type, size_t start,

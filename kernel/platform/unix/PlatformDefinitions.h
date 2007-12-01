@@ -171,13 +171,6 @@
 #define SysCallV
 //#define PATH_MAX        POSIX_PATH_MAX
 
-/******************************************************************************/
-/* OPTIONAL:  If the implementation is going to support a cross-process       */
-/* shared memory model, then include a define for SHARED                      */
-/******************************************************************************/
-
-//#define SHARED
-
 #define RXTRACE_SUPPORT
 
 /******************************************************************************/

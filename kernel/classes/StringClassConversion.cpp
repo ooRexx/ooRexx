@@ -51,8 +51,7 @@
 #include "RexxBuiltinFunctions.h"                     /* Gneral purpose BIF Header file    */
 
 #include "NumberStringMath.hpp"
-
-extern ACTIVATION_SETTINGS *current_settings;
+#include "ActivityManager.hpp"
 
 /*********************************************************************/
 /*                                                                   */

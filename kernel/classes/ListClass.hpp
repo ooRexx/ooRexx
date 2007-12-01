@@ -80,6 +80,12 @@
    RexxObject   *value(RexxObject *);
    RexxObject   *remove(RexxObject *);
    RexxObject   *primitiveRemove(LISTENTRY *);
+   size_t        firstIndex() { return first; }
+   size_t        lastIndex() { return last; }
+   size_t        nextIndex(size_t i);
+   size_t        previousIndex(size_t i);
+   RexxObject   *getValue(size_t i);
+
    RexxObject   *firstRexx();
    RexxObject   *lastRexx();
    RexxObject   *next(RexxObject *);
@@ -101,7 +107,10 @@
    RexxObject   *add(RexxObject *, RexxObject *);
    RexxObject   *removeFirst() { return (this->first != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->first)) : TheNilObject; }
    RexxObject   *removeLast() { return (this->last != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->last)) : TheNilObject; }
+   RexxObject   *removeFirstItem() { return (this->first != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->first)) : OREF_NULL; }
+   RexxObject   *removeLastItem() { return (this->last != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->last)) : OREF_NULL; }
    LISTENTRY    *getEntry(RexxObject *, RexxObject *);
+   LISTENTRY    *getEntry(size_t);
    RexxObject   *indexOfValue(RexxObject *);
    RexxObject   *empty();
    RexxObject   *isEmpty();

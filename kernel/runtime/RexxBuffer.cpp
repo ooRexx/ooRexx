@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxBuffer.c    */
+/* REXX Kernel                                                RexxBuffer.c    */
 /*                                                                            */
 /* Primitive Buffer Class                                                     */
 /*                                                                            */
@@ -45,6 +45,7 @@
 #include <string.h>
 #include "RexxCore.h"
 #include "RexxActivity.hpp"
+#include "ActivityManager.hpp"
 #include "RexxBuffer.hpp"
 
 RexxBuffer *RexxBuffer::expand(

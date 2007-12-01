@@ -1,0 +1,239 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+#ifndef Included_ActivityManager
+#define Included_ActivityManager
+
+class RexxActivity;
+class RexxObjectTable;
+class RexxStack;
+
+
+class ActivityManager
+{
+public:
+    static void live();
+    static void liveGeneral();
+
+    static void addWaitingActivity(RexxActivity *a, bool release);
+    static bool hasWaiters() { return waitingActivities > 0; }
+    static inline RexxActivity *waitingActivity()
+    {
+        return firstWaitingActivity;
+    }
+    static RexxActivity *findActivity();
+    static RexxActivity *findActivity(LONG);
+    static RexxActivity *getActivity();
+    static void returnActivity(RexxActivity *);
+    static void activityEnded(RexxActivity *);
+    static void shutdown();
+    static void createInterpreter();
+    static void terminateInterpreter();
+    static void lockKernel();
+    static void unlockKernel();
+    static void init();
+    static RexxActivation *newActivation(RexxObject *receiver, RexxMethod *runMethod, RexxActivity *activity, RexxString *msgname, RexxActivation *activation, int context);
+    static void cacheActivation(RexxActivation *activation);
+    static RexxActivity *newActivity(int priority);
+    static void haltAllActivities();
+    static void traceAllActivities(bool on);
+    static bool setActivityTrace(LONG thread_id, bool on_or_off);
+    static void clearActivityPool();
+    static bool poolActivity(RexxActivity *activity);
+    static bool haltActivity(LONG thread_id, RexxString * description);
+    static void yieldCurrentActivity();
+    static bool yieldActivity(LONG thread_id);
+    static void exit(int retcode);
+    static void startup();
+    static void relinquish(RexxActivity *activity);
+
+    static RexxActivity *currentActivity;   // the currently active thread
+    static RexxDirectory *localEnvironment; // the .local environment
+    static RexxObject *localServer;         // local environment initialization server
+
+protected:
+    enum
+    {
+        MAX_THREAD_POOL_SIZE = 5,       // maximum number of activities we'll pool
+    };
+
+                                        /* activities in use                 */
+    static RexxList         *activeActivities;
+                                        /* free activities                   */
+    static RexxList         *availableActivities;
+                                        /* table of all localact             */
+    static RexxList         *allActivities;
+    static RexxObjectTable  *subClasses;   /* SubClasses...one per system       */
+    static RexxStack        *activations;  /* cached activations                */
+                                        /* head of the waiting activity queue*/
+    static RexxActivity     *firstWaitingActivity;
+                                        /* tail of the waiting activity queue*/
+    static RexxActivity     *lastWaitingActivity;
+                                        /* size of the activation cache      */
+    static size_t            activationCacheSize;
+    static size_t            waitingActivities; /* number of waiting activities      */
+    static bool              processTerminating;  // shutdown processing started
+    static size_t            interpreterInstances;  // number of times an interpreter has been created.
+};
+
+
+                                       /* various exception/condition       */
+                                       /* reporting routines                */
+inline void reportCondition(RexxString *condition, RexxString *description) { ActivityManager::currentActivity->raiseCondition(condition, OREF_NULL, description, OREF_NULL, OREF_NULL, OREF_NULL); }
+inline void reportNovalue(RexxString *description) { reportCondition(OREF_NOVALUE, description); }
+inline void reportNostring(RexxString *description) { reportCondition(OREF_NOSTRING, description); }
+
+inline void reportException(wholenumber_t error)
+{
+    ActivityManager::currentActivity->reportAnException(error);
+}
+
+inline void reportException(wholenumber_t error, RexxArray *args)
+{
+    ActivityManager::currentActivity->raiseException(error, NULL, OREF_NULL, OREF_NULL, args, OREF_NULL);
+}
+
+inline void reportException(wholenumber_t error, RexxObject *a1)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1);
+}
+
+inline void reportException(wholenumber_t error, wholenumber_t a1)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1);
+}
+
+inline void reportException(wholenumber_t error, wholenumber_t a1, wholenumber_t a2)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, wholenumber_t a1, RexxObject *a2)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, RexxObject *a1, wholenumber_t a2)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, RexxObject *a1, const char *a2)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, const char *a1)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, wholenumber_t a2)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, wholenumber_t a2, RexxObject *a3)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2, a3);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, wholenumber_t a3)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2, a3);
+}
+
+inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+}
+
+inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2, RexxObject *a3)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2, a3);
+}
+
+inline void reportException(wholenumber_t error, RexxObject *a1, RexxObject *a2, RexxObject *a3, RexxObject *a4)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2, a3, a4);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, const char *a3, RexxObject *a4)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2, a3, a4);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, RexxObject *a3, RexxObject *a4)
+{
+    ActivityManager::currentActivity->reportAnException(error, new_string(a1), a2, a3, a4);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, RexxObject *a2, RexxObject *a3)
+{
+    ActivityManager::currentActivity->reportAnException(error, new_string(a1), a2, a3);
+}
+
+inline void reportNomethod(RexxString *message, RexxObject *receiver)
+{
+    if (!ActivityManager::currentActivity->raiseCondition(OREF_NOMETHOD, OREF_NULL, message, receiver, OREF_NULL, OREF_NULL))
+    {
+                                           /* raise as a syntax error           */
+        reportException(Error_No_method_name, receiver, message);
+    }
+}
+
+
+inline void reportHalt(RexxString *description)
+{
+                                       /* process as common condition       */
+  if (!ActivityManager::currentActivity->raiseCondition(OREF_HALT, OREF_NULL, description, OREF_NULL, OREF_NULL, OREF_NULL))
+  {
+                                         /* raise as a syntax error           */
+      reportException(Error_Program_interrupted_condition, OREF_HALT);
+  }
+}
+
+
+inline RexxActivity *new_activity()  { return ActivityManager::newActivity(MEDIUM_PRIORITY); }
+
+#endif
+

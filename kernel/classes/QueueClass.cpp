@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  QueueClass.c     */
+/* REXX Kernel                                               QueueClass.c     */
 /*                                                                            */
 /* Primitive Queue Class                                                      */
 /*                                                                            */
@@ -45,6 +45,8 @@
 #include "QueueClass.hpp"
 #include "IntegerClass.hpp"
 #include "SupplierClass.hpp"
+#include "ActivityManager.hpp"
+#include "ProtectedObject.hpp"
 
 RexxObject *RexxQueue::pullRexx()
 /******************************************************************************/
@@ -310,15 +312,13 @@ RexxArray *RexxQueue::allIndexes()
     arraysize_t arraysize = this->items();
 
     RexxArray *result = new_array(arraysize);
-    save(result);
+    ProtectedObject p(result);
 
     // now just make an array containing each index value.
     for (arraysize_t i = 1; i <= arraysize; i++)
     {
         result->put(new_integer(i), i);
     }
-
-    discard_hold(result);
     return result;
 }
 
@@ -496,11 +496,10 @@ RexxQueue *RexxQueue::ofRexx(
   if (TheQueueClass == ((RexxClass *)this)) {        /* creating an internel list item?   */
     arraysize = argCount;              /* get the array size                */
     newQueue = new RexxQueue;          /* get a new list                    */
-    save(newQueue);                    /* protect from garbage collection   */
+    ProtectedObject p(newQueue);
     for (i = 0; i < arraysize; i++) {  /* step through the array            */
       item = args[i];                  /* get the next item                 */
       if (item == OREF_NULL) {         /* omitted item?                     */
-        discard(newQueue);             /* release the new list              */
                                        /* raise an error on this            */
         reportException(Error_Incorrect_method_noarg, i + 1);
       }
@@ -512,11 +511,10 @@ RexxQueue *RexxQueue::ofRexx(
     arraysize = argCount;              /* get the array size                */
                                        /* get a new list                    */
     newQueue = (RexxQueue *)this->sendMessage(OREF_NEW);
-    save(newQueue);                    /* protect from garbage collection   */
+    ProtectedObject p(newQueue);
     for (i = 0; i < arraysize; i++) {  /* step through the array            */
       item = args[i];                  /* get the next item                 */
       if (item == OREF_NULL) {         /* omitted item?                     */
-        discard(newQueue);             /* release the new list              */
                                        /* raise an error on this            */
         reportException(Error_Incorrect_method_noarg, i + 1);
       }
@@ -524,7 +522,6 @@ RexxQueue *RexxQueue::ofRexx(
       newQueue->sendMessage(OREF_QUEUENAME, item);
     }
   }
-  discard_hold(newQueue);              /* release the collection lock       */
   return newQueue;                     /* give back the list                */
 }
 

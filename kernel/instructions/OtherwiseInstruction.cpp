@@ -67,9 +67,11 @@ void RexxInstructionOtherWise::execute(
 /* Function:  Execute a REXX OTHERWISE instruction                          */
 /****************************************************************************/
 {
-  if (context->blockNest == 0)         /* no possible blocks?               */
-                                       /* this is an error                  */
-    reportException(Error_Unexpected_when_otherwise);
+  if (!context->hasActiveBlocks())      /* no possible blocks?               */
+  {
+                                         /* this is an error                  */
+      reportException(Error_Unexpected_when_otherwise);
+  }
   context->traceInstruction(this);     /* trace if necessary                */
   return;                              /* do nothing at all (honest)        */
 }

@@ -67,20 +67,6 @@
 
 const int MAX_ERROR_NUMBER = 99999;        /* maximum error code number         */
 const int MAX_SYMBOL_LENGTH = 250;         /* length of a symbol name           */
-const int MAX_WHOLE_NUMBER = 999999999;    // maximum positive whole number
-const int MIN_WHOLE_NUMBER = -999999999;   // minimum negative whole number
-
-/******************************************************************************/
-/* Numeric setting constants                                                  */
-/******************************************************************************/
-                                       /* constants used for setting form   */
-const BOOL FORM_SCIENTIFIC    = FALSE;
-const BOOL FORM_ENGINEERING   = TRUE;
-
-const size_t DEFAULT_DIGITS  = ((size_t)9); /* default numeric digits setting    */
-const size_t DEFAULT_FUZZ    = ((size_t)0); /* default numeric fuzz setting      */
-                                       /* default numeric form setting      */
-const int DEFAULT_FORM       = FORM_SCIENTIFIC;
 
 /******************************************************************************/
 /* Defines for argument error reporting                                       */
@@ -162,8 +148,6 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 /* Object creation macros                                                     */
 /******************************************************************************/
 
-#define kernel_public(name, object, dir)  ((RexxDirectory *)dir)->setEntry(kernel_name(name), (RexxObject *)object)
-#define new_activity(l)                   (TheActivityClass->newActivity(MEDIUM_PRIORITY, l))
 #define new_behaviour(t)                  (new (t) RexxBehaviour)
 #define new_buffer(s)                     (new (s) RexxBuffer)
 #define new_clause()                      (new RexxClause)
@@ -199,20 +183,6 @@ typedef size_t stringsize_t;
 typedef int    wholenumber_t;
 typedef size_t arraysize_t;
 
-
-class ACTIVATION_SETTINGS {            /* activation "global" settings      */
-    public:
-      inline ACTIVATION_SETTINGS()
-      {
-          digits = DEFAULT_DIGITS;
-          fuzz = DEFAULT_FUZZ;
-          form = DEFAULT_FORM;
-      }
-
-      size_t digits;                       /* numeric digits setting            */
-      size_t fuzz;                         /* numeric fuzz setting              */
-      BOOL form;                           /* numeric form setting              */
-};                                     /* global activation settings        */
                                        /* builtin function prototype        */
 typedef RexxObject *builtin_func(RexxActivation *, int, RexxExpressionStack *);
 typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
@@ -260,8 +230,6 @@ typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
 /******************************************************************************/
 /* Global Objects - General                                                   */
 /******************************************************************************/
-EXTERN RexxActivityClass  * TheActivityClass INITGLOBALPTR;
-EXTERN RexxActivity * CurrentActivity INITGLOBALPTR; /* current active activity           */
 #ifdef SCRIPTING
 EXTERN RexxObject* (__stdcall *NovalueCallback)(const char *) INITGLOBALPTR;
 #endif
@@ -279,8 +247,6 @@ EXTERN MemorySegmentPool *GlobalPoolBase INITGLOBALPTR;
 EXTERN RexxDirectory * TheEnvironmentBase INITGLOBALPTR; // environment object base ptr
                                        /* function table                    */
 EXTERN RexxDirectory * TheFunctionsDirectory INITGLOBALPTR;
-                                       /* global string set                 */
-EXTERN RexxDirectory * TheGlobalStrings INITGLOBALPTR;
                                        /* integer class                     */
 EXTERN RexxIntegerClass  * TheIntegerClass INITGLOBALPTR;
 EXTERN RexxDirectory  * TheKernel INITGLOBALPTR;     /* kernel directory                  */
@@ -308,9 +274,6 @@ EXTERN RexxClass  * TheStemClass INITGLOBALPTR;      /* stem class              
 EXTERN RexxStringClass  * TheStringClass INITGLOBALPTR;
                                        /* mutablebuffer class                */
 EXTERN RexxClass  * TheMutableBufferClass INITGLOBALPTR;
-                                       /* Save array used for quick lookup  */
-                                       /*of objects during restore image    */
-EXTERN RexxArray  * TheSaveArray INITGLOBALPTR;
                                        /* saved array of primitive          */
                                        /*behaviours                         */
 EXTERN RexxObject * TheSavedBehaviours INITGLOBALPTR;
@@ -402,8 +365,7 @@ EXTERN RexxInteger * IntegerMinusOne INITGLOBALPTR;  /* Static integer -1       
 #define T_intstack                   T_nil_object                 + 1
 #define T_activation                 T_intstack                   + 1
 #define T_activity                   T_activation                 + 1
-#define T_activity_class             T_activity                   + 1
-#define T_behaviour                  T_activity_class             + 1
+#define T_behaviour                  T_activity                   + 1
 #define T_buffer                     T_behaviour                  + 1
 #define T_corral                     T_buffer                     + 1
 #define T_hashtab                    T_corral                     + 1
@@ -488,8 +450,7 @@ EXTERN RexxInteger * IntegerMinusOne INITGLOBALPTR;  /* Static integer -1       
 #define saveArray_GLOBAL_STRINGS     saveArray_NIL               + 1
 #define saveArray_CLASS              saveArray_GLOBAL_STRINGS    + 1
 #define saveArray_PBEHAV             saveArray_CLASS             + 1
-#define saveArray_ACTIVITY           saveArray_PBEHAV            + 1
-#define saveArray_NMETHOD            saveArray_ACTIVITY          + 1
+#define saveArray_NMETHOD            saveArray_PBEHAV            + 1
 #define saveArray_NULLA              saveArray_NMETHOD           + 1
 #define saveArray_NULLPOINTER        saveArray_NULLA             + 1
 #define saveArray_SYSTEM             saveArray_NULLPOINTER       + 1
@@ -502,14 +463,9 @@ EXTERN RexxInteger * IntegerMinusOne INITGLOBALPTR;  /* Static integer -1       
 /******************************************************************************/
 /* Global Objects - Primitive Behaviour                                       */
 /******************************************************************************/
-#ifndef GDATA
-EXTERN void *VFTArray[highest_T];      /* table of virtual functions        */
-
-#endif
 
 #define TheActivationBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_activation]))
 #define TheActivityBehaviour        ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_activity]))
-#define TheActivityClassBehaviour   ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_activity_class]))
 #define TheArrayBehaviour           ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_array]))
 #define TheArrayClassBehaviour      ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_array_class]))
 #define TheBehaviourBehaviour       ((RexxBehaviour *)(&RexxBehaviour::primitiveBehaviours[T_behaviour]))
@@ -648,8 +604,6 @@ const char *mempbrk(const char *, const char *, size_t);     /* search for chara
                                        /* reporting routines                */
 void missing_argument(LONG position);
 int  message_number(RexxString *);
-RexxActivity *activity_find (void);
-
                                        /* verify argument presence          */
 #define required_arg(arg, position) if (arg == OREF_NULL) missing_argument(ARG_##position)
 
@@ -707,8 +661,6 @@ extern double NO_DOUBLE;
  typedef RexxObject *  (VLAENTRY RexxObject::*PCPPM) (...);
  #define CPPM(n) ((PCPPM)&n)
 
-#ifdef LINUX
-
  #include "TableClass.hpp"
  #include "StackClass.hpp"
  #include "RexxMemory.hpp"               /* memory next, to get OrefSet       */
@@ -717,128 +669,9 @@ extern double NO_DOUBLE;
  #include "RexxEnvelope.hpp"                /* envelope is needed for flattens   */
  #include "RexxActivity.hpp"               /* activity is needed for errors     */
  #include "NumberStringClass.hpp"               /* added to make 'number_digits()'   */
+
+#endif
                                        /* in 'ArrayClass.c' visible            */
- #define PCPPINT    PCPPM
- #define PCPPSTR    PCPPM
- #define PCPPNUMSTR PCPPM
- #define PCPPMUTB   PCPPM
-
- #define CPPMIO(n) CPPM(n)
- #define CPPMC(n)  CPPM(n)
- #define CPPMLC(n) CPPM(n)
- #define CPPMA(n)  CPPM(n)
- #define CPPMC1(n)  CPPM(n)
- #define CPPMD(n)  CPPM(n)
- #define CPPMHC(n)  CPPM(n)
- #define CPPME(n)  CPPM(n)
- #define CPPMI(n)  CPPM(n)
- #define CPPML(n)  CPPM(n)
- #define CPPMSG(n)  CPPM(n)
- #define CPPMTD(n)  CPPM(n)
- #define CPPMTDC(n)  CPPM(n)
- #define CPPMNM(n)  CPPM(n)
- #define CPPMQ(n)  CPPM(n)
- #define CPPMSTEM(n)  CPPM(n)
- #define CPPMSTR(n)  CPPM(n)
- #define CPPMSTRCL(n)  CPPM(n)
- #define CPPMSUP(n)  CPPM(n)
- #define CPPMSUPCL(n)  CPPM(n)
- #define CPPMTBL(n)  CPPM(n)
- #define CPPMREL(n)  CPPM(n)
- #define CPPMMEM(n)  CPPM(n)
- #define CPPMLOC(n)  CPPM(n)
- #define CPPMSND(n)  CPPM(n)
- #define CPPMSRV(n)  CPPM(n)
- #define CPPMMUTB(n)  CPPM(n)
- #define CPPMMUTBCL(n) CPPM(n)
-
-#else
-
- typedef RexxObject *  (VLAENTRY RexxInternalObject::*PCPPMINTOBJ) (...);
- #define CPPMIO(n) ((PCPPMINTOBJ)&n)
-
- #include "TableClass.hpp"
- #include "StackClass.hpp"
- #include "RexxMemory.hpp"               /* memory next, to get OrefSet       */
- #include "RexxBehaviour.hpp"                /* now behaviours and                */
- #include "ClassClass.hpp"                /* classes, which everything needs   */
- #include "RexxEnvelope.hpp"                /* envelope is needed for flattens   */
- #include "RexxActivity.hpp"               /* activity is needed for errors     */
-
- // added these for VC++
- typedef RexxObject *  (VLAENTRY RexxClass::*PCPPCLASS) (...);
- #define CPPMC(n) (PCPPM) ((PCPPCLASS)&n)
- #include "ArrayClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxArray::*PCPPARRAY) (...);
- #define CPPMA(n) (PCPPM) ((PCPPARRAY)&n)
- typedef RexxObject *  (VLAENTRY RexxArray::*PCPPCOUNT) (...);
- #define CPPMC1(n) (PCPPM) ((PCPPCOUNT)&n)
- #include "DirectoryClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxDirectory::*PCPPDIR) (...);
- #define CPPMD(n) (PCPPM) ((PCPPDIR)&n)
- #include "RexxCollection.hpp"
- typedef RexxObject *  (VLAENTRY RexxHashTableCollection::*PCPPHASHCOL) (...);
- #define CPPMHC(n) (PCPPM) ((PCPPHASHCOL)&n)
- #include "RexxEnvelope.hpp"                /* envelope is needed for flattens   */
- typedef RexxObject *  (VLAENTRY RexxEnvelope::*PCPPENV) (...);
- #define CPPME(n) (PCPPM) ((PCPPENV)&n)
- #include "IntegerClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxInteger::*PCPPINT) (...);
- #define CPPMI(n) (PCPPM) ((PCPPINT)&n)
- #include "ListClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxList::*PCPPLIST) (...);
- #define CPPML(n) (PCPPM) ((PCPPLIST)&n)
- typedef RexxObject *  (VLAENTRY RexxListClass::*PCPPLISTCLASS) (...);
- #define CPPMLC(n) (PCPPM) ((PCPPLISTCLASS)&n)
- #include "MessageClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxMessage::*PCPPMSG) (...);
- #define CPPMSG(n) (PCPPM) ((PCPPMSG)&n)
- #include "MethodClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxMethod::*PCPPMETHOD) (...);
- #define CPPMTD(n) (PCPPM) ((PCPPMETHOD)&n)
- typedef RexxObject *  (VLAENTRY RexxMethodClass::*PCPPMETHODCLASS) (...);
- #define CPPMTDC(n) (PCPPM) ((PCPPMETHODCLASS)&n)
- #include "NumberStringClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxNumberString::*PCPPNUMSTR) (...);
- #define CPPMNM(n) (PCPPM) ((PCPPNUMSTR)&n)
- #include "QueueClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxQueue::*PCPPQ) (...);
- #define CPPMQ(n) (PCPPM) ((PCPPQ)&n)
- #include "StemClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxStem::*PCPPSTEM) (...);
- #define CPPMSTEM(n) (PCPPM) ((PCPPSTEM)&n)
- #include "StringClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxString::*PCPPSTR) (...);
- #define CPPMSTR(n) (PCPPM) ((PCPPSTR)&n)
- typedef RexxObject *  (VLAENTRY RexxStringClass::*PCPPSTRCLASS) (...);
- #define CPPMSTRCL(n) (PCPPM) ((PCPPSTRCLASS)&n)
- #include "SupplierClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxSupplier::*PCPPSUP) (...);
- #define CPPMSUP(n) (PCPPM) ((PCPPSUP)&n)
- typedef RexxObject *  (VLAENTRY RexxSupplierClass::*PCPPSUPCLASS) (...);
- #define CPPMSUPCL(n) (PCPPM) ((PCPPSUPCLASS)&n)
- #include "TableClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxTable::*PCPPTBL) (...);
- #define CPPMTBL(n) (PCPPM) ((PCPPTBL)&n)
- #include "RelationClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxRelation::*PCPPREL) (...);
- #define CPPMREL(n) (PCPPM) ((PCPPREL)&n)
- #include "RexxMemory.hpp"
- typedef RexxObject *  (VLAENTRY RexxMemory::*PCPPMEM) (...);
- #define CPPMMEM(n) (PCPPM) ((PCPPMEM)&n)
- #include "RexxMisc.hpp"
- typedef RexxObject *  (VLAENTRY RexxLocal::*PCPPLOCAL) (...);
- #define CPPMLOC(n) (PCPPM) ((PCPPLOCAL)&n)
- #include "MutableBufferClass.hpp"
- typedef RexxObject *  (VLAENTRY RexxMutableBuffer::*PCPPMUTB) (...);
- #define CPPMMUTB(n) (PCPPM) ((PCPPMUTB)&n)
- typedef RexxObject *  (VLAENTRY RexxMutableBufferClass::*PCPPMUTBCL) (...);
- #define CPPMMUTBCL(n) (PCPPM) ((PCPPMUTBCL)&n)
-
-#endif
-
-#endif
-
 /******************************************************************************/
 /* Method arguments special codes                                             */
 /******************************************************************************/
@@ -904,7 +737,7 @@ inline RexxString * REQUIRED_STRING(RexxObject *object, LONG position)
 inline RexxArray * REQUEST_ARRAY(RexxObject *obj) { return ((obj)->requestArray()); }
 
 /* The next macro is specifically for REQUESTing an INTEGER,                  */
-inline RexxInteger * REQUEST_INTEGER(RexxObject *obj) { return ((obj)->requestInteger(DEFAULT_DIGITS));}
+inline RexxInteger * REQUEST_INTEGER(RexxObject *obj) { return ((obj)->requestInteger(Numerics::DEFAULT_DIGITS));}
 
 /* The next macro is specifically for REQUESTing a LONG value                 */
 inline long REQUEST_LONG(RexxObject *obj, int precision) { return ((obj)->requestLong(precision)); }
@@ -939,16 +772,6 @@ inline RexxObject * callOperatorMethod(RexxObject *object, LONG methodOffset, Re
 }
 
 /******************************************************************************/
-/* Kernel synchronization and control macros                                  */
-/******************************************************************************/
-
-                                       /* macro for entering kernel         */
-#define RequestKernelAccess(acti) ((RexxActivity *)acti)->requestKernel()
-
-                                       /* macro for releasing kernel sem    */
-#define ReleaseKernelAccess(acti) ((RexxActivity *)acti)->releaseKernel()
-
-/******************************************************************************/
 /* Native method and external interface macros                                */
 /******************************************************************************/
                                        /* macros for creating methods that  */
@@ -976,9 +799,9 @@ inline RexxObject * callOperatorMethod(RexxObject *object, LONG methodOffset, Re
 #define nativei7(result, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6, t7, a7) result REXXENTRY REXX_##name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7)
 
                                        /* native method cleanup             */
-RexxObject *  native_release(RexxObject *);
+#define native_release(value)          ActivityManager::currentActivity->nativeRelease(value)
                                        /* macro for common native entry     */
-#define native_entry  RequestKernelAccess(activity_find())
+#define native_entry  ActivityManager::getActivity();
                                        /* value termination routine         */
 #define return_oref(value)  return (REXXOBJECT)native_release(value);
                                        /* return for no value returns       */

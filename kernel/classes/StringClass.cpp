@@ -51,10 +51,8 @@
 #include "DirectoryClass.hpp"
 #include "RexxActivation.hpp"
 #include "RexxActivity.hpp"
-                                       /* current global settings           */
-extern ACTIVATION_SETTINGS *current_settings;
-
 #include "RexxBuiltinFunctions.h"                          /* Gneral purpose BIF Header file       */
+#include "ProtectedObject.hpp"
 
 HashCode RexxString::hash()
 /******************************************************************************/
@@ -348,7 +346,7 @@ RexxObject *RexxString::lengthRexx()
   return (RexxObject *)new_integer(getLength());
 }
 
-BOOL RexxString::isEqual(
+bool RexxString::isEqual(
     RexxObject *otherObj)              /* other comparison object           */
 /******************************************************************************/
 /* Function:  Primitive strict equal\not equal method.  This determines       */
@@ -371,7 +369,7 @@ BOOL RexxString::isEqual(
   return !memcmp(this->getStringData(), other->getStringData(), otherLen);
 }
 
-BOOL RexxString::primitiveIsEqual(
+bool RexxString::primitiveIsEqual(
     RexxObject *otherObj)              /* other comparison object           */
 /******************************************************************************/
 /* Function:  Primitive strict equal\not equal method.  This determines       */
@@ -1061,7 +1059,7 @@ RexxString *RexxString::concatBlank(RexxObject *otherObj)
   return result;
 }
 
-BOOL RexxString::truthValue(long errorCode)
+bool RexxString::truthValue(int errorCode)
 /******************************************************************************/
 /* Function:  Determine the truth value of a string object, raising the       */
 /*            given error if bad.                                             */
@@ -1077,11 +1075,11 @@ BOOL RexxString::truthValue(long errorCode)
                                        /* report the error                  */
     reportException(errorCode, testString);
   if (*(testString->getStringData()) == '0')/* exactly '0'?                      */
-      return FALSE;                    /* have a false                      */
+      return false;                    /* have a false                      */
                                        /* not exactly '1'?                  */
   else if (!(*(testString->getStringData()) == '1'))
     reportException(errorCode, this);/* report the error                  */
-  return TRUE;                         /* this is true                      */
+  return true;                         /* this is true                      */
 }
 
 BOOL RexxString::checkLower()
@@ -1519,7 +1517,7 @@ RexxArray *RexxString::makeArray(RexxString *div)
   lines[linecount] = end;
 
   result = new_array(linecount);       /* create the array                  */
-  save(result);                        /* protect from garbage collection   */
+  ProtectedObject p(result);
 
   for (size = 0; size < linecount; size++) {
     len = lines[size+1] - lines[size];
@@ -1536,9 +1534,6 @@ RexxArray *RexxString::makeArray(RexxString *div)
   }
 
   free(lines);
-
-  discard_hold(result);                /* release the lock                  */
-
   return result;
 }
 
@@ -1643,7 +1638,7 @@ RexxString *RexxString::newString(const char *string, size_t length)
                                        /* set the behaviour from the class*/
   newObj->setBehaviour(TheStringBehaviour);
                                        /* set the virtual function table    */
-  newObj->setVirtualFunctions(VFTArray[T_string]);
+  newObj->setVirtualFunctions(RexxMemory::VFTArray[T_string]);
                                        /* clear the front part              */
   newObj->clearObject(sizeof(RexxString));
   newObj->setLength(length);           /* save the length                   */
@@ -1679,7 +1674,7 @@ RexxString *RexxString::rawString(size_t length)
                                        /* set the behaviour from the class*/
   newObj->setBehaviour(TheStringBehaviour);
                                        /* set the virtual function table    */
-  newObj->setVirtualFunctions(VFTArray[T_string]);
+  newObj->setVirtualFunctions(RexxMemory::VFTArray[T_string]);
                                        /* clear the front part              */
   newObj->clearObject(sizeof(RexxString));
   newObj->setLength(length);           /* save the length                   */
@@ -1722,7 +1717,7 @@ RexxString *RexxString::newUpperString(const char * string, stringsize_t length)
     /* set the behaviour from the class*/
     newObj->setBehaviour(TheStringBehaviour);
     /* set the virtual function table    */
-    newObj->setVirtualFunctions(VFTArray[T_string]);
+    newObj->setVirtualFunctions(RexxMemory::VFTArray[T_string]);
     /* clear the front part              */
     newObj->clearObject(sizeof(RexxString));
     newObj->length = length;             /* save the length                   */

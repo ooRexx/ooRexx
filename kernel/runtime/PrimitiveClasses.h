@@ -108,8 +108,6 @@ CLASS_INTERNAL(activation, RexxActivation)
 
 CLASS_INTERNAL(activity, RexxActivity)
 
-CLASS_INTERNAL(activity_class, RexxActivityClass)
-
 CLASS_INTERNAL(behaviour, RexxBehaviour)
 
 CLASS_INTERNAL(buffer, RexxBuffer)

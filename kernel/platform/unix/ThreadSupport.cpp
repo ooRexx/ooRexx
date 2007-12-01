@@ -69,6 +69,7 @@
 #include "RexxLibrary.h"
 #include "ThreadSupport.hpp"
 #include "RexxCore.h"
+#include "ActivityManager.hpp"
 #include <errno.h>
 
 #define THREAD_PRIORITY 100

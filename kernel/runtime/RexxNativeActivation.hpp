@@ -73,17 +73,17 @@ class RexxNativeActivation : public RexxActivationBase {
   RexxObject *dispatch();
   RexxObject *getReceiver() {return  this->receiver;}
   void   traceBack(RexxList *);
-  long   digits();
-  long   fuzz();
-  BOOL   form();
-  void   setDigits(long);
-  void   setFuzz(long);
-  void   setForm(BOOL);
+  size_t digits();
+  size_t fuzz();
+  bool   form();
+  void   setDigits(size_t);
+  void   setFuzz(size_t);
+  void   setForm(bool);
   void   guardOff();
   void   guardOn();
   void   enableVariablepool();
   void   disableVariablepool();
-  BOOL   trap (RexxString *, RexxDirectory *);
+  bool   trap (RexxString *, RexxDirectory *);
   void   setObjNotify(RexxMessage *);
   void   resetNext();
   BOOL   fetchNext(RexxString **name, RexxObject **value);

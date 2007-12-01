@@ -50,7 +50,6 @@
 extern SEV rexxTimeSliceSemaphore;
 extern ULONG  RexxTimeSliceTimer;
 extern ULONG  rexxTimeSliceTimerOwner;
-extern RexxInteger * ProcessName;
 
 extern BOOL UseMessageLoop;  /* for VAC++ */
 

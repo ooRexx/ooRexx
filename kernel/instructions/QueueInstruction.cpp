@@ -48,10 +48,6 @@
 #include "RexxActivity.hpp"
 #include "QueueInstruction.hpp"
 
-                                       /* current global settings           */
-extern ACTIVATION_SETTINGS *current_settings;
-extern RexxActivity *CurrentActivity;  /* current running activity          */
-
 RexxInstructionQueue::RexxInstructionQueue(
   RexxObject *_expression,              /* expresion to evaluate             */
   int type)                            /* top of queueing operation         */
@@ -87,7 +83,7 @@ void RexxInstructionQueue::execute(
     value =  OREF_NULLSTRING;          /* use a NULL string                 */
   context->traceResult(value);         /* trace if necessary                */
                                        /* write out the line                */
-  CurrentActivity->queue(context, value, ((instructionFlags&queue_lifo) != 0) ? QUEUE_LIFO : QUEUE_FIFO);
+  ActivityManager::currentActivity->queue(context, value, ((instructionFlags&queue_lifo) != 0) ? QUEUE_LIFO : QUEUE_FIFO);
   context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

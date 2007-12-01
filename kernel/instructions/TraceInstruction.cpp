@@ -109,13 +109,11 @@ void RexxInstructionTrace::execute(
 {
   RexxObject  *result;                 /* expression result                 */
   RexxString  *value;                  /* string version of expression      */
-  int          setting;                /* new trace setting                 */
-  int          debug;                  /* new debug setting                 */
 
   context->traceInstruction(this);     /* trace if necessary                */
   if (traceSetting == 0)               /* interactive debug mode request?   */
                                        /* turn on the skip mode             */
-    context->debugSkip(this->debugskip, instructionFlags&trace_notrace);
+    context->debugSkip(this->debugskip, (instructionFlags&trace_notrace) != 0);
                                        /* non-dynamic form?                 */
   else if (this->expression == OREF_NULL) {
     if (!context->inDebug())           /* not in debug mode?                */
@@ -129,11 +127,9 @@ void RexxInstructionTrace::execute(
     result = this->expression->evaluate(context, stack);
     value = REQUEST_STRING(result);    /* force to string form              */
     context->traceResult(result);      /* trace if necessary                */
-                                       /* process the result                */
-    context->code->getSource()->parseTraceSetting(value, &setting, &debug);
     if (!context->inDebug())           /* not in debug mode?                */
                                        /* now change the setting            */
-      context->setTrace(setting, debug);
+      context->setTrace(value);
     else
       context->pauseInstruction();     /* do debug pause if necessary       */
   }

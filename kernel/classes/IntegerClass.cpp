@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  IntegerClass.c       */
+/* REXX Kernel                                           IntegerClass.c       */
 /*                                                                            */
 /* Primitive Integer Class                                                    */
 /*                                                                            */
@@ -54,8 +54,6 @@
 #include "Numerics.hpp"
 
 
-                                       /* current global settings           */
-extern ACTIVATION_SETTINGS *current_settings;
                                        /* define an operator forwarding     */
                                        /* method                            */
 
@@ -247,17 +245,17 @@ void RexxInteger::setString(
    this->setHasReferences();           /* we now have references            */
 }
 
-BOOL RexxInteger::truthValue(
-    LONG  errorcode )                  /* error to raise if not good        */
+bool RexxInteger::truthValue(
+    int   errorcode )                  /* error to raise if not good        */
 /******************************************************************************/
 /* Function:  Determine the truth value of an integer object                  */
 /******************************************************************************/
 {
   if (this->value == 0L)               /* have a zero?                      */
-    return FALSE;                      /* this is false                     */
+    return false;                      /* this is false                     */
   else if (this->value != 1L)          /* how about a one?                  */
     reportException(errorcode, this);/* report the error                  */
-  return TRUE;                         /* this is true                      */
+  return true;                         /* this is true                      */
 }
 
 /******************************************************************************/
@@ -358,7 +356,7 @@ RexxObject *RexxInteger::plus(
   long tempVal;                        /* addition result                   */
 
                                        /* are we using default digits?      */
-  if (number_digits() != DEFAULT_DIGITS )
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
                                        /* nope, we can't do integer arith   */
     return integer_forward(this, plus, other);
   if (other == OREF_NULL)              /* unary                             */
@@ -385,7 +383,7 @@ RexxObject *RexxInteger::minus(
   long tempVal;                        /* subtraction result                */
 
                                        /* are we using default digits?      */
-  if (number_digits() != DEFAULT_DIGITS )
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
                                        /* nope, then we can do integer arith*/
     return integer_forward(this, minus, other);
 
@@ -416,7 +414,7 @@ RexxObject *RexxInteger::multiply(
   long tempVal;                        /* temp result value                 */
 
                                        /* are we using default digits?      */
-  if (number_digits() != DEFAULT_DIGITS )
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
                                        /* nope, we can't do integer math    */
     return integer_forward(this, multiply, other);
   required_arg(other, ONE);            /* make sure the argument is there   */
@@ -451,7 +449,7 @@ RexxObject *RexxInteger::integerDivide(
   long tempVal;                        /* temporary result value            */
 
                                        /* are we using default digits?      */
-  if (number_digits() != DEFAULT_DIGITS )
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
                                        /* nope, we can't do integer arith   */
     return integer_forward(this, integerDivide, other);
   required_arg(other, ONE);            /* make sure this is really there    */
@@ -480,7 +478,7 @@ RexxObject *RexxInteger::remainder(
   long tempVal;                        /* temporary result value            */
 
                                        /* are we using default digits?      */
-  if (number_digits() != DEFAULT_DIGITS )
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
                                        /* nope, we can't do integer arith   */
     return integer_forward(this, remainder, other);
   required_arg(other, ONE);            /* make sure this is really there    */
@@ -509,7 +507,7 @@ RexxObject *RexxInteger::power(
   return integer_forward(this, power, other);
 }
 
-BOOL RexxInteger::isEqual(
+bool RexxInteger::isEqual(
     RexxObject *other)                 /* other comparison object           */
 /******************************************************************************/
 /* Function:  Primitive strict equal\not equal method.  This determines       */
@@ -748,7 +746,7 @@ RexxObject *RexxInteger::abs()
 /******************************************************************************/
 {
                                        /* working under the default digits? */
- if (number_digits() == DEFAULT_DIGITS) {
+ if (number_digits() == Numerics::DEFAULT_DIGITS) {
      /* if we're already positive, this is a quick return */
      if (value >= 0) {
          return this;
@@ -766,9 +764,9 @@ RexxObject *RexxInteger::sign()
 {
   RexxObject *result;                  /* returned result                   */
 
- if (this->value > 0L)                 /* positive number?                  */
+ if (this->value > 0)                  /* positive number?                  */
    result = IntegerOne;                /* result is "1"                     */
- else if (this->value < 0L)            /* negative number?                  */
+ else if (this->value < 0)             /* negative number?                  */
   result = new_integer(-1);            /* result is "-1"                    */
  else
   result = IntegerZero;                /* exactly zero                      */
@@ -789,7 +787,7 @@ RexxObject *RexxInteger::Max(
 
 
                                        /* are we using default digits?      */
-  if (number_digits() != DEFAULT_DIGITS )
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
                                        /* nope, we can't do integer max.    */
    return this->numberString()->Max(args, argCount);
 
@@ -845,7 +843,7 @@ RexxObject *RexxInteger::Min(
 
 
                                        /* are we using default digits?      */
-  if (number_digits() != DEFAULT_DIGITS )
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
                                        /* nope, we can't do integer max.    */
    return this->numberString()->Min(args, argCount);
 

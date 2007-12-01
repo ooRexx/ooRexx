@@ -84,14 +84,7 @@
 #include "APIUtilities.h"
 #include "SystemSemaphores.h"
 
-#include "ActivityTable.hpp"
 #include "RexxActivation.hpp"
-
-#ifdef HIGHTID
-extern ActivityTable *ProcessLocalActs;
-#else
-extern RexxArray *ProcessLocalActs;
-#endif
 
 #include "SharedMemorySupport.h"                  /* system shared memory       */
 #include <string.h>                    /* to have the memset() func  */
@@ -1979,27 +1972,6 @@ VOID  RxExitClear(INT sig) {
 #endif
 
 
-              /* start signal handling when semaphore handling is done       */
-/*
- *            if (sig == SIGINT)
- *            {
- *               for (i=ProcessLocalActs->first();ProcessLocalActs->available(i);i=ProcessLocalActs->next(i))
- *               {
- *                  activity = (RexxActivity *)(ProcessLocalActs->value(i));
- *
- *                  currentActivation = (RexxActivationBase *) activity->currentAct();
- *
- *                  if (currentActivation != (RexxActivationBase *)TheNilObject)
- *                  {
- *                       ((RexxActivation *)currentActivation)->halt(OREF_NULL);
- *                  }
- *               }
- *               return;
- *            }
- *            else
- *               exit(0);
-*/
-
 #ifdef ORXAP_DEBUG
   switch(sig){
     case (SIGINT):
@@ -2028,18 +2000,7 @@ VOID  RxExitClear(INT sig) {
 
   if (sig == SIGINT)                    /* special for interrupt             */
   {
-     for (i=ProcessLocalActs->first();ProcessLocalActs->available(i);i=ProcessLocalActs->next(i))
-     {
-        activity = (RexxActivity *)(ProcessLocalActs->value(i));
-
-        currentActivation = (RexxActivationBase *) activity->currentAct();
-
-        if (currentActivation != (RexxActivationBase *)TheNilObject)
-        {
-                                        /* Yes, issue the halt to it.        */
-             ((RexxActivation *)currentActivation)->halt(OREF_NULL);
-        }
-     }
+     ActivityManager::haltAllActivities();
     if (iCallSigSet == 5 )                     /* Signal set                 */
     {
 #if defined( HAVE_SIGPROCMASK )

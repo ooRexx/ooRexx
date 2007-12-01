@@ -118,11 +118,11 @@ RexxObject  *RexxParseVariable::evaluate(
     if (value == TheNilObject) {       /* no external value?                */
       if (NovalueCallback) {
         // in an ActiveX Script-Engine context:
-        RexxActivity *save = CurrentActivity;  // save current activity
+        RexxActivity *save = ActivityManager::currentActivity;  // save current activity
 
         value = NovalueCallback(this->variableName->getStringData());
 
-        CurrentActivity = save;  // restore current activity
+        ActivityManager::currentActivity = save;  // restore current activity
 
         // no value found in engine?
         if (value == NULL) {
@@ -255,7 +255,7 @@ void RexxParseVariable::setGuard(
 
                                        /* look up the name                  */
   variable = context->getLocalVariable(variableName, index);
-  variable->inform(CurrentActivity);   /* mark the variable entry           */
+  variable->inform(ActivityManager::currentActivity);   /* mark the variable entry           */
 }
 
 void RexxParseVariable::clearGuard(
@@ -268,7 +268,7 @@ void RexxParseVariable::clearGuard(
 
                                        /* look up the name                  */
   variable = context->getLocalVariable(variableName, index);
-  variable->uninform(CurrentActivity); /* remove the notification           */
+  variable->uninform(ActivityManager::currentActivity); /* remove the notification           */
 }
 
 void RexxParseVariable::procedureExpose(

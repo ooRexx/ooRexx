@@ -36,12 +36,13 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                              RexxMemorysegment.c */
+/* REXX Kernel                                            RexxMemorysegment.c */
 /*                                                                            */
 /* Primitive Memory segment management                                        */
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
+#include "ActivityManager.hpp"
 
 
 void MemorySegment::dump(const char *owner, size_t counter, FILE *keyfile, FILE *dumpfile)

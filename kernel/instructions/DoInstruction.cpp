@@ -53,10 +53,6 @@
 #include "Token.hpp"
 #include "SourceFile.hpp"
 #include "ExpressionBaseVariable.hpp"
-                                       /* current global settings           */
-extern ACTIVATION_SETTINGS *current_settings;
-
-
 
 void RexxInstructionDo::matchLabel(
      RexxInstructionEnd *_end,         /* end to match up                   */
@@ -77,9 +73,9 @@ void RexxInstructionDo::matchLabel(
     RexxString *myLabel = getLabel();
     if (myLabel == OREF_NULL)          /* name given on non-control form?   */
                                        /* have a mismatched end             */
-      CurrentActivity->raiseException(Error_Unexpected_end_nocontrol, &location, source, OREF_NULL, new_array(name, new_integer(lineNum)), OREF_NULL);
+      ActivityManager::currentActivity->raiseException(Error_Unexpected_end_nocontrol, &location, source, OREF_NULL, new_array(name, new_integer(lineNum)), OREF_NULL);
     else if (name != getLabel())       /* not the same name?                */
-      CurrentActivity->raiseException(Error_Unexpected_end_control, &location, source, OREF_NULL, new_array(name, myLabel, new_integer(lineNum)), OREF_NULL);
+      ActivityManager::currentActivity->raiseException(Error_Unexpected_end_control, &location, source, OREF_NULL, new_array(name, myLabel, new_integer(lineNum)), OREF_NULL);
   }
 }
 
@@ -297,7 +293,8 @@ void RexxInstructionDo::execute(
                                        /* an integer value already, and     */
                                        /* we're dealing with a "normal      */
                                        /* NUMERIC DIGITS setting            */
-        if (isOfClass(Integer, result) && context->digits() >= (long)DEFAULT_DIGITS) {
+        if (isOfClass(Integer, result) && context->digits() >= Numerics::DEFAULT_DIGITS)
+        {
                                        /* get the value directly            */
           count = ((RexxInteger *)result)->getValue();
           context->traceResult(result);/* trace if necessary                */
@@ -330,7 +327,7 @@ void RexxInstructionDo::execute(
                                        /* an integer value already, and     */
                                        /* we're dealing with a "normal      */
                                        /* NUMERIC DIGITS setting            */
-        if (isOfClass(Integer, result) && context->digits() >= (long)DEFAULT_DIGITS) {
+        if (isOfClass(Integer, result) && context->digits() >= Numerics::DEFAULT_DIGITS) {
                                        /* get the value directly            */
           count = ((RexxInteger *)result)->getValue();
           context->traceResult(result);/* trace if necessary                */
@@ -477,7 +474,7 @@ void RexxInstructionDo::controlSetup(
                                        /* an integer value already, and     */
                                        /* we're dealing with a "normal      */
                                        /* NUMERIC DIGITS setting            */
-        if (isOfClass(Integer, result) && context->digits() >= (long)DEFAULT_DIGITS)
+        if (isOfClass(Integer, result) && context->digits() >= Numerics::DEFAULT_DIGITS)
           {
                                        /* get the value directly            */
           count = ((RexxInteger *)result)->getValue();

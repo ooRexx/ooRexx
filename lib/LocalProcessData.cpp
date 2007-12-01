@@ -43,40 +43,23 @@
 /******************************************************************************/
 #include <stdio.h>
 #include "RexxLibrary.h"
-                                       /* local server                      */
-RexxObject * ProcessLocalServer = OREF_NULL;
 int   ProcessBusyActs = 0;             /* number of busy activities         */
-int   ProcessInitializations = 0;      /* number of active initializations  */
 BOOL  ProcessColdStart = TRUE;         /* performing a coldstart            */
 BOOL  ProcessDoneInit = FALSE;         /* initialization is done            */
 BOOL  ProcessDoneTerm = FALSE;         /* termination is done               */
 BOOL  ProcessFirstThread = TRUE;       /* this is the first thread          */
-int   ProcessNumActs = 0;              /* number of activities created      */
-                                       /* array of local activities         */
-#ifdef HIGHTID
-ActivityTable * ProcessLocalActs = OREF_NULL;
-#else
-RexxArray * ProcessLocalActs = OREF_NULL;
-#endif
 
-BOOL  ProcessTerminating = FALSE;      /* termination in process            */
-                                       /* local environment directory       */
-RexxDirectory * ProcessLocalEnv = OREF_NULL;
-BOOL  ProcessRestoreImage = TRUE;      /* restoring the saved image         */
 BOOL  ProcessSaveImage = FALSE;        /* saving the image                  */
 ULONG ProcessMustCompleteNest = 0;     /* Global variable for MustComplete  */
                                        /* Next line added be THU            */
 BOOL  RexxStartedByApplication = TRUE; /* is REXX started by system or appl */
 #ifdef WIN32
 extern SEV RexxTerminated = NULL;      /* Semaphore to be posted at shutdown*/
-extern SEV RexxServerWait = NULL;      /* Semaphore for Sever waiting on msg*/
 #else
 SEV   RexxTerminated;                  /* Semaphore to be posted at shutdown*/
-SEV   RexxServerWait;                  /* Semaphore for Sever waiting on msg*/
 #endif
 RexxInteger * ProcessName = OREF_NULL; /* Process name/id                   */
 ULONG RexxTimeSliceTimer;              /* Time Slice timer handle.          */
 BOOL rexxTimeSliceElapsed = FALSE;     /* the time slice interlock flag     */
                                        /* Most currently accessed pool      */
 
-MemorySegmentPool *ProcessCurrentPool = NULL;

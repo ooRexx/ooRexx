@@ -49,6 +49,8 @@
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
+#include "ActivityManager.hpp"
+
 #define ACCOUNT_BUFFER_SIZE  256
 
 

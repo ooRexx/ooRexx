@@ -50,8 +50,6 @@
 #include "StringClass.hpp"
 #include "RexxBuiltinFunctions.h"                     /* General purpose BIF Header file       */
 
-extern ACTIVATION_SETTINGS *current_settings;
-
 /******************************************************************************/
 /* Arguments:  String to bitand with self                                     */
 /*             pad  character to use                                          */

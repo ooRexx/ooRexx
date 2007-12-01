@@ -45,6 +45,9 @@
 #ifndef Included_RexxObject
 #define Included_RexxObject
 
+#include "Numerics.hpp"
+
+
 #include <stddef.h>
 
 #define getAttributeIndex 0            /* location of getAttribute method   */
@@ -239,7 +242,7 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
 
      inline  HashCode     identityHash() { return HASHOREF(this); }
 
-     virtual BOOL         truthValue(LONG);
+     virtual bool         truthValue(int);
      virtual RexxString  *makeString();
      virtual void         copyIntoTail(RexxCompoundTail *buffer);
      virtual RexxString  *primitiveMakeString();
@@ -252,12 +255,12 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
      virtual LONG         longValueNoNOSTRING(size_t n) { return this->longValue(n);};
      virtual double       doubleValueNoNOSTRING() { return this->doubleValue();};
 
-     virtual BOOL         isEqual(RexxObject *);
+     virtual bool         isEqual(RexxObject *);
      virtual bool         isInstanceOf(RexxClass *);
      virtual RexxMethod   *instanceMethod(RexxString *);
      virtual RexxSupplier *instanceMethods(RexxClass *);
 
-             RexxObject  *hasUninit();
+             void         hasUninit();
              void         removedUninit();
              void         printObject();
              RexxObject  *clone();
@@ -340,7 +343,7 @@ class RexxObject : public RexxInternalObject {
      void flatten(RexxEnvelope *);
      RexxObject  *copy();
      HashCode     hash();
-     BOOL         truthValue(LONG);
+     bool         truthValue(int);
      long         longValue(size_t);
      long         longValueNoNOSTRING(size_t);
      RexxNumberString *numberString();
@@ -360,11 +363,11 @@ class RexxObject : public RexxInternalObject {
      RexxString  *requiredString(LONG);
      RexxString  *requiredString();
      RexxInteger *requiredInteger(LONG, size_t);
-     LONG         requiredLong(LONG, size_t precision = DEFAULT_DIGITS);
-     LONG         requiredPositive(LONG, size_t precision = DEFAULT_DIGITS);
-     LONG         requiredNonNegative(LONG, size_t precision=DEFAULT_DIGITS);
+     LONG         requiredLong(LONG, size_t precision = Numerics::DEFAULT_DIGITS);
+     LONG         requiredPositive(LONG, size_t precision = Numerics::DEFAULT_DIGITS);
+     LONG         requiredNonNegative(LONG, size_t precision = Numerics::DEFAULT_DIGITS);
 
-     BOOL         isEqual(RexxObject *);
+     bool         isEqual(RexxObject *);
      bool         isInstanceOf(RexxClass *);
      RexxObject  *isInstanceOfRexx(RexxClass *);
      RexxMethod   *instanceMethod(RexxString *);
@@ -529,16 +532,16 @@ class RexxActivationBase : public RexxInternalObject{
      virtual RexxObject  *dispatch() {return NULL;};
      virtual RexxObject  *getReceiver() {return NULL;};
      virtual void traceBack(RexxList *) {;};
-     virtual long digits() {return 0;};
-     virtual long fuzz() {return 0;};
-     virtual BOOL form() {return FALSE;};
-     virtual void setDigits(LONG) {;};
-     virtual void setFuzz(LONG) {;};
-     virtual void setForm(BOOL) {;}
-     virtual BOOL trap(RexxString *, RexxDirectory *) {return FALSE;};
+     virtual size_t digits() {return Numerics::DEFAULT_DIGITS;};
+     virtual size_t fuzz() {return Numerics::DEFAULT_FUZZ;};
+     virtual bool form() {return Numerics::DEFAULT_FORM;};
+     virtual void setDigits(size_t) {;};
+     virtual void setFuzz(size_t) {;};
+     virtual void setForm(bool) {;}
+     virtual bool trap(RexxString *, RexxDirectory *) {return false;};
      virtual void setObjNotify(RexxMessage *) {;};
      virtual void termination(){;};
-     virtual BOOL hasSecurityManager() { return FALSE; }
-     virtual BOOL isForwarded() { return FALSE; }
+     virtual bool hasSecurityManager() { return false; }
+     virtual bool isForwarded() { return false; }
 };
 #endif

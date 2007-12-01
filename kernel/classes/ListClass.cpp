@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ListClass.c      */
+/* REXX Kernel                                               ListClass.c      */
 /*                                                                            */
 /* Primitive List Class                                                       */
 /*                                                                            */
@@ -46,6 +46,8 @@
 #include "ListClass.hpp"
 #include "ArrayClass.hpp"
 #include "SupplierClass.hpp"
+#include "ActivityManager.hpp"
+#include "ProtectedObject.hpp"
 
 void RexxList::init(void)
 /******************************************************************************/
@@ -206,6 +208,30 @@ LISTENTRY * RexxList::getEntry(
   return element;                      /* return this                       */
 }
 
+
+/**
+ * Resolve a low-level index into a list entry value.
+ *
+ * @param item_index The target index.
+ *
+ * @return A LISTENTRY value, or NULL if not found.
+ */
+LISTENTRY * RexxList::getEntry(size_t item_index)
+{
+    if (item_index >= this->size)        /* out of possible range?            */
+    {
+        return NULL;                       /* not found                         */
+    }
+    LISTENTRY *element = ENTRY_POINTER(item_index); /* point to the item                 */
+    if (element->previous != NOT_ACTIVE) /* got a real item?                  */
+    {
+        return element;                  // go for it
+    }
+    return NULL;                         // not found
+}
+
+
+
 RexxObject *RexxList::value(
      RexxObject *_index)               /* list index item                   */
 /******************************************************************************/
@@ -224,6 +250,29 @@ RexxObject *RexxList::value(
     result = TheNilObject;             /* just return NIL                   */
   return result;                       /* return this item                  */
 }
+
+
+
+/**
+ * Primitive level getValue() for a list item.
+ *
+ * @param _index The decoded index item.
+ *
+ * @return The value associated with the index.  Returns OREF_NULL if not
+ *         there.
+ */
+RexxObject *RexxList::getValue(size_t _index)
+{
+                                       /* locate this entry                 */
+  LISTENTRY *element = this->getEntry(_index);
+  // return a real NULL if this isn't there
+  if (element == NULL)
+  {
+      return OREF_NULL;
+  }
+  return element->value;               // return whatever is in this position
+}
+
 
 RexxObject *RexxList::put(
      RexxObject *_value,                /* new value for the item            */
@@ -271,7 +320,7 @@ RexxObject *RexxList::section(
                                        /* need to do this the slow way      */
     return this->sectionSubclass(element, counter);
   result = new RexxList;               /* create a new list                 */
-  save(result);                        /* protect this                      */
+  ProtectedObject p(result);
                                        /* while still more to go and not at */
                                        /* the end of the list               */
   while (counter--> 0) {               /* while still more items            */
@@ -282,7 +331,6 @@ RexxObject *RexxList::section(
                                        /* step to the next item             */
     element = ENTRY_POINTER(element->next);
   }
-  discard_hold(result);                /* release the save lock             */
   return result;                       /* return the sectioned list         */
 }
 
@@ -297,7 +345,7 @@ RexxObject *RexxList::sectionSubclass(
 
                                        /* create a new list                 */
   newList = (RexxList *)this->behaviour->getOwningClass()->sendMessage(OREF_NEW);
-  save(newList);                       /* protect this                      */
+  ProtectedObject p(newList);
                                        /* while still more to go and not at */
                                        /* the end of the list               */
   while (counter-- > 0) {              /* while still more items            */
@@ -308,7 +356,6 @@ RexxObject *RexxList::sectionSubclass(
                                        /* step to the next item             */
     element = ENTRY_POINTER(element->next);
   }
-  discard_hold(newList);               /* release the save lock             */
   return newList;                      /* return the sectioned list         */
 }
 
@@ -675,6 +722,58 @@ RexxObject *RexxList::previous(
   }
 }
 
+
+/**
+ * A low-level next() method for internal usage.  This works
+ * directly off the index values without needing to create
+ * object instances.  This is critical for some of the internal
+ * data structures implemented as lists.
+ *
+ * @param _index The target item index.
+ *
+ * @return The index of the next item, or LIST_END if there is no next item.
+ */
+size_t RexxList::nextIndex(size_t _index)
+{
+    LISTENTRY *element = this->getEntry(_index);
+    // we're a little less strict when dealing with internal lists.  Just return
+    // the end of list marker here
+    if (element == NULL)
+    {
+        return LIST_END;
+    }
+    // we can just return this value directly...if there is no previous element,
+    // the next field contains LIST_END;
+    return element->next;
+}
+
+
+/**
+ * A low-level previous() method for internal usage.  This works
+ * directly off the index values without needing to create
+ * object instances.  This is critical for some of the internal
+ * data structures implemented as lists.
+ *
+ * @param _index The target item index.
+ *
+ * @return The index of the previous item, or LIST_END if there
+ *         is no previous item.
+ */
+size_t RexxList::previousIndex(size_t _index)
+{
+    LISTENTRY *element = this->getEntry(_index);
+    // we're a little less strict when dealing with internal lists.  Just return
+    // the end of list marker here
+    if (element == NULL)
+    {
+        return LIST_END;
+    }
+    // we can just return this value directly...if there is no previous element,
+    // the previous field contains LIST_END;
+    return element->previous;
+}
+
+
 RexxObject *RexxList::hasIndex(
      RexxObject *_index)               /* index of the target item          */
 /******************************************************************************/
@@ -772,7 +871,7 @@ RexxArray *RexxList::allIndexes(void)
     RexxArray *array = (RexxArray *)new_array(this->count);
     // this requires protecting, since we're going to be creating new
     // integer objects.
-    save(array);
+    ProtectedObject p(array);
     size_t   nextEntry = this->first;
     for (size_t i = 1; i <= this->count; i++)
     {
@@ -780,7 +879,6 @@ RexxArray *RexxList::allIndexes(void)
         array->put((RexxObject *)new_integer(nextEntry), i);
         nextEntry = element->next;
     }
-    discard_hold(array);
     return array;
 }
 
@@ -915,7 +1013,7 @@ RexxArray  *RexxList::makeArrayIndices()
 
                                        /* allocate proper sized array       */
   array = (RexxArray *)new_array(this->count);
-  save(array);                         /* lock the array                    */
+  ProtectedObject p(array);
   nextEntry = this->first;             /* point to the first element        */
   for (i = 1; i <= this->count; i++) { /* step through the array elements   */
     element = ENTRY_POINTER(nextEntry);/* get the next item                 */
@@ -923,7 +1021,6 @@ RexxArray  *RexxList::makeArrayIndices()
     array->put((RexxObject *)new_integer(nextEntry), i);
     nextEntry = element->next;         /* get the next pointer              */
   }
-  discard_hold(array);                 /* release the GC lock               */
   return array;                        /* return the array element          */
 }
 
@@ -1006,11 +1103,10 @@ RexxList *RexxListClass::classOf(
   if (TheListClass == this ) {         /* creating an internel list item?   */
     size = argCount;                   /* get the array size                */
     newList  = new RexxList;           /* get a new list                    */
-    save(newList);                     /* protect from garbage collection   */
+    ProtectedObject p(newList);
     for (i = 0; i < size; i++) {       /* step through the array            */
       item = args[i];                  /* get the next item                 */
       if (item == OREF_NULL) {         /* omitted item?                     */
-        discard(newList);              /* release the new list              */
                                        /* raise an error on this            */
         reportException(Error_Incorrect_method_noarg, i + 1);
       }
@@ -1022,11 +1118,10 @@ RexxList *RexxListClass::classOf(
     size = argCount;                   /* get the array size                */
                                        /* get a new list                    */
     newList = (RexxList *)this->sendMessage(OREF_NEW);
-    save(newList);                     /* protect from garbage collection   */
+    ProtectedObject p(newList);
     for (i = 0; i < size; i++) {       /* step through the array            */
       item = args[i];                  /* get the next item                 */
       if (item == OREF_NULL) {         /* omitted item?                     */
-        discard(newList);              /* release the new list              */
                                        /* raise an error on this            */
         reportException(Error_Incorrect_method_noarg, i + 1);
       }
@@ -1034,7 +1129,6 @@ RexxList *RexxListClass::classOf(
       newList->sendMessage(OREF_INSERT, item);
     }
   }
-  discard_hold(newList);               /* release the collection lock       */
   return newList;                      /* give back the list                */
 }
 

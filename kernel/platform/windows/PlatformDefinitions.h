@@ -158,17 +158,6 @@ typedef unsigned __int64 uint64_t;
 /* within the Activity (in addition to the threads ID)                        */
 #define THREADHANDLE
 
-
-/******************************************************************************/
-/* OPTIONAL:  Enable the new handling of a GUARD ON WHEN statement            */
-/* The access to a variable used as a GUARD ON WHEN expression will be        */
-/* serialized. That means, that an activity waiting for the guard will be     */
-/* able to check the expression after every modification that has been done   */
-/* to the expression variable                                                 */
-/******************************************************************************/
-// not ready yet (if it is defined, rexx runs slow)
-//#define NEWGUARD
-
 /******************************************************************************/
 /* OPTIONAL:  If the implementation enables external scripting support, then  */
 /* additional hand-shaking with an the exernal environment is enabled for     */
@@ -283,16 +272,6 @@ else printf("EVCR handle %x not null in %s line %d\n", s, __FILE__, __LINE__)
 
 /* create or open a named event semaphore */
 #define EVCROPEN(s,n) /* printf("EVCROPEN called with %x/%s in %s line %d\n", s, n, __FILE__, __LINE__);*/ EVCR(s)
-
-#ifdef NEWGUARD
-/* these macros are needed to serialize the access to a variable that */
-/* is used as a GUARD ON WHEN expression */
-/* AEVCR creates an automatic event (only one thread can get it) */
-#define AEVCR(s)      s = CreateEvent(NULL, FALSE, TRUE, NULL)
-/* AEVSIGNALED is true if the semaphore is in the signaled state */
-/* important: it will return immediately */
-#define AEVSIGNALED(s) (!WaitForSingleObject(s,SEM_IMMEDIATE_RETURN))
-#endif
 
 #define EVPOST(s)     SetEvent(s)
 #define EVSET(s)      ResetEvent(s)

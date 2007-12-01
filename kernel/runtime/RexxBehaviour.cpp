@@ -48,6 +48,7 @@
 #include "MethodClass.hpp"
 #include "ArrayClass.hpp"
 #include "SupplierClass.hpp"
+#include "ProtectedObject.hpp"
 
 extern PCPPM objectOperatorMethods[];
 
@@ -607,12 +608,11 @@ void RexxBehaviour::merge(
                                        /* get a copy of the source mdict    */
                                        /* for the merge                     */
     newMethods = (RexxTable *)source_behav->methodDictionary->copy();
-    save(newMethods);
+    ProtectedObject p(newMethods);
                                        /* merge this mdict with the copy    */
     this->methodDictionary->merge(newMethods);
                                        /* and put it into this behaviour    */
     OrefSet(this, this->methodDictionary, newMethods);
-    discard(newMethods);               /* unprotect this now                */
   }
 }
 
@@ -639,12 +639,11 @@ void RexxBehaviour::methodDictionaryMerge(
                                        /* get a copy of the target mdict    */
                                        /* for the merge                     */
     newDictionary = (RexxTable *)this->methodDictionary->copy();
-    save(newDictionary);
+    ProtectedObject p(newDictionary);
                                        /* merge the source mdict and copy   */
     sourceDictionary->merge(newDictionary);
                                        /* and put it into this behaviour    */
     OrefSet(this, this->methodDictionary, newDictionary);
-    discard(newDictionary);            /* and release the GC locking        */
   }
 }
 

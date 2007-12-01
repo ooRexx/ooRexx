@@ -204,7 +204,7 @@ ULONG SysVariablePool(
 
  pshvblock = (PSHVBLOCK)requests;      /* copy the request block pointer    */
                                        /* get the variable dictionary       */
- activation = self->activity->currentAct();
+ activation = self->activity->getCurrentActivation();
 
  while (pshvblock) {                   /* while more request blocks         */
   pshvblock->shvret = 0;               /* set the block return code         */
@@ -308,7 +308,7 @@ ULONG SysVariablePool(
                                        /* want the current exit?            */
       else if (IS_EQUAL(variable, "EXITNAME")) {
                                        /* get the exit name                 */
-        value = CurrentActivity->getCurrentExit();
+        value = ActivityManager::currentActivity->getCurrentExit();
         if (value == OREF_NULL)        /* is this a null?                   */
           value = OREF_NULLSTRING;     /* this is a null string value       */
                                        /* copy the value                    */
@@ -340,7 +340,7 @@ ULONG SysVariablePool(
                                        /* extract the numeric piece         */
         value = variable->extract(strlen("PARM."), variable->getLength() - strlen("PARM."));
                                        /* get the binary value              */
-        arg_position = value->longValue(DEFAULT_DIGITS);
+        arg_position = value->longValue(Numerics::DEFAULT_DIGITS);
                                        /* not a good number?                */
         if (arg_position == (long)NO_LONG || arg_position <= 0)
                                        /* this is a bad name                */

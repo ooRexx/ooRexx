@@ -44,6 +44,8 @@
 #ifndef Included_RexxNumberString
 #define Included_RexxNumberString
 
+#include "Numerics.hpp"
+
 #define MAXNUM      999999999               /* maximum size of 9 digits int         */
 #define MAXPOSNUM  4294967294u              /* maximum size of a ULONG              */
 #define MAXNEGNUM  2147483647u              /* maximum size of a negative long      */
@@ -78,10 +80,6 @@ int number_create_integer(const char *, size_t, int, int);
 
 
 #define NumberStringRound(s,d) s->roundUp(s,d)
-#define number_digits() current_settings->digits
-#define number_fuzz()   current_settings->fuzz
-#define number_form()   current_settings->form
-#define number_fuzzydigits() (current_settings->digits - current_settings->fuzz)
 
  class RexxNumberStringBase : public RexxObject {
    public:
@@ -122,9 +120,9 @@ int number_create_integer(const char *, size_t, int, int);
     RexxInteger *hasMethod(RexxString *);
     RexxString  *primitiveMakeString();
     RexxString  *stringValue();
-    BOOL         truthValue(LONG);
+    bool         truthValue(int);
 
-    BOOL        isEqual(RexxObject *);
+    bool        isEqual(RexxObject *);
     long        strictComp(RexxObject *);
     long        comp(RexxObject *);
     RexxInteger *equal(RexxObject *);
@@ -146,7 +144,7 @@ int number_create_integer(const char *, size_t, int, int);
     void        setString(RexxString *);
     void        roundUp(int);
     RexxString *formatRexx(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-    RexxString *formatInternal(size_t, size_t, size_t, size_t, RexxNumberString *, size_t, BOOL);
+    RexxString *formatInternal(size_t, size_t, size_t, size_t, RexxNumberString *, size_t, bool);
     RexxObject *operatorNot(RexxObject *);
     RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
     RexxObject *getValue(RexxActivation *context){return this;}
@@ -169,21 +167,19 @@ int number_create_integer(const char *, size_t, int, int);
     void              adjustPrecision(char *, size_t);
     void              adjustPrecision();
     inline void       checkPrecision() { if (length > NumDigits) adjustPrecision(); }
-    inline void       setNumericSettings(size_t digits, BOOL form)
+    inline void       setNumericSettings(size_t digits, bool form)
     {
         this->NumDigits = digits;
-        if (form == FORM_SCIENTIFIC)
+        if (form == Numerics::FORM_SCIENTIFIC)
             this->NumFlags |= NumFormScientific;
         else
             this->NumFlags &= ~NumFormScientific;
     }
 
-    inline void       setupNumber() {
-                                       /* current global settings           */
-        extern ACTIVATION_SETTINGS *current_settings;
-        size_t digits = number_digits();
+    inline void       setupNumber()
+    {
         /* inherit the current numeric settings */
-        setNumericSettings(digits, number_form());
+        setNumericSettings(number_digits(), number_form());
         /* check for any required rounding */
         checkPrecision();
     }

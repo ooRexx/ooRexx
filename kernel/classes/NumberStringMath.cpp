@@ -52,9 +52,8 @@
 #include "RexxActivity.hpp"
 #include "RexxBuffer.hpp"
 #include "NumberStringMath.hpp"
-
-                                       /* current global settings           */
-extern ACTIVATION_SETTINGS *current_settings;
+#include "ActivityManager.hpp"
+#include "ProtectedObject.hpp"
 
 
 RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, unsigned int operation)
@@ -72,7 +71,7 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
  if (argCount == 0) return this;       /* any arguments to ccompare?        */
 
                                        /* Get a reference to our current act*/
- CurrentActivation = CurrentActivity->current();
+ CurrentActivation = ActivityManager::currentActivity->current();
 
  saveFuzz = CurrentActivation->fuzz(); /* get the current fuzz and digits   */
  saveDigits = CurrentActivation->digits();
@@ -81,7 +80,7 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
                                        /* assume 1st operand (self) is the  */
                                        /*  one we want !                    */
  maxminobj = this->prepareNumber(saveDigits, ROUND);
- save(maxminobj);                      // protect this from GC while it's still "the one"
+ ProtectedObject p(maxminobj);
  for (arg=0; arg < argCount; arg++) {  /* Loop through all args             */
   nextObject = args[arg];              /* Get next argument.                */
 
@@ -116,10 +115,10 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
 
 
    if (compResult == TheTrueObject) {  /* Do we have a new MAX/MIN ?        */
-     discard(maxminobj);               /* Yes, no need to save old MAX/MIN  */
+                                       /* Yes, no need to save old MAX/MIN  */
                                        /*  assign and protect our next      */
                                        /*  MAX/MIN                          */
-     save(compobj);
+     p = compobj;
      maxminobj = (RexxNumberString *)compobj;
    }
   }
@@ -127,7 +126,6 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
                                        /* be sure we restore original Fuzz  */
     CurrentActivation->setFuzz(saveFuzz);
                                        /* keep maxminobj around just a      */
-    discard(maxminobj);                /* little longer                     */
     reportException(Error_Incorrect_method_number, arg + 1, args[arg]);
   }
  }
@@ -137,8 +135,6 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
                                        /* and it is adjusted to the correct */
                                        /* precision, so we have nothing     */
                                        /* left to do.                       */
-                                       /* keep maxminobj around just a      */
- discard_hold(maxminobj);              /* little longer                     */
  return maxminobj;                     /* now return it.                    */
 }
 

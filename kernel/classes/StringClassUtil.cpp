@@ -48,8 +48,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxBuiltinFunctions.h"                     /* include BIF util prototype/macros */
-                                       /* current global settings           */
-extern ACTIVATION_SETTINGS *current_settings;
+#include "ActivityManager.hpp"
 
 /******************************************************************************/
 /* Function:   Take in an agument passed to a method, convert it to a length  */
@@ -69,7 +68,7 @@ size_t get_length(
    value = ((RexxInteger *)argument)->getValue();
  else
                                        /* convert the length                */
-   value = REQUIRED_LONG(argument, DEFAULT_DIGITS, position);
+   value = REQUIRED_LONG(argument, Numerics::DEFAULT_DIGITS, position);
  if (value < 0)                        /* not a good length argument?       */
                                        /* this is an error                  */
    reportException(Error_Incorrect_method_length, argument);
@@ -94,7 +93,7 @@ size_t get_position(
    value = ((RexxInteger *)argument)->getValue();
  else
                                        /* convert the length                */
-   value = REQUIRED_LONG(argument, DEFAULT_DIGITS, position);
+   value = REQUIRED_LONG(argument, Numerics::DEFAULT_DIGITS, position);
  if (value <= 0)                       /* not a good position argument?     */
                                        /* this is an error                  */
    reportException(Error_Incorrect_method_position, argument);

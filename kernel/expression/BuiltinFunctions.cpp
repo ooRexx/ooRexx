@@ -56,6 +56,7 @@
 #include "BuiltinFunctions.hpp"
 #include "RexxDateTime.hpp"
 #include "Numerics.hpp"
+#include "ProtectedObject.hpp"
 
 
 /* checks if pad is a single character string */
@@ -896,7 +897,7 @@ BUILTIN(FUZZ) {
 BUILTIN(FORM) {
   check_args(FORM);                    /* check on required number of args  */
                                        /* return the current form setting   */
-  return context->form() == FORM_SCIENTIFIC ? OREF_SCIENTIFIC : OREF_ENGINEERING;
+  return context->form() == Numerics::FORM_SCIENTIFIC ? OREF_SCIENTIFIC : OREF_ENGINEERING;
 }
 
 #define USERID_MIN 0
@@ -1852,17 +1853,13 @@ BUILTIN(SOURCELINE) {
 BUILTIN(TRACE) {
   RexxString  *result;                 /* returned result                   */
   RexxString  *setting;                /* new trace setting                 */
-  int    newsetting;                   /* new trace setting                 */
-  int    debug;                        /* new debug setting                 */
 
   fix_args(TRACE);                     /* check required arguments          */
                                        /* get the trace setting             */
   setting = optional_string(TRACE, setting);
   result = context->traceSetting();    /* get the existing trace setting    */
   if (setting != OREF_NULL) {          /* have a new setting?               */
-    context->code->getSource()->parseTraceSetting(setting, &newsetting, &debug);
-                                       /* now change the setting            */
-    context->setTrace(newsetting, debug);
+    context->setTrace(setting);
   }
   return result;                       /* return old trace setting          */
 }
@@ -1892,25 +1889,25 @@ RexxObject *resolve_stream(            /* resolve a stream name             */
   if (name == OREF_NULL || name->getLength() == 0) { /* no name?                 */
     if (input) {                       /* input operation?                  */
                                        /* get the default output stream     */
-      stream = CurrentActivity->local->at(OREF_INPUT);
+      stream = ActivityManager::localEnvironment->at(OREF_INPUT);
     }
     else {
                                        /* get the default output stream     */
-      stream = CurrentActivity->local->at(OREF_OUTPUT);
+      stream = ActivityManager::localEnvironment->at(OREF_OUTPUT);
     }
   }
                                        /* standard input stream?            */
   else if (name->strICompare(CHAR_STDIN) || name->strICompare(CHAR_CSTDIN))
                                        /* get the default output stream     */
-    stream = CurrentActivity->local->at(OREF_INPUT);
+    stream = ActivityManager::localEnvironment->at(OREF_INPUT);
                                        /* standard output stream?           */
   else if (name->strICompare(CHAR_STDOUT) || name->strICompare(CHAR_CSTDOUT))
                                        /* get the default output stream     */
-    stream = CurrentActivity->local->at(OREF_OUTPUT);
+    stream = ActivityManager::localEnvironment->at(OREF_OUTPUT);
                                        /* standard error stream?            */
   else if (name->strICompare(CHAR_STDERR) || name->strICompare(CHAR_CSTDERR))
                                        /* get the default output stream     */
-    stream = CurrentActivity->local->at(OREF_ERRORNAME);
+    stream = ActivityManager::localEnvironment->at(OREF_ERRORNAME);
   else {
 //  stream = streamTable->at(name);    /* first try supplied name           */
 //  if (stream != OREF_NULL)           /* get one?                          */
@@ -1992,9 +1989,9 @@ BUILTIN(LINEIN) {
   count = optional_integer(LINEIN, count);
   if (check_queue(name)) {             /* is this "QUEUE:"                  */
                                        /* if exit declines call             */
-    if (CurrentActivity->sysExitMsqPll(context, &result)) {
+    if (ActivityManager::currentActivity->sysExitMsqPll(context, &result)) {
                                        /* get the default output stream     */
-        stream = CurrentActivity->local->at(OREF_REXXQUEUE);
+        stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
                                        /* pull from the queue               */
         result = (RexxString *)stream->sendMessage(OREF_LINEIN);
     }
@@ -2084,10 +2081,10 @@ BUILTIN(LINEOUT) {
   line = optional_integer(LINEOUT, line);
   if (check_queue(name)) {             /* is this "QUEUE:"                  */
                                        /* if exit declines call             */
-    if (CurrentActivity->sysExitMsqPsh(context, string, QUEUE_FIFO)) {
+    if (ActivityManager::currentActivity->sysExitMsqPsh(context, string, QUEUE_FIFO)) {
       if (string != OREF_NULL) {       /* have an actual string to write?   */
                                        /* get the default output stream     */
-        stream = CurrentActivity->local->at(OREF_REXXQUEUE);
+        stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
                                        /* push onto the queue               */
         result = (RexxString *)stream->sendMessage(OREF_QUEUENAME, string);
       }
@@ -2175,7 +2172,7 @@ BUILTIN(LINES) {
   option = optional_string(LINES, option);
   if (check_queue(name)) {             /* is this "QUEUE:"                  */
                                        /* get the default output stream     */
-    stream = CurrentActivity->local->at(OREF_REXXQUEUE);
+    stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
                                        /* return count on the queue         */
     result = (RexxInteger *)stream->sendMessage(OREF_QUERY);
   }
@@ -2306,49 +2303,49 @@ BUILTIN(STREAM) {
       break;
 
     case STREAM_COMMAND:               /* stream(name, c, command)          */
-      if (argcount < 3) {              /* given a third argument?           */
-                                       /* raise an error                    */
-        reportException(Error_Incorrect_call_minarg, OREF_STREAM, IntegerThree);
-      }
-                                       /* get the stream description        */
-      save(command);                   /* use save instead of hold */
-
-      /* I have to check the command twice because in the RexxMethods (i.g. query_exists)
-         I don't have access to the activation and thus not to the streamtable.
-         It's also not possible to pass context as the second argument because
-         stream is a RexxMethod and USE ARG RexxActivation is not possible */
-      command_upper = command->upper();
-      save(command_upper);           /* use save instead of hold */
-
-
-      fOpen = fClose = FALSE;    /* this whole part was reworked and moved up here */
-      if (command_upper->wordPos(new_string("OPEN"), OREF_NULL)->getValue() > 0) {
-        fOpen = TRUE;
-        stream = resolve_stream(name, context, stack, TRUE, &fullName, &added);
-      }
-      else if (command_upper->wordPos(new_string("CLOSE"), OREF_NULL)->getValue() > 0) {
-        fClose = TRUE;
-        stream = resolve_stream(name, context, stack, TRUE, &fullName, &added);
-      }
-      else
-        stream = resolve_stream(name, context, stack, TRUE, NULL, NULL);
-
-      result = stream->sendMessage(OREF_COMMAND, command);
-
-      /* this repairs the removed code below */
-      if (fClose) {
-        context->getStreams()->remove(fullName);
-      } else if (added && fOpen) {
-        /* if open failed, remove the stream object from stream table again */
-        if (((RexxString *)result)->strCompare("READY:"))
-        {
-          context->getStreams()->remove(fullName);
+    {
+        if (argcount < 3) {              /* given a third argument?           */
+                                         /* raise an error                    */
+          reportException(Error_Incorrect_call_minarg, OREF_STREAM, IntegerThree);
         }
-      }
+                                         /* get the stream description        */
+        ProtectedObject p(command);
 
-      discard(command);        /* use discard instead of discard_hold */
-      discard(command_upper);  /* use discard instead of discard_hold */
-      break;
+        /* I have to check the command twice because in the RexxMethods (i.g. query_exists)
+           I don't have access to the activation and thus not to the streamtable.
+           It's also not possible to pass context as the second argument because
+           stream is a RexxMethod and USE ARG RexxActivation is not possible */
+        command_upper = command->upper();
+        ProtectedObject p1(command_upper);
+
+
+        fOpen = fClose = FALSE;    /* this whole part was reworked and moved up here */
+        if (command_upper->wordPos(new_string("OPEN"), OREF_NULL)->getValue() > 0) {
+          fOpen = TRUE;
+          stream = resolve_stream(name, context, stack, TRUE, &fullName, &added);
+        }
+        else if (command_upper->wordPos(new_string("CLOSE"), OREF_NULL)->getValue() > 0) {
+          fClose = TRUE;
+          stream = resolve_stream(name, context, stack, TRUE, &fullName, &added);
+        }
+        else
+          stream = resolve_stream(name, context, stack, TRUE, NULL, NULL);
+
+        result = stream->sendMessage(OREF_COMMAND, command);
+
+        /* this repairs the removed code below */
+        if (fClose) {
+          context->getStreams()->remove(fullName);
+        } else if (added && fOpen) {
+          /* if open failed, remove the stream object from stream table again */
+          if (((RexxString *)result)->strCompare("READY:"))
+          {
+            context->getStreams()->remove(fullName);
+          }
+        }
+        break;
+
+    }
 
     default:
                                        /* this is an error                  */
@@ -2367,8 +2364,8 @@ BUILTIN(QUEUED) {
 
   check_args(QUEUED);                  /* check on required number of args  */
                                        /* get the default output stream     */
-  if (CurrentActivity->sysExitMsqSiz(context, &queuesize)) {
-    queue = CurrentActivity->local->at(OREF_REXXQUEUE);
+  if (ActivityManager::currentActivity->sysExitMsqSiz(context, &queuesize)) {
+    queue = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
                                        /* return count on the queue         */
     return queue->sendMessage(OREF_QUEUED);
   }

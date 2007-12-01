@@ -343,12 +343,10 @@ REXXOBJECT REXXENTRY REXX_TABLE_REMOVE(REXXOBJECT, REXXOBJECT);
 BOOL       REXXENTRY RexxQuery (void);
 int        REXXENTRY RexxTerminate (void);
 BOOL       REXXENTRY RexxInitialize (void);
-LONG       VLAREXXENTRY RexxSendMessage (REXXOBJECT receiver, const char *msgname, REXXOBJECT start_class, const char *interfacedefn, void *result, ...);
+int        VLAREXXENTRY RexxSendMessage (REXXOBJECT receiver, const char *msgname, REXXOBJECT start_class, const char *interfacedefn, void *result, ...);
 REXXOBJECT REXXENTRY RexxDispatch (REXXOBJECT argList);
-LONG       VLAREXXENTRY RexxCallProgram (CSTRING filename, CSTRING interfacedefn, PVOID result, ...);
-LONG       VLAREXXENTRY RexxCallString  (CSTRING filename, CSTRING interfacedefn, PVOID result, ...);
-
-ULONG      REXXENTRY REXX_EXECUTIONINFO(PULONG, char *, BOOL);
+int        VLAREXXENTRY RexxCallProgram (CSTRING filename, CSTRING interfacedefn, PVOID result, ...);
+int        VLAREXXENTRY RexxCallString  (CSTRING filename, CSTRING interfacedefn, PVOID result, ...);
 
 #ifdef __cplusplus
 }

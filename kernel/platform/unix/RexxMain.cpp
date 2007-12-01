@@ -70,7 +70,6 @@
 #include "RexxNativeAPI.h"                      /* REXX interface/native method code */
 #include SYSREXXSAA
 
-#include "ActivityTable.hpp"
 #include "RexxAPIManager.h"
 #include "APIDefinitions.h"
 #include "SubcommandAPI.h"
@@ -105,14 +104,11 @@ APIRET APIENTRY RexxExecuteMacroFunction ( char *, PRXSTRING );
 APIRET REXXENTRY RexxSetYield(PID procid, TID threadid);
 #endif /*timeslice*/
 
-extern RexxObject *ProcessLocalServer; /* current local server              */
-extern RexxActivity *CurrentActivity;  /* current active activity           */
 const char *SysFileExtension(const char *);
 RexxMethod *SysRestoreProgramBuffer(PRXSTRING, RexxString *);
 void SysSaveProgramBuffer(PRXSTRING, RexxMethod *);
 void SysSaveTranslatedProgram(const char *, RexxMethod *);
 const char *SearchFileName(const char *, char);
-extern ActivityTable * ProcessLocalActs;
 extern BOOL RexxStartedByApplication;
 
 extern "C" {
@@ -145,30 +141,16 @@ extern "C" {
 void SearchPrecision(
   PULONG    precision)                 /* required precision         */
 {
-  RexxActivity        *activity;
-  RexxActivation      *activation;
-  int i, thread_id,threadid;
-
-  *precision = DEFAULT_PRECISION;      /* set default digit count    */
+    *precision = DEFAULT_PRECISION;      /* set default digit count    */
 
 /* give me the numeric digits settings of the current actitity       */
 
-  threadid = (int) pthread_self();
-  if (ProcessLocalActs != OREF_NULL)
-  { /* activities created?               */
-                                       /* get all activities                */
-    for (i=ProcessLocalActs->first();ProcessLocalActs->available(i);i=ProcessLocalActs->next(i))
+    RexxActivity *activity = ActivityManager::findActivity();
+    if (activity != OREF_NULL)
     {
-      thread_id = ProcessLocalActs->index(i);   /* get thread id   */
-      if (thread_id == threadid)
-      {
-        activity = (RexxActivity *)ProcessLocalActs->fastAt(thread_id);
-        activation = activity->currentAct();
+        RexxActivation *activation = activity->getCurrentActivation();
         *precision = activation->digits();
-        break;
-      }
     }
-  }
 }
 }
 
@@ -232,7 +214,7 @@ LONG APIENTRY RexxStart(
     rexxutil_call_sem.release();
   }
                                        /* pass along to the real method     */
-  rc = RexxSendMessage(ProcessLocalServer, CHAR_RUN_PROGRAM, NULL, "vp", NULL, &RexxStartArguments);
+  rc = RexxSendMessage(ActivityManager::localServer, CHAR_RUN_PROGRAM, NULL, "vp", NULL, &RexxStartArguments);
   RexxTerminate();                     /* perform needed termination        */
   return -rc;                          /* return the error code (negated)   */
 }
@@ -296,7 +278,7 @@ LONG APIENTRY ApiRexxStart(
   rexxutil_call = FALSE;
   rexxutil_call_sem.release();
                                        /* pass along to the real method     */
-  rc = RexxSendMessage(ProcessLocalServer, CHAR_RUN_PROGRAM, NULL, "vp", NULL, &RexxStartArguments);
+  rc = RexxSendMessage(ActivityManager::localServer, CHAR_RUN_PROGRAM, NULL, "vp", NULL, &RexxStartArguments);
   return -rc;                          /* return the error code (negated)   */
 }
 //#endif /* AIX */
@@ -327,7 +309,7 @@ APIRET REXXENTRY RexxTranslateProgram(
   RexxInitialize();                    /* Perform any needed inits          */
 
                                        /* pass along to the real method     */
-  rc = RexxSendMessage(ProcessLocalServer, CHAR_RUN_PROGRAM, NULL, "vp", NULL, &RexxStartArguments);
+  rc = RexxSendMessage(ActivityManager::localServer, CHAR_RUN_PROGRAM, NULL, "vp", NULL, &RexxStartArguments);
   RexxTerminate();                     /* perform needed termination        */
   return rc;                           /* return the error code             */
 }
@@ -376,10 +358,18 @@ APIRET REXXENTRY RexxSetYield(PID procid, TID threadid)
 APIRET REXXENTRY RexxSetHalt(PID procid, TID threadid)
 {
   if (RexxQuery()) {                        /* Are we up?                     */
-    if(activity_halt((long)threadid, OREF_NULL)) /* Set halt condition?            */
-      return (RXARI_OK);                    /* Yes, return okay               */
-    else
-      return (RXARI_NOT_FOUND);             /* Couldn't find threadid         */
+      if (threadid == 0)
+      {
+          ActivityManager::haltAllActivities();
+      }
+      else
+      {
+          if (!ActivityManager::haltActivity(threadid, OREF_NULL))
+          {
+              return (RXARI_NOT_FOUND);             /* Couldn't find threadid         */
+          }
+      }
+      return (RXARI_OK);
   }
   else
     return (RXARI_NOT_FOUND);               /* REXX not running, error...     */
@@ -399,14 +389,22 @@ APIRET REXXENTRY RexxSetHalt(PID procid, TID threadid)
 /******************************************************************************/
 APIRET REXXENTRY RexxSetTrace(PID procid, TID threadid)
 {
-  if (RexxQuery()) {                        /* Are we up?                     */
-    if(activity_set_trace((long)threadid, 1))    /* Set trace on?                  */
-      return (RXARI_OK);                    /* Yes, return okay               */
-    else
-      return (RXARI_NOT_FOUND);             /* Couldn't find threadid         */
+    if (RexxQuery())
+    {                        /* Are we up?                     */
+       if (threadid == 0)
+       {
+           ActivityManager::traceAllActivities(true);
+       }
+       else
+       {
+           if (!ActivityManager::setActivityTrace(threadid, true))
+           {
+               return (RXARI_NOT_FOUND);             /* Couldn't find threadid         */
+           }
+       }
+       return (RXARI_OK);
     }
-  else
-    return (RXARI_NOT_FOUND);               /* REXX not running, error...     */
+    return RXARI_NOT_FOUND;     /* REXX not running, error...     */
 }
 
 
@@ -424,14 +422,22 @@ APIRET REXXENTRY RexxSetTrace(PID procid, TID threadid)
 /******************************************************************************/
 APIRET REXXENTRY RexxResetTrace(PID procid, TID threadid)
 {
-  if (RexxQuery()) {                        /* Are we up?                     */
-    if(activity_set_trace((long)threadid,0))     /* Set trace off??                */
-      return (RXARI_OK);                    /* Yes, return okay               */
-    else
-      return (RXARI_NOT_FOUND);             /* Couldn't find threadid         */
+    if (RexxQuery())
+    {                        /* Are we up?                     */
+       if (threadid == 0)
+       {
+           ActivityManager::traceAllActivities(false);
+       }
+       else
+       {
+           if (!ActivityManager::setActivityTrace(threadid, false))
+           {
+               return (RXARI_NOT_FOUND);             /* Couldn't find threadid         */
+           }
+       }
+       return (RXARI_OK);
     }
-  else
-    return (RXARI_NOT_FOUND);               /* REXX not running, error...     */
+    return RXARI_NOT_FOUND;     /* REXX not running, error...     */
 }
 
 
@@ -556,8 +562,8 @@ void  SysRunProgram(
   tokenize_only = FALSE;               /* default is to run the program     */
                                        /* create the native method to be run*/
                                        /* on the activity                   */
-  newNativeAct = new ((RexxObject *)CurrentActivity, OREF_NULL, CurrentActivity, OREF_PROGRAM, OREF_NULL) RexxNativeActivation;
-  CurrentActivity->push(newNativeAct); /* Push new nativeAct onto stack     */
+  newNativeAct = new ((RexxObject *)ActivityManager::currentActivity, OREF_NULL, ActivityManager::currentActivity, OREF_PROGRAM, OREF_NULL) RexxNativeActivation;
+  ActivityManager::currentActivity->push(newNativeAct); /* Push new nativeAct onto stack     */
   self = (RexxStartInfo *)ControlInfo; /* address all of the arguments      */
   if (self->programname != NULL)       /* have an actual name?              */
                                        /* get string version of the name    */
@@ -576,7 +582,7 @@ void  SysRunProgram(
                                        /* while not the list ender          */
       while (self->exits[i].sysexit_code != RXENDLST) {
                                        /* enable this exit                  */
-        CurrentActivity->setSysExit(self->exits[i].sysexit_code, new_string(self->exits[i].sysexit_name));
+        ActivityManager::currentActivity->setSysExit(self->exits[i].sysexit_code, new_string(self->exits[i].sysexit_name));
         i++;                           /* step to the next exit             */
       }
     }
@@ -665,10 +671,10 @@ void  SysRunProgram(
                                        /* actually need to run this?        */
   if (method != OREF_NULL && !tokenize_only) {
                                        /* Check to see if halt or trace sys */
-    CurrentActivity->queryTrcHlt();    /* were set                          */
+    ActivityManager::currentActivity->queryTrcHlt();    /* were set                          */
                                        /* run and get the result            */
-//  program_result = (RexxString *)((RexxObject *)CurrentActivity)->shriekRun(method, source_calltype, initial_address, new_arglist);
-    program_result = (RexxString *)((RexxObject *)CurrentActivity)->shriekRun(method, source_calltype, initial_address, new_arglist->data(), new_arglist->size());
+//  program_result = (RexxString *)((RexxObject *)ActivityManager::currentActivity)->shriekRun(method, source_calltype, initial_address, new_arglist);
+    program_result = (RexxString *)((RexxObject *)ActivityManager::currentActivity)->shriekRun(method, source_calltype, initial_address, new_arglist->data(), new_arglist->size());
     if (self->result != NULL) {        /* if return provided for            */
                                        /* actually have a result to return? */
       if (program_result != OREF_NULL) {
@@ -703,7 +709,7 @@ void  SysRunProgram(
                                        /* If there is a return val...       */
       if (program_result != OREF_NULL) {
                                        /* convert to a long value           */
-        return_code = program_result->longValue(DEFAULT_DIGITS);
+        return_code = program_result->longValue(Numerics::DEFAULT_DIGITS);
                                        /* if a whole number...              */
         if (return_code != (int)NO_LONG && return_code <= SHRT_MAX && return_code >= SHRT_MIN)
                                        /* ...copy to return code.           */
@@ -711,7 +717,7 @@ void  SysRunProgram(
       }
     }
   }
-  CurrentActivity->pop(FALSE);         /* finally, discard our activation   */
+  ActivityManager::currentActivity->pop(FALSE);         /* finally, discard our activation   */
 }
 
 /* functions for concurrency synchronization/termination               */

@@ -64,7 +64,6 @@
 extern SEV rexxTimeSliceSemaphore;
 extern ULONG  RexxTimeSliceTimer;
 extern ULONG  rexxTimeSliceTimerOwner;
-extern RexxInteger * ProcessName;
 
 void SysGetCurrentTime(
   RexxDateTime *Date )                 /* returned data structure    */
@@ -116,16 +115,6 @@ void SysStartTimeSlice( void )
 /* Function:  Make sure we ahve a Timer running and reset TimeSlice Sem       */
 /******************************************************************************/
 {
-//  if (!rexxTimeSliceTimerOwner) {      /* Is there a current Owner?     */
-//                                       /* nope, then none running.      */
-//    DosStartTimer(100, (HSEM)rexxTimeSliceSemaphore, &RexxTimeSliceTimer);
-//                                       /* owner is this process.        */
-//    rexxTimeSliceTimerOwner = ProcessName->value;
-//  }
-//                                       /* reset the timeslice semaphore */
-//                                       /* so we don't immediately give  */
-//                                       /* it up is already posted.      */
-//  EVSET(rexxTimeSliceSemaphore);
 }
 typedef struct {
   HEV sem;                             /* semaphore to wait on              */

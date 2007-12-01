@@ -59,118 +59,118 @@
 
 PCPPM stringOperatorMethods[] = {      /* table of string operator methods  */
    NULL,                               /* first entry not used              */
-   (PCPPM)(PCPPSTR)&RexxString::plus,
-   (PCPPM)(PCPPSTR)&RexxString::minus,
-   (PCPPM)(PCPPSTR)&RexxString::multiply,
-   (PCPPM)(PCPPSTR)&RexxString::divide,
-   (PCPPM)(PCPPSTR)&RexxString::integerDivide,
-   (PCPPM)(PCPPSTR)&RexxString::remainder,
-   (PCPPM)(PCPPSTR)&RexxString::power,
-   (PCPPM)(PCPPSTR)&RexxString::concatRexx,
-   (PCPPM)(PCPPSTR)&RexxString::concatRexx,
-   (PCPPM)(PCPPSTR)&RexxString::concatBlank,
-   (PCPPM)(PCPPSTR)&RexxString::equal,
-   (PCPPM)(PCPPSTR)&RexxString::notEqual,
-   (PCPPM)(PCPPSTR)&RexxString::isGreaterThan,
-   (PCPPM)(PCPPSTR)&RexxString::isLessOrEqual,
-   (PCPPM)(PCPPSTR)&RexxString::isLessThan,
-   (PCPPM)(PCPPSTR)&RexxString::isGreaterOrEqual,
-                                       /* Duplicate entry neccessary        */
-   (PCPPM)(PCPPSTR)&RexxString::isGreaterOrEqual,
-   (PCPPM)(PCPPSTR)&RexxString::isLessOrEqual,
-   (PCPPM)(PCPPSTR)&RexxString::strictEqual,
-   (PCPPM)(PCPPSTR)&RexxString::strictNotEqual,
-   (PCPPM)(PCPPSTR)&RexxString::strictGreaterThan,
-   (PCPPM)(PCPPSTR)&RexxString::strictLessOrEqual,
-   (PCPPM)(PCPPSTR)&RexxString::strictLessThan,
-   (PCPPM)(PCPPSTR)&RexxString::strictGreaterOrEqual,
-                                       /* Duplicate entry neccessary        */
-   (PCPPM)(PCPPSTR)&RexxString::strictGreaterOrEqual,
-   (PCPPM)(PCPPSTR)&RexxString::strictLessOrEqual,
-   (PCPPM)(PCPPSTR)&RexxString::notEqual,
-   (PCPPM)(PCPPSTR)&RexxString::notEqual, /* Duplicate entry neccessary        */
-   (PCPPM)(PCPPSTR)&RexxString::andOp,
-   (PCPPM)(PCPPSTR)&RexxString::orOp,
-   (PCPPM)(PCPPSTR)&RexxString::xorOp,
-   (PCPPM)(PCPPSTR)&RexxString::operatorNot,
+   (PCPPM)&RexxString::plus,
+   (PCPPM)&RexxString::minus,
+   (PCPPM)&RexxString::multiply,
+   (PCPPM)&RexxString::divide,
+   (PCPPM)&RexxString::integerDivide,
+   (PCPPM)&RexxString::remainder,
+   (PCPPM)&RexxString::power,
+   (PCPPM)&RexxString::concatRexx,
+   (PCPPM)&RexxString::concatRexx,
+   (PCPPM)&RexxString::concatBlank,
+   (PCPPM)&RexxString::equal,
+   (PCPPM)&RexxString::notEqual,
+   (PCPPM)&RexxString::isGreaterThan,
+   (PCPPM)&RexxString::isLessOrEqual,
+   (PCPPM)&RexxString::isLessThan,
+   (PCPPM)&RexxString::isGreaterOrEqual,
+                              /* Duplicate entry neccessary        */
+   (PCPPM)&RexxString::isGreaterOrEqual,
+   (PCPPM)&RexxString::isLessOrEqual,
+   (PCPPM)&RexxString::strictEqual,
+   (PCPPM)&RexxString::strictNotEqual,
+   (PCPPM)&RexxString::strictGreaterThan,
+   (PCPPM)&RexxString::strictLessOrEqual,
+   (PCPPM)&RexxString::strictLessThan,
+   (PCPPM)&RexxString::strictGreaterOrEqual,
+                              /* Duplicate entry neccessary        */
+   (PCPPM)&RexxString::strictGreaterOrEqual,
+   (PCPPM)&RexxString::strictLessOrEqual,
+   (PCPPM)&RexxString::notEqual,
+   (PCPPM)&RexxString::notEqual, /* Duplicate entry neccessary        */
+   (PCPPM)&RexxString::andOp,
+   (PCPPM)&RexxString::orOp,
+   (PCPPM)&RexxString::xorOp,
+   (PCPPM)&RexxString::operatorNot,
 };
 
                                        /* numberstring operator methods     */
 PCPPM numberstringOperatorMethods[] = {
    NULL,                               /* first entry not used              */
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::plus,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::minus,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::multiply,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::divide,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::integerDivide,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::remainder,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::power,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::concat,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::concat, /* Duplicate entry neccessary        */
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::concatBlank,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::equal,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::notEqual,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::isGreaterThan,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::isLessOrEqual,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::isLessThan,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::isGreaterOrEqual,
-                                       /* Duplicate entry neccessary        */
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::isGreaterOrEqual,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::isLessOrEqual,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::strictEqual,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::strictNotEqual,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::strictGreaterThan,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::strictLessOrEqual,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::strictLessThan,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::strictGreaterOrEqual,
-                                       /* Duplicate entry neccessary        */
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::strictGreaterOrEqual,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::strictLessOrEqual,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::notEqual,
-                                       /* Duplicate entry neccessary        */
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::notEqual,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::andOp,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::orOp,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::xorOp,
-   (PCPPM)(PCPPNUMSTR)&RexxNumberString::operatorNot,
+   (PCPPM)&RexxNumberString::plus,
+   (PCPPM)&RexxNumberString::minus,
+   (PCPPM)&RexxNumberString::multiply,
+   (PCPPM)&RexxNumberString::divide,
+   (PCPPM)&RexxNumberString::integerDivide,
+   (PCPPM)&RexxNumberString::remainder,
+   (PCPPM)&RexxNumberString::power,
+   (PCPPM)&RexxNumberString::concat,
+   (PCPPM)&RexxNumberString::concat, /* Duplicate entry neccessary        */
+   (PCPPM)&RexxNumberString::concatBlank,
+   (PCPPM)&RexxNumberString::equal,
+   (PCPPM)&RexxNumberString::notEqual,
+   (PCPPM)&RexxNumberString::isGreaterThan,
+   (PCPPM)&RexxNumberString::isLessOrEqual,
+   (PCPPM)&RexxNumberString::isLessThan,
+   (PCPPM)&RexxNumberString::isGreaterOrEqual,
+                           /* Duplicate entry neccessary        */
+   (PCPPM)&RexxNumberString::isGreaterOrEqual,
+   (PCPPM)&RexxNumberString::isLessOrEqual,
+   (PCPPM)&RexxNumberString::strictEqual,
+   (PCPPM)&RexxNumberString::strictNotEqual,
+   (PCPPM)&RexxNumberString::strictGreaterThan,
+   (PCPPM)&RexxNumberString::strictLessOrEqual,
+   (PCPPM)&RexxNumberString::strictLessThan,
+   (PCPPM)&RexxNumberString::strictGreaterOrEqual,
+                           /* Duplicate entry neccessary        */
+   (PCPPM)&RexxNumberString::strictGreaterOrEqual,
+   (PCPPM)&RexxNumberString::strictLessOrEqual,
+   (PCPPM)&RexxNumberString::notEqual,
+                           /* Duplicate entry neccessary        */
+   (PCPPM)&RexxNumberString::notEqual,
+   (PCPPM)&RexxNumberString::andOp,
+   (PCPPM)&RexxNumberString::orOp,
+   (PCPPM)&RexxNumberString::xorOp,
+   (PCPPM)&RexxNumberString::operatorNot,
 };
 
 PCPPM integerOperatorMethods[] = {     /* integer operator methods          */
    NULL,                               /* first entry not used              */
-   (PCPPM)(PCPPINT)&RexxInteger::plus,
-   (PCPPM)(PCPPINT)&RexxInteger::minus,
-   (PCPPM)(PCPPINT)&RexxInteger::multiply,
-   (PCPPM)(PCPPINT)&RexxInteger::divide,
-   (PCPPM)(PCPPINT)&RexxInteger::integerDivide,
-   (PCPPM)(PCPPINT)&RexxInteger::remainder,
-   (PCPPM)(PCPPINT)&RexxInteger::power,
-   (PCPPM)(PCPPINT)&RexxInteger::concat,
-   (PCPPM)(PCPPINT)&RexxInteger::concat, /* Duplicate entry neccessary        */
-   (PCPPM)(PCPPINT)&RexxInteger::concatBlank,
-   (PCPPM)(PCPPINT)&RexxInteger::equal,
-   (PCPPM)(PCPPINT)&RexxInteger::notEqual,
-   (PCPPM)(PCPPINT)&RexxInteger::isGreaterThan,
-   (PCPPM)(PCPPINT)&RexxInteger::isLessOrEqual,
-   (PCPPM)(PCPPINT)&RexxInteger::isLessThan,
-   (PCPPM)(PCPPINT)&RexxInteger::isGreaterOrEqual,
-                                       /* Duplicate entry neccessary        */
-   (PCPPM)(PCPPINT)&RexxInteger::isGreaterOrEqual,
-   (PCPPM)(PCPPINT)&RexxInteger::isLessOrEqual,
-   (PCPPM)(PCPPINT)&RexxInteger::strictEqual,
-   (PCPPM)(PCPPINT)&RexxInteger::strictNotEqual,
-   (PCPPM)(PCPPINT)&RexxInteger::strictGreaterThan,
-   (PCPPM)(PCPPINT)&RexxInteger::strictLessOrEqual,
-   (PCPPM)(PCPPINT)&RexxInteger::strictLessThan,
-   (PCPPM)(PCPPINT)&RexxInteger::strictGreaterOrEqual,
-                                       /* Duplicate entry neccessary        */
-   (PCPPM)(PCPPINT)&RexxInteger::strictGreaterOrEqual,
-   (PCPPM)(PCPPINT)&RexxInteger::strictLessOrEqual,
-   (PCPPM)(PCPPINT)&RexxInteger::notEqual,
-   (PCPPM)(PCPPINT)&RexxInteger::notEqual,
-   (PCPPM)(PCPPINT)&RexxInteger::andOp,
-   (PCPPM)(PCPPINT)&RexxInteger::orOp,
-   (PCPPM)(PCPPINT)&RexxInteger::xorOp,
-   (PCPPM)(PCPPINT)&RexxInteger::operatorNot,
+   (PCPPM)&RexxInteger::plus,
+   (PCPPM)&RexxInteger::minus,
+   (PCPPM)&RexxInteger::multiply,
+   (PCPPM)&RexxInteger::divide,
+   (PCPPM)&RexxInteger::integerDivide,
+   (PCPPM)&RexxInteger::remainder,
+   (PCPPM)&RexxInteger::power,
+   (PCPPM)&RexxInteger::concat,
+   (PCPPM)&RexxInteger::concat, /* Duplicate entry neccessary        */
+   (PCPPM)&RexxInteger::concatBlank,
+   (PCPPM)&RexxInteger::equal,
+   (PCPPM)&RexxInteger::notEqual,
+   (PCPPM)&RexxInteger::isGreaterThan,
+   (PCPPM)&RexxInteger::isLessOrEqual,
+   (PCPPM)&RexxInteger::isLessThan,
+   (PCPPM)&RexxInteger::isGreaterOrEqual,
+                              /* Duplicate entry neccessary        */
+   (PCPPM)&RexxInteger::isGreaterOrEqual,
+   (PCPPM)&RexxInteger::isLessOrEqual,
+   (PCPPM)&RexxInteger::strictEqual,
+   (PCPPM)&RexxInteger::strictNotEqual,
+   (PCPPM)&RexxInteger::strictGreaterThan,
+   (PCPPM)&RexxInteger::strictLessOrEqual,
+   (PCPPM)&RexxInteger::strictLessThan,
+   (PCPPM)&RexxInteger::strictGreaterOrEqual,
+                              /* Duplicate entry neccessary        */
+   (PCPPM)&RexxInteger::strictGreaterOrEqual,
+   (PCPPM)&RexxInteger::strictLessOrEqual,
+   (PCPPM)&RexxInteger::notEqual,
+   (PCPPM)&RexxInteger::notEqual,
+   (PCPPM)&RexxInteger::andOp,
+   (PCPPM)&RexxInteger::orOp,
+   (PCPPM)&RexxInteger::xorOp,
+   (PCPPM)&RexxInteger::operatorNot,
 };
 
 
@@ -227,16 +227,10 @@ RexxBehaviour RexxBehaviour::primitiveBehaviours[highest_T + 1] = {/* table of p
                                        /* float number                      */
 double NO_DOUBLE;                      /* non-exsistent double value        */
 
-
-MemorySegmentPool *GlobalCurrentPool = NULL;   //wge NULL
-
 SysSharedSemaphoreDefn                 /* semaphore definitions             */
                                        /* defined in xxxdef.h               */
 
 int   rexx_waiting_activity_count = 0; /* number of waiting activities      */
-
-void *VFTArray[highest_T + 1] = {NULL};   //wge NULL
-                                       /* Most currently allocated memoryPoo*/
 
 
 extern "C" {

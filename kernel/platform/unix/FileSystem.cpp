@@ -49,6 +49,7 @@
 #include "StringClass.hpp"
 #include "RexxBuffer.hpp"
 #include "RexxNativeAPI.h"
+#include "ProtectedObject.hpp"
 #include <string.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -442,7 +443,7 @@ const char *SearchFileName(
 //}
 
 
-void SysLoadImage(char **imageBuffer, long *imageSize)
+void SysLoadImage(char **imageBuffer, size_t *imageSize)
 /*******************************************************************/
 /* Function : Load the image into storage                          */
 /*******************************************************************/
@@ -500,32 +501,31 @@ RexxBuffer *SysReadProgram(
   RexxBuffer * buffer;                 /* buffer object to read file into   */
   RexxActivity*activity;               /* the current activity              */
 
-  activity = CurrentActivity;          /* save the activity                 */
-  ReleaseKernelAccess(activity);       /* release the kernel access         */
+  activity = ActivityManager::currentActivity;          /* save the activity                 */
+  activity->releaseAccess();           /* release the kernel access         */
 
   handle = fopen(file_name, "rb");     /* open as a binary file             */
   if (handle == NULL){                 /* open error?                       */
-    RequestKernelAccess(activity);     /* get the access back               */
+    activity->requestAccess();         /* get the access back               */
     return OREF_NULL;                  /* return nothing                    */
   }
 
   if (fileno(handle) == (FOPEN_MAX - 2)){      /* open error?                       */
-    RequestKernelAccess(activity);     /* get the access back               */
+    activity->requestAccess();         /* get the access back               */
     return OREF_NULL;                  /* return nothing                    */
   }
 
   fseek(handle, 0, SEEK_END);          /* seek to the file end              */
-  RequestKernelAccess(activity);       /* get the access back               */
+  activity->requestAccess();           /* get the access back               */
   buffersize = ftell(handle);          /* get the file size                 */
   fseek(handle, 0, SEEK_SET);          /* seek back to the file beginning   */
   buffer = new_buffer(buffersize);     /* get a buffer object               */
-  save(buffer);                        /* and protect this                  */
-  ReleaseKernelAccess(activity);       /* release the kernel access         */
+  ProtectedObject p(buffer);
+  activity->releaseAccess();           /* release the kernel access         */
                                        /* read the entire file in one shot  */
   fread(buffer->data, 1, buffersize, handle);
   fclose(handle);                      /* close the file                    */
-  RequestKernelAccess(activity);       /* get the access back               */
-  discard_hold(buffer);                /* and release the protection        */
+  activity->requestAccess();           /* get the access back               */
   return buffer;                       /* return the program buffer         */
 }
 

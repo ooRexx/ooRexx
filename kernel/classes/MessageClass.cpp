@@ -189,7 +189,7 @@ RexxObject *RexxMessage::result(void)
                                        /*condition Yes, we need to raise it */
                                        /*here.                              */
  if (this->raiseError()) {
-  CurrentActivity->reraiseException(this->condition);
+  ActivityManager::currentActivity->reraiseException(this->condition);
  }
  else {
                                        /* Quick test to see if result       */
@@ -198,7 +198,7 @@ RexxObject *RexxMessage::result(void)
                                        /* got an activity available?        */
    if (this->startActivity != OREF_NULL)
                                        /* go perform dead lock checks       */
-     this->startActivity->checkDeadLock(CurrentActivity);
+     this->startActivity->checkDeadLock(ActivityManager::currentActivity);
 
                                        /* No result yet, now we need to wait*/
                                        /*  until we get a result.           */
@@ -207,14 +207,14 @@ RexxObject *RexxMessage::result(void)
                                        /* No, Create a waiting list         */
      OrefSet(this, this->waitingActivities, new_list());
                                        /* add this activity to the list     */
-   this->waitingActivities->addLast((RexxObject *)CurrentActivity);
+   this->waitingActivities->addLast((RexxObject *)ActivityManager::currentActivity);
                                        /* now go wait to be woken up        */
-   CurrentActivity->waitReserve((RexxObject *)this);
+   ActivityManager::currentActivity->waitReserve((RexxObject *)this);
    if (this->raiseError()) {           /* do we need to raise an error.     */
                                        /* yes,                              */
       this->setErrorReported();        /* indicate error was reported, and  */
                                        /*  report and error.                */
-      CurrentActivity->reraiseException(this->condition);
+      ActivityManager::currentActivity->reraiseException(this->condition);
    }
   }
  }
@@ -234,7 +234,7 @@ RexxObject *RexxMessage::send(RexxObject *_receiver)
     reportException(Error_Execution_message_reuse);
 
                                        /* get the activity I'm running under*/
-  myActivity = (RexxActivity *)CurrentActivity;
+  myActivity = (RexxActivity *)ActivityManager::currentActivity;
                                        /* If we have a pending start message*/
                                        /*  sure this send is a result of    */
                                        /*that message dispatch.             */
@@ -309,16 +309,13 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
                                        /*  this method is found in OKNMSG.C */
   newNMethod = TheMethodClass->newEntry((PFN)message_nstart);
                                        /* get the current activity          */
-  oldActivity = (RexxActivity *)CurrentActivity;
+  oldActivity = ActivityManager::currentActivity;
                                        /* Create the new activity           */
-  newActivity = (RexxActivity *)new_activity(oldActivity->local);
+  newActivity = new_activity();
                                        /* propagate system exit trapping    */
   for (i = 1; i <= LAST_EXIT; i++)     /* copy any exit handlers            */
                                        /* from old activity to the new one  */
     newActivity->setSysExit(i, oldActivity->querySysExits(i));
-                                         /* is DEBUG sys exit set             */
-    if (newActivity->nestedInfo.sysexits[RXDBG - 1] != OREF_NULL)
-        newActivity->nestedInfo.exitset = TRUE;
 
                                        /* indicate the activity the send    */
                                        /*message should come in on.         */
@@ -348,7 +345,7 @@ void RexxMessage::sendNotification(void)
 
                                        /* no longer care about any error    */
                                        /*condition                          */
-  CurrentActivity->current()->setObjNotify(OREF_NULL);
+  ActivityManager::currentActivity->current()->setObjNotify(OREF_NULL);
                                        /* others waiting for a result?      */
   if (this->waitingActivities != OREF_NULL) {
     i = this->waitingActivities->count;/* get the waiting count             */
@@ -552,7 +549,7 @@ RexxObject *RexxMessage::newRexx(
                                        /* Yes, this is an error, report it. */
       reportException(Error_Incorrect_method_noarg, IntegerTwo);
                                        /* get the top activation            */
-    activation = (RexxActivation *)CurrentActivity->current();
+    activation = (RexxActivation *)ActivityManager::currentActivity->current();
                                        /* have an activation?               */
     if (activation != (RexxActivation *)TheNilObject) {
                                        /* get the receiving object          */

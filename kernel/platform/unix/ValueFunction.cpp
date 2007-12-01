@@ -53,6 +53,7 @@
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
+#include "ActivityManager.hpp"
 #include <unistd.h>
 #include <stdlib.h>
 

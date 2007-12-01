@@ -66,59 +66,20 @@
 #include "RexxVariableDictionary.hpp"
 #include "RexxCode.hpp"
 #include "RexxInstruction.hpp"
-#include "ActivityTable.hpp"
 #include "RexxMemory.hpp"
 #include "RexxVariableDictionary.hpp"
+#include "ProtectedObject.hpp"
 #define INCL_RXSYSEXIT
 #define INCL_RXOBJECT
 #include SYSREXXSAA
-                                       /* Local and global memory Pools     */
-                                       /*  last one accessed.               */
-extern MemorySegmentPool *ProcessCurrentPool;
-extern MemorySegmentPool *GlobalCurrentPool;
 
 const size_t ACT_STACK_SIZE = 10;
-const size_t ACTIVATION_CACHE_SIZE = 5;
-
-extern RexxObject * ProcessLocalServer;
-extern int  ProcessNumActs;            /* number of active activities       */
-extern BOOL ProcessTerminating;
-extern RexxDirectory *ProcessLocalEnv;
-extern RexxInteger * ProcessName;      /* processName object, one/Process   */
-                                       /* Localacts, is an array of all     */
-                                       /* activites per process, ie. there's*/
-                                       /* one localacts var for each process*/
-                                       /* The threadid for each activity    */
-                                       /* is the index into this array      */
-#ifdef HIGHTID
-extern ActivityTable *ProcessLocalActs;
-#else
-extern RexxArray *ProcessLocalActs;
-#endif
 
 extern SMTX rexx_kernel_semaphore;     /* global kernel semaphore           */
 extern SMTX rexx_resource_semaphore;   /* global kernel semaphore           */
 extern SMTX rexx_start_semaphore;      /* startup semaphore                 */
 
-                                       /* current active activity           */
-//RexxActivity *CurrentActivity = OREF_NULL;
-                                       /* generic default settings structure*/
-ACTIVATION_SETTINGS defaultSettings;
-                                       /* default active settings           */
-ACTIVATION_SETTINGS *current_settings = &defaultSettings;
-
-#ifdef HIGHTID_0
-//#define ID2String(id, s) new_string(itoa(id,(char *)&s,10))
-#define ID2String(id) new_string((char *)&id, sizeof(LONG))
-/* make fastAt in activity_find() faster if there's only one thread */
-static LONG HighTidLastID = 0;
-static RexxActivity * HighTidLastActivity = NULL;
-#endif
-ULONG thrdCount = 0;
-
-                                       /* allow to be called from C */
 extern "C" void activity_thread (RexxActivity *objp);
-void kernelShutdown (void);            /* system shutdown routine           */
 
 void activity_thread (
   RexxActivity *objp)                  /* activity assciated with a thread  */
@@ -130,98 +91,87 @@ void activity_thread (
 /*                                                                            */
 /******************************************************************************/
 {
-    LONG number_activities;              /* count of activities               */
+    objp->runThread();
+}
 
+
+/**
+ * The main entry point for spawned activities.
+ */
+void RexxActivity::runThread()
+{
     SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
 
     SysInitializeThread();               /* system specific thread init       */
                                          /* establish the stack base pointer  */
-    objp->nestedInfo.stackptr = SysGetThreadStackBase(TOTAL_STACK_SIZE);
+    this->nestedInfo.stackptr = SysGetThreadStackBase(TOTAL_STACK_SIZE);
     SysRegisterExceptions(&exreg);       /* create needed exception handlers  */
     for (;;)
     {
         try
         {
-            EVWAIT(objp->runsem);            /* wait for run permission           */
-            if (objp->exit)                  /* told to exit?                     */
+            EVWAIT(this->runsem);            /* wait for run permission           */
+            if (this->exit)                  /* told to exit?                     */
             {
                 break;                       /* we're out of here                 */
             }
             /* set our priority appropriately    */
 #ifdef THREADHANDLE
-            SysSetThreadPriority(objp->threadid, objp->hThread, objp->priority);
+            SysSetThreadPriority(this->threadid, this->hThread, this->priority);
 #else
-            SysSetThreadPriority(objp->threadid, objp->priority);
+            SysSetThreadPriority(this->threadid, this->priority);
 #endif
 
-            RequestKernelAccess(objp);       /* now get the kernel lock           */
+            this->requestAccess();           /* now get the kernel lock           */
                                              /* get the top activation            */
-            objp->topActivation->dispatch(); /* go dispatch it                    */
+            this->topActivation->dispatch(); /* go dispatch it                    */
 
         }
         catch (ActivityException)    // we've had a termination event, raise an error
         {
-            objp->error(0);
+            this->error(0);
         }
 
 
-        TheActivityClass->runUninits();    /* run any needed UNINIT methods now */
+        memoryObject.runUninits();         /* run any needed UNINIT methods now */
 
-        EVSET(objp->runsem);               /* reset the run semaphore and the   */
-        EVSET(objp->guardsem);             /* guard semaphore                   */
+        EVSET(this->runsem);               /* reset the run semaphore and the   */
+        EVSET(this->guardsem);             /* guard semaphore                   */
 
-        if (!ProcessTerminating)
-        {         /* Are we terminating?               */
-            SysEnterResourceSection();      /* now in a critical section         */
-                                            /* add this as a free activity       */
-            TheActivityClass->classFreeActivities->add((RexxObject *)objp, ProcessName);
-            SysExitResourceSection();       /* end of the critical section       */
+        // try to pool this.  If the ActivityManager doesn't take, we go into termination mode
+        if (!ActivityManager::poolActivity(this))
+        {
+            this->releaseAccess();
+            break;
         }
-        ReleaseKernelAccess(objp);         /* release the kernel lock           */
-        if (ProcessTerminating)
-        {          /* Are we terminating?               */
-            break;                           /* yup, go do termination stuff      */
-        }
+        // release the kernel lock and go wait for more work
+        this->releaseAccess();
     }
-    RequestKernelAccess(objp);           /* get the kernel access             */
+
+    this->requestAccess();               /* get the kernel access             */
 
     SysDeregisterExceptions(&exreg);     /* remove exception trapping         */
-    SysEnterResourceSection();           /* now in a critical section         */
-    number_activities = --ProcessNumActs;/* get the current activity count    */
-    SysExitResourceSection();            /* end of the critical section       */
-    if (number_activities == 0)          /* are we the last thread?           */
-    {
-        objp->checkUninits();              /* process uninits                   */
-    }
-
-    SysTerminateThread((TID)objp->threadid);  /* system specific thread termination*/
-    thrdCount--;
-    SysEnterResourceSection();           /* now in a critical section         */
-    if (ProcessTerminating)
-    {
-        if (TheActivityClass->classFreeActivities->hasItem((RexxObject *)objp, ProcessName) != OREF_NULL)
-        {
-            TheActivityClass->classFreeActivities->removeItem((RexxObject *)objp, ProcessName);
-        }
-        EVCLOSE(objp->runsem);
-        EVCLOSE(objp->guardsem);
-#ifdef THREADHANDLE
-        EVCLOSE(objp->hThread);
-#endif
-        ProcessLocalActs->put(OREF_NULL, objp->threadid);
-    }
-    /* remove this activity from usage   */
-    TheActivityClass->classUsedActivities->remove((RexxObject *)objp);
-    SysExitResourceSection();            /* end of the critical section       */
-    ReleaseKernelAccess(objp);           /* and release the kernel lock       */
-                                         /* Are we terminating?               */
-
-    if (ProcessTerminating && number_activities == 0)
-    {
-        kernelShutdown();                /* time to shut things down          */
-    }
+    // tell the activity manager we're going away
+    ActivityManager::activityEnded(this);
+    SysTerminateThread((TID)this->threadid);  /* system specific thread termination*/
     return;                              /* finished                          */
 }
+
+
+/**
+ * Do cleanup of activity resources when an activity is completely
+ * shutdown and discarded.
+ */
+void RexxActivity::terminateActivity()
+{
+    EVCLOSE(this->runsem);
+    EVCLOSE(this->guardsem);
+#ifdef THREADHANDLE
+    EVCLOSE(this->hThread);
+#endif
+}
+
+
 
 void *RexxActivity::operator new(size_t size)
 /******************************************************************************/
@@ -238,9 +188,8 @@ void *RexxActivity::operator new(size_t size)
 }
 
 RexxActivity::RexxActivity(
-    BOOL recycle,                      /* activity is being reused          */
-    long _priority,                    /* activity priority                 */
-    RexxDirectory *_local)             /* process local directory           */
+    bool recycle,                      /* activity is being reused          */
+    int  _priority)                    /* activity priority                 */
 /******************************************************************************/
 /* Function:  Initialize an activity object                                   */
 /*  Returned:  Nothing                                                        */
@@ -248,21 +197,17 @@ RexxActivity::RexxActivity(
 {
   if (!recycle) {                      /* if this is the first time         */
     this->clearObject();               /* globally clear the object         */
-    this->local = _local;              /* set the local environment         */
-                                       /* Set ProcessName now, before       */
-    this->processObj = ProcessName;    /* any more allocations.             */
                                        /* create an activation stack        */
     this->activations = new_internalstack(ACT_STACK_SIZE);
     this->frameStack.init();           /* initialize the frame stack        */
     EVCR(this->runsem);                /* create the run and                */
     EVCR(this->guardsem);              /* guard semaphores                  */
     this->size = ACT_STACK_SIZE;       /* set the activation stack size     */
-    this->stackcheck = TRUE;           /* start with stack checking enabled */
+    this->stackcheck = true;           /* start with stack checking enabled */
                                        /* use default settings set          */
-    this->exitObjects = FALSE;         // ENG023A: behaviour of exits: classic REXX
-    this->default_settings = defaultSettings;
+    this->exitObjects = false;         // ENG023A: behaviour of exits: classic REXX
                                        /* set up current usage set          */
-    this->settings = &this->default_settings;
+    this->numericSettings = Numerics::getDefaultSettings();
 
     if (_priority != NO_THREAD) {      /* need to create a thread?          */
 #ifdef FIXEDTIMERS
@@ -273,9 +218,6 @@ RexxActivity::RexxActivity(
       EVSET(this->runsem);             /* set the run semaphore             */
                                        /* create a thread                   */
       this->threadid = SysCreateThread((PTHREADFN)activity_thread,C_STACK_SIZE,this);
-      SysEnterResourceSection();
-      memoryObject.extendSaveStack(++thrdCount);
-      SysExitResourceSection();
       this->priority = _priority;      /* and the priority                  */
     }
     else {                             /* thread already exists             */
@@ -284,16 +226,7 @@ RexxActivity::RexxActivity(
 #ifdef THREADHANDLE
       this->hThread = SysQueryThread();
 #endif
-#ifdef NEWGUARD
-      this->priority = MEDIUM_PRIORITY+10;/* switch to medium priority +1  */
-   #ifdef THREADHANDLE
-      SysSetThreadPriority(this->threadid, this->hThread, this->priority);
-   #else
-      SysSetThreadPriority(this->threadid, objp->priority);
-   #endif
-#else
       this->priority = MEDIUM_PRIORITY;/* switch to medium priority         */
-#endif
                                        /* establish the stack base pointer  */
       this->nestedInfo.stackptr = SysGetThreadStackBase(TOTAL_STACK_SIZE);
     }
@@ -347,7 +280,7 @@ long RexxActivity::error(size_t startDepth)
                                        /* force activation termination      */
         this->topActivation->termination();
     }
-    this->pop(FALSE);                  /* pop the activation off            */
+    this->pop(false);                  /* pop the activation off            */
   }
   rc = Error_Interpretation/1000;      /* set default return code           */
                                        /* did we get a condtion object?     */
@@ -355,12 +288,12 @@ long RexxActivity::error(size_t startDepth)
                                        /* force it to display               */
     this->display(this->conditionobj);
                                        /* get the failure return code       */
-    rc = this->conditionobj->at(OREF_RC)->longValue(DEFAULT_DIGITS);
+    rc = this->conditionobj->at(OREF_RC)->longValue(Numerics::DEFAULT_DIGITS);
   }
   return rc;                           /* return the error code             */
 }
 
-BOOL RexxActivity::raiseCondition(
+bool RexxActivity::raiseCondition(
     RexxString    *condition,          /* condition to raise                */
     RexxObject    *rc,                 /* return code value                 */
     RexxString    *description,        /* description information           */
@@ -373,11 +306,11 @@ BOOL RexxActivity::raiseCondition(
 /******************************************************************************/
 {
   RexxActivationBase *activation;      /* current activation                */
-  BOOL                handled;         /* this condition has been handled   */
+  bool                handled;         /* this condition has been handled   */
   RexxDirectory      *conditionObj;    /* object for created condition      */
 
 
-  handled = FALSE;                     /* condition not handled yet         */
+  handled = false;                     /* condition not handled yet         */
   if (exobj == OREF_NULL) {            /* need to create a condition object?*/
     conditionObj = new_directory();    /* get a new directory               */
                                        /* put in the condition name         */
@@ -409,7 +342,7 @@ BOOL RexxActivity::raiseCondition(
 
   /* Control will not return here if the condition was trapped via*/
   /* SIGNAL ON SYNTAX.  For CALL ON conditions, handled will be   */
-  /* TRUE if a trap is pending.                                   */
+  /* true if a trap is pending.                                   */
 
   return handled;                      /* this has been handled             */
 }
@@ -656,11 +589,11 @@ void RexxActivity::raiseException(
       throw RecursiveStringError;
   }
 
-  activation = this->currentAct();     /* get the current activation        */
+  activation = this->getCurrentActivation();     /* get the current activation        */
   while (isOfClass(Activation, activation) && activation->isForwarded()) {
     activation->termination();         /* do activation termiantion process */
-    this->pop(FALSE);                  /* pop the top activation off        */
-    activation = this->currentAct();   /* and get the new current one       */
+    this->pop(false);                  /* pop the top activation off        */
+    activation = this->getCurrentActivation();   /* and get the new current one       */
   }
   primary = (errcode / 1000) * 1000;   /* get the primary message number    */
                                        /* format the number (string) into   */
@@ -742,7 +675,7 @@ void RexxActivity::raiseException(
   exobj->put(traceback, OREF_TRACEBACK);
   if (source != OREF_NULL)             /* have source for this?             */
                                        /* extract and add clause in error   */
-    traceback->addLast(source->traceBack(*location, 0, FALSE));
+    traceback->addLast(source->traceBack(*location, 0, false));
                                        /* have predecessors?                */
   if (activation != (RexxActivation *)TheNilObject)
     activation->traceBack(traceback);  /* have them add lines to the list   */
@@ -751,7 +684,7 @@ void RexxActivity::raiseException(
                                        /* have predecessors?                */
   else if (activation != (RexxActivation *)TheNilObject)
                                        /* extract program name from activa. */
-    programname = activation->programName();
+    programname = activation->getProgramName();
   else
     programname = OREF_NULLSTRING;     /* have no program name              */
   exobj->put(programname, OREF_PROGRAM);
@@ -772,17 +705,17 @@ void RexxActivity::raiseException(
                                        /* unwind the activation stack       */
     while ((poppedActivation = (RexxActivation *)this->current()) != activation) {
       poppedActivation->termination(); /* do activation termiantion process */
-      this->pop(FALSE);                /* pop the activation off the stack  */
+      this->pop(false);                /* pop the activation off the stack  */
     }
 
         if ((activation != (RexxActivation *)TheNilObject) &&
-                (activation->settings.traceindent > MAX_TRACEBACK_LIST))
+                (activation->getIndent() > MAX_TRACEBACK_LIST))
                 traceback->addLast(new_string("     >...<"));
 
                                        /* actually have an activation?      */
     if (activation != (RexxActivation *)TheNilObject) {
       activation->termination();       /* do activation termiantion process */
-      this->pop(FALSE);                /* pop the top activation off        */
+      this->pop(false);                /* pop the top activation off        */
     }
     this->raisePropagate(exobj);       /* pass on down the chain            */
   }
@@ -832,8 +765,8 @@ RexxString *RexxActivity::messageSubstitution(
         value = additional->get(selector);
         if (value != OREF_NULL) {      /* have a value?                     */
                                        /* set the reentry flag              */
-          this->requestingString = TRUE;
-          this->stackcheck = FALSE;    /* disable the checking              */
+          this->requestingString = true;
+          this->stackcheck = false;    /* disable the checking              */
                                        /* now protect against reentry       */
           try
           {
@@ -845,8 +778,8 @@ RexxString *RexxActivity::messageSubstitution(
               stringVal = value->defaultName();
           }
                                        /* we're safe again                  */
-          this->requestingString = FALSE;
-          this->stackcheck = TRUE;     /* disable the checking              */
+          this->requestingString = false;
+          this->stackcheck = true;     /* disable the checking              */
         }
         else
                                        /* use a null string                 */
@@ -877,13 +810,13 @@ void RexxActivity::reraiseException(
   char            work[10];            /* temp buffer for formatting        */
   int             newVal;
 
-  activation = this->currentActivation;/* get the current activation        */
+  activation = this->getCurrentActivation();/* get the current activation        */
                                        /* have a target activation?         */
   if (activation != (RexxActivation *)TheNilObject)  {
     newVal = activation->currentLine();/* get the activation position       */
     exobj->put(new_integer(newVal), OREF_POSITION);
                                        /* extract program name from activa. */
-    exobj->put(activation->programName(), OREF_PROGRAM);
+    exobj->put(activation->getProgramName(), OREF_PROGRAM);
   }
   else {
     exobj->remove(OREF_POSITION);      /* remove the position               */
@@ -941,10 +874,10 @@ void RexxActivity::raisePropagate(
                                        /* this is a propagated condition    */
     conditionObj->put(TheTrueObject, OREF_PROPAGATED);
     if ((traceback != TheNilObject)
-                && (((RexxActivation*)activation)->settings.traceindent < MAX_TRACEBACK_LIST))  /* have a traceback? */
+                && (((RexxActivation*)activation)->getIndent() < MAX_TRACEBACK_LIST))  /* have a traceback? */
       activation->traceBack(traceback);/* add this to the traceback info    */
     activation->termination();         /* do activation termiantion process */
-    this->pop(FALSE);                  /* pop top nativeact/activation      */
+    this->pop(false);                  /* pop top nativeact/activation      */
     activation = this->current();      /* get the sender's sender           */
   }
                                        /* now kill the activity, using the  */
@@ -973,8 +906,7 @@ RexxObject *RexxActivity::display(RexxDirectory *exobj)
   if (trace_backList != OREF_NULL) {   /* have a traceback?                 */
                                        /* convert to an array               */
     trace_back = trace_backList->makeArray();
-                                       /* save from gc                      */
-    save(trace_back);
+    ProtectedObject p(trace_back);
                                        /* get the traceback size            */
     size_t tracebackSize = trace_back->size();
 
@@ -983,9 +915,8 @@ RexxObject *RexxActivity::display(RexxDirectory *exobj)
                                        /* have a real line?                 */
       if (text != OREF_NULL && text != TheNilObject)
                                        /* write out the line                */
-        this->traceOutput(this->currentActivation, text);
+        this->traceOutput(this->getCurrentActivation(), text);
     }
-    discard_hold(trace_back);          /* ok, let gc have it                */
   }
   rc = exobj->at(OREF_RC);             /* get the error code                */
                                        /* get the message number            */
@@ -1022,7 +953,7 @@ RexxObject *RexxActivity::display(RexxDirectory *exobj)
                                        /* and finally the error message     */
   text = text->concat((RexxString *)exobj->at(OREF_ERRORTEXT));
                                        /* write out the line                */
-  this->traceOutput(this->currentActivation, text);
+  this->traceOutput(this->getCurrentActivation(), text);
                                        /* get the secondary message         */
   secondary = (RexxString *)exobj->at(OREF_NAME_MESSAGE);
                                        /* have a real message?              */
@@ -1044,7 +975,7 @@ RexxObject *RexxActivity::display(RexxDirectory *exobj)
                                        /* and finally the error message     */
     text = text->concat(secondary);
                                        /* write out the line                */
-    this->traceOutput(this->currentActivation, text);
+    this->traceOutput(this->getCurrentActivation(), text);
   }
   return TheNilObject;                 /* just return .nil                  */
 }
@@ -1068,7 +999,7 @@ RexxObject *RexxActivity::displayDebug(RexxDirectory *exobj)
                                        /* and finally the error message     */
   text = text->concatWith((RexxString *)exobj->at(OREF_ERRORTEXT), ' ');
                                        /* write out the line                */
-  this->traceOutput(this->currentActivation, text);
+  this->traceOutput(this->getCurrentActivation(), text);
                                        /* get the secondary message         */
   secondary = (RexxString *)exobj->at(OREF_NAME_MESSAGE);
                                        /* have a real message?              */
@@ -1082,7 +1013,7 @@ RexxObject *RexxActivity::displayDebug(RexxDirectory *exobj)
                                        /* and finally the error message     */
     text = text->concat(secondary);
                                        /* write out the line                */
-    this->traceOutput(this->currentActivation, text);
+    this->traceOutput(this->getCurrentActivation(), text);
   }
   return TheNilObject;                 /* just return .nil                  */
 }
@@ -1092,14 +1023,13 @@ void RexxActivity::live()
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  LONG    i;                           /* loop counter                      */
+  size_t  i;                           /* loop counter                      */
 
   setUpMemoryMark
   memory_mark(this->activations);
   memory_mark(this->topActivation);
-  memory_mark(this->currentActivation);
+  memory_mark(this->getCurrentActivation());
   memory_mark(this->saveValue);
-  memory_mark(this->local);
   memory_mark(this->conditionobj);
   memory_mark(this->requiresTable);
   memory_mark(this->nextWaitingActivity);
@@ -1111,6 +1041,15 @@ void RexxActivity::live()
 
   /* have the frame stack do its own marking. */
   frameStack.live();
+  // mark any protected objects we've been watching over
+
+  ProtectedObject *p = protectedObjects;
+  while (p != NULL)
+  {
+      memory_mark(p->protectedObject);
+      p = p->next;
+  }
+
   cleanUpMemoryMark
 }
 void RexxActivity::liveGeneral()
@@ -1118,14 +1057,13 @@ void RexxActivity::liveGeneral()
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  LONG    i;                           /* loop counter                      */
+  size_t  i;                           /* loop counter                      */
 
   setUpMemoryMarkGeneral
   memory_mark_general(this->activations);
   memory_mark_general(this->topActivation);
   memory_mark_general(this->currentActivation);
   memory_mark_general(this->saveValue);
-  memory_mark_general(this->local);
   memory_mark_general(this->conditionobj);
   memory_mark_general(this->requiresTable);
   memory_mark_general(this->nextWaitingActivity);
@@ -1138,6 +1076,14 @@ void RexxActivity::liveGeneral()
 
   /* have the frame stack do its own marking. */
   frameStack.liveGeneral();
+
+  ProtectedObject *p = protectedObjects;
+  while (p != NULL)
+  {
+      memory_mark_general(p->protectedObject);
+      p = p->next;
+  }
+
   cleanUpMemoryMarkGeneral
 }
 
@@ -1191,10 +1137,12 @@ void RexxActivity::push(
                                        /* this is the top REXX one too      */
     this->currentActivation = (RexxActivation *)new_activation;
                                        /* get the activation settings       */
-    this->settings = ((RexxActivation *)new_activation)->getGlobalSettings();
-    if (CurrentActivity == this)       /* this the active activity?         */
+    this->numericSettings = ((RexxActivation *)new_activation)->getNumericSettings();
+    if (ActivityManager::currentActivity == this)       /* this the active activity?         */
+    {
                                        /* update the active values          */
-      current_settings = this->settings;
+        Numerics::setCurrentSettings(this->numericSettings);
+    }
   }
   this->depth++;                       /* bump the depth to count this      */
 }
@@ -1223,14 +1171,13 @@ void RexxActivity::pushNil()
                                        /* both of them                      */
   this->currentActivation = (RexxActivation *)TheNilObject;
                                        /* use the default settings          */
-  this->settings = &this->default_settings;
-  current_settings = this->settings;   /* update the active values          */
+  this->numericSettings = Numerics::getDefaultSettings();
   this->depth++;                       /* bump the depth to count this      */
 }
 
 
 void RexxActivity::pop(
-    BOOL  reply)                       /* popping for REPLY purposes        */
+    bool  reply)                       /* popping for REPLY purposes        */
 /******************************************************************************/
 /* Function:  Remove an activation from the activity stack                    */
 /******************************************************************************/
@@ -1254,7 +1201,7 @@ void RexxActivity::pop(
                                        /* both of them                      */
     this->currentActivation = (RexxActivation *)TheNilObject;
                                        /* use the default settings          */
-    this->settings = &this->default_settings;
+    this->numericSettings = Numerics::getDefaultSettings();
   }
   else {                               /* probably have a previous one      */
                                        /* get the top item                  */
@@ -1280,16 +1227,17 @@ void RexxActivity::pop(
                                        /* last activation?                  */
       if (old_activation == (RexxActivationBase*)TheNilObject)
                                        /* use the default settings          */
-        this->settings = &this->default_settings;
+        this->numericSettings = Numerics::getDefaultSettings();
       else
                                        /* get the activation settings       */
-        this->settings = ((RexxActivation *)old_activation)->getGlobalSettings();
-      if (CurrentActivity == this)     /* this the active activity?         */
-                                       /* update the active values          */
-        current_settings = this->settings;
+        this->numericSettings = ((RexxActivation *)old_activation)->getNumericSettings();
+      if (ActivityManager::currentActivity == this)     /* this the active activity?         */
+      {
+          Numerics::setCurrentSettings(this->numericSettings);
+      }
       if (!reply)                      /* not a reply removal?              */
                                        /* add this to the cache             */
-        TheActivityClass->cacheActivation((RexxActivation *)top_activation);
+        ActivityManager::cacheActivation((RexxActivation *)top_activation);
     }
                                        /* did we pop off .NIL?              */
     else if (top_activation == (RexxActivationBase *)TheNilObject) {
@@ -1318,7 +1266,7 @@ void RexxActivity::popNil()
                                        /* both of them                      */
     this->currentActivation = (RexxActivation *)TheNilObject;
                                        /* use the default settings          */
-    this->settings = &this->default_settings;
+    this->numericSettings = Numerics::getDefaultSettings();
     this->depth = 0;                   /* make sure this is zero            */
   }
   else {                               /* probably have a previous one      */
@@ -1343,17 +1291,17 @@ void RexxActivity::popNil()
                                        /* last activation?                  */
     if (old_activation == (RexxActivationBase *)TheNilObject)
                                        /* use the default settings          */
-      this->settings = &this->default_settings;
+        this->numericSettings = Numerics::getDefaultSettings();
     else
                                        /* get the activation settings       */
-      this->settings = ((RexxActivation *)old_activation)->getGlobalSettings();
+      this->numericSettings = ((RexxActivation *)old_activation)->getNumericSettings();
   }
 }
 
 void RexxActivity::exitKernel(
   RexxActivation *activation,          /* activation going external on      */
   RexxString     *message_name,        /* reason for going external         */
-  BOOL            enable )             /* variable pool enabled flag        */
+  bool            enable )             /* variable pool enabled flag        */
 /******************************************************************************/
 /*  Function:  Release the kernel access because code is going to "leave"     */
 /*             the kernel.  This prepares for this by adding a native         */
@@ -1371,7 +1319,7 @@ void RexxActivity::exitKernel(
   if (enable)                          /* need variable pool access?        */
                                        /* turn it on now                    */
     new_activation->enableVariablepool();
-  ReleaseKernelAccess(this);           /* now give up control               */
+  releaseAccess();                     /* now give up control               */
 }
 void RexxActivity::enterKernel()
 /******************************************************************************/
@@ -1379,9 +1327,9 @@ void RexxActivity::enterKernel()
 /*             created by activity_exit_kernel from the activity stack.       */
 /******************************************************************************/
 {
-  RequestKernelAccess(this);           /* get the kernel lock back          */
+  requestAccess();                     /* get the kernel lock back          */
   ((RexxNativeActivation *)this->topActivation)->disableVariablepool();
-  this->pop(FALSE);                    /* pop the top activation            */
+  this->pop(false);                    /* pop the top activation            */
 }
 
 void RexxActivity::checkDeadLock(
@@ -1418,9 +1366,9 @@ void RexxActivity::waitReserve(
 {
   EVSET(this->runsem);                 /* clear the run semaphore           */
   this->waitingObject = resource;      /* save the waiting resource         */
-  ReleaseKernelAccess(this);           /* release the kernel access         */
+  releaseAccess();                     /* release the kernel access         */
   EVWAIT(this->runsem);                /* wait for the run to be posted     */
-  RequestKernelAccess(this);           /* reaquire the kernel access        */
+  requestAccess();                     /* reaquire the kernel access        */
 }
 
 void RexxActivity::guardWait()
@@ -1428,11 +1376,9 @@ void RexxActivity::guardWait()
 /* Function:  Wait for a guard post event                                     */
 /******************************************************************************/
 {
-  ReleaseKernelAccess(this);           /* release kernel access             */
+  releaseAccess();                     /* release kernel access             */
   EVWAIT(this->guardsem);              /* wait on the guard semaphore       */
-#ifndef NEWGUARD
-  RequestKernelAccess(this);           /* reaquire the kernel lock          */
-#endif
+  requestAccess();                     /* reaquire the kernel lock          */
 }
 
 void RexxActivity::guardPost()
@@ -1501,12 +1447,7 @@ void RexxActivity::relinquish()
 /*  Function: Relinquish to other system processes                            */
 /******************************************************************************/
 {
-                                       /* other's waiting to go?            */
-  if (TheActivityClass->waitingActivity() != OREF_NULL) {
-                                       /* now join the line                 */
-    TheActivityClass->addWaitingActivity(this, TRUE);
-  }
-  SysRelinquish();                     /* now allow system stuff to run     */
+    ActivityManager::relinquish(this);
 }
 
 void RexxActivity::yield(RexxObject *result)
@@ -1514,68 +1455,133 @@ void RexxActivity::yield(RexxObject *result)
 /* Function:  Yield control so some other activity can run                    */
 /******************************************************************************/
 {
+  //TODO:  Use protected object here
                                        /* other's waiting to go?            */
-  if (TheActivityClass->waitingActivity() != OREF_NULL) {
+  if (ActivityManager::hasWaiters()) {
     this->saveValue = result;          /* save the result value             */
                                        /* now join the line                 */
-    TheActivityClass->addWaitingActivity(this, TRUE);
-    hold(result);                      /* hold the result                   */
+    ActivityManager::addWaitingActivity(this, true);
+    holdObject(result);                /* hold the result                   */
     this->saveValue = OREF_NULL;       /* release the saved value           */
   }
 }
 
-void RexxActivity::releaseKernel()
+
+/**
+ * Tap the current running activation on this activity to
+ * give up control at the next reasonsable boundary.
+ */
+void RexxActivity::yield()
+{
+                                       /* get the current activation        */
+    RexxActivation *activation = currentActivation;
+                                       /* got an activation?                */
+    if ((activation != NULL) && (activation != (RexxActivation *)TheNilObject))
+    {
+                                       /* tell it to yield                  */
+        activation->yield();
+    }
+}
+
+
+/**
+ * Tap the current running activation on this activity to halt
+ * as soon as possible.
+ *
+ * @param d      The description string for the halt.
+ *
+ * @return true if we have an activation to tell to stop, false if the
+ *         activity's not really working.
+ */
+bool RexxActivity::halt(RexxString *d)
+{
+                                       /* get the current activation        */
+    RexxActivation *activation = currentActivation;
+                                       /* got an activation?                */
+    if ((activation != NULL) && (activation != (RexxActivation *)TheNilObject))
+    {
+        // please make it stop :-)
+        activation->halt(d);
+        return true;
+    }
+    return false;
+}
+
+
+/**
+ * Tap the current running activation on this activity to halt
+ * as soon as possible.
+ *
+ * @param d      The description string for the halt.
+ *
+ * @return true if we have an activation to tell to stop, false if the
+ *         activity's not really working.
+ */
+bool RexxActivity::setTrace(bool on)
+{
+                                       /* get the current activation        */
+    RexxActivation *activation = currentActivation;
+                                       /* got an activation?                */
+    if ((activation != NULL) && (activation != (RexxActivation *)TheNilObject))
+    {
+        if (on)                        /* turning this on?                  */
+        {
+                                       /* turn tracing on                   */
+            activation->externalTraceOn();
+        }
+        else
+        {
+                                       /* turn tracing off                  */
+            activation->externalTraceOff();
+        }
+        return true;
+    }
+    return false;
+}
+
+void RexxActivity::releaseAccess()
 /******************************************************************************/
 /* Function:  Release exclusive access to the kernel                          */
 /******************************************************************************/
 {
-  CurrentActivity = OREF_NULL;         /* no current activity               */
-  current_settings = &defaultSettings; /* use default settings              */
+  ActivityManager::currentActivity = OREF_NULL;         /* no current activity               */
+  // reset the numeric settings
+  Numerics::setDefaultSettings();
   MTXRL(kernel_semaphore);             /* release the kernel semaphore      */
 }
 
-void RexxActivity::requestKernel()
+void RexxActivity::requestAccess()
 /******************************************************************************/
 /* Function:  Acquire exclusive access to the kernel                          */
 /******************************************************************************/
 {
                                        /* only one there?                   */
-  if (TheActivityClass->waitingActivity() == OREF_NULL) {
-    if (MTXRI(kernel_semaphore) == 0) {/* try directly requesting first     */
-                                       /* we left the kernel ?              */
-      if (GlobalCurrentPool != ProcessCurrentPool)
-                                       /* yes, get access to them.          */
-        memoryObject.accessPools(ProcessCurrentPool);
-
-      CurrentActivity = this;          /* set new current activity          */
-                                       /* and new active settings           */
-      current_settings = this->getSettings();
-      return;                          /* get out if we have it             */
+    if (!ActivityManager::hasWaiters())
+    {
+        // there's a good chance we'll get this
+        if (MTXRI(kernel_semaphore) == 0)
+        {
+            ActivityManager::currentActivity = this;          /* set new current activity          */
+            /* and new active settings           */
+            Numerics::setCurrentSettings(numericSettings);
+            return;                          /* get out if we have it             */
+        }
     }
-  }
-                                       /* can't get it, go stand in line    */
-  TheActivityClass->addWaitingActivity(this, FALSE);
+    /* can't get it, go stand in line    */
+    ActivityManager::addWaitingActivity(this, false);
 }
 
-void RexxActivity::stackSpace()
+void RexxActivity::checkStackSpace()
 /******************************************************************************/
 /* Function:  Make sure there is enough stack space to run a method           */
 /******************************************************************************/
 {
 #ifdef STACKCHECK
   long temp;                           /* if checking and there isn't room  */
-  if (PTRSUB2(&temp,this->nestedInfo.stackptr) < MIN_C_STACK && this->stackcheck == TRUE)
+  if (PTRSUB2(&temp,this->nestedInfo.stackptr) < MIN_C_STACK && this->stackcheck == true)
                                        /* go raise an exception             */
     reportException(Error_Control_stack_full);
 #endif
-}
-
-long RexxActivity::priorityMethod()
-/******************************************************************************/
-/* Function:  Retrieve the activations priority                               */
-/******************************************************************************/
-{
-  return this->priority;               /* just return the priority          */
 }
 
 RexxObject *RexxActivity::localMethod()
@@ -1583,7 +1589,7 @@ RexxObject *RexxActivity::localMethod()
 /* Function:  Retrive the activities local environment                        */
 /******************************************************************************/
 {
-  return this->local;                  /* just return the .local directory  */
+  return ActivityManager::localEnvironment; // just return the .local directory
 }
 
 long  RexxActivity::threadIdMethod()
@@ -1612,22 +1618,16 @@ void RexxActivity::queryTrcHlt()
 /******************************************************************************/
 {                                      /* is HALT sys exit set              */
   if (this->nestedInfo.sysexits[RXHLT - 1] != OREF_NULL) {
-    this->nestedInfo.exitset = TRUE;   /* set flag to indicate one is found */
+    this->nestedInfo.clauseExitUsed = true;   /* set flag to indicate one is found */
     return;                            /* and return                        */
   }
                                        /* is TRACE sys exit set             */
   if (this->nestedInfo.sysexits[RXTRC - 1] != OREF_NULL) {
-    this->nestedInfo.exitset = TRUE;   /* set flag to indicate one is found */
+    this->nestedInfo.clauseExitUsed = true;   /* set flag to indicate one is found */
     return;                            /* and return                        */
   }
 
-  if (this->nestedInfo.sysexits[RXDBG - 1] != OREF_NULL) {
-    this->nestedInfo.exitset = TRUE;   /* set flag to indicate one is found */
-    return;                            /* and return                        */
-  }
-
-  this->nestedInfo.exitset = FALSE;    /* remember that none are set        */
-  return;                              /* and return                        */
+  this->nestedInfo.clauseExitUsed = false;    /* remember that none are set        */
 }
 
 void RexxActivity::sysExitInit(
@@ -1647,12 +1647,12 @@ void RexxActivity::sysExitInit(
                                        /* the variable pool, it contains the*/
                                        /* script name that is currently run */
     RexxString   *varName = new_string("RXPROGRAMNAME");
-    RexxString   *sourceStr = activation->code->getProgramName();
+    RexxString   *sourceStr = activation->getProgramName();
     RexxVariableDictionary *vdict = activation->getLocalVariables();
     RexxVariable *pgmName = vdict->createVariable(varName);
     pgmName->set(sourceStr);
                                        /* call the handler                  */
-    SysExitHandler(this, activation, exitname, RXINI, RXINIEXT, NULL, TRUE);
+    SysExitHandler(this, activation, exitname, RXINI, RXINIEXT, NULL, true);
                                        /* if variable was not changed, then */
                                        /* remove it from the var. pool again*/
     if (sourceStr == pgmName->getVariableValue()) {
@@ -1674,10 +1674,10 @@ void RexxActivity::sysExitTerm(
   exitname = this->querySysExits(RXTER);
   if (exitname != OREF_NULL)           /* exit enabled?                     */
                                        /* call the handler                  */
-    SysExitHandler(this, activation, exitname, RXTER, RXTEREXT, NULL, TRUE);
+    SysExitHandler(this, activation, exitname, RXTER, RXTEREXT, NULL, true);
 }
 
-BOOL  RexxActivity::sysExitSioSay(
+bool  RexxActivity::sysExitSioSay(
     RexxActivation *activation,        /* sending activation                */
     RexxString     *sayoutput)         /* line to write out                 */
 /******************************************************************************/
@@ -1694,12 +1694,12 @@ BOOL  RexxActivity::sysExitSioSay(
                                        /* make into RXSTRING form           */
     MAKERXSTRING(exit_parm.rxsio_string, sayoutput->getWritableData(),  sayoutput->getLength());
                                        /* call the handler                  */
-    return SysExitHandler(this, activation, exitname, RXSIO, RXSIOSAY, (PVOID)&exit_parm, FALSE);
+    return SysExitHandler(this, activation, exitname, RXSIO, RXSIOSAY, (PVOID)&exit_parm, false);
   }
-  return TRUE;                         /* exit didn't handle                */
+  return true;                         /* exit didn't handle                */
 }
 
-BOOL RexxActivity::sysExitSioTrc(
+bool RexxActivity::sysExitSioTrc(
     RexxActivation *activation,        /* sending activation                */
     RexxString     *traceoutput)       /* line to write out                 */
 /******************************************************************************/
@@ -1716,12 +1716,12 @@ BOOL RexxActivity::sysExitSioTrc(
                                        /* make into RXSTRING form           */
     MAKERXSTRING(exit_parm.rxsio_string, traceoutput->getWritableData(), traceoutput->getLength());
                                        /* call the handler                  */
-    return SysExitHandler(this, activation, exitname, RXSIO, RXSIOTRC, (PVOID)&exit_parm, FALSE);
+    return SysExitHandler(this, activation, exitname, RXSIO, RXSIOTRC, (PVOID)&exit_parm, false);
   }
-  return TRUE;                         /* exit didn't handle                */
+  return true;                         /* exit didn't handle                */
 }
 
-BOOL RexxActivity::sysExitSioTrd(
+bool RexxActivity::sysExitSioTrd(
     RexxActivation *activation,        /* sending activation                */
     RexxString **inputstring)          /* returned input string             */
 /******************************************************************************/
@@ -1743,13 +1743,13 @@ BOOL RexxActivity::sysExitSioTrd(
                                        /* init shvexit return buffer        */
     this->nestedInfo.shvexitvalue = OREF_NULL;
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXSIO, RXSIOTRD, (PVOID)&exit_parm, FALSE))
-      return TRUE;                     /* this wasn't handled               */
+    if (SysExitHandler(this, activation, exitname, RXSIO, RXSIOTRD, (PVOID)&exit_parm, false))
+      return true;                     /* this wasn't handled               */
                                        /* shv_exit return a value?          */
     if (this->nestedInfo.shvexitvalue != OREF_NULL) {
                                        /* return this information           */
       *inputstring = (RexxString *)this->nestedInfo.shvexitvalue;
-      return FALSE;                    /* return that request was handled   */
+      return false;                    /* return that request was handled   */
     }
                                        /* Get input string and return it    */
     *inputstring = (RexxString *)new_string(exit_parm.rxsiotrd_retc.strptr, exit_parm.rxsiotrd_retc.strlength);
@@ -1757,12 +1757,12 @@ BOOL RexxActivity::sysExitSioTrd(
     if (exit_parm.rxsiotrd_retc.strptr != retbuffer)
                                        /* free it                           */
       SysReleaseResultMemory(exit_parm.rxsiotrd_retc.strptr);
-    return FALSE;                      /* this was handled                  */
+    return false;                      /* this was handled                  */
   }
-  return TRUE;                         /* not handled                       */
+  return true;                         /* not handled                       */
 }
 
-BOOL RexxActivity::sysExitSioDtr(
+bool RexxActivity::sysExitSioDtr(
     RexxActivation *activation,        /* sending activation                */
     RexxString    **inputstring)       /* returned input value              */
 /******************************************************************************/
@@ -1784,13 +1784,13 @@ BOOL RexxActivity::sysExitSioDtr(
                                        /* init shvexit return buffer        */
     this->nestedInfo.shvexitvalue = OREF_NULL;
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXSIO, RXSIODTR, (PVOID)&exit_parm, FALSE))
-      return TRUE;                     /* this wasn't handled               */
+    if (SysExitHandler(this, activation, exitname, RXSIO, RXSIODTR, (PVOID)&exit_parm, false))
+      return true;                     /* this wasn't handled               */
                                        /* shv_exit return a value?          */
     if (this->nestedInfo.shvexitvalue != OREF_NULL) {
                                        /* return this information           */
       *inputstring = (RexxString *)this->nestedInfo.shvexitvalue;
-      return FALSE;                    /* return that request was handled   */
+      return false;                    /* return that request was handled   */
     }
                                        /* Get input string and return it    */
     *inputstring = (RexxString *)new_string(exit_parm.rxsiodtr_retc.strptr, exit_parm.rxsiodtr_retc.strlength);
@@ -1798,12 +1798,12 @@ BOOL RexxActivity::sysExitSioDtr(
     if (exit_parm.rxsiodtr_retc.strptr != retbuffer)
                                        /* free it                           */
       SysReleaseResultMemory(exit_parm.rxsiodtr_retc.strptr);
-    return FALSE;                      /* this was handled                  */
+    return false;                      /* this was handled                  */
   }
-  return TRUE;                         /* not handled                       */
+  return true;                         /* not handled                       */
 }
 
-BOOL RexxActivity::sysExitFunc(
+bool RexxActivity::sysExitFunc(
     RexxActivation *activation,        /* calling activation                */
     RexxString     *rname,             /* routine name                      */
     RexxObject     *calltype,          /* type of call                      */
@@ -1823,7 +1823,7 @@ BOOL RexxActivity::sysExitFunc(
   RexxString   *temp;                  /* temporary argument                */
   RexxString   *stdqueue;              /* current REXX queue                */
   RexxDirectory *securityArgs;         /* security check arguments          */
-  BOOL         wasNotHandled;
+  bool         wasNotHandled;
 
                                        /* need to do a security check?      */
   if (activation->hasSecurityManager()) {
@@ -1836,7 +1836,7 @@ BOOL RexxActivity::sysExitFunc(
     if (activation->callSecurityManager(OREF_CALL, securityArgs)) {
                                        /* get the return code               */
       *funcresult = securityArgs->fastAt(OREF_RESULT);
-      return FALSE;                    /* we've handled this                */
+      return false;                    /* we've handled this                */
     }
   }
                                        /* get the exit handler              */
@@ -1889,7 +1889,7 @@ BOOL RexxActivity::sysExitFunc(
                                        /* construct the arg array           */
     for (argindex=0; argindex < exit_parm.rxfnc_argc; argindex++) {
                                        /* get the next argument             */
-      if (this->exitObjects == TRUE) {
+      if (this->exitObjects == true) {
         // store pointers to rexx objects
         argrxarray[argindex].strlength = 8; // pointer length in ASCII
         argrxarray[argindex].strptr = (char *)SysAllocateExternalMemory(16);
@@ -1916,11 +1916,11 @@ BOOL RexxActivity::sysExitFunc(
                                        /* init shvexit return buffer        */
     this->nestedInfo.shvexitvalue = OREF_NULL;
                                        /* call the handler                  */
-    wasNotHandled = SysExitHandler(this, activation, exitname, RXFNC, RXFNCCAL, (PVOID)&exit_parm, TRUE);
+    wasNotHandled = SysExitHandler(this, activation, exitname, RXFNC, RXFNCCAL, (PVOID)&exit_parm, true);
 
     /* release the memory allocated for the arguments */
     // free memory that was needed to pass objects
-    if (this->exitObjects == TRUE)
+    if (this->exitObjects == true)
     {
         for (argindex=0; argindex < exit_parm.rxfnc_argc; argindex++)
         {
@@ -1930,7 +1930,7 @@ BOOL RexxActivity::sysExitFunc(
     SysReleaseResultMemory(argrxarray);
 
     if (wasNotHandled)
-      return TRUE;                     /* this wasn't handled               */
+      return true;                     /* this wasn't handled               */
 
 
     if (exit_parm.rxfnc_flags.rxfferr) /* function error?                   */
@@ -1944,7 +1944,7 @@ BOOL RexxActivity::sysExitFunc(
     if (this->nestedInfo.shvexitvalue != OREF_NULL) {
                                        /* return this information           */
       *funcresult = this->nestedInfo.shvexitvalue;
-      return FALSE;                    /* return that request was handled   */
+      return false;                    /* return that request was handled   */
     }
                                        /* Was it a function call??          */
     if (exit_parm.rxfnc_retc.strptr == OREF_NULL && calltype == OREF_FUNCTIONNAME)
@@ -1953,7 +1953,7 @@ BOOL RexxActivity::sysExitFunc(
 
     if (exit_parm.rxfnc_retc.strptr) { /* If we have result, return it      */
       // is this a real object?
-      if (this->exitObjects == TRUE) {
+      if (this->exitObjects == true) {
         RexxObject *transfer = NULL;
         if (sscanf(exit_parm.rxfnc_retc.strptr,"%p",&transfer) == 1)
           *funcresult = transfer;
@@ -1967,13 +1967,13 @@ BOOL RexxActivity::sysExitFunc(
                                        /* free it                           */
         SysReleaseResultMemory(exit_parm.rxfnc_retc.strptr);
     }
-    return FALSE;                      /* this was handled                  */
+    return false;                      /* this was handled                  */
   }
-  return TRUE;                         /* not handled                       */
+  return true;                         /* not handled                       */
 }
 
 
-BOOL RexxActivity::sysExitCmd(
+bool RexxActivity::sysExitCmd(
      RexxActivation *activation,       /* issuing activation                */
      RexxString *cmdname,              /* command name                      */
      RexxString *environment,          /* environment                       */
@@ -2008,7 +2008,7 @@ BOOL RexxActivity::sysExitCmd(
                                        /* how about an error condition?     */
       else if (securityArgs->fastAt(OREF_ERRORNAME) != OREF_NULL)
         *conditions = OREF_ERRORNAME;  /* raise an ERROR condition          */
-      return FALSE;                    /* we've handled this                */
+      return false;                    /* we've handled this                */
     }
   }
                                        /* get the exit handler              */
@@ -2030,8 +2030,8 @@ BOOL RexxActivity::sysExitCmd(
                                        /* init shvexit return buffer        */
     this->nestedInfo.shvexitvalue = OREF_NULL;
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXCMD, RXCMDHST, (PVOID)&exit_parm, TRUE))
-      return TRUE;                     /* this wasn't handled               */
+    if (SysExitHandler(this, activation, exitname, RXCMD, RXCMDHST, (PVOID)&exit_parm, true))
+      return true;                     /* this wasn't handled               */
     if (exit_parm.rxcmd_flags.rxfcfail)/* need to raise failure condition?  */
 
       *conditions = OREF_FAILURENAME;  /* raise an FAILURE condition        */
@@ -2043,7 +2043,7 @@ BOOL RexxActivity::sysExitCmd(
     if (this->nestedInfo.shvexitvalue != OREF_NULL) {
                                        /* return this information           */
       *cmdresult = this->nestedInfo.shvexitvalue;
-      return FALSE;                    /* return that request was handled   */
+      return false;                    /* return that request was handled   */
     }
                                        /* Get input string and return it    */
     *cmdresult = new_string(exit_parm.rxcmd_retc.strptr, exit_parm.rxcmd_retc.strlength);
@@ -2052,12 +2052,12 @@ BOOL RexxActivity::sysExitCmd(
                                        /* free it                           */
       SysReleaseResultMemory(exit_parm.rxcmd_retc.strptr);
 
-    return FALSE;                      /* this was handled                  */
+    return false;                      /* this was handled                  */
   }
-  return TRUE;                         /* not handled                       */
+  return true;                         /* not handled                       */
 }
 
-BOOL  RexxActivity::sysExitMsqPll(
+bool  RexxActivity::sysExitMsqPll(
     RexxActivation *activation,        /* sending activation                */
     RexxString **inputstring)          /* returned input string             */
 /******************************************************************************/
@@ -2077,14 +2077,14 @@ BOOL  RexxActivity::sysExitMsqPll(
                                        /* init shvexit return buffer        */
     this->nestedInfo.shvexitvalue = OREF_NULL;
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQPLL, (PVOID)&exit_parm, FALSE))
-      return TRUE;                     /* this wasn't handled               */
+    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQPLL, (PVOID)&exit_parm, false))
+      return true;                     /* this wasn't handled               */
                                        /* Get input string and return it    */
                                        /* shv_exit return a value?          */
     if (this->nestedInfo.shvexitvalue != OREF_NULL) {
                                        /* return this information           */
       *inputstring = (RexxString *)this->nestedInfo.shvexitvalue;
-      return FALSE;                    /* return that request was handled   */
+      return false;                    /* return that request was handled   */
     }
     if (!(exit_parm.rxmsq_retc.strptr))/* if rxstring not null              */
                                        /* no value returned,                */
@@ -2096,12 +2096,12 @@ BOOL  RexxActivity::sysExitMsqPll(
     if (exit_parm.rxmsq_retc.strptr != retbuffer)
                                        /* free it                           */
       SysReleaseResultMemory(exit_parm.rxmsq_retc.strptr);
-    return FALSE;                      /* this was handled                  */
+    return false;                      /* this was handled                  */
   }
-  return TRUE;                         /* not handled                       */
+  return true;                         /* not handled                       */
 }
 
-BOOL  RexxActivity::sysExitMsqPsh(
+bool  RexxActivity::sysExitMsqPsh(
     RexxActivation *activation,        /* sending activation                */
     RexxString *inputstring,           /* string to be placed on the queue  */
     int lifo_flag)                     /* flag to indicate LIFO or FIFO     */
@@ -2125,15 +2125,15 @@ BOOL  RexxActivity::sysExitMsqPsh(
                                        /* make into RXSTRING form           */
     MAKERXSTRING(exit_parm.rxmsq_value, inputstring->getWritableData(), inputstring->getLength());
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQPSH, (PVOID)&exit_parm, FALSE))
-      return TRUE;                     /* this wasn't handled               */
+    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQPSH, (PVOID)&exit_parm, false))
+      return true;                     /* this wasn't handled               */
 
-    return FALSE;                      /* this was handled                  */
+    return false;                      /* this was handled                  */
   }
-  return TRUE;                         /* not handled                       */
+  return true;                         /* not handled                       */
 }
 
-BOOL  RexxActivity::sysExitMsqSiz(
+bool  RexxActivity::sysExitMsqSiz(
     RexxActivation *activation,        /* sending activation                */
     RexxInteger **returnsize)          /* returned queue size               */
 /******************************************************************************/
@@ -2149,18 +2149,18 @@ BOOL  RexxActivity::sysExitMsqSiz(
   exitname = this->querySysExits(RXMSQ);
   if (exitname != OREF_NULL) {         /* exit enabled?                     */
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQSIZ, (PVOID)&exit_parm, FALSE))
-      return TRUE;                     /* this wasn't handled               */
+    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQSIZ, (PVOID)&exit_parm, false))
+      return true;                     /* this wasn't handled               */
                                        /* Get queue size and return it      */
     tempSize = exit_parm.rxmsq_size;   /* temporary place holder for new_integer */
     *returnsize = (RexxInteger *)new_integer(tempSize);
 
-    return FALSE;                      /* this was handled                  */
+    return false;                      /* this was handled                  */
   }
-  return TRUE;                         /* not handled                       */
+  return true;                         /* not handled                       */
 }
 
-BOOL  RexxActivity::sysExitMsqNam(
+bool  RexxActivity::sysExitMsqNam(
     RexxActivation *activation,        /* sending activation                */
     RexxString    **inputstring )      /* name of external queue            */
 /******************************************************************************/
@@ -2178,19 +2178,19 @@ BOOL  RexxActivity::sysExitMsqNam(
                                        /* make into RXSTRING form           */
     MAKERXSTRING(exit_parm.rxmsq_name, (*inputstring)->getWritableData(), (*inputstring)->getLength());
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQNAM, (PVOID)&exit_parm, FALSE))
-      return TRUE;                     /* this wasn't handled               */
+    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQNAM, (PVOID)&exit_parm, false))
+      return true;                     /* this wasn't handled               */
     *inputstring = (RexxString *)new_string(exit_parm.rxmsq_name.strptr, exit_parm.rxmsq_name.strlength);
                                        /* user give us a new buffer?        */
     if (exit_parm.rxmsq_name.strptr != retbuffer)
                                        /* free it                           */
       SysReleaseResultMemory(exit_parm.rxmsq_name.strptr);
-    return FALSE;                      /* this was handled                  */
+    return false;                      /* this was handled                  */
   }
-  return TRUE;                         /* not handled                       */
+  return true;                         /* not handled                       */
 }
 
-BOOL RexxActivity::sysExitHltTst(
+bool RexxActivity::sysExitHltTst(
     RexxActivation *activation)        /* sending activation                */
 /******************************************************************************/
 /* Function:   Calls the SysExitHandler method on the System Object to run    */
@@ -2209,8 +2209,8 @@ BOOL RexxActivity::sysExitHltTst(
                                        /* init shvexit return buffer        */
     this->nestedInfo.shvexitvalue = OREF_NULL;
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXHLT, RXHLTTST, (PVOID)&exit_parm, FALSE))
-      return TRUE;                     /* this wasn't handled               */
+    if (SysExitHandler(this, activation, exitname, RXHLT, RXHLTTST, (PVOID)&exit_parm, false))
+      return true;                     /* this wasn't handled               */
                                        /* Was halt requested?               */
     if (exit_parm.rxhlt_flags.rxfhhalt == 1) {
                                        /* shv_exit return a value?          */
@@ -2223,12 +2223,12 @@ BOOL RexxActivity::sysExitHltTst(
       activation->halt(condition);
     }
 
-    return FALSE;                      /* this was handled                  */
+    return false;                      /* this was handled                  */
   }
-  return TRUE;                         /* not handled                       */
+  return true;                         /* not handled                       */
 }
 
-BOOL RexxActivity::sysExitHltClr(
+bool RexxActivity::sysExitHltClr(
     RexxActivation *activation)        /* sending activation                */
 /******************************************************************************/
 /* Function:   Calls the SysExitHandler method on the System Object to run    */
@@ -2242,16 +2242,16 @@ BOOL RexxActivity::sysExitHltClr(
   exitname = this->querySysExits(RXHLT);
   if (exitname != OREF_NULL) {         /* exit enabled?                     */
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXHLT, RXHLTCLR, (PVOID)&exit_parm, FALSE))
-      return TRUE;                     /* this wasn't handled               */
-    return FALSE;                      /* this was handled                  */
+    if (SysExitHandler(this, activation, exitname, RXHLT, RXHLTCLR, (PVOID)&exit_parm, false))
+      return true;                     /* this wasn't handled               */
+    return false;                      /* this was handled                  */
   }
-  return TRUE;                         /* not handled                       */
+  return true;                         /* not handled                       */
 }
 
-BOOL  RexxActivity::sysExitTrcTst(
+bool  RexxActivity::sysExitTrcTst(
      RexxActivation *activation,       /* sending activation                */
-     BOOL currentsetting)              /* sending activation                */
+     bool currentsetting)              /* sending activation                */
 /******************************************************************************/
 /* Function:   Calls the SysExitHandler method on the System Object to run    */
 /*             the Test external trace indicator system exit.                 */
@@ -2266,83 +2266,50 @@ BOOL  RexxActivity::sysExitTrcTst(
                                        /* Clear Trace bit before  call      */
     exit_parm.rxtrc_flags.rxftrace = 0;
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXTRC, RXTRCTST, (PVOID)&exit_parm, FALSE))
-      return TRUE;                     /* this wasn't handled               */
+    if (SysExitHandler(this, activation, exitname, RXTRC, RXTRCTST, (PVOID)&exit_parm, false))
+      return true;                     /* this wasn't handled               */
                                        /* if not tracing, and now it is     */
                                        /* requsted                          */
     if ((currentsetting == 0) &&  (exit_parm.rxtrc_flags.rxftrace == 1)) {
                                        /* call routine to handle this       */
       activation->externalTraceOn();
-      return FALSE;                    /* this was handled                  */
+      return false;                    /* this was handled                  */
     }
     else                               /* if currently tracing, and now     */
                                        /* requsted to stop                  */
       if ((currentsetting != 0) &&  (exit_parm.rxtrc_flags.rxftrace != 1)) {
                                        /* call routine to handle this       */
         activation->externalTraceOff();
-        return FALSE;                  /* this was handled                  */
+        return false;                  /* this was handled                  */
       }
   }
-  return TRUE;                         /* not handled                       */
+  return true;                         /* not handled                       */
 }
 
 
-
-BOOL  RexxActivity::sysExitDbgTst(
-     RexxActivation *activation,       /* sending activation                */
-     BOOL currentsetting,
-     BOOL EndStepOut_Over)
-/******************************************************************************/
-/* Function:   Calls the SysExitHandler method on the System Object to run    */
-/*             the Test external trace indicator system exit.                 */
-/******************************************************************************/
+/**
+ * Test if the activity is currently running in a context that
+ * requires a security manager call.
+ *
+ * @return true if there is an active security manager, false otherwise.
+ */
+bool RexxActivity::hasSecurityManager()
 {
-  RexxString   *exitname;              /* Exit routine name                 */
-  RexxString   *filename;              /* Exit routine name                 */
-  RXDBGTST_PARM exit_parm;             /* exit parameters                   */
+    return currentActivation->hasSecurityManager();
+}
 
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXDBG);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-    if (!activation->code->isTraceable())
-       return TRUE;
-    if (EndStepOut_Over)
-        exit_parm.rxdbg_flags.rxftrace = RXDBGENDSTEP;
-    else
-        exit_parm.rxdbg_flags.rxftrace = (currentsetting != 0);
 
-    filename = activation->code->getProgramName();
-    MAKERXSTRING(exit_parm.rxdbg_filename, filename->getWritableData(), filename->getLength());
-    if (activation->getCurrent() != OREF_NULL)
-        exit_parm.rxdbg_line = activation->getCurrent()->getLineNumber();
-    else
-        exit_parm.rxdbg_line = 0;
-    exit_parm.rxdbg_routine.strlength = 0;
-    exit_parm.rxdbg_routine.strptr = NULL;
-
-                                       /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXDBG, RXDBGTST, (PVOID)&exit_parm, FALSE))
-      return TRUE;                     /* this wasn't handled               */
-                                       /* if not tracing, and now it is     */
-                                       /* requsted                          */
-     switch (exit_parm.rxdbg_flags.rxftrace)
-     {
-        case RXDBGSTEPIN: activation->externalDbgStepIn();
-                return FALSE;                    /* this was handled                  */
-        case RXDBGSTEPOVER: activation->externalDbgStepOver();
-                return FALSE;                    /* this was handled                  */
-        case RXDBGSTEPOUT: activation->externalDbgStepOut();
-                return FALSE;                    /* this was handled                  */
-        case RXDBGLOCATELINE: return FALSE;
-        case RXDBGSTEPAGAIN: activation->externalDbgStepAgain();
-                return FALSE;                    /* this was handled                  */
-        case RXDBGRECURSIVEOFF: activation->externalDbgAllOffRecursive();    /* switch off current activation and all parents */
-                return FALSE;                    /* this was handled                  */
-        default:activation->externalDbgTraceOff();
-                return FALSE;                    /* this was handled                  */
-     }
-  }
-  return TRUE;                         /* not handled                       */
+/**
+ * Make a call to the current context security manager.
+ *
+ * @param name   The name of the check operation.
+ * @param args   The arguments directory to the call.
+ *
+ * @return The return result from the call.
+ */
+bool RexxActivity::callSecurityManager(RexxString *name, RexxDirectory *args)
+{
+    return currentActivation->callSecurityManager(name, args);
 }
 
 
@@ -2359,7 +2326,7 @@ void  RexxActivity::traceOutput(       /* write a line of trace information */
                                        /* if exit declines the call         */
   if (this->sysExitSioTrc(activation, line)) {
                                        /* get the default output stream     */
-    stream = this->local->at(OREF_ERRORNAME);
+    stream = ActivityManager::localEnvironment->at(OREF_ERRORNAME);
                                        /* have .local set up yet?           */
     if (stream != OREF_NULL && stream != TheNilObject)
                                        /* do the lineout                    */
@@ -2381,7 +2348,7 @@ void RexxActivity::sayOutput(          /* write a line of say information   */
                                        /* if exit declines the call         */
   if (this->sysExitSioSay(activation, line)) {
                                        /* get the default output stream     */
-    stream = this->local->at(OREF_OUTPUT);
+    stream = ActivityManager::localEnvironment->at(OREF_OUTPUT);
                                        /* have .local set up yet?           */
     if (stream != OREF_NULL && stream != TheNilObject)
                                        /* do the lineout                    */
@@ -2403,7 +2370,7 @@ RexxString *RexxActivity::traceInput(  /* read a line of trace input        */
                                        /* if exit declines the call         */
   if (this->sysExitSioDtr(activation, &value)) {
                                        /* get the input stream              */
-    stream = this->local->at(OREF_INPUT);
+    stream = ActivityManager::localEnvironment->at(OREF_INPUT);
     if (stream != OREF_NULL) {         /* have a stream?                    */
                                        /* read from it                      */
       value = (RexxString *)stream->sendMessage(OREF_LINEIN);
@@ -2429,7 +2396,7 @@ RexxString *RexxActivity::pullInput(   /* read a line of pull input         */
                                        /* if exit declines call             */
   if (this->sysExitMsqPll(activation, &value)) {
                                        /* get the external data queue       */
-    stream = this->local->at(OREF_REXXQUEUE);
+    stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
     if (stream != OREF_NULL) {         /* have a data queue?                */
                                        /* pull from the queue               */
       value = (RexxString *)stream->sendMessage(OREF_PULL);
@@ -2469,7 +2436,7 @@ RexxString *RexxActivity::lineIn(
                                        /* if exit declines call             */
   if (this->sysExitSioTrd(activation, &value)) {
                                        /* get the input stream              */
-    stream = this->local->at(OREF_INPUT);
+    stream = ActivityManager::localEnvironment->at(OREF_INPUT);
     if (stream != OREF_NULL) {         /* have a stream?                    */
                                        /* read from it                      */
       value = (RexxString *)stream->sendMessage(OREF_LINEIN);
@@ -2496,7 +2463,7 @@ void RexxActivity::queue(              /* write a line to the queue         */
                                        /* if exit declines call             */
   if (this->sysExitMsqPsh(activation, line, order)) {
                                        /* get the default queue             */
-    targetQueue = this->local->at(OREF_REXXQUEUE);
+    targetQueue = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
     if (targetQueue != OREF_NULL) {    /* have a data queue?                */
                                        /* pull from the queue               */
       if (order == QUEUE_LIFO)         /* push instruction?                 */
@@ -2509,138 +2476,6 @@ void RexxActivity::queue(              /* write a line to the queue         */
    }
 }
 
-BOOL RexxActivity::isPendingUninit(RexxObject *obj)
-/******************************************************************************/
-/* Function:  Test if an object is going to require its uninit method run.    */
-/******************************************************************************/
-{
-    /* uninit table for this process     */
-    RexxObjectTable * uninittable;
-    /* do we have an uninit table? */
-    if ((uninittable = TheActivityClass->getUninitTable(this->processObj)) != OREF_NULL) {
-        /* is object in the table?           */
-        if (uninittable->get(obj) != OREF_NULL) {
-            /* this object may require an uninit method run */
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-void   RexxActivity::addUninitObject(
-    RexxObject *obj)                   /* object to add                     */
-/******************************************************************************/
-/* Function:  Add an object to the process unit table                         */
-/******************************************************************************/
-{
-                                       /* add obj to uninit table for     */
-                                       /*  this my process.               */
-  TheActivityClass->addUninitObject((RexxObject *)obj, this->processObj);
-}
-
-void RexxActivity::removeUninitObject(
-    RexxObject *obj)                   /* object to remove                  */
-/******************************************************************************/
-/* Function:  Remove an object from the process uninit table                  */
-/******************************************************************************/
-{
-                                       /* remove obj from the uninit table*/
-                                       /*  for this my process.           */
-  TheActivityClass->removeUninitObject((RexxObject *)obj, this->processObj);
-}
-
-void  RexxActivity::uninitObject(RexxObject *dropObj)
-/******************************************************************************/
-/* Function:  Run UNINIT method for a specific object in this activity        */
-/******************************************************************************/
-/* NOTE: This method will only be called from the drop function in order to   */
-/*  run the uninit for the object that has just been dropped. The object will */
-/*  then be removed from the uninit table so that uninit will not be called   */
-/*  again.                                                                    */
-/*                                                                            */
-/******************************************************************************/
-{
-  RexxObjectTable * uninittable;       /* uninit table for this process     */
-
-                                       /* retrive the UNINIT table for      */
-                                       /*  process, if it exists            */
-  if ((uninittable = TheActivityClass->getUninitTable(this->processObj)) != OREF_NULL) {
-                                       /* uninitTabe exists, run UNINIT     */
-    if (uninittable->get(dropObj) == TheTrueObject)  {
-                                       /* make sure we don't recurse        */
-      uninittable->put(TheFalseObject, dropObj);
-      dropObj->uninit();               /* yes, indicate run the UNINIT      */
-                                       /* remove zombie from uninit table   */
-      TheActivityClass->removeUninitObject(dropObj, this->processObj);
-    }
-  }
-}
-
-void  RexxActivity::checkUninits()
-/******************************************************************************/
-/* FUNCTION: we will run the UNINIT method of all objetcs in the UNINIT       */
-/*  table for our process.  Even if the object is "dead", this is because the */
-/*  process is going away an its our last chance.  Instead of removing the    */
-/*  objects as we go, we run the entire table and then reset table.           */
-/*                                                                            */
-/******************************************************************************/
-{
-  RexxObjectTable  * uninittable;      /* uninit table for this process     */
-  RexxObject * zombieObj;              /* obj that needs uninit run.        */
-  HashLink iterTable;                  /* iterator for table.             */
-
-                                       /* retrive the UNINIT table for    */
-                                       /*  process.                       */
-                                       /* and protect from GC,            */
-                                       /* it is OK to do the save and     */
-                                       /* allow general marking of this   */
-                                       /* table now, since we are cleaning*/
-                                       /* up and UNINITing all meths.     */
-  uninittable = TheActivityClass->removeUninitTable(this->processObj);
-                                       /* does an uninit table exist for  */
-                                       /* process?                        */
-  if (uninittable != OREF_NULL) {
-    save(uninittable);                 /* yes, protect table from GC      */
-                                       /* for all objects in the table    */
-    for (iterTable = uninittable->first();
-         (zombieObj = uninittable->index(iterTable)) != OREF_NULL;
-         iterTable = uninittable->next(iterTable)) {
-        try
-        {
-            zombieObj->uninit();           /* run the UNINIT method           */
-        }
-        catch (ActivityException)
-        {
-        }
-    }                                  /* now go check next object in tabl*/
-
-                                       /* all UNINITed, remove uninit tabl*/
-    discard(uninittable);              /* from save table                 */
-  }
-}
-
-void  RexxActivity::startMessages()
-/******************************************************************************/
-/* Function: Get the list of pending message object that need to be started   */
-/*  on this process, and start them.                                          */
-/******************************************************************************/
-{
-  RexxObject  * queuedMessages;        /* collection of queued messages     */
-  RexxMessage * currentMessage;        /* Current message object to start.  */
-
-                                       /* Get the list of messages for    */
-                                       /* this process.                   */
-  queuedMessages = TheActivityClass->getMessageList(this->processObj);
-  if (queuedMessages != OREF_NULL) {   /* Is the a list for this process? */
-                                       /* Yes, iterate through until no   */
-                                       /* more message objects in list.   */
-    while ((currentMessage = TheActivityClass->removeNextMessageObject(queuedMessages)) != TheNilObject) {
-                                       /* Start the message object-ASYNCH */
-      currentMessage->start(OREF_NULL);
-    }
-  }
-}
-
 void  RexxActivity::terminateMethod()
 /******************************************************************************/
 /* Function: Mark this FREE activity for termination.  Set its exit flag to 1 */
@@ -2649,831 +2484,6 @@ void  RexxActivity::terminateMethod()
 {
   this->exit = 1;                      /* Activity should exit          */
   EVPOST(this->runsem);                /* let him run so he knows to exi*/
-}
-
-void RexxActivityClass::init()
-/******************************************************************************/
-/* Function:  Initialize the activity class                                   */
-/******************************************************************************/
-{
-  RexxObjectTable *subClassTable;      /* existing subclass table           */
-
-  subClassTable = this->subClasses;    /* save this before clearing         */
-  this->clearObject();                 /* clear the activity class          */
-  OrefSet(this,this->classUsedActivities,new_object_table());
-  OrefSet(this,this->classFreeActivities,new_object_table());
-  OrefSet(this,this->classAllActivities,new_object_table());
-  OrefSet(this,this->messageTable, new_object_table());
-                                       /* Don't use OrefSet, keep uninit    */
-                                       /*  out of Old2New.                  */
-  this->uninitTables = new_object_table();
-  processingUninits = FALSE;           /* we're not handling uninits currently */
-  pendingUninits = 0;                  /* nothing pending currently         */
-  if (memoryObject.restoringImage())   /* restoring the image?              */
-                                       /* copy this to get it out of the    */
-                                       /* old space area                    */
-    this->subClasses = (RexxObjectTable *)subClassTable->copy();
-  else                                 /* add an object table               */
-    this->subClasses = new_object_table();
-  OrefSet(this, this->activations, new_stack(ACTIVATION_CACHE_SIZE));
-  CurrentActivity = NULL;              /* start out fresh                 */
-  current_settings = &defaultSettings; /* use default settings set          */
-}
-
-void RexxActivityClass::live()
-/******************************************************************************/
-/* NOTE: we do not mark the UninitTables.  MEMORY will request the table      */
-/*  and mark it for us.  This is so that it can determine if there are        */
-/*  any objects that a "dead" and need uninit run.  Activity will run the     */
-/*  UNINIT, but we let Garbage Collection, handle detection/etc.              */
-/* NOTE: we also do not mark the subClasses table.  This will be managed      */
-/*  by memory so that we can reclaim classes once all of the instances have   */
-/*  also been reclaimed.                                                      */
-/******************************************************************************/
-{
-  this->RexxClass::live();
-  setUpMemoryMark
-  memory_mark(this->classUsedActivities);
-  memory_mark(this->classFreeActivities);
-  memory_mark(this->classAllActivities);
-  memory_mark(this->activations);
-  memory_mark(this->messageTable);;
-  memory_mark(this->firstWaitingActivity);
-  memory_mark(this->lastWaitingActivity);
-  cleanUpMemoryMark
-}
-
-void RexxActivityClass::liveGeneral()
-/******************************************************************************/
-/* NOTE: we do not mark the UninitTables.  MEMORY will request the table      */
-/*  and mark it for us.  This is so that it can determine if there are        */
-/*  any objects that a "dead" and need uninit run.  Activity will run the     */
-/*  UNINIT, but we let Garbage Collection, handle detection/etc.              */
-/*  The subClasses table is only marked during a save image, so that the      */
-/*  classes will still have the proper subclass definitions.                  */
-/******************************************************************************/
-{
-  this->RexxClass::liveGeneral();
-  if (!memoryObject.savingImage()) {
-    setUpMemoryMarkGeneral
-    memory_mark_general(this->classUsedActivities);
-    memory_mark_general(this->classFreeActivities);
-    memory_mark_general(this->classAllActivities);
-    memory_mark_general(this->activations);
-    memory_mark_general(this->messageTable);
-    memory_mark_general(this->firstWaitingActivity);
-    memory_mark_general(this->lastWaitingActivity);
-    if (memoryObject.restoringImage()) /* restoring or saving the image?    */
-                                       /* need to mark the subclass table   */
-      memory_mark_general(this->subClasses);
-    cleanUpMemoryMarkGeneral
-  } else {
-    OrefSet(this,this->classUsedActivities,OREF_NULL);
-    OrefSet(this,this->classFreeActivities,OREF_NULL);
-    OrefSet(this,this->classAllActivities,OREF_NULL);
-    OrefSet(this,this->activations,OREF_NULL);
-    OrefSet(this,this->uninitTables,OREF_NULL);
-    OrefSet(this,this->messageTable,OREF_NULL);
-    OrefSet(this,this->firstWaitingActivity,OREF_NULL);
-    OrefSet(this,this->lastWaitingActivity,OREF_NULL);
-                                       /* this one is marked                */
-    memory_mark_general(this->subClasses);
-  }
-}
-
-
-void  RexxActivityClass::runUninits()
-/******************************************************************************/
-/* Function:  Run any UNINIT methods for this activity                        */
-/******************************************************************************/
-/* NOTE: The routine to iterate across uninit Table isn't quite right, since  */
-/*  the removal of zombieObj may move another zombieObj and then doing        */
-/*  the next will skip this zombie, we should however catch it next time      */
-/*  through.                                                                  */
-/*                                                                            */
-/******************************************************************************/
-{
-  RexxObjectTable * uninittable;       /* uninit table for this process     */
-  RexxObject * zombieObj;              /* obj that needs uninit run.        */
-  long iterTable;                      /* iterator for table.               */
-
-  /* if we're already processing this, don't try to do this */
-  /* recursively. */
-  if (processingUninits) {
-      return;
-  }
-
-  /* turn on the recursion flag, and also zero out the count of */
-  /* pending uninits to run */
-  processingUninits = TRUE;
-  pendingUninits = 0;
-
-                                       /* retrive the UNINIT table for      */
-                                       /*  process, if it exists            */
-  if ((uninittable = getUninitTable(CurrentActivity->processObj)) != OREF_NULL) {
-                                       /* uninitTabe exists, run UNINIT     */
-    for (iterTable = uninittable->first();
-         (zombieObj = uninittable->index(iterTable)) != OREF_NULL;
-         iterTable = uninittable->next(iterTable)) {
-
-                                       /* is this object readyfor UNINIT?   */
-      if (uninittable->value(iterTable) == TheTrueObject)  {
-                                       /* make sure we don't recurse        */
-        uninittable->put(TheFalseObject, zombieObj);
-        zombieObj->uninit();           /* yes, indicate run the UNINIT      */
-                                       /* remove zombie from uninit table   */
-        removeUninitObject(zombieObj, CurrentActivity->processObj);
-      }
-    }                                  /* now go check next object in table */
-  }
-  /* make sure we remove the recursion protection */
-  processingUninits = FALSE;
-}
-
-
-void RexxActivityClass::addWaitingActivity(
-    RexxActivity *waitingAct,          /* new activity to add to the queue  */
-    BOOL          release )            /* need to release the run semaphore */
-/******************************************************************************/
-/* Function:  Add an activity to the round robin wait queue                   */
-/******************************************************************************/
-{
-  SysEnterResourceSection();           /* now in a critical section         */
-                                       /* NOTE:  The following assignments  */
-                                       /* do not use OrefSet intentionally. */
-                                       /* because we do have yet have kernel*/
-                                       /* access, we can't allow memory to  */
-                                       /* allocate a new counter object for */
-                                       /* this.  This leads to memory       */
-                                       /* corruption and unpredictable traps*/
-                                       /* nobody waiting yet?               */
-  if (this->firstWaitingActivity == OREF_NULL) {
-                                       /* this is the head of the chain     */
-    this->firstWaitingActivity = waitingAct;
-                                       /* and the tail                      */
-    this->lastWaitingActivity = waitingAct;
-    SysExitResourceSection();          /* end of the critical section       */
-  }
-  else {                               /* move to the end of the line       */
-                                       /* chain off of the existing one     */
-    this->lastWaitingActivity->setNextWaitingActivity(waitingAct);
-                                       /* this is the new last one          */
-    this->lastWaitingActivity = waitingAct;
-    waitingAct->clearWait();           /* clear the run semaphore           */
-    SysExitResourceSection();          /* end of the critical section       */
-    if (release)                       /* current semaphore owner?          */
-      MTXRL(kernel_semaphore);         /* release the lock                  */
-    SysThreadYield();                  /* yield the thread                  */
-    waitingAct->waitKernel();          /* and wait for permission           */
-  }
-  MTXRQ(kernel_semaphore);             /* request the lock now              */
-  SysEnterResourceSection();           /* now remove the waiting one        */
-                                       /* NOTE:  The following assignments  */
-                                       /* do not use OrefSet intentionally. */
-                                       /* because we do have yet have kernel*/
-                                       /* access, we can't allow memory to  */
-                                       /* allocate a new counter object for */
-                                       /* this.  This leads to memory       */
-                                       /* corruption and unpredictable traps*/
-                                       /* dechain the activity              */
-
-  /* this->firstWaitingActivity will be released, so set first to next of first
-     The original outcommented code was setting the first to the next of the
-     activity that got the semaphore. This could corrupt the list if threads
-     are not released in fifo */
-
-//  this->firstWaitingActivity = newActivity->nextWaitingActivity;   /* this was the orig. wrong connection */
-  if (this->firstWaitingActivity) this->firstWaitingActivity = this->firstWaitingActivity->nextWaitingActivity;
-                                       /* clear out the chain               */
-  /* if we are here, newActivity must have been this->firstWaitingActivity sometime
-     before and therefore we can set next pointer to NULL without disturbing
-     the linked list */
-
-  waitingAct->setNextWaitingActivity(OREF_NULL);
-                                       /* was this the only one?            */
-  if (!this->firstWaitingActivity)
-  {
-                                       /* clear out the last one            */
-      this->lastWaitingActivity = OREF_NULL;
-  }
-  else                                 /* release the next one to run       */
-  {
-      this->firstWaitingActivity->postRelease();
-  }
-  CurrentActivity = waitingAct;        /* set new current activity          */
-                                       /* and new active settings           */
-  current_settings = waitingAct->settings;
-  SysExitResourceSection();            /* end of the critical section       */
-                                       /* have more pools been added since  */
-                                       /* we left the kernel ?              */
-  if (GlobalCurrentPool != ProcessCurrentPool)
-                                       /* yes, get access to them.          */
-    memoryObject.accessPools(ProcessCurrentPool);
-}
-
-RexxActivation *RexxActivityClass::newActivation(
-     RexxObject     *receiver,         /* message receiver                  */
-     RexxMethod     *runMethod,        /* method to run                     */
-     RexxActivity   *activity,         /* current activity                  */
-     RexxString     *msgname,          /* message name processed            */
-     RexxActivation *activation,       /* parent activation                 */
-     int             context )         /* execution context                 */
-/******************************************************************************/
-/* Function:  Get an activation from cache or create new one                  */
-/******************************************************************************/
-{
-  RexxActivation *resultActivation;    /* newly create activation           */
-
-  if (this->activationCacheSize != 0) {/* have a cached entry?              */
-    this->activationCacheSize--;       /* remove an entry from the count    */
-                                       /* get the top cached entry          */
-    resultActivation = (RexxActivation *)this->activations->stackTop();
-                                       /* reactivate this                   */
-    resultActivation->setHasReferences();
-    resultActivation = new (resultActivation) RexxActivation (receiver, runMethod, activity, msgname, activation, context);
-    this->activations->pop();          /* Remove reused activation from stac*/
-  }
-  else {                               /* need to create a new one          */
-                                       /* Create new Activation.            */
-    resultActivation = new RexxActivation (receiver, runMethod, activity, msgname, activation, context);
-  }
-  return resultActivation;                /* return the new activation         */
-}
-
-void RexxActivityClass::cacheActivation(
-  RexxActivation *activation )         /* activation to process             */
-/******************************************************************************/
-/* Function:  Save an activation to the cache.                                */
-/******************************************************************************/
-{
-                                       /* still room in the cache?          */
-  if (this->activationCacheSize < ACTIVATION_CACHE_SIZE) {
-                                       /* free everything for reclamation   */
-    activation->setHasNoReferences();
-    this->activationCacheSize++;       /* add the this to the count         */
-                                       /* and add the activation            */
-    this->activations->push((RexxObject *)activation);
-  }
-}
-
-RexxActivity *RexxActivityClass::newActivity( long priority, RexxObject *local)
-/******************************************************************************/
-/* Function:  Create or reuse an activity object                              */
-/******************************************************************************/
-{
-  RexxActivity    *activity;           /* activity to use                   */
-  LONG   tid;                          /* current threadid                  */
-
-  if (ProcessName == OREF_NULL) {      /* 1st activity on process?          */
-                                       /* Yes, then we initialize processNam*/
-                                       /* get the process name              */
-                                       /* This will be set into new activity*/
-                                       /*  so will be safe from GC soon     */
-    ProcessName = (RexxInteger *)SysProcessName();
-  }
-  save(ProcessName);                   /* GC protect                        */
-
-  SysEnterResourceSection();           /* now in a critical section         */
-
-  activity = OREF_NULL;                /* no activity yet                   */
-  if ((int)priority != NO_THREAD)      /* can we reuse one?                 */
-  {
-                                       /* try to get one from the free table*/
-    activity =  (RexxActivity *)TheActivityClass->classFreeActivities->remove(ProcessName);
-  }
-
-  if (activity == OREF_NULL) {         /* no luck?                          */
-    SysExitResourceSection();          /* end of the critical section       */
-                                       /* Create a new activity object      */
-    activity = new RexxActivity(FALSE, priority, (RexxDirectory *)local);
-    SysEnterResourceSection();         /* now in a critical section         */
-                                       /* Add this activity to the table of */
-                                       /*  all activities.                  */
-    TheActivityClass->classUsedActivities->add(ProcessName, (RexxObject *)activity);
-                                       /* add the activity to thread table  */
-                                       /*Find the thread id of this activity*/
-    tid = activity->threadid;
-
-#ifndef HIGHTID
-                                       /* local activities? (process local) */
-    if (ProcessLocalActs != OREF_NULL) {
-                                       /* Yup, Get current max thread number*/
-      size_t maxacts = ProcessLocalActs->size();
-      if (maxacts < tid) {             /* Can current array handle this     */
-                                       /* no, need to grow the array        */
-                                       /* Get new array, based on threadid, */
-                                       /*  and round up to 8, (extra room   */
-                                       /* to grow                           */
-        ProcessLocalActs = ProcessLocalActs->extend(roundup8(tid));
-                                       /* Add localacts to all_activities,  */
-                                       /*  keep being garbage collected.    */
-        TheActivityClass->classAllActivities->put((RexxObject *)ProcessLocalActs, ProcessName);
-      }
-    }
-    else {
-                                       /* 1st loacl activity, create        */
-                                       /*  localacts array, size based on   */
-                                       /* current thread id                 */
-      ProcessLocalActs = (RexxArray *)new_array(roundup8(tid));
-                                       /* Add localacts array to keep table */
-      TheActivityClass->classAllActivities->put((RexxObject *)ProcessLocalActs, ProcessName);
-    }
-                                       /* Add new activity to localacts     */
-    ProcessLocalActs->put((RexxObject *)activity, tid);
-    ProcessNumActs++;                  /* got an active activity            */
-
-#else
-    if (ProcessLocalActs != OREF_NULL) {
-                                       /* Yup, Get current max thread number*/
-                                       /* Add localacts to all_activities,  */
-                                       /*  keep being garbage collected.    */
-//        TheActivityClass->classAllActivities->put((RexxObject *)ProcessLocalActs, ProcessName);
-    }
-    else {
-                                       /* 1st loacl activity, create        */
-                                       /*  localacts array, size based on   */
-                                       /* current thread id                 */
-      ProcessLocalActs = new ActivityTable();
-                                       /* Add localacts array to keep table */
-//      TheActivityClass->classAllActivities->put((RexxObject *)ProcessLocalActs, ProcessName);
-
-    }
-//    HighTidLastID = 0;
-                                       /* Add new activity to localacts     */
-    ProcessLocalActs->put((RexxObject *)activity, tid);
-    ProcessNumActs++;                  /* got an active activity            */
-#endif
-
-  }
-  else {
-                                       /* We are able to reuse an activity, */
-                                       /*  so just re-initialize it.        */
-    new (activity) RexxActivity(TRUE, priority, (RexxDirectory *)local);
-                                       /* add activity to loclaActs.  Array */
-                                       /* is big enough since existing      */
-                                       /*Activity                           */
-#ifdef HIGHTID_0
-    ProcessLocalActs->put((RexxObject *)activity, ID2String(activity->threadid));
-    /* keep higher performance on HIGHTID up to date */
-    HighTidLastID = 0;
-#else
-    ProcessLocalActs->put((RexxObject *)activity, activity->threadid);
-#endif
-  }
-  SysExitResourceSection();            /* end of the critical section       */
-  discard(ProcessName);                /* GC "unprotect"                    */
-  return activity;                     /* return the activity               */
-}
-
-void RexxActivityClass::addUninitObject(
-    RexxObject *obj,                   /* object to add                     */
-    RexxObject *processobj)            /* object's target process           */
-/******************************************************************************/
-/* Function:  Add an object with an uninit method to the uninit table for     */
-/*            a process                                                       */
-/******************************************************************************/
-{
-   RexxObjectTable *uninitTable;       /* uninit Table for assoc w/ procc   */
-                                       /* retrieve process uninit table     */
-                                       /* does an uninit Table exist for    */
-                                       /* this process?                     */
-   if ((uninitTable = (RexxObjectTable *)this->uninitTables->get(processobj)) == OREF_NULL) {
-     uninitTable = new_object_table(); /* No, create a new table            */
-                                       /* and add it to the uninitTables    */
-                                       /* under this process name.          */
-     this->uninitTables->put(uninitTable, processobj);
-   }
-                                       /* is object already in table?       */
-   if (uninitTable->get(obj) == OREF_NULL) {
-                                       /* nope, add obj to uninitTable,     */
-                                       /*  initial value is NIL             */
-     uninitTable->put(TheNilObject, obj);
-   }
-
-}
-
-void  RexxActivityClass::removeUninitObject(
-    RexxObject *obj,                   /* object to remove                  */
-    RexxObject *processobj)            /* target process                    */
-/******************************************************************************/
-/* Function:  Remove an object from the uninit tables                         */
-/******************************************************************************/
-{
-  RexxObjectTable *uninitTable;        /* uninitTable for this process      */
-                                       /* retrieve the uninitTbale for      */
-                                       /* this process.                     */
-  uninitTable = (RexxObjectTable *)this->uninitTables->get(processobj);
-                                       /* remove obj fromthe uninit table   */
-                                       /*  for the process identified by    */
-                                       /*  proccessobj                      */
-  uninitTable->remove(obj);
-  if (uninitTable->items() == 0) {     /* anything left in the table?       */
-                                       /* no remove process table from      */
-                                       /* uninit Tables.                    */
-    this->uninitTables->remove(processobj);
-  }
-}
-
-BOOL  RexxActivityClass::addMessageObject(
-    RexxObject *msgObj,                /* added message object              */
-    RexxObject *processobj)            /* target process id                 */
-/******************************************************************************/
-/* Function:  Add a message object to another processes message table         */
-/******************************************************************************/
-{
-   RexxList * messageList;             /* message Table for assoc w/ procc  */
-                                       /* retrieve process uninit table     */
-                                       /* does an uninit Tbale exist for    */
-                                       /* this process?                     */
-   if ((messageList = (RexxList *)this->messageTable->get(processobj)) == OREF_NULL) {
-     messageList = new_list();         /* No, create a new list             */
-                                       /* and add it to the messageTable    */
-                                       /* under this process name.          */
-     this->messageTable->put((RexxObject *)messageList, processobj);
-   }
-                                       /* did process terminate?            */
-   else if ((RexxObject *)messageList == (RexxObject *)TheFalseObject)
-     return FALSE;                     /* indicate couldn't queue message   */
-
-   messageList->addFirst(msgObj);      /* put new msg obj at front of list  */
-   return TRUE;
-}
-
-void RexxActivityClass::terminateFreeActs()
-/******************************************************************************/
-/* Function:   see if there are any Uninit messages need to be send before    */
-/*             the process goes away.                                         */
-/******************************************************************************/
-{
-  RexxObject * activity;               /* activity to free up               */
-
-                                       /* have more pools been added since  */
-                                       /* we left the kernel ?              */
-  if (GlobalCurrentPool != ProcessCurrentPool)
-                                       /* yes, get access to them.          */
-    memoryObject.accessPools(ProcessCurrentPool);
-                                       /* for all activities on freeList    */
-  for (activity = this->classFreeActivities->remove(ProcessName);
-       activity != OREF_NULL;
-       activity = this->classFreeActivities->remove(ProcessName)) {
-                                       /* Make sure they terminate.         */
-    ((RexxActivity *)activity)->terminateMethod();
-  }
-}
-
-BOOL activity_halt(
-     LONG         thread_id,           /* target thread id                  */
-     RexxString * description )        /* description to use                */
-/******************************************************************************/
-/* Function:   Flip on a bit in a target activities top activation            */
-/******************************************************************************/
-{
-  RexxActivity *activity;              /* target activity                   */
-  RexxActivation *activation;          /* target activation                 */
-  BOOL result;                         /* return value                      */
-
-  result = FALSE;                      /* assume failure                    */
-  /* no need for critical section, since access here is read-only */
-  MTXRQ(resource_semaphore);           /* lock activity changes             */
-  if (ProcessLocalActs != OREF_NULL) { /* activities created?               */
-                                       /* possible thread_id?               */
-#ifndef HIGHTID
-    if (ProcessLocalActs->size() >= thread_id) {
-      activity = (RexxActivity *)ProcessLocalActs->get(thread_id);
-#else
-    {
-      activity = (RexxActivity *)ProcessLocalActs->fastAt(thread_id);
-#endif
-                                       /* Activity exist for thread?        */
-      if (activity != (RexxActivity *)OREF_NULL) {
-                                       /* get the current activation        */
-        activation = (RexxActivation *)activity->currentActivation;
-                                       /* got an activation?                */
-        if (activation != (RexxActivation *)TheNilObject) {
-                                       /* process the halt                  */
-          activation->halt(description);
-          result = TRUE;               /* this actually worked              */
-        }
-      }
-    }
-  }
-  MTXRL(resource_semaphore);           /* unlock the resources              */
-  return result;                       /* return the result                 */
-}
-
-BOOL activity_sysyield(
-     LONG         thread_id,           /* target thread id                  */
-     RexxObject * description )        /* description to use                */
-/****************************************************************************/
-/* Function:   Flip on a bit in a target activities top activation          */
-/*             called from rexxsetyield                                     */
-/****************************************************************************/
-{
-  RexxActivity *activity;              /* target activity                   */
-  RexxActivation *activation;          /* target activation                 */
-  BOOL result;                         /* return value                      */
-
-  result = FALSE;                      /* assume failure                    */
-  /* no need for critical section, since access here is read-only */
-  MTXRQ(resource_semaphore);           /* lock activity changes             */
-  if (ProcessLocalActs != OREF_NULL) { /* activities created?               */
-                                       /* possible thread_id?               */
-#ifndef FIXEDTIMERS0
-#ifndef HIGHTID
-    if (ProcessLocalActs->size() >= thread_id) {
-      activity = (RexxActivity *)ProcessLocalActs->get(thread_id);
-#else
-    {
-      activity = (RexxActivity *)ProcessLocalActs->fastAt(thread_id);
-#endif
-      if (activity != OREF_NULL) {
-                                       /* get the current activation        */
-        activation = activity->currentActivation;
-                                       /* got an activation?                */
-        if ((activation != NULL) &&
-           (activation != (RexxActivation *)TheNilObject)) {
-                                       /* process the yield                 */
-          activation->yield();
-          result = TRUE;               /* this actually worked              */
-        }
-      }
-    }
-#else
-        if (LastRunningActivity)
-        {
-       activation = LastRunningActivity->currentActivation;
-                                       /* got an activation?                */
-       if ((activation != NULL) &&
-          (activation != (RexxActivation *)TheNilObject))
-       {                                       /* process the yield                 */
-          activation->yield();
-          result = TRUE;               /* this actually worked              */
-       }
-        }
-        else
-        /* get the first valid activity and activation */
-    while ((!result) && (ProcessLocalActs->size() >= thread_id))
-    {
-      activity = (RexxActivity *)ProcessLocalActs->get(thread_id);
-      if (activity != OREF_NULL) {
-                                       /* get the current activation        */
-         activation = activity->currentActivation;
-                                       /* got an activation?                */
-         if ((activation != NULL) &&
-            (activation != (RexxActivation *)TheNilObject)) {
-                                       /* process the yield                 */
-            activation->yield();
-            result = TRUE;               /* this actually worked              */
-         }
-      }
-          thread_id++;
-    }
-#endif
-  }
-  MTXRL(resource_semaphore);           /* unlock the resources              */
-  return result;                       /* return the result                 */
-}
-
-BOOL activity_set_trace(
-     LONG  thread_id,                  /* target thread id                  */
-     BOOL  on_or_off )                 /* trace on/off flag                 */
-/******************************************************************************/
-/* Function:   Flip on a bit in a target activities top activation            */
-/******************************************************************************/
-{
-  RexxActivity   *activity;            /* target activity                   */
-  RexxActivation *activation;          /* target activation                 */
-  BOOL result;                         /* return value                      */
-
-  result = FALSE;                      /* assume failure                    */
-  /* no need for critical section, since access here is read-only */
-  MTXRQ(resource_semaphore);           /* lock activity changes             */
-  if (ProcessLocalActs != OREF_NULL) { /* activities created?               */
-                                       /* possible thread_id?               */
-#ifndef HIGHTID
-    if (ProcessLocalActs->size() >= thread_id) {
-      activity = (RexxActivity *)ProcessLocalActs->get(thread_id);
-#else
-    {
-      activity = (RexxActivity *)ProcessLocalActs->fastAt(thread_id);
-#endif
-                                       /* Activity exist for thread?        */
-      if (activity != OREF_NULL) {
-                                       /* get the current activation        */
-        activation = activity->currentAct();
-                                       /* got an activation?                */
-        if ((activation != NULL) &&
-           (activation != (RexxActivation *)TheNilObject)) {
-          if (on_or_off)               /* turning this on?                  */
-                                       /* turn tracing on                   */
-            activation->externalTraceOn();
-          else
-                                       /* turn tracing off                  */
-            activation->externalTraceOff();
-          result = TRUE;               /* this actually worked              */
-        }
-      }
-    }
-  }
-  MTXRL(resource_semaphore);           /* unlock the resources              */
-  return result;                       /* return the result                 */
-}
-
-void activity_set_yield(void)
-/******************************************************************************/
-/* Function:   Signal an activation to yield control                          */
-/******************************************************************************/
-{
-  RexxActivation *activation;          /* target activation                 */
-
-  /* no need for critical section, since access here is read-only */
-  MTXRQ(resource_semaphore);           /* lock activity changes             */
-  if (CurrentActivity != OREF_NULL) {  /* something working?                */
-                                       /* get the current activation        */
-    activation = CurrentActivity->currentActivation;
-                                       /* got an activation?                */
-    if ((activation != NULL) &&
-       (activation != (RexxActivation *)TheNilObject))
-                                       /* tell it to yield                  */
-      activation->yield();
-  }
-  MTXRL(resource_semaphore);           /* unlock the resources              */
-}
-
-void RexxActivity::createClass()
-/******************************************************************************/
-/* Function:  Create the activity class during save image processing          */
-/******************************************************************************/
-{
-                                       /* create the class object           */
-  SUBCLASS_CREATE(Activity, "Activity", RexxActivityClass);
-                                       /* and do class-specific init        */
-  new (TheActivityClass) RexxActivityClass();
-                                       /* hook up the class and behaviour   */
-  ((RexxBehaviour *)TheActivityBehaviour)->setOwningClass((RexxClass *)TheActivityClass);
-}
-
-void RexxActivity::restoreClass()
-/******************************************************************************/
-/* Function:  Restore the activity class during start up                      */
-/******************************************************************************/
-{
-                                       /* now go reinitialize               */
-  TheActivityClass->init();
-}
-
-
-RexxActivity *activity_find (void)
-/******************************************************************************/
-/* Function:  Locate the activity associated with a thread                    */
-/******************************************************************************/
-{
-  RexxActivity *activity;              /* returned activity                 */
-  int  threadid;                       /* current thread id                 */
-
-  activity = OREF_NULL;                /* assume failure                    */
-  if (ProcessLocalActs != OREF_NULL) { /* something active?                 */
-    threadid = SysQueryThreadID();     /* get the thread id                 */
-                                       /* got one possible?                 */
-
-                                       /* pull it from the array            */
-#ifndef HIGHTID
-    if (ProcessLocalActs->size() >= threadid) {
-      activity = (RexxActivity *)ProcessLocalActs->get(threadid);
-        }
-#else
-          /* to get a better performance */
-//      if ((HighTidLastID) && (HighTidLastID == threadid))
-//             activity = HighTidLastActivity;
-
-//      if ((!HighTidLastID) || (HighTidLastID != threadid) || (!activity))
-//          {
-//         activity = (RexxActivity *)ProcessLocalActs->fastAt(ID2String(threadid));
-//                 HighTidLastActivity = activity;
-//                 HighTidLastID = threadid;
-//          }
-    activity = (RexxActivity *)ProcessLocalActs->fastAt(threadid);
-#endif
-  }
-  return activity;                     /* return the located activity       */
-}
-
-void activity_exit (int retcode)
-/******************************************************************************/
-/* Function:  Really shut down--this exits the process                        */
-/******************************************************************************/
-{
-  exit(retcode);
-}
-
-void activity_lock_kernel(void)
-/******************************************************************************/
-/* Function:  Request access to the kernel                                    */
-/******************************************************************************/
-{
-  MTXRQ(kernel_semaphore);             /* just request the semaphore        */
-                                       /* have more pools been added since  */
-                                       /* we left the kernel ?              */
-  if (GlobalCurrentPool != ProcessCurrentPool)
-                                       /* yes, get access to them.          */
-    memoryObject.accessPools(ProcessCurrentPool);
-}
-
-void activity_unlock_kernel(void)
-/******************************************************************************/
-/* Function:  Release the kernel access                                       */
-/******************************************************************************/
-{
-  CurrentActivity = OREF_NULL;         /* no current activation             */
-  MTXRL(kernel_semaphore);             /* release the kernel semaphore      */
-}
-
-void RexxActivityClass::returnActivity(
-    RexxActivity *activityObject )     /* returned activity                 */
-/******************************************************************************/
-/* Function:  Return access to an activity previously obtained from           */
-/*            getActivity().  This will handle activity nesting and also      */
-/*            release the kernel semaphore.                                   */
-/******************************************************************************/
-{
-  LONG   numberActivities;             /* current number of activities      */
-
-  activityObject->nestedCount--;       /* decrease the nesting              */
-  numberActivities = --ProcessNumActs; /* decrement number of activities    */
-                                       /* not a nested call?                */
-  if (activityObject->nestedCount == 0) {
-    if (numberActivities == 0)         /* are we the last thread?           */
-      activityObject->checkUninits();  /* process uninits                   */
-    SysEnterResourceSection();         /* now in a critical section         */
-                                       /* This activity is nolonger in use. */
-    this->classUsedActivities->remove((RexxObject *)activityObject);
-                                       /* remove from the local acts list   */
-#ifdef HIGHTID
-    /* keep higher performance on HIGHTID up to date */
-//    HighTidLastID = 0;
-    ProcessLocalActs->put(OREF_NULL, activityObject->threadid);
-    EVCLOSE(activityObject->runsem);
-    EVCLOSE(activityObject->guardsem);
-#ifdef THREADHANDLE
-    EVCLOSE(activityObject->hThread);
-#endif
-#else
-    ProcessLocalActs->put(OREF_NULL, activityObject->threadid);
-#endif
-    SysExitResourceSection();          /* end of the critical section       */
-                                       /* Are we terminating?               */
-    if (ProcessTerminating && numberActivities == 0)
-      kernelShutdown();                /* time to shut things down          */
-  }
-  ReleaseKernelAccess(activityObject); /* release the kernel semaphore      */
-}
-
-RexxActivity *RexxActivityClass::getActivity(void)
-/******************************************************************************/
-/* Function:  Determine the activity (or create a new one) for the thread     */
-/*            we are about to enter kernel to send a message.  We return      */
-/*            the activity object to be used to send the message.             */
-/*            The routine requests kernel access on the new activity before   */
-/*            returning.                                                      */
-/******************************************************************************/
-{
-  RexxActivity *activityObject;        /* Activity object for this thread   */
-
-                                       /* first see if activity already     */
-                                       /* exists for this thread in this    */
-  activityObject = activity_find();    /* process.                          */
-  if (activityObject == OREF_NULL) {   /* Nope, 1st time through here.      */
-    MTXRQ(kernel_semaphore);           /* get the kernel semophore          */
-                                       /* have more pools been added since  */
-                                       /* we left the kernel ?              */
-    if (GlobalCurrentPool != ProcessCurrentPool)
-                                       /* yes, get access to them.          */
-      memoryObject.accessPools(ProcessCurrentPool);
-                                       /* Get a new activity object.        */
-    activityObject = this->newActivity(NO_THREAD, ProcessLocalEnv);
-    MTXRL(kernel_semaphore);           /* release kernel semaphore          */
-                                       /* Reacquire kernel semaphore on new */
-                                       /*  activity.                        */
-    RequestKernelAccess(activityObject);
-  }
-  else {
-                                       /* Activity already existed for this */
-                                       /* get kernel semophore in activity  */
-    RequestKernelAccess(activityObject);
-    ProcessNumActs++;                  /* got an active activity            */
-    SysEnterResourceSection();         /* now in a critical section         */
-                                       /* See if this activity is already in*/
-                                       /*  use, are we re-entering kernel?  */
-    if (this->classUsedActivities->get((RexxObject *)activityObject) == OREF_NULL) {
-                                       /* not re-entering, but were here    */
-                                       /* before add this activity to inuse */
-                                       /* activities                        */
-      this->classUsedActivities->add(ProcessName, (RexxObject *)activityObject);
-    }
-    SysExitResourceSection();          /* end of the critical section       */
-  }
-  activityObject->nestedCount++;       /* step the nesting count            */
-  return activityObject;               /* Return the activity for thread    */
 }
 
 void process_message_arguments(
@@ -3628,7 +2638,7 @@ void process_message_result(
 
       case 'b':                        /* BOOLEAN                           */
                                        /* get the number                    */
-        (*((BOOL *)return_pointer)) = value->longValue(NO_LONG);
+        (*((bool *)return_pointer)) = value->longValue(NO_LONG) == 0 ? false : true;
         break;
       case 'c':                        /* CHARACTER                         */
                                        /* get the first character           */
@@ -3693,10 +2703,10 @@ void process_message_result(
   }
 }
 
-LONG RexxActivity::messageSend(
+int RexxActivity::messageSend(
     RexxObject      *receiver,         /* target object                     */
     RexxString      *msgname,          /* name of the message to process    */
-    LONG             count,            /* count of arguments                */
+    size_t           count,            /* count of arguments                */
     RexxObject     **arguments,        /* array of arguments                */
     RexxObject     **result )          /* message result                    */
 /******************************************************************************/
@@ -3704,14 +2714,14 @@ LONG RexxActivity::messageSend(
 /*              method will do any needed activity setup before hand.         */
 /******************************************************************************/
 {
-  LONG    rc;                          /* message return code               */
+  int     rc;                          /* message return code               */
   SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
-  long    startDepth;                  /* starting depth of activation stack*/
-  nestedActivityInfo saveInfo;         /* saved activity info               */
+  size_t  startDepth;                  /* starting depth of activation stack*/
+  NestedActivityState saveInfo;        /* saved activity info               */
 
   rc = 0;                              /* default to a clean return         */
   *result = OREF_NULL;                 /* default to no return value        */
-  this->saveNestedInfo(&saveInfo);     /* save critical nesting info        */
+  this->saveNestedInfo(saveInfo);      /* save critical nesting info        */
                                        /* make sure we have the stack base  */
   this->nestedInfo.stackptr = SysGetThreadStackBase(TOTAL_STACK_SIZE);
   this->clearExits();                  /* make sure the exits are cleared   */
@@ -3732,15 +2742,18 @@ LONG RexxActivity::messageSend(
   {
       rc = this->error(startDepth);      /* do error cleanup                  */
   }
-  this->restoreNestedInfo(&saveInfo);  /* now restore to previous nesting   */
+  // give uninit objects a chance to run
+  TheMemoryObject->runUninits();
+  this->restoreNestedInfo(saveInfo);   /* now restore to previous nesting   */
   SysDeregisterSignals(&exreg);        /* deregister the signal handlers    */
   this->popNil();                      /* remove the nil marker             */
   return rc;                           /* return the error code             */
 }
 
+
 #include "RexxNativeAPI.h"             /* bring in the external definitions */
 
-LONG VLAREXXENTRY RexxSendMessage (
+int VLAREXXENTRY RexxSendMessage (
   REXXOBJECT  receiver,                /* receiving object                  */
   const char *msgname,                 /* message to send                   */
   REXXOBJECT  start_class,             /* lookup starting class             */
@@ -3758,22 +2771,22 @@ LONG VLAREXXENTRY RexxSendMessage (
   RexxArray  *argument_array;          /* array of arguments                */
   RexxList   *argument_list;           /* temp list of arguments            */
   char returnType;                     /* type of return value              */
-  LONG rc;                             /* message return code               */
+  int  rc;                             /* message return code               */
   va_list arguments;                   /* message argument list             */
   SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
-  nestedActivityInfo saveInfo;         /* saved activity info               */
-  long startDepth;
+  NestedActivityState saveInfo;        /* saved activity info               */
+  size_t startDepth;
 
   rc = 0;                              /* default to a clean return         */
                                        /* Find an activity for this thread  */
                                        /* (will create one if necessary)    */
-  activity = TheActivityClass->getActivity();
-  activity->saveNestedInfo(&saveInfo); /* save the nested stuff             */
+  activity = ActivityManager::getActivity();
+  activity->saveNestedInfo(saveInfo);  /* save the nested stuff             */
   activity->clearExits();              /* make sure the exits are cleared   */
   activity->generateRandomNumberSeed();/* get a fresh random seed           */
                                        /* Push marker onto stack so we know */
   activity->pushNil();                 /* what level we entered.            */
-  startDepth = activity->depth;        /* Remember activation stack depth   */
+  startDepth = activity->getActivationDepth(); /* Remember activation stack depth   */
   SysRegisterSignals(&exreg);          /* register our signal handlers      */
   try
   {
@@ -3782,13 +2795,12 @@ LONG VLAREXXENTRY RexxSendMessage (
       va_start(arguments, result_pointer);
                                          /* create an argument list           */
       argument_list  = new_list();
-      save(argument_list);
+      ProtectedObject p(argument_list);
                                          /* go convert the arguments          */
       process_message_arguments(&arguments, interfacedefn, argument_list);
                                          /* now convert to an array           */
       argument_array = argument_list->makeArray();
-      save(argument_array);
-      discard(argument_list);            /* No longer need the list.          */
+      ProtectedObject p1(argument_array);
       va_end(arguments);                 /* end of argument processing        */
       if (start_class == OREF_NULL)      /* no start scope given?             */
                                          /* issue a straight message send     */
@@ -3798,9 +2810,9 @@ LONG VLAREXXENTRY RexxSendMessage (
                                          /* go issue the message with override*/
         result = receiver->messageSend(new_string(msgname)->upper(),
             argument_array->size(), argument_array->data(), start_class);
-      discard(argument_array);           /* no longer need the argument array */
+      // TODO fix this usage up
       if (result != OREF_NULL) {         /* if we got a result, protect it.   */
-        save(result);                    /* because might not have references */
+        saveObject(result);              /* because might not have references */
                                          /* convert the return result         */
         process_message_result(result, result_pointer, returnType);
       }
@@ -3811,24 +2823,36 @@ LONG VLAREXXENTRY RexxSendMessage (
       rc = activity->error(startDepth);
       result = OREF_NULL;                /* no result in this case            */
   }
-  TheActivityClass->runUninits();      /* be sure to finish UNINIT methods  */
-                                       /* restore the nested information    */
-  activity->restoreNestedInfo(&saveInfo);
-  SysDeregisterSignals(&exreg);        /* deregister the signal handlers    */
-                                       /* if had a real result object       */
-                                       /*  and not returning an OREF....    */
-  if (result != OREF_NULL) {
-    if (returnType == 'o' || returnType == 'z')
-                                       /* Need to keep result obj around.   */
-       ProcessLocalServer->sendMessage(new_string("SAVE_RESULT"));
 
-     discard_hold(result);             /* release it and hole a bit longer  */
-  }
+  memoryObject.runUninits();           /* be sure to finish UNINIT methods  */
+                                       /* restore the nested information    */
+  activity->restoreNestedInfo(saveInfo);
+  SysDeregisterSignals(&exreg);        /* deregister the signal handlers    */
   activity->popNil();                  /* remove the nil marker             */
                                        /* release our activity usage        */
-  TheActivityClass->returnActivity(activity);
+  ActivityManager::returnActivity(activity);
   return rc;                           /* return the error code             */
 }
+
+
+RexxObject *RexxActivity::nativeRelease(
+    RexxObject *result )               /* potential return value            */
+/***************************************************************/
+/* Function:  Release kernel access, providing locking on      */
+/*            the return value, if any                         */
+/***************************************************************/
+{
+  RexxNativeActivation *activation;    /* current activation                */
+
+  if (result != OREF_NULL)             /* only save real references!        */
+  {
+      activation = (RexxNativeActivation *)ActivityManager::currentActivity->current();
+      result = activation->saveObject(result);
+  }
+  ActivityManager::currentActivity->releaseAccess(); /* release the kernel lock           */
+  return result;                       /* return the result object          */
+}
+
 
 REXXOBJECT REXXENTRY RexxDispatch (
   REXXOBJECT argList)                  /* ArgLIst array.                    */
@@ -3842,12 +2866,6 @@ REXXOBJECT REXXENTRY RexxDispatch (
   RexxObject *result;                  /* returned result object            */
 
   MTXRQ(kernel_semaphore);             /* get the kernel semophore          */
-                                       /* have more pools been added since  */
-                                       /* we left the kernel ?              */
-  if (GlobalCurrentPool != ProcessCurrentPool)
-                                       /* yes, get access to them.          */
-    memoryObject.accessPools(ProcessCurrentPool);
-
 
   receiver = ((RexxArray *)argList)->get(1);
   message  = (RexxString *)((RexxArray *)argList)->get(2);

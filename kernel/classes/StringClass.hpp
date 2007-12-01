@@ -112,10 +112,10 @@ class RexxStringClass : public RexxClass {
    RexxString  *primitiveMakeString();
    void         copyIntoTail(RexxCompoundTail *buffer);
    RexxString  *stringValue();
-   BOOL         truthValue(LONG);
+   bool         truthValue(int);
 
-   BOOL        isEqual(RexxObject *);
-   BOOL        primitiveIsEqual(RexxObject *);
+   bool        isEqual(RexxObject *);
+   bool        primitiveIsEqual(RexxObject *);
    bool        primitiveCaselessIsEqual(RexxObject *);
    long        strictComp(RexxObject *);
    long        comp(RexxObject *);

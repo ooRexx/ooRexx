@@ -51,6 +51,7 @@
 #include "RexxVariable.hpp"
 #include "StemClass.hpp"
 #include "SupplierClass.hpp"
+#include "ProtectedObject.hpp"
 #include <limits.h>
 
 /* a pair of static variables used by the stem sort function. */
@@ -93,9 +94,8 @@ RexxObject *RexxStem::copy(void)
                                        /* make a copy of ourself (this also */
                                        /* copies the object variables       */
   newObj = (RexxStem *)this->RexxObject::copy();
-  save(newObj);                        // we need to protect this during the copy
+  ProtectedObject p(newObj);
   newObj->tails.copy(newObj, this);    /* have the tail table copy itself   */
-  discard_hold(newObj);
   return newObj;                       /* return the new object             */
 }
 
@@ -990,7 +990,6 @@ BOOL RexxStem::sort(RexxString *prefix, int order, int type, size_t firstElement
 /*            string values.                                                  */
 /******************************************************************************/
 {
-/*    RexxCompoundTail stem_size((size_t)0);                   */
     RexxCompoundTail stem_size(prefix, (size_t)0);
     RexxCompoundElement *size_element = findCompoundVariable(&stem_size);
     if (size_element == OREF_NULL) {
@@ -1002,7 +1001,7 @@ BOOL RexxStem::sort(RexxString *prefix, int order, int type, size_t firstElement
     }
     /* get the integer value of this.  It must be a valid numeric */
     /* value. */
-    size_t count = size_value->longValue(DEFAULT_DIGITS);
+    size_t count = size_value->longValue(Numerics::DEFAULT_DIGITS);
     if (count == NO_LONG) {
         return FALSE;
     }
@@ -1024,23 +1023,20 @@ BOOL RexxStem::sort(RexxString *prefix, int order, int type, size_t firstElement
 
     /* get an array item and protect it.  We need to have space for both the variable anchors, and the variable values. */
     RexxArray *array = new_array(bounds * 2);
-    save(array);
+    ProtectedObject p(array);
 
     size_t i;
     size_t j;
     for (j = 1, i = firstElement; i <= last; i++, j++) {
-/*      RexxCompoundTail nextStem(i);                             */
         RexxCompoundTail nextStem(prefix, (size_t)i);
         RexxCompoundElement *next_element = findCompoundVariable(&nextStem);
 
         if (next_element == OREF_NULL) {
-            discard(array);
             return FALSE;
         }
 
         RexxObject *nextValue = next_element->getVariableValue();
         if (nextValue == OREF_NULL) {
-            discard(array);
             return FALSE;
         }
         /* force this to a string value. */
@@ -1092,6 +1088,5 @@ BOOL RexxStem::sort(RexxString *prefix, int order, int type, size_t firstElement
         element->set(v);
     }
     /* make sure we discard the array before returning */
-    discard(array);
     return TRUE;
 }

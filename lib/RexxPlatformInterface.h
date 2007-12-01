@@ -149,7 +149,7 @@ RexxObject * SysCommand(RexxActivation *, RexxActivity *, RexxString *, RexxStri
 
 #ifndef SysExitHandler
                                        /* invoke an exit                    */
-BOOL SysExitHandler(RexxActivity *, RexxActivation *, RexxString *, LONG, LONG, PVOID, BOOL);
+bool SysExitHandler(RexxActivity *, RexxActivation *, RexxString *, int, int, void *, bool);
 #endif
 
 #ifndef SysThreadYield
@@ -244,7 +244,7 @@ char *SysGetTempFileName(void);
 #endif
 
 #ifndef SysLoadImage
-void SysLoadImage(char **, long *);    /* load the image file               */
+void SysLoadImage(char **, size_t *);    /* load the image file               */
 #endif
 
 #ifndef SysTerminateThread

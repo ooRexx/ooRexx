@@ -67,6 +67,7 @@
 #include "StringClass.hpp"
 #include "RexxActivity.hpp"
 #include "RexxNativeAPI.h"                           /* Lot's of useful REXX macros    */
+#include "ActivityManager.hpp"
 
 #include SYSREXXSAA                         /* Include REXX header            */
 #include "SystemCommands.h"
@@ -121,14 +122,14 @@ void scan_cmd(const char *parm_cmd, char **args);
 /*                                                                            */
 /* Notes:      Inovkes a system exit routine.                                 */
 /******************************************************************************/
-BOOL SysExitHandler(
+bool SysExitHandler(
   RexxActivity     * activity,         /* activity working under            */
   RexxActivation   * activation,       /* activation working under          */
   RexxString       * exitname,         /* name of the exit handler          */
-  long             function,           /* major function                    */
-  long             subfunction,        /* minor exit function               */
-  PVOID            exitbuffer,         /* exit specific arguments           */
-  BOOL             enable )            /* enable variable pool              */
+  int              function,           /* major function                    */
+  int              subfunction,        /* minor exit function               */
+  void *           exitbuffer,         /* exit specific arguments           */
+  bool             enable )            /* enable variable pool              */
 {
   int   rc;                            /* exit return code                  */
   const char *handler_name;            /* ASCII-Z handler name              */
@@ -244,11 +245,11 @@ RexxObject * SysCommand(
 
       shell_cmd = command->getStringData();
 
-      ReleaseKernelAccess(activity);                   /* unlock the kernel */
+      activity->releaseAccess();                       /* unlock the kernel */
 
       rc = sys_command(shell_cmd, local_env_type);     /* issue the command */
 
-      RequestKernelAccess(activity);           /* reacquire the kernel lock */
+      activity->requestAccess();               /* reacquire the kernel lock */
 
       result = new_integer(rc);              /* get the command return code */
 

@@ -46,6 +46,7 @@
 #include "RexxCore.h"
 #include "ArrayClass.hpp"
 #include "Clause.hpp"
+#include "ProtectedObject.hpp"
 
 #define INITIAL_SIZE  50               /* initial size of the token cache   */
 #define EXTEND_SIZE   25               /* size to extend when table fills   */
@@ -161,9 +162,8 @@ RexxToken *RexxClause::newToken(
                                        /* allocate a larger array  */
                                        /* first a bulk array of tokens      */
     RexxArray *newTokens = new_arrayOfObject(sizeof(RexxToken), EXTEND_SIZE, T_token);
-    save(newTokens);                   /* the join operation may trigger a GC, so protect it */
+    ProtectedObject p(newTokens);
     RexxArray *newarray = (RexxArray *)this->tokens->join(newTokens);
-    discard(newTokens);                /* we're finished with the array part */
     this->size += EXTEND_SIZE;         /* bump the cache size               */
                                        /* replace the old array             */
     OrefSet(this, this->tokens, newarray);

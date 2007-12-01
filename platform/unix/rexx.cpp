@@ -86,7 +86,6 @@ BOOL   APIENTRY RexxInitialize (void);
 }
 #endif
 extern BOOL RexxStartedByApplication;  /* Global inducator                  */
-extern BOOL ProcessRestoreImage;
 extern BOOL ProcessSaveImage;
 extern HEV  RexxTerminated;            /* Termination complete semaphore.   */
                                        /* semaphore type changed from HEV to OSEM */
@@ -116,7 +115,6 @@ int main (int argc, char **argv)
     if (program_name == NULL && (*(cp=*(argv+i)) == '-'))
       switch (*++cp) {
         case 'i': case 'I':            /* image build                       */
-          ProcessRestoreImage = FALSE; /* hit the startup flags             */
           ProcessSaveImage = TRUE;     /* say this is a save image          */
           break;
 

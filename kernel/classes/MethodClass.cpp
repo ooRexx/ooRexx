@@ -55,9 +55,8 @@
 #include "MethodClass.hpp"
 #include "SourceFile.hpp"
 #include "DirectoryClass.hpp"
+#include "ProtectedObject.hpp"
 #include <ctype.h>
-
-extern PCPPM ExportedMethods[];        /* table of exported methods         */
 
 RexxMethod::RexxMethod(
     size_t method,                     /* method table index                */
@@ -112,7 +111,7 @@ void RexxMethod::liveGeneral()
   if (memoryObject.restoringImage()) { /* restoring the image?              */
     this->setInternal();               /* mark as an image method           */
                                        /* reset the method entry point      */
-    this->cppEntry = ExportedMethods[this->getMethodIndex()];
+    this->cppEntry = RexxMemory::exportedMethods[this->getMethodIndex()];
   }
 }
 
@@ -140,7 +139,7 @@ RexxObject * RexxMethod::unflatten(RexxEnvelope *envelope)
                                        /* if not then we haven't unflattened*/
   if (this->code == OREF_NULL)         /* is this a kernel method?          */
                                        /* reset the method entry point      */
-    this->cppEntry = ExportedMethods[this->getMethodIndex()];
+    this->cppEntry = RexxMemory::exportedMethods[this->getMethodIndex()];
   return (RexxObject *)this;           /* return ourself.                   */
 }
 
@@ -160,7 +159,6 @@ RexxObject *RexxMethod::run(
   RexxActivation *newacta;             /* newly created activation          */
   RexxNativeActivation *newNActa;      /* newly created Native activation   */
   PCPPM methodEntry;                   /* kernel method entry point         */
-  RexxActivation * Parent;
 
   if (this->code == OREF_NULL) {       /* directly to a kernel method?      */
     methodEntry = this->cppEntry;      /* get the entry point               */
@@ -229,25 +227,19 @@ RexxObject *RexxMethod::run(
   }
   else if (this->isRexxMethod()) {     /* written in REXX?                  */
 
-    newacta = TheActivityClass->newActivation(receiver, this, activity, msgname, (RexxActivation *)TheNilObject, METHODCALL);
+    newacta = ActivityManager::newActivation(receiver, this, activity, msgname, (RexxActivation *)TheNilObject, METHODCALL);
                                        /* add to the activity stack         */
 
     activity->push(newacta);
-
-    /* moved before new argarray because otherwise argarray might be collected
-       while dbg exit is processed (because of SendMessage in workbench)
-       Another possibility would be to save and later discard argarray */
-    Parent = newacta->sender;
-    Parent->dbgEnterSubroutine();
-    newacta->dbgPrepareMethod(Parent);
-
                                        /* run the method and return result  */
     result = newacta->run(argPtr, count, OREF_NULL);
-    if (Parent) Parent->dbgLeaveSubroutine();
-    newacta->dbgPassTrace2Parent(Parent);
-    CurrentActivity->yield(NULL);    /* yield control now */ /* NULL instead of result */
+    ActivityManager::currentActivity->yield(NULL);    /* yield control now */ /* NULL instead of result */
       /* yield stores the argument but result is already saved in run so we don't need to save again */
-    if (result != OREF_NULL) discard(result);
+    // TODO:  replace this with ProtectedObject usage
+    if (result != OREF_NULL)
+    {
+        discardObject(result);
+    }
     return result;                     /* and return it                     */
   }
   else {                               /* native activation                 */
@@ -274,14 +266,12 @@ RexxObject *RexxMethod::call(
 {
   RexxActivation *newacta;             /* newly created activation          */
   RexxObject * returnObject;
-  RexxActivation * Parent;
-  static int rnd = 0;
+  ProtectedObject p(this);
 
-  CurrentActivity->stackSpace();       /* have enough stack space?          */
+  ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
   if (this->isRexxMethod()) {          /* this written in REXX?             */
-    hold(this);                        /* keep it around                    */
                                        /* add to the activity stack         */
-    newacta = TheActivityClass->newActivation(receiver, this, activity, msgname, (RexxActivation *)TheNilObject, context);
+    newacta = ActivityManager::newActivation(receiver, this, activity, msgname, (RexxActivation *)TheNilObject, context);
 
     activity->push(newacta);
 
@@ -293,17 +283,12 @@ RexxObject *RexxMethod::call(
                                        /* set it also                       */
       newacta->setDefaultAddress(environment);
 
-    Parent = newacta->sender;
-    Parent->dbgEnterSubroutine();
-    newacta->dbgPrepareMethod(Parent);
     // the random seed is copied from the calling activity, this led
     // to reproducable random sequences even though no specific seed was given!
     // see feat. 900 for example program.
-    newacta->random_seed += (++rnd);
+    newacta->adjustRandomSeed();
                 /* run the method and return result  */
     returnObject = newacta->run(argPtr, argcount, OREF_NULL);
-    if (Parent) Parent->dbgLeaveSubroutine();
-    newacta->dbgPassTrace2Parent(Parent);
     return returnObject;
 
   }
@@ -443,18 +428,13 @@ RexxSmartBuffer *RexxMethod::saveMethod()
 /******************************************************************************/
 {
   RexxEnvelope *envelope;              /* envelope for flattening           */
-  RexxSmartBuffer   *envelopeBuffer;   /* enclosing buffer                  */
-
                                        /* Get new envelope object           */
   envelope = new RexxEnvelope;
-  save(envelope);
+  ProtectedObject p(envelope);
                                        /* now pack up the envelope for      */
                                        /* saving.                           */
   envelope->pack(this);
-                                       /* pull out the buffer               */
-  envelopeBuffer = envelope->getBuffer();
-  discard_hold(envelope);              /* release memory lock on envelope   */
-  return envelopeBuffer;               /* return the buffer                 */
+  return envelope->getBuffer();        /* return the buffer                 */
 }
 
 void *RexxMethod::operator new (size_t size)
@@ -525,15 +505,13 @@ RexxMethod *RexxMethodClass::newRexxCode(
       reportException(Error_Incorrect_method_noarray, position);
                                        /*  element are strings.             */
                                        /* Make a source array safe.         */
-    save(newSourceArray);
+    ProtectedObject p(newSourceArray);
                                        /* Make sure all elements in array   */
     for (counter = 1; counter <= newSourceArray->size(); counter++) {
                                        /* Get element as string object      */
       sourceString = newSourceArray ->get(counter)->makeString();
                                        /* Did it convert?                   */
       if (sourceString == (RexxString *)TheNilObject) {
-                                       /* nope, release source array.       */
-        discard(newSourceArray);
                                        /* and report the error.             */
         reportException(Error_Incorrect_method_nostring_inarray, IntegerTwo);
       }
@@ -542,12 +520,12 @@ RexxMethod *RexxMethodClass::newRexxCode(
         newSourceArray ->put(sourceString, counter);
       }
     }
-    discard_hold(newSourceArray);      /* release newSOurce obj.            */
   }
                                        /* create a source object            */
   newSource = new RexxSource (pgmname, newSourceArray);
+
+  ProtectedObject p(newSource);
                                        /* now complete method creation      */
-  save(newSource);                     /* needed because newRexxMethod calls method() which discards this */
 //  return this->newRexxMethod(newSource, OREF_NULL);
   if (option != OREF_NULL) {
     if (isOfClass(Method, option)) {
@@ -570,8 +548,8 @@ RexxMethod *RexxMethodClass::newRexxCode(
   else if (option == NULL) {
     result = this->newRexxMethod(newSource, OREF_NULL);
     // new default: insert program scope into method object
-    result->setLocalRoutines(CurrentActivity->currentActivation->getSource()->getLocalRoutines());
-    result->setPublicRoutines(CurrentActivity->currentActivation->getSource()->getPublicRoutines());
+    result->setLocalRoutines(ActivityManager::currentActivity->getCurrentActivation()->getSource()->getLocalRoutines());
+    result->setPublicRoutines(ActivityManager::currentActivity->getCurrentActivation()->getSource()->getPublicRoutines());
   }
 
   return result;
@@ -603,7 +581,7 @@ RexxMethod *RexxMethodClass::newRexx(
     process_new_args(init_args, initCount, &init_args, &initCount, 1, (RexxObject **)&option, NULL);
                                        /* go create a method                */
   newMethod = this->newRexxCode(nameString, source, IntegerTwo, option);
-  save(newMethod);
+  ProtectedObject p(newMethod);
                                        /* Give new object its behaviour     */
   newMethod->setBehaviour(this->getInstanceBehaviour());
    if (this->hasUninitDefined()) {        /* does object have an UNINT method  */
@@ -611,7 +589,6 @@ RexxMethod *RexxMethodClass::newRexx(
    }
                                        /* now send an INIT message          */
   newMethod->sendMessage(OREF_INIT, init_args, initCount);
-  discard_hold(newMethod);
   return newMethod;                    /* return the new method             */
 }
 
@@ -628,11 +605,10 @@ RexxMethod *RexxMethodClass::newFileRexx(
   filename = REQUIRED_STRING(filename, ARG_ONE);
                                        /* create a source object            */
   source = ((RexxSource *)TheNilObject)->classNewFile(filename);
-  save(source);
+  ProtectedObject p(source);
                                        /* finish up processing of this      */
   RexxMethod * newMethod = this->newRexxMethod(source, (RexxClass *)TheNilObject);
-  save(newMethod);
-  discard_hold(source);
+  ProtectedObject p2(newMethod);
                                        /* Give new object its behaviour     */
   newMethod->setBehaviour(this->getInstanceBehaviour());
    if (this->hasUninitDefined()) {     /* does object have an UNINT method  */
@@ -640,7 +616,6 @@ RexxMethod *RexxMethodClass::newFileRexx(
    }
                                        /* now send an INIT message          */
   newMethod->sendMessage(OREF_INIT);
-  discard_hold(newMethod);
   return newMethod;
 }
 
@@ -661,11 +636,9 @@ RexxMethod *RexxMethodClass::newRexxBuffer(
                                        /* create a source object            */
   newSource = (RexxSource *)((RexxSource *)TheNilObject)->classNewBuffered(pgmname, source);
   // we need to protect this source object until parsing is complete
-  save(newSource);
+  ProtectedObject p(newSource);
                                        /* now complete method creation      */
   RexxMethod *newMethod = this->newRexxMethod(newSource, scope);
-  // end of the protected section
-  discard_hold(newSource);
   return newMethod;
 }
 
@@ -721,10 +694,9 @@ RexxMethod *RexxMethodClass::restore(
 
                                        /* Get new envelope object           */
   envelope  = new_envelope();
-  save(envelope);
+  ProtectedObject p(envelope);
                                        /* now puff up the method object     */
   envelope->puff(buffer, startPointer);
-  discard_hold(envelope);              /* release the envelope now          */
                                        /* The receiver object is an envelope*/
                                        /* whose receiver is the actual      */
                                        /* method object we're restoring     */
@@ -741,10 +713,8 @@ RexxMethod *RexxMethodClass::newFile(
 
                                        /* create a source object            */
   source = ((RexxSource *)TheNilObject)->classNewFile(filename);
-  save(source);
+  ProtectedObject p(source);
                                        /* finish up processing of this      */
-  RexxMethod * newMethod = this->newRexxMethod(source, (RexxClass *)TheNilObject);
-  discard_hold(source);
-  return newMethod;
+  return this->newRexxMethod(source, (RexxClass *)TheNilObject);
 }
 

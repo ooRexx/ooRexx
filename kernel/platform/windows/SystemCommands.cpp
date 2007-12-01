@@ -61,6 +61,8 @@
 #include "StringClass.hpp"
 #include "RexxActivity.hpp"
 #include "RexxNativeAPI.h"             /* Lot's of useful REXX macros    */
+#include "ActivityManager.hpp"
+#include "ProtectedObject.hpp"
 
 #include SYSREXXSAA                    /* Include REXX header            */
 
@@ -101,14 +103,14 @@ LONG sysCommandNT(const char *cmd, RexxString ** error_failure, BOOL direct);
 /*                                                                            */
 /* Notes:      Inovkes a system exit routine.                                 */
 /******************************************************************************/
-BOOL SysExitHandler(
+bool SysExitHandler(
   RexxActivity     * activity,         /* activity working under              */
   RexxActivation   * activation,       /* activation working under            */
   RexxString       * exitname,         /* name of the exit handler            */
-  long  function,                      /* major function                      */
-  long  subfunction,                   /* minor exit function                 */
-  PVOID exitbuffer,                    /* exit specific arguments             */
-  BOOL  enable )                       /* enable variable pool                */
+  int   function,                      /* major function                      */
+  int   subfunction,                   /* minor exit function                 */
+  void *exitbuffer,                    /* exit specific arguments             */
+  bool  enable )                       /* enable variable pool                */
 {
   int   rc;                            /* exit return code                    */
   const char *handler_name;            /* ASCII-Z handler name                */
@@ -176,7 +178,6 @@ RexxObject * SysCommand(
   unsigned short flags = 0;            /* Subcom error flags                  */
   short    sbrc  = 0;                  /* Subcom return code                  */
   RXSTRING retstr;                     /* Subcom result string                */
-  RexxObject * result;                 /* Result array                        */
                                        /* default return code buffer          */
   char     default_return_buffer[DEFRXSTRING];
 
@@ -200,23 +201,20 @@ RexxObject * SysCommand(
 
 /* END CRITICAL window here -->>  kernel calls now allowed again              */
 
+  ProtectedObject result;
+
   /****************************************************************************/
   /* If subcom isn't registered and it happens to be the current system cmd   */
   /* handler, try passing it on to the system to handle.                      */
   /****************************************************************************/
   if (rc == RXSUBCOM_NOTREG) {
     if ((stricmp((char *)current_address,SYSENV))==0) {
-      ReleaseKernelAccess(activity);   /* unlock the kernel                   */
+      activity->releaseAccess();   ;   /* unlock the kernel                   */
                                        /* issue the command                   */
       rc = sys_command(command->getStringData(), error_failure);
-      RequestKernelAccess(activity);   /* reacquire the kernel lock           */
+      activity->requestAccess();       /* reacquire the kernel lock           */
       result = new_integer(rc);        /* get the command return code         */
 
-      /* CMD.EXE does not have a special 'not found' error as on OS/2 */
-//      if (rc == UNKNOWN_COMMAND)       /* is this unknown command?            */
-//                                       /*   send failure condition back       */
-//        *error_failure = OREF_FAILURENAME;
-//     else
      if (rc != 0)                      /* command error?                      */
                                        /*   send error condition back         */
         *error_failure = OREF_ERRORNAME;
@@ -231,17 +229,16 @@ RexxObject * SysCommand(
   /*************************************************************************  */
   /* Put rc from subcom handler into result array                             */
   /*************************************************************************  */
+
     if (sbrc != 0)                     /* have a numeric return code?         */
     {
       result = new_integer(sbrc);      /* just use the binary return code     */
-      hold(result);
     }
     else if (!RXNULLSTRING(retstr)) {  /* we have something in retstr?        */
                                        /* make into a return string           */
       result = new_string(retstr.strptr, retstr.strlength);
-      hold(result);
                                        /* try to get the numeric value also */
-      sbrc = (short)result->longValue(NO_LONG);
+      sbrc = (short)((RexxObject *)result)->longValue(NO_LONG);
                                        /* user give us a new buffer?          */
       if (retstr.strptr != default_return_buffer)
                                        /* free it                             */
@@ -276,7 +273,7 @@ RexxObject * SysCommand(
     *error_failure = OREF_FAILURENAME; /*   send failure condition back     */
     result = new_integer(rc);          /* just use the binary return code   */
   }
-  return result;                       /* Return result value               */
+  return (RexxObject *)result;         /* Return result value               */
 }
 
 

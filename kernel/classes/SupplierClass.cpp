@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                SupplierClass.c        */
+/* REXX Kernel                                         SupplierClass.c        */
 /*                                                                            */
 /* Primitive Supplier Class                                                   */
 /*                                                                            */
@@ -46,6 +46,7 @@
 #include "IntegerClass.hpp"
 #include "ArrayClass.hpp"
 #include "SupplierClass.hpp"
+#include "ActivityManager.hpp"
 
 
 RexxSupplier::RexxSupplier(

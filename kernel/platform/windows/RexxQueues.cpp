@@ -53,6 +53,7 @@
 #include "StringClass.hpp"
 #include "RexxNativeAPI.h"                      /* Lot's of useful REXX macros       */
 #include "StreamNative.h"
+#include "ActivityManager.hpp"
 
 #include SYSREXXSAA                    /* Include REXX header               */
 #include "SubcommandAPI.h"             /* Get private REXXAPI API's         */
@@ -221,8 +222,8 @@ RexxMethod1(REXXOBJECT, function_queueExit,
 
   native_entry;                        /* synchronize access                */
                                        /* pick up current activation        */
-  activation = (RexxActivation *)CurrentActivity->currentAct();
+  activation = (RexxActivation *)ActivityManager::currentActivity->getCurrentActivation();
                                        /* call the exit                     */
-  CurrentActivity->sysExitMsqNam(activation, (RexxString **)&queue_name);
+  ActivityManager::currentActivity->sysExitMsqNam(activation, (RexxString **)&queue_name);
   return_oref(queue_name);             /* and just return the exit result   */
 }

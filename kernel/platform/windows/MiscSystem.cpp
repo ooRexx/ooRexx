@@ -50,67 +50,22 @@
 #include "malloc.h"
 #include "SystemVersion.h"
 #include <signal.h>
-#include "ActivityTable.hpp"
-
-extern int  ProcessNumActs;
-extern int  ProcessTerminating;
 
 /* special flag for the LPEX message loop problem */
 extern BOOL UseMessageLoop = TRUE;
 
 extern ULONG mustCompleteNest;         /* Global variable for MustComplete  */
-extern RexxActivity *CurrentActivity;  /* expose current activity object    */
-                                       /* default active settings           */
-extern ACTIVATION_SETTINGS *current_settings;
 extern "C" void activity_thread (RexxActivity *objp);
 
 
 unsigned int iClauseCounter=0;         // count of clauses
 unsigned int iTransClauseCounter=0;    // count of clauses in translator
 
-#ifdef HIGHTID
-extern ActivityTable *ProcessLocalActs;
-#else
-extern RexxArray *ProcessLocalActs;
-#endif
 extern "C" _declspec(dllimport) HANDLE ExceptionQueueSem;
 extern ULONG ExceptionHostProcessId;
 extern HANDLE ExceptionHostProcess;
 extern BOOL ExceptionConsole;
 static int SignalCount = 0;
-
-
-#ifdef TIMESLICE
-/*
- *  These functions can be used for timer based yielding
- *  Set a timer which will call RexxSetYield, which in turn
- *  eventually tells the kernel to yield at the next clause boudary
- *  Not used in windows because timer pops only get reflected
- *  during a yield.
- */
-extern int REXXENTRY RexxSetYield(PID procid, TID threadid);
-#endif //TIMESLICE
-
-RexxObject *SysProcessName( void )
-/******************************************************************************/
-/* Function:  Get a referenceable name for this process                       */
-/******************************************************************************/
-{
-  LONG pname;
-/*
-  RexxObject *result;
-
-  pname = GetCurrentProcessId();
-  result = new_integer(pname);
-  save(result);
-
-  return result;
-//  return new_integer(pname);
-*/
-  pname = GetCurrentProcessId();
-  return new_integer(pname);
-}
-
 
 RexxString *SysName( void )
 /******************************************************************************/
@@ -134,8 +89,6 @@ RexxString *SysName( void )
 
 void SysTermination(void)
 {
-    if (ProcessLocalActs != OREF_NULL)
-        delete ProcessLocalActs;
 }
 
 //void SysInitialize(void)
@@ -229,7 +182,7 @@ RexxString * SysGetCurrentQueue(void)
   RexxString * queue_name;             /* name of the queue object          */
 
                                        /* get the default queue             */
-  queue = (RexxString *)CurrentActivity->local->at(OREF_REXXQUEUE);
+  queue = (RexxString *)ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
 
   if (queue == OREF_NULL)              /* no queue?                         */
     queue_name = OREF_SESSION;         /* use the default name              */
@@ -331,11 +284,7 @@ BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
 /******************************************************************************/
 {
     /* set halt condition for all threads of this process */
-  int i;
-  RexxActivity   * activity;           /* associated activity               */
   char envp[65];
-                                       /* current running activation        */
-  RexxActivationBase * currentActivation;
 
   if ((dwCtrlType == CTRL_CLOSE_EVENT) || (dwCtrlType == CTRL_SHUTDOWN_EVENT)) return FALSE;  /* send to system */
 
@@ -368,17 +317,7 @@ BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
       if (SignalCount > 1) return FALSE;    /* send signal to system */
   }
 
-  for (i=ProcessLocalActs->first();ProcessLocalActs->available(i);i=ProcessLocalActs->next(i))
-  {
-     activity = (RexxActivity *)(ProcessLocalActs->value(i));
-
-     currentActivation = activity->currentAct();
-
-     if (currentActivation != (RexxActivationBase *)TheNilObject) {
-                                       /* Yes, issue the halt to it.        */
-          ((RexxActivation *)currentActivation)->halt(OREF_NULL);
-     }
-  }
+  ActivityManager::haltAllActivities();
   return TRUE;      /* ignore signal */
 }
 
@@ -465,12 +404,6 @@ void SysSetThreadPriority(long tid, HANDLE han, int prio)
     pri= THREAD_PRIORITY_ABOVE_NORMAL +1; /* the class is regular, but move    */
                                          /* to the head of the class          */
   }                                    /* medium priority                   */
-#ifdef NEWGUARD
-  else if (prio >= (MEDIUM_PRIORITY+10)) {
-    pri = THREAD_PRIORITY_NORMAL+1;    /* main activity,                     */
-                                       /* dead in the middle of it all      */
-  }
-#endif
   else if (prio >= MEDIUM_PRIORITY) {
     pri = THREAD_PRIORITY_NORMAL;      /* normal class,                     */
                                        /* dead in the middle of it all      */

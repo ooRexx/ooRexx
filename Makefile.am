@@ -185,7 +185,7 @@ platformHeaders = $(kernel_platform_unix_dir)/APIDefinitions.h \
                   $(kernel_platform_unix_dir)/SystemCommands.h \
                   $(kernel_platform_unix_dir)/SystemSemaphores.h \
                   $(kernel_platform_unix_dir)/ThreadSupport.hpp
-platformcommonHeaders = $(kernel_platform_common_dir)/ActivityTable.hpp
+platformcommonHeaders =
 runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/GlobalNames.h \
                  $(runtime_dir)/MemorySegment.hpp \
@@ -196,6 +196,8 @@ runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/RexxActivation.hpp \
                  $(runtime_dir)/RexxActivationStack.hpp \
                  $(runtime_dir)/RexxActivity.hpp \
+                 $(runtime_dir)/ActivityManager.hpp \
+                 $(runtime_dir)/ProtectedObject.hpp \
                  $(runtime_dir)/RexxBehaviour.hpp \
                  $(runtime_dir)/RexxBuffer.hpp \
                  $(runtime_dir)/RexxBuiltinFunctions.h \
@@ -421,7 +423,7 @@ parser_sources = $(parser_dir)/Clause.cpp \
                  $(parser_dir)/Scanner.cpp \
                  $(parser_dir)/SourceFile.cpp \
                  $(parser_dir)/Token.cpp
-kernel_platform_common_sources = $(kernel_platform_common_dir)/ActivityTable.cpp
+kernel_platform_common_sources =
 #                        SharedMemorySupport.cpp
 #                        SystemSemaphores.cpp
 platform_sources = $(kernel_platform_unix_dir)/ErrorMessages.cpp \
@@ -451,6 +453,7 @@ runtime_sources  = $(runtime_dir)/DeadObject.cpp \
                    $(runtime_dir)/RexxActivation.cpp \
                    $(runtime_dir)/RexxActivationStack.cpp \
                    $(runtime_dir)/RexxActivity.cpp \
+                   $(runtime_dir)/ActivityManager.cpp \
                    $(runtime_dir)/RexxBehaviour.cpp \
                    $(runtime_dir)/RexxBuffer.cpp \
                    $(runtime_dir)/RexxCode.cpp \

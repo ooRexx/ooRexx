@@ -44,6 +44,8 @@
 #ifndef Included_RexxInteger
 #define Included_RexxInteger
 
+#include "NumberStringClass.hpp"
+
 void integer_create (void);
 #define INTEGERCACHELOW  -10
 #define INTEGERCACHESIZE 100
@@ -69,21 +71,18 @@ class RexxInteger : public RexxObject {
   RexxInteger *hasMethod(RexxString *);
   RexxString  *primitiveMakeString();
   RexxString  *stringValue();
-  BOOL         truthValue(LONG);
+  bool         truthValue(int);
   bool         isInstanceOf(RexxClass *);
   RexxMethod   *instanceMethod(RexxString *);
   RexxSupplier *instanceMethods(RexxClass *);
 
-  BOOL        isEqual(RexxObject *);
+  bool        isEqual(RexxObject *);
   long        strictComp(RexxObject *);
   inline int  comp(RexxObject *other)
     {
-                                       /* current global settings           */
-      extern ACTIVATION_SETTINGS *current_settings;
-
       required_arg(other, ONE);            /* make sure this is really there    */
                                            /* able to compare here?             */
-      if (this->isSameType(other) && number_digits() == DEFAULT_DIGITS)
+      if (this->isSameType(other) && number_digits() == Numerics::DEFAULT_DIGITS)
                                            /* just return the difference        */
         return this->value - ((RexxInteger *)other)->value;
       else                                 /* do a numberstring compare         */

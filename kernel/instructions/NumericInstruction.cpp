@@ -82,8 +82,8 @@ void RexxInstructionNumeric::execute(
 {
   RexxObject  *result;                 /* expression evaluation result      */
   RexxString  *stringResult;           /* converted string                  */
-  int          setting;                /* binary form of the setting        */
-  int          tempVal;                /* temporary value for errors        */
+  wholenumber_t  setting;              /* binary form of the setting        */
+  wholenumber_t  tempVal;              /* temporary value for errors        */
 
   context->traceInstruction(this);     /* trace if necessary                */
                                        /* process the different types of    */
@@ -93,7 +93,7 @@ void RexxInstructionNumeric::execute(
                                        /* resetting to default digits?      */
       if (this->expression == OREF_NULL)
                                        /* just set it to the default        */
-        context->setDigits(DEFAULT_DIGITS);
+        context->setDigits(Numerics::DEFAULT_DIGITS);
       else {                           /* need to evaluate an expression    */
                                        /* get the expression value          */
         result = this->expression->evaluate(context, stack);
@@ -101,23 +101,23 @@ void RexxInstructionNumeric::execute(
                                        /* convert the value                 */
         setting = REQUEST_LONG(result, NO_LONG);
                                        /* bad value?                        */
-        if (setting == (int)NO_LONG || setting < 1)
+        if (setting == (wholenumber_t)NO_LONG || setting < 1)
                                        /* report an exception               */
           reportException(Error_Invalid_whole_number_digits, result);
                                        /* problem with the fuzz setting?    */
-        if (setting <= context->fuzz()) {
+        if (setting <= (wholenumber_t)context->fuzz()) {
           tempVal = context->fuzz();   /* get the value                     */
                                        /* this is an error                  */
           reportException(Error_Expression_result_digits, setting, tempVal);
         }
-        context->setDigits(setting);   /* now adjust the setting            */
+        context->setDigits((size_t)setting); /* now adjust the setting            */
       }
       break;
 
     case numeric_fuzz:                 /* NUMERIC FUZZ instruction          */
                                        /* resetting to default fuzz?        */
       if (this->expression == OREF_NULL)
-        context->setFuzz(DEFAULT_FUZZ);/* just set it to the default        */
+        context->setFuzz(Numerics::DEFAULT_FUZZ);/* just set it to the default        */
       else {                           /* need to evaluate an expression    */
                                        /* get the expression value          */
         result = this->expression->evaluate(context, stack);
@@ -125,11 +125,12 @@ void RexxInstructionNumeric::execute(
                                        /* convert the value                 */
         setting = REQUEST_LONG(result, NO_LONG);
                                        /* bad value?                        */
-        if (setting == (int)NO_LONG || setting < 0)
+        if (setting == (wholenumber_t)NO_LONG || setting < 0)
                                        /* report an exception               */
           reportException(Error_Invalid_whole_number_fuzz, result);
                                        /* problem with the digits setting?  */
-        if (setting >= context->digits()) {
+        if (setting >= (wholenumber_t)context->digits())
+        {
           tempVal = context->digits(); /* Get the value                     */
                                        /* and issue the error               */
           reportException(Error_Expression_result_digits, tempVal, setting);
@@ -142,7 +143,7 @@ void RexxInstructionNumeric::execute(
                                        /* non-VALUE form?                   */
       if (this->expression == OREF_NULL)
                                        /* just set it to the default        */
-        context->setForm(instructionFlags&numeric_engineering ? FORM_ENGINEERING : FORM_SCIENTIFIC);
+        context->setForm(instructionFlags&numeric_engineering ? Numerics::FORM_ENGINEERING : Numerics::FORM_SCIENTIFIC);
       else {                           /* need to evaluate an expression    */
                                        /* get the expression value          */
         result = this->expression->evaluate(context, stack);
@@ -153,11 +154,11 @@ void RexxInstructionNumeric::execute(
                                        /* Scientific form?                  */
         if (stringResult->strCompare(CHAR_SCIENTIFIC))
                                        /* set the proper form               */
-          context->setForm(FORM_SCIENTIFIC);
+          context->setForm(Numerics::FORM_SCIENTIFIC);
                                        /* Scientific form?                  */
         else if (stringResult->strCompare(CHAR_ENGINEERING))
                                        /* set the engineering form          */
-          context->setForm(FORM_ENGINEERING);
+          context->setForm(Numerics::FORM_ENGINEERING);
         else
                                        /* report an exception               */
           reportException(Error_Invalid_subkeyword_form, result);

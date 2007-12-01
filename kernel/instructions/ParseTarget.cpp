@@ -49,9 +49,6 @@
 #include "ParseTarget.hpp"
 #include "ParseInstruction.hpp"
 
-                                       /* current global settings           */
-extern ACTIVATION_SETTINGS *current_settings;
-
 void RexxTarget::init(
     RexxObject     *_string,            /* target string                     */
     RexxObject    **_arglist,           /* argument list                     */

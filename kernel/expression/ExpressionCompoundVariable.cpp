@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ExpressionCompoundVariable.c     */
+/* REXX Translator                           ExpressionCompoundVariable.c     */
 /*                                                                            */
 /* Primitive Translator Expression Parsing Compound Variable Reference Class  */
 /*                                                                            */
@@ -52,6 +52,7 @@
 #include "ExpressionCompoundVariable.hpp"
 #include "ExpressionVariable.hpp"
 #include "RexxVariable.hpp"
+#include "ProtectedObject.hpp"
 
 RexxCompoundVariable::RexxCompoundVariable(
     RexxString * _stemName,            /* stem retriever                    */
@@ -97,12 +98,12 @@ RexxObject * build(
   }
                                        /* extract the stem part             */
   stem = variable_name->extract(0, position + 1);
-  save(stem);                          /* lock the stem part                */
+  ProtectedObject p1(stem);
                                        /* processing to decompose the name  */
                                        /* into its component parts          */
 
   tails = new_queue();                 /* get a new list for the tails      */
-  save(tails);                         /* protect the stem name             */
+  ProtectedObject p2(tails);
   position++;                          /* step past previous period         */
   length--;                            /* adjust the length                 */
   if (direct == TRUE) {                /* direct access?                    */
@@ -138,8 +139,6 @@ RexxObject * build(
     if (variable_name->getChar(position - 1) == '.')
       tails->push(OREF_NULLSTRING);    /* add to the tail piece list        */
   }
-  discard_hold(stem);                  /* release the stem                  */
-  discard_hold(tails);                 /* and the tails                     */
                                        /* create and return a new compound  */
   return (RexxObject *)new (tails->getSize()) RexxCompoundVariable(stem, 0, tails, tails->getSize());
 }
@@ -347,7 +346,7 @@ void RexxCompoundVariable::setGuard(
 
                                        /* get the variable item             */
   variable = context->getLocalCompoundVariable(stemName, index, &tails[0], tailCount);
-  variable->inform(CurrentActivity);   /* mark the variable entry           */
+  variable->inform(ActivityManager::currentActivity);   /* mark the variable entry           */
 }
 
 void RexxCompoundVariable::clearGuard(
@@ -360,7 +359,7 @@ void RexxCompoundVariable::clearGuard(
 
                                        /* get the variable item             */
   variable = context->getLocalCompoundVariable(stemName, index, &tails[0], tailCount);
-  variable->uninform(CurrentActivity); /* mark the variable entry           */
+  variable->uninform(ActivityManager::currentActivity); /* mark the variable entry           */
 }
 
 void * RexxCompoundVariable::operator new(size_t size,

@@ -65,7 +65,6 @@ BOOL   APIENTRY RexxInitialize (void);
 
                                          /* Global inducator */
 extern  _declspec(dllimport) BOOL RexxStartedByApplication;
-extern  _declspec(dllimport) BOOL ProcessRestoreImage;
 extern  _declspec(dllimport) BOOL ProcessSaveImage;
 extern  _declspec(dllimport) HANDLE RexxTerminated;           /* Termination complete semaphore.   */
 
@@ -117,7 +116,6 @@ int __cdecl main(int argc, char *argv[])
     if ((*(cp=*(argv+i)) == '-' || *cp == '/'))
       switch (*++cp) {
         case 'i': case 'I':            /* image build                       */
-          ProcessRestoreImage = FALSE; /* hit the startup flags             */
           ProcessSaveImage = TRUE;     /* say this is a save image          */
           break;
 

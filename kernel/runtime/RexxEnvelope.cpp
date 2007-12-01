@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxEnvelope.c     */
+/* REXX Kernel                                             RexxEnvelope.c     */
 /*                                                                            */
 /* Primitive Envelope Class                                                   */
 /*                                                                            */
@@ -51,8 +51,6 @@
 #include "ArrayClass.hpp"
 #include "RexxEnvelope.hpp"
 #include "MethodClass.hpp"
-
-extern void *VFTArray[highest_T];      /* table of virtual function tables  */
 
 RexxEnvelope::RexxEnvelope()
 /******************************************************************************/
@@ -318,7 +316,7 @@ void RexxEnvelope::puff(
         }
         /* Force fix-up of                   */
         /*VirtualFunctionTable,              */
-        ((RexxObject *)bufferPointer)->setVirtualFunctions(VFTArray[primitiveTypeNum]);
+        ((RexxObject *)bufferPointer)->setVirtualFunctions(RexxMemory::VFTArray[primitiveTypeNum]);
         puffObject->setObjectLive(memoryObject.markWord);  /* Then Mark this object as live.    */
                                            /* Mark other referenced objs        */
                                            /* Note that this flavor of          */

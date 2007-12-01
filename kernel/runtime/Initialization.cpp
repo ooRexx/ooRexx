@@ -36,9 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  okinit.c      */
+/* REXX Kernel                                                                */
 /*                                                                            */
-/* Initialization and termination                                             */
+/* Initialization of the virtual function table                               */
 /*                                                                            */
 /******************************************************************************/
 #include <string.h>
@@ -149,74 +149,13 @@
  #include "OtherwiseInstruction.hpp"
  #include "SelectInstruction.hpp"
 
-/******************************************************************************/
-/* Initialisation                                                             */
-/******************************************************************************/
-void         REXX_terminate (void);
-void         restoreStrings(void);     /* restore "name" strings            */
-void         kernelBuildVirtualFunctionTableArray(void);
 
-RexxString * kernel_name (
-    const char *value)                 /* ASCII-Z string value              */
-/******************************************************************************/
-/* Function:  Create a common string value during image build and save        */
-/******************************************************************************/
-{
-  RexxString * stringValue;            /* string value                      */
-  RexxString * result;                 /* result value                      */
-
-  stringValue = new_string(value);    /* get a string object               */
-  if (TheGlobalStrings == OREF_NULL)   /* no longer collecting strings?     */
-    return stringValue;                /* just return the string            */
-                                       /* check the global table first      */
-  result = (RexxString *)TheGlobalStrings->at(stringValue);
-  if (result == OREF_NULL) {           /* not in the table                  */
-                                       /* add this to the table             */
-    TheGlobalStrings->put((RexxObject *)stringValue, stringValue);
-    result = stringValue;              /* also the final value              */
-  }
-  return result;                       /* return the string                 */
-}
-
-void kernelRestore(void)
-/******************************************************************************/
-/* Function:  Restore the kernel state from a saved image.                    */
-/******************************************************************************/
-{
-                                       /* go build the VFT Array            */
-  kernelBuildVirtualFunctionTableArray();
-  memoryRestore();                     /* go restore the save image         */
-
-                                       /* If first one through, generate all*/
-  IntegerZero   = new_integer(0L);     /*  static integers we want to use...*/
-  IntegerOne    = new_integer(1L);     /* This will allow us to use static  */
-  IntegerTwo    = new_integer(2L);     /* integers instead of having to do a*/
-  IntegerThree  = new_integer(3L);     /* new_integer evrytime....          */
-  IntegerFour   = new_integer(4L);
-  IntegerFive   = new_integer(5L);
-  IntegerSix    = new_integer(6L);
-  IntegerSeven  = new_integer(7L);
-  IntegerEight  = new_integer(8L);
-  IntegerNine   = new_integer(9L);
-  IntegerMinusOne = new_integer(-1);
-  restoreStrings();                    /* restore the global strings        */
-  RexxNativeCode::restoreClass();      /* fix up native methods             */
-  RexxActivity::restoreClass();        /* do activity restores              */
-  memoryObject.enableOrefChecks();     /* enable setCheckOrefs...           */
-}
-
-void kernelNewProcess(void)
-/******************************************************************************/
-/* Function:  Restore the kernel state from a saved image.                    */
-/******************************************************************************/
-{
-  memoryNewProcess();                  /* go restore the save image         */
-
-}
 #undef CLASS_EXTERNAL
 #undef CLASS_INTERNAL
 #undef CLASS_EXTERNAL_STRING
 
+
+void *RexxMemory::VFTArray[highest_T + 1] = {NULL};   //wge NULL
                                        /* Following macros will generate    */
                                        /* code to call each class construct */
                                        /* so that the VFT info gets filled  */
@@ -231,7 +170,7 @@ void kernelNewProcess(void)
 #define CLASS_INTERNAL(b,c)         CLASS_EXTERNAL(b,c)
 #define CLASS_EXTERNAL_STRING(b,c)  CLASS_EXTERNAL(b,c)
 
-void kernelBuildVirtualFunctionTableArray(void)
+void RexxMemory::buildVFTArray()
 /******************************************************************************/
 /* Function:  This routine will build an array of the virtualFunctions        */
 /*            There will be one for each Class.                               */

@@ -78,6 +78,8 @@
 #include SYSREXXSAA                         /* Include REXX header            */
 #include "SubcommandAPI.h"                  /* Get private REXXAPI API's      */
 #include "RexxAPIManager.h"
+#include "ProtectedObject.hpp"
+
 #define DEFEXT "REX"                        /* Default OS/2 REXX program ext  */
 #define DIRLEN        256                   /* length of a directory          */
 
@@ -438,7 +440,7 @@ BOOL MacroSpaceSearch(
                                        /* run as a call                     */
     *result = Routine->call(activity, (RexxObject *)activation, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL);
     /* merge (class) definitions from macro with current settings */
-    activation->settings.parent_code->mergeRequired(Routine->getSource());
+    activation->getSource()->mergeRequired(Routine->getSource());
     return TRUE;                       /* return success we found it flag   */
   }
   return FALSE;                        /* nope, nothing to find here        */
@@ -572,7 +574,7 @@ BOOL RegExternalFunction(
       if (funcresult.strptr) {       /* If we have a result, return it    */
                                        /* make a string result              */
         *result = new_string(funcresult.strptr, funcresult.strlength);
-        save(*result);
+        ProtectedObject p(*result);
                                        /* user give us a new buffer?        */
         if (funcresult.strptr != default_return_buffer )
                                        /* free it                           */

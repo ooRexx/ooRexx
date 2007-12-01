@@ -181,7 +181,7 @@ void RexxInstructionCall::execute(
   RexxString       *_name;              /* resolved function name            */
   RexxDirectory    *labels;            /* labels table                      */
 
-  context->activity->stackSpace();     /* check if enough stack is there    */
+  ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
   context->traceInstruction(this);     /* trace if necessary                */
   if (this->condition != OREF_NULL) {  /* is this the ON/OFF form?          */
     if (instructionFlags&call_on_off)           /* ON form?                          */
@@ -260,7 +260,8 @@ void RexxInstructionCall::execute(
                                        /* message return value              */
       context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, result);
       context->traceResult(result);    /* trace if necessary                */
-      if (type != call_builtin) discard(result);
+      // TODO:  Need to fix this up to use protected object
+      if (type != call_builtin) discardObject(result);
     }
     else                               /* drop the variable RESULT          */
       context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
@@ -283,18 +284,20 @@ void RexxInstructionCall::trap(
     case call_internal:                /* need to process internal routine  */
                                        /* go process the internal call      */
       result = context->internalCallTrap(this->target, conditionObj);
-      if (result != OREF_NULL) discard(result);
+      // TODO:  Need to fix this up to use protected object
+      if (result != OREF_NULL) discardObject(result);
       break;
 
     case call_builtin:                 /* builtin function call             */
                                        /* call the function                 */
-      (*(builtin_table[builtinIndex]))(context, 0, &context->stack);
+      (*(builtin_table[builtinIndex]))(context, 0, context->getStack());
       break;
 
     case call_external:                /* need to call externally           */
                                        /* go process the externnl call      */
-      result = context->externalCall((RexxString *)this->name, 0, &context->stack, OREF_ROUTINENAME);
-      if (result != OREF_NULL) discard(result);
+      result = context->externalCall((RexxString *)this->name, 0, context->getStack(), OREF_ROUTINENAME);
+      // TODO use protected object
+      if (result != OREF_NULL) discardObject(result);
       break;
   }
                                        /* restore the trap state            */

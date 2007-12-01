@@ -105,6 +105,8 @@
 #include "EndInstruction.hpp"
 #include "OtherwiseInstruction.hpp"
 #include "SelectInstruction.hpp"
+#include "ProtectedObject.hpp"
+
 
 RexxInstruction *RexxSource::addressNew()
 /****************************************************************************/
@@ -1165,11 +1167,9 @@ RexxInstruction *RexxSource::messageNew(
 /* Function:  Create a new MESSAGE instruction translator object            */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly create object               */
-
-  hold(_message);                      /* lock this temporarily             */
+  ProtectedObject p(_message);
                                        /* allocate a new object             */
-  newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount - 1) * sizeof(RexxObject *));
+  RexxObject *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount - 1) * sizeof(RexxObject *));
                                        /* Initialize this new method        */
   new ((void *)newObject) RexxInstructionMessage(_message);
   return (RexxInstruction *)newObject; /* done, return this                 */
@@ -1182,7 +1182,7 @@ RexxInstruction *RexxSource::messageAssignmentNew(
 /* Function:  Create a new MESSAGE assignment translator object             */
 /****************************************************************************/
 {
-  hold(_message);                       /* lock this temporarily             */
+    ProtectedObject p(_message);        // protect this
   _message->makeAssignment(this);       // convert into an assignment message
   // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
   RexxObject *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount) * sizeof(RexxObject *));
@@ -1206,7 +1206,7 @@ RexxInstruction *RexxSource::messageAssignmentNew(
  */
 RexxInstruction *RexxSource::messageAssignmentOpNew(RexxExpressionMessage *_message, RexxToken *operation, RexxObject *_expression)
 {
-  hold(_message);                       // lock this temporarily
+  ProtectedObject p(_message);        // protect this
   // make a copy of the message term for use in the expression
   RexxObject *retriever = _message->copy();
 

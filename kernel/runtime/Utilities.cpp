@@ -48,8 +48,10 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivity.hpp"
+#include "ActivityManager.hpp"
 #include "ArrayClass.hpp"
 #include "RexxNativeActivation.hpp"
+#include "ProtectedObject.hpp"
 
 void logic_error (const char *desc)
 /******************************************************************************/
@@ -190,23 +192,3 @@ const char *mempbrk(
   return NULL;                         /* return matched position           */
 }
 
-RexxObject *native_release(
-    RexxObject *result )               /* potential return value            */
-/***************************************************************/
-/* Function:  Release kernel access, providing locking on      */
-/*            the return value, if any                         */
-/***************************************************************/
-{
-  RexxNativeActivation *activation;    /* current activation                */
-
-  if (result != OREF_NULL) {           /* only save real references!        */
-                                       /* get the current activation        */
-    activation = (RexxNativeActivation *)CurrentActivity->current();
-                                       /* protect the result                */
-    save(result);                      /* protect from GC while saving!     */
-    result = activation->saveObject(result);
-    discard(result);
-  }
-  ReleaseKernelAccess(CurrentActivity);/* release the kernel lock           */
-  return result;                       /* return the result object          */
-}

@@ -50,8 +50,6 @@
 #include "StringClass.hpp"
 #include "RexxBuiltinFunctions.h"                     /* Gneral purpose BIF Header file    */
 
-extern ACTIVATION_SETTINGS *current_settings;
-
 /*********************************************************************/
 /*                                                                   */
 /*  Name:           SkipBlanks                                       */

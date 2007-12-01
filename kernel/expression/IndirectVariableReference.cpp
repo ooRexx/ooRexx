@@ -50,8 +50,6 @@
 #include "RexxVariableDictionary.hpp"
 #include "IndirectVariableReference.hpp"
 
-extern RexxActivity *CurrentActivity;  /* expose current activity object    */
-
 RexxVariableReference::RexxVariableReference(
      RexxVariableBase *variable)       /* variable retriever for reference  */
 /******************************************************************************/
@@ -155,7 +153,7 @@ void RexxVariableReference::drop(
   RexxVariableBase    *variable;       /* current variable                  */
   RexxExpressionStack *stack;          /* evaluation stack                  */
 
-  stack = &context->stack;             /* get the stack from the context    */
+  stack = context->getStack();         /* get the stack from the context    */
                                        /* evaluate into a variable list     */
   name_list = this->list(context, stack);
                                        /* get the first list item           */

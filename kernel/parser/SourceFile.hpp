@@ -92,7 +92,7 @@ class RexxSource : public RexxInternalObject {
   void        initFile();
   bool        reconnect();
   void        setReconnect();
-  void        setBufferedSource(RexxBuffer *newSource) { this->initBuffered((RexxObject *)newSource); discard(this);}
+  void        setBufferedSource(RexxBuffer *newSource) { this->initBuffered((RexxObject *)newSource); }
   void        interpretLine(size_t);
   void        comment();
   void        needVariable(RexxToken *);

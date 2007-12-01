@@ -56,7 +56,6 @@ BOOL   APIENTRY RexxInitialize (void);
 
                                          /* Global inducator */
 extern  _declspec(dllimport) BOOL RexxStartedByApplication;
-extern  _declspec(dllimport) BOOL ProcessRestoreImage;
 extern  _declspec(dllimport) HANDLE RexxTerminated;           /* Termination complete semaphore.   */
 
 //

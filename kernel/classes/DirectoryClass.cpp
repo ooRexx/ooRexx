@@ -48,6 +48,7 @@
 #include "ArrayClass.hpp"
 #include "MethodClass.hpp"
 #include "RexxActivation.hpp"
+#include "ProtectedObject.hpp"
 
 void RexxDirectory::live()
 /******************************************************************************/
@@ -168,7 +169,7 @@ RexxSupplier *RexxDirectory::supplier(void)
   HashLink   i;                        /* table index                       */
 
   result = new_table();                /* get a table for the supplier      */
-  save(result);                        /* protect this                      */
+  ProtectedObject p(result);
   hashTab = this->contents;            /* point to the contents             */
                                        /* now traverse the entire table     */
   for (i = hashTab->first(); hashTab->index(i) != OREF_NULL; i = hashTab->next(i)) {
@@ -187,11 +188,10 @@ RexxSupplier *RexxDirectory::supplier(void)
                                        /* get the method                    */
       RexxMethod *method = (RexxMethod *)methodTable->value(i);
                                        /* run the method                    */
-      RexxObject *v = method->run(CurrentActivity, this, name, 0, NULL);
+      RexxObject *v = method->run(ActivityManager::currentActivity, this, name, 0, NULL);
       result->put(v, name);            /* add to the table                  */
     }
   }
-  discard_hold(result);                /* unlock the result                 */
   return result->supplier();           /* convert this to a supplier        */
 }
 
@@ -227,7 +227,7 @@ RexxArray *RexxDirectory::allIndexes(void)
     // get a result array of the appropriate size
     wholenumber_t count = this->items();
     RexxArray *result = (RexxArray *)new_array(count);
-    save(result);
+    ProtectedObject p(result);
     arraysize_t out = 1;
     // we're working directly off of the contents.
     RexxHashTable *hashTab = this->contents;
@@ -248,7 +248,6 @@ RexxArray *RexxDirectory::allIndexes(void)
            result->put(name, out++);
         }
     }
-    discard_hold(result);
     return result;                       /* send back the array               */
 }
 
@@ -269,7 +268,7 @@ RexxArray *RexxDirectory::allItems()
   count = this->items();               /* get the array size                */
                                        /* get result array of correct size  */
   result = (RexxArray *)new_array(count);
-  save(result);                        /* protect this                      */
+  ProtectedObject p(result);
   i = 1;                               /* position in array                 */
   hashTab = this->contents;
                                        /* now traverse the entire table     */
@@ -289,11 +288,10 @@ RexxArray *RexxDirectory::allItems()
                                        /* need to extract method values     */
       RexxMethod *method = (RexxMethod *)methodTable->value(j);
                                        /* run the method                    */
-      RexxObject *v = method->run(CurrentActivity, this, name, 0, NULL);
+      RexxObject *v = method->run(ActivityManager::currentActivity, this, name, 0, NULL);
       result->put(v, i++);             /* add to the array                  */
     }
   }
-  discard_hold(result);                /* unlock the result                 */
   return result;                       /* send back the array               */
 }
 
@@ -542,14 +540,14 @@ RexxObject *RexxDirectory::at(
       method = (RexxMethod *)this->method_table->stringGet(_index);
       if (method != OREF_NULL)         /* have a method?                    */
                                        /* run the method                    */
-        return method->run(CurrentActivity, this, _index, 0, NULL);
+        return method->run(ActivityManager::currentActivity, this, _index, 0, NULL);
     }
                                        /* got an unknown method?            */
     if (this->unknown_method != OREF_NULL)
     {
         RexxObject *arg = _index;
                                        /* run it                            */
-        return this->unknown_method->run(CurrentActivity, this, OREF_UNKNOWN, 1, (RexxObject **)&arg);
+        return this->unknown_method->run(ActivityManager::currentActivity, this, OREF_UNKNOWN, 1, (RexxObject **)&arg);
     }
   }
   return result;                       /* return a result                   */
@@ -569,13 +567,13 @@ RexxObject *RexxDirectory::atRexx(
                                        /* get as a string parameter         */
   _index = REQUIRED_STRING(_index, ARG_ONE);
   // is this the .local object?
-  if ((RexxDirectory *)(CurrentActivity->local) == this &&
-      CurrentActivity->currentActivation->hasSecurityManager()) {
+  if ((RexxDirectory *)(ActivityManager::localEnvironment) == this &&
+      ActivityManager::currentActivity->hasSecurityManager()) {
     RexxDirectory *securityArgs;       /* security check arguments          */
     securityArgs = new_directory();
     securityArgs->put(_index, OREF_NAME);
     securityArgs->put(TheNilObject, OREF_RESULT);
-    if (CurrentActivity->currentActivation->callSecurityManager(OREF_LOCAL, securityArgs))
+    if (ActivityManager::currentActivity->callSecurityManager(OREF_LOCAL, securityArgs))
                                        /* get the result and return         */
       return securityArgs->fastAt(OREF_RESULT);
   }
@@ -675,7 +673,7 @@ RexxObject *RexxDirectory::indexRexx(RexxObject *target)
                 // we need to run each method, looking for a value that matches
                 RexxString *name = (RexxString *)methodTable->index(i);
                 RexxMethod *method = (RexxMethod *)methodTable->value(i);
-                RexxObject *v = method->run(CurrentActivity, this, name, 0, NULL);
+                RexxObject *v = method->run(ActivityManager::currentActivity, this, name, 0, NULL);
                 // got a match?
                 if (target->equalValue(v))
                 {

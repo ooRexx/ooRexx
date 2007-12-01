@@ -45,9 +45,16 @@
 #ifndef Included_Numerics
 #define Included_Numerics
 
-#include "RexxCore.h"
 
-class RexxObject;
+class NumericSettings                  // "global" numeric settings         */
+{
+    public:
+      NumericSettings();
+      size_t digits;                       /* numeric digits setting            */
+      size_t fuzz;                         /* numeric fuzz setting              */
+      bool form;                           /* numeric form setting              */
+};                                         /* global activation settings        */
+
 
 class Numerics
 {
@@ -82,7 +89,23 @@ public:
     static stringsize_t formatInt64(int64_t integer, char *dest);
 
     static int validMaxWhole[];          // table of maximum values per digits setting
+    static size_t digits() { return settings->digits; }
+    static size_t fuzz()   { return settings->fuzz; }
+    static bool   form()   { return settings->form; }
+    static void   setCurrentSettings(NumericSettings *s) { settings = s; }
+    static NumericSettings *setDefaultSettings() { settings = &defaultSettings; return settings; }
+    static NumericSettings *getDefaultSettings() { return &defaultSettings; }
+
+protected:
+
+    static NumericSettings *settings;
+    static NumericSettings  defaultSettings;
 };
 
+
+inline size_t number_digits() { return Numerics::digits(); }
+inline size_t number_fuzz()   { return Numerics::fuzz(); }
+inline bool   number_form()   { return Numerics::form(); }
+inline size_t number_fuzzydigits()   { return number_digits() - number_fuzz(); }
 #endif
 

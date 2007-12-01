@@ -53,6 +53,8 @@
 #include "ExpressionStem.hpp"
 #include "ExpressionVariable.hpp"
 #include "ExpressionCompoundVariable.hpp"
+#include "ProtectedObject.hpp"
+
 
 RexxObject  *RexxVariableDictionary::copy()
 /******************************************************************************/
@@ -66,13 +68,12 @@ RexxObject  *RexxVariableDictionary::copy()
   copyObj->clearObject();              /* clear this out                    */
                                        /* copy the behaviour pointer        */
   OrefSet(copyObj, copyObj->behaviour, this->behaviour);
-  save(copyObj);                       /* protect from garbage collect      */
+  ProtectedObject p(copyObj);
                                        /* copy the hash table               */
   OrefSet(copyObj, copyObj->contents, (RexxHashTable *)this->contents->copy());
   /* make sure we copy the scope too */
   OrefSet(copyObj, copyObj->scope, this->scope);
   copyObj->copyValues();               /* copy all of the variables         */
-  discard_hold(copyObj);               /* unlock the copy                   */
   return (RexxObject *)copyObj;        /* return the new vdict              */
 }
 

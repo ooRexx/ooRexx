@@ -50,9 +50,7 @@
 #include "StringClass.hpp"
 #include "RexxBuiltinFunctions.h"                     /* General purpose BIF Header file   */
 #include "SourceFile.hpp"
-
-
-extern ACTIVATION_SETTINGS *current_settings;
+#include "ActivityManager.hpp"
 
 const char *Memcpbrk(
   const char *String,                  /* search string                     */
@@ -321,7 +319,7 @@ RexxObject *DataType(
 
     case DATATYPE_9DIGITS:             /* NUMERIC DIGITS 9 number           */
                                        /* good long number                  */
-      if (String->longValue(DEFAULT_DIGITS) != (int)NO_LONG)
+      if (String->longValue(Numerics::DEFAULT_DIGITS) != (int)NO_LONG)
                                        /* say it's good                     */
         Answer = (RexxObject *)TheTrueObject;
       break;
@@ -891,7 +889,7 @@ RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, Rex
   newNeedle = REQUIRED_STRING(newNeedle, ARG_TWO);
 
   // we'll only change up to a specified count.  If not there, we do everything.
-  size_t count = optionalPositive(countArg, MAX_WHOLE_NUMBER, ARG_THREE);
+  size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
   matches = this->countStr(needle);    /* find the number of replacements   */
   if (matches > count)                 // the matches are bounded by the count
   {
@@ -950,7 +948,7 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
                                        /* newneedle must be a string two    */
   newNeedle = REQUIRED_STRING(newNeedle, ARG_TWO);
   // we'll only change up to a specified count.  If not there, we do everything.
-  size_t count = optionalPositive(countArg, MAX_WHOLE_NUMBER, ARG_THREE);
+  size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
 
   matches = this->caselessCountStr(needle);    /* find the number of replacements   */
   if (matches > count)                 // the matches are bounded by the count

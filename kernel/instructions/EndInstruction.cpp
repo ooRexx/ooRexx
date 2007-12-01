@@ -105,9 +105,11 @@ void RexxInstructionEnd::execute(
 
     context->unindent();                 /* remove indentation                */
     context->traceInstruction(this);     /* trace if necessary                */
-    if (context->blockNest == 0)         /* no possible blocks?               */
+    if (!context->hasActiveBlocks())     /* no possible blocks?               */
+    {
                                          /* this is an error                  */
         reportException(Error_Unexpected_end_nodo);
+    }
 
     switch (this->getStyle())
     {          /* process each loop type            */

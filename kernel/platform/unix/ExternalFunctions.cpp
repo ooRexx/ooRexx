@@ -86,6 +86,8 @@
 #include "SubcommandAPI.h"
 #include "RexxAPIManager.h"
 #include "APIUtilities.h"
+#include "ActivityManager.hpp"
+#include "ProtectedObject.hpp"
 
 
 #define CMDBUFSIZE      1024                 /* Max size of executable cmd     */
@@ -511,7 +513,7 @@ BOOL MacroSpaceSearch(
       APICLEANUP(MACROCHAIN);          /* now we have a copy of the routine */
       if (Routine == OREF_NULL) return FALSE;
     *result = Routine->call(activity, (RexxObject *)activation, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL);
-    activation->settings.parent_code->mergeRequired(Routine->getSource());
+    activation->getSource()->mergeRequired(Routine->getSource());
     return TRUE;                       /* return success we found it flag   */
   }
   return FALSE;                        /* nope, nothing to find here        */
@@ -623,6 +625,7 @@ BOOL RegExternalFunction(
   activity->enterKernel();             /* now re-enter the kernel           */
 
 /* END CRITICAL window here -->>  kernel calls now allowed again            */
+  ProtectedObject p;
 
   SysReleaseResultMemory(argrxarray);
 
@@ -631,7 +634,7 @@ BOOL RegExternalFunction(
       if (funcresult.strptr) {         /* If we have a result, return it    */
                                        /* make a string result              */
         *result = new_string(funcresult.strptr, funcresult.strlength);
-        save(*result);
+        p = *result;
                                        /* user give us a new buffer?        */
         if (funcresult.strptr != default_return_buffer )
                                        /* free it                           */

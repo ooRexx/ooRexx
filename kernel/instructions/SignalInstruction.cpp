@@ -149,7 +149,6 @@ void RexxInstructionSignal::execute(
         reportException(Error_Label_not_found_name, this->name);
                                        /* tell the activation to perform    */
       context->signalTo(this->target); /* the signal                        */
-      context->dbgSignal();            /* call the signal debug exit        */
     }
     else {                             /* need to evaluate an expression    */
                                        /* get the expression value          */
@@ -160,7 +159,6 @@ void RexxInstructionSignal::execute(
                                        /* tell the activation to perform    */
                                        /* the signal                        */
       context->signalValue(stringResult);
-      context->dbgSignal();            /* call the signal debug exit        */
     }
   }
 }

@@ -57,6 +57,7 @@
 #include "MethodClass.hpp"
 #include "ExpressionBaseVariable.hpp"
 #include "SourceFile.hpp"
+#include "ProtectedObject.hpp"
 
 static RexxString *msgname_save;       /* last issued message               */
 static RexxMethod *method_save;        /* last issued method object         */
@@ -121,7 +122,7 @@ RexxObject * RexxInternalObject::makeProxy(RexxEnvelope *envelope)
       return (RexxObject *)this;
 }
 
-BOOL RexxInternalObject::isEqual(
+bool RexxInternalObject::isEqual(
     RexxObject *other )                /* other object for comparison       */
 /******************************************************************************/
 /* Function:  primitive level equality method used by the hash collection     */
@@ -131,7 +132,7 @@ BOOL RexxInternalObject::isEqual(
   return ((RexxObject *)this) == other;/* simple identity equality          */
 }
 
-BOOL RexxObject::isEqual(
+bool RexxObject::isEqual(
     RexxObject *other )                /* other object for comparison       */
 /******************************************************************************/
 /* Function:  primitive level equality method used by the hash collection     */
@@ -191,7 +192,7 @@ wholenumber_t RexxObject::compareTo(RexxObject *other )
     {
         reportException(Error_No_result_object_message, OREF_COMPARETO);
     }
-    wholenumber_t comparison = result->longValue(DEFAULT_DIGITS);
+    wholenumber_t comparison = result->longValue(Numerics::DEFAULT_DIGITS);
     if (comparison == (wholenumber_t)NO_LONG)
     {
         reportException(Error_Invalid_whole_number_compareto, result);
@@ -421,19 +422,19 @@ RexxInteger *RexxObject::notEqual(RexxObject *other)
    return this != other ? TheTrueObject : TheFalseObject;
 }
 
-BOOL RexxInternalObject::truthValue(
-    LONG   errorCode )                 /* error to issue for bad conversion */
+bool RexxInternalObject::truthValue(
+    int    errorCode )                 /* error to issue for bad conversion */
 /******************************************************************************/
 /* Function:  test the truth value of a primitive object                      */
 /******************************************************************************/
 {
                                        /* report the error                  */
   reportException(errorCode, OREF_NULLSTRING);
-  return FALSE;                        /* need a return value               */
+  return false;                        /* need a return value               */
 }
 
-BOOL RexxObject::truthValue(
-    LONG   errorCode )                 /* error to issue for bad conversion */
+bool RexxObject::truthValue(
+    int    errorCode )                 /* error to issue for bad conversion */
 /******************************************************************************/
 /* Function:  test the truth value of a primitive object                      */
 /******************************************************************************/
@@ -545,9 +546,8 @@ RexxObject * RexxObject::copy()
   newObj = (RexxObject *)this->clone();
                                        /* have object variables?            */
   if (this->objectVariables != OREF_NULL) {
-    save(newObj);                      /* protect the copy through this process */
-    copyObjectVariables(newObj);       /* copy the object variables into the new object */
-    discard_hold(newObj);              /* release lock on the copy          */
+      ProtectedObject p(newObj);
+      copyObjectVariables(newObj);       /* copy the object variables into the new object */
   }
                                        /* have instance methods?            */
   if (this->behaviour->getInstanceMethodDictionary() != OREF_NULL)
@@ -588,7 +588,7 @@ RexxMethod * RexxObject::checkPrivate(
   RexxObject         *sender;          /* sending activation                */
 
                                        /* get the top activation            */
-  activation = CurrentActivity->current();
+  activation = ActivityManager::currentActivity->current();
                                        /* have an activation?               */
   if (activation != (RexxActivationBase *)TheNilObject) {
     sender = activation->getReceiver();/* get the receiving object          */
@@ -696,7 +696,7 @@ RexxObject * RexxObject::messageSend(
   RexxObject     *result;              /* returned result                   */
 
   msgname_save = msgname;              /* save the message name             */
-  CurrentActivity->stackSpace();       /* have enough stack space?          */
+  ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
                                        /* grab the method from this level   */
   method_save = this->behaviour->methodLookup(msgname);
                                        /* method exists...special processing*/
@@ -712,7 +712,7 @@ RexxObject * RexxObject::messageSend(
                                        /* have a method                     */
   if (method_save != (RexxMethod *)TheNilObject) {
                                        /* run the method                    */
-    result = method_save->run(CurrentActivity, this, msgname, count, arguments);
+    result = method_save->run(ActivityManager::currentActivity, this, msgname, count, arguments);
     return result;                     /* return the result                 */
   }
                                        /* go process an unknown method      */
@@ -730,7 +730,7 @@ RexxObject * RexxObject::messageSend(
 /******************************************************************************/
 {
   msgname_save = msgname;              /* save the message name             */
-  CurrentActivity->stackSpace();       /* have enough stack space?          */
+  ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
                                        /* go to the higher level            */
   method_save = this->superMethod(msgname, startscope);
   if (method_save != (RexxMethod *)TheNilObject && method_save->isProtected()) {
@@ -743,7 +743,7 @@ RexxObject * RexxObject::messageSend(
                                        /* have a method                     */
   if (method_save != (RexxMethod *)TheNilObject)
                                        /* run the method                    */
-    return method_save->run(CurrentActivity, this, msgname, count, arguments);
+    return method_save->run(ActivityManager::currentActivity, this, msgname, count, arguments);
                                        /* go process an unknown method      */
   return this->processUnknown(msgname, count, arguments);
 }
@@ -763,7 +763,7 @@ RexxObject * RexxObject::processProtectedMethod(
   RexxActivationBase *activation;      /* current activation                */
 
                                        /* get the top activation            */
-  activation = CurrentActivity->current();
+  activation = ActivityManager::currentActivity->current();
                                        /* have an activation?               */
   if (activation != (RexxActivationBase *)TheNilObject) {
                                        /* have a security manager?          */
@@ -787,7 +787,7 @@ RexxObject * RexxObject::processProtectedMethod(
     }
   }
                                        /* run the method                    */
-  return method_save->run(CurrentActivity, this, messageName, count, arguments);
+  return method_save->run(ActivityManager::currentActivity, this, messageName, count, arguments);
 }
 
 RexxObject * RexxObject::processUnknown(
@@ -817,7 +817,7 @@ RexxObject * RexxObject::processUnknown(
                                        /* second argument is array of       */
   unknown_arguments[1] = argumentArray;/* arguments for the original call   */
                                        /* run the unknown method            */
-  return method_save->run(CurrentActivity, this, OREF_UNKNOWN, 2, unknown_arguments);
+  return method_save->run(ActivityManager::currentActivity, this, OREF_UNKNOWN, 2, unknown_arguments);
 }
 
 RexxMethod * RexxObject::methodLookup(
@@ -1060,7 +1060,7 @@ RexxString *RexxObject::requestString()
                                        /* get the final string value        */
       string_value = this->stringValue();
                                        /* raise a NOSTRING condition        */
-      CurrentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, string_value, (RexxObject *)this, OREF_NULL, OREF_NULL);
+      ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, string_value, (RexxObject *)this, OREF_NULL, OREF_NULL);
     }
   }
   else {                               /* do a real request for this        */
@@ -1069,7 +1069,7 @@ RexxString *RexxObject::requestString()
                                        /* get the final string value        */
       string_value = (RexxString *)this->sendMessage(OREF_STRINGSYM);
                                        /* raise a NOSTRING condition        */
-      CurrentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, string_value, this, OREF_NULL, OREF_NULL);
+      ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, string_value, this, OREF_NULL, OREF_NULL);
     }
   }
   return string_value;                 /* return the converted form         */
@@ -1523,7 +1523,7 @@ RexxMessage *RexxObject::start(
                                        /* Yes, this is an error, report it. */
       reportException(Error_Incorrect_method_noarg, IntegerTwo);
                                        /* get the top activation            */
-    activation = CurrentActivity->current();
+    activation = ActivityManager::currentActivity->current();
                                        /* have an activation?               */
     if (activation != (RexxActivation *)TheNilObject) {
                                        /* get the receiving object          */
@@ -1542,9 +1542,8 @@ RexxMessage *RexxObject::start(
   }
                                        /* Create the new message object.    */
   newMessage = new_message(this, message, new (argCount - 1, arguments + 1) RexxArray);
-  save(newMessage);
+  ProtectedObject p(newMessage);
   newMessage->start(OREF_NULL);        /* Tell the message object to start  */
-  discard_hold(newMessage);            /* make sure message object stays    */
 #endif                                 // end of NOTHREADSUPPORT
   return newMessage;                   /* return the new message object     */
 }
@@ -1561,14 +1560,13 @@ RexxString  *RexxObject::oref()
   return (RexxString *)new_string(buffer,8);
 }
 
-RexxObject  *RexxInternalObject::hasUninit()
+void RexxInternalObject::hasUninit()
 /****************************************************************************/
 /* Function:  Tag an object as having an UNINIT method                      */
 /****************************************************************************/
 {
                                        /* tell the activity about this      */
-   CurrentActivity->addUninitObject((RexxObject *)this);
-   return OREF_NULL;
+   memoryObject.addUninitObject((RexxObject *)this);
 }
 
 RexxObject  *RexxObject::shriekRun(
@@ -1585,8 +1583,9 @@ RexxObject  *RexxObject::shriekRun(
                                        /* ensure correct scope              */
   method = method->newScope((RexxClass *)this);
   /* go run the method                 */
-  result = method->call(CurrentActivity, this, OREF_NONE, arguments, argCount, calltype, environment, PROGRAMCALL);
-  if ((result != OREF_NULL) && method->isRexxMethod()) discard(result);
+  result = method->call(ActivityManager::currentActivity, this, OREF_NONE, arguments, argCount, calltype, environment, PROGRAMCALL);
+  // TODO:  Fix this up to use protected objects
+  if ((result != OREF_NULL) && method->isRexxMethod()) discardObject(result);
   return result;
 }
 
@@ -1619,37 +1618,39 @@ RexxObject  *RexxObject::run(
     methobj = methobj->newScope((RexxClass *)TheNilObject);
   // we need to save this, since we might be working off of a newly created
   // one or a copy
-  save(methobj);
+  ProtectedObject p(methobj);
 
-  if (argCount > 1L) {                 /* if any arguments passed           */
+  if (argCount > 1) {                  /* if any arguments passed           */
                                        /* get the 1st one, its the option   */
     option = (RexxString *)arguments[1];
                                        /* this is now required              */
     option = REQUIRED_STRING(option, ARG_TWO);
                                        /* process the different options     */
     switch (toupper(option->getChar(0))) {
-      case 'A':                        /* args are an array                 */
-                                       /* so they say, make sure we have an */
-                                       /* array and we were only passed 3   */
-                                       /*args                               */
-        if (argCount < 3)              /* not enough arguments?             */
-          missing_argument(ARG_THREE); /* this is an error                  */
-        if (argCount > 3)              /* too many arguments?               */
-         reportException(Error_Incorrect_method_maxarg, IntegerThree);
-                                       /* now get the array                 */
-        arglist = (RexxArray *)arguments[2];
-                                       /* force to array form               */
-        arglist = REQUEST_ARRAY(arglist);
-                                       /* not an array?                     */
-        if (arglist == TheNilObject || arglist->getDimension() != 1)
-                                       /* raise an error                    */
-          reportException(Error_Incorrect_method_noarray, arguments[2]);
-        // request array may create a new one...keep it safe
-        save(arglist);
-        /* grab the argument information */
-        argumentPtr = arglist->data();
-        argcount = arglist->size();
-        break;
+        case 'A':                        /* args are an array                 */
+        {
+                                           /* so they say, make sure we have an */
+                                           /* array and we were only passed 3   */
+                                           /*args                               */
+            if (argCount < 3)              /* not enough arguments?             */
+              missing_argument(ARG_THREE); /* this is an error                  */
+            if (argCount > 3)              /* too many arguments?               */
+             reportException(Error_Incorrect_method_maxarg, IntegerThree);
+                                           /* now get the array                 */
+            arglist = (RexxArray *)arguments[2];
+                                           /* force to array form               */
+            arglist = REQUEST_ARRAY(arglist);
+                                           /* not an array?                     */
+            if (arglist == TheNilObject || arglist->getDimension() != 1)
+                                           /* raise an error                    */
+              reportException(Error_Incorrect_method_noarray, arguments[2]);
+            // request array may create a new one...keep it safe
+            ProtectedObject p1(arglist);
+            /* grab the argument information */
+            argumentPtr = arglist->data();
+            argcount = arglist->size();
+            break;
+        }
 
       case 'I':                        /* args are "strung out"             */
         /* point to the array data for the second value */
@@ -1664,15 +1665,7 @@ RexxObject  *RexxObject::run(
     }
   }
                                        /* now just run the method....       */
-  result = methobj->call(CurrentActivity, this, OREF_NONE, argumentPtr, argcount, OREF_METHODNAME, OREF_NULL, METHODCALL);
-
-  discard(methobj);
-  // and if we have a saved argument, release it also
-  if (arglist != OREF_NULL)
-  {
-      discard(arglist);
-  }
-  //if ((result != OREF_NULL) && u_method->isRexxMethod()) discard(result);
+  result = methobj->call(ActivityManager::currentActivity, this, OREF_NONE, argumentPtr, argcount, OREF_METHODNAME, OREF_NULL, METHODCALL);
   return result;
 }
 
@@ -1765,7 +1758,7 @@ void RexxInternalObject::removedUninit()
 /* Function:  Remove an UNINIT method from an object                          */
 /******************************************************************************/
 {
-  CurrentActivity->removeUninitObject((RexxObject *)this);
+    memoryObject.removeUninitObject((RexxObject *)this);
 }
 
 RexxObject * RexxObject::getObjectVariable(
@@ -2054,10 +2047,9 @@ void *RexxObject::operator new(size_t size, RexxClass *classObject, RexxObject *
 
                                        /* create a new object               */
   newObject = new (classObject) RexxObject;
-  save(newObject);                     /* protect from GC                   */
+  ProtectedObject p(newObject);
                                        /* now drive the user INIT           */
   newObject->sendMessage(OREF_INIT, args, argCount);
-  discard_hold(newObject);
   return newObject;                    /* and returnthe new object          */
 }
 
@@ -2191,7 +2183,7 @@ void *RexxNilObject::operator new(size_t size)
     // function table pointer.
     RexxObject *newObj = new_object(size, T_object);
     // we need to switch the virtual method table pointer new.
-    newObj->setVirtualFunctions(VFTArray[T_nil_object]);
+    newObj->setVirtualFunctions(RexxMemory::VFTArray[T_nil_object]);
     return newObj;
 }
 

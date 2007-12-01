@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxMemory.hpp  */
+/* REXX Kernel                                                RexxMemory.hpp  */
 /*                                                                            */
 /* Primitive Memory Class Definitions                                         */
 /*                                                                            */
@@ -44,10 +44,6 @@
 
 #ifndef Included_RexxMemory
 #define Included_RexxMemory
-
-void memoryCreate();
-void memoryRestore(void);
-void memoryNewProcess (void);
 
 /* The minimum allocation unit for an object.   */
 #define ObjectGrain 8
@@ -82,6 +78,7 @@ inline size_t roundObjectResize(size_t n) { return n > LargeObjectMinSize ? RXRO
 
 class RexxActivationFrameBuffer;
 class MemorySegment;
+class RexxMethod;
 #ifdef _DEBUG
 class RexxMemory;
 #endif
@@ -108,7 +105,7 @@ class MemorySegmentPool : public MemorySegmentPoolHeader {
 #ifdef _DEBUG
  friend class RexxMemory;
 #endif
- friend BOOL SysAccessPool(MemorySegmentPool **);
+ friend bool SysAccessPool(MemorySegmentPool **);
  public:
    void          *operator new(size_t size, size_t minSize);
    void          *operator new(size_t size, void *pool) { return pool;}
@@ -118,7 +115,7 @@ class MemorySegmentPool : public MemorySegmentPoolHeader {
    MemorySegmentPool();
    MemorySegment *newSegment(size_t minSize);
    MemorySegment *newLargeSegment(size_t minSize);
-   BOOL           accessNextPool(void);
+   bool           accessNextPool(void);
    MemorySegmentPool *freePool(void); /* CHM - defect 96: add return value */
    MemorySegmentPool *nextPool() {return this->next;}
    void               setNext( MemorySegmentPool *nextPool ); /* CHM - def.96: new function */
@@ -157,8 +154,17 @@ class RexxMemory : public RexxObject {
   RexxObject *temporaryObject(size_t size);
   RexxArray  *newObjects(size_t size, size_t count, size_t objectType);
   void        reSize(RexxObject *, size_t);
-  void        checkUninit(RexxTable *);
-  void        checkSubClasses(RexxObjectTable *);
+  void        checkUninit();
+  void        checkSubClasses();
+  void        runUninits();
+  void        removeUninitObject(RexxObject *obj);
+  void        addUninitObject(RexxObject *obj);
+  bool        isPendingUninit(RexxObject *obj);
+  inline void checkUninitQueue() { if (pendingUninits > 0) runUninits(); }
+
+  RexxArray  *getSubClasses(RexxClass *);
+  void        newSubClass(RexxClass *newClass, RexxClass *superClass);
+  void        removeSubClass(RexxClass *subClass, RexxClass *superClass);
   void        markObjects(void);
   void        markObjectsMain(RexxObject *);
   void        killOrphans(RexxObject *);
@@ -171,16 +177,16 @@ class RexxMemory : public RexxObject {
   void        discardHoldObject(RexxInternalObject *obj);
   RexxObject *holdObject(RexxInternalObject *obj);
   void        saveImage();
-  BOOL        savingImage() { return saveimage; }
-  BOOL        restoringImage() { return restoreimage; }
+  bool        savingImage() { return saveimage; }
+  bool        restoringImage() { return restoreimage; }
   RexxObject *setDump(RexxObject *);
-  inline BOOL queryDump() {return this->dumpEnable;};
+  inline bool queryDump() {return this->dumpEnable;};
   RexxObject *dump();
   void        dumpObject(RexxObject *objectRef, FILE *outfile);
   void        setObjectOffset(size_t offset);
   void        setEnvelope(RexxEnvelope *);
   inline void        setMarkTable(RexxTable *marktable) {this->markTable = marktable;};
-  inline void        setOrphanCheck(BOOL orphancheck) {this->orphanCheck = orphancheck; };
+  inline void        setOrphanCheck(bool orphancheck) {this->orphanCheck = orphancheck; };
   RexxObject *checkSetOref(RexxObject *, RexxObject **, RexxObject *, const char *, int);
   RexxObject *setOref(void *index, RexxObject *value);
   RexxStack  *getFlattenStack();
@@ -190,10 +196,10 @@ class RexxMemory : public RexxObject {
   RexxObject *gutCheck();
   void        accessPools();
   void        accessPools(MemorySegmentPool *);
+  void        addPool(MemorySegmentPool *pool);
   void        freePools();
   MemorySegmentPool *freePools(MemorySegmentPool *);
   void        liveStackFull();
-  BOOL        extendSaveStack(size_t inc);
   void        dumpMemoryProfile();
   char *      allocateImageBuffer(size_t size);
   void        logVerboseOutput(const char *message, void *sub1, void *sub2);
@@ -218,8 +224,8 @@ class RexxMemory : public RexxObject {
   inline void logObjectStats(RexxObject *obj) { imageStats->logObject(obj); }
   inline void pushSaveStack(RexxObject *obj) { saveStack->push(obj); }
   inline void removeSavedObject(RexxObject *obj) { saveStack->remove(obj); }
-  inline void disableOrefChecks() { checkSetOK = FALSE; }
-  inline void enableOrefChecks() { checkSetOK = TRUE; }
+  inline void disableOrefChecks() { checkSetOK = false; }
+  inline void enableOrefChecks() { checkSetOK = true; }
   inline void clearSaveStack() {
                                        /* remove all objects from the save- */
                                        /* stack. to be really oo, this      */
@@ -232,7 +238,21 @@ class RexxMemory : public RexxObject {
   RexxObject *dumpImageStats();
   void        createLocks();
   void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
-  void setUpMemoryTables(RexxObjectTable *old2newTable);
+  void        setUpMemoryTables(RexxObjectTable *old2newTable);
+  void        forceUninits();
+  inline RexxDirectory *getGlobalStrings() { return globalStrings; }
+
+  static void restore();
+  static void buildVFTArray();
+  static void create();
+  static void createImage();
+  static RexxString *getGlobalName(const char *value);
+  static void createStrings();
+  static RexxArray *saveStrings();
+  static void restoreStrings(RexxArray *stringArray);
+
+  static void *VFTArray[];             /* table of virtual functions        */
+  static PCPPM exportedMethods[];      /* start of exported methods table   */
 
   uint16_t markWord;                   /* current marking counter           */
   SMTX flattenMutex;                   /* locks for various memory processes */
@@ -267,10 +287,18 @@ private:
   void saveImageMark(RexxObject *markObject, RexxObject **pMarkObject);
   void orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObject);
 
-  BOOL inObjectStorage(RexxObject *obj);
-  BOOL inSharedObjectStorage(RexxObject *obj);
-  BOOL objectReferenceOK(RexxObject *o);
-  void restoreImage(void);
+  bool inObjectStorage(RexxObject *obj);
+  bool inSharedObjectStorage(RexxObject *obj);
+  bool objectReferenceOK(RexxObject *o);
+  void restoreImage();
+
+  static size_t resolveExportedMethod(PCPPM   targetMethod);
+  static RexxMethod *createKernelMethod(PCPPM entryPoint, size_t arguments);
+  static RexxMethod *createProtectedKernelMethod(PCPPM entryPoint, size_t arguments);
+  static RexxMethod *createPrivateKernelMethod(PCPPM entryPoint, size_t arguments);
+  static void        defineKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+  static void        defineProtectedKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+  static void        definePrivateKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
 
   RexxStack  *liveStack;
   RexxStack  *flattenStack;
@@ -280,6 +308,12 @@ private:
                                        /*  if building/restoring image,     */
                                        /*OREF_ENV, else old2new             */
   RexxObjectTable  *old2new;           /* remd set                          */
+  RexxObjectTable  *uninitTable;       // the table of objects with uninit methods
+  size_t            pendingUninits;    // objects waiting to have uninits run
+  bool              processingUninits; // TRUE when we are processing the uninit table
+
+  RexxObjectTable  *subClasses;        // the table of subclasses
+
   MemorySegmentPool *firstPool;        /* First segmentPool block.          */
   MemorySegmentPool *currentPool;      /* Curent segmentPool being carved   */
   OldSpaceSegmentSet oldSpaceSegments;
@@ -288,13 +322,13 @@ private:
   char *image_buffer;                  /* the buffer used for image save/restore operations */
   size_t image_offset;                 /* the offset information for the image */
   size_t relocation;                   /* image save/restore relocation factor */
-  BOOL dumpEnable;                     /* enabled for dumps?                */
-  BOOL saveimage;                      /* we're saving the image */
-  BOOL restoreimage;                   /* we're restoring the image */
-  BOOL checkSetOK;                     /* OREF checking is enabled          */
+  bool dumpEnable;                     /* enabled for dumps?                */
+  bool saveimage;                      /* we're saving the image */
+  bool restoreimage;                   /* we're restoring the image */
+  bool checkSetOK;                     /* OREF checking is enabled          */
                                        /* enabled for checking for bad      */
                                        /*OREF's?                            */
-  BOOL orphanCheck;
+  bool orphanCheck;
   size_t objOffset;                    /* offset of arriving mobile objects */
                                        /* envelope for arriving mobile      */
                                        /*objects                            */
@@ -304,6 +338,8 @@ private:
 
   size_t allocations;                  /* number of allocations since last GC */
   size_t collections;                  /* number of garbage collections     */
+
+  static RexxDirectory *globalStrings; // table of global strings
 };
 
 
@@ -312,10 +348,10 @@ private:
 /******************************************************************************/
 
 
-inline void save(RexxInternalObject *o) { memoryObject.saveObject((RexxObject *)o); }
-inline void discard(RexxInternalObject *o) { memoryObject.discardObject((RexxObject *)o); }
-inline void hold(RexxInternalObject *o) { memoryObject.holdObject((RexxObject *)o); }
-inline void discard_hold(RexxInternalObject *o) { memoryObject.discardHoldObject((RexxObject *)(o)); }
+inline void saveObject(RexxInternalObject *o) { memoryObject.saveObject((RexxObject *)o); }
+inline void discardObject(RexxInternalObject *o) { memoryObject.discardObject((RexxObject *)o); }
+inline void holdObject(RexxInternalObject *o) { memoryObject.holdObject((RexxObject *)o); }
+inline void discardHoldObject(RexxInternalObject *o) { memoryObject.discardHoldObject((RexxObject *)(o)); }
 
 
 inline RexxObject *new_object(size_t s) { return memoryObject.newObject(s); }

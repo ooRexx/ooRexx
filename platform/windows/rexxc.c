@@ -61,7 +61,6 @@ extern "C" {
 BOOL   APIENTRY RexxInitialize (void);
 }
 
-extern  _declspec(dllimport) BOOL ProcessRestoreImage;
 extern  _declspec(dllimport) BOOL ProcessSaveImage;
 
 //
@@ -103,7 +102,6 @@ int __cdecl main(int argc, char *argv[])
     if ((*(cp=*(argv+i)) == '-' || *cp == '\\'))
       switch (*++cp) {
         case 'i': case 'I':            /* image build                       */
-          ProcessRestoreImage = FALSE; /* hit the startup flags             */
           ProcessSaveImage = TRUE;      /* say this is a save image          */
           break;
 

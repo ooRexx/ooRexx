@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ExpressionStack.c    */
+/* REXX Kernel                                           ExpressionStack.c    */
 /*                                                                            */
 /* Primitive Expression Stack Class                                           */
 /*                                                                            */
@@ -45,6 +45,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ExpressionStack.hpp"
+#include "ActivityManager.hpp"
 
 void RexxExpressionStack::live()
 /******************************************************************************/
@@ -194,10 +195,10 @@ RexxInteger *RexxExpressionStack::requiredIntegerArg(
   LONG          tempCount;             /* actual function argument position */
 
   argument = this->peek(position);     /* get the argument in question      */
-  if (isOfClass(Integer, argument))        /* integer object already?           */
+  if (isOfClass(Integer, argument))    /* integer object already?           */
     return (RexxInteger *)argument;    /* finished                          */
                                        /* return the string form of argument*/
-  long_value = REQUEST_LONG(argument, DEFAULT_DIGITS);
+  long_value = REQUEST_LONG(argument, Numerics::DEFAULT_DIGITS);
   if (long_value == (long)NO_LONG) { /* not convertable?                  */
     tempCount = argcount - position;   /* get the actual argument number    */
                                        /* report an exception               */
@@ -228,7 +229,7 @@ RexxInteger *RexxExpressionStack::optionalIntegerArg(
   if (isOfClass(Integer, argument))        /* integer object already?           */
     return (RexxInteger *)argument;    /* finished                          */
                                        /* return the string form of argument*/
-  long_value = REQUEST_LONG(argument, DEFAULT_DIGITS);
+  long_value = REQUEST_LONG(argument, Numerics::DEFAULT_DIGITS);
   if (long_value == (long)NO_LONG) {   /* not convertable?                  */
     tempCount = argcount - position;   /* get the actual argument number    */
                                        /* report an exception               */

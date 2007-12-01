@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  SourceFile.c    */
+/* REXX Kernel                                                SourceFile.c    */
 /*                                                                            */
 /* Primitive Translator Source File Class                                     */
 /*                                                                            */
@@ -77,6 +77,7 @@
 #include "DoInstruction.hpp"
 #include "CallInstruction.hpp"
 #include "StreamNative.h"
+#include "ProtectedObject.hpp"
 
 #define HOLDSIZE         60            /* room for 60 temporaries           */
 
@@ -87,11 +88,7 @@ extern unsigned int iTransClauseCounter; /* defined in WinYield.c           */
 #define CLAUSESPERYIELD 100              /* yield every n blocks            */
 #endif
 
-extern RexxActivity *CurrentActivity;  /* expose current activity object    */
-                                       /* table of internal REXX methods    */
 extern "C" internalMethodEntry internalMethodTable[];
-                                       /* current global settings           */
-extern ACTIVATION_SETTINGS *current_settings;
 
 typedef struct _LINE_DESCRIPTOR {
   size_t position;                     /* position within the buffer        */
@@ -898,13 +895,12 @@ void RexxSource::globalSetup()
   OrefSet(this, this->subTerms, new_queue());
   OrefSet(this, this->operators, new_queue());
   OrefSet(this, this->literals, new_directory());
-  if (TheGlobalStrings != OREF_NULL)   /* doing an image build?             */
+  // during an image build, we have a global string table.  If this is
+  // available now, use it.
+  OrefSet(this, this->strings, memoryObject.getGlobalStrings());
+  if (this->strings == OREF_NULL)
   {
-                                       /* use this for the string table     */
-      OrefSet(this, this->strings, TheGlobalStrings);
-  }
-  else
-  {
+      // no global string table, use a local copy
       OrefSet(this, this->strings, new_directory());
   }
                                        /* get the clause object             */
@@ -921,9 +917,8 @@ RexxMethod *RexxSource::method()
   this->globalSetup();                 /* do the global setup part          */
                                        /* translate the source program      */
   newMethod = this->translate(OREF_NULL);
-  save(newMethod);                     /* protect this during cleanup       */
+  ProtectedObject p(newMethod);
   this->cleanup();                     /* release temporary tables          */
-  discard_hold(newMethod);             /* and on the new method             */
   return newMethod;                    /* return the method                 */
 }
 
@@ -938,9 +933,8 @@ RexxMethod *RexxSource::interpretMethod(
   this->globalSetup();                 /* do the global setup part          */
   this->flags |= _interpret;           /* this is an interpret              */
   newMethod = this->translate(_labels); /* translate the source program      */
-  save(newMethod);                     /* protect this during cleanup       */
+  ProtectedObject p(newMethod);
   this->cleanup();                     /* release temporary tables          */
-  discard_hold(newMethod);             /* and on the new method             */
   return newMethod;                    /* return the method                 */
 }
 
@@ -957,11 +951,10 @@ RexxMethod *RexxSource::interpret(
 
                                        /* create a source object            */
   source = new RexxSource (this->programName, new_array(string));
-  save(source);
+  ProtectedObject p(source);
   source->interpretLine(_line_number);  /* fudge the line numbering          */
                                        /* convert to executable form        */
   _method = source->interpretMethod(_labels);
-  discard_hold(source);                /* release lock on the source        */
   return _method;                       /* return this method                */
 }
 
@@ -1171,7 +1164,7 @@ RexxClass *RexxSource::resolveClass(
                                        /* normal execution?                 */
   if (this->securityManager == OREF_NULL) {
                                        /* send message to .local            */
-    classObject = (RexxClass *)(((RexxDirectory *)(CurrentActivity->local))->at(internalName));
+    classObject = (RexxClass *)(ActivityManager::localEnvironment->at(internalName));
     if (classObject == OREF_NULL)      /* still not found?                  */
                                        /* last chance, try the environment  */
       classObject = (RexxClass *)(TheEnvironment->at(internalName));
@@ -1187,7 +1180,7 @@ RexxClass *RexxSource::resolveClass(
     classObject = (RexxClass *)securityArgs->fastAt(OREF_RESULT);
   else
                                        /* send message to .local            */
-    classObject = (RexxClass *)(((RexxDirectory *)(CurrentActivity->local))->at(internalName));
+    classObject = (RexxClass *)(ActivityManager::localEnvironment->at(internalName));
   if (classObject == OREF_NULL) {      /* still not found?                  */
                                        /* put the name in the directory     */
     securityArgs->put(internalName, OREF_NAME);
@@ -2916,7 +2909,7 @@ RexxMethod *RexxSource::translateBlock(
     this->nextClause();                /* get the next physical clause      */
 #ifdef NOTIMER
     if (!(iTransClauseCounter++ % CLAUSESPERYIELD))
-      CurrentActivity->relinquish();   /* yield to other system processes   */
+      ActivityManager::currentActivity->relinquish();   /* yield to other system processes   */
 #endif
   }
                                        /* now go resolve any label targets  */
@@ -3475,7 +3468,7 @@ RexxObject *RexxSource::addText(
                                        /* can we create an integer object?  */
             if (token->numeric == INTEGER_CONSTANT) {
                                        /* create this as an integer         */
-              value = name->requestInteger(DEFAULT_DIGITS);
+              value = name->requestInteger(Numerics::DEFAULT_DIGITS);
                                        /* conversion error?                 */
               if (value == TheNilObject)
                 value = name;          /* just go with the string value     */
@@ -4438,7 +4431,6 @@ void RexxSource::errorCleanup()
 /******************************************************************************/
 {
   this->cleanup();                     /* do needed cleanup                 */
-  discard_hold(this);                  /* release lock on the source        */
 }
 
 void RexxSource::error(
@@ -4451,7 +4443,7 @@ void RexxSource::error(
   SourceLocation location = this->clause->getLocation();
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, OREF_NULL, OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, OREF_NULL, OREF_NULL);
 }
 
 void RexxSource::errorLine(
@@ -4468,7 +4460,7 @@ void RexxSource::errorLine(
   location = this->clause->getLocation();
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(new_integer(_instruction->getLineNumber())), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(new_integer(_instruction->getLineNumber())), OREF_NULL);
 }
 
 void RexxSource::errorPosition(
@@ -4483,7 +4475,7 @@ void RexxSource::errorPosition(
   SourceLocation token_location = token->getLocation(); /* get the token location            */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(new_integer(token_location.getOffset()), new_integer(token_location.getLineNumber())), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(new_integer(token_location.getOffset()), new_integer(token_location.getLineNumber())), OREF_NULL);
 }
 
 void RexxSource::errorToken(
@@ -4554,7 +4546,7 @@ void RexxSource::errorToken(
   }
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -4567,7 +4559,7 @@ void RexxSource::error(
   SourceLocation location = this->clause->getLocation();/* get the clause location           */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -4581,7 +4573,7 @@ void RexxSource::error(
   SourceLocation location = this->clause->getLocation();/* get the clause location           */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value1, value2), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value1, value2), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -4596,7 +4588,7 @@ void RexxSource::error(
   SourceLocation location = this->clause->getLocation();/* get the clause location           */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  CurrentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
 }
 
 void RexxSource::blockError(
@@ -4658,13 +4650,11 @@ RexxSource *RexxSource::classNewBuffered(
 {
   RexxSource *newObject;               /* newly created source object       */
 
-  save(source_buffer);                 /* protect the buffer                */
+  ProtectedObject p(source_buffer);
   newObject = new RexxSource (programname, OREF_NULL);
-  save(newObject);                     // protect this while parsing
+  ProtectedObject p1(newObject);
                                        /* process the buffering             */
   newObject->initBuffered((RexxObject *)source_buffer);
-  discard(source_buffer);              /* release the buffer protect        */
-  discard_hold(newObject);             // and also release the source object protection
   return newObject;                    /* return the new source object      */
 }
 
@@ -4678,9 +4668,8 @@ RexxSource *RexxSource::classNewFile(
 
                                        /* create a new source object        */
   newObject = new RexxSource (programname, OREF_NULL);
-  save(newObject);                     // protect this while parsing
+  ProtectedObject p(newObject);
   newObject->initFile();               /* go process the file               */
-  discard_hold(newObject);             // and also release the source object protection
   return newObject;                    /* return the new object             */
 }
 

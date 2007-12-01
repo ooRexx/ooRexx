@@ -61,7 +61,7 @@
    void flatten(RexxEnvelope*);
    RexxObject *unflatten(RexxEnvelope*);
    RexxObject *makeProxy(RexxEnvelope*);
-   BOOL        isEqual(RexxObject *);
+   bool        isEqual(RexxObject *);
 
    HashCode     hash();
    HashCode     getHashValue();

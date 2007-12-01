@@ -48,9 +48,6 @@
 #include "ArrayClass.hpp"
 #include "SourceFile.hpp"
 
-                                       /* current global settings           */
-extern ACTIVATION_SETTINGS *current_settings;
-
 int RexxSource::precedence(
     RexxToken  *token)                 /* target token                      */
 /******************************************************************************/
@@ -768,7 +765,7 @@ RexxToken *RexxSource::sourceNextToken(
         else if (inch >= '0' && inch <= '9') {
           subclass = SYMBOL_CONSTANT;  /* have a constant symbol            */
                                        /* can we optimize to an integer?    */
-          if (state == EXP_DIGIT && length < (long)DEFAULT_DIGITS) {
+          if (state == EXP_DIGIT && length < (long)Numerics::DEFAULT_DIGITS) {
                                        /* no leading zero or only zero?     */
             if (inch != '0' || length == 1)
                                        /* we can make this an integer object*/

@@ -128,16 +128,16 @@ class RexxLocalVariables {
 
   inline void       setNovalueOn() { this->flags |= VDICT_NOVALUE; };
   inline void       setNovalueOff() { this->flags &= ~VDICT_NOVALUE; };
-  inline BOOL       getNovalue() {return this->flags & VDICT_NOVALUE; };
+  inline bool       getNovalue() {return (this->flags & VDICT_NOVALUE) != 0; };
   inline void       setNested()  { flags |= NESTED_INTERNAL; }
   inline void       clearNested()  { flags &= ~NESTED_INTERNAL; }
-  inline BOOL       isNested() { return flags&NESTED_INTERNAL; }
+  inline bool       isNested() { return (flags&NESTED_INTERNAL) != 0; }
 
   inline void       procedure(RexxActivation *activation) { this->owner = activation; dictionary = OREF_NULL;  flags &= ~NESTED_INTERNAL; }
   inline void       setDictionary(RexxVariableDictionary *dict) { dictionary = dict; }
   inline RexxVariableDictionary *getNestedDictionary() { return dictionary; }
 
-  ULONG  flags;                        /* dictionary control flags          */
+  size_t flags;                        /* dictionary control flags          */
   size_t size;                         /* size of the expstack              */
   RexxActivation *owner;               /* the owning activation             */
   RexxVariable **locals;               /* the frame of local variables      */

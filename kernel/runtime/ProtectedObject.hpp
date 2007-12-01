@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,62 +35,87 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/* REXX Kernel                                            ActivityTable.hpp   */
-/*                                                                            */
-/* Activity Storage Table for High Thread IDs                                 */
-/*                                                                            */
-/******************************************************************************/
-#ifndef Included_ActivityTable
-#define Included_ActivityTable
+#ifndef ProtectedObject_Included
+#define ProtectedObject_Included
 
-#include "ObjectClass.hpp"
+#include "RexxActivity.hpp"
+#include "ActivityManager.hpp"
 
 
-typedef struct
+class ProtectedObject
 {
-    ULONG tid;
-    RexxObject  *activity;
-} ThreadActivityPair;
+friend class RexxActivity;
+public:
+    inline ProtectedObject() : protectedObject(OREF_NULL), next(NULL)
+    {
+        // it would be better to have the activity class do this, but because
+        // we're doing this with inline methods, we run into a bit of a
+        // circular reference problem
+        next = ActivityManager::currentActivity->protectedObjects;
+        ActivityManager::currentActivity->protectedObjects = this;
+    }
 
-class ActivityTable {
- public:
+    inline ProtectedObject(RexxObject *o) : protectedObject(o), next(NULL)
+    {
+        next = ActivityManager::currentActivity->protectedObjects;
+        ActivityManager::currentActivity->protectedObjects = this;
+    }
 
-  ActivityTable();
-  ~ActivityTable() {if (data) free(data);}
+    inline ProtectedObject(RexxInternalObject *o) : protectedObject((RexxObject *)o), next(NULL)
+    {
+        next = ActivityManager::currentActivity->protectedObjects;
+        ActivityManager::currentActivity->protectedObjects = this;
+    }
 
-  RexxObject   *put(RexxObject *, long);
-  void          extend();
-  long          first() {for (long i=0;i<max_element;i++) if (data[i].activity) return i; return -1;}
-  long          next(long j) {for (long i=j+1;i<max_element;i++) if (data[i].activity) return i; return -1;}
-  BOOL          available(long j) {if (j < 0) return FALSE; else return (BOOL) (data[j].activity != OREF_NULL);}
-  long          index(long j) {return data[j].tid;}
-  RexxObject   *value(long j) {return data[j].activity;}
+    inline ~ProtectedObject()
+    {
+        // remove ourselves from the list and give this object a
+        // little hold protection.
+        ActivityManager::currentActivity->protectedObjects = next;
+        holdObject(protectedObject);
+    }
 
-  /* MostRecently... was not thread save. To be thread save a local variable must be used
-     and the whole procedure must be a critical section */
-  inline      RexxObject *fastAt(long tid)
-              {
-                    RexxObject * act = OREF_NULL;
-                    SysEnterCriticalSection();
-                    if (SysIsThreadEqual(MostRecentlyUsedTid,tid)) act = MostRecentlyUsedActivity;
-                    else
-                    for (register int i=0;i<max_element;i++)
-                        if (SysIsThreadEqual(data[i].tid,tid))
-                        {
-                            MostRecentlyUsedTid = data[i].tid;
-                            act = MostRecentlyUsedActivity = data[i].activity;
-                            break;
-                        }
-                    SysExitCriticalSection();
-                    return act;
-              }
+    inline ProtectedObject & operator=(RexxObject *o)
+    {
+        protectedObject = o;
+        return *this;
+    }
 
-  long          size;
-  long          max_element;
-  long          MostRecentlyUsedTid;
-  RexxObject   *MostRecentlyUsedActivity;
-  ThreadActivityPair *data;
+    // cast conversion operators for some very common uses of protected object.
+    inline operator RexxObject *()
+    {
+        return protectedObject;
+    }
+
+    inline operator RexxString *()
+    {
+        return (RexxString *)protectedObject;
+    }
+
+    inline operator RexxMethod *()
+    {
+        return (RexxMethod *)protectedObject;
+    }
+
+    inline operator RexxArray *()
+    {
+        return (RexxArray *)protectedObject;
+    }
+
+    // this conversion helps the parsing process protect objects
+    inline operator RexxInstruction *()
+    {
+        return (RexxInstruction *)protectedObject;
+    }
+
+    inline operator void *()
+    {
+        return (void *)protectedObject;
+    }
+
+protected:
+    RexxObject *protectedObject;       // next in the chain of protected object
+    ProtectedObject *next;             // the pointer protected by the object
 };
-#endif
 
+#endif

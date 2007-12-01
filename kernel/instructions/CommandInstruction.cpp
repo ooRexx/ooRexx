@@ -72,9 +72,11 @@ void RexxInstructionCommand::execute(
   result = this->expression->evaluate(context, stack);
   command = REQUEST_STRING(result);    /* force to string form              */
                                        /* are we tracing commands?          */
-  if (context->settings.flags&trace_commands)
-                                       /* then we always trace full command */
-    context->traceValue((RexxObject *)command, TRACE_PREFIX_RESULT);
+  if (context->tracingCommands())
+  {
+                                         /* then we always trace full command */
+      context->traceValue((RexxObject *)command, TRACE_PREFIX_RESULT);
+  }
                                        /* go process the command            */
   context->command(command, context->getAddress());
 }

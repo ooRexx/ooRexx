@@ -43,10 +43,9 @@
 
 #include "RexxCore.h"
 #include "RexxMemory.hpp"
+#include "ActivityManager.hpp"
 
 #define APIRET ULONG
-extern MemorySegmentPool *ProcessCurrentPool;
-extern MemorySegmentPool *GlobalCurrentPool;
 
 // retrofit by IH
 #define MEMSIZE   4194304   /* get pools in 4M chunks. */
@@ -81,7 +80,7 @@ void SysReleaseResultMemory(
         free(MemoryBlock);           /* release this block */
 }
 
-BOOL SysAccessPool(MemorySegmentPool **pool)
+bool SysAccessPool(MemorySegmentPool **pool)
 /*********************************************************************/
 /*   Function:  Access/Create the 1st block as Named Storage         */
 /*              return TRUE is an access, FALSE is created.          */
@@ -267,10 +266,7 @@ MemorySegment *MemorySegmentPool::newSegment(size_t minSize)
           memoryObject.accessPools(this);
        } else
          this->next = newPool;         /* Anchor it to end of chain         */
-       ProcessCurrentPool = newPool;   /* update last pool accessed for proc*/
-       GlobalCurrentPool = newPool;    /* update global pool addr           */
-       if (this->uncommitted) {          /* Anything left to commit?          */
-       }
+       memoryObject.addPool(newPool);  // tell the memory object we have a new pool
        return newPool->newSegment(minSize);
      } else {
        return NULL;
@@ -328,15 +324,14 @@ MemorySegment *MemorySegmentPool::newLargeSegment(size_t minSize)
           memoryObject.accessPools(this);
        } else
          this->next = newPool;         /* Anchor it to end of chain         */
-       ProcessCurrentPool = newPool;   /* update last pool accessed for proc*/
-       GlobalCurrentPool = newPool;    /* update global pool addr           */
+       memoryObject.addPool(newPool);
        return newPool->newLargeSegment(minSize);
      } else
        return NULL;
    }
 }
 
-BOOL    MemorySegmentPool::accessNextPool()
+bool    MemorySegmentPool::accessNextPool()
 /*********************************************************************/
 /* Function:: Gain access to all existing memoryPools.               */
 /*                                                                   */
@@ -344,10 +339,10 @@ BOOL    MemorySegmentPool::accessNextPool()
 {
                                        /* Is there a next MemoryPool        */
    if (this->next)    {
-     return TRUE;                      /* Return one accessed               */
+     return true;                      /* Return one accessed               */
    }
    else {
-     return FALSE;                     /* At the end, return FALSE (NO_MORE)*/
+     return false;                     /* At the end, return FALSE (NO_MORE)*/
    }
 }
 

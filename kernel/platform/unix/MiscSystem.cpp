@@ -58,10 +58,10 @@
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"
 #include "ThreadSupport.hpp"
+#include "ActivityManager.hpp"
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-#include "ActivityTable.hpp"
 
 #if defined( HAVE_SIGNAL_H )
 # include <signal.h>
@@ -89,42 +89,19 @@ void RxExitClear(int);
 void RxExitClearNormal();
 
 
-extern int  ProcessNumActs;
-extern int  ProcessTerminating;
 extern BOOL bProcessExitInitFlag;
 
 extern ULONG mustCompleteNest;         /* Global variable for MustComplete  */
-extern RexxActivity *CurrentActivity;  /* expose current activity object    */
-                                       /* default active settings           */
-extern ACTIVATION_SETTINGS *current_settings;
-
-#ifdef HIGHTID
-extern ActivityTable *ProcessLocalActs;
-#else
-extern RexxArray *ProcessLocalActs;
-#endif
 
 unsigned int iClauseCounter=0;         // count of clauses
 unsigned int iTransClauseCounter=0;    // count of clauses in translator
 #define LOADED_OBJECTS 100
-
-RexxObject *SysProcessName( void )
-/******************************************************************************/
-/* Function:  Get a referenceable name for this process                       */
-/******************************************************************************/
-{
-  return new_integer((long)getpid());
-}
 
 void SysTermination(void)
 /******************************************************************************/
 /* Function:   Perform system specific termination.                           */
 /******************************************************************************/
 {
-//                                       /* remove the exit list routine      */
-// DosExitList(EXLST_REMOVE,(PFNEXITLIST)exit_handler);
-    if (ProcessLocalActs != OREF_NULL)
-       delete ProcessLocalActs;
 }
 
 void SysInitialize(void)
@@ -243,7 +220,7 @@ RexxString * SysGetCurrentQueue(void)
   RexxString * queue_name;             /* name of the queue object          */
 
                                        /* get the default queue             */
-  queue = (RexxString *)CurrentActivity->local->at(OREF_REXXQUEUE);
+  queue = (RexxString *)ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
 
   if (queue == OREF_NULL)              /* no queue?                         */
     queue_name = OREF_SESSION;         /* use the default name              */

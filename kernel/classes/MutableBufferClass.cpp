@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                           MutableBufferClass.c    */
+/* REXX Kernel                                        MutableBufferClass.c    */
 /*                                                                            */
 /* Primitive MutableBuffer Class                                              */
 /*                                                                            */
@@ -49,11 +49,9 @@
 #include "StringClass.hpp"
 #include "MutableBufferClass.hpp"
 #include "RexxBuiltinFunctions.h"                          /* Gneral purpose BIF Header file       */
-
-#define CRIT_SIZE 0x400000
+#include "ProtectedObject.hpp"
 
 #define DEFAULT_BUFFER_LENGTH 256
-static int        counter = 0;        /* is counting memory                */
 
 RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t argc)
 /******************************************************************************/
@@ -91,28 +89,12 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
     bufferLength = string->getLength();
   }
 
-
-/* It can be critical to handle memory out of Object REXX memory management  */
-/* if memory processing depends on Object REXX Garbage collection and uninit */
-/* cycle time. GC is always triggered by need in case segment borders are    */
-/* reached, Objects are too big, aso. Privat managed memory can never trigger*/
-/* garbage collection. This could lead to the problem, in the following situ-*/
-/* ation:                                                                    */
-/* - Lots of objects (that reside in Object REXX memory) need private memory.*/
-/* - GC is not forced as the Objects memory is not managed by Object REXX    */
-/* - Objects may not marked dead                                             */
-/* - No uninit is started on that objects, so that no free is processed on   */
-/*   private memory                                                          */
-/* In case Objects have big private memory consumption, a GC and runUninits  */
-/* must be forced                                                            */
-  counter += bufferLength;
-
                                         /* allocate the new object           */
   newBuffer = (RexxMutableBuffer *)new_object(sizeof(RexxMutableBuffer));
                                         /* set the behaviour from the class  */
   newBuffer->setBehaviour(this->getInstanceBehaviour());
                                         /* set the virtual function table    */
-  newBuffer->setVirtualFunctions(VFTArray[T_mutablebuffer]);
+  newBuffer->setVirtualFunctions(RexxMemory::VFTArray[T_mutablebuffer]);
                                         /* clear the front part              */
   newBuffer->clearObject(sizeof(RexxMutableBuffer));
   newBuffer->bufferLength = bufferLength;/* save the length of the buffer    */
@@ -145,10 +127,9 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
                                         /* original length                   */
   newBuffer->data->setLength(string->getLength());
 
-  save(newBuffer);                      /* protect new object from GC        */
+  ProtectedObject p(newBuffer);
   newBuffer->hasUninit();               /* important! we have an UNINT method*/
   newBuffer->sendMessage(OREF_INIT, args, argc > 2 ? argc - 2 : 0);
-  discard_hold(newBuffer);
   return newBuffer;
 }
 
@@ -222,23 +203,18 @@ RexxMutableBuffer *RexxMutableBuffer::append(RexxObject *obj)
 {
 
   RexxString *string = get_string(obj, ARG_ONE);
-  save(string);
-
   size_t      resultLength = this->data->getLength() + string->getLength();
 
   if (resultLength > bufferLength) {     /* need to enlarge?                  */
-    counter = counter - bufferLength;
     bufferLength *= 2;                   /* double the buffer                 */
     if (bufferLength < resultLength) {   /* still too small? use new length   */
       bufferLength = resultLength;
     }
-    counter = counter + bufferLength;
                                          /* see the comments in ::newRexx()!! */
     this->data = (RexxString *) realloc(this->data, bufferLength + sizeof(RexxString));
   }
   memcpy(this->data->getWritableData() + this->data->getLength(), string->getStringData(), string->getLength());
   this->data->setLength(data->getLength() + string->getLength());
-  discard(string);
   return this;
 }
 

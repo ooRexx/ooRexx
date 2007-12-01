@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
-/* REXX Kernel                                                  TableClass.c   */
+/* REXX Kernel                                               TableClass.c   */
 /*                                                                          */
 /* Primitive Table Class                                                    */
 /*                                                                          */
@@ -45,6 +45,7 @@
 #include "IntegerClass.hpp"
 #include "TableClass.hpp"
 #include "RexxActivity.hpp"
+#include "ActivityManager.hpp"
 #include "RexxNativeAPI.h"
 
 RexxObject *RexxTable::addOffset(

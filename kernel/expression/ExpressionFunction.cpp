@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ExpressionFunction.c     */
+/* REXX Translator                                   ExpressionFunction.c     */
 /*                                                                            */
 /* Primitive Function Invocation Class                                        */
 /*                                                                            */
@@ -52,6 +52,7 @@
 #include "Token.hpp"
 #include "StackClass.hpp"
 #include "RexxActivity.hpp"
+#include "ProtectedObject.hpp"
 
 extern pbuiltin builtin_table[];       /* table of builtin function stubs   */
 
@@ -168,9 +169,9 @@ RexxObject *RexxExpressionFunction::evaluate(
   RexxObject *result = OREF_NULL;      /* returned result                   */
   size_t      argcount;                /* count of arguments                */
   size_t      i;                       /* loop counter                      */
-  LONG        stacktop;                /* top location on the stack         */
+  size_t      stacktop;                /* top location on the stack         */
 
-  context->activity->stackSpace();     /* check if enough stack is there    */
+  ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
 
   stacktop = stack->location();        /* save the stack top                */
 
@@ -216,7 +217,8 @@ RexxObject *RexxExpressionFunction::evaluate(
       reportException(Error_Function_no_data);  // no name => don't try to print one out...!
   stack->setTop(stacktop);             /* remove arguments from the stack   */
   stack->push(result);                 /* push onto the stack               */
-  if ((this->flags&function_type_mask) != function_builtin) discard(result);
+  // TODO:  replace this with ProtectedObject
+  if ((this->flags&function_type_mask) != function_builtin) discardObject(result);
                                        /* trace if necessary                */
   context->traceFunction(functionName, result);
   return result;                       /* and return this to the caller     */
