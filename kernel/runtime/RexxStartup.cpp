@@ -183,7 +183,7 @@ BOOL REXXENTRY RexxInitialize (void)
   if (ProcessFirstThread) {            /* if the first time                 */
     ProcessFirstThread = FALSE;        /* this is the first thread          */
     MTXCROPEN(resource_semaphore, "OBJREXXRESSEM");         /* create or open the other          */
-    MTXCROPEN(kernel_semaphore, "OBJREXXKERNELSEM");           /* semaphores                        */
+    ActivityManager::createKernelLock();
 #ifdef FIXEDTIMERS
     EVCROPEN(rexxTimeSliceSemaphore, "OBJREXXTSSEM");      // originally EVOPEN
 #endif

@@ -66,9 +66,6 @@ RexxActivity *ActivityManager::firstWaitingActivity = OREF_NULL;
 // tail of the waiting activity chain
 RexxActivity *ActivityManager::lastWaitingActivity = OREF_NULL;
 
-// the number of waiting activitities
-size_t ActivityManager::waitingActivities = 0;
-
 // process shutting down flag
 bool ActivityManager::processTerminating = false;
 
@@ -80,6 +77,9 @@ RexxDirectory *ActivityManager::localEnvironment = OREF_NULL;
 
 // the local server object
 RexxObject *ActivityManager::localServer = OREF_NULL;
+
+// global lock for the interpreter
+SMTX ActivityManager::kernelSemaphore = 0;
 
 const size_t ACTIVATION_CACHE_SIZE = 5;
 
@@ -181,11 +181,13 @@ void ActivityManager::addWaitingActivity(
         waitingAct->clearWait();           /* clear the run semaphore           */
         SysExitResourceSection();          /* end of the critical section       */
         if (release)                       /* current semaphore owner?          */
-            MTXRL(kernel_semaphore);       /* release the lock                  */
+        {
+            unlockKernel();
+        }
         SysThreadYield();                  /* yield the thread                  */
         waitingAct->waitKernel();          /* and wait for permission           */
     }
-    MTXRQ(kernel_semaphore);             /* request the lock now              */
+    lockKernel();                        // get the kernel lock now
     SysEnterResourceSection();           /* now remove the waiting one        */
                                          /* NOTE:  The following assignments  */
                                          /* do not use OrefSet intentionally. */
@@ -201,7 +203,7 @@ void ActivityManager::addWaitingActivity(
        activity that got the semaphore. This could corrupt the list if threads
        are not released in fifo */
 
-    if (firstWaitingActivity)
+    if (firstWaitingActivity != OREF_NULL)
     {
         firstWaitingActivity = firstWaitingActivity->getNextWaitingActivity();
     }
@@ -212,7 +214,7 @@ void ActivityManager::addWaitingActivity(
 
     waitingAct->setNextWaitingActivity(OREF_NULL);
     /* was this the only one?            */
-    if (!firstWaitingActivity)
+    if (firstWaitingActivity == OREF_NULL)
     {
         /* clear out the last one            */
         lastWaitingActivity = OREF_NULL;
@@ -620,7 +622,7 @@ void ActivityManager::lockKernel()
 /* Function:  Request access to the kernel                                    */
 /******************************************************************************/
 {
-    MTXRQ(kernel_semaphore);            /* just request the semaphore        */
+    MTXRQ(kernelSemaphore);            /* just request the semaphore        */
 }
 
 void ActivityManager::unlockKernel()
@@ -629,7 +631,42 @@ void ActivityManager::unlockKernel()
 /******************************************************************************/
 {
     currentActivity = OREF_NULL;         /* no current activation             */
-    MTXRL(kernel_semaphore);             /* release the kernel semaphore      */
+    MTXRL(kernelSemaphore);             /* release the kernel semaphore      */
+}
+
+/**
+ * Create the global kernel lock for the ActivityManager.
+ */
+void ActivityManager::createKernelLock()
+{
+    MTXCROPEN(kernelSemaphore, "OBJREXXKERNELSEM");
+}
+
+/**
+ * Create the global kernel lock for the ActivityManager.
+ */
+void ActivityManager::closeKernelLock()
+{
+    MTXCL(kernelSemaphore);
+}
+
+
+/**
+ * Try a fast request for the kernel.  This requires A) there
+ * be no waiting activities and B) that it be possible to request
+ * the semaphore without waiting.
+ *
+ * @return true if the semaphore was obtained, false if the kernel is
+ *         not locked by this activity.
+ */
+bool ActivityManager::lockKernelImmediate()
+{
+    if (firstWaitingActivity == OREF_NULL)
+    {
+        return MTXRI(kernelSemaphore) == 0;
+    }
+    // don't give this up if somebody is waiting
+    return false;
 }
 
 
@@ -777,7 +814,7 @@ RexxActivity *ActivityManager::getActivity()
  */
 void ActivityManager::relinquish(RexxActivity *activity)
 {
-    if (waitingActivity != OREF_NULL)
+    if (firstWaitingActivity != OREF_NULL)
     {
                                          /* now join the line                 */
         addWaitingActivity(activity, true);

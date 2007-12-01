@@ -173,8 +173,7 @@ typedef unsigned __int64 uint64_t;
 /*#include "oryxthrd.h"      not needed, defines moved in here           */
 #define SMTX HANDLE                 /* semaphore data types              */
 #define SEV  HANDLE
-#define SysSharedSemaphoreDefn HANDLE rexx_kernel_semaphore = NULL;     \
-                               HANDLE rexx_resource_semaphore = NULL;   \
+#define SysSharedSemaphoreDefn HANDLE rexx_resource_semaphore = NULL;   \
                                HANDLE rexx_start_semaphore = NULL;      \
                                HANDLE rexx_wait_queue_semaphore = NULL; \
                                HANDLE rexxTimeSliceSemaphore = NULL;    \

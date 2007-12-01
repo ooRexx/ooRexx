@@ -224,26 +224,6 @@
 /******************************************************************************/
 
 #define _POSIX_THREADS_
-#ifdef OLD_THREADING_PACKAGE
-#include "oryxthrd.h"                  // Need this here for OSEM structs
-
-#define SMTX OSEM                      /* semaphore data types              */
-#define HMTX HOSEM
-#define SEV  OSEM
-#define HEV  HOSEM
-                                       // semaphore definitions and init
-//
-// If you use the OREXX Thread Package, the semaphores are structs. This
-// macro must be changed such that each semaphore is assigned = {0,0,0}
-//
-#define SysSharedSemaphoreDefn SMTX  rexx_kernel_semaphore = {0,0,0};     \
-                               SMTX  rexx_resource_semaphore = {0,0,0};   \
-                               SMTX  rexx_start_semaphore =  {0,0,0};     \
-                               SMTX  rexx_wait_queue_semaphore = {0,0,0};
-                               SEV   rexxTimeSliceSemaphore = {0,0,0};    \
-                               ULONG rexxTimeSliceTimerOwner;
-
-#else
 
 #ifdef OPSYS_AIX41
 #define SysThreadYield()   pthread_yield()
@@ -265,13 +245,11 @@ extern int SecureFlag;
 //#endif
 
 
-#define SysSharedSemaphoreDefn SMTX  rexx_kernel_semaphore = 0;     \
-                               SMTX  rexx_resource_semaphore = 0;   \
+#define SysSharedSemaphoreDefn SMTX  rexx_resource_semaphore = 0;   \
                                SMTX  rexx_start_semaphore =  0;     \
                                SMTX  rexx_wait_queue_semaphore = 0; \
                                SEV   rexxTimeSliceSemaphore = 0;    \
                                ULONG rexxTimeSliceTimerOwner;
-#endif
 /******************************************************************************/
 /* REQUIRED:  Define the REXX type for exceptions.  These can be system       */
 /* specific exception registration info or any place holder type if this      */
@@ -309,29 +287,6 @@ typedef void *(* PTHREADFN)(void *);    /* define a thread function          */
 // If you are using the OREXX Thread package, look at winrexx.h for correct
 // setup of these macros.
 /******************************************************************************/
-#ifdef OLD_THREADING_PACKAGE
-//  Check these changes in oryxthrd.h
-
-#define MTXCR(s)      new ((void *)s) RexxMutex// create a mutex semaphore
-                                       // request wait on a semaphore
-#define MTXRQ(s)      OryxSemRequest(&s, SEM_INDEFINITE_WAIT)
-#define MTXRL(s)      OryxSemClear(&s) // clear a semaphore
-#define MTXCL(s)                       // no need to close in thread package
-                                       // no wait, return if can't get it
-#define MTXRI(s)      OryxSemRequest(&s,SEM_IMMEDIATE_RETURN)
-#define MTXNOPEN(s,n)                  // only used for shared stuff
-#define MTXNCR(s,n)   MTXCR(s)
-#define EVCR(s)       OryxSemInit(&s)
-#define EVPOST(s)     OryxSemClear(&s)
-#define EVSET(s)      OryxSemSet(&s)
-#define EVWAIT(s)     OryxSemWait(&s)
-#define EVCL(s)                        // no need to close in thread package
-#define EVCLOSE(s)
-#define EVOPEN(s)
-#define EVCLEAR(s)    OryxSemInit(&s)  // clear an OSEM
-#define EVEXIST(s)    s.use_count
-
-#else
 
 #define MTXCR(s)      s = new RexxMutex// create a mutex semaphore
 #define MTXCROPEN(s,n) s = new RexxMutex // dummy for Windows
@@ -360,7 +315,6 @@ typedef void *(* PTHREADFN)(void *);    /* define a thread function          */
 //#define EVCLEAR(s)    s->reset()     // commented out by weigold
 #define EVCLEAR(s)    s=0              // and inserted new line
 #define EVEXIST(s)
-#endif
 
 /******************************************************************************/
 /* REQUIRED:  Definitions for entering and exiting code sections that         */

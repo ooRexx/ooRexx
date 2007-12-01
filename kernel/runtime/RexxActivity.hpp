@@ -68,7 +68,6 @@ typedef enum
 } ActivityException;
 
 #define resource_semaphore     rexx_resource_semaphore
-#define kernel_semaphore       rexx_kernel_semaphore
 #define start_semaphore        rexx_start_semaphore
 
                                        /* system exit definitions           */
@@ -89,7 +88,6 @@ typedef enum
 #define LAST_EXIT 12                   /* top bound of the exits            */
 
 
-extern SMTX rexx_kernel_semaphore;     /* global kernel semaphore           */
 extern SMTX rexx_resource_semaphore;   /* global kernel semaphore           */
 extern SMTX rexx_start_semaphore;      /* startup semaphore                 */
 

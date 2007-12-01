@@ -75,7 +75,6 @@
 
 const size_t ACT_STACK_SIZE = 10;
 
-extern SMTX rexx_kernel_semaphore;     /* global kernel semaphore           */
 extern SMTX rexx_resource_semaphore;   /* global kernel semaphore           */
 extern SMTX rexx_start_semaphore;      /* startup semaphore                 */
 
@@ -1544,10 +1543,9 @@ void RexxActivity::releaseAccess()
 /* Function:  Release exclusive access to the kernel                          */
 /******************************************************************************/
 {
-  ActivityManager::currentActivity = OREF_NULL;         /* no current activity               */
-  // reset the numeric settings
-  Numerics::setDefaultSettings();
-  MTXRL(kernel_semaphore);             /* release the kernel semaphore      */
+    ActivityManager::unlockKernel();
+    // reset the numeric settings
+    Numerics::setDefaultSettings();
 }
 
 void RexxActivity::requestAccess()
@@ -1556,16 +1554,12 @@ void RexxActivity::requestAccess()
 /******************************************************************************/
 {
                                        /* only one there?                   */
-    if (!ActivityManager::hasWaiters())
+    if (ActivityManager::lockKernelImmediate())
     {
-        // there's a good chance we'll get this
-        if (MTXRI(kernel_semaphore) == 0)
-        {
-            ActivityManager::currentActivity = this;          /* set new current activity          */
-            /* and new active settings           */
-            Numerics::setCurrentSettings(numericSettings);
-            return;                          /* get out if we have it             */
-        }
+        ActivityManager::currentActivity = this;          /* set new current activity          */
+        /* and new active settings           */
+        Numerics::setCurrentSettings(numericSettings);
+        return;                          /* get out if we have it             */
     }
     /* can't get it, go stand in line    */
     ActivityManager::addWaitingActivity(this, false);
@@ -2865,12 +2859,11 @@ REXXOBJECT REXXENTRY RexxDispatch (
   RexxArray  *args;                    /* argument array for message        */
   RexxObject *result;                  /* returned result object            */
 
-  MTXRQ(kernel_semaphore);             /* get the kernel semophore          */
-
+  ActivityManager::lockKernel();
   receiver = ((RexxArray *)argList)->get(1);
   message  = (RexxString *)((RexxArray *)argList)->get(2);
   args     = (RexxArray *)((RexxArray *)argList)->get(3);
-  MTXRL(kernel_semaphore);             /* release kernel lock.              */
+  ActivityManager::unlockKernel();
                                        /* process the message               */
   RexxSendMessage(receiver, message->getStringData(), OREF_NULL, "oA", &result, (RexxObject *)args);
   return result;                       /* return the message result         */
