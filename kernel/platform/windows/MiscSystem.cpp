@@ -52,7 +52,7 @@
 #include <signal.h>
 
 /* special flag for the LPEX message loop problem */
-extern BOOL UseMessageLoop = TRUE;
+extern BOOL UseMessageLoop = FALSE;
 
 extern ULONG mustCompleteNest;         /* Global variable for MustComplete  */
 extern "C" void activity_thread (RexxActivity *objp);

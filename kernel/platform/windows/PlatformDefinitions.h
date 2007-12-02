@@ -217,13 +217,26 @@ else printf("MTXCR handle %x not null in %s line %d\n", s, __FILE__, __LINE__)
 #define MTXCR(s)      if (!s) s = CreateMutex(NULL, FALSE, NULL)  // create a mutex semaphore
 #endif
 
+void SysRelinquish(void);              /* allow the system to run           */
 
-                                       // request wait on a semaphore
-#define MTXRQ(s)      /* WaitForSingleObject(s, INFINITE) */ \
-                      do \
-                      {    \
-                         SysRelinquish(); \
-                      } while (WaitForSingleObject(s, 1) == WAIT_TIMEOUT);
+inline void waitHandle(HANDLE s)
+{
+   extern BOOL UseMessageLoop;
+   if (UseMessageLoop)
+   {
+       do
+       {
+          SysRelinquish();
+       } while (WaitForSingleObject(s, 1) == WAIT_TIMEOUT);
+   }
+   else
+   {
+       WaitForSingleObject(s, INFINITE);
+   }
+}
+
+
+#define MTXRQ(s)      waitHandle(s);
 #define MTXRL(s)      ReleaseMutex(s) // clear a semaphore
 #ifdef TRACE_SEMAPHORES
 #define MTXCL(s)      if (!CloseHandle(s)) \
