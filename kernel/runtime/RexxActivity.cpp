@@ -108,18 +108,6 @@ void RexxActivity::runThread()
     {
         try
         {
-            int rc;
-            DWORD lastError;
-
-            do
-            {
-               SysRelinquish();
-               rc = WaitForSingleObject(this->runsem, 1);
-               if (rc == WAIT_FAILED)
-               {
-                   lastError = GetLastError();
-               }
-            } while (rc == WAIT_TIMEOUT);
 //          EVWAIT(this->runsem);            /* wait for run permission           */
             if (this->exit)                  /* told to exit?                     */
             {
