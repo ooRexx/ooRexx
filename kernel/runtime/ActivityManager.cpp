@@ -584,12 +584,10 @@ RexxActivity *ActivityManager::findActivity(LONG threadId)
 /* Function:  Locate the activity associated with a thread                    */
 /******************************************************************************/
 {
-    for (size_t listIndex = activeActivities->firstIndex() ;
+    for (size_t listIndex = allActivities->firstIndex() ;
          listIndex != LIST_END;
-         listIndex = activeActivities->nextIndex(listIndex) )
+         listIndex = allActivities->nextIndex(listIndex) )
     {
-                                         /* Get the next message object to    */
-                                         /*process                            */
         RexxActivity *activity = (RexxActivity *)allActivities->getValue(listIndex);
         if (activity->isThread(threadId))
         {
