@@ -226,7 +226,7 @@ RexxMethod1(REXXOBJECT, function_queueExit,
   activation = (RexxActivation *)ActivityManager::currentActivity->getCurrentActivation();
                                        /* call the exit                     */
   ActivityManager::currentActivity->sysExitMsqNam(activation, &qname);
-  return_oref(qname);                  /* and just return the exit result   */
+  return_object(qname);                  /* and just return the exit result   */
 }
 
 

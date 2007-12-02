@@ -255,7 +255,7 @@ native2 (REXXOBJECT, TABLE_ADD, REXXOBJECT, object, REXXOBJECT, index)
 {
   native_entry;                        /* synchronize access                */
                                        /* just forward and return           */
-  return_oref(this->add((RexxObject *)object, (RexxObject *)index));
+  return_object(this->add((RexxObject *)object, (RexxObject *)index));
 }
 
 native1 (REXXOBJECT, TABLE_REMOVE, REXXOBJECT, index)
@@ -265,7 +265,7 @@ native1 (REXXOBJECT, TABLE_REMOVE, REXXOBJECT, index)
 {
   native_entry;                        /* synchronize access                */
                                        /* just forward and return           */
-  return_oref(this->remove((RexxObject *)index));
+  return_object(this->remove((RexxObject *)index));
 }
 
 native1 (REXXOBJECT, TABLE_GET, REXXOBJECT, index)
@@ -275,6 +275,6 @@ native1 (REXXOBJECT, TABLE_GET, REXXOBJECT, index)
 {
   native_entry;                        /* synchronize access                */
                                        /* just forward and return           */
-  return_oref(this->get((RexxObject *)index));
+  return_object(this->get((RexxObject *)index));
 }
 

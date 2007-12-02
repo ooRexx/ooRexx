@@ -2843,7 +2843,7 @@ RexxObject *RexxActivity::nativeRelease(
       activation = (RexxNativeActivation *)ActivityManager::currentActivity->current();
       result = activation->saveObject(result);
   }
-  ActivityManager::currentActivity->releaseAccess(); /* release the kernel lock           */
+  ActivityManager::returnActivity();   /* release the kernel lock           */
   return result;                       /* return the result object          */
 }
 

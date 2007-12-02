@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ListClass.hpp    */
+/* REXX Kernel                                               ListClass.hpp    */
 /*                                                                            */
 /* Primitive List Class Definitions                                           */
 /*                                                                            */
@@ -93,7 +93,7 @@
    RexxObject   *hasIndex(RexxObject *);
    RexxSupplier *supplier();
    RexxObject   *itemsRexx();
-   inline size_t items() { return (size_t)count; };
+   inline size_t items() { return count; };
    RexxObject   *insert(RexxObject *, RexxObject *);
    RexxObject   *put(RexxObject *, RexxObject *);
    RexxObject   *section(RexxObject *, RexxObject *);

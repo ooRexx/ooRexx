@@ -125,7 +125,7 @@ native1 (REXXOBJECT, BUFFER_EXTEND,
 {
   native_entry;                        /* synchronize access                */
                                        /* return new expanded buffer        */
-  return_oref((RexxObject *)this->expand(length));
+  return_object((RexxObject *)this->expand(length));
 }
 
 #undef RexxBuffer
@@ -137,5 +137,5 @@ nativei1 (REXXOBJECT, BUFFER_NEW, size_t, length)
 {
   native_entry;                        /* synchronize access                */
                                        /* just forward and return           */
-  return_oref((RexxObject *)new (length) RexxBuffer());
+  return_object((RexxObject *)new (length) RexxBuffer());
 }

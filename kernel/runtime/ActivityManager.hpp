@@ -58,9 +58,11 @@ public:
     static RexxActivity *findActivity();
     static RexxActivity *findActivity(LONG);
     static RexxActivity *getActivity();
+    static void returnActivity() { returnActivity(currentActivity); }
     static void returnActivity(RexxActivity *);
     static void activityEnded(RexxActivity *);
     static void shutdown();
+    static void checkShutdown();
     static void createInterpreter();
     static void terminateInterpreter();
     static void lockKernel();

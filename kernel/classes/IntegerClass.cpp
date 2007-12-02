@@ -1075,5 +1075,5 @@ nativei1 (REXXOBJECT, INTEGER_NEW,
 {
   native_entry;                        /* synchronize access                */
                                        /* just forward and return           */
-  return_oref(new_integer(value));
+  return_object(new_integer(value));
 }

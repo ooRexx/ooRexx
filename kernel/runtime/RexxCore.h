@@ -803,7 +803,7 @@ inline RexxObject * callOperatorMethod(RexxObject *object, LONG methodOffset, Re
                                        /* macro for common native entry     */
 #define native_entry  ActivityManager::getActivity();
                                        /* value termination routine         */
-#define return_oref(value)  return (REXXOBJECT)native_release(value);
+#define return_object(value)  return (REXXOBJECT)native_release(value);
                                        /* return for no value returns       */
 #define return_void native_release(OREF_NULL); return;
                                        /* return for non-oref values        */

@@ -2259,7 +2259,5 @@ void RexxMemory::restore()
                                        /* Semophores used to serialize      */
                                        /* the flatten/unflatten process     */
   memoryObject.createLocks();
-  // shutdown the activity
-//  ActivityManager::returnActivity(ActivityManager::currentActivity);
 }
 

@@ -871,7 +871,7 @@ nativei0 (REXXOBJECT, MSGNAME)
   native_entry;                        /* synchronize access                */
                                        /* pick up current activation        */
   self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-  return_oref(this->msgname);          /* just forward and return           */
+  return_object(this->msgname);          /* just forward and return           */
 }
 
 nativei0 (REXXOBJECT, RECEIVER)
@@ -884,7 +884,7 @@ nativei0 (REXXOBJECT, RECEIVER)
   native_entry;                        /* synchronize access                */
                                        /* pick up current activation        */
   self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-  return_oref(this->receiver);         /* just forward and return           */
+  return_object(this->receiver);         /* just forward and return           */
 }
 
 nativei1 (int, INTEGER, REXXOBJECT, object)
@@ -1007,7 +1007,7 @@ nativei3 (REXXOBJECT, SEND,
 /******************************************************************************/
 {
   native_entry;                        /* synchronize access                */
-  return_oref((RexxObject *)receiver->sendMessage((RexxString *)new_string(msgname), (RexxArray *)arguments));
+  return_object((RexxObject *)receiver->sendMessage((RexxString *)new_string(msgname), (RexxArray *)arguments));
 }
 
 nativei2 (REXXOBJECT, SUPER,
@@ -1031,7 +1031,7 @@ nativei2 (REXXOBJECT, SUPER,
                                        /* copying each OREF                 */
     argarray[i-1] = args->get(i);
                                        /* now send the message              */
-  return_oref(this->receiver->messageSend((RexxString *)new_string(msgname), count, argarray, this->receiver->superScope(this->method->getScope())));
+  return_object(this->receiver->messageSend((RexxString *)new_string(msgname), count, argarray, this->receiver->superScope(this->method->getScope())));
 }
 
 nativei2 (REXXOBJECT, SETVAR,
@@ -1053,7 +1053,7 @@ nativei2 (REXXOBJECT, SETVAR,
   variableName = new_string(name);    /* get a string version of this      */
                                        /* do the assignment                 */
   dictionary->set(variableName, (RexxObject *)value);
-  return_oref(OREF_NULL);              /* return nothing                    */
+  return_object(OREF_NULL);              /* return nothing                    */
 }
 
 nativei2 (REXXOBJECT, SETVAR2,
@@ -1076,7 +1076,7 @@ nativei2 (REXXOBJECT, SETVAR2,
                                        /* do the assignment throug retriever*/
   retriever = context->getVariableRetriever(variableName);
   retriever->set(context, (RexxObject *)value);
-  return_oref(OREF_NULL);              /* return nothing                    */
+  return_object(OREF_NULL);              /* return nothing                    */
 }
 
 
@@ -1098,7 +1098,7 @@ nativei2 (REXXOBJECT, SETFUNC,
   activation = self->activity->getCurrentActivation();
 
   activation->addLocalRoutine(new_string(name), (RexxMethod *) value);
-  return_oref(OREF_NULL);              /* return nothing                    */
+  return_object(OREF_NULL);              /* return nothing                    */
 }
 
 /*******************************************************1***/
@@ -1143,7 +1143,7 @@ nativei2 (REXXOBJECT, GETFUNCTIONNAMES,
     }
   }
 
-  return_oref(OREF_NULL);              /* return nothing                    */
+  return_object(OREF_NULL);              /* return nothing                    */
 }
 
 nativei1 (REXXOBJECT, GETVAR,
@@ -1225,7 +1225,7 @@ nativei3 (REXXOBJECT, CONDITION,
 {
   native_entry;                        /* synchronize access                */
                                        /* pass on and raise the condition   */
-  return_oref((ActivityManager::currentActivity->raiseCondition((RexxString *)condition, OREF_NULL, (RexxString *)description, (RexxObject *)additional, OREF_NULL, OREF_NULL)) ? TheTrueObject : TheFalseObject);
+  return_object((ActivityManager::currentActivity->raiseCondition((RexxString *)condition, OREF_NULL, (RexxString *)description, (RexxObject *)additional, OREF_NULL, OREF_NULL)) ? TheTrueObject : TheFalseObject);
 }
 
 nativei1 (ULONG, VARIABLEPOOL,
@@ -1341,7 +1341,7 @@ nativei0 (REXXOBJECT, POP_ENVIRONMENT)
   native_entry;                        /* synchronize access                */
                                        /* pick up current activation        */
   activation = (RexxActivation *)ActivityManager::currentActivity->getCurrentActivation();
-  return_oref(activation->popEnvironment());
+  return_object(activation->popEnvironment());
 }
 
 BOOL REXXENTRY REXX_ISDIRECTORY(REXXOBJECT object)

@@ -2198,5 +2198,5 @@ native0 (REXXOBJECT, OBJECT_NEW)
 {
   native_entry;                        /* synchronize access              */
                                        /* just forward and return         */
-  return_oref(new ((RexxClass *)self) RexxObject);
+  return_object(new ((RexxClass *)self) RexxObject);
 }

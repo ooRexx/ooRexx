@@ -272,10 +272,26 @@ void ActivityManager::shutdown()
                                        /* done after uninit calls. incas    */
                                        /*  uninits needed some.             */
     clearActivityPool();
-    // now shut down the rest of the stuff
-    kernelShutdown();                  /* shut everything down              */
+    // if there are no activities yet to shutdown, we can terminate immediately.
+    // Otherwise, we need to wait for the rest of the threads to finish cleaning
+    // up.  Once the last thread terminates, we can shutdown.
+    checkShutdown();
     localEnvironment = OREF_NULL;      /* no local environment              */
     unlockKernel();                    /* Done with Kernel stuff            */
+}
+
+
+/**
+ * Check to see it it's time to shutdown the entire kernel.
+ * This only occurs once all of the activities have shut down.
+ */
+void ActivityManager::checkShutdown()
+{
+    // if this is the last thread, time to shutdown
+    if (allActivities->items() == 0)
+    {
+        kernelShutdown();                /* time to shut things down          */
+    }
 }
 
 
@@ -464,10 +480,7 @@ bool ActivityManager::poolActivity(RexxActivity *activity)
         // remove this from the activity list
         allActivities->removeItem((RexxObject *)activity);
         // if this is the last thread, time to shutdown
-        if (allActivities->isEmpty())
-        {
-            kernelShutdown();                /* time to shut things down          */
-        }
+        checkShutdown();
         return false;
     }
     else if (availableActivities->items() > MAX_THREAD_POOL_SIZE)
@@ -707,9 +720,9 @@ void ActivityManager::returnActivity(RexxActivity *activityObject)
         // END OF CRITICAL SECTION
         SysExitResourceSection();
                                          /* Are we terminating?               */
-        if (processTerminating && allActivities->isEmpty())
+        if (processTerminating)
         {
-            kernelShutdown();                /* time to shut things down          */
+            checkShutdown();                /* time to shut things down          */
         }
     }
 
@@ -747,9 +760,9 @@ void ActivityManager::activityEnded(RexxActivity *activityObject)
     // END OF CRITICAL SECTION
     SysExitResourceSection();
                                      /* Are we terminating?               */
-    if (processTerminating && allActivities->isEmpty())
+    if (processTerminating)
     {
-        kernelShutdown();                /* time to shut things down          */
+        checkShutdown();                /* time to shut things down          */
     }
 
     // this activity owned the kernel semaphore before entering here...release it
@@ -839,5 +852,5 @@ void ActivityManager::startup()
                                          /* create a new server object        */
     currentActivity->messageSend(server_class, OREF_NEW, 0, OREF_NULL, &localServer);
                                          /* now release this activity         */
-    returnActivity(currentActivity);
+    returnActivity();
 }
