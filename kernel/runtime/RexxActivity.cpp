@@ -108,7 +108,7 @@ void RexxActivity::runThread()
     {
         try
         {
-//          EVWAIT(this->runsem);            /* wait for run permission           */
+            EVWAIT(this->runsem);            /* wait for run permission           */
             if (this->exit)                  /* told to exit?                     */
             {
                 break;                       /* we're out of here                 */
