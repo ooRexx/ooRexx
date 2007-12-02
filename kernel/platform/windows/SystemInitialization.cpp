@@ -94,11 +94,7 @@ BOOL WINAPI DllMain(
 //      RxAPIStartUp();
      InitializeCriticalSection(&waitProtect);  // another critical section is needed...
 /* create critical section at DLL load-time (more secure) */
-#ifdef THREADS
      SysThreadInit();
-#else
-     OryxThreadInit();
-#endif
      if (fSuccess) {
        RxInterProcessInit(TRUE);
        horyxkDll = hinstDll;            /* keep handle around */

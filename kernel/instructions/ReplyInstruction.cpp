@@ -64,11 +64,6 @@ void RexxInstructionReply::execute(
 /******************************************************************************/
 {
   RexxObject *result;                  /* expression result                 */
-
-#ifdef NOTHREADSUPPORT
-   reportException(Error_Execution_no_concurrency);
-#else
-
   context->traceInstruction(this);     /* trace if necessary                */
   if (!context->inMethod())            /* is this a method clause?          */
                                        /* raise an error                    */
@@ -83,6 +78,5 @@ void RexxInstructionReply::execute(
   else
     context->reply(OREF_NULL);         /* return with no value              */
   context->pauseInstruction();         /* do debug pause if necessary       */
-#endif                                 // end of NOTHREADSUPPORT
 }
 

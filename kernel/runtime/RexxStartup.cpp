@@ -72,7 +72,6 @@ extern RexxInteger *ProcessName;
 
 #if defined(AIX) || defined(LINUX)
 char achRexxCurDir[ CCHMAXPATH+2 ];          /* Save current working direct */
-extern int thread_counter;
 extern int  SecureFlag;
 #endif
 
@@ -141,24 +140,7 @@ BOOL REXXENTRY RexxInitialize (void)
   setbuf(stdout,NULL);                 /* No buffering                      */
   setbuf(stderr,NULL);
 
-#if defined(AIX) || defined(LINUX)
-#ifdef THREADS
-  if (!thread_counter)                 /*thread_counter is global defined    */
-  {                                    /* and reset in RexxWaitForTermination */
-    thread_counter++;
-    SysThreadInit();                   /* do thread initialization          */
-  }
-#else
-  OryxThreadInit();                    /* do thread initialization          */
-#endif
-#else
-#ifdef THREADS
   SysThreadInit();                     /* do thread initialization          */
-#else
-  OryxThreadInit();                    /* do thread initialization          */
-#endif
-#endif
-
   SysEnterCriticalSection();
 
   result = ProcessFirstThread;         /* check on the first thread         */

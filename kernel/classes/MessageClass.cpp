@@ -285,10 +285,6 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
   RexxNativeActivation *newNativeAct;  /* Native Activation to run on       */
   size_t        i;                     /* loop counter                      */
 
-#ifdef NOTHREADSUPPORT
-   reportException(Error_Execution_no_concurrency);
-#else
-
                                        /* has message already been sent or  */
                                        /* is another start message pending? */
   if (this->msgSent() || this->startPending())
@@ -328,7 +324,6 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
   newActivity->push(newNativeAct);     /*stack                              */
                                        /* indicate we want the NativeAct to */
   newActivity->run();                  /*run                                */
-#endif                                 // end of NOTHREADSUPPORT
   return OREF_NULL;                    /* all done here, return to caller.  */
 }
 

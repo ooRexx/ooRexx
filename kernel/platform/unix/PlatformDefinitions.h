@@ -174,15 +174,6 @@
 #define RXTRACE_SUPPORT
 
 /******************************************************************************/
-/* OPTIONAL:  If the implementation is going to support multiple threads,     */
-/* include a define for THREADS.                                              */
-// If the implementation is going to use the OREXX thread package do NOT
-// define THREADS.
-/******************************************************************************/
-
-#define THREADS
-
-/******************************************************************************/
 /* OPTIONAL:  Perform stack checking on new message invocations.  If this type*/
 /* of information is not available, then do not include this define           */
 /******************************************************************************/

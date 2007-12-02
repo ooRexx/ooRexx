@@ -66,11 +66,6 @@ RexxString *version_number (void)
   if (*day == '0')                     /* day have a leading zero?          */
     day++;                             /* step over it                      */
                                        /* format the result                 */
-#ifdef NOTHREADSUPPORT
-  sprintf(buffer, "REXX-ooRexx_%d.%d.%d 6.02 %s %s %s", ORX_VER, ORX_REL, ORX_MOD, day, month, year);
-#else
   sprintf(buffer, "REXX-ooRexx_%d.%d.%d(MT) 6.02 %s %s %s", ORX_VER, ORX_REL, ORX_MOD, day, month, year);
-#endif
-
   return new_string(buffer);          /* return as a rexx string           */
 }

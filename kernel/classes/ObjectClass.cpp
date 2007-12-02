@@ -1479,10 +1479,6 @@ RexxMessage *RexxObject::start(
   RexxObject  *sender;                 /* sending object                    */
   RexxString  *newMsgName;             /* msgname to be sent                */
 
-#ifdef NOTHREADSUPPORT
-   reportException(Error_Execution_no_concurrency);
-#else
-
   if (argCount < 1 )                   /* no arguments?                     */
     missing_argument(ARG_ONE);         /* Yes, this is an error.            */
                                        /* Get the message name.             */
@@ -1544,7 +1540,6 @@ RexxMessage *RexxObject::start(
   newMessage = new_message(this, message, new (argCount - 1, arguments + 1) RexxArray);
   ProtectedObject p(newMessage);
   newMessage->start(OREF_NULL);        /* Tell the message object to start  */
-#endif                                 // end of NOTHREADSUPPORT
   return newMessage;                   /* return the new message object     */
 }
 

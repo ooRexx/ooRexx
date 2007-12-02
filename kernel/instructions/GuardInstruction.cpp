@@ -88,10 +88,6 @@ void RexxInstructionGuard::execute(
   size_t      i;                       /* loop counter                      */
   RexxObject *result;                  /* guard expression result           */
 
-#ifdef NOTHREADSUPPORT
-   reportException(Error_Execution_no_concurrency);
-#else
-
   context->traceInstruction(this);     /* trace if necessary                */
   if (!context->inMethod())            /* is this a method clause?          */
                                        /* raise an error                    */
@@ -142,7 +138,6 @@ void RexxInstructionGuard::execute(
       this->variables[i]->clearGuard(context);
     }
   }
-#endif                                 // end of NOTHREADSUPPORT
 }
 
 void RexxInstructionGuard::live()

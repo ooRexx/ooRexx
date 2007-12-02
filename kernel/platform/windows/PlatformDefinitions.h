@@ -97,22 +97,6 @@ typedef unsigned __int64 uint64_t;
 #define INT64_MAX  ((int64_t)(UINT64_MAX >> 1))
 #define INT64_MIN  ((int64_t)UINT64_MAX)
 
-
-/******************************************************************************/
-/* OPTIONAL:  If the implementation is going to support a cross-process       */
-/* shared memory model, then include a define for SHARED                      */
-/******************************************************************************/
-
-/* enable the flag so RexxStart can be called within threads */
-#define SHARED                         // no shared memory sup
-
-/******************************************************************************/
-/* OPTIONAL:  If the implementation is going to support multiple threads,     */
-/* include a define for THREADS.  If not defined, then the REPLY instruction  */
-/* will not work.                                                             */
-/******************************************************************************/
-#define THREADS
-
 /******************************************************************************/
 /* OPTIONAL:  Perform stack bounds checking on new message invocations.  If   */
 /* this is a non-stack based calling convention, or it is not possible to     */
@@ -170,7 +154,6 @@ typedef unsigned __int64 uint64_t;
 /* REQUIRED:  Define the REXX type for semaphores.  These can be system       */
 /* specific semaphore types or the REXX define OSEM.                          */
 /******************************************************************************/
-/*#include "oryxthrd.h"      not needed, defines moved in here           */
 #define SMTX HANDLE                 /* semaphore data types              */
 #define SEV  HANDLE
 #define SysSharedSemaphoreDefn HANDLE rexx_resource_semaphore = NULL;   \
@@ -214,9 +197,6 @@ typedef void (* PTHREADFN)(void *);    /* define a thread function          */
 /* the REXX library semaphore package, but can be redefined to map directly   */
 /* to system specific functions too.                                          */
 /******************************************************************************/
-//  Check these changes in oryxthrd.h
-
-//SECURITY_ATTRIBUTES SA_inherit = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
 #ifdef _DEBUG
 // #define TRACE_SEMAPHORES    /* not necessary to trace MTX and EV macros */
