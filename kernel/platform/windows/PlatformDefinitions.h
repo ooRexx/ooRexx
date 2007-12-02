@@ -174,7 +174,6 @@ typedef unsigned __int64 uint64_t;
 #define SMTX HANDLE                 /* semaphore data types              */
 #define SEV  HANDLE
 #define SysSharedSemaphoreDefn HANDLE rexx_resource_semaphore = NULL;   \
-                               HANDLE rexx_start_semaphore = NULL;      \
                                HANDLE rexx_wait_queue_semaphore = NULL; \
                                HANDLE rexxTimeSliceSemaphore = NULL;    \
                                ULONG rexxTimeSliceTimerOwner;

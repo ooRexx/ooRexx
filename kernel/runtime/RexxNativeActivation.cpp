@@ -328,6 +328,8 @@ RexxObject *RexxNativeActivation::run(
   if (i < argcount && !used_arglist)   /* extra, unwanted arguments?        */
                                        /* got too many                      */
     reportException(Error_Incorrect_method_maxarg, i);
+
+  size_t activityLevel = this->activity->getActivationLevel();
                                        /* get a RAISE type return?          */
   if (setjmp(this->conditionjump) != 0) {
     // TODO  Use protected object on the result
@@ -335,14 +337,46 @@ RexxObject *RexxNativeActivation::run(
       holdObject(this->result);        /* get result held longer            */
     this->guardOff();                  /* release any variable locks        */
     this->argcount = 0;                /* make sure we don't try to mark any arguments */
+    // the lock holder gets here by longjmp from a kernel reentry.  We need to
+    // make sure the activation count gets reset, else we'll accumulate bogus
+    // nesting levels that will make it look like this activity is still in use
+    // when in fact we're done with it.
+    this->activity->restoreActivationLevel(activityLevel);
     this->activity->pop(FALSE);        /* pop this from the activity        */
     this->setHasNoReferences();        /* mark this as not having references in case we get marked */
     return this->result;               /* and finished                      */
   }
 
-  activity->releaseAccess();           /* force this to "safe" mode         */
-  (*methp)(ivalues);                   /* process the method call           */
-  activity->requestAccess();           /* now in unsafe mode again          */
+  try
+  {
+      activity->releaseAccess();           /* force this to "safe" mode         */
+      (*methp)(ivalues);                   /* process the method call           */
+      activity->requestAccess();           /* now in unsafe mode again          */
+  }
+  catch (RexxActivation *a)
+  {
+      // it's possible that we can get terminated by a throw during condition processing.
+      // we intercept this here, perform any cleanup we need to perform, then let the
+      // condition trap propagate.
+      this->guardOff();                  /* release any variable locks        */
+      this->argcount = 0;                /* make sure we don't try to mark any arguments */
+      // the lock holder gets here by longjmp from a kernel reentry.  We need to
+      // make sure the activation count gets reset, else we'll accumulate bogus
+      // nesting levels that will make it look like this activity is still in use
+      // when in fact we're done with it.
+      this->activity->restoreActivationLevel(activityLevel);
+      // IMPORTANT NOTE:  We don't pop our activation off the stack.  This will be
+      // handled by the catcher.  Attempting to pop the stack when an error or condition has
+      // occurred can munge the activation stack, resulting bad stuff.
+      this->setHasNoReferences();        /* mark this as not having references in case we get marked */
+
+      // now rethrow the trapped condition so that real target can handle this.
+      throw;
+  }
+
+  // belt and braces...this restores the activity level to whatever
+  // level we had when we made the callout.
+  this->activity->restoreActivationLevel(activityLevel);
 
   /* give up reference to receiver so that it can be garbage collected */
   this->receiver = OREF_NULL;

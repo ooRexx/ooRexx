@@ -395,5 +395,9 @@ void RexxMutableBuffer::uninitMB()
 /* Function:   free the allocated memory at the end of object's lifetime      */
 /******************************************************************************/
 {
-  if (this->data) free(data);
+  if (this->data)
+  {
+      free(data);
+      data = NULL;
+  }
 }

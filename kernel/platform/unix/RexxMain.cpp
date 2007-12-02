@@ -750,7 +750,6 @@ void APIENTRY RexxWaitForTermination(void)
    RexxTerminated = NULL;
    SecureFlag = 0;
    thread_counter = 0;
-   MTXCL(start_semaphore);
    MTXCL(resource_semaphore);
    ActivityManager::closeKernelLock();
    MTXCL(memoryObject.flattenMutex);
@@ -776,7 +775,6 @@ APIRET APIENTRY RexxDidRexxTerminate(void)
        RexxTerminated = NULL;
 
        MTXCL(initialize_sem);
-       MTXCL(start_semaphore);
        MTXCL(resource_semaphore);
        ActivityManager::closeKernelLock();
        MTXCL(memoryObject.flattenMutex);

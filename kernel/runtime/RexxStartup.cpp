@@ -81,7 +81,6 @@ void kernelShutdown (void)
 /* Shutdown OREXX System for this process                                     */
 /******************************************************************************/
 {
-  MTXRQ(start_semaphore);              /* serialize startup/shutdown        */
   SysTermination();                    /* cleanup                           */
   EVPOST(RexxTerminated);              /* let anyone who cares know we're done*/
 //  memoryObject.dumpMemoryProfile();    /* optionally dump memory stats      */
@@ -92,13 +91,6 @@ void kernelShutdown (void)
     ProcessFirstThread = TRUE;         /* first thread needs to be created  */
     memoryObject.freePools();          /* release access to memoryPools     */
   }
-#ifdef SHARED
-#if defined(AIX) || defined(LINUX)
-    MTXRL(initialize_sem);
-#else
-    MTXRL(start_semaphore);              /* serialize startup/shutdown        */
-#endif
-#endif
 }
 
 
@@ -173,13 +165,7 @@ BOOL REXXENTRY RexxInitialize (void)
 
   // perform activity manager startup for another instance
   ActivityManager::createInterpreter();
-                                       /* make sure we can't loose control  */
-                                       /* durecing creation/opening of THIS */
-                                       /* MUTEX.                            */
-  MTXCROPEN(start_semaphore, "OBJREXXSTARTSEM");  /* get the start semaphore           */
   SysExitCriticalSection();
-  MTXRQ(start_semaphore);              /* lock the startup                  */
-
   if (ProcessFirstThread) {            /* if the first time                 */
     ProcessFirstThread = FALSE;        /* this is the first thread          */
     MTXCROPEN(resource_semaphore, "OBJREXXRESSEM");         /* create or open the other          */

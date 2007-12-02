@@ -246,7 +246,6 @@ extern int SecureFlag;
 
 
 #define SysSharedSemaphoreDefn SMTX  rexx_resource_semaphore = 0;   \
-                               SMTX  rexx_start_semaphore =  0;     \
                                SMTX  rexx_wait_queue_semaphore = 0; \
                                SEV   rexxTimeSliceSemaphore = 0;    \
                                ULONG rexxTimeSliceTimerOwner;

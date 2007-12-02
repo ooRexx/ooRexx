@@ -76,7 +76,6 @@
 const size_t ACT_STACK_SIZE = 10;
 
 extern SMTX rexx_resource_semaphore;   /* global kernel semaphore           */
-extern SMTX rexx_start_semaphore;      /* startup semaphore                 */
 
 extern "C" void activity_thread (RexxActivity *objp);
 
@@ -109,7 +108,19 @@ void RexxActivity::runThread()
     {
         try
         {
-            EVWAIT(this->runsem);            /* wait for run permission           */
+            int rc;
+            DWORD lastError;
+
+            do
+            {
+               SysRelinquish();
+               rc = WaitForSingleObject(this->runsem, 1);
+               if (rc == WAIT_FAILED)
+               {
+                   lastError = GetLastError();
+               }
+            } while (rc == WAIT_TIMEOUT);
+//          EVWAIT(this->runsem);            /* wait for run permission           */
             if (this->exit)                  /* told to exit?                     */
             {
                 break;                       /* we're out of here                 */
@@ -122,6 +133,7 @@ void RexxActivity::runThread()
 #endif
 
             this->requestAccess();           /* now get the kernel lock           */
+            this->activate();                // make sure this is marked as active
                                              /* get the top activation            */
             this->topActivation->dispatch(); /* go dispatch it                    */
 
@@ -133,6 +145,8 @@ void RexxActivity::runThread()
 
 
         memoryObject.runUninits();         /* run any needed UNINIT methods now */
+
+        this->deactivate();                // no longer an active activity
 
         EVSET(this->runsem);               /* reset the run semaphore and the   */
         EVSET(this->guardsem);             /* guard semaphore                   */
