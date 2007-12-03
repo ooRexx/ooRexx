@@ -220,16 +220,16 @@ Third option: <Location of documentation files>
 
 The third option can be used to point makeorx to the documentation files if
 they are not located in the source tree.  For example, say the PDF files are
-located in the C:\ooRexx.3.2.0.release.docs directory.  The following could
+located in the C:\ooRexx.3.3.0.release.docs directory.  The following could
 be used to build ooRexx and create the installer package without the need to
 copy the PDF files into the source tree:
 
-E:\work.ooRexx\makeorx NODEBUG PACKAGE C:\ooRexx.3.2.0.release.docs
+E:\work.ooRexx\makeorx NODEBUG PACKAGE C:\ooRexx.3.3.0.release.docs
 
 Rather than specify the doc location on the command line, an environment
 variable can be used.  The following is equivalent to the above command:
 
-E:\work.ooRexx\set DOC_LOCATION=C:\ooRexx.3.2.0.release.docs
+E:\work.ooRexx\set DOC_LOCATION=C:\ooRexx.3.3.0.release.docs
 E:\work.ooRexx\makeorx NODEBUG PACKAGE
 
 Miscellaneous details:

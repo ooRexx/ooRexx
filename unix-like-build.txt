@@ -183,9 +183,9 @@ naming convention.  To build the deb package you *must* name the root of
 directory of the source tree to conform to the naming convention.
 
 The root directory must be named:  oorexx-<versionNumber>  For example, when
-building the 3.2.0 version of ooRexx the root directory of the source tree
-must be named:  oorexx-3.2.0
-For the 3.1.2 version the name must be: oorexx-3.1.2
+building the 3.3.0 version of ooRexx the root directory of the source tree
+must be named:  oorexx-3.3.0
+For the 3.3.0 version the name must be: oorexx-3.3.0
 
 After naming the root directory of the source tree correctly, build ooRexx
 as described above, then execute the deb make target.  I.e.:

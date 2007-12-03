@@ -53,12 +53,12 @@
 
 # Specify the package version
 %define orx_major 3
-%define orx_minor 2
+%define orx_minor 3
 %define orx_mod_lvl 0
 
 # Specify the libtool library version
 %define orx_current 3
-%define orx_revision 4
+%define orx_revision 5
 %define orx_age 0
 # the order of these looks wrong, but that is how it comes out!
 %define orx_libversion %{orx_current}.%{orx_age}.%{orx_revision}
