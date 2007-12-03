@@ -703,9 +703,14 @@ void ActivityManager::returnActivity(RexxActivity *activityObject)
         // was that our last working activity for this interpreter invocation?
         if (activeActivities->items() == 1)
         {
+            // This activity is currently the current activity.  We're going to run the
+            // uninits on this one, so reactivate it until we're done running
+            activityObject->activate();
             // before we update of the data structures, make sure we process any
             // pending uninit activity.
             memoryObject.forceUninits();
+            // ok, deactivate this again.
+            activityObject->deactivate();
         }
 
         // START OF CRITICAL SECTION
@@ -743,9 +748,14 @@ void ActivityManager::activityEnded(RexxActivity *activityObject)
     // was that our last working activity for this interpreter invocation?
     if (activeActivities->items() == 1)
     {
+        // This activity is currently the current activity.  We're going to run the
+        // uninits on this one, so reactivate it until we're done running
+        activityObject->activate();
         // before we update of the data structures, make sure we process any
         // pending uninit activity.
         memoryObject.forceUninits();
+        // ok, deactivate this again.
+        activityObject->deactivate();
     }
 
     // START OF CRITICAL SECTION
