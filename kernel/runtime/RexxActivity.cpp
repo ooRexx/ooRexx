@@ -106,6 +106,10 @@ void RexxActivity::runThread()
     SysRegisterExceptions(&exreg);       /* create needed exception handlers  */
     for (;;)
     {
+        // save the actitivation level in case there's an error unwind for an unhandled
+        // exception;
+        size_t activityLevel = getActivationLevel();
+
         try
         {
             EVWAIT(this->runsem);            /* wait for run permission           */
@@ -131,6 +135,8 @@ void RexxActivity::runThread()
             this->error(0);
         }
 
+        // make sure we get restored to the same base activation level.
+        restoreActivationLevel(activityLevel);
 
         memoryObject.runUninits();         /* run any needed UNINIT methods now */
 
@@ -768,6 +774,9 @@ RexxString *RexxActivity::messageSubstitution(
                                        /* set the reentry flag              */
           this->requestingString = true;
           this->stackcheck = false;    /* disable the checking              */
+          // save the actitivation level in case there's an error unwind for an unhandled
+          // exception;
+          size_t activityLevel = getActivationLevel();
                                        /* now protect against reentry       */
           try
           {
@@ -778,6 +787,9 @@ RexxString *RexxActivity::messageSubstitution(
           {
               stringVal = value->defaultName();
           }
+
+          // make sure we get restored to the same base activation level.
+          restoreActivationLevel(activityLevel);
                                        /* we're safe again                  */
           this->requestingString = false;
           this->stackcheck = true;     /* disable the checking              */
@@ -2728,6 +2740,10 @@ int RexxActivity::messageSend(
 
   SysRegisterSignals(&exreg);          /* register our signal handlers      */
 
+  // save the actitivation level in case there's an error unwind for an unhandled
+  // exception;
+  size_t activityLevel = getActivationLevel();
+
   try
   {
                                        /* issue a straight message send     */
@@ -2738,6 +2754,9 @@ int RexxActivity::messageSend(
   {
       rc = this->error(startDepth);      /* do error cleanup                  */
   }
+
+  // make sure we get restored to the same base activation level.
+  restoreActivationLevel(activityLevel);
   // give uninit objects a chance to run
   TheMemoryObject->runUninits();
   this->restoreNestedInfo(saveInfo);   /* now restore to previous nesting   */
