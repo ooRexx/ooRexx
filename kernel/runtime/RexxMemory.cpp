@@ -426,6 +426,17 @@ void  RexxMemory::forceUninits()
 /*                                                                            */
 /******************************************************************************/
 {
+    /* if we're already processing this, don't try to do this */
+    /* recursively. */
+    if (processingUninits)
+    {
+        return;
+    }
+
+    /* turn on the recursion flag, and also zero out the count of */
+    /* pending uninits to run */
+    processingUninits = true;
+
     RexxObject *zombieObj;
 
                                        /* for all objects in the table    */
@@ -440,6 +451,9 @@ void  RexxMemory::forceUninits()
         catch (RexxActivation *) { }
         catch (ActivityException) { }
     }                                  /* now go check next object in tabl*/
+
+    /* make sure we remove the recursion protection */
+    processingUninits = false;
 }
 
 
@@ -483,7 +497,12 @@ void  RexxMemory::runUninits()
         {
             /* make sure we don't recurse        */
             uninitTable->put(TheFalseObject, zombieObj);
-            zombieObj->uninit();           /* yes, indicate run the UNINIT      */
+            try
+            {
+                zombieObj->uninit();           /* run the UNINIT method           */
+            }
+            catch (RexxActivation *) { }
+            catch (ActivityException) { }
                                            /* remove zombie from uninit table   */
             uninitTable->remove(zombieObj);
         }

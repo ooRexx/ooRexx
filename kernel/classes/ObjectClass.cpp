@@ -1908,7 +1908,9 @@ void        RexxObject::uninit(void)
 /******************************************************************************/
 {
   if (TheTrueObject == this->hasMethod(OREF_UNINIT))
-    this->sendMessage(OREF_UNINIT);
+  {
+      this->sendMessage(OREF_UNINIT);
+  }
 
 }
 
