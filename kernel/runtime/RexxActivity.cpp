@@ -108,7 +108,7 @@ void RexxActivity::runThread()
     {
         // save the actitivation level in case there's an error unwind for an unhandled
         // exception;
-        size_t activityLevel = getActivationLevel();
+        size_t activityLevel = 0;
 
         try
         {
@@ -126,6 +126,7 @@ void RexxActivity::runThread()
 
             this->requestAccess();           /* now get the kernel lock           */
             this->activate();                // make sure this is marked as active
+            activityLevel = getActivationLevel();
                                              /* get the top activation            */
             this->topActivation->dispatch(); /* go dispatch it                    */
 
