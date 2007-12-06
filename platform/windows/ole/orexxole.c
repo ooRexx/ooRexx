@@ -1103,8 +1103,12 @@ RexxObject *SafeArray2RexxArray(VARIANT *pVariant)
   BOOL        fCarryBit;
   INT         i;
 
+  /* V_ARRAY can be passed by reference. */
+  if ( V_VT(pVariant) & VT_BYREF )
+    pSafeArray = *(V_ARRAYREF(pVariant));
+  else
+    pSafeArray = V_ARRAY(pVariant);
 
-  pSafeArray = V_ARRAY(pVariant);
   EmbeddedVT = V_VT(pVariant) & VT_TYPEMASK;
   lDimensions = SafeArrayGetDim(pSafeArray);
 
@@ -1672,10 +1676,7 @@ BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, INT iArgPo
     send_exception(Error_Interpretation_initialization);
   }
 
-  /* OLE Automation objects can require an argument to IDispatch::Invoke be sent
-   * as an array (VT_ARRAY | VT_XXX)  There are definitely cases where an empty
-   * array is valid.
-   */
+  /* An empty array is valid, and necessary for some OLE Automation objects. */
   if ( lDimensions == 0 )
   {
       return createEmptySafeArray(VarArray);
@@ -2639,156 +2640,255 @@ RexxMethod1(REXXOBJECT,                // Return type
 }
 
 
-/* handle rereferencing/dereferencing for out-parameters
-   => sets VT_BYREF and changes variant correctly */
-// make the VARIANT a VT_BYREF VARIANT
-// this sets the VT_BYREF flag in the vt member,
-// creates a pointer to the content of the variant
-// and changes the entry in the variant from
-// xxxVal to pxxxVal (ptr)
+/**
+ * Handle referencing for out parameters in IDispatch::Invoke.  Memory is
+ * allocated for and set with the variant value, the variant value is set as a
+ * pointer to this memory, and the VT_BYREF flag is added to the vartype.
+ *
+ * @param obj  Pointer to the variant to be changed to a by reference variant.
+ */
 void referenceVariant(VARIANT *obj)
 {
-  void *pNew;
+    void *pNew;
 
-  switch (obj->vt) {
-  case VT_I1:
-  case VT_UI1:
-    pNew = (void*) ORexxOleAlloc(sizeof(char));
-    * (char*) pNew = obj->cVal;
-    obj->pcVal = (char*) pNew;
-    break;
-  case VT_I2:
-  case VT_UI2:
-    pNew = (void*) ORexxOleAlloc(sizeof(short));
-    * (short*) pNew = obj->iVal;
-    obj->piVal = (short*) pNew;
-    break;
-  case VT_I4:
-  case VT_UI4:
-    pNew = (void*) ORexxOleAlloc(sizeof(long));
-    * (long*) pNew = obj->lVal;
-    obj->plVal = (long*) pNew;
-    break;
-  case VT_INT:
-  case VT_UINT:
-    pNew = (void*) ORexxOleAlloc(sizeof(int));
-    * (int*) pNew = obj->intVal;
-    obj->pintVal = (int*) pNew;
-    break;
-  case VT_R4:
-    pNew = (void*) ORexxOleAlloc(sizeof(float));
-    * (float*) pNew = obj->fltVal;
-    obj->pfltVal = (float*) pNew;
-    break;
-  case VT_R8:
-    pNew = (void*) ORexxOleAlloc(sizeof(double));
-    * (double*) pNew = obj->dblVal;
-    obj->pdblVal = (double*) pNew;
-    break;
-  case VT_BOOL:
-    pNew = (void*) ORexxOleAlloc(sizeof(VARIANT_BOOL));
-    * (VARIANT_BOOL*) pNew = obj->boolVal;
-    obj->pboolVal = (VARIANT_BOOL*) pNew;
-    break;
-  case VT_ERROR:
-    pNew = (void*) ORexxOleAlloc(sizeof(SCODE));
-    * (SCODE*) pNew = obj->scode;
-    obj->pscode = (SCODE*) pNew;
-    break;
-  case VT_CY:
-    pNew = (void*) ORexxOleAlloc(sizeof(CY));
-    * (CY*) pNew = obj->cyVal;
-    obj->pcyVal = (CY*) pNew;
-    break;
-  case VT_DATE:
-    pNew = (void*) ORexxOleAlloc(sizeof(DATE));
-    * (DATE*) pNew = obj->date;
-    obj->pdate = (DATE*) pNew;
-    break;
-  case VT_BSTR:
-    pNew = (void*) ORexxOleAlloc(sizeof(BSTR));
-    *((BSTR*) pNew) = obj->bstrVal;
-    obj->pbstrVal = (BSTR*) pNew;
-    break;
-  default:
-    break;
-  }
-  obj->vt |= VT_BYREF;
+    /**
+     * If the variant is already by reference, then nothing should be done, so
+     * just return.
+     */
+    if ( V_VT(obj) & VT_BYREF )
+        return;
+
+    switch ( V_VT(obj) & VT_TYPEMASK )
+    {
+        case VT_VARIANT:
+            /**
+             * If the VARTYPE is VT_VARIANT, it has to be orr'd with VT_BYREF,
+             * VT_ARRAY, or VT_VECTOR.  OLE Automation does not use VT_VECTOR,
+             * VT_BYREF has already been checked, so it must be VT_ARRAY.
+             * Nevertheless, check that it is.
+             */
+            if ( V_VT(obj) & VT_ARRAY )
+            {
+                SAFEARRAY **ppsa = (SAFEARRAY **)ORexxOleAlloc(sizeof(SAFEARRAY *));
+                *ppsa = V_ARRAY(obj);
+                V_ARRAYREF(obj) = ppsa;
+            }
+            else
+            {
+                /**
+                 * It should be impossible to be here, but, do not add VT_BYREF
+                 * to a variant that is not changed by this function.
+                 */
+                return;
+            }
+            break;
+
+        case VT_DISPATCH:
+        {
+            IDispatch **ppdisp = (IDispatch **)ORexxOleAlloc(sizeof(IDispatch *));
+            *ppdisp = V_DISPATCH(obj);
+            V_DISPATCHREF(obj) = ppdisp;
+        } break;
+
+        case VT_UNKNOWN:
+        {
+            IUnknown **ppunk = (IUnknown **)ORexxOleAlloc(sizeof(IUnknown *));
+            *ppunk = V_UNKNOWN(obj);
+            V_UNKNOWNREF(obj) = ppunk;
+        } break;
+
+        case VT_I1:
+        case VT_UI1:
+            pNew = (void*) ORexxOleAlloc(sizeof(char));
+            * (char*) pNew = obj->cVal;
+            obj->pcVal = (char*) pNew;
+            break;
+        case VT_I2:
+        case VT_UI2:
+            pNew = (void*) ORexxOleAlloc(sizeof(short));
+            * (short*) pNew = obj->iVal;
+            obj->piVal = (short*) pNew;
+            break;
+        case VT_I4:
+        case VT_UI4:
+            pNew = (void*) ORexxOleAlloc(sizeof(long));
+            * (long*) pNew = obj->lVal;
+            obj->plVal = (long*) pNew;
+            break;
+        case VT_INT:
+        case VT_UINT:
+            pNew = (void*) ORexxOleAlloc(sizeof(int));
+            * (int*) pNew = obj->intVal;
+            obj->pintVal = (int*) pNew;
+            break;
+        case VT_R4:
+            pNew = (void*) ORexxOleAlloc(sizeof(float));
+            * (float*) pNew = obj->fltVal;
+            obj->pfltVal = (float*) pNew;
+            break;
+        case VT_R8:
+            pNew = (void*) ORexxOleAlloc(sizeof(double));
+            * (double*) pNew = obj->dblVal;
+            obj->pdblVal = (double*) pNew;
+            break;
+        case VT_BOOL:
+            pNew = (void*) ORexxOleAlloc(sizeof(VARIANT_BOOL));
+            * (VARIANT_BOOL*) pNew = obj->boolVal;
+            obj->pboolVal = (VARIANT_BOOL*) pNew;
+            break;
+        case VT_ERROR:
+            pNew = (void*) ORexxOleAlloc(sizeof(SCODE));
+            * (SCODE*) pNew = obj->scode;
+            obj->pscode = (SCODE*) pNew;
+            break;
+        case VT_CY:
+            pNew = (void*) ORexxOleAlloc(sizeof(CY));
+            * (CY*) pNew = obj->cyVal;
+            obj->pcyVal = (CY*) pNew;
+            break;
+        case VT_DATE:
+            pNew = (void*) ORexxOleAlloc(sizeof(DATE));
+            * (DATE*) pNew = obj->date;
+            obj->pdate = (DATE*) pNew;
+            break;
+        case VT_BSTR:
+            pNew = (void*) ORexxOleAlloc(sizeof(BSTR));
+            *((BSTR*) pNew) = obj->bstrVal;
+            obj->pbstrVal = (BSTR*) pNew;
+            break;
+        default:
+            /**
+             * Do not add VT_BYREF to a variant that has not been changed by
+             * this function.
+             */
+            return;
+    }
+    obj->vt |= VT_BYREF;
 }
 
-// change a by-ref VARIANT that was created with
-// referenceVariant() back to an unreferenced one.
-// this free the pointer and moves the content
-// "into" this variant by changing the entry from
-// pxxxVal (ptr) to xxxVal ...
+
+/**
+ * Changes a by-reference variant, that was set up using referenceVariant(),
+ * back to its original form.  Note that this function is symmetrical with
+ * referenceVariant() and should only be called with by-reference variants that
+ * have been altered by that function.
+ *
+ * @param obj  Pointer to the variant to be dereferenced.
+ */
 void dereferenceVariant(VARIANT *obj)
 {
-  void *temp;
+    void *temp = NULL;
 
-  obj->vt ^= VT_BYREF;
-  switch (obj->vt) {
-  case VT_I1:
-  case VT_UI1:
-    temp = (void*) obj->pcVal;
-    obj->cVal = *(obj->pcVal);
-    ORexxOleFree(temp);
-    break;
-  case VT_I2:
-  case VT_UI2:
-    temp = (void*) obj->piVal;
-    obj->iVal = *(obj->piVal);
-    ORexxOleFree(temp);
-    break;
-  case VT_I4:
-  case VT_UI4:
-    temp = (void*) obj->plVal;
-    obj->lVal = *(obj->plVal);
-    ORexxOleFree(temp);
-    break;
-  case VT_INT:
-  case VT_UINT:
-    temp = (void*) obj->pintVal;
-    obj->intVal = *(obj->pintVal);
-    ORexxOleFree(temp);
-    break;
-  case VT_R4:
-    temp = (void*) obj->pfltVal;
-    obj->fltVal = *(obj->pfltVal);
-    ORexxOleFree(temp);
-    break;
-  case VT_R8:
-    temp = (void*) obj->pdblVal;
-    obj->dblVal = *(obj->pdblVal);
-    ORexxOleFree(temp);
-    break;
-  case VT_BOOL:
-    temp = (void*) obj->pboolVal;
-    obj->boolVal = *(obj->pboolVal);
-    ORexxOleFree(temp);
-    break;
-  case VT_ERROR:
-    temp = (void*) obj->pscode;
-    obj->scode = *(obj->pscode);
-    ORexxOleFree(temp);
-    break;
-  case VT_CY:
-    temp = (void*) obj->pcyVal;
-    obj->cyVal = *(obj->pcyVal);
-    ORexxOleFree(temp);
-    break;
-  case VT_DATE:
-    temp = (void*) obj->pdate;
-    obj->date = *(obj->pdate);
-    ORexxOleFree(temp);
-    break;
-  case VT_BSTR:
-    temp = (void*) obj->pbstrVal;
-    obj->bstrVal = *(obj->pbstrVal);
-    ORexxOleFree(temp);
-    break;
-  default:
-    break;
-  }
+    /* If the variant is not by reference, do not touch it. */
+    if ( ! (V_VT(obj) & VT_BYREF) )
+        return;
+
+    switch ( V_VT(obj) & VT_TYPEMASK )
+    {
+        case VT_VARIANT:
+            if ( V_VT(obj) & VT_ARRAY )
+            {
+                temp = (void*)V_ARRAYREF(obj);
+                V_ARRAY(obj) = *(V_ARRAYREF(obj));
+                if ( temp )
+                    ORexxOleFree(temp);
+            }
+            else
+            {
+                /** VT_VARIANT | VT_BYREF is a valid variant.  But
+                 *  referenceVariant() does not set up that type.  So, it should
+                 *  not be possible to be here.  Nevertheless, the code to
+                 *  correctly dereference this type of variant, at this point of
+                 *  execution, is not, and has never been, present in OLEObject.
+                 *
+                 *  It is a mistake to remove the VT_BYREF flag, if the variant
+                 *  is not changed.  So, just return.
+                 *
+                 *  DFX TODO revisit this logic, especially if Variant2Rexx() is
+                 *  fixed to properly handle VT_VARIANT | VT_BYREF.
+                 */
+                return;
+            }
+            break;
+
+        case VT_DISPATCH:
+            temp = (void*)V_DISPATCHREF(obj);
+            V_DISPATCH(obj) = *(V_DISPATCHREF(obj));
+            if ( temp )
+                ORexxOleFree(temp);
+            break;
+
+        case VT_UNKNOWN:
+            temp = (void*)V_UNKNOWNREF(obj);
+            V_UNKNOWN(obj) = *(V_UNKNOWNREF(obj));
+            if ( temp )
+                ORexxOleFree(temp);
+            break;
+
+        case VT_I1:
+        case VT_UI1:
+            temp = (void*) obj->pcVal;
+            obj->cVal = *(obj->pcVal);
+            ORexxOleFree(temp);
+            break;
+        case VT_I2:
+        case VT_UI2:
+            temp = (void*) obj->piVal;
+            obj->iVal = *(obj->piVal);
+            ORexxOleFree(temp);
+            break;
+        case VT_I4:
+        case VT_UI4:
+            temp = (void*) obj->plVal;
+            obj->lVal = *(obj->plVal);
+            ORexxOleFree(temp);
+            break;
+        case VT_INT:
+        case VT_UINT:
+            temp = (void*) obj->pintVal;
+            obj->intVal = *(obj->pintVal);
+            ORexxOleFree(temp);
+            break;
+        case VT_R4:
+            temp = (void*) obj->pfltVal;
+            obj->fltVal = *(obj->pfltVal);
+            ORexxOleFree(temp);
+            break;
+        case VT_R8:
+            temp = (void*) obj->pdblVal;
+            obj->dblVal = *(obj->pdblVal);
+            ORexxOleFree(temp);
+            break;
+        case VT_BOOL:
+            temp = (void*) obj->pboolVal;
+            obj->boolVal = *(obj->pboolVal);
+            ORexxOleFree(temp);
+            break;
+        case VT_ERROR:
+            temp = (void*) obj->pscode;
+            obj->scode = *(obj->pscode);
+            ORexxOleFree(temp);
+            break;
+        case VT_CY:
+            temp = (void*) obj->pcyVal;
+            obj->cyVal = *(obj->pcyVal);
+            ORexxOleFree(temp);
+            break;
+        case VT_DATE:
+            temp = (void*) obj->pdate;
+            obj->date = *(obj->pdate);
+            ORexxOleFree(temp);
+            break;
+        case VT_BSTR:
+            temp = (void*) obj->pbstrVal;
+            obj->bstrVal = *(obj->pbstrVal);
+            ORexxOleFree(temp);
+            break;
+        default:
+            /* Do not remove the VT_BYREF flag if the variant is not changed. */
+            return;
+    }
+    obj->vt ^= VT_BYREF;
 }
 
 //******************************************************************************
@@ -3125,7 +3225,10 @@ RexxMethod3(REXXOBJECT,                // Return type
      */
     handleVariantClear(&(dp.rgvarg[dp.cArgs-i-1]), arrItem);
     if ( fIsOleVariant(arrItem) )
-      RexxSend1(arrItem, "!CLEARVARIANT_=", RexxTrue);
+    {
+       RexxSend1(arrItem, "!CLEARVARIANT_=", RexxTrue);
+       RexxSend1(arrItem, "!VARIANTPOINTER_=", RexxInteger(0));
+    }
   } /* endfor */
 
   /* free the argument array */
@@ -3205,7 +3308,7 @@ RexxMethod3(REXXOBJECT,                // Return type
  *
  * @param RxObject   The ooRexx object to be converted.  If this is an
  *                   OLEVariant object, the actual object to convert is
- *                   contained withing the OLEVariant object.
+ *                   contained within the OLEVariant object.
  *
  * @param DestVt     The VT type that the automatic conversion believes the
  *                   ooRexx object should be coerced to.
@@ -3230,6 +3333,7 @@ BOOL checkForOverride( VARIANT *pVariant, RexxObject *RxObject, VARTYPE DestVt,
   else
   {
     RexxObject *tmpRxObj = RexxSend0(RxObject, "!_VT_");
+    char        szBuffer[32];
 
     *pRxObject = RexxSend0(RxObject, "!VARVALUE_");
     if ( tmpRxObj == RexxNil )
@@ -3256,10 +3360,10 @@ BOOL checkForOverride( VARIANT *pVariant, RexxObject *RxObject, VARTYPE DestVt,
         case VT_DISPATCH :
           if ( *pRxObject == RexxNil || *pRxObject == NULL )
           {
+            IDispatch **ppDisp = NULL;
+
             if ( *pDestVt & VT_BYREF )
             {
-              IDispatch **ppDisp;
-
               ppDisp = (IDispatch **)ORexxOleAlloc(sizeof(IDispatch **));
               if ( ! ppDisp )
                 send_exception(Error_System_resources);
@@ -3275,7 +3379,9 @@ BOOL checkForOverride( VARIANT *pVariant, RexxObject *RxObject, VARTYPE DestVt,
               V_DISPATCH(pVariant) = NULL;
             }
             /* ooRexx, not VariantClear, must clear this variant. */
+            sprintf(szBuffer, "%p", ppDisp);
             RexxSend1(RxObject, "!CLEARVARIANT_=", RexxFalse);
+            RexxSend1(RxObject, "!VARIANTPOINTER_=", RexxString(szBuffer));
             converted = TRUE;
             break;
           }
@@ -3285,10 +3391,10 @@ BOOL checkForOverride( VARIANT *pVariant, RexxObject *RxObject, VARTYPE DestVt,
         case VT_UNKNOWN :
           if ( *pRxObject == RexxNil || *pRxObject == NULL )
           {
+            IUnknown **ppU = NULL;
+
             if ( *pDestVt & VT_BYREF )
             {
-              IUnknown **ppU;
-
               ppU = (IUnknown **)ORexxOleAlloc(sizeof(IUnknown **));
               if ( ! ppU )
                 send_exception(Error_System_resources);
@@ -3303,8 +3409,9 @@ BOOL checkForOverride( VARIANT *pVariant, RexxObject *RxObject, VARTYPE DestVt,
               V_UNKNOWN(pVariant) = NULL;
             }
             /* ooRexx, not VariantClear, must clear this variant. */
+            sprintf(szBuffer, "%p", ppU);
             RexxSend1(RxObject, "!CLEARVARIANT_=", RexxFalse);
-
+            RexxSend1(RxObject, "!VARIANTPOINTER_=", RexxString(szBuffer));
             converted = TRUE;
             break;
           }
@@ -3378,30 +3485,59 @@ BOOL isOutParam( RexxObject *param, POLEFUNCINFO pFuncInfo, INT i )
  */
 VOID handleVariantClear( VARIANT *pVariant, RexxObject *RxObject )
 {
+  BOOL useVariantClear = TRUE;
+
   if ( ! okayToClear(RxObject) )
   {
     /* This reverses work done in Rexx2Variant when the parameter is an
-     * OLEVariant object.
+     * OLEVariant object.  Memory allocated in checkForOverride(), that needs to
+     * be freed, is freed here.
      */
+    const char *pszRxString = string_data((RexxString*)RexxSend0(RxObject, "!VARIANTPOINTER_"));
 
     switch ( V_VT(pVariant) & VT_TYPEMASK )
     {
       case VT_DISPATCH :
-        if ( V_DISPATCH(pVariant) != NULL)
-          ORexxOleFree(V_DISPATCH(pVariant));
+        if ( V_DISPATCH(pVariant) == NULL)
+        {
+          useVariantClear = FALSE;
+        }
+        else
+        {
+          IDispatch  *pDispatch = NULL;
+          if ( (sscanf(pszRxString, "%p", &pDispatch) == 1) && pDispatch == V_DISPATCH(pVariant) )
+          {
+            ORexxOleFree(V_DISPATCH(pVariant));
+            useVariantClear = FALSE;
+          }
+        }
         break;
 
       case VT_UNKNOWN :
-        if ( V_UNKNOWN(pVariant) != NULL)
-          ORexxOleFree(V_UNKNOWN(pVariant));
+        if ( V_UNKNOWN(pVariant) == NULL)
+        {
+          useVariantClear = FALSE;
+        }
+        else
+        {
+          IUnknown *pUnknown = NULL;
+          if ( (sscanf(pszRxString, "%p", &pUnknown) == 1) && pUnknown == V_UNKNOWN(pVariant) )
+          {
+            ORexxOleFree(V_UNKNOWN(pVariant));
+            useVariantClear = FALSE;
+          }
+        }
         break;
 
       default :
         break;
     }
   }
-  else
+
+  if ( useVariantClear )
     VariantClear(pVariant);
+  else
+    V_VT(pVariant) = VT_EMPTY;
 }
 
 /**

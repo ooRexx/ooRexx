@@ -125,10 +125,11 @@ syntax:
   use arg bool
   signal on syntax
 
+  errDescription = "!CLEARVARIANT_  must be set to .true or .false."
   if arg(1, 'O') then
-    raise syntax 93.903 array(1) description "!CLEARVARIANT_ must be set to .true or .false."
+    raise syntax 93.903 array('bool') description (errDescription)
   if bool <> .true & bool <> .false then
-    raise syntax 93.914 array(1, "[.true,.false]", bool~string) description "!CLEARVARIANT_ must be set to .true or .false."
+    raise syntax 93.914 array('bool', "[.true,.false]", bool) description (errDescription)
 
   !_CLEAR_VARIANT_ = (bool == .true)
   return
@@ -136,3 +137,24 @@ syntax:
 syntax:
   raise propagate
 
+-- !variantPointer_ is an undocumented method for internal use only.
+::METHOD "!VARIANTPOINTER_"
+  expose !_VARIANT_PTR_
+  return !_VARIANT_PTR_
+
+::METHOD "!VARIANTPOINTER_="
+  expose !_VARIANT_PTR_
+  use arg pointer
+  signal on syntax
+
+  errDescription = "!VARIANTPOINTER_ must be set to a valid pointer value."
+  if arg(1, 'O') then
+    raise syntax 93.903 array(1) description (errDescription)
+  if \ pointer~isA(.string) then
+    raise syntax 93.948 array("pointer", ".string") description (errDescription)
+
+  !_VARIANT_PTR_ = pointer
+  return
+
+syntax:
+  raise propagate

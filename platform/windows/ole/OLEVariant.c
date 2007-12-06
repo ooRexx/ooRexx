@@ -96,6 +96,7 @@ RexxMethod4(REXXOBJECT, OLEVariant_Init,
 
     REXX_SETVAR("!_VAR_VALUE_", v_value);
     REXX_SETVAR("!_CLEAR_VARIANT_", RexxTrue);
+    REXX_SETVAR("!_VARIANT_PTR_", RexxInteger(0));
 
     return RexxNil;
 }
