@@ -3160,7 +3160,8 @@ LONG APIENTRY SysSearchPath(
 *                                                                        *
 * Syntax:    call SysSleep secs                                          *
 *                                                                        *
-* Params:    secs - Number of seconds to sleep.                          *
+* Params:    secs - Number of seconds to sleep.  The function accepts    *
+*            fractional seconds. (call SysSleep 1.5 is valid)            *
 *                                                                        *
 * Return:    NO_UTIL_ERROR                                               *
 *************************************************************************/
@@ -3175,7 +3176,6 @@ LONG APIENTRY SysSleep(
 
   LONG secs;                           /* Time to sleep in secs      */
   MSG msg;
-  BOOL UseMsgLoop;                     /* for VAC++                  */
 
   LONG milliseconds;
   LONG secs_buf;
@@ -3227,27 +3227,27 @@ LONG APIENTRY SysSleep(
   else if (length != 0)                /* invalid character found?   */
     return INVALID_ROUTINE;            /* this is invalid            */
 
-
-//  /* get number of seconds      */
-//  if (!string2long(args[0].strptr, &secs) || secs < 0)
-//    return INVALID_ROUTINE;            /* raise error if bad         */
-
-  /* for VAC++ begin*/
-  UseMsgLoop = RexxSetProcessMessages(TRUE); /* retrieve current setting */
-  RexxSetProcessMessages(UseMsgLoop);  /* set back settings          */
-
-  if (UseMsgLoop)
+  /** Using Sleep with a long timeout risks sleeping on a thread with a message
+   *  queue, which can make the system sluggish, or possibly deadlocked.  If the
+   *  sleep is longer than 333 milliseconds use a window timer to avoid this
+   *  risk.
+   */
+  if ( secs > 333 )
   {
-  /* for VAC++ end */
       if ( !(SetTimer(NULL, 0, (secs), (TIMERPROC) SleepTimerProc)) )
-        return INVALID_ROUTINE;   /* no timer available, logic error */
-      while (GetMessage (&msg, NULL, 0, 0) ) {
-        if (msg.message == OM_WAKEUP)  /* If our message exit loop   */
-          break;
-        TranslateMessage( &msg );
-        DispatchMessage ( &msg );
+          return INVALID_ROUTINE;        /* no timer available, need to abort */
+      while ( GetMessage (&msg, NULL, 0, 0) )
+      {
+          if ( msg.message == OM_WAKEUP )  /* If our message, exit loop       */
+              break;
+          TranslateMessage( &msg );
+          DispatchMessage ( &msg );
       }
-  } else Sleep(secs); /* for VAC++ */
+  }
+  else
+  {
+      Sleep(secs);
+  }
   BUILDRXSTRING(retstr, NO_UTIL_ERROR);
   return VALID_ROUTINE;
 }

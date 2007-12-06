@@ -221,18 +221,41 @@ void SysRelinquish(void);              /* allow the system to run           */
 
 inline void waitHandle(HANDLE s)
 {
-   extern BOOL UseMessageLoop;
-   if (UseMessageLoop)
-   {
-       do
-       {
-          SysRelinquish();
-       } while (WaitForSingleObject(s, 1) == WAIT_TIMEOUT);
-   }
-   else
-   {
-       WaitForSingleObject(s, INFINITE);
-   }
+    MSG msg = {0};
+
+    // If already signaled, return.
+    if ( WaitForSingleObject(s, 0) == WAIT_OBJECT_0 )
+    {
+        return;
+    }
+
+    /** Any thread that creates windows must process messages.  A thread that
+     *  calls WaitForSingelObject with an infinite timeout risks deadlocking the
+     *  system.  MS's solution for this is to use MsgWaitForMultipleObjects to
+     *  wait on the object, or a new message arriving in the message queue. Some
+     *  threads create windows indirectly, an example is COM with CoInitialize.
+     *  Since we can't know if the current thread has a message queue that needs
+     *  processing, we use MsgWaitForMultipleObjects.
+     *
+     *  Note that MsgWaitForMultipleObjects only returns if a new message is
+     *  placed in the queue.  PeekMessage alters the state of all messages in
+     *  the queue so that they are no longer 'new.'  Once PeekMessage is called,
+     *  all the messages on the queue need to be processed.
+     */
+    do
+    {
+        while ( PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+
+            // Check to see if signaled.
+            if ( WaitForSingleObject(s, 0) == WAIT_OBJECT_0 )
+            {
+                return;
+            }
+        }
+    } while ( MsgWaitForMultipleObjects(1, &s, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0 + 1 );
 }
 
 
