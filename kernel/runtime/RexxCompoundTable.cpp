@@ -63,8 +63,8 @@ void RexxCompoundTable::copyFrom(
 {
     RexxCompoundElement *entry = other.first();/* grab the first element */
     while (entry != NULL) {            /* while we have more entry to process */
-                                       /* insert an entry in the new table */
-        RexxCompoundElement *newEntry = other.findEntry(entry->getName(), true);
+                                       /* insert an entry in our table     */
+        RexxCompoundElement *newEntry = findEntry(entry->getName(), true);
                                        /* copy over the value */
         newEntry->setValue(entry->variableValue);
         entry = other.next(entry);
