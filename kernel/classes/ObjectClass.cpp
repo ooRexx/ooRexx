@@ -195,7 +195,7 @@ wholenumber_t RexxObject::compareTo(RexxObject *other )
     }
     wholenumber_t comparison;
 
-    if (!numberValue(comparison))
+    if (!result->numberValue(comparison))
     {
         reportException(Error_Invalid_whole_number_compareto, result);
     }
