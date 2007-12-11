@@ -1785,8 +1785,20 @@ void *   RexxArray::operator new(size_t size,
 
   newArray = new_array(items);         /* get a new array                   */
   if (items != 0)                      /* not a null array?                 */
+  {
                                        /* copy the references in            */
-    memcpy(newArray->data(), first, (sizeof(RexxObject *) * items));
+      memcpy(newArray->data(), first, (sizeof(RexxObject *) * items));
+      // we need to make sure the lastElement field is set to the
+      // new arg position.
+      for (;items > 0; items--)
+      {
+          if (newArray->get(items) != OREF_NULL)
+          {
+              newArray->lastElement = items;
+              break;
+          }
+      }
+  }
   return newArray;                     /* return the new array              */
 }
 
