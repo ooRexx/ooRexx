@@ -59,5 +59,5 @@ RexxMethod1 (void, message_nstart, OSELF, self)
 /* taken care of the complete setup.                                          */
 /******************************************************************************/
 {
-  RexxSend0(self,"SEND");
+  ooRexxSend0(self,"SEND");
 }

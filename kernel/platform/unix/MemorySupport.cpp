@@ -80,7 +80,7 @@ void SysReleaseResultMemory(
 bool SysAccessPool(MemorySegmentPool **pool)
 /*********************************************************************/
 /*   Function:  Access/Create the 1st block as Named Storage         */
-/*              return TRUE is an access, FALSE is created.          */
+/*              return true is an access, false is created.          */
 /*********************************************************************/
 {
   MemorySegmentPool *  newPool;
@@ -119,7 +119,7 @@ bool SysAccessPool(MemorySegmentPool **pool)
     newPool->nextLargeAlloc = ((char*) newPool) + MEMSIZE;
 
     new (newPool) MemorySegmentPool;   /* Initialize as a segmentPool       */
-    return FALSE;                      /* newly created.                    */
+    return false;                      /* newly created.                    */
 }
 
 void *MemorySegmentPool::operator new(size_t size, size_t minSize)
@@ -303,7 +303,7 @@ bool MemorySegmentPool::accessNextPool()
     {
       return true;                      /* Return one accessed               */
     }
-    return false;                       /* At the end, return FALSE (NO_MORE)*/
+    return false;                       /* At the end, return false (NO_MORE)*/
 }
 
 MemorySegmentPool  * MemorySegmentPool::freePool()       // add return value

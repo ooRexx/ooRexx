@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                   DoBlock.hpp */
+/* REXX Kernel                                                    DoBlock.hpp */
 /*                                                                            */
 /* Primitive Do Block Class Definitions                                       */
 /*                                                                            */
@@ -61,24 +61,27 @@ class RexxDoBlock : public RexxInternalObject {
   void flatten(RexxEnvelope *);
 
   inline RexxObject * getTo() {return this->to;};
-  inline LONG getFor() {return this->forcount;};
+  inline wholenumber_t getFor() {return this->forcount;};
   inline int  getCompare() {return (int)(this->compare);};
   inline RexxObject * getBy() {return this->by;};
   inline RexxBlockInstruction * getParent() {return this->parent;};
   inline void setTo(RexxObject * value) {this->to = value;};
   inline void setBy(RexxObject * value) {this->by = value;};
   inline void setCompare(int value) {this->compare = (unsigned short)value;};
-  inline void setFor(long value) {this->forcount = value;};
-  inline BOOL testFor() {return (this->forcount--) <= 0;};
-  inline LONG getIndent() { return this->indent; };
+  inline void setFor(wholenumber_t value) {this->forcount = value;};
+  inline bool testFor() {return (this->forcount--) <= 0;};
+  inline size_t getIndent() { return this->indent; };
   inline void setPrevious(RexxDoBlock *block) { this->previous = block; }
+  inline RexxDoBlock *getPrevious() { return previous; }
+
+protected:
 
   RexxDoBlock       *previous;         /* previous stacked Do Block         */
   RexxBlockInstruction *parent;        /* parent instruction                */
   RexxObject        *to;               /* final target value                */
   RexxObject        *by;               /* control increment value           */
-  LONG               forcount;         /* number of iterations              */
-  LONG               indent;           /* base indentation                  */
-  LONG               compare;          /* type of comparison                */
+  wholenumber_t      forcount;         /* number of iterations              */
+  size_t             indent;           /* base indentation                  */
+  int                compare;          /* type of comparison                */
 };
 #endif

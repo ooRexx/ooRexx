@@ -51,6 +51,13 @@
 #include "Token.hpp"
 #include "Clause.hpp"
 
+class RexxInstruction;
+class RexxInstructionDo;
+class RexxInstructionIf;
+class RexxInstructionForward;
+class RexxExpressionMessage;
+class RexxCompoundVariable;
+
                                        /* handy defines to easy coding      */
 #define new_instruction(name, type) this->sourceNewObject(sizeof(RexxInstruction##type), The##type##InstructionBehaviour, KEYWORD_##name)
 #define new_variable_instruction(name, type, size) this->sourceNewObject(size, The##type##InstructionBehaviour, KEYWORD_##name)
@@ -97,7 +104,7 @@ class RexxSource : public RexxInternalObject {
   void        comment();
   void        needVariable(RexxToken *);
   void        needVariableOrDotSymbol(RexxToken *);
-  BOOL        terminator(int, RexxObject *);
+  bool        terminator(int, RexxObject *);
   static int  resolveKeyword(RexxString *token, KeywordEntry *Table, int Table_Size);
   static int  subKeyword(RexxToken *);
   static int  keyword(RexxToken *);
@@ -203,7 +210,7 @@ class RexxSource : public RexxInternalObject {
   RexxObject *parseConditional(int *, int);
   RexxObject *parseLogical(RexxToken *first, int terminators);
 
-  BOOL        terminator(int, RexxToken *);
+  bool        terminator(int, RexxToken *);
   bool        isTraceable();
   inline bool isInterpret() { return (flags & _interpret) != 0; }
 
@@ -219,7 +226,7 @@ class RexxSource : public RexxInternalObject {
   inline RexxToken  *popOperator() { return (RexxToken *)(this->operators->pullRexx()); };
   inline RexxToken  *topOperator() { return (RexxToken *)(this->operators->peek()); };
   inline void        reclaimClause()  { this->flags |= reclaimed; };
-  inline BOOL        atEnd(void) { return (!(this->flags&reclaimed) && (this->line_number > (this->line_count))); };
+  inline bool        atEnd(void) { return (!(this->flags&reclaimed) && (this->line_number > (this->line_count))); };
 
   inline RexxToken  *nextToken() { return clause->next(); }
   inline RexxToken  *nextReal() { return clause->nextRealToken(); }
@@ -308,7 +315,7 @@ class RexxSource : public RexxInternalObject {
 
 protected:
 
-  LONG  flags;                         /* parsing flags                     */
+  size_t flags;                        /* parsing flags                     */
   RexxArray  *sourceArray;             /* source lines for this code        */
   RexxString *programName;             /* name of the source program        */
   RexxObject *securityManager;         /* source execution time security    */

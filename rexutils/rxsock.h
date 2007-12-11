@@ -40,6 +40,8 @@
 /*                 sockets utility function package                        */
 /***************************************************************************/
 
+#include "rexx.h"
+
 /*------------------------------------------------------------------
  * typedef for struct
  *------------------------------------------------------------------*/
@@ -93,97 +95,62 @@ RexxFunctionHandler SockSoClose                    ;
  *------------------------------------------------------------------*/
 void StripBlanks(
    char *string
-   );
+);
 
 /*------------------------------------------------------------------
  * set a rexx variable
  *------------------------------------------------------------------*/
-void RxVarSet(
-   PSZ pszStem,
-   PSZ pszTail,
-   PSZ pszValue
-   );
+void RxVarSet(const char *pszStem, const char *pszTail, const char *pszValue);
 
 /*------------------------------------------------------------------
  * get a rexx variable - return value must be freed by caller
  *------------------------------------------------------------------*/
-PSZ RxVarGet(
-   PSZ pszStem,
-   PSZ pszTail
-   );
+char *RxVarGet(const char *pszStem, const char *pszTail);
 
 /*------------------------------------------------------------------
- * convert a rexx string to a ULONG
+ * convert a rexx string to an unsigned int
  *------------------------------------------------------------------*/
-ULONG rxs2ulong(
-   PRXSTRING  pRxStr,
-   int       *rc
-   );
+size_t rxs2size_t(PCONSTRXSTRING  pRxStr, int *rc);
 
 /*------------------------------------------------------------------
  * convert a rexx string to a LONG
  *------------------------------------------------------------------*/
-LONG rxs2long(
-   PRXSTRING  pRxStr,
-   int       *rc
-   );
+int rxs2int(PCONSTRXSTRING  pRxStr, int *rc);
 
 /*------------------------------------------------------------------
  * convert an int to a rexx string (already allocated)
  *------------------------------------------------------------------*/
-void int2rxs(
-   int        i,
-   PRXSTRING  pRxStr
-   );
+void int2rxs(int i, PRXSTRING  pRxStr);
 
 /*------------------------------------------------------------------
  * convert a stem variable to an array of ints
  *------------------------------------------------------------------*/
-void rxstem2intarray(
-   PRXSTRING   pRxStr,
-   int        *count,
-   int       **arr
-   );
+void rxstem2intarray(PCONSTRXSTRING pRxStr, int *count, int **arr);
 
 /*------------------------------------------------------------------
  * convert an array of ints to a stem variable
  *------------------------------------------------------------------*/
-void intarray2rxstem(
-   PRXSTRING   pRxStr,
-   int         count,
-   int        *arr
-   );
+void intarray2rxstem(PCONSTRXSTRING pRxStr, int count, int *arr);
 
 /*------------------------------------------------------------------
  * convert a stemmed variable to a sockaddr
  *------------------------------------------------------------------*/
-void stem2sockaddr(
-   PSZ          pszStem,
-   sockaddr_in *pSockAddr
-   );
+void stem2sockaddr(const char *pszStem, sockaddr_in *pSockAddr);
 
 /*------------------------------------------------------------------
  * convert a sockaddr to a stemmed variable
  *------------------------------------------------------------------*/
-void sockaddr2stem(
-   sockaddr_in *pSockAddr,
-   PSZ          pszStem
-   );
+void sockaddr2stem(sockaddr_in *pSockAddr, const char *pszStem);
 
 /*------------------------------------------------------------------
  * convert a hostent to a stemmed variable
  *------------------------------------------------------------------*/
-void hostent2stem(
-   struct hostent *pHostEnt,
-   PSZ             pszStem
-   );
+void hostent2stem(struct hostent *pHostEnt, const char *pszStem);
 
 /*------------------------------------------------------------------
  * convert a string sock option to an integer
  *------------------------------------------------------------------*/
-int rxs2SockOpt(
-   PSZ pszOptName
-   );
+int rxs2SockOpt(const char *pszOptName);
 
 /*------------------------------------------------------------------
  * set errno
@@ -199,5 +166,5 @@ void SetH_Errno(void);
 /*------------------------------------------------------------------
  * string compare ignore upper and lower case
  *------------------------------------------------------------------*/
-int stricmp( char *op1, char *op2 );
+int stricmp(const char *op1, const char *op2 );
 #endif

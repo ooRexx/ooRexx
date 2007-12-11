@@ -68,7 +68,7 @@
    RexxObject *fpop();
 
    inline void        fastPush(RexxObject *element) { this->stack[++(this->top)] = element; };
-   inline BOOL        checkRoom() { return this->top < this->size-1; }
+   inline bool        checkRoom() { return this->top < this->size-1; }
    inline RexxObject *fastPop() { return this->stack[(this->top)--]; };
    inline size_t      stackSize() { return this->size; };
    inline RexxObject *stackTop() { return (*(this->stack + this->top)); };
@@ -91,7 +91,7 @@
    void        live();
    void        init(size_t, size_t);
    void        extend(size_t);
-   void        remove(RexxObject *, BOOL search = FALSE);
+   void        remove(RexxObject *, bool search = false);
 
    size_t allocSize;
  };

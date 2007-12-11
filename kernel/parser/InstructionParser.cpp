@@ -217,7 +217,7 @@ RexxInstruction *RexxSource::callNew()
 /****************************************************************************/
 {
   RexxObject *newObject;               /* newly created object              */
-  LONG        argCount;                /* call arguments                    */
+  size_t      argCount;                /* call arguments                    */
   RexxToken  *token;                   /* current working token             */
   RexxObject *name;                    /* call name                         */
   int         _keyword;                /* call subkeyword                   */
@@ -738,7 +738,7 @@ RexxInstruction *RexxSource::dropNew()
 /****************************************************************************/
 {
   RexxObject *newObject;               /* newly created object              */
-  LONG        variableCount;           /* count of variables                */
+  size_t      variableCount;           /* count of variables                */
 
                                        /* go process the list               */
   variableCount = this->processVariableList(KEYWORD_DROP);
@@ -831,7 +831,7 @@ RexxInstruction *RexxSource::exposeNew()
 /****************************************************************************/
 {
   RexxObject *newObject;               /* newly created object              */
-  LONG        variableCount;           /* count of variables                */
+  size_t      variableCount;           /* count of variables                */
 
   this->isExposeValid();               /* validate the placement            */
                                        /* go process the list               */
@@ -850,9 +850,9 @@ void RexxSource::RexxInstructionForwardCreate(
 /****************************************************************************/
 {
   RexxToken *token;                    /* current working token             */
-  BOOL       returnContinue;           /* return or continue found          */
+  bool       returnContinue;           /* return or continue found          */
 
-  returnContinue = FALSE;              /* no return or continue yet         */
+  returnContinue = false;              /* no return or continue yet         */
   token = nextReal();                  /* get the next token                */
 
   while (!token->isEndOfClause()) {/* while still more to process       */
@@ -932,7 +932,7 @@ void RexxSource::RexxInstructionForwardCreate(
         if (returnContinue)            /* already had the return action?    */
                                        /* this is invalid                   */
           report_error(Error_Invalid_subkeyword_continue);
-        returnContinue = TRUE;         /* not valid again                   */
+        returnContinue = true;         /* not valid again                   */
                                        /* remember this                     */
         newObject->instructionFlags |= forward_continue;
         break;
@@ -1635,7 +1635,7 @@ RexxInstruction *RexxSource::procedureNew()
 /****************************************************************************/
 {
   RexxObject *newObject;               /* newly created object              */
-  LONG        variableCount;           /* list of variables                 */
+  size_t      variableCount;           /* list of variables                 */
   RexxToken  *token;                   /* current working token             */
 
   token = nextReal();                  /* get the next token                */
@@ -1689,7 +1689,7 @@ RexxInstruction *RexxSource::raiseNew()
   RexxObject            *result;       /* result expression                 */
   int                    _keyword;     /* type of condition found           */
   RexxQueue             *saveQueue;    /* temporary save queue              */
-  BOOL                   raiseReturn;  /* return form                       */
+  bool                   raiseReturn;  /* return form                       */
 
 
   arrayCount = -1;                     /* clear out the temporaries         */
@@ -1697,7 +1697,7 @@ RexxInstruction *RexxSource::raiseNew()
   description = OREF_NULL;
   additional = OREF_NULL;
   result = OREF_NULL;
-  raiseReturn = FALSE;                 /* default is exit form              */
+  raiseReturn = false;                 /* default is exit form              */
 
   saveQueue = new_queue();             /* get a new queue item              */
   this->saveObject(saveQueue);         /* protect it                        */
@@ -1806,7 +1806,7 @@ RexxInstruction *RexxSource::raiseNew()
         if (result != OREF_NULL)
                                        /* this is invalid                   */
           report_error(Error_Invalid_subkeyword_result);
-        raiseReturn = TRUE;            /* remember this                     */
+        raiseReturn = true;            /* remember this                     */
                                        /* get the keyword value             */
         result = this->constantExpression();
         if (result != OREF_NULL)       /* actually have one?                */
@@ -1954,9 +1954,9 @@ RexxInstruction *RexxSource::signalNew()
   RexxObject *_expression;              /* signal expression                 */
   size_t      _flags;                   /* option flags                      */
   RexxString *name;                    /* signal name                       */
-  BOOL        signalOff;               /* signal off form                   */
+  bool        signalOff;               /* signal off form                   */
 
-  signalOff = FALSE;                   /* not a SIGNAL OFF instruction      */
+  signalOff = false;                   /* not a SIGNAL OFF instruction      */
   _expression = OREF_NULL;              /* no expression yet                 */
   name = OREF_NULL;                    /* no name                           */
   _condition = OREF_NULL;               /* and no condition                  */
@@ -2033,7 +2033,7 @@ RexxInstruction *RexxSource::signalNew()
         }
       }
       else if (_keyword == SUBKEY_OFF) {/* SIGNAL OFF instruction?           */
-        signalOff = TRUE;              /* doing a SIGNAL OFF                */
+        signalOff = true;              /* doing a SIGNAL OFF                */
         token = nextReal();            /* get the next token                */
                                        /* no condition specified or not a   */
                                        /* symbol?                           */
@@ -2129,7 +2129,7 @@ RexxInstruction *RexxSource::traceNew()
   RexxObject *newObject;               /* newly created object              */
   int         setting;                 /* new trace setting                 */
   int         debug;                   /* new debug setting                 */
-  int         debug_skip;              /* amount to skip                    */
+  wholenumber_t debug_skip;            /* amount to skip                    */
   size_t      debug_flags;             /* current debug flags               */
 
   setting = TRACE_NORMAL;              /* set default trace mode            */
@@ -2155,10 +2155,8 @@ RexxInstruction *RexxSource::traceNew()
         if (!token->isEndOfClause())
                                        /* this is an error                  */
           report_error_token(Error_Invalid_data_trace, token);
-                                       /* convert the value                 */
-        debug_skip = REQUEST_LONG(value, NO_LONG);
-
-        if (debug_skip == (int)NO_LONG) {   /* bad value?                        */
+        if (!value->requestNumber(debug_skip, number_digits()))
+        {
           debug_skip = 0;              /* belt and braces                   */
                                        /* process the setting               */
           this->parseTraceSetting(value, &setting, &debug);
@@ -2174,9 +2172,8 @@ RexxInstruction *RexxSource::traceNew()
       if (!token->isEndOfClause()) /* end of the instruction?           */
                                        /* this is an error                  */
         report_error_token(Error_Invalid_data_trace, token);
-                                       /* convert the value                 */
-      debug_skip = REQUEST_LONG(value, NO_LONG);
-      if (debug_skip == (int)NO_LONG) {     /* bad value?                        */
+      if (!value->requestNumber(debug_skip, number_digits()))
+      {
         debug_skip = 0;                /* belt and braces                   */
                                        /* process the setting               */
         this->parseTraceSetting(value, &setting, &debug);
@@ -2201,11 +2198,11 @@ RexxInstruction *RexxSource::traceNew()
       if (!token->isEndOfClause())     /* end of the instruction?           */
                                        /* this is an error                  */
         report_error(Error_Invalid_data_trace);
-                                       /* convert the value                 */
-      debug_skip = REQUEST_LONG(value, NO_LONG);
-      if (debug_skip == (int)NO_LONG)  /* bad value?                        */
+      if (!value->requestNumber(debug_skip, number_digits()))
+      {
                                        /* have an error                     */
         report_error1(Error_Invalid_whole_number_trace, value);
+      }
     }
     else {                             /* implicit value form               */
       previousToken();                 /* step back a token                 */

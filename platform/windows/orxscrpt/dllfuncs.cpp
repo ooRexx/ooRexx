@@ -79,7 +79,9 @@ BOOL APIENTRY DllMain(HANDLE hModule,
     // turn off dispatch messages, otherwise the WSH will interfere
     // with the execution of the engine code and will cause everything
     // to hang...
-    RexxSetProcessMessages(FALSE);
+
+    // TODO: This needs to be really sorted out.
+//RexxSetProcessMessages(FALSE);
 
     mutex = CreateMutex(NULL,false,NULL); // we're in deep trouble if this is zero after the call!
 

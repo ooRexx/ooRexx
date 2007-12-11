@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* Object REXX Kernel                                           ObjectClass.c    */
+/* Object REXX Kernel                                        ObjectClass.c    */
 /*                                                                            */
 /* The main REXX object definitions                                           */
 /*                                                                            */
@@ -59,6 +59,7 @@
 #include "SourceFile.hpp"
 #include "ProtectedObject.hpp"
 
+// TODO:  Make this activity based.
 static RexxString *msgname_save;       /* last issued message               */
 static RexxMethod *method_save;        /* last issued method object         */
 
@@ -192,8 +193,9 @@ wholenumber_t RexxObject::compareTo(RexxObject *other )
     {
         reportException(Error_No_result_object_message, OREF_COMPARETO);
     }
-    wholenumber_t comparison = result->longValue(Numerics::DEFAULT_DIGITS);
-    if (comparison == (wholenumber_t)NO_LONG)
+    wholenumber_t comparison;
+
+    if (!numberValue(comparison))
     {
         reportException(Error_Invalid_whole_number_compareto, result);
     }
@@ -443,51 +445,6 @@ bool RexxObject::truthValue(
    return REQUEST_STRING(this)->truthValue(errorCode);
 }
 
-// this talks about "duplicate logic" but it seems to never be called!
-// besides, if they really wanted this, why recalculate the hash, it's
-// in the string already:
-//   ...
-//   else {
-//     hashString = this->sendMessage(OREF_STRICT_EQUAL)->stringValue();
-//     hash = hashString->hashvalue;
-//   }
-//   return hash;
-//
-// would have done the same! voila, just one place for hash calculation?!!
-#if 0
-ULONG RexxObject::hash()
-/******************************************************************************/
-/* Function:  retrieve the hash value of a primitive object                   */
-/******************************************************************************/
-{
-  RexxString *hashString;              /* string value of the hash          */
-  ULONG       hash;                    /* returned hash value               */
-
-  if (this->isBaseClass())             /* is this a primitve class?         */
-    return HASHVALUE(this);            /* use the macro to return the hash  */
-  else {
-                                       /* get a hash value (as a string)    */
-    hashString = this->sendMessage(OREF_STRICT_EQUAL)->stringValue();
-                                       /* the following logic is duplicated */
-                                       /* in string_class_new function.  Any*/
-                                       /* changes to the hashing must be    */
-                                       /* reflected in both locations       */
-    if (hashString->getLength() == 0)       /* nullstring?                       */
-      hash = 1;                        /* use 1 for the hash value          */
-                                       /* got a long string?                */
-    else if (hashString->getLength() >= sizeof(LONG))
-                                       /* just pick up the first 4 bytes    */
-      hash = *((PULONG)hashString->getStringData());
-    else
-                                       /* just pick up the first 2 bytes    */
-                                       /* (this may pick up the trailing    */
-                                       /* NULL if only one character long   */
-      hash = *((short *)hashString->getStringData());
-    return hash;                       /* return the hash value             */
-  }
-}
-#endif
-
 RexxObject * RexxInternalObject::copy()
 /******************************************************************************/
 /* Function:  First level primitive copy of an object.  This just copies      */
@@ -686,7 +643,7 @@ RexxObject * RexxObject::sendMessage(
 
 RexxObject * RexxObject::messageSend(
     RexxString      *msgname,          /* name of the message to process    */
-    LONG             count,            /* count of arguments                */
+    size_t           count,            /* count of arguments                */
     RexxObject     **arguments )       /* array of arguments                */
 /******************************************************************************/
 /* Function:    send a message (with message lookup) to an object.            */
@@ -721,7 +678,7 @@ RexxObject * RexxObject::messageSend(
 
 RexxObject * RexxObject::messageSend(
     RexxString      *msgname,          /* name of the message to process    */
-    LONG             count,            /* count of arguments                */
+    size_t           count,            /* count of arguments                */
     RexxObject     **arguments,        /* array of arguments                */
     RexxObject      *startscope)       /* starting superclass scope         */
 /******************************************************************************/
@@ -750,7 +707,7 @@ RexxObject * RexxObject::messageSend(
 
 RexxObject * RexxObject::processProtectedMethod(
     RexxString   * messageName,        /* message to issue                  */
-    LONG           count,              /* count of arguments                */
+    size_t         count,              /* count of arguments                */
     RexxObject  ** arguments)          /* actual message arguments          */
 /******************************************************************************/
 /* Function:  Process an unknown message, uncluding looking for an UNKNOWN    */
@@ -860,13 +817,44 @@ RexxMethod * RexxObject::methodObject(
   }
 }
 
-long RexxInternalObject::longValue(
-    size_t precision)                  /* precision to use                  */
+bool RexxInternalObject::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
 /******************************************************************************/
 /* Function:  Convert a primitive internal object to a long value             */
 /******************************************************************************/
 {
-  return NO_LONG;                      /* give a "safe" default here        */
+  return false;                        /* give a "safe" default here        */
+}
+
+bool RexxInternalObject::unsignedNumberValue(stringsize_t &result)
+/******************************************************************************/
+/* Function:  Convert a primitive internal object to a long value             */
+/******************************************************************************/
+{
+  return false;                        /* give a "safe" default here        */
+}
+
+bool RexxInternalObject::numberValue(wholenumber_t &result, stringsize_t digits)
+/******************************************************************************/
+/* Function:  Convert a primitive internal object to a long value             */
+/******************************************************************************/
+{
+  return false;                        /* give a "safe" default here        */
+}
+
+bool RexxInternalObject::numberValue(wholenumber_t &result)
+/******************************************************************************/
+/* Function:  Convert a primitive internal object to a long value             */
+/******************************************************************************/
+{
+  return false;                        /* give a "safe" default here        */
+}
+
+bool RexxInternalObject::doubleValue(double &result)
+/******************************************************************************/
+/* Function:  Convert a primitive internal object to a double value           */
+/******************************************************************************/
+{
+  return false;                        /* give a "safe" default here        */
 }
 
 RexxInteger * RexxInternalObject::integerValue(
@@ -878,14 +866,6 @@ RexxInteger * RexxInternalObject::integerValue(
   return (RexxInteger *)TheNilObject;  /* give a "safe" default here        */
 }
 
-double RexxInternalObject::doubleValue()
-/******************************************************************************/
-/* Function:  Convert a primitive internal object to a double value           */
-/******************************************************************************/
-{
-  return NO_DOUBLE;                    /* give a "safe" default here        */
-}
-
 RexxNumberString * RexxInternalObject::numberString()
 /******************************************************************************/
 /* Function:  convert an internal object to a numberstring representation     */
@@ -894,24 +874,49 @@ RexxNumberString * RexxInternalObject::numberString()
   return OREF_NULL;                    /* this never converts               */
 }
 
-long RexxObject::longValue(
-    size_t precision)                  /* precision to use                  */
+bool RexxObject::numberValue(wholenumber_t &result, stringsize_t digits)
 /******************************************************************************/
 /* Function:  Convert a REXX object to a long value                           */
 /******************************************************************************/
 {
                                        /* get a string and convert          */
-  return REQUEST_STRING(this)->longValue(precision);
+  return REQUEST_STRING(this)->numberValue(result, digits);
 }
 
-long RexxObject::longValueNoNOSTRING(
-    size_t precision)                  /* precision to use                  */
+bool RexxObject::numberValue(wholenumber_t &result)
 /******************************************************************************/
 /* Function:  Convert a REXX object to a long value                           */
 /******************************************************************************/
 {
                                        /* get a string and convert          */
-  return this->requestStringNoNOSTRING()->longValue(precision);
+  return REQUEST_STRING(this)->numberValue(result);
+}
+
+bool RexxObject::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
+/******************************************************************************/
+/* Function:  Convert a REXX object to a long value                           */
+/******************************************************************************/
+{
+                                       /* get a string and convert          */
+  return REQUEST_STRING(this)->unsignedNumberValue(result, digits);
+}
+
+bool RexxObject::unsignedNumberValue(stringsize_t &result)
+/******************************************************************************/
+/* Function:  Convert a REXX object to a long value                           */
+/******************************************************************************/
+{
+                                       /* get a string and convert          */
+  return REQUEST_STRING(this)->unsignedNumberValue(result);
+}
+
+bool RexxObject::doubleValue(double &result)
+/******************************************************************************/
+/* Function:  Convert a primitive internal object to a double value           */
+/******************************************************************************/
+{
+                                       /* get a string and convert          */
+  return this->requestString()->doubleValue(result);
 }
 
 RexxInteger * RexxObject::integerValue(
@@ -922,24 +927,6 @@ RexxInteger * RexxObject::integerValue(
 {
                                        /* get a string and convert          */
   return REQUEST_STRING(this)->integerValue(precision);
-}
-
-double RexxObject::doubleValue()
-/******************************************************************************/
-/* Function:  Convert a primitive internal object to a double value           */
-/******************************************************************************/
-{
-                                       /* get a string and convert          */
-  return this->requestString()->doubleValue();
-}
-
-double RexxObject::doubleValueNoNOSTRING()
-/******************************************************************************/
-/* Function:  Convert a primitive internal object to a double value           */
-/******************************************************************************/
-{
-                                       /* get a string and convert          */
-  return this->requestStringNoNOSTRING()->doubleValue();
 }
 
 RexxNumberString * RexxObject::numberString()
@@ -1103,7 +1090,7 @@ RexxString *RexxObject::requestStringNoNOSTRING()
 }
 
 RexxString *RexxObject::requiredString(
-    LONG  position )                   /* required argument position        */
+    int   position )                   /* required argument position        */
 /******************************************************************************/
 /* Function:  Handle a string request for a REXX object in a context where    */
 /*            the object MUST have a string value.                            */
@@ -1160,7 +1147,7 @@ RexxInteger *RexxObject::requestInteger(
 }
 
 RexxInteger *RexxObject::requiredInteger(
-    LONG   position,                   /* precision to use                  */
+    int    position,                   /* precision to use                  */
     size_t precision)                  /* argument position for errors      */
 /******************************************************************************/
 /* Function:  Request an integer value from an object.  If this is not a      */
@@ -1182,22 +1169,57 @@ RexxInteger *RexxObject::requiredInteger(
   return result;                       /* return the new integer            */
 }
 
-LONG  RexxObject::requestLong(
-    size_t precision )                 /* precision to use                  */
-/******************************************************************************/
-/* Function:  Request a long value from an object.  If this is not a          */
-/*            primitive object, the object will be converted to a string,     */
-/*            and then the string long value will be returned.                */
-/******************************************************************************/
+
+/**
+ * Request an object to convert itself into a number value.
+ *
+ * @param result    The numeric result value.
+ * @param precision The precision used for the conversion.
+ *
+ * @return true if the object converted ok, false for a conversion failure.
+ */
+bool RexxObject::requestNumber(wholenumber_t &result, size_t precision)
 {
-  if (this->isBaseClass())             /* primitive object?                 */
-    return this->longValue(precision); /* return the long value             */
-  else                                 /* return integer value of string    */
-    return this->requestString()->longValue(precision);
+    if (isBaseClass())
+    {
+        // are we already a base class?
+        // the base classes can handle this directly.
+        return numberValue(result, precision);
+    }
+    else
+    {
+        // we need to perform the operation on the string value
+        return numberValue(result, precision);
+    }
 }
 
-LONG  RexxObject::requiredLong(
-    LONG   position ,                  /* precision to use                  */
+
+/**
+ * Request an object to convert itself into a number value.
+ *
+ * @param result    The numeric result value.
+ * @param precision The precision used for the conversion.
+ *
+ * @return true if the object converted ok, false for a conversion failure.
+ */
+bool RexxObject::requestUnsignedNumber(stringsize_t &result, size_t precision)
+{
+    if (isBaseClass())
+    {
+        // are we already a base class?
+        // the base classes can handle this directly.
+        return unsignedNumberValue(result, precision);
+    }
+    else
+    {
+        // we need to perform the operation on the string value
+        return unsignedNumberValue(result, precision);
+    }
+}
+
+
+wholenumber_t RexxObject::requiredNumber(
+    int    position ,                  /* precision to use                  */
     size_t precision)                  /* argument position for errors      */
 /******************************************************************************/
 /* Function:  Request a long value from an object.  If this is not a          */
@@ -1205,55 +1227,65 @@ LONG  RexxObject::requiredLong(
 /*            and then the string long value will be returned.                */
 /******************************************************************************/
 {
-  wholenumber_t  result;               /* returned result                   */
+    wholenumber_t  result;               /* returned result                   */
 
-                                       /* primitive object?                 */
-  if (this->isBaseClass() && !isOfClass(Object, this))
-                                       /* return the integer value          */
-    result = this->longValue(precision);
-  else                                 /* return integer value of string    */
-    result = this->requiredString(position)->longValue(precision);
-  if (result == (wholenumber_t)NO_LONG)/* didn't convert well?              */
-                                       /* raise an error                    */
-    reportException(Error_Incorrect_method_whole, position, this);
-  return result;                       /* return the result                 */
+                                         /* primitive object?                 */
+    if (this->isBaseClass() && !isOfClass(Object, this))
+    {
+        if (!numberValue(result, precision))
+        {
+            /* raise an error                    */
+            reportException(Error_Incorrect_method_whole, position, this);
+        }
+    }
+    else                                 /* return integer value of string    */
+    {
+        if (!requiredString(position)->numberValue(result, precision))
+        {
+            /* raise an error                    */
+            reportException(Error_Incorrect_method_whole, position, this);
+        }
+    }
+    return result;                       /* return the result                 */
 }
 
-LONG  RexxObject::requiredPositive(
-    LONG   position,                   /* precision to use                  */
+stringsize_t RexxObject::requiredPositive(
+    int    position,                   /* precision to use                  */
     size_t precision)                  /* argument position for errors      */
 /******************************************************************************/
 /* Function:  Request a a positive long value from an object.  If this is not */
 /*            positive, it will raise an error.                               */
 /******************************************************************************/
 {
-  LONG         result;                 /* returned result                   */
+    stringsize_t result;                 /* returned result                   */
 
-                                       /* get the value first               */
-  result = this->requiredLong(position, precision);
-  if (result <= 0)                     /* non-positive number?              */
-                                       /* raise the error                   */
-    reportException(Error_Incorrect_method_positive, position, this);
-  return result;                       /* return the result                 */
+    if (!unsignedNumberValue(result, precision) || result == 0)
+    {
+        /* raise the error                   */
+        reportException(Error_Incorrect_method_positive, position, this);
+    }
+    return result;
 }
 
-LONG  RexxObject::requiredNonNegative(
-    LONG   position ,                  /* precision to use                  */
+
+stringsize_t RexxObject::requiredNonNegative(
+    int    position ,                  /* precision to use                  */
     size_t precision)                  /* argument position for errors      */
 /******************************************************************************/
 /* Function:  Request a non-negative long value from an object.  If this is   */
 /*            less than zero, it will raise an error                          */
 /******************************************************************************/
 {
-  LONG         result;                 /* returned result                   */
+    stringsize_t result;                 /* returned result                   */
 
-                                       /* get the value first               */
-  result = this->requiredLong(position, precision);
-  if (result < 0)                      /* negative number?                  */
-                                       /* raise the error                   */
-    reportException(Error_Incorrect_method_nonnegative, position, this);
-  return result;                       /* return the result                 */
+    if (!unsignedNumberValue(result, precision))
+    {
+        /* raise the error                   */
+        reportException(Error_Incorrect_method_nonnegative, position, this);
+    }
+    return result;
 }
+
 
 RexxArray *RexxObject::requestArray()
 /******************************************************************************/
@@ -1670,7 +1702,7 @@ RexxObject  *RexxObject::defMethods(
 /* Function:  Add a table of methods to an object's behaviour               */
 /****************************************************************************/
 {
-  LONG i;                              /* loop counter                      */
+  HashLink i;                          /* loop counter                      */
   RexxMethod *method;
   RexxString *name;
 
@@ -1914,7 +1946,7 @@ void        RexxObject::uninit(void)
 
 }
 
-BOOL RexxObject::hasUninitMethod()
+bool RexxObject::hasUninitMethod()
 /******************************************************************************/
 /* Function:  Check to see if an object has an UNINIT method.                 */
 /******************************************************************************/
@@ -2187,8 +2219,7 @@ void *RexxNilObject::operator new(size_t size)
 
 #include "RexxNativeAPI.h"
 
-native0 (REXXOBJECT, OBJECT_NEW)
-
+REXXOBJECT REXXENTRY REXX_OBJECT_NEW(REXXOBJECT self)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/

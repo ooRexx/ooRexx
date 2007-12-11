@@ -80,7 +80,7 @@
     inline long          next(long pos) { return this->contents->next(pos);};
     inline RexxObject   *value(long pos) {return this->contents->value(pos); };
     inline RexxObject   *index(long pos) {return this->contents->index(pos); };
-    inline BOOL          available(long pos) {return this->contents->available(pos); };
+    inline bool          available(long pos) {return this->contents->available(pos); };
     inline RexxObject   *remove(RexxObject *key) {return this->contents->remove(key); };
     inline RexxObject   *get(RexxObject *key) {return this->contents->get(key); };
 

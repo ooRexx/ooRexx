@@ -223,7 +223,7 @@ void RexxInstructionSelect::terminate(
 /******************************************************************************/
 {
                                        /* perform cleanup                   */
-  context->terminateBlock(doblock->indent);
+  context->terminateBlock(doblock->getIndent());
                                        /* jump to the loop end              */
   context->setNext(this->end->nextInstruction);
 }

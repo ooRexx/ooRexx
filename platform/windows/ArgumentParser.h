@@ -38,13 +38,13 @@
 
 #include "SystemVersion.h"
 
-PCHAR nextArgument(BOOL getprog, PCHAR argptr, PULONG ndx, PULONG len, BOOL allocate, ULONG maxarglength)
+const char *nextArgument(BOOL getprog, const char *argptr, PULONG ndx, PULONG len, BOOL allocate, ULONG maxarglength)
 {
-    PCHAR tmp, ret;
+    PCHAR ret;
     if (argptr[*ndx] == ' ')                      /* skip blanks of previous argument */
     while ((argptr[*ndx] == ' ') && argptr[*ndx] && (*ndx<maxarglength)) (*ndx)++;
     *len = 0;
-    tmp = &argptr[*ndx];
+    const char *tmp = &argptr[*ndx];
 
     if (!allocate)
     {
@@ -89,11 +89,9 @@ PCHAR nextArgument(BOOL getprog, PCHAR argptr, PULONG ndx, PULONG len, BOOL allo
 
 
 
-PRXSTRING getArguments(PCHAR * program, PCHAR argptr, PULONG count, PRXSTRING retarr)
+PCONSTRXSTRING getArguments(const char **program, const char *argptr, size_t *count, PCONSTRXSTRING retarr)
 {
     ULONG i, isave, len, maxarglen;
-    PCHAR tmp;
-
     /* don't forget the break after program_name */
 
     /* WindowsNT accepts 2048 bytes, Windows95/98 1024 bytes */
@@ -105,7 +103,7 @@ PRXSTRING getArguments(PCHAR * program, PCHAR argptr, PULONG count, PRXSTRING re
         (*program) = nextArgument(TRUE, argptr, &i, &len, TRUE, maxarglen);  /* for REXXHIDE script is first argument */
     else {
         nextArgument(FALSE, argptr, &i, &len, FALSE, maxarglen);             /* skip REXX*.EXE */
-        tmp = nextArgument(FALSE, argptr, &i, &len, FALSE, maxarglen);       /* skip REXX script or -e switch */
+        const char *tmp = nextArgument(FALSE, argptr, &i, &len, FALSE, maxarglen);       /* skip REXX script or -e switch */
         /* the following test ensure that the -e switch on rexx.exe is not included in the arguments */
         /* passed to the running program as specified on the command line. Unfortunately it also     */
         /* affects rexxhide, rexxpaws, etc, that all use this code; may not be important             */
@@ -128,8 +126,8 @@ PRXSTRING getArguments(PCHAR * program, PCHAR argptr, PULONG count, PRXSTRING re
 }
 
 
-void freeArguments(PCHAR program, PRXSTRING arguments)
+void freeArguments(const char *program, PCONSTRXSTRING arguments)
 {
-   if (arguments->strptr) GlobalFree(arguments->strptr);
-   if (program) GlobalFree(program);
+   if (arguments->strptr) GlobalFree((HGLOBAL)arguments->strptr);
+   if (program) GlobalFree((HGLOBAL)program);
 }

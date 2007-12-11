@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              RaiseInstruction.c    */
+/* REXX Translator                                      RaiseInstruction.c    */
 /*                                                                            */
 /* Primitive Raise Parse Class                                                */
 /*                                                                            */
@@ -58,7 +58,7 @@ RexxInstructionRaise::RexxInstructionRaise(
   RexxObject *_result,                  /* returned result                   */
   size_t      _arrayCount,             /* size of the array items           */
   RexxQueue  *array,                   /* array argument information        */
-  BOOL        raiseReturn )            /* return/exit flag                  */
+  bool        raiseReturn )            /* return/exit flag                  */
 /******************************************************************************/
 /* Function:  Initialize a RAISE instruction item                             */
 /******************************************************************************/
@@ -159,7 +159,7 @@ void RexxInstructionRaise::execute(
   RexxDirectory *conditionobj;         /* propagated condition object       */
   size_t  count;                       /* count of array expressions        */
   size_t  i;                           /* loop counter                      */
-  LONG    msgNum;                      /* message number                    */
+  wholenumber_t  msgNum;               /* message number                    */
 
   context->traceInstruction(this);     /* trace if necessary                */
   _additional = OREF_NULL;             /* no object yet                     */

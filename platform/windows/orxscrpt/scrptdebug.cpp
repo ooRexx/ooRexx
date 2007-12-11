@@ -50,15 +50,14 @@ CRITICAL_SECTION stop = { 0 };
 //  The invCount is only in this module.  There should be only one of these per method.
 int __cdecl FPRINTF(FILE *Stream, const char *Format,...) {
   int RetCode=0;
-  SYSTEMTIME st;
 
-  va_list marker;
 
 #if defined(DEBUGC)+defined(DEBUGZ)
   if (invCount == 0)
     InitializeCriticalSection(&stop);
   EnterCriticalSection(&stop);
   invCount++;
+  SYSTEMTIME st;
   GetSystemTime(&st);
   fprintf(Stream,"%3d %02x %4d - [%2.2d:%2.2d.%3.3d] ",_getpid(),GetCurrentThreadId(),invCount, st.wMinute, st.wSecond,st.wMilliseconds);
   if(HeaderLength == 0) {
@@ -66,6 +65,7 @@ int __cdecl FPRINTF(FILE *Stream, const char *Format,...) {
     sprintf(&Temp[0],"%3d %02x %4d - [%2.2d:%2.2d.%3.3d] ",_getpid(),GetCurrentThreadId(),invCount, st.wMinute, st.wSecond,st.wMilliseconds);
     HeaderLength = strlen(&Temp[0]);
     }
+  va_list marker;
 
   va_start(marker,Format);
   RetCode = vfprintf(Stream,Format,marker);
@@ -79,10 +79,10 @@ int __cdecl FPRINTF(FILE *Stream, const char *Format,...) {
 
 int __cdecl FPRINTF2(FILE *Stream, const char *Format, ...) {
   int RetCode=0;
-  va_list marker;
 
   if (!Stream) return 0;
 #if defined(DEBUGC)+defined(DEBUGZ)
+  va_list marker;
   for(int i=0; i<HeaderLength; ++i) fprintf(Stream," ");
   va_start(marker,Format);
   RetCode = vfprintf(Stream,Format,marker);
@@ -102,10 +102,10 @@ int __cdecl FPRINTF2(FILE *Stream, const char *Format, ...) {
  *****************************************************************************/
 int __cdecl FPRINTF3(FILE *Stream, const char *Format, ...) {
   int RetCode=0;
-  va_list marker;
 
   if (!Stream) return 0;
 #if defined(DEBUGC)+defined(DEBUGZ)
+  va_list marker;
   va_start(marker,Format);
   RetCode = vfprintf(Stream,Format,marker);
   va_end(marker);

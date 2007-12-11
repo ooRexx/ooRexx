@@ -54,20 +54,10 @@
 # include "config.h"
 #endif
 
-#define  INCL_RXFUNC
-#define  INCL_RXSUBCOM
-#define  INCL_RXSYSEXIT
-
 #include <stdlib.h>
-#include "PlatformDefinitions.h"
-#include "RexxCore.h"                         /* global REXX declarations       */
-//#include "okactiva.hpp"
-//#include "okstring.hpp"
-//#include "okactivi.hpp"
-#include "RexxLibrary.h"
-//#include "oknativa.hpp"
-#include "RexxNativeAPI.h"
-#include SYSREXXSAA
+#include <string.h>
+#include <stdio.h>
+#include "rexx.h"
 #include "SharedMemorySupport.h"
 #include "SystemSemaphores.h"
 #include "SubcommandAPI.h"
@@ -100,7 +90,7 @@ extern REXXAPIDATA  *apidata;                   /* Global state data          */
 //#define PIDCMP(x)    ((x->apipid==apidata->ProcessId))
 #define PT_32BIT       1                       /* only for Windows            */
 
-PVOID  pLibSave = NULL;                        /* External lib handle         */
+void  *pLibSave = NULL;                        /* External lib handle         */
 char   szLibName[MAXNAME +1];                  /* External lib name           */
 
 /*********************************************************************/
@@ -109,16 +99,14 @@ char   szLibName[MAXNAME +1];                  /* External lib name           */
 /*                                                                   */
 /*********************************************************************/
 
-LONG  RegQuery(PSZ, PSZ, PUSHORT, unsigned char *, LONG );
-LONG dllcheck(PSZ, PSZ, LONG);        // Check against duplicating
-LONG execheck(PSZ, LONG );
-LONG  RegLoad(PSZ, PSZ, LONG , PFN *, PULONG, PVOID*);
-LONG  RegDrop(PSZ, PSZ, LONG );       // Drop an api block from the chain
-LONG  RegRegisterExe(PSZ, PFN, unsigned char *, LONG, LONG);
-LONG  RegRegisterDll(PSZ, PSZ, PSZ, unsigned char *, ULONG, LONG);
-//PAPIBLOCK search(PSZ, PSZ, LONG );
-APIBLOCK *RegSearch(PSZ, LONG, char);
-//APIBLOCK *dllsearch(PSZ, PSZ, LONG );
+int RegQuery(const char *, const char *, unsigned short *, char *, int);
+int dllcheck(const char *, const char *, int);    // Check against duplicating
+int execheck(const char *, int);
+int RegLoad(const char *, const char *, int , void **, void **);
+int  RegDrop(const char *, const char *, int);       // Drop an api block from the chain
+int  RegRegisterExe(const char *, REXXPFN, const char *, int);
+int  RegRegisterDll(const char *, const char *, const char *, const char *, size_t, int);
+APIBLOCK *RegSearch(const char *, int, char);
 
 
 /********************************************************************/
@@ -147,13 +135,12 @@ APIBLOCK *RegSearch(PSZ, LONG, char);
 /*                                                                  */
 /********************************************************************/
 
-VOID   APIENTRY RxSubcomExitList(VOID)
+void APIENTRY RxSubcomExitList(void)
 {
-  ULONG           block;
-  ULONG           prev, c;
-  LONG            i ;
-  INT             begin = 0;
-  pid_t           pidOwnID;             /* keep process id          */
+  size_t          prev, c;
+  int             i ;
+  int             begin = 0;
+  process_id_t    pidOwnID;             /* keep process id          */
 
 if(apidata == NULL)                     /* nothing happend at all   */
   return;
@@ -201,10 +188,6 @@ if(apidata->sebase != NULL)             /* if there is API memory   */
           begin = 1; /* now begin at front(perhaps the memory is rearanged)*/
           c = SEDATA(c)->next;
           RxFreeAPIBlock(c,sizeof(APIBLOCK));    /* release the block */
-//        if ( apidata->sememtop > 1 )
-//           apidata->baseblock[ i ] = apidata->sememtop -  sizeof(APIBLOCK);
-//        else
-//           apidata->baseblock[ i ] = NULL;
         }
         else {
           prev = c ;                         /* Keeping this block.   */
@@ -251,17 +234,15 @@ if(apidata->sebase != NULL)             /* if there is API memory   */
 /*********************************************************************/
 
 APIRET APIENTRY RexxRegisterSubcomDll(
-  PSZ   EnvName,                       /* Subcom name                */
-  PSZ   ModuleName,                    /* Name of DLL                */
-  PSZ   EntryPoint,                    /* DLL routine name           */
-  unsigned char *UserArea,             /* User data                  */
-  ULONG DropAuth )                     /* Drop Authority             */
+  const char *EnvName,              /* Subcom name                */
+  const char *ModuleName,           /* Name of DLL                */
+  const char *EntryPoint,           /* DLL routine name           */
+  const char *UserArea,             /* User data                  */
+  size_t DropAuth )                 /* Drop Authority             */
 {
-  ULONG  rc;                           /* Function return code.      */
                                        /* Register the subcommand.   */
-  rc = RegRegisterDll(EnvName, ModuleName, EntryPoint, UserArea,
+  return RegRegisterDll(EnvName, ModuleName, EntryPoint, UserArea,
                       DropAuth, REGSUBCOMM);
-  return (rc);                         /* and exit with return code  */
 }
 
 
@@ -293,16 +274,13 @@ APIRET APIENTRY RexxRegisterSubcomDll(
 /*********************************************************************/
 
 APIRET APIENTRY RexxRegisterSubcomExe(
-  PSZ   EnvName,                       /* Subcom name                */
-  PFN   EntryPoint,                    /* DLL routine name           */
-  unsigned char *UserArea)             /* User data                  */
+  const char *   EnvName,              /* Subcom name                */
+  REXXPFN EntryPoint,                  /* DLL routine name           */
+  const char *UserArea)                /* User data                  */
 {
-  ULONG  rc;                           /* Function return code.      */
                                        /* Register the subcommand    */
                                        /* (as a 32-bit callout       */
-  rc = RegRegisterExe(EnvName, EntryPoint, UserArea,
-                      REGSUBCOMM,PT_32BIT);
-  return (rc);                         /* and exit with return code  */
+  return RegRegisterExe(EnvName, EntryPoint, UserArea, REGSUBCOMM);
 }
 
 
@@ -332,32 +310,26 @@ APIRET APIENTRY RexxRegisterSubcomExe(
 /*                                                                   */
 /*********************************************************************/
 APIRET APIENTRY RexxCallFunction (
-        PSZ dname,                     /* Name of function to call   */
-        ULONG argc,                    /* Number of arguments        */
-        PRXSTRING argv,                /* Array of argument strings  */
-        PUSHORT  funcrc,                /* RC from function called    */
-        PRXSTRING result,              /* Storage for returned data  */
-        PSZ act_q)                     /* Name of active data queue  */
-
+    const char * dname,            /* Name of function to call   */
+    size_t argc,                   /* Number of arguments        */
+    PCONSTRXSTRING argv,           /* Array of argument strings  */
+    int     *funcrc,               /* RC from function called    */
+    PRXSTRING result,              /* Storage for returned data  */
+    const char *act_q)             /* Name of active data queue  */
 {
-  ULONG rc = 1;
-  ULONG calltype;
-  PRXFUNC    func_address;             /* addr for transfer to call  */
-  PVOID plib = NULL;                   /* Dll handle                 */
+  APIRET rc = 1;
+  RexxFunctionHandler *func_address; /* addr for transfer to call  */
+  void *plib = NULL;               /* Dll handle                 */
 
-  if (!(rc=RegLoad(dname, NULL, REGFUNCTION, (PFN *)&func_address,
-       &calltype, &plib))) {
-
+  if (!(rc=RegLoad(dname, NULL, REGFUNCTION, (REXXPFN *)&func_address, &plib)))
+  {
                                        /* call                       */
     *funcrc = (*func_address)(         /* unsigned char added        */
-               (unsigned char *)dname, /* send function name to call */
+                  dname,               /* send function name to call */
                   argc,                /*   and argument count       */
                   argv,                /*   and argument array       */
                   act_q,               /*   and the name of the queue*/
                   result);             /*   and place for ret data   */
-
-//  if(plib)
-//    dlclose(plib);                   /* free the DLL               */
   }
   return (rc);                         /* if ok, return success      */
 }                                      /* end of RexxCallFunction()  */
@@ -381,17 +353,14 @@ APIRET APIENTRY RexxCallFunction (
 /*********************************************************************/
 
 APIRET APIENTRY RexxLoadSubcom(
-  PSZ name,                            /* Name of Subcommand Environ */
-  PSZ dll )                            /* Module name of its' DLL    */
+  const char * name,                   /* Name of Subcommand Environ */
+  const char * dll )                   /* Module name of its' DLL    */
 {
-  ULONG  calltype;                     /* Routine calltype (not used)*/
-  ULONG  rc;                           /* Function return code.      */
-  PFN a;                               /* Address of Subcom.         */
-  PVOID plib = NULL;                   /* DLL handle                 */
+  REXXPFN a;                           /* Address of Subcom.         */
+  void *plib = NULL;                   /* DLL handle                 */
 
                                        /* Load routine into memory   */
-  rc = RegLoad(name, dll, REGSUBCOMM, &a, &calltype, &plib);
-  return (rc);                         /* and exit with return code  */
+  return RegLoad(name, dll, REGSUBCOMM, &a, &plib);
 }
 
 
@@ -415,30 +384,26 @@ APIRET APIENTRY RexxLoadSubcom(
 /*********************************************************************/
 
 APIRET APIENTRY RexxCallSubcom(
-  PSZ name,                            /* the Subcommand Environment */
-  PSZ dll,                             /* Module name of its' DLL    */
-  PRXSTRING cmd,                       /* Command string to be passed*/
-  PUSHORT flags,                       /* Used to notify errors      */
-  PUSHORT sbrc,                        /* return code from handler   */
+  const char * name,                   /* the Subcommand Environment */
+  const char * dll,                    /* Module name of its' DLL    */
+  PCONSTRXSTRING cmd,                  /* Command string to be passed*/
+  unsigned short *flags,               /* Used to notify errors      */
+  wholenumber_t *sbrc,                 /* return code from handler   */
   PRXSTRING rv )                       /* rxstring to pass back info */
 {
-  PRXSUBCOM    subcom_addr;            /* addr for transfer to call  */
-  LONG rc;
-  ULONG calltype;
-  PVOID plib = NULL;
+  RexxSubcomHandler  *subcom_addr;      /* addr for transfer to call  */
+  APIRET rc;
+  void *plib = NULL;
 
- if (!(rc=RegLoad(name, dll, REGSUBCOMM, (PFN *)&subcom_addr,
-      &calltype, &plib))) {
+ if (!(rc=RegLoad(name, dll, REGSUBCOMM, (REXXPFN *)&subcom_addr, &plib))) {
 
-    *sbrc = (USHORT)(                /* Call subcom environment w/ */
+    *sbrc = (                        /* Call subcom environment w/ */
         (* subcom_addr ) (           /* The ptr to environmnt entry*/
         cmd,                         /* The command to perform     */
         flags,                       /* Pointer to the error flags */
         rv                           /* returned string after call */
         ));                          /* return value is set to SBRC*/
     rc = RXSUBCOM_OK;                /* Set RxSubComExecute return */
-//  if(plib)
-//    dlclose(plib);                   /* free the DLL              */
  }
   return (rc);                     /* and exit with return code  */
 }
@@ -468,15 +433,12 @@ APIRET APIENTRY RexxCallSubcom(
 /*********************************************************************/
 
 APIRET APIENTRY RexxQuerySubcom(
-  PSZ     name,                        /* Environment Name           */
-  PSZ     dll,                         /* Associated Name (of DLL)   */
-  PUSHORT exist,                       /* existence information      */
-  unsigned char  *userword )           /* data from registration     */
+  const char *     name,               /* Environment Name           */
+  const char *     dll,                /* Associated Name (of DLL)   */
+  unsigned short * exist,              /* existence information      */
+  char  *userword )                    /* data from registration     */
 {
-  ULONG  rc;                           /* General Return code holder */
-  rc = RegQuery(name, dll, exist, userword, /* Perform the query.    */
-      REGSUBCOMM);
-  return (rc);                         /* and exit with return code  */
+  return RegQuery(name, dll, exist, userword, REGSUBCOMM);
 }
 
 /*********************************************************************/
@@ -497,12 +459,10 @@ APIRET APIENTRY RexxQuerySubcom(
 /*********************************************************************/
 
 APIRET APIENTRY RexxDeregisterSubcom(
-  PSZ name,                            /* Environment Name           */
-  PSZ dllname )                        /* Associated Name (of DLL)   */
+  const char * name,                   /* Environment Name           */
+  const char * dllname )               /* Associated Name (of DLL)   */
 {
-  ULONG  rc;                           /* Function return code.      */
-  rc = RegDrop(name, dllname, REGSUBCOMM);/* Drop the subcommand.    */
-  return (rc);                         /* and exit with return code  */
+  return RegDrop(name, dllname, REGSUBCOMM);/* Drop the subcommand.    */
 }
 
 /*********************************************************************/
@@ -532,15 +492,12 @@ APIRET APIENTRY RexxDeregisterSubcom(
 /*********************************************************************/
 
 APIRET APIENTRY RexxRegisterExitExe(
-  PSZ   EnvName,                       /* exit name                  */
-  PFN   EntryPoint,                    /* DLL routine name           */
-  unsigned char *UserArea )            /* User data                  */
+  const char *   EnvName,              /* exit name                  */
+  REXXPFN EntryPoint,                  /* DLL routine name           */
+  const char *UserArea )               /* User data                  */
 {
-  ULONG  rc;                           /* Function return code.      */
                                        /* Register the exit          */
-  rc = RegRegisterExe(EnvName, EntryPoint, UserArea,
-                      REGSYSEXIT, PT_32BIT);
-  return (rc);                         /* and exit with return code  */
+  return RegRegisterExe(EnvName, EntryPoint, UserArea, REGSYSEXIT);
 }
 
 
@@ -577,17 +534,14 @@ APIRET APIENTRY RexxRegisterExitExe(
 /*********************************************************************/
 
 APIRET APIENTRY RexxRegisterExitDll(
-  PSZ   EnvName,                       /* Exit name                  */
-  PSZ   ModuleName,                    /* Name of DLL                */
-  PSZ   EntryPoint,                    /* DLL routine name           */
-  unsigned char *UserArea,             /* User data                  */
-  ULONG DropAuth )                     /* Drop Authority             */
+  const char *   EnvName,              /* Exit name                  */
+  const char *   ModuleName,           /* Name of DLL                */
+  const char *   EntryPoint,           /* DLL routine name           */
+  const char *UserArea,                /* User data                  */
+  size_t DropAuth )                    /* Drop Authority             */
 {
-  ULONG  rc;                           /* Function return code.      */
                                        /* Register the subcommand.   */
-  rc = RegRegisterDll(EnvName, ModuleName, EntryPoint, UserArea,
-                      DropAuth, REGSYSEXIT);
-  return (rc);                         /* and exit with return code  */
+  return RegRegisterDll(EnvName, ModuleName, EntryPoint, UserArea, DropAuth, REGSYSEXIT);
 }
 
 /*********************************************************************/
@@ -608,12 +562,10 @@ APIRET APIENTRY RexxRegisterExitDll(
 /*********************************************************************/
 
 APIRET APIENTRY RexxDeregisterExit(
-  PSZ name,                            /* Environment Name           */
-  PSZ dllname )                        /* Associated Name (of DLL)   */
+  const char * name,                   /* Environment Name           */
+  const char * dllname )               /* Associated Name (of DLL)   */
 {
-  ULONG  rc;                           /* Function return code.      */
-  rc = RegDrop(name, dllname, REGSYSEXIT);/* Drop the subcommand.    */
-  return (rc);                         /* and exit with return code  */
+    return RegDrop(name, dllname, REGSYSEXIT);/* Drop the subcommand.    */
 }
 
 /*********************************************************************/
@@ -640,15 +592,12 @@ APIRET APIENTRY RexxDeregisterExit(
 /*********************************************************************/
 
 APIRET APIENTRY RexxQueryExit(
-  PSZ name,                            /* Environment Name           */
-  PSZ dll,                             /* Associated Name (of DLL)   */
-  PUSHORT exist,                       /* existence information      */
-  unsigned char *userword )            /* data from registration     */
+  const char * name,                   /* Environment Name           */
+  const char * dll,                    /* Associated Name (of DLL)   */
+  unsigned short *exist,               /* existence information      */
+  char *userword )                     /* data from registration     */
 {
-  ULONG  rc;                           /* General Return code holder */
-  rc = RegQuery(name, dll, exist, userword, /* Perform the query.    */
-      REGSYSEXIT);
-  return (rc);                         /* and exit with return code  */
+    return RegQuery(name, dll, exist, userword, REGSYSEXIT);
 }
 
 
@@ -670,23 +619,21 @@ APIRET APIENTRY RexxQueryExit(
 /*                   -1 otherwise                                    */
 /*                                                                   */
 /*********************************************************************/
-
-LONG APIENTRY RexxCallExit(
-  PSZ name,                            /* Exit name.                 */
-  PSZ dll,                             /* dll name.                  */
-  LONG  fnc,                           /* Exit function.             */
-  LONG  subfnc,                        /* Exit subfunction.          */
+int APIENTRY RexxCallExit(
+  const char * name,                   /* Exit name.                 */
+  const char * dll,                    /* dll name.                  */
+  int   fnc,                           /* Exit function.             */
+  int   subfnc,                        /* Exit subfunction.          */
   PEXIT param_block )                  /* Exit parameter block.      */
 {
-  PRXEXIT exit_address;                /* Exit's calling address.    */
-  LONG     rc;                         /* Function return code.      */
-  ULONG calltype;
-  PVOID plib = NULL;
+  RexxExitHandler *exit_address;       /* Exit's calling address.    */
+  int      rc;                         /* Function return code.      */
+  void *plib = NULL;
 
-  if (!(rc=RegLoad(name, dll, REGSYSEXIT, (PFN *)&exit_address,
-       &calltype, &plib))) {
+  if (!(rc=RegLoad(name, dll, REGSYSEXIT, (REXXPFN *)&exit_address, &plib)))
+  {
                                        /* call                       */
-    rc = (LONG )(*exit_address)(fnc, subfnc, param_block);
+    rc = (*exit_address)(fnc, subfnc, param_block);
     if(plib)
       dlclose(plib);                   /* free the DLL               */
   }
@@ -725,15 +672,13 @@ LONG APIENTRY RexxCallExit(
 /*                                                                   */
 /*********************************************************************/
 APIRET APIENTRY RexxRegisterFunctionDll(
-           PSZ EnvName,                /* Subcom name                */
-           PSZ ModuleName,             /* Name of DLL                */
-           PSZ EntryPoint)             /* Dll routine name           */
+    const char * EnvName,                /* Subcom name                */
+    const char * ModuleName,             /* Name of DLL                */
+    const char * EntryPoint)             /* Dll routine name           */
 {
  return (RegRegisterDll(EnvName, ModuleName, EntryPoint, NULL,RXSUBCOM_DROPPABLE, REGFUNCTION));
                                             /* to new entrypoint name  */
 }
-
-
 
 /*********************************************************************/
 /*                                                                   */
@@ -759,14 +704,11 @@ APIRET APIENTRY RexxRegisterFunctionDll(
 /*********************************************************************/
 
 APIRET APIENTRY RexxRegisterFunctionExe(
-  PSZ   EnvName,                       /* Subcom name                */
-  PFN   EntryPoint )                   /* DLL routine name           */
+  const char *EnvName,                 /* Subcom name                */
+  REXXPFN EntryPoint )                 /* DLL routine name           */
 {
-  ULONG  rc;                           /* Function return code.      */
                                        /* Register the subcommand.   */
-  rc = RegRegisterExe(EnvName, EntryPoint, NULL,
-                      REGFUNCTION,PT_32BIT);
-  return (rc);                         /* and exit with return code  */
+    return RegRegisterExe(EnvName, EntryPoint, NULL, REGFUNCTION);
 }
 
 
@@ -785,13 +727,9 @@ APIRET APIENTRY RexxRegisterFunctionExe(
 /*                                                                   */
 /*********************************************************************/
 APIRET APIENTRY RexxDeregisterFunction(
-           PSZ name)               /* ASCIIZ subcom env name     */
+    const char * name)               /* ASCIIZ subcom env name     */
 {
-  ULONG  rc;                           /* Function return code.      */
-
-  rc = RegDrop(name, NULL, REGFUNCTION); /* Drop the function        */
-
-  return (rc);                         /* and exit with return code  */
+  return RegDrop(name, NULL, REGFUNCTION); /* Drop the function        */
 }
 
 
@@ -813,12 +751,11 @@ APIRET APIENTRY RexxDeregisterFunction(
 /*********************************************************************/
 
 APIRET APIENTRY RexxQueryFunction(
-  PSZ name )                           /* Environment Name           */
+  const char * name )                           /* Environment Name           */
 {
-  ULONG  rc;                           /* General Return code holder */
-  USHORT exist;                        /* existance flage            */
-  rc = RegQuery(name, NULL, &exist, NULL,/* Perform the query.       */
-      REGFUNCTION);
+  APIRET rc;
+  unsigned short exist;                /* existance flage            */
+  rc = RegQuery(name, NULL, &exist, NULL, REGFUNCTION);
                                        /* set the proper return code */
   rc = (exist)?RXFUNC_OK:RXFUNC_NOTREG;
   return (rc);                         /* and exit with return code  */
@@ -851,25 +788,22 @@ APIRET APIENTRY RexxQueryFunction(
 /*                                                                   */
 /*********************************************************************/
 
-LONG RegRegisterDll(
-  PSZ       EnvName,                   /* Subcom name                */
-  PSZ       ModuleName,                /* Name of DLL                */
-  PSZ       EntryPoint,                /* Dll routine name           */
-  unsigned char *UserArea,             /* User data                  */
-  ULONG     DropAuth,                  /* Drop Authoritiy            */
-  LONG      type)                      /* Registration Type          */
+int RegRegisterDll(
+  const char *EnvName,                 /* Subcom name                */
+  const char *ModuleName,              /* Name of DLL                */
+  const char *EntryPoint,              /* Dll routine name           */
+  const char *UserArea,                /* User data                  */
+  size_t    DropAuth,                  /* Drop Authoritiy            */
+  int       type)                      /* Registration Type          */
 {
-  pid_t pidProcID;
-  pid_t pidOwnID;
+  process_id_t pidProcID;
+  process_id_t pidOwnID;
   PAPIBLOCK cblock = NULL;             /* Working ptr, current block */
-  LONG rc = RXSUBCOM_OK;
+  int  rc = RXSUBCOM_OK;
 
-//EnterMustComplete();                    /* start of critical section*/
   APISTARTUP(SECHAIN);                    /* do common entry code     */
-//rc = dllcheck(EnvName, ModuleName, type); /* check against duplicating */
   cblock = RegSearch(EnvName, type, 'M');   /* check against duplicating */
                                           /* if we can still register...*/
-//if (rc == RXSUBCOM_OK || rc == RXSUBCOM_DUP)
   if ( cblock == NULL )
   {
     pidOwnID = getpid();                 /* Save time in loop          */
@@ -878,7 +812,6 @@ LONG RegRegisterDll(
 #else
     pidProcID = pidOwnID;                 /* Save time in loop          */
 #endif
-//  EnterMustComplete();                  /* start of critical section */
     if( ! RxAllocAPIBlock(&cblock, EnvName, ModuleName, EntryPoint)) {
 
       /*************************************************************/
@@ -890,25 +823,21 @@ LONG RegRegisterDll(
       if (UserArea)                  /* Copy the user data         */
          memcpy(cblock->apiuser,UserArea, USERLENGTH);
       cblock->apidrop_auth = DropAuth;/* and drop authority        */
-      cblock->apitype = 0;           /* call type determined later */
       cblock->apipid = pidProcID;    /* copy the process Group ID  */
       cblock->apiownpid = pidOwnID;  /* copy the process ID        */
-//    if ( apidata->baseblock[type] != 1 )
                                     /* Next pointer set to old top*/
       cblock->next =  apidata->baseblock[type];
-      if ( (!rxstricmp(cblock->apidll_name, szLibName)) &&
+      if ( (!strcasecmp(cblock->apidll_name, szLibName)) &&
            ( pLibSave != NULL ) )   /* If lib handle exists get it */
            cblock->apimod_handle = pLibSave;
       else
            cblock->apimod_handle = NULL;
                                     /* Make this block the top     */
-        apidata->baseblock[type] = ((ULONG)(((char*)cblock)-(apidata->sebase)));
+        apidata->baseblock[type] = ((char*)cblock) - apidata->sebase;
     }
     else rc = RXSUBCOM_NOEMEM;       /* Couldn't alloc a APIBLOCK  */
-//  ExitMustComplete();              /* end of critical section    */
   }
   APICLEANUP(SECHAIN);               /* release shared resources   */
-//ExitMustComplete();                /* end of critical section    */
   return (rc);
 }
 
@@ -942,24 +871,21 @@ LONG RegRegisterDll(
 /*                                                                   */
 /*********************************************************************/
 
-LONG  RegRegisterExe(
-  PSZ   EnvName,                       /* Subcom name                */
-  PFN   EntryPoint,                    /* DLL routine name           */
-  unsigned char *UserArea,             /* User data                  */
-  LONG  type,                          /* Registration type.         */
-  LONG  CallType )                     /* 32- or 16-bit call outs    */
+int  RegRegisterExe(
+  const char *EnvName,                 /* Subcom name                */
+  REXXPFN EntryPoint,                  /* entry point address        */
+  const char *UserArea,                /* User data                  */
+  int   type)                          /* Registration type.         */
 {
   PAPIBLOCK cblock ;                   /* Working ptr, current block */
-  LONG rc;
-  pid_t pidProcID;
-  pid_t pidOwnID;
+  int  rc;
+  process_id_t pidProcID;
+  process_id_t pidOwnID;
 
-//EnterMustComplete();                 /* enter critical section     */
   APISTARTUP(SECHAIN);                 /* do common entry code       */
                                        /* check against duplicating  */
   rc = execheck(EnvName, type);
                                        /* if we can still register...*/
-//if (rc == RXSUBCOM_NOTREG || rc == RXSUBCOM_DUP) {
   if (rc == RXSUBCOM_NOTREG )
   {
       /***************************************************************/
@@ -967,9 +893,7 @@ LONG  RegRegisterExe(
       /* tion data.  Otherwise, return RXSUBCOM_NOMEM.               */
       /***************************************************************/
 
-//  EnterMustComplete();               /* enter critical section     */
-    if( ! RxAllocAPIBlock( &cblock,
-                     EnvName, NULL, NULL))
+    if( ! RxAllocAPIBlock( &cblock, EnvName, NULL, NULL))
     {
       pidOwnID = getpid();                 /* Save time in loop      */
 #if defined( HAVE_GETPGRP )
@@ -989,19 +913,16 @@ LONG  RegRegisterExe(
         cblock->apidrop_auth=RXSUBCOM_NONDROP;
         cblock->apiownpid = pidOwnID;  /* copy the process ID        */
         cblock->apipid = pidProcID;    /* fill in process and        */
-        cblock->apitype = CallType;    /* remember type of call      */
         cblock->next =                 /* Next pointer set to old top*/
             apidata->baseblock[type];
         cblock->apiFunRegFlag = 1;     /* Not the main registration  */
                                        /* Make this block the top    */
-        apidata->baseblock[type] = ((ULONG)(((char*)cblock)-(apidata->sebase)));
+        apidata->baseblock[type] = ((char*)cblock) - apidata->sebase;
         rc = RXSUBCOM_OK;
     }
     else rc = RXSUBCOM_NOEMEM;         /* Couldn't alloc an APIBLOCK */
-//  ExitMustComplete();                /* end of critical section    */
   }
   APICLEANUP(SECHAIN);                 /* release shared resources   */
-//ExitMustComplete();                  /* end of critical section    */
   return (rc);
 }
 
@@ -1027,20 +948,18 @@ LONG  RegRegisterExe(
 /*                                                                   */
 /*********************************************************************/
 
-LONG  RegQuery(
-  PSZ name,                            /* Environment Name           */
-  PSZ dll,                             /* Associated Name (of DLL)   */
-  PUSHORT exist,                       /* existence information      */
-  unsigned char *usrwrd,               /* data from registration     */
-  LONG  type )                         /* Registration type.         */
+int RegQuery(
+  const char * name,                   /* Environment Name           */
+  const char * dll,                    /* Associated Name (of DLL)   */
+  unsigned short *exist,               /* existence information      */
+  char *usrwrd,                        /* data from registration     */
+  int   type )                         /* Registration type.         */
 {
   PAPIBLOCK cblock;                    /* Working ptr, current block */
-  LONG      rc;
+  int       rc;
 
-//EnterMustComplete();                 /* start of critical section  */
   APISTARTUP(SECHAIN);                 /* do common entry code       */
 
-//cblock = search(name, dll, type);    /* Find the block or not.     */
   if ( dll != NULL )
   {
     cblock = RegSearch(name, type, 'M'); /* Search for MASTER only   */
@@ -1062,7 +981,6 @@ LONG  RegQuery(
     *exist = NO;
   }
   APICLEANUP(SECHAIN);                    /* release shared resources   */
-//ExitMustComplete();                     /* start of critical section  */
   return (rc);
 }
 
@@ -1085,65 +1003,37 @@ LONG  RegQuery(
 /*                                                                   */
 /*********************************************************************/
 
-LONG  RegDrop(
-  PSZ name,                            /* Environment Name           */
-  PSZ dll,                             /* Associated Name (of DLL)   */
-  LONG  type )                         /* Registration type.         */
+int   RegDrop(
+  const char * name,                   /* Environment Name           */
+  const char * dll,                    /* Associated Name (of DLL)   */
+  int   type )                         /* Registration type.         */
 {
-  ULONG cblock;                        /* Ptr to the current block   */
-  ULONG pblock;                        /* Ptr to the previous block  */
-  LONG  rc = RXSUBCOM_NOTREG;          /* init return code to NOTREG */
+  size_t cblock;                       /* Ptr to the current block   */
+  size_t pblock;                       /* Ptr to the previous block  */
+  int   rc = RXSUBCOM_NOTREG;          /* init return code to NOTREG */
                                        /* Exception handler record   */
 
-//EnterMustComplete();                 /* start of critical section  */
   APISTARTUP(SECHAIN);                 /* do common entry code       */
 
   cblock = apidata->sememtop;          /* get to the top  'pointer'  */
-//cblock = apidata->baseblock[type];   /* Get head of the chain      */
   pblock = 0;                          /* No previous block yet      */
   if (dll && !strlen(dll))             /* if dll is a null string    */
     dll = NULL;                        /* make it really null        */
-//pidProcID = getpid();                /* Save time in loop          */
 
   while (cblock > SHM_OFFSET )
   {
    cblock -= sizeof(APIBLOCK);         /* Get last block  'pointer'  */
-   if ((!rxstricmp(SEDATA(cblock)->apiname, name) &&
+   if ((!strcasecmp(SEDATA(cblock)->apiname, name) &&
        (!dll)) ||
        (SEDATA(cblock)->apidll_name && dll &&
-        !rxstricmp(SEDATA(cblock)->apidll_name, dll))) {
-//   if (!SEDATA(cblock)->apidrop_auth ||                            */
-//       (SEDATA(cblock)->apidrop_auth == 1 &&                       */
-//       (SEDATA(cblock)->apipid == pidProcID ||
-//       ((getpgid(SEDATA(cblock)->apipid) == -1) &&     /* if not running */
-//       (errno == ESRCH)))) )
-//   if (SEDATA(cblock)->apiFunRegFlag == 0) /* Only the main registration */
-//   {
+        !strcasecmp(SEDATA(cblock)->apidll_name, dll))) {
        SEDATA(cblock)->apiFunRegFlag = 1; /* Change to no main registration */
-//   }
-//   else {
-//     rc = RXSUBCOM_NOCANDROP;        /* Set the error return code  */
-       rc = RXSUBCOM_OK;               /* Set appropiate return code */
-//     cblock = 0;                     /* Set the finished condition */
-//   }
    }
    if (cblock) {                       /* if we have not reached end */
      pblock = cblock;                  /* of chain or still haven't  */
-//   cblock -=  sizeof(APIBLOCK);      /* found it then continue     */
-//   cblock = SEDATA(cblock)->next;    /* found it then continue     */
    }
   }
-//if((apidata->baseblock[REGSUBCOMM] == 0 ) /* if all chains empty   */
-//        && (apidata->baseblock[REGSYSEXIT] == 0 )
-//        && (apidata->baseblock[REGFUNCTION] == 0 )){
-//removeshmem(apidata->sebasememId);   /* remove the se memory       */
-//detachshmem(apidata->sebase);   /* detach it to force the deletion */
-//apidata->sebase = NULL;              /* reset the memory anchor    */
-//}
   APICLEANUP(SECHAIN);                 /* release shared resources   */
-//ExitMustComplete();                  /* end of critical section    */
-//if ( rc == 0 )
-//   rc = RXSUBCOM_NOCANDROP;        /* Set the error return code    */
   return (rc);
 }
 
@@ -1167,25 +1057,24 @@ LONG  RegDrop(
 /*                                                                   */
 /*********************************************************************/
 
-ULONG  RegDeregFunc(
-  PSZ dll,                             /* Associated Name (of DLL)   */
-  LONG  type )                         /* Registration type.         */
+int    RegDeregFunc(
+  const char * dll,                    /* Associated Name (of DLL)   */
+  int   type )                         /* Registration type.         */
 {
-  LONG temp_cblock;
-  LONG temp_nblock;
-  ULONG ulBlockSize;
+  size_t temp_cblock;
+  size_t temp_nblock;
+  size_t ulBlockSize;
 
-  ULONG     rc;                        /* init return code to NOTREG */
+  int       rc;                        /* init return code to NOTREG */
                                        /* Exception handler record   */
-  pid_t     pidOwnID;                  /* Keep process id            */
-  pid_t     pidProcID;                 /* Keep process id            */
-  PVOID     pLibH[3];                  /* Save two lib handles       */
+  process_id_t   pidOwnID;             /* Keep process id            */
+  process_id_t   pidProcID;            /* Keep process id            */
+  void *    pLibH[3];                  /* Save two lib handles       */
 
   pLibH[0] = NULL;                     /* Reset the lib handle 1     */
   pLibH[1] = NULL;                     /* Reset the lib handle 2     */
   pLibH[2] = NULL;                     /* Reset the lib handle 2     */
 
-//EnterMustComplete();                 /* start of critical section  */
   APISTARTUP(SECHAIN);                 /* do common entry code       */
 
   rc = RXSUBCOM_NOTREG;                /* init return code to NOTREG */
@@ -1217,8 +1106,6 @@ ULONG  RegDeregFunc(
          (SEDATA(temp_cblock)->apimod_handle != pLibH[2]) )
     {
       dlclose(SEDATA(temp_cblock)->apimod_handle);     /* free the library     */
-//    if (dlclose(SEDATA(temp_cblock)->apimod_handle)) /* for debug only   */
-//      fprintf(stderr, " *** Info message: %s\n", dlerror());
       pLibH[2] = pLibH[1];                 /* Save lib handles closed */
       pLibH[1] = pLibH[0];                 /* Save lib handles closed */
       pLibH[0] = SEDATA(temp_cblock)->apimod_handle;
@@ -1229,7 +1116,6 @@ ULONG  RegDeregFunc(
          ((SEDATA(temp_cblock)->apipid != 0)  &&        /* cleanup entries */
          (kill(SEDATA(temp_cblock)->apipid, 0) == -1 )) ) /* if not running*/
     {
-//    EnterMustComplete();                   /* start of critical section  */
       if  (SEDATA(temp_cblock)->apiFunRegFlag)  /* Not the main registration */
       {
         RxFreeAPIBlock(temp_cblock, ulBlockSize);
@@ -1245,8 +1131,6 @@ ULONG  RegDeregFunc(
          SEDATA(temp_cblock)->apiaddr = NULL;
          SEDATA(temp_cblock)->apimod_handle = NULL;
       }
-//    ExitMustComplete();             /* end of critical section    */
-
       rc = RXSUBCOM_OK;               /* Set appropiate return code */
     }
   }
@@ -1260,7 +1144,6 @@ ULONG  RegDeregFunc(
   apidata->sebase = NULL;              /* reset the memory anchor    */
   }
   APICLEANUP(SECHAIN);                 /* release shared resources   */
-//ExitMustComplete();                  /* end of critical section    */
   return (rc);
 }
 
@@ -1285,43 +1168,32 @@ ULONG  RegDeregFunc(
 /*                                                                   */
 /*********************************************************************/
 
-LONG  RegLoad(
-  PSZ name,                            /* the Subcommand Environment */
-  PSZ dll,                             /* Module name of its' DLL    */
-  LONG  type,                          /* Load type.                 */
-  PFN *paddress,                       /* Function addr (returned if */
+int   RegLoad(
+  const char * name,                   /* the Subcommand Environment */
+  const char * dll,                    /* Module name of its' DLL    */
+  int   type,                          /* Load type.                 */
+  void **paddress,                     /* Function addr (returned if */
                                        /* function properly loaded). */
-  PULONG calltype,                     /* type of DLL procedure      */
-  PVOID *plib)
+  void **plib)
 {                                      /*                            */
   APIBLOCK *cblock;                    /* Working ptr, current block */
-  PFN load_address;                    /* Function's addr (from load)*/
-  LONG rc = 0;
+  REXXPFN load_address;                /* Function's addr (from load)*/
+  int  rc = 0;
   char ModuleNameBuffer[MAXNAME + 40]={0};  /* full library name     */
   char *p;                             /* array pointer              */
-  int len;                             /* length of the module name  */
-  int i;                               /* loop counter               */
-  ULONG pblock = 0;                    /* Init 0 for entry block     */
-#ifdef LINUX
-  const char *error;                   /* error message              */
-#else
-  RXFUNCBLOCK *funcblock;              /* Base for function blocks   */
-  PRXINITFUNCPKG InitFunc;             /* Pointer returned from load */
-#endif
+  size_t len;                          /* length of the module name  */
+  size_t pblock = 0;                   /* Init 0 for entry block     */
 
-//EnterMustComplete();                 /*start of critical section   */
   APISTARTUP(SECHAIN);                 /* do common entry code       */
 #ifdef ORXLD_DEBUG
   fprintf(stderr,"*I* %s: SEARCH for Lib fnc name %s.\n", __FILE__ ,name);
 #endif
 
-//cblock = search(name, dll, type);    /* Find data for the routine. */
   cblock = RegSearch(name, type, 'A'); /* Find data for the routine. */
 
   if (!cblock)
     rc = RXSUBCOM_NOTREG;              /* If not there, set the error*/
   else {                               /* OTHERWISE                  */
- /* if ((cblock->apipid ==  getpid() )  * If new PID, load lib again */
     if     (cblock->apiaddr)           /* the func addr is non-Zero  */
     {
       rc = RXSUBCOM_OK;                /* then function loaded as EXE*/
@@ -1385,14 +1257,9 @@ LONG  RegLoad(
                        ModuleNameBuffer, errno);
               perror(" REXXAPI");
               rc = 1;
-//            EnterMustComplete();                 /*start of critical section */
               pblock = cblock->next;               /* Save entry of chain      */
                                                    /* free the block itself    */
               RxFreeAPIBlock( apidata->baseblock[type] , sizeof(APIBLOCK));
-//            if ( apidata->sememtop > 1 )
-//              apidata->baseblock[type] = apidata->sememtop -  sizeof(APIBLOCK);
-//            else
-//              apidata->baseblock[type] = NULL;
               if((apidata->baseblock[REGSUBCOMM] == 0 ) /* if all chains empty */
                   && (apidata->baseblock[REGSYSEXIT] == 0 )
                   && (apidata->baseblock[REGFUNCTION] == 0 ))
@@ -1401,7 +1268,6 @@ LONG  RegLoad(
                  detachshmem(apidata->sebase);   /* detach it to force the deletion */
                  apidata->sebase = NULL;              /* reset the memory anchor    */
               }
-//            ExitMustComplete();                   /* end of critical section   */
             }
             else
               *plib = *InitFunc;
@@ -1502,14 +1368,9 @@ LONG  RegLoad(
         }
         if ( rc == 1 )
         {
-//         EnterMustComplete();                 /*start of critical section */
            pblock = cblock->next;               /* Save entry of chain      */
                                                 /* free the block itself    */
            RxFreeAPIBlock( apidata->baseblock[type] , sizeof(APIBLOCK));
-//         if ( apidata->sememtop > 1 )
-//            apidata->baseblock[type] = apidata->sememtop -  sizeof(APIBLOCK);
-//         else
-//            apidata->baseblock[type] = NULL;
            if((apidata->baseblock[REGSUBCOMM] == 0 ) /* if all chains empty */
                && (apidata->baseblock[REGSYSEXIT] == 0 )
                && (apidata->baseblock[REGFUNCTION] == 0 ))
@@ -1518,58 +1379,15 @@ LONG  RegLoad(
               detachshmem(apidata->sebase);   /* detach it to force the deletion */
               apidata->sebase = NULL;              /* reset the memory anchor    */
            }
-//         ExitMustComplete();                   /* end of critical section      */
         }
 #ifdef __xlC__
       }
 #endif
-/*    if ( rc == NULL )                 * Change owner of cblock */
-/*       cblock->apipid = getpid();     * copy the process ID    */
     }                                  /* If exe ... else is dll.... */
   }                                    /* If registered.             */
   APICLEANUP(SECHAIN);                 /*  release shared resources  */
-//ExitMustComplete();                   /* end of critical section   */
   return (rc);
 }
-
-/*********************************************************************/
-/*                                                                   */
-/*  Function Name: search                                            */
-/*                                                                   */
-/*  Description:   Given an Environment name and a DLL name search   */
-/*                 returns a pointer to the block holding the        */
-/*                 registration information with the following       */
-/*                 resolution:                                       */
-/*                                                                   */
-/*                 if no DLL name is passed then first search for an */
-/*                 EXE type registration, then search for the name   */
-/*                 as a DLL type block                               */
-/*                                                                   */
-/*  Entry Point:   search( name, dll, type )                         */
-/*                                                                   */
-/*  Parameter(s):    name     -  The environment name to free        */
-/*                   dll  -  The Associated DLL name if appropiate.  */
-/*                   type     -  The Registration Type.              */
-/*                                                                   */
-/*  Return Value:    NULL or the address of the block if found.      */
-/*                                                                   */
-/*********************************************************************/
-//PAPIBLOCK search(
-//  PSZ name,
-//  PSZ dll,
-//  LONG  type )
-//{
-//  PAPIBLOCK cblock = NULL;             /* return pointer for function*/
-//  if ((!dll) ||                        /* No DLLNAME?, search exe 1st*/
-//      (!strlen(dll)))
-//    cblock = exesearch(name, type);    /* set cblock with the result.*/
-//  if (!cblock)                         /* If couldn't find it search */
-//    cblock = dllsearch(name,           /* set cblock with result.    */
-//        dll, type);
-//  return (cblock);                     /* Return block found or NULL */
-//}
-
-
 
 /*********************************************************************/
 /*                                                                   */
@@ -1595,17 +1413,16 @@ LONG  RegLoad(
 /*********************************************************************/
 
 PAPIBLOCK RegSearch(                   /* Function Declaration.      */
-  PSZ name,                            /* Name of function to find   */
-  LONG  type,                          /* Type of name.              */
+  const char * name,                   /* Name of function to find   */
+  int   type,                          /* Type of name.              */
   char  chMstBlk )                     /* Search All or Muster only  */
 {
-  ULONG     cblock;                /* Working ptr, current block     */
-  ULONG     previous;              /* prior block for movement       */
-  ULONG     sblock;                /* Save main block offset         */
+  size_t    cblock;                /* Working ptr, current block     */
+  size_t    previous;              /* prior block for movement       */
+  size_t    sblock;                /* Save main block offset         */
   PAPIBLOCK nblock;                /* Working ptr, new block              */
-  pid_t     pidProcID = 0;                  /* keep process id       */
-  pid_t     pidOwnID = 0;                   /* keep owner   id       */
-//PAPIBLOCK dbgblock;                       /* Working ptr, debug   block */
+  process_id_t     pidProcID = 0;  /* keep process id       */
+  process_id_t     pidOwnID = 0;   /* keep owner   id       */
   cblock   = 0;                    /* Working ptr, current block     */
   previous = 0;                    /* prior block for movement       */
   sblock = 0;                      /* Save main block offset         */
@@ -1624,14 +1441,12 @@ PAPIBLOCK RegSearch(                   /* Function Declaration.      */
     {
       while (cblock)                       /* Run through the list       */
       {                                    /* Comp name with passed name */
-//      dbgblock = SEDATA(cblock);         /* For debug only             */
         /* 1. Search for own block or a free matching block of the main reg  */
         if ( ((SEDATA(cblock)->apiownpid == pidOwnID) ||   /* PID or free    */
               (SEDATA(cblock)->apiownpid == 0)) &&         /* main flock and */
-              (!rxstricmp(SEDATA(cblock)->apiname,name)) && /* Matching name */
+              (!strcasecmp(SEDATA(cblock)->apiname,name)) && /* Matching name */
               (strlen(SEDATA(cblock)->apidll_name)) )      /* and A DLL      */
         {                                  /* if found a matching name &     */
-//        EnterMustComplete();             /* start of critical section      */
           SEDATA(cblock)->apiownpid = pidOwnID; /* for reuse of cblock       */
           if (previous)                    /* if not at front                */
           {
@@ -1641,30 +1456,27 @@ PAPIBLOCK RegSearch(                   /* Function Declaration.      */
               apidata->baseblock[type];    /* to need it again soon          */
             apidata->baseblock[type] = cblock;
             if ( ( pLibSave != NULL ) &&    /* If lib handle exists get it   */
-                 (!rxstricmp(SEDATA(cblock)->apidll_name, szLibName)) )
+                 (!strcasecmp(SEDATA(cblock)->apidll_name, szLibName)) )
                SEDATA(cblock)->apimod_handle = pLibSave;
             else
                SEDATA(cblock)->apimod_handle = NULL;
           }
-//        ExitMustComplete();              /* end of critical section        */
           return ((PAPIBLOCK)SEDATA(cblock)); /* matching pid, return block  */
         }
 
         /* 2. Search for own block of an exec    registration                */
         if ( (SEDATA(cblock)->apiownpid == pidOwnID)  &&   /* PID and       */
-             (!rxstricmp(SEDATA(cblock)->apiname,name)) && /* Matching name */
+             (!strcasecmp(SEDATA(cblock)->apiname,name)) && /* Matching name */
              (!strlen(SEDATA(cblock)->apidll_name)) )      /* and NOT A DLL */
         {
           if (previous)                    /* if not at front            */
           {
-//          EnterMustComplete();           /* start of critical section      */
             SEDATA(previous)->next =       /* rearrange the chain to move*/
                    SEDATA(cblock)->next;   /* this block to the front    */
             SEDATA(cblock)->next=          /* of the list.  We are likely*/
               apidata->baseblock[type];    /* to need it again soon      */
             apidata->baseblock[type] = cblock;
             SEDATA(cblock)->apimod_handle = NULL;
-//          ExitMustComplete();            /* end of critical section        */
           }
           return ((PAPIBLOCK)SEDATA(cblock)); /* matching pid, return block  */
         }
@@ -1679,7 +1491,7 @@ PAPIBLOCK RegSearch(                   /* Function Declaration.      */
     {                                    /* Comp name with passed name */
       /* 3. Search for main registration block and save offset             */
       if ( (SEDATA(cblock)->apiFunRegFlag == 0 ) &&  /* The main reg block */
-           (!rxstricmp(SEDATA(cblock)->apiname,name)) &&  /* Matching name */
+           (!strcasecmp(SEDATA(cblock)->apiname,name)) &&  /* Matching name */
            (strlen(SEDATA(cblock)->apidll_name)) )   /* and a dll          */
       {
          sblock = cblock;                /* Save offset of main reg block  */
@@ -1704,28 +1516,26 @@ PAPIBLOCK RegSearch(                   /* Function Declaration.      */
         /* tion data.  Otherwise, return RXSUBCOM_NOMEM.               */
         /***************************************************************/
 
-//      EnterMustComplete();                 /* enter critical section     */
         if ( ! RxAllocAPIBlock( &nblock, name, NULL, NULL))
         {
           /*************************************************************/
           /* Complete the registration.                                */
           /*************************************************************/
-          memcpy((PVOID)nblock, (PVOID)SEDATA(sblock), APISIZE);
+          memcpy((void *)nblock, (void *)SEDATA(sblock), APISIZE);
           nblock->apipid = pidProcID;         /* fill in process ID and    */
           nblock->apiownpid = pidOwnID;       /* fill in owner   ID and    */
           nblock->apiFunRegFlag = 1;          /* mark no main registration */
           nblock->apiaddr = NULL;
           if ( ( pLibSave != NULL ) &&    /* If lib handle exists get it   */
-               (!rxstricmp(nblock->apidll_name, szLibName)) )
+               (!strcasecmp(nblock->apidll_name, szLibName)) )
                nblock->apimod_handle = pLibSave;
           else
                nblock->apimod_handle = NULL;
           nblock->next =                    /* Next pointer set to old top */
               apidata->baseblock[type];
                                             /* Make this block the top     */
-          apidata->baseblock[type] = ((ULONG)(((char*)nblock)-(apidata->sebase)));
+          apidata->baseblock[type] = ((char*)nblock) - apidata->sebase;
         }
-//      ExitMustComplete();                /* end of critical section      */
         return(nblock);                    /* matching pid, return block   */
       }
       if ( (sblock > 0) && ((SEDATA(sblock)->apiownpid == pidOwnID) ||
@@ -1740,104 +1550,6 @@ PAPIBLOCK RegSearch(                   /* Function Declaration.      */
    else
      return ((PAPIBLOCK)SEDATA(cblock));   /* matching pid, return block   */
 }
-
-
-/*$PE*/
-/*********************************************************************/
-/*                                                                   */
-/*  Function Name: dllsearch                                         */
-/*                                                                   */
-/*  Description:   Seaches the registration chain for a given        */
-/*                 handler.  Only handlers declared as dll           */
-/*                 procedures.                                       */
-/*                                                                   */
-/*                 If the routine is found, it returns a pointer     */
-/*                 to the control block.  The block will be moved    */
-/*                 to the front of the chain for to speed            */
-/*                 subsequent references.                            */
-/*                                                                   */
-/*  Entry Point:   dllsearch( name, type )                           */
-/*                                                                   */
-/*  Parameter(s):    name     -  The handler name to locate.         */
-/*                   type     -  The Registration Type.              */
-/*                                                                   */
-/*  Return Value:    NULL or the address of the block if found.      */
-/*                                                                   */
-/*********************************************************************/
-//APIBLOCK *dllsearch(
-//  PSZ name,                            /* Name to find               */
-//  PSZ dll,                             /* Dynalink Name to find.     */
-//  LONG  type )                         /* Type of name to find.      */
-//{
-//  ULONG     cblock;                    /* Working ptr, current block */
-//  ULONG     previous;                  /* prior block for movement   */
-//
-//  previous = NULL;                     /* no prior block yet         */
-//  cblock = apidata->baseblock[type];   /* Working ptr, current block */
-//
-//  if (!dll)                            /* Treat NULL dlls as 0 length*/
-//    dll = "";                          /* names.                     */
-//  while (cblock) {                     /* while not at end of chain  */
-//    if( (strlen(SEDATA(cblock)->apidll_proc))&&/* If no proc name, is .exe   */
-//                                       /* which we don't want.       */
-//    /*  (strlen(SEDATA(cblock)->apidll_proc)))&&                     */
-//                                       /* If environment names match */
-//       (!rxstricmp(SEDATA(cblock)->apiname,name))
-//        && (!dll[0]                    /* And passed dll name is NULL*/
-//        || (strlen(SEDATA(cblock)->apidll_name)/* Or exists a stored dll name*/
-//        && (!rxstricmp(SEDATA(cblock)->apidll_name, /* And           */
-//        dll))                          /* it matches the passed one  */
-//        ))) {                          /* Then                       */
-//      if (previous) {                  /* if not at front            */
-//        EnterMustComplete();           /* start of critical section  */
-//        SEDATA(previous)->next =       /* rearrange the chain to move*/
-//               SEDATA(cblock)->next;   /* this block to the front    */
-//        SEDATA(cblock)->next=          /* of the list.  We are likely*/
-//          apidata->baseblock[type];    /* to need it again soon      */
-//        apidata->baseblock[type] = cblock;
-//        ExitMustComplete();            /* end of critical section    */
-//      }
-//      if(cblock == NULL)
-//        return((PAPIBLOCK)0);
-//      else
-//        return (SEDATA(cblock));       /* matching pid, return block */
-//    }
-//    previous = cblock;                 /* remember this one,         */
-//    cblock = SEDATA(cblock)->next;     /* and continue the search    */
-//  }                                    /* END of Search              */
-//  if(cblock == NULL)
-//    return((PAPIBLOCK)0);
-//  else
-//    return (SEDATA(cblock));           /* matching pid, return block */
-//}
-
-
-
-
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   rxstricmp                                    */
-/*                                                                   */
-/*   Descriptive Name:  case insensitive string compare              */
-/*                                                                   */
-/*   Entry Point:       rxstricmp                                    */
-/*                                                                   */
-/*   Input:             pointers to two ASCII strings                */
-/*                                                                   */
-/*********************************************************************/
-int rxstricmp(
-  char *    s1,                        /* first string location      */
-  char *    s2 )                       /* second string location     */
-{
-  while ( 1 ) {
-    if ( ( tolower(*s1) != tolower(*s2) ) || !*s1 )
-      break;
-    ++s1;
-    ++s2;
-  }
-  return ( (int)tolower(*s1) - (int)tolower(*s2) );
-}
-
 
 /*********************************************************************/
 /*                                                                   */
@@ -1860,26 +1572,26 @@ int rxstricmp(
 /*                                                                   */
 /*********************************************************************/
 
-LONG dllcheck(
-  PSZ name,
-  PSZ dllname,
-  LONG  type )
+int  dllcheck(
+  const char * name,
+  const char * dllname,
+  int   type )
 {
-  ULONG  rc = RXSUBCOM_OK;             /* Function return code.      */
-  pid_t  pidOwnID;                     /* keep process id            */
+  int    rc = RXSUBCOM_OK;             /* Function return code.      */
+  process_id_t  pidOwnID;              /* keep process id            */
   pidOwnID = getpid();                 /* Save time in loop          */
                                        /* Working ptr, current block */
-  ULONG cblock = apidata->baseblock[type];
+  size_t cblock = apidata->baseblock[type];
   while (cblock) {                     /* While another block        */
                                        /* Com name with passed name  */
-    if (!rxstricmp(SEDATA(cblock)->apiname,
+    if (!strcasecmp(SEDATA(cblock)->apiname,
         name)                          /* if found a matching name   */
         && SEDATA(cblock)->apiownpid == pidOwnID) {
       rc = RXSUBCOM_DUP;               /* then set the duplicate rc  */
                                        /* if a registered dll name & */
       if (strlen(SEDATA(cblock)->apidll_name) &&
                                        /* it matches the         */
-          (!rxstricmp(SEDATA(cblock)->apidll_name,
+          (!strcasecmp(SEDATA(cblock)->apidll_name,
           dllname))) {                 /* dll name passed in         */
         rc = RXSUBCOM_NOTREG;          /* then set appropiate rc     */
         cblock = 0;                    /* force a quick end.         */
@@ -1892,7 +1604,6 @@ LONG dllcheck(
 }
 
 
-/*$PE*/
 /*********************************************************************/
 /*                                                                   */
 /*  Function Name:   execheck                                        */
@@ -1913,23 +1624,21 @@ LONG dllcheck(
 /*                                                                   */
 /*********************************************************************/
 
-LONG execheck(
-  PSZ   name,
-  LONG  type )
+int  execheck(
+  const char *name,
+  int   type )
 {
-  ULONG  rc = RXSUBCOM_NOTREG;         /* Function return code.NOT OK*/
-  pid_t       pidOwnID;                /* keep process id            */
+  int    rc = RXSUBCOM_NOTREG;         /* Function return code.NOT OK*/
+  process_id_t       pidOwnID;         /* keep process id            */
   pidOwnID = getpid();                 /* Save time in loop          */
                                        /* Working ptr, current block*/
-  ULONG cblock = apidata->baseblock[type];
+  size_t cblock = apidata->baseblock[type];
   while (cblock) {                     /* Run through the list       */
                                        /* Comp name with passed name */
-    if (!rxstricmp(SEDATA(cblock)->apiname,
+    if (!strcasecmp(SEDATA(cblock)->apiname,
         name)) {                       /* if found a matching name   */
       if (! strlen(SEDATA(cblock)->apidll_name)){/* if not a dll type and*/
         if (SEDATA(cblock)->apiownpid == pidOwnID) {
-/*      if (PIDCMP(SEDATA(cblock))) {   * matching process info      */
-/*        rc = RXSUBCOM_NOTREG;         * then must be registered &  */
           rc = RXSUBCOM_DUP;           /* then must be registered &  */
                                        /* cannot be re-registered    */
           cblock = 0;                  /* so force a quick end.      */
@@ -1937,7 +1646,6 @@ LONG execheck(
       }
       else                             /* this is a DLL match        */
         rc = RXSUBCOM_NOTREG;          /* then set the duplicate rc  */
-/*      rc = RXSUBCOM_DUP;              * then set the duplicate rc  */
     }                                  /* END of NAME comparison     */
                                        /* If more blocks incrmnt ptr */
     if (cblock) cblock = SEDATA(cblock)->next;
@@ -1966,14 +1674,11 @@ extern "C" {
 /*********************************************************************/
 
 APIRET APIENTRY RexxRegisterFunction(
-  PSZ   EnvName,                       /* Subcom name                */
-  PFN   EntryPoint )                   /* DLL routine name           */
+  const char *EnvName,                 /* Subcom name                */
+  REXXPFN EntryPoint )                 /* DLL routine name           */
 {
-  ULONG  rc;                           /* Function return code.      */
                                        /* Register the subcommand.   */
-  rc = RegRegisterExe(EnvName, EntryPoint, NULL,
-                      REGFUNCTION,PT_32BIT);
-  return (rc);                         /* and exit with return code  */
+  return RegRegisterExe(EnvName, EntryPoint, NULL, REGFUNCTION);
 }
 
 /*********************************************************************/
@@ -1985,16 +1690,13 @@ APIRET APIENTRY RexxRegisterFunction(
 /*********************************************************************/
 
 APIRET APIENTRY RexxRegisterSubcom(
-  PSZ   EnvName,                       /* Subcom name                */
-  PFN   EntryPoint,                    /* DLL routine name           */
-  unsigned char *UserArea )            /* User data                  */
+  const char *EnvName,                 /* Subcom name                */
+  REXXPFN EntryPoint,                  /* DLL routine name           */
+  const char *UserArea )               /* User data                  */
 {
-  ULONG  rc;                           /* Function return code.      */
                                        /* Register the subcommand    */
                                        /* (as a 32-bit callout       */
-  rc = RegRegisterExe(EnvName, EntryPoint, UserArea,
-                      REGSUBCOMM,PT_32BIT);
-  return (rc);                         /* and exit with return code  */
+    return RegRegisterExe(EnvName, EntryPoint, UserArea, REGSUBCOMM);
 }
 
 #ifdef __cplusplus

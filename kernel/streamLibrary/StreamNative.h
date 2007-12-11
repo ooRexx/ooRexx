@@ -181,13 +181,13 @@
 /*****************************************************************************/
 
 typedef struct {
-  long *position_flags_pointer;
-  long *position_offset_pointer;
+  size_t *position_flags_pointer;
+  size_t *position_offset_pointer;
  } POSITION_PARMS;
 
 /* dummy parameter structure for call to parser */
 typedef struct {
-  long *dummy_pointer;
+  size_t *dummy_pointer;
  } DUMMY_PARMS;
 
 #define stream_unknown_state  0        /* stream is in unknown state        */
@@ -205,22 +205,22 @@ typedef struct Stream_Info {
    char name_parameter[name_parameter_length];
                                        /* fully resolved stream name        */
    char full_name_parameter[name_parameter_length];
-   long char_read_position;            /* current character position        */
-   long char_write_position;           /* current write position            */
-   long line_read_position;            /* current read line number          */
-   long line_write_position;           /* current write line number         */
-   long line_read_char_position;       /* current line read position        */
-   long line_write_char_position;      /* current line write position       */
-   long pseudo_stream_size;            /* emulated stream size (lines)      */
-   long pseudo_lines;                  /* emulated lines() value            */
-   long pseudo_max_lines;              /* emulated max lines() value        */
+   size_t char_read_position;            /* current character position        */
+   size_t char_write_position;           /* current write position            */
+   size_t line_read_position;            /* current read line number          */
+   size_t line_write_position;           /* current write line number         */
+   size_t line_read_char_position;       /* current line read position        */
+   size_t line_write_char_position;      /* current line write position       */
+   size_t pseudo_stream_size;            /* emulated stream size (lines)      */
+   size_t pseudo_lines;                  /* emulated lines() value            */
+   size_t pseudo_max_lines;              /* emulated max lines() value        */
    FILE *stream_file;                  /* file information                  */
    int fh;                             /* stream file handle                */
    int state;                          /* current stream state              */
    int error;                          /* error information                 */
-   long stream_reclength;              /* binary file record length         */
+   size_t stream_reclength;              /* binary file record length         */
    char *bufferAddress;                /* current read buffer               */
-   long  bufferLength;                 /* current read buffer size          */
+   size_t  bufferLength;                 /* current read buffer size          */
    struct {
       unsigned read_only :1;           /* if read only specified            */
       unsigned write_only :1;          /* if write only specified           */
@@ -243,15 +243,15 @@ void SysQualifyStreamName(STREAM_INFO *);
 #endif
 
 #ifndef SearchFirstFile
-BOOL SearchFirstFile(const char *name);
+bool SearchFirstFile(const char *name);
 #endif
 
 #ifndef SysBinaryFilemode
-FILE * SysBinaryFilemode(FILE *, BOOL);
+FILE * SysBinaryFilemode(FILE *, bool);
 #endif
 
 #ifndef SysFileIsDevice
-BOOL SysFileIsDevice(int fhandle);
+bool SysFileIsDevice(int fhandle);
 #endif
 
 #ifndef SysPeekKeyboard
@@ -271,15 +271,15 @@ int SysPeekSTD(STREAM_INFO *);
 #endif
 
 #ifndef SysStat
-int SysStat(char *, struct stat *);
+int SysStat(const char *, struct stat *);
 #endif
 
 #ifndef SysFileIsPipe
-BOOL SysFileIsPipe(STREAM_INFO *);
+bool SysFileIsPipe(STREAM_INFO *);
 #endif
 
 #ifndef SysTellPosition
-LONG SysTellPosition(STREAM_INFO *);
+int SysTellPosition(STREAM_INFO *);
 #endif
 
 #endif

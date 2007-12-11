@@ -572,14 +572,14 @@ RexxObject *RexxBehaviour::mergeScope(
 }
 
 
-BOOL RexxBehaviour::checkScope(
+bool RexxBehaviour::checkScope(
     RexxObject *scope)                 /* scope to check                    */
 /*****************************************************************************/
 /* Function: Check if the passed scope is already in the scope table         */
 /*****************************************************************************/
 {
   if (this->scopes == OREF_NULL)       /* no scopes set?                    */
-    return FALSE;                      /* then it can't be in the table     */
+    return false;                      /* then it can't be in the table     */
                                        /* have the table check for the index*/
   return this->scopes->get(scope) != OREF_NULL;
 }

@@ -456,7 +456,7 @@ void NormalSegmentSet::addDeadObject(char *object, size_t length)
 }
 
 
-void MemorySegmentSet::addSegment(MemorySegment *segment, BOOL createDeadObject)
+void MemorySegmentSet::addSegment(MemorySegment *segment, bool createDeadObject)
 /******************************************************************************/
 /* Function:  Add a segment to the segment pool.                              */
 /******************************************************************************/
@@ -715,7 +715,7 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
             MemorySegment *newSeg = new (candidateSegment) MemorySegment(splitLength);
             tailSegment = new (tailSegment) MemorySegment(tailLength);
             /* Anchor new segment at end of list */
-            addSegment(tailSegment, FALSE);
+            addSegment(tailSegment, false);
             return newSeg;
         }
         /* we're taking a block from the middle of the segment.  We */
@@ -744,8 +744,8 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
             tailSegment = new (tailSegment) MemorySegment(tailLength);
             candidateSegment = new (candidateSegment) MemorySegment(frontLength);
             /* Anchor the original pieces on the segment chain */
-            addSegment(tailSegment, FALSE);
-            addSegment(candidateSegment, FALSE);
+            addSegment(tailSegment, false);
+            addSegment(candidateSegment, false);
             return newSeg;
         }
     }
@@ -1727,8 +1727,8 @@ void MemorySegmentSet::gatherStats(MemoryStats *memStats, SegmentStats *stats)
     MemorySegment *seg;
     for (seg = first(); seg != NULL; seg = next(seg)) {
         seg->gatherObjectStats(memStats, stats);
-        stats->largestSegment = max(stats->largestSegment, seg->size());
-        stats->smallestSegment = max(stats->smallestSegment, seg->size());
+        stats->largestSegment = Numerics::maxVal(stats->largestSegment, seg->size());
+        stats->smallestSegment = Numerics::maxVal(stats->smallestSegment, seg->size());
     }
 
 }

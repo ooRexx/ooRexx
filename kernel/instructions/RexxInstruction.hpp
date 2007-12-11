@@ -45,7 +45,9 @@
 #define Included_RexxInstruction
 
 class RexxInstructionEnd;
+class RexxInstructionEndIf;
 class RexxSource;
+class RexxClause;
 
 #include "SourceLocation.hpp"
 

@@ -54,14 +54,14 @@ class RexxStemVariable : public RexxVariableBase {
   inline void  operator delete(void *, void *) { ; }
 
   inline RexxStemVariable(RESTORETYPE restoreType) { ; };
-  RexxStemVariable(RexxString *, LONG);
+  RexxStemVariable(RexxString *, size_t);
   void live();
   void liveGeneral();
   void flatten(RexxEnvelope *);
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
   RexxObject *getValue(RexxVariableDictionary *);
   RexxObject *getValue(RexxActivation *);
-  BOOL exists(RexxActivation *);
+  bool exists(RexxActivation *);
   void set(RexxActivation *, RexxObject *) ;
   void set(RexxVariableDictionary *, RexxObject *) ;
   void assign(RexxActivation *, RexxExpressionStack *, RexxObject *);
@@ -70,11 +70,10 @@ class RexxStemVariable : public RexxVariableBase {
   void clearGuard(RexxActivation *);
   void expose(RexxActivation *, RexxExpressionStack *, RexxVariableDictionary *);
   void procedureExpose(RexxActivation *, RexxActivation *, RexxExpressionStack *);
-//BOOL sort(RexxActivation *context, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
-  BOOL sort(RexxActivation *context, RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
-  inline LONG getIndex() {return this->index;};
+  bool sort(RexxActivation *context, RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
+  inline size_t getIndex() {return this->index;};
 
   RexxString  *stem;                   // the stem variable name
-  LONG        index;                   /* lookaside table index             */
+  size_t      index;                   /* lookaside table index             */
 };
 #endif

@@ -65,9 +65,10 @@ class RexxCompoundElement;
 }
 
 class RexxCompoundTable {
+ friend class RexxStem;
  public:
   inline RexxCompoundTable() { ; };
-  void         copy(RexxStem *newObject, RexxStem *oldObject);
+  void         copyFrom(RexxCompoundTable &other);
   void         init(RexxStem *parent);
   void         clear();
   inline RexxCompoundElement *get(RexxCompoundTail *name) { return findEntry(name); }
@@ -102,10 +103,10 @@ class RexxCompoundTable {
         }
         return OREF_NULL;                  /* return var not found       */
     }
-  RexxCompoundElement *findEntry(RexxCompoundTail *tail, BOOL create);
-  RexxCompoundElement *findEntry(RexxString *tail, BOOL create = FALSE);
+  RexxCompoundElement *findEntry(RexxCompoundTail *tail, bool create);
+  RexxCompoundElement *findEntry(RexxString *tail, bool create = false);
   void         balance(RexxCompoundElement *node);
-  void         moveNode(RexxCompoundElement **anchor, BOOL toright);
+  void         moveNode(RexxCompoundElement **anchor, bool toright);
   RexxCompoundElement *first();
   RexxCompoundElement *findLeaf(RexxCompoundElement *node);
   RexxCompoundElement *next(RexxCompoundElement *node);

@@ -65,9 +65,9 @@ RexxInstructionIf::RexxInstructionIf(
 }
 
 void RexxInstructionIf::setEndInstruction(
-    RexxInstructionEndIf *end_target)  /* targer for the FALSE branch       */
+    RexxInstructionEndIf *end_target)  /* targer for the false branch       */
 /******************************************************************************/
-/* Function:  Set the location for the FALSE branch of the IF instruction     */
+/* Function:  Set the location for the false branch of the IF instruction     */
 /******************************************************************************/
 {
                                        /* save the end location             */

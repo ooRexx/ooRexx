@@ -87,11 +87,11 @@ class RexxInstructionDo : public RexxBlockInstruction
   void flatten(RexxEnvelope *);
   void execute(RexxActivation *, RexxExpressionStack *);
   void controlSetup(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
-  BOOL checkOver(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
-  BOOL checkControl(RexxActivation *, RexxExpressionStack *, RexxDoBlock *, BOOL);
+  bool checkOver(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
+  bool checkControl(RexxActivation *, RexxExpressionStack *, RexxDoBlock *, bool);
   void reExecute(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);
-  BOOL whileCondition(RexxActivation *, RexxExpressionStack *);
-  BOOL untilCondition(RexxActivation *, RexxExpressionStack *);
+  bool whileCondition(RexxActivation *, RexxExpressionStack *);
+  bool untilCondition(RexxActivation *, RexxExpressionStack *);
   RexxInstruction *getEnd();
   void matchLabel(RexxInstructionEnd *end, RexxSource *source );
 
@@ -103,7 +103,7 @@ class RexxInstructionDo : public RexxBlockInstruction
   RexxObject       *conditional;       /* while/until expression            */
   RexxInstruction  *end;               /* matching END instruction          */
   RexxObject       *forcount;          /* number of iterations              */
-  BYTE              type;              /* type of loop                      */
-  BYTE              expressions[3];    /* controlled loop expression order  */
+  uint8_t           type;              /* type of loop                      */
+  uint8_t           expressions[3];    /* controlled loop expression order  */
 };
 #endif

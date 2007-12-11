@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxEnvelope.hpp   */
+/* REXX Kernel                                             RexxEnvelope.hpp   */
 /*                                                                            */
 /* Primitive Envelope Class Definitions                                       */
 /*                                                                            */
@@ -51,6 +51,8 @@
 
 #define BEHAVIOUR_NON_PRIMITIVE 0x80000000
 #define ObjectHasNonPrimitiveBehaviour(o) (((long)(((RexxObject *)o)->behaviour)) & BEHAVIOUR_NON_PRIMITIVE)
+
+class RexxSmartBuffer;
 
  class RexxEnvelope : public RexxObject {
   public:

@@ -104,7 +104,7 @@ typedef struct tokentablestruct {
                               /* otherwise it would be typecast to ATS */
 
                                              /* type cast for calling unknown token routine */
-  long (*utp)(struct tokentablestruct *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *userparms);
+  int (*utp)(struct tokentablestruct *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *userparms);
  } TTS;
 
                     /************************************************************************/
@@ -119,17 +119,17 @@ typedef struct actiontablestruct {
                                                 /* area to modify as specified by action */
     void  *output;
                                                 /* errorcode to return when actions are in error */
-    long  errorcode;
+    int   errorcode;
                                                 /* area to be used as specified by action */
     void  *item;
                                                 /* type cast for a call action-call */
-    long (*afp)(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *userparms);
+    int (*afp)(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *userparms);
  }  ATS;
 
                     /************************************************************************/
                     /* parse routine prototype                                              */
                     /************************************************************************/
-long parser(TTS *ttsp, const char *TokenString, void *userparms);
+int parser(TTS *ttsp, const char *TokenString, void *userparms);
 
                     /************************************************************************/
                     /* gettoken routine prototype                                           */

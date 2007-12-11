@@ -53,6 +53,9 @@
 #define TRIGGER_PLUS_LENGTH 7
 #define TRIGGER_MINUS_LENGTH 8
 
+class RexxTarget;
+class RexxVariableBase;
+
 class RexxTrigger : public RexxInternalObject {
  public:
   void        *operator new(size_t, int);
@@ -61,16 +64,18 @@ class RexxTrigger : public RexxInternalObject {
   inline void  operator delete(void *, int) { }
   inline void  operator delete(void *, void *) { ; }
 
-  RexxTrigger(int, RexxObject *, LONG, RexxQueue *);
+  RexxTrigger(int, RexxObject *, size_t, RexxQueue *);
   inline RexxTrigger(RESTORETYPE restoreType) { ; };
-  long        integerTrigger(RexxObject *);
+  stringsize_t integerTrigger(RexxObject *);
   RexxString *stringTrigger(RexxObject *);
   void        parse(RexxActivation *, RexxExpressionStack *, RexxTarget *);
   void        live();
   void        liveGeneral();
   void        flatten(RexxEnvelope *);
-  inline int         getType()     { return this->triggerType; }
-  inline void        setType(int v) { this->triggerType = v; }
+  inline int  getType()     { return this->triggerType; }
+  inline void setType(int v) { this->triggerType = v; }
+
+protected:
 
   int         triggerType;             // type if trigger
   size_t      variableCount;           /* count of variables                */

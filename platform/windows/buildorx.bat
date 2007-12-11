@@ -172,7 +172,8 @@ REM *** API samples
 REM
 @ECHO Building API Samples..
 set LIB=%LIB%;%OR_OUTDIR%
-set INCLUDE=%OR_OUTDIR%;%OR_ORYXAWSRC%;%INCLUDE%
+set INCLUDE=%OR_OUTDIR%;%SAMPLEPATH%;%INCLUDE%
+@ECHO Include path is %INCLUDE%
 
 CD  %OR_ORYXAPISAMPLES%\callrxnt
 IF %USELOGFILE% equ 1 ( NMAKE /F callrxnt.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F callrxnt.mak )

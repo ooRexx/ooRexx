@@ -47,9 +47,6 @@
 # include "config.h"
 #endif
 
-#define INCL_RXSUBCOM
-#define INCL_RXSYSEXIT
-
 #if defined( HAVE_NL_TYPES_H )
 # include <nl_types.h>
 #endif
@@ -59,16 +56,16 @@
 #include <stdio.h>
 
 #include "rexx.h"                      /* for REXXSAA functionality  */
+#include "PlatformDefinitions.h"
 #include "SubcommandAPI.h"             /* get RexxLoadSubcom calls   */
 #include "RexxAPIManager.h"
-#include "PlatformDefinitions.h"       /* error constants            */
                                        /* old msg constants replaced!*/
 #include "RexxErrorCodes.h"
 #include "RexxMessageNumbers.h"
 
 #define BUFFERLEN         256          /* Length of message bufs used*/
                                        /* Macro for argv[1] compares */
-#define CASE(x) if(!rxstricmp(x,argv[1]))
+#define CASE(x) if(!strcasecmp(x,argv[1]))
 
 #define CCHMAXPATH PATH_MAX+1
 #ifdef LINUX                   /*  AIX already defined               */
@@ -78,18 +75,17 @@
 #define SECOND_PARAMETER 0             /* 0 for no  NL_CAT_LOCALE    */
 #endif
 
-void parmerr(ULONG);
+void parmerr(int ); 
 
 int main(                              /* Program Begins             */
 int     argc,                          /* Argument count             */
 char    **argv,                        /* Ptr to array of arguments  */
 char    **envp )                       /* Ptr to array of env strings*/
 {                                      /*                            */
-   ULONG        userdata[2] = {0,0};   /* Used during registeration  */
-   USHORT       i;                     /* General var for dummy args */
-   PSZ          scbname;               /* registration name          */
-   PSZ          scbdll_name;           /* DLL file name              */
-   PSZ          scbdll_proc;           /* DLL procedure name         */
+   const char  *scbname;               /* registration name          */
+   const char  *scbdll_name;           /* DLL file name              */
+   const char  *scbdll_proc;           /* DLL procedure name         */
+   const char  *funcname = "";
 
                                        /* Must be at lease 1 argument*/
    if(argc<2)parmerr(Error_RXSUBC_general_msg);
@@ -107,38 +103,39 @@ char    **envp )                       /* Ptr to array of env strings*/
      }                                 /*                            */
    CASE("QUERY"){                      /* Query Check                */
      if(argc<3)parmerr(Error_RXSUBC_query_msg);   /* requires 3 parameters */
-     if(argc<4)argv[3]="";             /* if only 3 passed, dummy 4  */
+     if(argc>=4)funcname = argv[3];    /* if only 3 passed, dummy 4  */
+     unsigned short exists = 0; 
      return(                           /* Call query and return      */
         RexxQuerySubcom(               /* code.                      */
                  argv[2],              /* Should be Dll Name         */
-                 argv[3],              /* Should be Function Name    */
-                 &i,                   /* Ptr to storage for existnce*/
-                 (unsigned char *)userdata /* Ptr to storage for userdata*/
+                 funcname,             /* Should be Function Name    */
+                 &exists,              /* Ptr to storage for existnce*/
+                 NULL                  /* Ptr to storage for userdata*/
                 ));                    /*                            */
      }                                 /*                            */
    CASE("DROP"){                       /* Drop Check                 */
      if(argc<3)parmerr(Error_RXSUBC_drop_msg);/* Must pass at least 3 args */
-     if(argc<4)argv[3]="";             /* if only 3 passed, dummy 4  */
+     if(argc>=4)funcname = argv[3];    /* if only 3 passed, dummy 4  */
      return(                           /* Call Drop and return       */
         RexxDeregisterSubcom(          /* code                       */
                  argv[2],              /* Should be Dll Name         */
-                 argv[3]));            /* Should be Function Name    */
+                 funcname));           /* Should be Function Name    */
                                        /*                            */
      }                                 /*                            */
    CASE("LOAD"){                       /* Load Check                 */
      if(argc<3)parmerr(Error_RXSUBC_load_msg);/* Must pass at least 3 args */
-     if(argc<4)argv[3]="";             /* if only 3 passed, dummy 4  */
+     if(argc>=4)funcname = argv[3];    /* if only 3 passed, dummy 4  */
      return(                           /* Call the load function     */
         RexxLoadSubcom(                /* and return its return code */
                  argv[2],              /* Should be Dll Name         */
-                 argv[3]));            /* Should be Function Name    */
+                 funcname));           /* Should be Function Name    */
                                        /*                            */
      }
    parmerr(Error_RXSUBC_general_msg);  /* Otherwise, must be an error*/
 }
 
 
-void parmerr( ULONG msgid )            /* removed useless code       */
+void parmerr( int   msgid )            /* removed useless code       */
 {
 #if defined( HAVE_NL_TYPES_H )
  nl_catd        catd;                  /* catalog descriptor from catopen() */

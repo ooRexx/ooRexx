@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ParseTarget.c    */
+/* REXX Translator                                           ParseTarget.c    */
 /*                                                                            */
 /* Primitive Procedure Parse Trigger Class                                    */
 /*                                                                            */
@@ -53,8 +53,8 @@ void RexxTarget::init(
     RexxObject     *_string,            /* target string                     */
     RexxObject    **_arglist,           /* argument list                     */
     size_t          _argcount,          /* size of the argument list         */
-    BOOL            _translate,         /* translation flag                  */
-    BOOL            multiple,          /* have multiple strings             */
+    bool            _translate,         /* translation flag                  */
+    bool            multiple,          /* have multiple strings             */
     RexxActivation *context,           /* execution context                 */
     RexxExpressionStack *s)            /* current expression stack          */
 /******************************************************************************/
@@ -132,7 +132,7 @@ void RexxTarget::moveToEnd()
 }
 
 void RexxTarget::forward(
-    long offset)                       /* offset to move                    */
+    stringsize_t offset)               /* offset to move                    */
 /******************************************************************************/
 /* Arguments:  distance to move the parse pointer                             */
 /******************************************************************************/
@@ -153,7 +153,7 @@ void RexxTarget::forward(
 }
 
 void RexxTarget::forwardLength(
-    long offset)                       /* offset to move                    */
+    stringsize_t offset)               /* offset to move                    */
 /******************************************************************************/
 /* Arguments:  distance to move the parse pointer                             */
 /******************************************************************************/
@@ -170,7 +170,7 @@ void RexxTarget::forwardLength(
 
 
 void RexxTarget::absolute(
-    long offset)                       /* offset to move                    */
+    stringsize_t offset)               /* offset to move                    */
 /******************************************************************************/
 /* Arguments:  new parse position                                             */
 /******************************************************************************/
@@ -196,7 +196,7 @@ void RexxTarget::absolute(
 }
 
 void RexxTarget::backward(
-    long offset)                       /* offset to move                    */
+    stringsize_t offset)               /* offset to move                    */
 /******************************************************************************/
 /* Arguments:  distance to move the parse pointer                             */
 /******************************************************************************/
@@ -204,7 +204,7 @@ void RexxTarget::backward(
   this->start = this->pattern_start;   /* start position is last position   */
   this->end = this->string_length;     /* negatives always use to the end   */
   /* go past start of string?          */
-  if ((size_t)offset > this->pattern_start)
+  if (offset > this->pattern_start)
     this->pattern_start = 0;         /* this resets to the start          */
   else
     this->pattern_start -= offset;   /* just back up                      */
@@ -215,7 +215,7 @@ void RexxTarget::backward(
 
 
 void RexxTarget::backwardLength(
-    long offset)                       /* offset to move                    */
+    stringsize_t offset)               /* offset to move                    */
 /******************************************************************************/
 /* Arguments:  distance to move the parse pointer                             */
 /******************************************************************************/
@@ -223,13 +223,13 @@ void RexxTarget::backwardLength(
   this->start = this->pattern_start;   /* start position is last position   */
   this->end = this->string_length;     /* negatives always use to the end   */
                                        /* go past start of string?          */
-  if ((size_t)offset > this->pattern_start)
+  if (offset > this->pattern_start)
   {
       this->start = 0;
   }
   else
   {
-      this->start = this->pattern_start - (size_t)offset;
+      this->start = this->pattern_start - offset;
   }
   this->end = this->pattern_start;     // the end is the starting location
                                        /* and have a zero length pattern    */

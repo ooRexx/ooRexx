@@ -80,7 +80,7 @@
 /*                     REXX number                                   */
 /*********************************************************************/
 
-UCHAR NEAR first_char[] = {
+char  first_char[] = {
    /* '00'x */       White  ,
    /* '01'x */       Invalid,
    /* '02'x */       Invalid,
@@ -344,7 +344,7 @@ UCHAR NEAR first_char[] = {
 } ;
 
 
-UCHAR NEAR upper_case_table[] = {
+char  upper_case_table[] = {
    /* '00'x */      '\x00',
    /* '01'x */      '\x01',
    /* '02'x */      '\x02',
@@ -604,7 +604,7 @@ UCHAR NEAR upper_case_table[] = {
 };
 
 
-UCHAR NEAR lower_case_table[] = {
+char lower_case_table[] = {
    /* '00'x */      '\x00',
    /* '01'x */      '\x01',
    /* '02'x */      '\x02',

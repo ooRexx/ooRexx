@@ -50,11 +50,11 @@
 
 /************ DEFINED IN WINMAIN.C *****************/
 typedef struct _ConditionData {
-  long   code;
-  long   rc;
+  int    code;
+  int    rc;
   RXSTRING message;
   RXSTRING errortext;
-  long   position;
+  size_t position;
   RXSTRING program;
 } ConditionData;
 /************ DEFINED IN WINMAIN.C *****************/

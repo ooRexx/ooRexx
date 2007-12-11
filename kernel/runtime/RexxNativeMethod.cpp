@@ -54,8 +54,8 @@ extern "C" internalMethodEntry internalMethodTable[];
      RexxNativeCode::RexxNativeCode(
      RexxString *_procedure,            /* procedure to load                 */
      RexxString *_library,              /* library to load from              */
-     PFN         _entry,                /* Entry point address for method    */
-     LONG        _index )               /* internal method index             */
+     PNMF        _entry,                /* Entry point address for method    */
+     size_t      _index )               /* internal method index             */
 /****************************************************************************/
 /* Function:  Initialize a REXX native code object                          */
 /****************************************************************************/
@@ -76,7 +76,7 @@ void RexxNativeCode::reinit(           /* reinitialize the nmethod entry    */
 {
   if (this->procedure != OREF_NULL)    /* in another library?               */
                                        /* and resolve the function address  */
-    this->entry = (PFN)SysLoadProcedure(Handle, this->procedure);
+    this->entry = (PNMF)SysLoadProcedure(Handle, this->procedure);
 }
 
 void RexxNativeCode::live()
@@ -170,7 +170,7 @@ void RexxNativeCodeClass::restore()
 /* Function:  Do nmethod class restore image processing                       */
 /******************************************************************************/
 {
-  long        i;                       /* table index                       */
+  HashLink    i;                       /* table index                       */
                                        /* go reload all the libraries       */
   for (i = this->libraries->first(); this->libraries->available(i); i = this->libraries->next(i)) {
                                        /* first reload the library          */
@@ -211,7 +211,7 @@ RexxNativeCode *RexxNativeCodeClass::newClass(
 {
   RexxNativeCode *newMethod;           /* new code to return                */
   RexxDirectory  *libinfo;             /* Library info table for library    */
-  PFN             entry;               /* routine entry point address       */
+  PNMF            entry;               /* routine entry point address       */
 
   libinfo = this->load(_library);       /* Load the library.                 */
   if (libinfo != OREF_NULL) {          /* library loaded ok?                */
@@ -220,7 +220,7 @@ RexxNativeCode *RexxNativeCodeClass::newClass(
     newMethod = (RexxNativeCode *)libinfo->entry(_procedure);
     if (newMethod == OREF_NULL) {      /* not there yet?                    */
                                        /* resolve the function address      */
-      entry = (PFN)SysLoadProcedure((RexxInteger *)libinfo->at(OREF_NULLSTRING), _procedure);
+      entry = (PNMF)SysLoadProcedure((RexxInteger *)libinfo->at(OREF_NULLSTRING), _procedure);
                                        /* unknown, create a new one.        */
                                        /* Get new object                    */
       newMethod = new RexxNativeCode (_procedure, _library, entry, 0);
@@ -235,7 +235,7 @@ RexxNativeCode *RexxNativeCodeClass::newClass(
 }
 
 RexxNativeCode *RexxNativeCodeClass::newInternal(
-     LONG index )                     /* index of the internal REXX method */
+    size_t index)                     /* index of the internal REXX method */
 /******************************************************************************/
 /* Function:  Create a new native method from the internal REXX table         */
 /******************************************************************************/
@@ -251,7 +251,7 @@ void RexxNativeCodeClass::reload(
 /****************************************************************************/
 {
   RexxString     *Procedure;           /* table procedure name              */
-  long            i;                   /* table traversal index             */
+  HashLink        i;                   /* table traversal index             */
   RexxNativeCode *Method;              /* resolved method object            */
   RexxInteger    *Handle;              /* library handle                    */
 

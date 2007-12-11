@@ -90,7 +90,7 @@ void RexxSmartBuffer::flatten(RexxEnvelope *envelope)
 }
 
 size_t RexxSmartBuffer::copyData(
-    PVOID start,                       /* data to be copied                 */
+    void *start,                       /* data to be copied                 */
     size_t length)                     /* length to copy                    */
 /******************************************************************************/
 /* Function:  Copy data into the buffer at the very end.                      */

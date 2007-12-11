@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                MethodClass.hpp    */
+/* REXX Kernel                                             MethodClass.hpp    */
 /*                                                                            */
 /* Primitive Kernel Method Class Definitions                                  */
 /*                                                                            */
@@ -45,7 +45,7 @@
 #define Included_RexxMethod
 
 #include "RexxCode.hpp"
-
+#include "RexxNativeMethod.hpp"
 
  class RexxMethod : public RexxObject {
   public:
@@ -148,7 +148,7 @@ class RexxMethodClass : public RexxClass {
   RexxMethod  *newRexx(RexxObject **, size_t);
   RexxMethod  *newRexxBuffer(RexxString *, RexxBuffer *, RexxClass  *);
   RexxMethod  *newNative(RexxString *, RexxString *, RexxClass  *);
-  RexxMethod  *newEntry(PFN);
+  RexxMethod  *newEntry(PNMF);
   RexxMethod  *restore(RexxBuffer *, char *);
   RexxMethod  *newFile(RexxString *);
   RexxMethod  *newFileRexx(RexxString *);

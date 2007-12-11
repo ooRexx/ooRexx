@@ -248,7 +248,7 @@ RexxObject *RexxObjectTable::add(
 /* ========================================================================== */
 
 
-native2 (REXXOBJECT, TABLE_ADD, REXXOBJECT, object, REXXOBJECT, index)
+REXXOBJECT REXXENTRY REXX_TABLE_ADD(REXXOBJECT self, REXXOBJECT object, REXXOBJECT index)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
@@ -258,7 +258,7 @@ native2 (REXXOBJECT, TABLE_ADD, REXXOBJECT, object, REXXOBJECT, index)
   return_object(this->add((RexxObject *)object, (RexxObject *)index));
 }
 
-native1 (REXXOBJECT, TABLE_REMOVE, REXXOBJECT, index)
+REXXOBJECT REXXENTRY REXX_TABLE_REMOVE(REXXOBJECT self, REXXOBJECT index)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
@@ -268,7 +268,7 @@ native1 (REXXOBJECT, TABLE_REMOVE, REXXOBJECT, index)
   return_object(this->remove((RexxObject *)index));
 }
 
-native1 (REXXOBJECT, TABLE_GET, REXXOBJECT, index)
+REXXOBJECT REXXENTRY REXX_TABLE_GET(REXXOBJECT self, REXXOBJECT index)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/

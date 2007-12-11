@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  DirectoryClass.c    */
+/* REXX Kernel                                            DirectoryClass.c    */
 /*                                                                            */
 /* Primitive Directory Class                                                  */
 /*                                                                            */
@@ -127,13 +127,13 @@ RexxObject *RexxDirectory::entry(
   return this->at(entryName);          /* just return the "at" form         */
 }
 
-long RexxDirectory::items(void)
+size_t RexxDirectory::items(void)
 /******************************************************************************/
 /* Function:  Return the count of items in the directory, including the       */
 /*            number of methods added via set method calls                    */
 /******************************************************************************/
 {
-  LONG    count;                       /* count of items                    */
+  size_t  count;                       /* count of items                    */
 
                                        /* get the direct table size         */
   count = this->contents->totalEntries();
@@ -151,10 +151,7 @@ RexxObject *RexxDirectory::itemsRexx(void)
 /*            number of methods added via set method calls                    */
 /******************************************************************************/
 {
-  long tempCount;                      /* temporary count                   */
-
-  tempCount = this->items();           /* return the count as an object     */
-  return (RexxObject *)new_integer(tempCount);
+  return (RexxObject *)new_integer(this->items());
 }
 
 RexxSupplier *RexxDirectory::supplier(void)
@@ -228,7 +225,7 @@ RexxArray *RexxDirectory::allIndexes(void)
     wholenumber_t count = this->items();
     RexxArray *result = (RexxArray *)new_array(count);
     ProtectedObject p(result);
-    arraysize_t out = 1;
+    size_t out = 1;
     // we're working directly off of the contents.
     RexxHashTable *hashTab = this->contents;
 
@@ -328,7 +325,7 @@ RexxObject *RexxDirectory::hasIndex(
   indexName = REQUIRED_STRING(indexName, ARG_ONE);
                                        /* got a value?                      */
   if (this->contents->stringGet(indexName) != OREF_NULL)
-    return (RexxObject *)TheTrueObject;/* return TRUE                       */
+    return (RexxObject *)TheTrueObject;/* return true                       */
   else {
                                        /* have a table?                     */
     if (this->method_table != OREF_NULL) {
@@ -432,7 +429,7 @@ RexxObject *RexxDirectory::unknown(
 /******************************************************************************/
 {
   RexxString * message_value;          /* value of the message name         */
-  LONG         message_length;         /* length of the message name        */
+  stringsize_t message_length;         /* length of the message name        */
 
                                        /* validate the name                 */
   message_value = REQUIRED_STRING(msgname, ARG_ONE);

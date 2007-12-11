@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /*********************************************************************/
-/* REXX for UNIX                                            APIDefinitions.h */
+/* REXX for UNIX                                    APIDefinitions.h */
 /*********************************************************************/
 
 #ifndef AIXAPI_H_INCLUDED
@@ -48,18 +48,17 @@
 #define REGNOOFTYPES 3
 
 typedef struct apireg_node {
-    ULONG  next;                       /* number of the next block     */
+    size_t  next;                      /* number of the next block     */
     char   apiname[MAXNAME];           /* routine name                 */
     char   apidll_name[MAXNAME];       /* module name                  */
     char   apidll_proc[MAXNAME];       /* procedure name               */
     char   apiuser[USERLENGTH];        /* user area                    */
-    PFN    apiaddr;                    /* routine address              */
-    LONG   apitype;                    /* 16 or 32-bit flag            */
-    PVOID  apimod_handle;              /* dynalink module handle       */
-    ULONG  apidrop_auth;               /* Permission to drop           */
-    PID    apipid;                     /* Pid of Registrant            */
-    PID    apiownpid;                  /* Pid of owner                 */
-    LONG   apiFunRegFlag;              /* Main reg set to >0<          */
+    REXXPFN apiaddr;                   /* routine address              */
+    void  *apimod_handle;              /* dynalink module handle       */
+    size_t  apidrop_auth;              /* Permission to drop           */
+    process_id_t    apipid;            /* Pid of Registrant            */
+    process_id_t    apiownpid;         /* Pid of owner                 */
+    int    apiFunRegFlag;              /* Main reg set to >0<          */
     } APIBLOCK;
 
 typedef APIBLOCK *PAPIBLOCK;
@@ -77,12 +76,12 @@ typedef APIBLOCK *PAPIBLOCK;
 #define NAMESIZE   0x00ff              /* size of a function name    */
 
 typedef struct _MACRO {                /****** MACRO structure *******/
-      ULONG          next;             /* pointer to next function   */
-      char           name[NAMESIZE];   /* function name              */
-      RXSTRING       temp_buf;         /* temp  buffer               */
-      ULONG          image;            /* pcode+literals image       */
-      ULONG          i_size;           /* size of image              */
-      ULONG          srch_pos;         /* search order position      */
+      size_t          next;             /* pointer to next function   */
+      char            name[NAMESIZE];   /* function name              */
+      RXSTRING        temp_buf;         /* temp  buffer               */
+      size_t          image;            /* pcode+literals image       */
+      size_t          i_size;           /* size of image              */
+      size_t          srch_pos;         /* search order position      */
       } MACRO;                         /******************************/
                                        /******************************/
 typedef MACRO *PMACRO;                 /* pointer to MACRO structure */
@@ -98,15 +97,12 @@ typedef struct _SEMCONT {
       int     usecount;                /* semaphore usecount         */
       int     type;                    /* semaphore type: 0=Event    */
                                        /*                 1=Mutex    */
-      BOOL    waitandreset;            /* eventsem second new arg    */
+      bool    waitandreset;            /* eventsem second new arg    */
 } SEMCONT;
 
+int RxAPIHOMEset(); 
 
 #define EVENT 0                        /* event semaphore            */
 #define MUTEX 1                        /* mutex semaphore            */
-
-/* ----------------------------------------------------------------- */
-/* Prototype use in okstart and rexxapi                              */
-LONG RxAPIHOMEset(void);
 
 #endif

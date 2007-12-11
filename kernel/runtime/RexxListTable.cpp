@@ -113,7 +113,7 @@ void *RexxListTable::operator new(size_t size, size_t initialSize, size_t compan
 {
   RexxListTable *newTable;             /* newly created list                */
   RexxList      *newList;              /* associated list object            */
-  LONG bytes;                          /* size of the allocated object      */
+  size_t bytes;                        /* size of the allocated object      */
 
                                        /* Compute size of hash tab object   */
   bytes = roundObjectBoundary(size + (sizeof(LISTENTRY) * (initialSize - 1)));

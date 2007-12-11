@@ -303,7 +303,7 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
   }
                                        /* create a native method object     */
                                        /*  this method is found in OKNMSG.C */
-  newNMethod = TheMethodClass->newEntry((PFN)message_nstart);
+  newNMethod = TheMethodClass->newEntry((PNMF)message_nstart);
                                        /* get the current activity          */
   oldActivity = ActivityManager::currentActivity;
                                        /* Create the new activity           */
@@ -336,7 +336,7 @@ void RexxMessage::sendNotification(void)
   RexxObject *listIndex;               /* index of the list as we traverse  */
   RexxMessage *thisMessage;            /* Message object to noitfy          */
   RexxActivity *waitingActivity;       /* activity to notify                */
-  LONG        i;                       /* loop index                        */
+  size_t      i;                       /* loop index                        */
 
                                        /* no longer care about any error    */
                                        /*condition                          */

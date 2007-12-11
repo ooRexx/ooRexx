@@ -40,9 +40,9 @@ if arg() = 0 then outdir = value("OR_OUTDIR","","ENVIRONMENT")
 parse source . . progname
 inpdir = left(progname, progname~lastpos("\"))
 p = time('R')
-say '----------------------------------------------------------------'
-say 'OOdialog build started                  ' time() 'on' date()
-say '----------------------------------------------------------------'
+-- say '----------------------------------------------------------------'
+-- say 'OOdialog build started                  ' time() 'on' date()
+-- say '----------------------------------------------------------------'
 outname = .array~new(3)
 outname[1] = "OODPLAIN"
 outname[2] = "OODIALOG"
@@ -106,10 +106,10 @@ do j over Arrax
 end
 
 
-say '----------------------------------------------------------------'
-say 'Build ended after: ' time('E') 'sec  ' ' at:' time() 'on' date()
-say '----------------------------------------------------------------'
-say
+-- say '----------------------------------------------------------------'
+-- say 'Build ended after: ' time('E') 'sec  ' ' at:' time() 'on' date()
+-- say '----------------------------------------------------------------'
+-- say
 
 exit
 

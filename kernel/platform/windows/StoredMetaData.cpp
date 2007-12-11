@@ -43,9 +43,6 @@
 /*                                                                   */
 /*********************************************************************/
 
-#define  INCL_ERRORS
-#define  INCL_DOSQUEUES
-#define  INCL_REXXSAA
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxBuffer.hpp"
@@ -56,7 +53,6 @@
 #include "SourceFile.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
-#include SYSREXXSAA
 
 /*********************************************************************/
 /*         Definitions for use by the Meta I/O functionality         */
@@ -110,13 +106,13 @@ typedef struct _control {              /* meta date control info            */
     unsigned short MetaVersion;        /* version of the meta prog          */
     char           RexxVersion[40];    /* version of rexx intrpreter        */
     FILESTATUS     FileStatus;         /* file information                  */
-    LONG           ImageSize;          /* size of the method info           */
+    size_t         ImageSize;          /* size of the method info           */
 } FILE_CONTROL;                        /* saved control info                */
 
 
 typedef FILE_CONTROL *PFILE_CONTROL;   /* pointer to file info              */
 
-extern BOOL ProcessSaveImage;
+extern bool ProcessSaveImage;
 RexxMethod *SysRestoreTranslatedProgram(RexxString *, FILE *Handle);
 
 /*********************************************************************/
@@ -489,8 +485,8 @@ RexxMethod *SysRestoreTranslatedProgram(
   FILE_CONTROL  Control;               /* control information               */
   char         *StartPointer;          /* start of buffered method          */
   RexxBuffer   *Buffer;                /* Buffer to unflatten               */
-  LONG          BufferSize;            /* size of the buffer                */
-  ULONG         BytesRead;             /* actual bytes read                 */
+  size_t        BufferSize;            /* size of the buffer                */
+  size_t        BytesRead;             /* actual bytes read                 */
   RexxMethod   *Method;                /* unflattened method                */
   RexxSource   *Source;                /* REXX source object                */
   RexxActivity *activity;              /* the current activity              */

@@ -226,7 +226,7 @@ void RexxSaveStack::extend(
 
 void RexxSaveStack::remove(
     RexxObject *element,               /* object to remove from save stack  */
-    BOOL search)                       /* search through whole savestack?   */
+    bool search)                       /* search through whole savestack?   */
 {
    size_t i;
 

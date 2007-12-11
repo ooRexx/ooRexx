@@ -324,7 +324,6 @@ STDMETHODIMP ESource::InitEvent(IDispatch *SourceDispatch,
                  FILE *LogFile) {
   ITypeInfo *SourceType;
   TYPEATTR  *TypeAttributes;
-  OLECHAR    lGUID[50];
   BSTR       SourceName;
   unsigned int NameCount;
   int        i;
@@ -968,7 +967,6 @@ STDMETHODIMP ESource::AddMap(char *Name, PEMAP *pbNewMap) {
 STDMETHODIMP ESource::SetMap(LPCOLESTR pName, DISPID SinkDispID) {
   PEMAP     Map;
   HRESULT   RetCode=S_OK;
-  int       tab;
 
 
 #if defined(DEBUGC)+defined(DEBUGZ)
@@ -984,7 +982,7 @@ STDMETHODIMP ESource::SetMap(LPCOLESTR pName, DISPID SinkDispID) {
    */
   while(Map) {
 #if defined(DEBUGZ)
-    tab = 20 - wcslen(pName);
+    int tab = 20 - wcslen(pName);
     tab = tab < 1 ? 1 : tab;
   FPRINTF2(logfile,"ESource::SetMap \"%S\" %*s \"%S\"\n",pName,tab," ",Map->SourceEventName);
 #endif

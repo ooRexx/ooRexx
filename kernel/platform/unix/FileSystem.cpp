@@ -252,7 +252,7 @@ const char *SearchFileName(
 
     size_t     NameLength;               /* length of name                    */
     struct stat dummy;                   /* structure for stat system calls   */
-    BOOL       found=0;
+    bool       found=0;
 
     NameLength = strlen(Name);           /* get length of incoming name       */
                                          /* if name is too small or big       */
@@ -473,7 +473,7 @@ void SysLoadImage(char **imageBuffer, size_t *imageSize)
 
 
                                        /* Read in the size of the image     */
-  if(!fread(imageSize, 1, sizeof(long), image))
+  if(!fread(imageSize, 1, sizeof(size_t), image))
     logic_error("could not check the size of the image");
                                        /* Create new segment for image      */
 //memoryObject.newOldSegment(*imageSize);
@@ -585,25 +585,9 @@ RexxString *SysQualifyFileSystemName(
    return new_string(stream_info.full_name_parameter);
 }
 
-BOOL SearchFirstFile(
+bool SearchFirstFile(
   const char *Name)                     /* name of file with wildcards       */
 {
-
-
-  /**************** Dummy *********************/
-
-/*  HDIR          hdirFindHandle = HDIR_SYSTEM;
- *  FILEFINDBUF3  FindBuffer     = {0};
- *  ULONG         ulResultBufLen = sizeof(FILEFINDBUF3);
- *  ULONG         ulFindCount    = 1;
- *
- *  return (DosFindFirst( Name,
- *                        &hdirFindHandle,
- *                        FILE_ARCHIVED | FILE_READONLY,
- *                        &FindBuffer,
- *                        ulResultBufLen,
- *                        &ulFindCount,
- *  ************          FIL_STANDARD) == NO_ERROR); */
     return(0);
 }
 
@@ -612,28 +596,17 @@ BOOL SearchFirstFile(
 /* In POSIX systems(including the GNU system) there is no difference between */
 /* opening a file for binary or for text writing                             */
 
-FILE * SysBinaryFilemode(FILE * fh,BOOL fRead)
+FILE * SysBinaryFilemode(FILE * fh,bool fRead)
 {
   return fh;                        /* dummy funcion !    */
 }
 
-//BOOL SysFileIsDevice(int fhandle)
-//{
-//  struct stat info;                 /* file info buffer */
-//
-//  fstat(fhandle,&info);             /* get the info     */
-//  if(S_ISREG(info.st_mode))         /* if it's a file   */
-//    return FALSE;
-//  else                              /* it's the keyboard*/
-//    return TRUE;
-//}
-
-BOOL SysFileIsDevice(int fhandle)
+bool SysFileIsDevice(int fhandle)
 {
   if( isatty( fhandle ) )
-    return TRUE;
+    return true;
   else
-    return FALSE;
+    return false;
 }
 
 int SysPeekKeyboard(void)
@@ -677,32 +650,7 @@ int SysPeekSTD(STREAM_INFO *stream_info)
 }
 #endif
 
-#if 0
-// this function no longer used - MHES 20050124
-/* function for SysPeekKeyboard() to read from STDIN buffer */
-int SysPeekSTDIN(STREAM_INFO *stream_info)
-{
-  struct stat info;                 /* File info buffer */
-  long lRc = 0;
-
-  lRc = fstat(0,&info);             /* Get the info     */
-  if ( (lRc == 0) && info.st_size)  /* Stream is open   */
-     return (1);
-                                    /* Buffer is empty  */
-#if defined(AIX) || defined(OPSYS_SUN)
-  if ( stream_info->stream_file->_cnt != 0 )
-#endif
-#if defined(LINUX) && !defined(OPSYS_SUN)
-  if (stream_info->stream_file->_IO_read_ptr <
-      stream_info->stream_file->_IO_read_end )
-#endif
-     return (1);
-  else
-     return (0);
-}
-#endif
-
-int SysStat(char * PathName, struct stat * Buffer)
+int SysStat(const char * PathName, struct stat * Buffer)
 {
   int rc;
 
@@ -710,18 +658,18 @@ int SysStat(char * PathName, struct stat * Buffer)
   return rc;
 }
 
-BOOL SysFileIsPipe(STREAM_INFO * stream_info)
+bool SysFileIsPipe(STREAM_INFO * stream_info)
 {
    struct stat buf;
 
    if (fstat(stream_info->fh, &buf ))
-     return FALSE;
+     return false;
    else
      return (S_ISFIFO(buf.st_mode));
 }
 
 
-LONG SysTellPosition(STREAM_INFO * stream_info)
+int SysTellPosition(STREAM_INFO * stream_info)
 {                                                 /* flags.std has been changed */
    if (stream_info->flags.bstd || stream_info->fh == stdin_handle) return -1;
     return ftell(stream_info->stream_file);

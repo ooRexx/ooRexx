@@ -52,21 +52,23 @@ void RexxCompoundTable::init(
     setRoot(OREF_NULL);                /* no root member */
 }
 
-void RexxCompoundTable::copy(
-    RexxStem *newObject,               /* the target new object */
-    RexxStem *oldObject)               /* the source stem */
+/**
+ * Copy all of the entries from another compound table into this
+ * table.
+ *
+ * @param other  The source tail collection.
+ */
+void RexxCompoundTable::copyFrom(
+    RexxCompoundTable &other)
 {
-    newObject->tails.init(newObject);  /* clear the new table */
-
-    RexxCompoundElement *entry = oldObject->tails.first();/* grab the first element */
+    RexxCompoundElement *entry = other.first();/* grab the first element */
     while (entry != NULL) {            /* while we have more entry to process */
                                        /* insert an entry in the new table */
-        RexxCompoundElement *newEntry = newObject->tails.findEntry(entry->getName(), TRUE);
+        RexxCompoundElement *newEntry = other.findEntry(entry->getName(), true);
                                        /* copy over the value */
         newEntry->setValue(entry->variableValue);
-        entry = oldObject->tails.next(entry);
+        entry = other.next(entry);
     }
-
 }
 
 void RexxCompoundTable::clear()
@@ -75,7 +77,7 @@ void RexxCompoundTable::clear()
 }
 
 
-RexxCompoundElement *RexxCompoundTable::findEntry(RexxString *tail, BOOL create)
+RexxCompoundElement *RexxCompoundTable::findEntry(RexxString *tail, bool create)
 {
                                        /* process the tail and search */
     RexxCompoundTail resolved_tail(tail);
@@ -85,7 +87,7 @@ RexxCompoundElement *RexxCompoundTable::findEntry(RexxString *tail, BOOL create)
 
 RexxCompoundElement *RexxCompoundTable::findEntry(
     RexxCompoundTail *tail,            /* our tail search target     */
-    BOOL create)                       /* we're creating a variable  */
+    bool create)                       /* we're creating a variable  */
 {
 
     int          rc = 0;               /* comparison result          */
@@ -159,7 +161,7 @@ void RexxCompoundTable::balance(
              _parent->rightdepth = depth;   /* set right depth            */
                                             /* deeper on left?            */
              if (depth > (wd = _parent->leftdepth + (unsigned short)1)) {
-                 moveNode(&_parent, FALSE);   /* adjust right branch        */
+                 moveNode(&_parent, false);   /* adjust right branch        */
                  depth = _parent->rightdepth; /* readjust depth             */
              }
              else {
@@ -171,7 +173,7 @@ void RexxCompoundTable::balance(
              _parent->leftdepth = depth;    /* set left depth             */
                                             /* if right shorter           */
              if (depth > (wd = _parent->rightdepth + (unsigned short)1)) {
-                 moveNode(&_parent, TRUE);       /* adjust left branch         */
+                 moveNode(&_parent, true);       /* adjust left branch         */
                  depth = _parent->leftdepth;     /* readjust depth             */
              }
              else {
@@ -187,7 +189,7 @@ void RexxCompoundTable::balance(
 
 void RexxCompoundTable::moveNode(
     RexxCompoundElement   **anchor,        /* node to move               */
-    BOOL         toright)                  /* move direction             */
+    bool         toright)                  /* move direction             */
 {
     RexxCompoundElement   *temp;           /* anchor save position       */
     RexxCompoundElement   *work;           /* working block pointer      */

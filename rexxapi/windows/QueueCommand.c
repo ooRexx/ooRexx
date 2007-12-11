@@ -56,13 +56,12 @@
 #include "RexxAPIManager.h"    /* needed for queue functions & codes */
                                /* used for queue name                */
 #include "RexxErrorCodes.h"    /* generated file containing message numbers */
-#include "APIUtil.h"           /* used for rxstricmp function        */
 
 #define RXQUEUE_CLEAR    -2    /* used for queue mode CLEAR flag     */
 #define BAD_MESSAGE      -6    /* Exit RC for message not found.     */
 
 // defines necessary for running OS2 code under Windows
-#define rxstricmp(a,b) _stricmp(a,b)
+#define _stricmp(a,b) _stricmp(a,b)
 #define DATETIME SYSTEMTIME
 #define ENVBUFSIZE 256
 
@@ -71,13 +70,13 @@
 #define DosRead(a,b,c,d) !ReadFile(hStdIn, b, c, d, NULL)
 HANDLE hStdIn;
 
-CHAR  line[4096];              /* buffer for data to add to queue    */
-CHAR  work[256];               /* buffer for queue name, if default  */
+char  line[4096];              /* buffer for data to add to queue    */
+char  work[256];               /* buffer for queue name, if default  */
 LONG  queuemode=-1;            /* mode for access to queue           */
 
-VOID  options_error(           /* function called on errors          */
-          LONG  type,
-          PSZ   queuename ) ;
+void  options_error(           /* function called on errors          */
+          int   type,
+          const char *queuename ) ;
 
                                /* function to read stdin             */
 ULONG get_line(PUCHAR, ULONG, PULONG);
@@ -91,12 +90,12 @@ int __cdecl main(
   LONG      rc;                /* return code from API calls         */
   ULONG     entries;           /* number of entries in queue         */
   DATETIME  dt;                /* date/time structure for reading    */
-  PSZ       quename=NULL;      /* initialize queuename to NULL       */
+  const char *quename=NULL;    /* initialize queuename to NULL       */
   ULONG     linelen ;          /* input line length                  */
-  RXSTRING  queuedata;         /* data added to the queue            */
+  CONSTRXSTRING  queuedata;    /* data added to the queue            */
   PSZ       t;                 /* argument pointer                   */
   DWORD     envvalue;
-  CHAR      envbuffer[ENVBUFSIZE+1];
+  char      envbuffer[ENVBUFSIZE+1];
   BOOL      Need2Detach = FALSE;
 
   hStdIn = GetStdHandle(STD_INPUT_HANDLE);
@@ -117,13 +116,13 @@ int __cdecl main(
     t = argv[i];               /* point to next argument             */
     if((t[0]=='/') || (t[0]=='-')) {/*if options character in        */
       t[0]='/';                /* argument,  then make character '/' */
-      if( !rxstricmp(t,"/FIFO") && /* if FIFO flag and               */
+      if( !_stricmp(t,"/FIFO") && /* if FIFO flag and               */
           queuemode==-1)       /*   no queuemode selected yet, then  */
         queuemode=RXQUEUE_FIFO;/*   set queuemode to FIFO, otherwise */
-      else if( !rxstricmp(t,"/LIFO") &&  /* if LIFO flag and         */
+      else if( !_stricmp(t,"/LIFO") &&  /* if LIFO flag and         */
                queuemode==-1)  /*   no queuemode selected yet, then  */
         queuemode=RXQUEUE_LIFO;/*   set queuemode to LIFO, otherwise */
-      else if( !rxstricmp(t,"/CLEAR") &&  /* if CLEAR flag and         */
+      else if( !_stricmp(t,"/CLEAR") &&  /* if CLEAR flag and         */
                queuemode==-1)  /*   no queuemode selected yet, then  */
         queuemode=RXQUEUE_CLEAR;/*   set queue for CLEAR, otherwise  */
       else options_error(      /*   there was an error in invokation */
@@ -204,13 +203,17 @@ int __cdecl main(
     }
   }
   else {
-    MAKERXSTRING(queuedata,NULL,0);    /* make an empty RXSTRING     */
-    rc = RexxPullQueue(quename, &queuedata, &dt, RXQUEUE_NOWAIT);
+    RXSTRING pulldata;
+
+    MAKERXSTRING(pulldata,NULL,0);    /* make an empty RXSTRING     */
+    rc = RexxPullQueue(quename, &pulldata, &dt, RXQUEUE_NOWAIT);
     while (!rc) {
-      if (queuedata.strlength && queuedata.strptr)
-        GlobalFree(queuedata.strptr);  /* GlobalFree instead of free */
-      MAKERXSTRING(queuedata,NULL,0);  /* make a new empty RXSTRING  */
-      rc = RexxPullQueue(quename, &queuedata, &dt, RXQUEUE_NOWAIT);
+      if (pulldata.strlength && pulldata.strptr)
+      {
+          RexxFreeMemory(pulldata.strptr);  /* GlobalFree instead of free */
+      }
+      MAKERXSTRING(pulldata,NULL,0);  /* make a new empty RXSTRING  */
+      rc = RexxPullQueue(quename, &pulldata, &dt, RXQUEUE_NOWAIT);
     }
   }
   if (Need2Detach)    /* only remove queue when queue was            */
@@ -243,8 +246,8 @@ int __cdecl main(
 /*********************************************************************/
 
 
-VOID options_error( LONG  type,        /* Error type.                */
-                    PSZ   quename )    /* Name of offending queue.   */
+void options_error( int   type,        /* Error type.                */
+                    const char *quename ) /* Name of offending queue.   */
 {
   LONG   rc = 0 ;                      /* Exit return code.          */
   char   DataArea[ 256 ] ;             /* Message buffer.            */
@@ -281,10 +284,6 @@ VOID options_error( LONG  type,        /* Error type.                */
 
     case RXQUEUE_SIZE:
       MsgNumber = Error_RXQUE_size;
-      break;
-
-    case RXQUEUE_NOEMEM:
-      MsgNumber = Error_RXQUE_nomem;
       break;
 
     case RXQUEUE_BADQNAME:

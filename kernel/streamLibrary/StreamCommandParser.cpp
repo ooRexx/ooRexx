@@ -122,10 +122,10 @@ void ungettoken(const char *TokenString,TOKENSTRUCT *tsp)
 /*     back from it.                                                 */
 /*********************************************************************/
 
-long parser(TTS *ttsp, const char *TokenString, void *userparms)
+int  parser(TTS *ttsp, const char *TokenString, void *userparms)
 
 {
-   long result = 0;                    /* parse result                      */
+   int  result = 0;                    /* parse result                      */
    TTS *work_ttsp;                     /* token struct work pointer         */
    ATS *work_ATSP;                     /* action table work pointer         */
    TOKENSTRUCT ts_struct = {0,0,0};    /* single token structure            */
@@ -136,7 +136,7 @@ long parser(TTS *ttsp, const char *TokenString, void *userparms)
    while ((result = gettoken(TokenString,tsp)) == 0) {
      for (work_ttsp = ttsp;            /* check against the table           */
          (*(work_ttsp->token)) &&
-         (memicmp(work_ttsp->token, tsp->string, tsp->length));
+         (CaselessCompare(work_ttsp->token, tsp->string, tsp->length));
        work_ttsp++ ) {
      }
      if (!*(work_ttsp->token)) {       /* no token found?                   */
@@ -175,8 +175,8 @@ long parser(TTS *ttsp, const char *TokenString, void *userparms)
                  *(short *)work_ATSP->output |= *(short *)work_ATSP->item;
                  break;
 
-               default:                /* long                              */
-                  *(long *)work_ATSP->output |= *(long *)work_ATSP->item;
+               default:                /* size_t                            */
+                  *(size_t *)work_ATSP->output |= *(size_t *)work_ATSP->item;
              }
              break;
            case (BitAnd):              /* and the item with output          */
@@ -191,8 +191,8 @@ long parser(TTS *ttsp, const char *TokenString, void *userparms)
                  *(short *)work_ATSP->output &= *(short *)work_ATSP->item;
                  break;
 
-               default:                /* long                              */
-                 *(long *)work_ATSP->output &= *(long *)work_ATSP->item;
+               default:                /* size_t                              */
+                 *(size_t *)work_ATSP->output &= *(size_t *)work_ATSP->item;
              }
              break;
                                        /* for a mutual field                */
@@ -219,9 +219,9 @@ long parser(TTS *ttsp, const char *TokenString, void *userparms)
                    return work_ATSP->errorcode;
                  break;
 
-               default:                /* long field                        */
+               default:                /* size_t field                        */
                                        /* already set?                      */
-                 if (*(long *)work_ATSP->output)
+                 if (*(size_t *)work_ATSP->output)
                                        /* error                             */
                    return work_ATSP->errorcode;
              }
@@ -248,9 +248,9 @@ long parser(TTS *ttsp, const char *TokenString, void *userparms)
                    return work_ATSP->errorcode;
                  break;
 
-               default:                /* long field                        */
+               default:                /* size_t field                        */
                                        /* had a conflict?                   */
-                 if (*(long *)work_ATSP->output & *(long *)work_ATSP->item)
+                 if (*(size_t *)work_ATSP->output & *(size_t *)work_ATSP->item)
                                        /* get out with an error code        */
                    return work_ATSP->errorcode;
                  break;
@@ -281,10 +281,10 @@ long parser(TTS *ttsp, const char *TokenString, void *userparms)
                    return work_ATSP->errorcode;
                  break;
 
-               default:                /* long field                        */
+               default:                /* size_t field                        */
                                        /* have all of the required options? */
-                 if ((*(long *)work_ATSP->output &
-                     *(long *)work_ATSP->item) != *(long *)work_ATSP->item)
+                 if ((*(size_t *)work_ATSP->output &
+                     *(size_t *)work_ATSP->item) != *(size_t *)work_ATSP->item)
                                        /* return the error code             */
                    return work_ATSP->errorcode;
                  break;

@@ -67,12 +67,12 @@ int WINAPI WinMain(
     LPSTR lpCmdLine,	// pointer to command line
     int nCmdShow)
 {
-  LONG     rexxrc = 0;                 /* return code from rexx             */
+  short    rexxrc = 0;                 /* return code from rexx             */
   LONG  rc;                            /* actually running program RC       */
-  PCHAR program_name;                  /* name to run                       */
+  const char *program_name;            /* name to run                       */
   CHAR  arg_buffer[1024];              /* starting argument buffer         */
-  RXSTRING arguments;                 /* rexxstart argument                */
-  ULONG argcount;
+  CONSTRXSTRING arguments;             /* rexxstart argument                */
+  size_t argcount;
   RXSTRING rxretbuf;                   // program return buffer
 
   rc = 0;                              /* set default return                */
@@ -93,20 +93,17 @@ int WINAPI WinMain(
    /* Here we call the interpreter.  We don't really need to use     */
    /* all the casts in this call; they just help illustrate          */
    /* the data types used.                                           */
-   rc=REXXSTART((LONG)       argcount,      /* number of arguments   */
-                (PRXSTRING)  &arguments,    /* array of arguments    */
-                (PSZ)        program_name,  /* name of REXX file     */
-                (PRXSTRING)  0,             /* No INSTORE used       */
-                (PSZ)        "CMD",         /* Command env. name     */
-                (LONG)       RXCOMMAND,     /* Code for how invoked  */
-				NULL,                       /* No system exits */
-                (PSHORT)     &rexxrc,       /* Rexx program output   */
-                (PRXSTRING)  &rxretbuf );   /* Rexx program output   */
+   rc=REXXSTART(argcount,      /* number of arguments   */
+                &arguments,    /* array of arguments    */
+                program_name,  /* name of REXX file     */
+                0,             /* No INSTORE used       */
+                "CMD",         /* Command env. name     */
+                RXCOMMAND,     /* Code for how invoked  */
+				NULL,          /* No system exits */
+                &rexxrc,       /* Rexx program output   */
+                &rxretbuf );   /* Rexx program output   */
 
-   /* wait until all activities did finish so no activity will be canceled */
-   RexxWaitForTermination();
-
-   if ((rc==0) && rxretbuf.strptr) GlobalFree(rxretbuf.strptr);        /* Release storage only if*/
+   if ((rc==0) && rxretbuf.strptr) RexxFreeMemory(rxretbuf.strptr);        /* Release storage only if*/
    freeArguments(program_name, &arguments);
 
    if (rc < 0)

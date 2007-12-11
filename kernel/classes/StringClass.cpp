@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  StringClass.c    */
+/* REXX Kernel                                               StringClass.c    */
 /*                                                                            */
 /* Primitive String Class                                                     */
 /*                                                                            */
@@ -208,40 +208,105 @@ RexxString  *RexxString::primitiveMakeString()
   return this;                         /* this is easy                      */
 }
 
-long RexxString::longValue(
-     size_t digits)                    /* digits to use                     */
+bool RexxString::numberValue(wholenumber_t &result, stringsize_t digits)
 /******************************************************************************/
-/* Function:  Convert a string object to a long value.  Returns NO_LONG if    */
+/* Function:  Convert a string object to a long value.  Returns false         */
 /*            it will not convert.                                            */
 /******************************************************************************/
 {
-  RexxNumberString *numberstring;      /* converted numberstring version    */
-
-  if (!(isOfClass(String, this)))          /* subclassed string object?         */
-                                       /* get the string value's long value */
-    return this->requestString()->longValue(digits);
-  numberstring = this->fastNumberString(); /* get the number string version     */
-  if (numberstring != OREF_NULL )      /* convert ok?                       */
-                                       /* convert to integer with proper    */
-                                       /* precision                         */
-    return numberstring->longValue(digits);
-  else
-    return NO_LONG;                    /* return the "not value long" value */
+    if (!(isString(this)))               /* subclassed string object?         */
+    {
+        return this->requestString()->numberValue(result, digits);
+    }
+                                         /* get the string value's long value */
+    RexxNumberString *numberstring = this->fastNumberString();
+    if (numberstring != OREF_NULL )      /* convert ok?                       */
+    {
+                                         /* convert to integer with proper    */
+                                         /* precision                         */
+        return numberstring->numberValue(result, digits);
+    }
+    return false;                        /* return the "not value long" value */
 }
 
-double RexxString::doubleValue()
+bool RexxString::numberValue(wholenumber_t &result)
+/******************************************************************************/
+/* Function:  Convert a string object to a long value.  Returns false         */
+/*            it will not convert.                                            */
+/******************************************************************************/
+{
+    if (!(isString(this)))               /* subclassed string object?         */
+    {
+        return this->requestString()->numberValue(result);
+    }
+                                         /* get the string value's long value */
+    RexxNumberString *numberstring = this->fastNumberString();
+    if (numberstring != OREF_NULL )      /* convert ok?                       */
+    {
+                                         /* convert to integer with proper    */
+                                         /* precision                         */
+        return numberstring->numberValue(result);
+    }
+    return false;                        /* return the "not value long" value */
+}
+
+
+bool RexxString::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
+/******************************************************************************/
+/* Function:  Convert a string object to a long value.  Returns false         */
+/*            it will not convert.                                            */
+/******************************************************************************/
+{
+    if (!(isString(this)))               /* subclassed string object?         */
+    {
+        return this->requestString()->unsignedNumberValue(result, digits);
+    }
+                                         /* get the string value's long value */
+    RexxNumberString *numberstring = this->fastNumberString();
+    if (numberstring != OREF_NULL )      /* convert ok?                       */
+    {
+                                         /* convert to integer with proper    */
+                                         /* precision                         */
+        return numberstring->unsignedNumberValue(result, digits);
+    }
+    return false;                        /* return the "not value long" value */
+}
+
+
+bool RexxString::unsignedNumberValue(stringsize_t &result)
+/******************************************************************************/
+/* Function:  Convert a string object to a long value.  Returns false         */
+/*            it will not convert.                                            */
+/******************************************************************************/
+{
+    if (!(isString(this)))               /* subclassed string object?         */
+    {
+        return this->requestString()->unsignedNumberValue(result);
+    }
+                                         /* get the string value's long value */
+    RexxNumberString *numberstring = this->fastNumberString();
+    if (numberstring != OREF_NULL )      /* convert ok?                       */
+    {
+                                         /* convert to integer with proper    */
+                                         /* precision                         */
+        return numberstring->unsignedNumberValue(result);
+    }
+    return false;                        /* return the "not value long" value */
+}
+
+bool RexxString::doubleValue(double &result)
 /******************************************************************************/
 /* Function:  Convert a string object to a double value                       */
 /******************************************************************************/
 {
-  RexxNumberString *numberDouble;      /* converted number string           */
-
-  numberDouble = this->fastNumberString(); /* convert String to Numberstring    */
-  if (numberDouble != OREF_NULL)       /* Did we get a numberstring?        */
-    return numberDouble->doubleValue();/* Yup, convert it to double         */
-  else
-    return NO_DOUBLE;                  /* not number string, so NODOUBLE    */
+    RexxNumberString *numberDouble = this->fastNumberString(); /* convert String to Numberstring    */
+    if (numberDouble != OREF_NULL)       /* Did we get a numberstring?        */
+    {
+        return numberDouble->doubleValue(result);/* Yup, convert it to double         */
+    }
+    return false;                      /* not number string, so NODOUBLE    */
 }
+
 
 RexxNumberString *RexxString::numberString()
 /******************************************************************************/
@@ -364,7 +429,7 @@ bool RexxString::isEqual(
   other = REQUEST_STRING(otherObj);    /* force into string form            */
   otherLen = other->getLength();            /* get length of second string.      */
   if (otherLen != this->getLength())        /* lengths different?                */
-    return FALSE;                      /* also unequal                      */
+    return false;                      /* also unequal                      */
                                        /* now compare the actual string     */
   return !memcmp(this->getStringData(), other->getStringData(), otherLen);
 }
@@ -382,13 +447,13 @@ bool RexxString::primitiveIsEqual(
   required_arg(otherObj, ONE);         /* this is required.                 */
   if (otherObj == TheNilObject)        // strings never compare equal to the NIL object
   {
-      return FALSE;
+      return false;
   }
 
   other = REQUEST_STRING(otherObj);    /* force into string form            */
   otherLen = other->getLength();            /* get length of second string.      */
   if (otherLen != this->getLength())        /* lengths different?                */
-    return FALSE;                      /* also unequal                      */
+    return false;                      /* also unequal                      */
                                        /* now compare the actual string     */
   return !memcmp(this->getStringData(), other->getStringData(), otherLen);
 }
@@ -438,7 +503,7 @@ wholenumber_t RexxString::compareTo(RexxObject *other )
 }
 
 
-long RexxString::comp(RexxObject *other)
+int RexxString::comp(RexxObject *other)
 /******************************************************************************/
 /* Function:  Do a value comparison of two strings for the non-strict         */
 /*            comparisons.  This returns for the compares:                    */
@@ -475,7 +540,7 @@ long RexxString::comp(RexxObject *other)
   if (((firstNum = this->fastNumberString()) != OREF_NULL) && ((secondNum = other->numberString()) != OREF_NULL ))
                                        /* yes, send converted numbers and do*/
                                        /* the compare                       */
-    return (long) firstNum->comp(secondNum);
+    return firstNum->comp(secondNum);
   second = REQUEST_STRING(other);      /* yes, get a string object.         */
                                        /* objects are converted.  now strip */
                                        /* any leading/trailing blanks.      */
@@ -541,7 +606,7 @@ long RexxString::comp(RexxObject *other)
   return result;                       /* return the compare result         */
 }
 
-long RexxString::strictComp(RexxObject *otherObj)
+int RexxString::strictComp(RexxObject *otherObj)
 /******************************************************************************/
 /* Function:  Do a strict comparison of two strings.  This returns:           */
 /*                                                                            */
@@ -1071,7 +1136,7 @@ bool RexxString::truthValue(int errorCode)
     testString = this->requestString();/* get the real string value         */
   else
     testString = this;                 /* just use the string directly      */
-  if (testString->getLength() != 1L)        /* not exactly 1 character long?     */
+  if (testString->getLength() != 1)    /* not exactly 1 character long?     */
                                        /* report the error                  */
     reportException(errorCode, testString);
   if (*(testString->getStringData()) == '0')/* exactly '0'?                      */
@@ -1082,7 +1147,7 @@ bool RexxString::truthValue(int errorCode)
   return true;                         /* this is true                      */
 }
 
-BOOL RexxString::checkLower()
+bool RexxString::checkLower()
 /******************************************************************************/
 /* Function:  Tests for existence of lowercase characters                     */
 /******************************************************************************/
@@ -1096,13 +1161,13 @@ BOOL RexxString::checkLower()
   while (data < endData) {             /* loop through entire string        */
     if (*data != toupper(*data)) {     /* have something to uppercase?      */
       this->setHasLower();             /* remember we have this             */
-      return TRUE;                     /* just return now                   */
+      return true;                     /* just return now                   */
     }
     data++;                            /* step the position                 */
   }
                                        /* no lowercase?                     */
   this->setUpperOnly();                /* set the upper only attribute      */
-  return FALSE;                        /* return then translation flag      */
+  return false;                        /* return then translation flag      */
 }
 
 RexxString *RexxString::upper()
@@ -1147,17 +1212,17 @@ RexxString *RexxString::stringTrace()
   // greater than 0x7f.
   const unsigned char *Current;        /* current string location           */
   size_t    i;                         /* string length                     */
-  BOOL      NonDisplay;                /* have non-displayables             */
+  bool      NonDisplay;                /* have non-displayables             */
 
   i = this->getLength();               /* get the length                    */
                                        /* point to the start                */
   Current = (const unsigned char *)this->getStringData();
-  NonDisplay = FALSE;                  /* no non-displayable characters     */
+  NonDisplay = false;                  /* no non-displayable characters     */
 
   for (; i > 0; i--) {                 /* loop for the entire string        */
                                        /* control character?                */
     if (*Current < ' ') {
-      NonDisplay = TRUE;               /* got a non-displayable             */
+      NonDisplay = true;               /* got a non-displayable             */
       break;                           /* get out of here                   */
     }
     Current++;                         /* step the pointer                  */
@@ -1241,7 +1306,7 @@ RexxString *RexxString::lowerRexx(RexxInteger *_start, RexxInteger *_length)
         return this;
     }
 
-    rangeLength = min(rangeLength, getLength() - startPos);
+    rangeLength = Numerics::minVal(rangeLength, getLength() - startPos);
 
     // a zero length value is also a non-change.
     if (rangeLength == 0)
@@ -1274,7 +1339,7 @@ RexxString *RexxString::upperRexx(RexxInteger *_start, RexxInteger *_length)
         return this;
     }
 
-    rangeLength = min(rangeLength, getLength() - startPos);
+    rangeLength = Numerics::minVal(rangeLength, getLength() - startPos);
 
     // a zero length value is also a non-change.
     if (rangeLength == 0)
@@ -1441,11 +1506,9 @@ RexxObject *RexxString::xorOp(RexxObject *other)
 /* Function:  Logical XOR of a string with another logical value              */
 /******************************************************************************/
 {
-  BOOL truth;                          /* converted other argument          */
-
   required_arg(other, ONE);            /* make sure the argument is there   */
                                        /* get as a boolean                  */
-  truth = other->truthValue(Error_Logical_value_method);
+  bool truth = other->truthValue(Error_Logical_value_method);
                                        /* first one false?                  */
   if (!this->truthValue(Error_Logical_value_method))
                                        /* value is always the second        */
@@ -1800,7 +1863,7 @@ RexxString *RexxString::newRexx(RexxObject **init_args, size_t argCount)
 
 #define this ((RexxString *)self)
 
-native0 (size_t, STRING_LENGTH)
+size_t REXXENTRY REXX_STRING_LENGTH(REXXOBJECT self)
 /******************************************************************************/
 /* Function:  External interface to the object method                         */
 /******************************************************************************/
@@ -1812,7 +1875,7 @@ native0 (size_t, STRING_LENGTH)
   return this->getLength();
 }
 
-native0 (CSTRING, STRING_DATA)
+CSTRING REXXENTRY REXX_STRING_DATA(REXXOBJECT self)
 /******************************************************************************/
 /* Function:  External interface to the object method                         */
 /******************************************************************************/
@@ -1824,17 +1887,18 @@ native0 (CSTRING, STRING_DATA)
   return this->getStringData();
 }
 
-nativei1 (REXXOBJECT, STRING_NEWD, PDBL, number)
+
+REXXOBJECT REXXENTRY REXX_STRING_NEWD(double number)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
   native_entry;                        /* synchronize access                */
                                        /* just forward and return           */
-  return_object(new_string(*number));
+  return_object(new_string(number));
 }
 
-nativei1 (REXXOBJECT, STRING_NEW_UPPER, CSTRING, string)
+REXXOBJECT REXXENTRY REXX_STRING_NEW_UPPER(CSTRING string)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
@@ -1844,7 +1908,7 @@ nativei1 (REXXOBJECT, STRING_NEW_UPPER, CSTRING, string)
   return_object(((RexxString *)new_string(string))->upper());
 }
 
-nativei2 (REXXOBJECT, STRING_NEW, CSTRING, string, size_t, length)
+REXXOBJECT REXXENTRY REXX_STRING_NEW(CSTRING string, size_t length)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
@@ -1854,7 +1918,7 @@ nativei2 (REXXOBJECT, STRING_NEW, CSTRING, string, size_t, length)
   return_object(new_string(string, length));
 }
 
-native3 (size_t, STRING_GET, size_t, start, char *, buffer, size_t, bufl)
+size_t REXXENTRY REXX_STRING_GET(REXXOBJECT self, size_t start, char * buffer, size_t bufl)
 /******************************************************************************/
 /* Function:  External interface to the object method                         */
 /******************************************************************************/

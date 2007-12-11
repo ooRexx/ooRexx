@@ -61,12 +61,6 @@
 #include <process.h>
 #include <direct.h>
 
-#define INCL_RXSUBCOM                       /* Include subcom declares        */
-#define INCL_RXFUNC                         /* and external function...       */
-#define INCL_RXSYSEXIT                      /* and system exits               */
-#define INCL_RXMACRO
-
-
 #include "RexxCore.h"                         /* global REXX definitions        */
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
@@ -75,7 +69,6 @@
 #include "MethodClass.hpp"
 #include "SourceFile.hpp"
 #include "RexxNativeAPI.h"                  /* Lot's of useful REXX macros    */
-#include SYSREXXSAA                         /* Include REXX header            */
 #include "SubcommandAPI.h"                  /* Get private REXXAPI API's      */
 #include "RexxAPIManager.h"
 #include "ProtectedObject.hpp"
@@ -99,7 +92,7 @@
 extern HANDLE apiProtect;
 
 typedef struct _ENVENTRY {                  /* setlocal/endlocal structure    */
-  ULONG    DriveNumber;                     /* saved drive                    */
+  size_t   DriveNumber;                     /* saved drive                    */
   char     Directory[DIRLEN];               /* saved current directory        */
   char    *Environment;                     /* saved environment segment      */
   char     Variables[1];                    /* start of variable values       */
@@ -111,7 +104,7 @@ REXXOBJECT BuildEnvlist(void);
 void RestoreEnvironment( void * );
 
 extern "C" {
-APIRET APIENTRY RexxExecuteMacroFunction ( char *, PRXSTRING );
+APIRET APIENTRY RexxExecuteMacroFunction (const char *, PRXSTRING );
 }
 
 /*********************************************************************/
@@ -124,7 +117,7 @@ APIRET APIENTRY RexxExecuteMacroFunction ( char *, PRXSTRING );
 /*                      specified duration (in milliseconds)         */
 /*********************************************************************/
 
-RexxMethod2(REXXOBJECT, sysBeep, long, Frequency, long, Duration)
+RexxMethod2(REXXOBJECT, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration)
 {
                                        /* out of range?              */
   if (Frequency > MAX_FREQUENCY || Frequency < MIN_FREQUENCY || Duration > MAX_DURATION || Duration < MIN_DURATION)
@@ -132,7 +125,7 @@ RexxMethod2(REXXOBJECT, sysBeep, long, Frequency, long, Duration)
     send_exception(Error_Incorrect_call);
 
   Beep(Frequency, Duration);           /* sound beep                 */
-  return RexxString("");               /* always returns a null      */
+  return ooRexxString("");             /* always returns a null      */
 }
 
 /*********************************************************************/
@@ -177,7 +170,6 @@ RexxMethod1(REXXOBJECT, sysDirectory, CSTRING, dir)
   int rc = 0;
 
   if (dir != NO_CSTRING)
-//     rc = SetCurrentDirectory(dir);
   {
       if ((strlen(dir) == 2) && (dir[1] == ':'))
          rc = _chdrive(toupper( dir[0] ) - 'A' + 1);
@@ -185,8 +177,7 @@ RexxMethod1(REXXOBJECT, sysDirectory, CSTRING, dir)
          rc = _chdir(dir);
   }
                                        /* Return the current directory    */
-//  return (rc == 0) || (GetCurrentDirectory(CCHMAXPATH,buffer) == NULL) ? RexxString("") : RexxString(buffer);
-  return (rc != 0) || (_getcwd(buffer,CCHMAXPATH) == NULL) ? RexxString("") : RexxString(buffer);
+  return (rc != 0) || (_getcwd(buffer,CCHMAXPATH) == NULL) ? ooRexxString("") : ooRexxString(buffer);
 }
 
 
@@ -220,7 +211,7 @@ RexxMethod2 (REXXOBJECT, sysFilespec, CSTRING, Option, CSTRING, Name)
         ScanPtr = (const char *)memchr(Name, ':', NameLength);
         if (ScanPtr)                   /* found one?                        */
                                        /* create result string              */
-          Retval = RexxStringL(Name, ScanPtr - Name + 1);
+          Retval = ooRexxStringL(Name, ScanPtr - Name + 1);
       }
       break;
 
@@ -243,7 +234,7 @@ RexxMethod2 (REXXOBJECT, sysFilespec, CSTRING, Option, CSTRING, Name)
               }
               if (PathEnd)             /* have backslashes?                 */
                                        /* extract the path                  */
-                Retval = RexxStringL(ScanPtr, PathEnd - ScanPtr + 1);
+                Retval = ooRexxStringL(ScanPtr, PathEnd - ScanPtr + 1);
             }
           }
           else {
@@ -259,7 +250,7 @@ RexxMethod2 (REXXOBJECT, sysFilespec, CSTRING, Option, CSTRING, Name)
               PathPtr = mempbrk(PathPtr, "\\/", EndPtr-PathPtr);
             }
                                        /* extract the path                  */
-            Retval = RexxStringL(Name, PathEnd - Name + 1); //retrofit by IH
+            Retval = ooRexxStringL(Name, PathEnd - Name + 1); //retrofit by IH
           }
         }
       }
@@ -284,7 +275,7 @@ RexxMethod2 (REXXOBJECT, sysFilespec, CSTRING, Option, CSTRING, Name)
             }
             if (PathEnd < EndPtr)      /* stuff to return?                  */
                                        /* extract the name                  */
-              Retval = RexxStringL(PathEnd, EndPtr - PathEnd);
+              Retval = ooRexxStringL(PathEnd, EndPtr - PathEnd);
           }
           else {
             PathPtr = ScanPtr + 1;     /* save start position               */
@@ -299,11 +290,11 @@ RexxMethod2 (REXXOBJECT, sysFilespec, CSTRING, Option, CSTRING, Name)
             }
             if (PathEnd < EndPtr)      /* stuff to return?                  */
                                        /* extract the name                  */
-              Retval = RexxStringL(PathEnd, EndPtr - PathEnd);
+              Retval = ooRexxStringL(PathEnd, EndPtr - PathEnd);
           }
         }
         else
-          Retval = RexxString(Name);   /* entire string is a name           */
+          Retval = ooRexxString(Name); /* entire string is a name           */
       }
       break;                           /* finished                          */
 
@@ -381,7 +372,7 @@ RexxMethod1(REXXOBJECT,sysRxfuncquery,CSTRING,name)
 /* Notes:      Searches for a REXX program with the target name and extension */
 /*             and if it finds one, runs the exec passing back the result.    */
 /******************************************************************************/
-BOOL ExecExternalSearch(
+bool ExecExternalSearch(
   RexxActivation * activation,         /* Current Activation                */
   RexxActivity   * activity,           /* activity in use                   */
   RexxString     * target,             /* Name of external function         */
@@ -402,14 +393,14 @@ BOOL ExecExternalSearch(
 /*             target function is found, it executes the function and passes  */
 /*             back the rc in result.                                         */
 /******************************************************************************/
-BOOL MacroSpaceSearch(
+bool MacroSpaceSearch(
   RexxActivation * activation,         /* Current Activation                */
   RexxActivity   * activity,           /* activity in use                   */
   RexxString     * target,             /* Name of external function         */
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* the count of arguments            */
   RexxString     * calltype,           /* Type of call                      */
-  BOOL             order,              /* Pre/Post order search flag        */
+  int              order,              /* Pre/Post order search flag        */
   RexxObject    ** result )            /* Result of function call           */
 {
 
@@ -423,10 +414,10 @@ BOOL MacroSpaceSearch(
   if (RexxQueryMacro(MacroName, &Position) == 0) {
                                        /* but not at the right time?        */
     if (order == MS_PREORDER && Position == RXMACRO_SEARCH_AFTER)
-      return FALSE;                    /* didn't really find this           */
+      return false;                    /* didn't really find this           */
                                        /* get image of function             */
-    if (RexxExecuteMacroFunction(const_cast<char *>(MacroName), &MacroImage) != 0)
-        return FALSE;
+    if (RexxExecuteMacroFunction(MacroName, &MacroImage) != 0)
+        return false;
                                        /* unflatten the method now          */
     Routine = SysRestoreProgramBuffer(&MacroImage, target);
 
@@ -436,14 +427,14 @@ BOOL MacroSpaceSearch(
        buffer somewhere and do it here. */
     if (MacroImage.strptr) GlobalFree(MacroImage.strptr);
 
-    if (Routine == OREF_NULL) return FALSE;
+    if (Routine == OREF_NULL) return false;
                                        /* run as a call                     */
     *result = Routine->call(activity, (RexxObject *)activation, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL);
     /* merge (class) definitions from macro with current settings */
     activation->getSource()->mergeRequired(Routine->getSource());
-    return TRUE;                       /* return success we found it flag   */
+    return true;                       /* return success we found it flag   */
   }
-  return FALSE;                        /* nope, nothing to find here        */
+  return false;                        /* nope, nothing to find here        */
 }
 
 /******************************************************************************/
@@ -462,7 +453,7 @@ BOOL MacroSpaceSearch(
 /*             function is registered.  If it is, it asks the API to invoke   */
 /*             the function, passing the rc back in result.                   */
 /******************************************************************************/
-BOOL RegExternalFunction(
+bool RegExternalFunction(
   RexxActivation * activation,         /* Current Activation                */
   RexxActivity   * activity,           /* activity in use                   */
   RexxString     * target,             /* Name of external function         */
@@ -475,10 +466,10 @@ BOOL RegExternalFunction(
   const char *queuename;               /* Pointer to active queue name      */
   long      rc;                        /* RexxCallFunction return code      */
   size_t    argindex;                  /* Index into arg array              */
-  PRXSTRING argrxarray;                /* Array of args in PRXSTRING form   */
+  PCONSTRXSTRING argrxarray;           /* Array of args in PRXSTRING form   */
   RXSTRING  funcresult;                /* Function result                   */
   RexxString * argument;               /* current argument                  */
-  unsigned short functionrc;           /* Return code from function         */
+  int functionrc;                      /* Return code from function         */
                                        /* default return code buffer        */
   char      default_return_buffer[DEFRXSTRING];
 
@@ -488,7 +479,7 @@ BOOL RegExternalFunction(
   if (RexxQueryFunction(funcname) != 0) {  /* is the function registered ?  */
 
                                        /* this a system routine?            */
-    if (memicmp(funcname, "SYS", 3) == 0) {
+    if (CaselessCompare(funcname, "SYS", 3) == 0) {
       MTXRQ(apiProtect);               /* protect these instructions        */
                                        /* from concurrent access of multiple*/
                                        /* processes                         */
@@ -500,13 +491,13 @@ BOOL RegExternalFunction(
         /* SysLoadFunc is not registered */
         /* register and call SysLoadFunc */
 
-        if (RexxRegisterFunctionDll((char *)"SYSLOADFUNCS", (char *)"REXXUTIL", (char *)"SysLoadFuncs") == 0)
+        if (RexxRegisterFunctionDll("SYSLOADFUNCS", "REXXUTIL", "SysLoadFuncs") == 0)
         {
                                        /* first registration?               */
                                        /* set up an result RXSTRING         */
           MAKERXSTRING(funcresult, default_return_buffer, sizeof(default_return_buffer));
                                        /* call the function loader          */
-          RexxCallFunction("SYSLOADFUNCS", 0, (PRXSTRING)NULL, &functionrc, &funcresult, "");
+          RexxCallFunction("SYSLOADFUNCS", 0, (PCONSTRXSTRING)NULL, &functionrc, &funcresult, "");
 
         }
       }
@@ -514,18 +505,18 @@ BOOL RegExternalFunction(
       {
         /* SysloadFunc is registered, call it */
         MAKERXSTRING(funcresult, default_return_buffer, sizeof(default_return_buffer));
-        RexxCallFunction("SYSLOADFUNCS", 0, (PRXSTRING)NULL, &functionrc, &funcresult, "");
+        RexxCallFunction("SYSLOADFUNCS", 0, (PCONSTRXSTRING)NULL, &functionrc, &funcresult, "");
       }
       MTXRL(apiProtect);
     }
                                        /* Do we have the function?          */
     if (RexxQueryFunction(funcname) != 0)
-      return FALSE;                    /* truely not found                  */
+      return false;                    /* truely not found                  */
   }
 
   /* allocate enough memory for all arguments */
   /* at least one item needs to be allocated to prevent error reporting */
-  argrxarray = (PRXSTRING) SysAllocateResultMemory(sizeof(RXSTRING)*max(argcount,1));
+  argrxarray = (PCONSTRXSTRING) SysAllocateResultMemory(sizeof(CONSTRXSTRING)*max(argcount,1));
   if (argrxarray == OREF_NULL)    /* memory error?                   */
       reportException(Error_System_resources);
                                        /* create RXSTRING arguments         */
@@ -543,7 +534,7 @@ BOOL RegExternalFunction(
                                        /* set the RXSTRING length           */
       argrxarray[argindex].strlength = argument->getLength();
                                        /* and pointer                       */
-      argrxarray[argindex].strptr = argument->getWritableData();
+      argrxarray[argindex].strptr = argument->getStringData();
     }
     else {                           /* have an omitted argument          */
                                        /* give it zero length               */
@@ -560,9 +551,9 @@ BOOL RegExternalFunction(
 /* CRITICAL window here -->>  ABSOLUTELY NO KERNEL CALLS ALLOWED            */
 
                                        /* get ready to call the function    */
-  activity->exitKernel(activation, OREF_SYSEXTERNALFUNCTION, TRUE);
+  activity->exitKernel(activation, OREF_SYSEXTERNALFUNCTION, true);
                                        /* now call the external function    */
-  rc = RexxCallFunction(const_cast<char *>(funcname), argcount, argrxarray, &functionrc, &funcresult, const_cast<char *>(queuename));
+  rc = RexxCallFunction(funcname, argcount, argrxarray, &functionrc, &funcresult, queuename);
   activity->enterKernel();           /* now re-enter the kernel           */
 
 /* END CRITICAL window here -->>  kernel calls now allowed again            */
@@ -590,7 +581,7 @@ BOOL RegExternalFunction(
   else                               /* Bad rc from RexxCallFunction,     */
     reportException(Error_Routine_not_found_name, target);
 
-  return TRUE;                      /* Show what happened                */
+  return true;                      /* Show what happened                */
 }
 
 
@@ -614,14 +605,14 @@ RexxObject * SysExternalFunction(
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* count of arguments                */
   RexxString     * calltype,           /* Type of call                      */
-  BOOL           * foundFnc)
+  bool           * foundFnc)
 {
   RexxObject * result;                 /* Init function result to null      */
   //RXSTRING  funcresult;                /* Function result                 */
   //unsigned short functionrc;           /* Return code from function       */
   //char      default_return_buffer[10]; /* default return code buffer      */
 
-  *foundFnc = TRUE;
+  *foundFnc = true;
 
   if (!MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_PREORDER, &result)) {
                                        /* no luck try for a registered func */
@@ -633,7 +624,7 @@ RexxObject * SysExternalFunction(
                                        /* then raise an error               */
         if (!MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_POSTORDER, &result)) {
 //          reportException(Error_Routine_not_found_name, target);
-            *foundFnc = FALSE;
+            *foundFnc = false;
         }
       }
     }
@@ -654,7 +645,7 @@ RexxMethod * SysGetMacroCode(
   RexxMethod   * method = OREF_NULL;
 
   MacroImage.strptr = NULL;
-  if (RexxExecuteMacroFunction(const_cast<char *>(MacroName->getStringData()), &MacroImage) == 0)
+  if (RexxExecuteMacroFunction(MacroName->getStringData(), &MacroImage) == 0)
     method = SysRestoreProgramBuffer(&MacroImage, MacroName);
 
   /* On Windows we need to free the allocated buffer for the macro */

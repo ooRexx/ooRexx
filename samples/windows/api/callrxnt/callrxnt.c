@@ -51,22 +51,19 @@
 /*                                                                   */
 /*********************************************************************/
 
-#define INCL_REXXSAA
 #include <rexx.h>                      /* needed for RexxStart()     */
 #include <stdio.h>                     /* needed for printf()        */
 #include <string.h>                    /* needed for strlen()        */
 
-int main(void);                        /* main entry point           */
-
 int main()
-    {
-    RXSTRING arg;                       /* argument string for REXX  */
+{
+    CONSTRXSTRING arg;                  /* argument string for REXX  */
     RXSTRING rexxretval;                /* return value from REXX    */
 
-    UCHAR    *str = "These words will be swapped"; /* text to swap   */
+    char     *str = "These words will be swapped"; /* text to swap   */
 
     APIRET   rc;                        /* return code from REXX     */
-    SHORT    rexxrc = 0;                /* return code from function */
+    short    rexxrc = 0;                /* return code from function */
 
     printf("\nThis program will call the REXX interpreter ");
     printf("to reverse the order of the\n");
@@ -82,18 +79,16 @@ int main()
 
     MAKERXSTRING(arg, str, strlen(str));/* create input argument     */
 
-    /* Here we call the interpreter.  We don't really need to use    */
-    /* all the casts in this call; they just help illustrate         */
-    /* the data types used.                                          */
-    rc=RexxStart((LONG)      1,             /* number of arguments   */
-                (PRXSTRING)  &arg,          /* array of arguments    */
-                (PSZ)        "BACKWARD.FNC",/* name of REXX file     */
-                (PRXSTRING)  0,             /* No INSTORE used       */
-                (PSZ)        "FNC",         /* Command env. name     */
-                (LONG)       RXSUBROUTINE,  /* Code for how invoked  */
-                (PRXSYSEXIT) 0,             /* No EXITs on this call */
-                (PSHORT)     &rexxrc,       /* Rexx program output   */
-                (PRXSTRING)  &rexxretval ); /* Rexx program output   */
+    /* Here we call the interpreter.                                 */
+    rc=RexxStart(1,                         /* number of arguments   */
+                 &arg,                      /* array of arguments    */
+                 "BACKWARD.FNC",            /* name of REXX file     */
+                 0,                         /* No INSTORE used       */
+                 "FNC",                     /* Command env. name     */
+                 RXSUBROUTINE,              /* Code for how invoked  */
+                 0,                         /* No EXITs on this call */
+                 &rexxrc,                   /* Rexx program output   */
+                 &rexxretval );             /* Rexx program output   */
 
     printf("Interpreter Return Code: %d\n", rc);
     printf("Function Return Code:    %d\n", (int) rexxrc);
@@ -101,9 +96,8 @@ int main()
     printf("Backwards String:        '%s'\n", rexxretval.strptr);
 
     /* wait for RexxTerminate to be posted and closed */
-    RexxWaitForTermination();
-    GlobalFree(rexxretval.strptr);                /* Release storage       */
+    RexxFreeMemory(rexxretval.strptr);      /* Release storage       */
                                             /* given to us by REXX.  */
     system("PAUSE");
     return 0;
-    }
+}

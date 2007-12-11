@@ -38,22 +38,16 @@
 #include <signal.h>
 
 
-VOID Queue_Detach(ULONG);
-ULONG search_session();
-LONG  RxFreeMem(ULONG, ULONG, INT);
-LONG  RxAllocMem(PULONG, ULONG, INT);
-VOID detachall(INT);                      /* routine to detach all shared memory blocks  */
-VOID EnterMustComplete(VOID);
-VOID ExitMustComplete(VOID);
-VOID RxExitClear(int);
-ULONG RxAPIStartUp(INT);
-VOID RxAPICleanUp(INT, INT);
-LONG CheckForMemory();
-LONG RxFreeMemQue(ULONG, ULONG, INT, ULONG);
-LONG            RxAllocAPIBlock(PAPIBLOCK *,
-                                PSZ,
-                                PSZ,
-                                PSZ);
-
-void            RxFreeAPIBlock(ULONG,ULONG);
+void Queue_Detach(process_id_t);
+size_t search_session();
+int  RxFreeMem(size_t, size_t, int);
+int  RxAllocMem(size_t *, size_t, int);
+void detachall(int);                      /* routine to detach all shared memory blocks  */
+void RxExitClear(int);
+int RxAPIStartUp(int);
+void RxAPICleanUp(int, int);
+int  CheckForMemory();
+int  RxFreeMemQue(size_t, size_t, int, size_t);
+int  RxAllocAPIBlock(PAPIBLOCK *, const char *, const char *, const char *); 
+void RxFreeAPIBlock(size_t,size_t);
 

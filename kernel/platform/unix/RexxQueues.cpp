@@ -67,13 +67,13 @@
 RexxMethod0(REXXOBJECT, rexx_query_queue)
 {
    REXXOBJECT queue_name;              /* current queue name                */
-   unsigned long count = 0;            /* count of lines                    */
+   size_t count = 0;                   /* count of lines                    */
    APIRET rc;                          /* queue query return code           */
 
                                        /* get the queue name                */
-   queue_name = RexxVarValue("NAMED_QUEUE");
+   queue_name = ooRexxVarValue("NAMED_QUEUE");
                                        /* query the queue                   */
-   rc = RexxQueryQueue(const_cast<char *>(string_data(queue_name)), &count);
+   rc = RexxQueryQueue(string_data(queue_name), &count);
                                        /* return zero for any errors        */
    return rc ? IntegerZero : RexxInteger(count);
 }
@@ -84,25 +84,25 @@ RexxMethod0(REXXOBJECT, rexx_query_queue)
 RexxMethod0(REXXOBJECT, rexx_pull_queue)
 {
    RXSTRING buf;                       /* pulled line buffer                */
-   DATETIME dt;                        /* line time stamp                   */
+   REXXDATETIME dt;                    /* line time stamp                   */
    APIRET rc;                          /* pull return code                  */
    REXXOBJECT oref_buf;                /* returned string object            */
    REXXOBJECT queue_name;              /* current queue name                */
 
                                        /* get the queue name                */
-   queue_name = RexxVarValue("NAMED_QUEUE");
+   queue_name = ooRexxVarValue("NAMED_QUEUE");
 
    buf.strptr = NULL;                  /* ask for a returned buffer         */
    buf.strlength = 0;
                                        /* pull a line                       */
-   rc = RexxPullQueue(const_cast<char *>(string_data(queue_name)), &buf, &dt, RXQUEUE_NOWAIT);
+   rc = RexxPullQueue(string_data(queue_name), &buf, &dt, RXQUEUE_NOWAIT);
    if (!rc) {                          /* get a pulled line?                */
-     oref_buf = RexxStringL(buf.strptr, buf.strlength);
+     oref_buf = ooRexxStringL(buf.strptr, buf.strlength);
      if (buf.strptr > (char *)1)       /* have a queue item?             do */
                                        /* not free addr 00000001            */
 
                                        /* free the buffer item              */
-       SysReleaseResultMemory(buf.strptr);
+       RexxFreeMemory(buf.strptr);
      return oref_buf;                  /* return the item                   */
    }
    return TheNilObject;                /* give back a failure               */
@@ -114,24 +114,24 @@ RexxMethod0(REXXOBJECT, rexx_pull_queue)
 RexxMethod0(REXXOBJECT, rexx_linein_queue)
 {
    RXSTRING buf;                       /* pulled line buffer                */
-   DATETIME dt;                        /* line time stamp                   */
+   REXXDATETIME dt;                    /* line time stamp                   */
    APIRET rc;                          /* pull return code                  */
    REXXOBJECT oref_buf;                /* returned string object            */
    REXXOBJECT queue_name;              /* current queue name                */
 
                                        /* get the queue name                */
-   queue_name = RexxVarValue("NAMED_QUEUE");
+   queue_name = ooRexxVarValue("NAMED_QUEUE");
 
    buf.strptr = NULL;                  /* ask for a returned buffer         */
    buf.strlength = 0;
                                        /* pull a line                       */
-   rc = RexxPullQueue(const_cast<char *>(string_data(queue_name)), &buf, &dt, RXQUEUE_WAIT);
+   rc = RexxPullQueue(string_data(queue_name), &buf, &dt, RXQUEUE_WAIT);
 
    if (!rc) {                          /* get a pulled line?                */
-     oref_buf = RexxStringL(buf.strptr, buf.strlength);
+     oref_buf = ooRexxStringL(buf.strptr, buf.strlength);
      if (buf.strptr)                   /* have a queue item?                */
                                        /* free the buffer item              */
-       SysReleaseResultMemory(buf.strptr);
+       RexxFreeMemory(buf.strptr);
      return oref_buf;                  /* return the item                   */
    }
    return TheNilObject;                /* give back a failure               */
@@ -140,32 +140,32 @@ RexxMethod0(REXXOBJECT, rexx_linein_queue)
 /*****************************************************************************/
 /* add a line to a rexx queue                                                */
 /*****************************************************************************/
-long rexx_add_queue(
+int  rexx_add_queue(
   REXXOBJECT  queue_line,              /* line to add                       */
   int         order )                  /* queuing order                     */
 {
-   RXSTRING rx_string;                 /* rxstring to return                */
+   CONSTRXSTRING rx_string;            /* rxstring to return                */
    APIRET rc;                          /* queue return code                 */
    REXXOBJECT queue_name;              /* current queue name                */
 
    if (queue_line == NULLOBJECT)       /* no line given?                    */
      queue_line = OREF_NULLSTRING;     /* just add a null line              */
                                        /* get the queue name                */
-   queue_name = RexxVarValue("NAMED_QUEUE");
+   queue_name = ooRexxVarValue("NAMED_QUEUE");
                                        /*  move the info to rxstring        */
-   rx_string.strptr = const_cast<char *>(string_data(queue_line));
+   rx_string.strptr = string_data(queue_line);
    rx_string.strlength = string_length(queue_line);
                                        /*  move the line to the queue       */
-   rc = RexxAddQueue(const_cast<char *>(string_data(queue_name)), &rx_string, order);
+   rc = RexxAddQueue(string_data(queue_name), &rx_string, order);
    if (rc != 0)                        /* stream error?                     */
-     send_exception1(Error_System_service_service, RexxArray1(RexxString("SYSTEM QUEUE")));
+     send_exception1(Error_System_service_service, ooRexxArray1(ooRexxString("SYSTEM QUEUE")));
    return rc;                          /* return the result                 */
 }
 
 /****************************************************************************/
 /* Rexx_push_queue                                                          */
 /****************************************************************************/
-RexxMethod1(long, rexx_push_queue,
+RexxMethod1(int, rexx_push_queue,
    REXXOBJECT, queue_line)             /* line to queue                     */
 {
                                        /* push a line onto the queue        */
@@ -175,7 +175,7 @@ RexxMethod1(long, rexx_push_queue,
 /*****************************************************************************/
 /* Rexx_queue_queue                                                          */
 /*****************************************************************************/
-RexxMethod1(long, rexx_queue_queue,
+RexxMethod1(int, rexx_queue_queue,
    REXXOBJECT, queue_line)             /* line to queue                     */
 {
                                        /* queue a line onto the queue       */
@@ -190,13 +190,13 @@ RexxMethod1(REXXOBJECT, rexx_create_queue,
 {
    char buf[name_parameter_length+1];  /* creation buffer                   */
    APIRET rc;                          /* creation return code              */
-   unsigned long dup_flag = 0;         /* duplicate name flag               */
+   size_t dup_flag = 0;                /* duplicate name flag               */
 
                                        /* create a queue                    */
-   rc = RexxCreateQueue((char *)buf, sizeof(buf), const_cast<char *>(queue_name), &dup_flag);
+   rc = RexxCreateQueue(buf, sizeof(buf), queue_name, &dup_flag);
 
    if (!rc)                            /* work ok?                          */
-     return RexxString(buf);           /* return the created name           */
+     return ooRexxString(buf);         /* return the created name           */
 
    return OREF_NULLSTRING;             /* just return a null string         */
 }
@@ -204,11 +204,11 @@ RexxMethod1(REXXOBJECT, rexx_create_queue,
 /****************************************************************************/
 /* Rexx_delete_queue                                                        */
 /****************************************************************************/
-RexxMethod1(long, rexx_delete_queue,
+RexxMethod1(int, rexx_delete_queue,
   CSTRING, queue_name)
 {
                                        /* just delete the queue             */
-  return RexxDeleteQueue(const_cast<char *>(queue_name));
+  return RexxDeleteQueue(queue_name);
 }
 
 /********************************************************************************************/

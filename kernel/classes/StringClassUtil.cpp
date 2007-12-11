@@ -50,54 +50,52 @@
 #include "RexxBuiltinFunctions.h"                     /* include BIF util prototype/macros */
 #include "ActivityManager.hpp"
 
+
 /******************************************************************************/
 /* Function:   Take in an agument passed to a method, convert it to a length  */
 /*               object, verifying that the number is a non-negative value.   */
 /*               If the argument is omitted, an error is raised.              */
 /******************************************************************************/
-size_t get_length(
+stringsize_t get_length(
     RexxObject * argument,             /* input argument                    */
     size_t position )                  /* position of the argument          */
 {
- LONG   value;                         /* converted number value            */
+    if (argument == OREF_NULL)            /* have a real argument?             */
+    {
+        missing_argument(position);         /* raise an error                    */
+    }
+    stringsize_t    value;                /* converted number value            */
 
- if (argument == OREF_NULL)            /* have a real argument?             */
-   missing_argument(position);         /* raise an error                    */
- if (isOfClass(Integer, argument))         /* already an integer?               */
-                                       /* get this directly                 */
-   value = ((RexxInteger *)argument)->getValue();
- else
-                                       /* convert the length                */
-   value = REQUIRED_LONG(argument, Numerics::DEFAULT_DIGITS, position);
- if (value < 0)                        /* not a good length argument?       */
-                                       /* this is an error                  */
-   reportException(Error_Incorrect_method_length, argument);
- return (size_t)value;                 /* return converted value            */
+    if (!argument->unsignedNumberValue(value))
+    {
+        /* raise the error                   */
+        reportException(Error_Incorrect_method_length, argument);
+    }
+    return value;
 }
+
 
 /******************************************************************************/
 /* Function:   Take in an agument passed to a method, convert it to a position*/
 /*               value, verifying that the number is a positive value.        */
 /*               If the argument is omitted, an error is raised.              */
 /******************************************************************************/
-size_t get_position(
+stringsize_t get_position(
     RexxObject *argument,              /* input argument                    */
     size_t position )                  /* position of the argument          */
 {
- LONG   value;                         /* converted number value            */
+    if (argument == OREF_NULL)            /* have a real argument?             */
+    {
+        missing_argument(position);         /* raise an error                    */
+    }
+    stringsize_t    value;                /* converted number value            */
 
- if (argument == OREF_NULL)            /* have a real argument?             */
-   missing_argument(position);         /* raise an error                    */
- if (isOfClass(Integer, argument))         /* already an integer?               */
-                                       /* get this directly                 */
-   value = ((RexxInteger *)argument)->getValue();
- else
-                                       /* convert the length                */
-   value = REQUIRED_LONG(argument, Numerics::DEFAULT_DIGITS, position);
- if (value <= 0)                       /* not a good position argument?     */
-                                       /* this is an error                  */
-   reportException(Error_Incorrect_method_position, argument);
- return (size_t)value;                 /* return converted value            */
+    if (!argument->unsignedNumberValue(value) || value == 0)
+    {
+        /* raise the error                   */
+        reportException(Error_Incorrect_method_position, argument);
+    }
+    return value;
 }
 
 /******************************************************************************/

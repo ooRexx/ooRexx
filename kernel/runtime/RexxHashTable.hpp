@@ -54,6 +54,9 @@ typedef size_t HashLink;
   HashLink next;                       /* next item in overflow bucket      */
  } TABENTRY;
 
+ class RexxHashTableCollection;
+ class RexxTable;
+
  class RexxHashTable : public RexxInternalObject {
   public:
    enum

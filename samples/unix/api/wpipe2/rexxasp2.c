@@ -49,8 +49,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define  INCL_REXXSAA
-#define  INCL_DOSMEMMGR
 #include <rexx.h>
 
 /*********************************************************************/
@@ -70,7 +68,7 @@ extern "C" {
 /*   Array of names of the REXXASPI functions.                       */
 /*   This list is used for registration and deregistration.          */
 /*********************************************************************/
-static PSZ  AspiFncTable[] =
+static const char *AspiFncTable[] =
    {
       "AspiDeregFunc2",
       "Aspi_Fill_REXX_Variable_Pool"
@@ -87,23 +85,22 @@ static PSZ  AspiFncTable[] =
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY AspiLoadFuncs2(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY AspiLoadFuncs2(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT    entries;                      /* Num of entries             */
-  INT    j;                            /* Counter                    */
+  int    entries;                      /* Num of entries             */
+  int    j;                            /* Counter                    */
 
 
-  entries = sizeof(AspiFncTable)/sizeof(PSZ);
+  entries = sizeof(AspiFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
   {
-    RexxRegisterFunctionDll(AspiFncTable[j],
-          "rexxasp2", AspiFncTable[j]);
+    RexxRegisterFunctionDll(AspiFncTable[j], "rexxasp2", AspiFncTable[j]);
   }
   return VALID_ROUTINE;
 }
@@ -119,15 +116,15 @@ LONG APIENTRY AspiLoadFuncs2(
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY AspiDeregFunc2(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY AspiDeregFunc2(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT    entries;                      /* Num of entries             */
-  INT    j;                            /* Counter                    */
+  int    entries;                      /* Num of entries             */
+  int    j;                            /* Counter                    */
 
   retstr->strlength = 0;               /* set return value           */
 
@@ -135,7 +132,7 @@ LONG APIENTRY AspiDeregFunc2(
     return INVALID_ROUTINE;
 
 
-  entries = sizeof(AspiFncTable)/sizeof(PSZ);
+  entries = sizeof(AspiFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
   {
@@ -155,12 +152,12 @@ LONG APIENTRY AspiDeregFunc2(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-LONG APIENTRY Aspi_Fill_REXX_Variable_Pool(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY Aspi_Fill_REXX_Variable_Pool(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   char   *outbuf = NULL;
   char   *ptr;

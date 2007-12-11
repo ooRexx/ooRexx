@@ -55,7 +55,7 @@
 
 #define BUFFERLEN         256          /* Length of message bufs used       */
 
-extern "C" APIRET APIENTRY RexxTranslateProgram(char *, char *, PRXSYSEXIT);
+extern "C" APIRET APIENTRY RexxTranslateProgram(const char *, const char *, PRXSYSEXIT);
 extern "C" char * APIENTRY RexxGetVersionInformation();
 
 void DisplayError(HINSTANCE hDll, int err_no)
@@ -68,7 +68,7 @@ void DisplayError(HINSTANCE hDll, int err_no)
 }
 
 
-int SysCallV main(int argc, char **argv)
+int SysCall main(int argc, char **argv)
 {
   char fn[2][BUFFERLEN];
   int  silent = 0;

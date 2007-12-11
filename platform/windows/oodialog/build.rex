@@ -52,9 +52,9 @@ if outname~wordpos("OODWIN32.CLS") > 0 | outname~wordpos("OODIALOG.CLS") > 0 | o
 end
 outdir = "..\"
 p = time('R')
-say '----------------------------------------------------------------'
-say 'OOdialog build started                  ' time() 'on' date()
-say '----------------------------------------------------------------'
+-- say '----------------------------------------------------------------'
+-- say 'OOdialog build started                  ' time() 'on' date()
+-- say '----------------------------------------------------------------'
 Arrax = .CheckArray~of("OODUTILS.CLS", "PLBDLG.CLS","DYNDLG.CLS","PLUDLG.CLS","STDDLG.CLS",,
           "DLGEXT.CLS", "DLGAREA.CLS", "BASEDLG.CLS","RESDLG.CLS","USERDLG.CLS","CATDLG.CLS","ANIBUTTN.CLS",,
           "ADVCTRL.CLS","MSGEXT.CLS", "STDEXT.CLS", "PROPSHT.CLS")
@@ -83,10 +83,10 @@ NewFile~close
 
 "rexxc" outname outdir||outname "/s"
 
-say '----------------------------------------------------------------'
-say 'Build ended after: ' time('E') 'sec  ' ' at:' time() 'on' date()
-say '----------------------------------------------------------------'
-say
+-- say '----------------------------------------------------------------'
+-- say 'Build ended after: ' time('E') 'sec  ' ' at:' time() 'on' date()
+-- say '----------------------------------------------------------------'
+-- say
 if (rc = 0) then say outdir||outname "should be used as the ::Requires file."
 
 exit

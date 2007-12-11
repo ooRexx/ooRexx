@@ -58,7 +58,7 @@
 
 enum { STOP, START };
 
-void SysRunProgram(PVOID arguments);   /* system dependent program startup  */
+void SysRunProgram(void *arguments);   /* system dependent program startup  */
 
 
 RexxDirectory *RexxLocal::local()

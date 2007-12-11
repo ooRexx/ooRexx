@@ -95,7 +95,7 @@ void *RexxBuffer::operator new(size_t size,
 
 #define this ((RexxBuffer *)self)
 
-native0 (char *, BUFFER_ADDRESS)
+char *REXXENTRY REXX_BUFFER_ADDRESS(REXXOBJECT self)
 /******************************************************************************/
 /* Function:  External interface to the object method                         */
 /******************************************************************************/
@@ -106,7 +106,7 @@ native0 (char *, BUFFER_ADDRESS)
   return this->address();              /* just return this directly         */
 }
 
-native0 (size_t, BUFFER_LENGTH)
+size_t REXXENTRY REXX_BUFFER_LENGTH(REXXOBJECT self)
 /******************************************************************************/
 /* Function:  External interface to the object method                         */
 /******************************************************************************/
@@ -117,8 +117,7 @@ native0 (size_t, BUFFER_LENGTH)
   return this->getLength();               /* just return this directly         */
 }
 
-native1 (REXXOBJECT, BUFFER_EXTEND,
-    size_t, length )                   /* new buffer length                 */
+REXXOBJECT REXXENTRY REXX_BUFFER_EXTEND(REXXOBJECT self, size_t length)
 /******************************************************************************/
 /* Function:  Extend the length of a buffer                                   */
 /******************************************************************************/
@@ -130,7 +129,7 @@ native1 (REXXOBJECT, BUFFER_EXTEND,
 
 #undef RexxBuffer
 
-nativei1 (REXXOBJECT, BUFFER_NEW, size_t, length)
+REXXOBJECT REXXENTRY REXX_BUFFER_NEW(size_t length)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/

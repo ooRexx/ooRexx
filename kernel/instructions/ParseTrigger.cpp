@@ -53,7 +53,7 @@
 RexxTrigger::RexxTrigger(
     int        type,                    /* type of trigger                   */
     RexxObject *_value,                 /* value to evaluatate               */
-    LONG        _variableCount,         /* count of variables                */
+    size_t      _variableCount,         /* count of variables                */
     RexxQueue  *_variables)             /* array of trigger variables        */
 /******************************************************************************/
 /* Function:  Initialize a parse trigger translator object                    */
@@ -68,19 +68,20 @@ RexxTrigger::RexxTrigger(
 }
 
 
-long RexxTrigger::integerTrigger(
+stringsize_t RexxTrigger::integerTrigger(
     RexxObject *trigger)               /* value to be converted             */
 /******************************************************************************/
 /* Function:  Convert a trigger value to an integer, with appopriate error    */
 /*            reporting.                                                      */
 /******************************************************************************/
 {
-  LONG       result;                   /* converted result                  */
+  stringsize_t result;                 /* converted result                  */
                                        /* convert the value                 */
-  result = REQUEST_LONG(trigger, NO_LONG);
-  if (result == (long)NO_LONG || result < 0) /* bad value or negative?            */
+  if (!trigger->requestUnsignedNumber(result, number_digits()))
+  {
                                        /* report an exception               */
-    reportException(Error_Invalid_whole_number_parse, trigger);
+      reportException(Error_Invalid_whole_number_parse, trigger);
+  }
   return result;                       /* finished                          */
 }
 
@@ -107,7 +108,7 @@ void RexxTrigger::parse(
 {
   RexxObject       *_value = OREF_NULL;/* evaluated trigger part            */
   RexxString       *stringvalue;       /* new string value                  */
-  LONG              integer;           /* target integer value              */
+  stringsize_t      integer;           /* target integer value              */
   size_t            i;                 /* loop counter                      */
   size_t            size;              /* size of variables array           */
   RexxVariableBase *variable;          /* current variable processing       */

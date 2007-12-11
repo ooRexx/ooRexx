@@ -62,8 +62,8 @@ APIBLOCK *dllsearch(PSZ, PSZ, LONG );
 extern __declspec(dllexport) LONG APIexecheck(PSZ, LONG, DWORD );
 extern __declspec(dllexport) LONG APIdllcheck(PAPIBLOCK, LONG);
 extern __declspec(dllexport) LONG APIregdrop(PSZ, PSZ, LONG, DWORD );
-extern __declspec(dllexport) LONG addPID(PAPIBLOCK, PID);
-extern __declspec(dllexport) LONG removePID(PAPIBLOCK, PID);
+extern __declspec(dllexport) LONG addPID(PAPIBLOCK, process_id_t);
+extern __declspec(dllexport) LONG removePID(PAPIBLOCK, process_id_t);
 
 #define PIDCMP(x)    (((x)->apipid==GetCurrentProcessId()))
 #define  REGSUBCOMM    0
@@ -84,13 +84,13 @@ extern _declspec(dllexport) CRITICAL_SECTION nest; /* must complete nest count  
 /*                                                                   */
 /*********************************************************************/
 
-VOID  memupper(location, length)
-  PUCHAR   location;                   /* location to uppercase      */
-  ULONG    length;                     /* length to uppercase        */
+void  memupper(
+  char    *location,                   /* location to uppercase      */
+  size_t   length)                     /* length to uppercase        */
 {
   for (; length--; location++)         /* loop for entire string     */
                                        /* uppercase in place         */
-    *location = upper_case_table[*location];
+    *location = toupper(*location);
 }
 
 
@@ -133,31 +133,6 @@ INT rxmemicmp(
     return 0;
 }
 
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   rxstricmp                                    */
-/*                                                                   */
-/*   Descriptive Name:  case insensitive string compare              */
-/*                                                                   */
-/*   Entry Point:       rxstricmp                                    */
-/*                                                                   */
-/*   Input:             pointers to two ASCII strings                */
-/*                                                                   */
-/*********************************************************************/
-int rxstricmp(
-  char *    s1,                        /* first string location      */
-  char *    s2 )                       /* second string location     */
-{
-  while ( 1 ) {
-    if ( ( tolower(*s1) != tolower(*s2) ) || !*s1 )
-      break;
-
-    ++s1;
-    ++s2;
-  }
-
-  return ( (int)tolower(*s1) - (int)tolower(*s2) );
-}
 
 /*********************************************************************/
 /*                                                                   */
@@ -170,16 +145,16 @@ int rxstricmp(
 /*   Input:             pointer to APIBLOCK and PID                  */
 /*                                                                   */
 /*********************************************************************/
-LONG addPID(PAPIBLOCK cblock, PID processID) {
+LONG addPID(PAPIBLOCK cblock, process_id_t processID) {
   ULONG index = 0;
-  PID   *tempptr;
+  process_id_t   *tempptr;
 
   if (cblock->pUserPIDs == NULL) {     /* first addition?            */
     cblock->uPIDBlockSize = 2;
-    cblock->pUserPIDs = (PID*) GlobalAlloc(GPTR, cblock->uPIDBlockSize*sizeof(PID));
+    cblock->pUserPIDs = (process_id_t*) GlobalAlloc(GPTR, cblock->uPIDBlockSize*sizeof(process_id_t));
   }
 
-  while (index < cblock->uPIDBlockSize && cblock->pUserPIDs[index] != (PID) 0) {
+  while (index < cblock->uPIDBlockSize && cblock->pUserPIDs[index] != (process_id_t) 0) {
     if (cblock->pUserPIDs[index] == processID) {
                                       /* already on the list, return*/
       return RXSUBCOM_NOTREG;         /* immediately                */
@@ -188,8 +163,8 @@ LONG addPID(PAPIBLOCK cblock, PID processID) {
   }
   if (index == cblock->uPIDBlockSize){/* array too small? enlarge   */
     cblock->uPIDBlockSize *= 2;
-    tempptr = (PID*) GlobalAlloc(GPTR, cblock->uPIDBlockSize*sizeof(PID));
-    memcpy(tempptr, cblock->pUserPIDs, (cblock->uPIDBlockSize/2)*sizeof(PID));
+    tempptr = (process_id_t*) GlobalAlloc(GPTR, cblock->uPIDBlockSize*sizeof(process_id_t));
+    memcpy(tempptr, cblock->pUserPIDs, (cblock->uPIDBlockSize/2)*sizeof(process_id_t));
     GlobalFree(cblock->pUserPIDs);
     cblock->pUserPIDs = tempptr;
   }
@@ -209,7 +184,7 @@ LONG addPID(PAPIBLOCK cblock, PID processID) {
 /*   Input:             pointer to APIBLOCK and PID                  */
 /*                                                                   */
 /*********************************************************************/
-LONG removePID(PAPIBLOCK cblock, PID processID) {
+LONG removePID(PAPIBLOCK cblock, process_id_t processID) {
   LONG  retval = 0;                    /* 2 if found                 */
                                        /* 1 if found and block can be*/
                                        /*                removed     */
@@ -228,14 +203,14 @@ LONG removePID(PAPIBLOCK cblock, PID processID) {
     retval = 2;
                                        /* remove in the middle?      */
     if (index < (cblock->uPIDBlockSize-1)) {
-      memmove(cblock->pUserPIDs + index, cblock->pUserPIDs + index + 1, (cblock->uPIDBlockSize - index - 1)*sizeof(PID));
+      memmove(cblock->pUserPIDs + index, cblock->pUserPIDs + index + 1, (cblock->uPIDBlockSize - index - 1)*sizeof(process_id_t));
       if ((index+1) == (cblock->uPIDBlockSize-1)) {
                                        /* set final entry to zero    */
-        cblock->pUserPIDs[index+1] = (PID) 0;
+        cblock->pUserPIDs[index+1] = (process_id_t) 0;
       }
     } else {
                                        /* set entry to zero (at end) */
-      cblock->pUserPIDs[index] = (PID) 0;
+      cblock->pUserPIDs[index] = (process_id_t) 0;
     }
   }
   /* this code is currently disabled
@@ -272,7 +247,7 @@ LONG removePID(PAPIBLOCK cblock, PID processID) {
     }
   } */
 
-  if (cblock->pUserPIDs[0] == (PID) 0) {
+  if (cblock->pUserPIDs[0] == (process_id_t) 0) {
     retval = 1; // block can be freed completely
     GlobalFree(cblock->pUserPIDs);
     cblock->pUserPIDs = NULL;
@@ -365,9 +340,9 @@ APIBLOCK *exesearch(                   /* Function Declaration.      */
   cblock = RX.baseblock[type];         /* Working ptr, current block */
 
   while (cblock) {                     /* Run through the list       */
-    if ((PID)pid == cblock->apipid ) {
+    if ((process_id_t)pid == cblock->apipid ) {
                                        /* Comp name with passed name */
-    if((!rxstricmp(APIBLOCKNAME(cblock),name)) &&
+    if((!_stricmp(APIBLOCKNAME(cblock),name)) &&
         !APIBLOCKDLLNAME(cblock)) {    /* and not a dll              */
       if (previous) {                  /* if not at front            */
         previous->next =               /* rearrange the chain to move*/
@@ -429,10 +404,10 @@ APIBLOCK *dllsearch(
     if(((APIBLOCKDLLPROC(cblock))&&    /* If no proc name, is .exe   */
         (strlen(APIBLOCKDLLPROC(cblock))))&& /* which we don't want. */
                                        /* If environment names match */
-       (!rxstricmp(APIBLOCKNAME(cblock),name))
+       (!_stricmp(APIBLOCKNAME(cblock),name))
         && (!dll[0]                    /* And passed dll name is NULL*/
         || (APIBLOCKDLLNAME(cblock)    /* Or exists a stored dll name*/
-        && (!rxstricmp(APIBLOCKDLLNAME(cblock), /* And               */
+        && (!_stricmp(APIBLOCKDLLNAME(cblock), /* And               */
         dll))                          /* it matches the passed one  */
         ))) {                          /* Then                       */
       if (previous) {                  /* if not at front            */
@@ -481,10 +456,10 @@ LONG APIexecheck(
 
   cblock = RX.baseblock[type];         /* Working ptr, current block*/
   while (cblock) {                     /* Run through the list       */
-    if (!rxstricmp(APIBLOCKNAME(cblock), /* Comp name w/ passed name */
+    if (!_stricmp(APIBLOCKNAME(cblock), /* Comp name w/ passed name */
         name)) {                       /* if found a matching name   */
       if (!APIBLOCKDLLNAME(cblock)) {  /* if not a dll type and      */
-        if ((PID)pid == cblock->apipid){ /* matching process info    */
+        if ((process_id_t)pid == cblock->apipid){ /* matching process info    */
           rc = RXSUBCOM_NOTREG;        /* then must be registered &  */
                                        /* cannot be re-registered    */
           cblock = NULL;               /* so force a quick end.      */
@@ -530,11 +505,11 @@ LONG APIdllcheck(
   PAPIBLOCK cblock = RX.baseblock[type];/* Working ptr, current block */
 
   while (cblock) {                     /* While another block        */
-    if (!rxstricmp(APIBLOCKNAME(cblock), /* Com name with passed name*/
+    if (!_stricmp(APIBLOCKNAME(cblock), /* Com name with passed name*/
         name)) {                       /* if found a matching name   */
       rc = RXSUBCOM_DUP;               /* then set the duplicate rc  */
                                        /* if a registered dll name & */
-      if ((APIBLOCKDLLNAME(cblock)) && (!rxstricmp((APIBLOCKDLLNAME(cblock)),dllname)))
+      if ((APIBLOCKDLLNAME(cblock)) && (!_stricmp((APIBLOCKDLLNAME(cblock)),dllname)))
       {                                /* it matches the dll name passed in */
         rc = RXSUBCOM_NOTREG;          /* then set appropiate rc     */
         if (type != REGSUBCOMM) {
@@ -586,13 +561,13 @@ LONG  APIregdrop(
     dll = NULL;                        /* make it really null        */
 
   while (cblock != NULL) {
-   if ((!rxstricmp(APIBLOCKNAME(cblock), name) &&
+   if ((!_stricmp(APIBLOCKNAME(cblock), name) &&
        (!dll)) ||
        (APIBLOCKDLLNAME(cblock) && dll &&
-        !rxstricmp(APIBLOCKDLLNAME(cblock), dll))) {
+        !_stricmp(APIBLOCKDLLNAME(cblock), dll))) {
      if (!cblock->apidrop_auth ||
          (cblock->apidrop_auth == 1 &&
-          cblock->apipid == (PID)pid   )) {
+          cblock->apipid == (process_id_t)pid   )) {
        EnterCriticalSection(&nest);
 
        if (type != REGSUBCOMM) {

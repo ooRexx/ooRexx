@@ -190,15 +190,15 @@ int CallRexx(HWND hwnd)
    /* Here we call the interpreter.  We don't really need to use     */
    /* all the casts in this call; they just help illustrate          */
    /* the data types used.                                           */
-   rc=RexxStart((LONG)     1,          /* number of arguments        */
-               (PRXSTRING) &arg,       /* array of arguments         */
-               (PSZ)    "BACKWARD.FNC",/* name of REXX file          */
-               (PRXSTRING )0,          /* No INSTORE used            */
-               (PSZ)      "FNC",       /* Command env. name          */
-               (LONG)     RXSUBROUTINE,/* Code for how invoked       */
-               (PRXSYSEXIT)exitlist,   /* No EXITs on this call      */
-               (PSHORT)   &rexxrc,     /* Rexx program output        */
-               (PRXSTRING)&rexxretval);/* Rexx program output        */
+   rc=RexxStart(1,               /* number of arguments        */
+                &arg,            /* array of arguments         */
+                "BACKWARD.FNC",  /* name of REXX file          */
+                0,               /* No INSTORE used            */
+                "FNC",           /* Command env. name          */
+                RXSUBROUTINE,    /* Code for how invoked       */
+                exitlist,        /* No EXITs on this call      */
+                &rexxrc,         /* Rexx program output        */
+                &rexxretval);    /* Rexx program output        */
 
                                        /* send rc info to dialog box */
    wsprintf (chTxtBuffer," %s    %d", "Interpreter Return Code: ", rc);
@@ -213,9 +213,7 @@ int CallRexx(HWND hwnd)
    wsprintf (chTxtBuffer," %s   '%s' ", "Backwards String: ", rexxretval.strptr);
    SendDlgItemMessage (hwnd, DID_LISTBOX, LB_ADDSTRING, 0, (LONG)chTxtBuffer);
 
-   /* wait for RexxTerminate to be posted and closed */
-   RexxWaitForTermination();
-   GlobalFree(rexxretval.strptr);      /* Release storage            */
+   RexxFreeMemory(rexxretval.strptr);  /* Release storage            */
                                        /* given to us by REXX.       */
                                        /* remove the exit            */
    RexxDeregisterExit("RexxIOExit",NULL);

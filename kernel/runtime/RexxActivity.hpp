@@ -54,10 +54,35 @@
 
 
 class ProtectedObject;                 // needed for look aheads
+class RexxSource;
+
                                        /* interface values for the          */
                                        /* activity_queue method             */
 #define QUEUE_FIFO 1
 #define QUEUE_LIFO 2
+
+/******************************************************************************/
+/* Constants used for trace prefixes                                          */
+/******************************************************************************/
+
+enum TracePrefixes {
+    TRACE_PREFIX_CLAUSE   ,
+    TRACE_PREFIX_ERROR    ,
+    TRACE_PREFIX_RESULT   ,
+    TRACE_PREFIX_DUMMY    ,
+    TRACE_PREFIX_VARIABLE ,
+    TRACE_PREFIX_DOTVARIABLE ,
+    TRACE_PREFIX_LITERAL  ,
+    TRACE_PREFIX_FUNCTION ,
+    TRACE_PREFIX_PREFIX   ,
+    TRACE_PREFIX_OPERATOR ,
+    TRACE_PREFIX_COMPOUND ,
+    TRACE_PREFIX_MESSAGE  ,
+    TRACE_PREFIX_ARGUMENT ,
+};
+
+#define MAX_TRACEBACK_LIST 80      /* 40 messages are displayed */
+#define MAX_TRACEBACK_INDENT 20    /* 10 messages are indented */
 
 
 typedef enum
@@ -90,8 +115,6 @@ typedef enum
 extern SMTX rexx_resource_semaphore;   /* global kernel semaphore           */
 
 extern SEV    rexxTimeSliceSemaphore;
-extern ULONG  RexxTimeSliceTimer;
-extern ULONG  rexxTimeSliceTimerOwner;
 
                                        /* information must be saved and     */
                                        /* restored on nested entries to the */
@@ -130,7 +153,7 @@ public:
 
 
    void runThread();
-   long error(size_t);
+   wholenumber_t error(size_t);
    bool        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, RexxDirectory *);
    void        raiseException(wholenumber_t, SourceLocation *, RexxSource *, RexxString *, RexxArray *, RexxObject *);
    void        reportAnException(wholenumber_t, const char *);
@@ -184,8 +207,8 @@ public:
    void        checkStackSpace();
    void        terminateActivity();
    RexxObject *localMethod();
-   long threadIdMethod();
-   bool isThread(long id) { return threadid == id; }
+   thread_id_t threadIdMethod();
+   bool isThread(thread_id_t id) { return threadid == id; }
    void setShvVal(RexxString *);
    inline bool isClauseExitUsed() { return this->nestedInfo.clauseExitUsed; }
    void queryTrcHlt();
@@ -245,7 +268,7 @@ public:
    inline void setSysExit(long exitNum, RexxString *exitName) { this->nestedInfo.sysexits[exitNum -1] = exitName;}
    inline RexxString *querySysExits(long exitNum) {return this->nestedInfo.sysexits[exitNum -1];}
    inline RexxString **getSysExits() {return this->nestedInfo.sysexits;}
-   inline void clearExits() { memset((PVOID)&this->nestedInfo.sysexits, 0, sizeof(this->nestedInfo.sysexits)); }
+   inline void clearExits() { memset((void *)&this->nestedInfo.sysexits, 0, sizeof(this->nestedInfo.sysexits)); }
    inline void saveNestedInfo(NestedActivityState &saveInfo) { saveInfo = nestedInfo; }
    inline void restoreNestedInfo(NestedActivityState &saveInfo) { nestedInfo = saveInfo; }
    inline bool useExitObjects() { return exitObjects; }
@@ -295,7 +318,7 @@ public:
    SEV      runsem;                    /* activity run control semaphore    */
    size_t   size;                      /* size of activation stack          */
    size_t   depth;                     /* depth of activation stack         */
-   LONG     threadid;                  /* thread id                         */
+   thread_id_t threadid;               /* thread id                         */
    NumericSettings *numericSettings;   /* current activation setting values */
 
    int      priority;                  /* activity priority value           */

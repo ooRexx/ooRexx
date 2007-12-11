@@ -58,7 +58,7 @@ RexxInstructionParse::RexxInstructionParse(
   RexxObject *_expression,             /* string expression source          */
   unsigned short string_source,        /* source of the parsed string       */
   size_t      flags,                   /* option flags                      */
-  LONG        templateCount,           /* count of template items           */
+  size_t      templateCount,           /* count of template items           */
   RexxQueue  *parse_template )         /* parsing template array            */
 /******************************************************************************/
 /* Function:  Complete parse instruction initialization                       */
@@ -87,11 +87,11 @@ void RexxInstructionParse::execute(
   RexxTarget        target;            /* created target value              */
   RexxTrigger      *trigger;           /* current trigger                   */
   size_t            size;              /* size of template array            */
-  BOOL              multiple;          /* processing an argument list       */
+  bool              multiple;          /* processing an argument list       */
   size_t            i;                 /* loop counter                      */
 
   context->traceInstruction(this);     /* trace if necessary                */
-  multiple = FALSE;                    /* default to no argument list       */
+  multiple = false;                    /* default to no argument list       */
   value = OREF_NULLSTRING;             /* no value yet                      */
   argList = OREF_NULL;                 /* neither is there an argument list */
   argCount = 0;
@@ -111,7 +111,7 @@ void RexxInstructionParse::execute(
       break;
 
     case SUBKEY_ARG:                   /* PARSE ARG instruction             */
-      multiple = TRUE;                 /* have an argument list             */
+      multiple = true;                 /* have an argument list             */
       /* get the current argument list     */
       argList = context->getMethodArgumentList();
       argCount = context->getMethodArgumentCount();
@@ -150,7 +150,7 @@ void RexxInstructionParse::execute(
       break;
   }
                                        /* create the parse target           */
-  target.init(value, argList, argCount, instructionFlags&parse_translate, multiple, context, stack);
+  target.init(value, argList, argCount, (instructionFlags&parse_translate) != 0, multiple, context, stack);
 
   size = this->trigger_count;          /* get the template size             */
   for (i = 0; i < size; i++) {         /* loop through the template list    */

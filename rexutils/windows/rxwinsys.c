@@ -864,8 +864,7 @@ BOOL ProgmanCmd(LPSTR lpszCmd)
     DdeDisconnect(hConv);
     DdeUninitialize(dwDDEInst);
 
-    if (!exRes) return FALSE;
-    return TRUE;
+    return exRes != 0;
 }
 
 
@@ -2215,7 +2214,7 @@ ULONG APIENTRY WSEventLog(
 
                //get time and date
                //DateTime = localtime(&pEvLogRecord->TimeGenerated);   // convert to local time
-               DateTime = localtime(&pEvLogRecord->TimeWritten);   // convert to local time
+               DateTime = localtime((const time_t *)&pEvLogRecord->TimeWritten);   // convert to local time
                strftime(date, MAX_TIME_DATE,"%x", DateTime);
                strftime(time, MAX_TIME_DATE,"%X", DateTime);
 

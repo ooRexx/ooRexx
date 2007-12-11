@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  TableClass.hpp   */
+/* REXX Kernel                                               TableClass.hpp   */
 /*                                                                            */
 /* Primitive Table Collection Class Definition                                */
 /*                                                                            */
@@ -59,7 +59,7 @@ class RexxTable : public RexxHashTableCollection {
    RexxObject * stringPut(RexxObject *, RexxString *);
    RexxObject * stringAdd(RexxObject *, RexxString *);
    RexxObject * addOffset(size_t, RexxObject *);
-   RexxObject * replace(RexxObject *newValue, long pos) {return this->contents->replace(newValue, pos); };
+   RexxObject * replace(RexxObject *newValue, HashLink pos) {return this->contents->replace(newValue, pos); };
    RexxArray  * allAt(RexxObject *key)  { return this->contents->getAll(key); }
    void         reHash();
    RexxArray  * requestArray();

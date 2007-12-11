@@ -95,10 +95,10 @@ RexxMethod4(REXXOBJECT, OLEVariant_Init,
     convertToParamFlag(param_flags, 3);
 
     REXX_SETVAR("!_VAR_VALUE_", v_value);
-    REXX_SETVAR("!_CLEAR_VARIANT_", RexxTrue);
-    REXX_SETVAR("!_VARIANT_PTR_", RexxInteger(0));
+    REXX_SETVAR("!_CLEAR_VARIANT_", ooRexxTrue);
+    REXX_SETVAR("!_VARIANT_PTR_", ooRexxInteger(0));
 
-    return RexxNil;
+    return ooRexxNil;
 }
 
 /**
@@ -118,11 +118,11 @@ RexxMethod2(REXXOBJECT, OLEVariant_VarValueEquals,
     if ( !v_value )
     {
         send_exception1(Error_Incorrect_method_noarg,
-                        RexxArray1(RexxString("1")));
+                        ooRexxArray1(ooRexxString("1")));
     }
     REXX_SETVAR("!_VAR_VALUE_", v_value);
 
-    return RexxNil;
+    return ooRexxNil;
 }
 
 /**
@@ -139,7 +139,7 @@ RexxMethod2(REXXOBJECT, OLEVariant_VarTypeEquals,
             REXXOBJECT, v_type)
 {
     convertToVT(v_type, 1);
-    return RexxNil;
+    return ooRexxNil;
 }
 
 /**
@@ -156,7 +156,7 @@ RexxMethod2(REXXOBJECT, OLEVariant_ParamFlagsEquals,
             REXXOBJECT, param_flags)
 {
     convertToParamFlag(param_flags, 1);
-    return RexxNil;
+    return ooRexxNil;
 }
 
 /**
@@ -171,27 +171,27 @@ static void convertToVT( REXXOBJECT v_type, int position )
 {
     RexxString *vtString = NULL;
 
-    if ( v_type != NULL && v_type != RexxNil )
+    if ( v_type != NULL && v_type != ooRexxNil )
     {
-        vtString = (RexxString *) RexxSend0(v_type, "STRING");
+        vtString = (RexxString *) ooRexxSend0(v_type, "STRING");
         if ( ! _isstring(vtString) )
         {
             send_exception1(Error_Incorrect_method_string,
-                            RexxArray1(RexxInteger(position)));
+                            ooRexxArray1(ooRexxInteger(position)));
         }
 
         vtString = stringToVT(vtString);
         if ( ! vtString )
         {
             send_exception1(Error_Incorrect_method_argType,
-                            RexxArray2(RexxInteger(position),
-                                       RexxString("VARTYPE")));
+                            ooRexxArray2(ooRexxInteger(position),
+                                       ooRexxString("VARTYPE")));
         }
     }
 
-    REXX_SETVAR("!_VAR_TYPE_", vtString == NULL ? RexxNil : vtString);
+    REXX_SETVAR("!_VAR_TYPE_", vtString == NULL ? ooRexxNil : vtString);
     REXX_SETVAR("!_VAR_TYPE_STR_",
-                vtString == NULL ? RexxString("default") : v_type);
+                vtString == NULL ? ooRexxString("default") : v_type);
 }
 
 /**
@@ -209,27 +209,27 @@ static void convertToParamFlag( REXXOBJECT param_flags, int position )
 {
     RexxString *flagsString = NULL;
 
-    if ( param_flags != NULL && param_flags != RexxNil )
+    if ( param_flags != NULL && param_flags != ooRexxNil )
     {
-        flagsString = (RexxString *)RexxSend0(param_flags, "STRING");
+        flagsString = (RexxString *)ooRexxSend0(param_flags, "STRING");
         if ( ! _isstring(flagsString) )
         {
             send_exception1(Error_Incorrect_method_string,
-                            RexxArray1(RexxInteger(position)));
+                            ooRexxArray1(ooRexxInteger(position)));
         }
 
         flagsString = stringToFlags(flagsString);
         if ( ! flagsString )
         {
             send_exception1(Error_Incorrect_method_argType,
-                            RexxArray2(RexxInteger(position),
-                                       RexxString("PARAMFLAG")));
+                            ooRexxArray2(ooRexxInteger(position),
+                                       ooRexxString("PARAMFLAG")));
         }
     }
 
-    REXX_SETVAR("!_PARAM_FLAGS_", flagsString == NULL ? RexxNil : flagsString);
+    REXX_SETVAR("!_PARAM_FLAGS_", flagsString == NULL ? ooRexxNil : flagsString);
     REXX_SETVAR("!_PARAM_FLAGS_STR_",
-                flagsString == NULL ? RexxString("default") : param_flags);
+                flagsString == NULL ? ooRexxString("default") : param_flags);
 }
 
 /**
@@ -266,7 +266,7 @@ static RexxString * stringToVT( RexxString * rxStr )
                  v1 != VT_ARRAY )
             {
                 sprintf(szBuffer, "%d", v1);
-                rxResult = (RexxString *)RexxString(szBuffer);
+                rxResult = (RexxString *)ooRexxString(szBuffer);
             }
             break;
 
@@ -280,7 +280,7 @@ static RexxString * stringToVT( RexxString * rxStr )
             if ( v1 != VT_ILLEGAL && v2 != VT_ILLEGAL && areValidVTs(v1, v2) )
             {
                 sprintf(szBuffer, "%d", v1 | v2);
-                rxResult = (RexxString *)RexxString(szBuffer);
+                rxResult = (RexxString *)ooRexxString(szBuffer);
             }
             break;
 
@@ -345,7 +345,7 @@ static RexxString * stringToFlags( RexxString * rxStr )
         if ( tmp != PARAMFLAG_ILLEGAL )
         {
             sprintf(szBuffer, "%d", val | tmp);
-            rxResult = (RexxString *)RexxString(szBuffer);
+            rxResult = (RexxString *)ooRexxString(szBuffer);
         }
     }
 

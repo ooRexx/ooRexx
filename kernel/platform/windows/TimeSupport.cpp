@@ -48,10 +48,9 @@
 #include "RexxDateTime.hpp"
 
 extern SEV rexxTimeSliceSemaphore;
-extern ULONG  RexxTimeSliceTimer;
-extern ULONG  rexxTimeSliceTimerOwner;
+extern HANDLE rexxTimeSliceTimerOwner;
 
-extern BOOL UseMessageLoop;  /* for VAC++ */
+extern bool UseMessageLoop;  /* for VAC++ */
 
 void CALLBACK TimerProc( HWND, unsigned int, unsigned int, DWORD);
 void CALLBACK alarmTimerProc( HWND, unsigned int, unsigned int, DWORD);
@@ -66,8 +65,8 @@ static TIMERPROC lpTimerProc;
 
 #ifdef TIMESLICE
 extern SEV   RexxTerminated;           /* Termination complete semaphore.   */
-extern int REXXENTRY RexxSetYield(PID procid, TID threadid);
-extern BOOL rexxTimeSliceElapsed;
+extern int REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid);
+extern bool rexxTimeSliceElapsed;
 #endif
 
 void SysGetCurrentTime(
@@ -111,7 +110,7 @@ DWORD WINAPI TimeSliceControl(void * args)
          TranslateMessage(&msg);// Translates virtual key codes
          DispatchMessage(&msg); // Dispatches message to window
       }
-      rexxTimeSliceElapsed = TRUE;
+      rexxTimeSliceElapsed = true;
    } while (RexxTerminated && (WaitForSingleObject(RexxTerminated, 0) != WAIT_OBJECT_0));
    rexxTimeSliceTimerOwner = 0;
 #endif
@@ -126,14 +125,14 @@ void SysStartTimeSlice( void )
 {
 #ifdef TIMESLICE
    ULONG thread;
-   if (!rexxTimeSliceTimerOwner) {           /* Is there a timer?         */
+   if (rexxTimeSliceTimerOwner == 0) {           /* Is there a timer?         */
 
 	 /* create a thread with low priority to check the message queue for WM_TIMER */
 
-     rexxTimeSliceTimerOwner = (ULONG)CreateThread(NULL, TIMESLICE_STACKSIZE, TimeSliceControl, NULL, 0, &thread);
-     SetThreadPriority((HANDLE)rexxTimeSliceTimerOwner,THREAD_PRIORITY_NORMAL+1);  /* set a higher priority */
+     rexxTimeSliceTimerOwner = CreateThread(NULL, TIMESLICE_STACKSIZE, TimeSliceControl, NULL, 0, &thread);
+     SetThreadPriority(rexxTimeSliceTimerOwner,THREAD_PRIORITY_NORMAL+1);  /* set a higher priority */
   }
-  rexxTimeSliceElapsed = FALSE;
+  rexxTimeSliceElapsed = false;
 #endif
 }
 
@@ -144,7 +143,7 @@ void SysStopTimeSlice( void )
 /******************************************************************************/
 {
 #ifdef TIMESLICE
-   TerminateThread((HANDLE)rexxTimeSliceTimerOwner, 0);
+   TerminateThread(rexxTimeSliceTimerOwner, 0);
    rexxTimeSliceTimerOwner = 0;
 #endif
 }
@@ -162,13 +161,13 @@ void SysStopTimeSlice( void )
 /*                       semaphore is posted                         */
 /*********************************************************************/
 RexxMethod2(void, alarm_startTimer,
-                     long, numdays,
-                     long, alarmtime)
+                     wholenumber_t, numdays,
+                     wholenumber_t, alarmtime)
 									    // retrofit by IH
 
 {
   APIRET rc;                           /* return code                       */
-  BOOL fState = FALSE;                 /* Initial state of semaphore        */
+  bool fState = false;                 /* Initial state of semaphore        */
                                        /* Time-out value                    */
   ULONG ulTimeout = INFINITE;
   long msecInADay = 86400000;          /* number of milliseconds in a day   */
@@ -187,8 +186,8 @@ RexxMethod2(void, alarm_startTimer,
      return;
   }
                                        /* set the state variables           */
-  RexxVarSet("EVENTSEMHANDLE",RexxInteger((long)SemHandle));
-  RexxVarSet("TIMERSTARTED",RexxTrue);
+  ooRexxVarSet("EVENTSEMHANDLE", ooRexxInteger((long)SemHandle));
+  ooRexxVarSet("TIMERSTARTED", ooRexxTrue);
 
   while (numdays > 0) {                /* is it some future day?            */
 
@@ -216,17 +215,7 @@ RexxMethod2(void, alarm_startTimer,
 
 	EVPOST(SemHandle);
 
-#if 0
-                                       /* wait for semaphore to be posted   */
-    rc = WaitForSingleObject(SemHandle, ulTimeout);
-    if (rc !=  WAIT_OBJECT_0)
-    {                                   /* raise error                       */
-      send_exception(Error_System_service);
-      return;
-    }
-#endif
-                                       /* get the cancel state              */
-    cancelObj = RexxVarValue("CANCELED");
+    cancelObj = ooRexxVarValue("CANCELED");
     cancelVal = REXX_INTEGER_VALUE(cancelObj);
 
     if (cancelVal == 1) {              /* If alarm cancelled?               */
@@ -321,7 +310,7 @@ RexxMethod2(void, alarm_startTimer,
 
 
 RexxMethod1(void, alarm_stopTimer,
-               long, eventSemHandle)
+               size_t, eventSemHandle)
 {
   APIRET rc;                           /* return code                       */
   HANDLE    hev = (HANDLE)eventSemHandle;    /* event semaphore handle            */

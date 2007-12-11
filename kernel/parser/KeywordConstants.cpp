@@ -328,7 +328,7 @@ int RexxSource::resolveKeyword(RexxString *token, KeywordEntry *Table, int Table
     Middle = Lower + ((Upper - Lower) / 2);
                                        /* if first character matches */
     if (*Table[Middle].name == FirstChar) {
-      rc = memcmp(Name, Table[Middle].name, min(Length, Table[Middle].length));
+      rc = memcmp(Name, Table[Middle].name, Numerics::minVal(Length, Table[Middle].length));
       if (!rc) {                       /* compared equal             */
                                        /* lengths equal?             */
         if (Length == Table[Middle].length)

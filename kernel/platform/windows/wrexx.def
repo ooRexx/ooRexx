@@ -50,20 +50,9 @@ RexxResetTrace                 @5
 ;
 RexxInitialize                 @10
 RexxSendMessage                @11
-RexxDispatch                   @12
-;RexxCallProgram                @13
-;RexxCallString                 @14
 RexxQuery                      @15
 RexxTerminate                  @16
 ;
-;RexxSomFreeObject              @17
-;RexxSomInitialize              @18
-;RexxSomSendA                   @19
-;RexxSomSendD                   @20
-;RexxSomSendL                   @21
-;RexxSomSendV                   @22
-;
-;RexxMain                       @23
 RexxTranslateProgram           @24
 ;
 REXX_ARRAY_AT                @30
@@ -88,14 +77,12 @@ REXX_ISINTEGER               @50
 REXX_STRING                  @51
 REXX_MSGNAME                 @52
 REXX_RECEIVER                @53
-REXX_ISASTRING               @54
+REXX_ISSTRING                @54
 REXX_SEND                    @55
 REXX_SUPER                   @56
 REXX_SETVAR                  @57
 REXX_GETVAR                  @58
 REXX_VARIABLEPOOL            @59
-REXX_ENABLE_VARIABLEPOOL     @60
-REXX_DISABLE_VARIABLEPOOL    @61
 REXX_OBJECT_NEW              @63
 REXX_STRING_GET              @64
 REXX_STRING_DATA             @65
@@ -136,13 +123,10 @@ RexxSetProcessMessages        @110
 
 ; for feature 249
 
-REXX_SETVAR2                  @113        ; CHM for feature 595
 RexxGetVersionInformation     @114        ; MAE for feature 594
-REXX_SETFUNC                  @115        ; ENG for feature 855
 REXX_GETFUNCTIONNAMES         @116        ; ENG for feature 855 (additional)
 SearchPrecision               @117        ; DOE for feature 883
 SetNovalueCallback            @118        ; ENG for feature 884
-RexxStartedByApplication      @119        ; DOE for defect  899
 WinEnterKernel                @120        ; ENG for feature 906
 WinLeaveKernel                @121        ; ENG for feature 906
 WinGetVariables               @122        ; ENG for feature 906

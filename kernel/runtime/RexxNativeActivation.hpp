@@ -67,9 +67,9 @@ class RexxNativeActivation : public RexxActivationBase {
   const char *cstring(RexxObject *);
   double getDoubleValue(RexxObject *);
   bool   isDouble(RexxObject *);
-  PVOID  cself();
-  PVOID  buffer();
-  PVOID  pointer(RexxObject *);
+  void  *cself();
+  void  *buffer();
+  void  *pointer(RexxObject *);
   RexxObject *dispatch();
   RexxObject *getReceiver() {return  this->receiver;}
   void   traceBack(RexxList *);
@@ -86,22 +86,26 @@ class RexxNativeActivation : public RexxActivationBase {
   bool   trap (RexxString *, RexxDirectory *);
   void   setObjNotify(RexxMessage *);
   void   resetNext();
-  BOOL   fetchNext(RexxString **name, RexxObject **value);
+  bool   fetchNext(RexxString **name, RexxObject **value);
+  void   raiseCondition(RexxString *condition, RexxString *description, RexxObject *additional, RexxObject *result);
 
   inline void   termination() { this->guardOff();}
   inline RexxActivation *sender() {return (RexxActivation *)this->activity->sender((RexxActivationBase *)this);}
+  inline RexxActivation *getCurrentActivation() { return activity->getCurrentActivation(); }
   inline char        getVpavailable()   {return this->vpavailable;}
   inline RexxMethod *getMethod()        {return this->method;}
-  inline RexxString *getMsgname()       {return this->msgname;}
-  inline LONG        nextVariable()     {return this->nextvariable;}
+  inline RexxString *getMessageName()   {return this->msgname;}
+  inline int         nextVariable()     {return this->nextvariable;}
   inline RexxStem   *nextStem()         {return this->nextstem;}
   inline RexxVariableDictionary *nextCurrent()     {return this->nextcurrent;}
   inline RexxCompoundElement *compoundElement() {return this->compoundelement; }
-  inline void        setNextVariable(LONG value)           {this->nextvariable = value;}
+  inline void        setNextVariable(size_t value)           {this->nextvariable = value;}
   inline void        setNextCurrent(RexxVariableDictionary *vdict)     {this->nextcurrent = vdict;}
   inline void        setNextStem(RexxStem *stemVar)     {this->nextstem = stemVar;}
   inline void        setCompoundElement(RexxCompoundElement *element)     {this->compoundelement = element;}
+  inline RexxActivity *getActivity() { return activity; }
 
+protected:
 
   RexxMethod     *method;              /* Method to run                     */
   RexxString     *msgname;             /* name of the message running       */
@@ -116,13 +120,12 @@ class RexxNativeActivation : public RexxActivationBase {
   RexxObject     *result;              /* result from RexxRaise call        */
                                        /* running object variable pool      */
   RexxVariableDictionary *objectVariables;
-  LONG            nextvariable;        /* next variable to retrieve         */
+  int             nextvariable;        /* next variable to retrieve         */
   RexxVariableDictionary *nextcurrent; /* current processed vdict           */
   RexxCompoundElement *compoundelement;/* current compound variable value   */
   RexxStem *      nextstem;            /* our working stem variable         */
   size_t          argcount;            /* size of the argument list         */
   bool            vpavailable;         /* Variable pool access flag         */
   int             object_scope;        /* reserve/release state of variables*/
-  jmp_buf         conditionjump;       /* condition trap recovery location  */
 };
 #endif

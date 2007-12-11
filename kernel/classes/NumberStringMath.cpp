@@ -147,7 +147,7 @@ void RexxNumberStringBase::mathRound(
 {
  int carry, RoundNum;
  size_t resultDigits;
- long numVal;
+ wholenumber_t numVal;
 
  resultDigits = this->length;          /* get number of digits in number    */
  NumPtr += this->length;               /* point one past last digit, this   */
@@ -193,7 +193,7 @@ void RexxNumberString::adjustPrecision()
 /* Function:  Adjust the precision of a number to the given digits   */
 /*********************************************************************/
 {
- long resultVal;
+ wholenumber_t resultVal;
                                        /* is length of number too big?      */
  if (this->length > NumDigits) {
      size_t extra = this->length - NumDigits;
@@ -221,13 +221,15 @@ void RexxNumberString::adjustPrecision()
  return;                               /* just return to caller.            */
 }
 
-ULONG HighBits(ULONG number)
+size_t HighBits(size_t number)
 /*********************************************************************/
 /* Function:  Determine high order bit position of an unsigned       */
 /*            number setting.                                        */
 /*********************************************************************/
 {
- ULONG HighBit;
+// TODO:  64-bit issues here
+
+ size_t HighBit;
 
  if (!number)                          /* is number 0?                      */
   return 0;                            /*  Yes, just return 0, no high bit  */
@@ -236,7 +238,7 @@ ULONG HighBits(ULONG number)
 
  while (!(number & 0x80000000u)) {     /* loops though all bit positions    */
                                        /*  until first 1 bit is found.      */
-  number <<= 1l;                       /* shift number one bit pos left.    */
+  number <<= 1;                        /* shift number one bit pos left.    */
   HighBit--;                           /* decrement i, high bit not found   */
  }
 
@@ -292,8 +294,8 @@ void RexxNumberString::adjustPrecision(char *resultPtr, size_t NumberDigits)
 /* Function:  Adjust the precision of a number to the given digits   */
 /*********************************************************************/
 {
-    BOOL  CopyData;
-    long resultVal;
+    bool  CopyData;
+    wholenumber_t resultVal;
     /* resultPtr will either point to    */
     /* the actual result data or be      */
     /* NULL, if the data is already in   */
@@ -301,13 +303,13 @@ void RexxNumberString::adjustPrecision(char *resultPtr, size_t NumberDigits)
     if (resultPtr == NULL)
     {              /* Is resultPtr NULL, that is data   */
                    /*  already in result object?        */
-        CopyData = FALSE;                    /* Yes, don't copy data.             */
+        CopyData = false;                    /* Yes, don't copy data.             */
                                              /* have data pointer point to data in*/
         resultPtr = this->number;            /* The result object.                */
     }
     else
     {
-        CopyData = TRUE;                     /* resultPtr not null, need to copy  */
+        CopyData = true;                     /* resultPtr not null, need to copy  */
     }
     /* is length of number too big?      */
     if (this->length > NumberDigits)
@@ -350,7 +352,7 @@ void RexxNumberString::adjustPrecision(char *resultPtr, size_t NumberDigits)
     return;                               /* just return to caller.            */
 }
 
-RexxNumberString *RexxNumberString::prepareNumber(size_t NumberDigits, BOOL rounding)
+RexxNumberString *RexxNumberString::prepareNumber(size_t NumberDigits, bool rounding)
 /*********************************************************************/
 /* Function:  Create new copy of supplied object and make sure the   */
 /*            number is computed to correct digits setting           */
@@ -391,10 +393,10 @@ RexxNumberString *RexxNumberString::addSub(
  char  *leftPtr,*rightPtr,*resultPtr;
  char  *resultBuffer = NULL;
  int   right_sign, carry, addDigit, rc;
- long  LadjustDigits, RadjustDigits;
- long  adjustDigits;
+ wholenumber_t  LadjustDigits, RadjustDigits;
+ wholenumber_t  adjustDigits;
  size_t ResultSize;
- long aLeftExp, aRightExp, rightExp, leftExp, MinExp;
+ wholenumber_t aLeftExp, aRightExp, rightExp, leftExp, MinExp;
  size_t rightLength, leftLength;
  char  resultBufFast[FASTDIGITS*2+1];  /* for fast allocation if default    */
  size_t maxLength = NumberDigits + 1;
@@ -449,14 +451,14 @@ RexxNumberString *RexxNumberString::addSub(
                                        /*  number affect the outcome of the */
                                        /*  arithmetic operation?            */
  }
- else if ((aLeftExp + (long)leftLength) > (long)(rightLength + NumberDigits)) {
+ else if ((aLeftExp + (wholenumber_t)leftLength) > (wholenumber_t)(rightLength + NumberDigits)) {
   temp1=left;                          /*   Yes,  so return the left number.*/
                                        /* Is the right number completely    */
                                        /*  dominant, that is can the left   */
                                        /*  number affect the outcome of the */
                                        /*  arithmetic operation?            */
  }
- else if ((aRightExp + (long)rightLength) > (long)(leftLength + NumberDigits)) {
+ else if ((aRightExp + (wholenumber_t)rightLength) > (wholenumber_t)(leftLength + NumberDigits)) {
   temp1=right;                         /*   Yes, so setup to return right   */
  }
                                        /* Temp1 will either point to null   */
@@ -518,8 +520,8 @@ RexxNumberString *RexxNumberString::addSub(
                                        /* Adjusted exponents ....           */
                                        /* a value of 0 or less means we are */
                                        /*OK.                                */
- LadjustDigits = ((long)leftLength + aLeftExp) - (long)(maxLength);
- RadjustDigits = ((long)rightLength + aRightExp) - (long)(maxLength);
+ LadjustDigits = ((wholenumber_t)leftLength + aLeftExp) - (wholenumber_t)(maxLength);
+ RadjustDigits = ((wholenumber_t)rightLength + aRightExp) - (wholenumber_t)(maxLength);
                                        /* Do we need to adjust any numbers? */
  if (LadjustDigits > 0 || RadjustDigits >0 ) {
   if (LadjustDigits >= RadjustDigits)  /* yes, find which number needs to be*/
@@ -532,7 +534,7 @@ RexxNumberString *RexxNumberString::addSub(
 
 
   if (aLeftExp) {                      /* Was left exp larger than right    */
-    if ((long)adjustDigits < aLeftExp) { /* Do we need to adjust for more than*/
+    if ((wholenumber_t)adjustDigits < aLeftExp) { /* Do we need to adjust for more than*/
                                        /* our adjusted exponent?            */
      aLeftExp -= adjustDigits;         /* Yes, decrease adj exp             */
                                        /* Right number is now shorter       */
@@ -551,7 +553,7 @@ RexxNumberString *RexxNumberString::addSub(
     }
   }
   else if (aRightExp) {                /* Was right exp larger than left    */
-    if ((long)adjustDigits < aRightExp) {    /* Do we adjust for more than        */
+    if ((wholenumber_t)adjustDigits < aRightExp) {    /* Do we adjust for more than        */
                                        /* our adjusted exponent?            */
      aRightExp -= adjustDigits;        /* Yes, decrease adj exp             */
                                        /* Left  number is now shorter       */
@@ -801,10 +803,10 @@ RexxNumberString *RexxNumberString::addSub(
 void Subtract_Numbers(
     RexxNumberString *larger,          /* larger numberstring object        */
     const char       *largerPtr,       /* pointer to last digit in larger   */
-    long              aLargerExp,      /* adjusted exponent of larger       */
+    wholenumber_t     aLargerExp,      /* adjusted exponent of larger       */
     RexxNumberString *smaller,         /* smaller numberstring object       */
     const char       *smallerPtr,      /* pointer to last digit in smaller  */
-    long              aSmallerExp,     /* adjusted exponent of smaller      */
+    wholenumber_t     aSmallerExp,     /* adjusted exponent of smaller      */
     RexxNumberString *result,          /* result numberstring object        */
     char            **presultPtr)      /* last number in result             */
 /*********************************************************************/

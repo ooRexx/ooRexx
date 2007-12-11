@@ -42,24 +42,20 @@
 /*                                                                            */
 /******************************************************************************/
 #include <stdio.h>
-#include "RexxLibrary.h"
-int   ProcessBusyActs = 0;             /* number of busy activities         */
-BOOL  ProcessColdStart = TRUE;         /* performing a coldstart            */
-BOOL  ProcessDoneInit = FALSE;         /* initialization is done            */
-BOOL  ProcessDoneTerm = FALSE;         /* termination is done               */
-BOOL  ProcessFirstThread = TRUE;       /* this is the first thread          */
+#include "RexxCore.h"
+bool  ProcessDoneInit = false;         /* initialization is done            */
+bool  ProcessDoneTerm = false;         /* termination is done               */
+bool  ProcessFirstThread = true;       /* this is the first thread          */
 
-BOOL  ProcessSaveImage = FALSE;        /* saving the image                  */
-ULONG ProcessMustCompleteNest = 0;     /* Global variable for MustComplete  */
+bool  ProcessSaveImage = false;        /* saving the image                  */
                                        /* Next line added be THU            */
-BOOL  RexxStartedByApplication = TRUE; /* is REXX started by system or appl */
+bool  RexxStartedByApplication = true; /* is REXX started by system or appl */
+// TODO Why is this conditional comp here?
 #ifdef WIN32
 extern SEV RexxTerminated = NULL;      /* Semaphore to be posted at shutdown*/
 #else
 SEV   RexxTerminated;                  /* Semaphore to be posted at shutdown*/
 #endif
-RexxInteger * ProcessName = OREF_NULL; /* Process name/id                   */
-ULONG RexxTimeSliceTimer;              /* Time Slice timer handle.          */
-BOOL rexxTimeSliceElapsed = FALSE;     /* the time slice interlock flag     */
+bool rexxTimeSliceElapsed = false;     /* the time slice interlock flag     */
                                        /* Most currently accessed pool      */
 

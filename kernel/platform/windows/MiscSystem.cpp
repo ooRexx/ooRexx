@@ -51,10 +51,8 @@
 #include "SystemVersion.h"
 #include <signal.h>
 
-/* special flag for the LPEX message loop problem */
-extern BOOL UseMessageLoop = FALSE;
+extern bool UseMessageLoop = false;
 
-extern ULONG mustCompleteNest;         /* Global variable for MustComplete  */
 extern "C" void activity_thread (RexxActivity *objp);
 
 
@@ -64,7 +62,7 @@ unsigned int iTransClauseCounter=0;    // count of clauses in translator
 extern "C" _declspec(dllimport) HANDLE ExceptionQueueSem;
 extern ULONG ExceptionHostProcessId;
 extern HANDLE ExceptionHostProcess;
-extern BOOL ExceptionConsole;
+extern bool ExceptionConsole;
 static int SignalCount = 0;
 
 RexxString *SysName( void )
@@ -91,14 +89,6 @@ void SysTermination(void)
 {
 }
 
-//void SysInitialize(void)
-/******************************************************************************/
-/* Function:   Perform system specific initialization.  For OS/2, this means  */
-/*             declare the exit list processor.                               */
-/******************************************************************************/
-//{
-//   DosExitList(EXLST_ADD,(PFNEXITLIST)exit_handler);
-//}
 
 RexxString *SysVersion(void)
 /******************************************************************************/
@@ -119,7 +109,7 @@ RexxString *SysVersion(void)
 }
 
 
-PFN SysLoadProcedure(
+void *SysLoadProcedure(
   RexxInteger * LibraryHandle,         /* library load handle               */
   RexxString  * Procedure)             /* required procedure name           */
 /******************************************************************************/
@@ -138,7 +128,7 @@ PFN SysLoadProcedure(
   if ( !(Function =(PFN)GetProcAddress(Handle, Name)) )
                                        /* report an exception               */
     reportException(Error_External_name_not_found_method, Procedure);
-  return Function;                     /* return the pointer information    */
+  return (void *)Function;             /* return the pointer information    */
 }
 
 RexxInteger * SysLoadLibrary(
@@ -286,21 +276,21 @@ BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
     /* set halt condition for all threads of this process */
   char envp[65];
 
-  if ((dwCtrlType == CTRL_CLOSE_EVENT) || (dwCtrlType == CTRL_SHUTDOWN_EVENT)) return FALSE;  /* send to system */
+  if ((dwCtrlType == CTRL_CLOSE_EVENT) || (dwCtrlType == CTRL_SHUTDOWN_EVENT)) return false;  /* send to system */
 
   /* if RXCTRLBREAK=NO then ignore SIGBREAK exception */
   if (((dwCtrlType == CTRL_BREAK_EVENT) || (dwCtrlType == CTRL_LOGOFF_EVENT)) &&
       (GetEnvironmentVariable("RXCTRLBREAK", envp, 64) > 0)
       && (strcmp("NO",envp) == 0))
-    return TRUE;    /* ignore signal */
+    return true;    /* ignore signal */
 
-  if (dwCtrlType == CTRL_LOGOFF_EVENT) return FALSE;    /* send to system */
+  if (dwCtrlType == CTRL_LOGOFF_EVENT) return false;    /* send to system */
 
   /* Ignore Ctrl+C if console is running in console */
   if (ExceptionConsole)
   {
       GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, ExceptionHostProcessId);
-      return TRUE;   /* ignore signal */
+      return true;   /* ignore signal */
   }
 
   if (ExceptionQueueSem)
@@ -318,7 +308,7 @@ BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
   }
 
   ActivityManager::haltAllActivities();
-  return TRUE;      /* ignore signal */
+  return true;      /* ignore signal */
 }
 
 
@@ -341,27 +331,8 @@ char *SysGetThreadStackBase (size_t StackSize)
 /* Function:  Return a pointer to the current stack base                      */
 /******************************************************************************/
 {
-#if 0  /* this code didn't work */
-   CONTEXT con;
-   MEMORY_BASIC_INFORMATION mbi;
-   PBYTE pbStackCrnt, pbStackBase;
-   SYSTEM_INFO si;
-
-
-   // Use _alloca() to get the current stack pointer
-   pbStackCrnt = (PBYTE) _alloca(1);
-
-   // Find the base of the stack's reserved region.
-   VirtualQuery(pbStackCrnt, &mbi, sizeof(mbi));
-   pbStackBase = (PBYTE) mbi.AllocationBase;
-
-//   if (!GetThreadContext(GetCurrentThread(), &con)) printf("\n Bad error: thread context not received");
-//   return (char *)(con.Esp - StackSize);   /* return calculated stack base         */
-   return (char *) pbStackBase;
-#else
-   LONG temp;
-   return (char *) ((ULONG)&temp - (ULONG)StackSize);
-#endif
+   size_t temp;
+   return (char *)&temp - StackSize;
 }
 
 
@@ -376,7 +347,7 @@ DWORD WINAPI call_thread_function(void * Arguments)
 int SysCreateThread (
   PTHREADFN ThreadProcedure,           /* address of thread procedure       */
   size_t    StackSize,                 /* required stack size               */
-  PVOID     Arguments )                /* thread procedure argument block   */
+  void     *Arguments )                /* thread procedure argument block   */
 /******************************************************************************/
 /* Function:  Create a new thread                                             */
 /******************************************************************************/

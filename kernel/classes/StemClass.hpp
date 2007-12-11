@@ -58,6 +58,7 @@
 class RexxSupplier;
 
  class RexxStem : public RexxObject {
+  friend class RexxCompoundTable;
   public:
    void *operator new (size_t);
    inline void *operator new(size_t size, void *ptr) {return ptr;};
@@ -68,11 +69,13 @@ class RexxSupplier;
   void flatten(RexxEnvelope*);
   RexxObject * copy();
 
-  long         longValue(size_t);
-  long         longValueNoNOSTRING(size_t);
+  void         copyFrom(RexxCompoundTable &_tails);
+  bool         numberValue(wholenumber_t &result, size_t precision);
+  bool         numberValue(wholenumber_t &result);
+  bool         unsignedNumberValue(stringsize_t &result, size_t precision);
+  bool         unsignedNumberValue(stringsize_t &result);
+  bool         doubleValue(double &result);
   RexxNumberString *numberString();
-  double       doubleValue();
-  double       doubleValueNoNOSTRING();
   RexxInteger *integerValue(size_t);
   RexxString  *stringValue();
   RexxArray   *makeArray();
@@ -82,7 +85,7 @@ class RexxSupplier;
   RexxObject  *request(RexxString *);
   RexxObject   *empty();
   RexxObject   *isEmpty();
-  arraysize_t  items();
+  size_t        items();
 
   void        dropValue();
   RexxObject *unknown (RexxString *, RexxArray *);
@@ -97,7 +100,7 @@ class RexxSupplier;
   RexxObject *removeItem(RexxObject *);
 
 
-  RexxString *tail(RexxArray *, long);
+  RexxString *tail(RexxArray *, size_t);
   RexxObject *newRexx(RexxObject **, size_t);
   RexxObject *evaluateCompoundVariableValue(RexxActivation *context, RexxCompoundTail *resolved_tail);
   RexxObject *getCompoundVariableValue(RexxCompoundTail *resolved_tail);
@@ -113,19 +116,20 @@ class RexxSupplier;
   RexxCompoundElement *nextVariable(RexxNativeActivation *activation);
   RexxObject *handleNovalue(RexxString *name, RexxActivation *context);
   void        expose(RexxCompoundElement *variable);
-//  BOOL        sort(int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
-  BOOL        sort(RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
+  bool        sort(RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
 
   inline bool compoundVariableExists(RexxCompoundTail *resolved_tail) { return realCompoundVariableValue(resolved_tail) != OREF_NULL; }
   inline RexxString *getName() { return stemName; }
   inline RexxCompoundElement *first() { return tails.first(); }
   inline RexxString *createCompoundName(RexxCompoundTail *tailPart) { return tailPart->createCompoundName(stemName); }
+  inline void init() { tails.init(this); }
 
+ protected:
 
   RexxString *stemName;               // the name of the stem
   RexxCompoundTable tails;            /* the table of compound tails */
   RexxObject *value;                  /* value of the stem                 */
-  BOOL dropped;                       /* stem has no explicit value        */
+  bool dropped;                       /* stem has no explicit value        */
 
  };
  #endif

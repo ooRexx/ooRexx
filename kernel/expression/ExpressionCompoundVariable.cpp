@@ -56,9 +56,9 @@
 
 RexxCompoundVariable::RexxCompoundVariable(
     RexxString * _stemName,            /* stem retriever                    */
-    LONG         stemIndex,            /* stem lookaside index              */
+    size_t       stemIndex,            /* stem lookaside index              */
     RexxQueue  * tailList,             /* list of tails                     */
-    LONG         TailCount)            /* count of tails                    */
+    size_t       TailCount)            /* count of tails                    */
 /******************************************************************************/
 /* Function:  Complete compound variable initialization                       */
 /******************************************************************************/
@@ -76,7 +76,7 @@ RexxCompoundVariable::RexxCompoundVariable(
 
 RexxObject * build(
     RexxString * variable_name,         /* full variable name of compound    */
-    BOOL direct )                       /* this is direct access             */
+    bool direct )                       /* this is direct access             */
 /******************************************************************************/
 /* Function:  Build a dynamically created compound variable                   */
 /******************************************************************************/
@@ -106,7 +106,7 @@ RexxObject * build(
   ProtectedObject p2(tails);
   position++;                          /* step past previous period         */
   length--;                            /* adjust the length                 */
-  if (direct == TRUE) {                /* direct access?                    */
+  if (direct == true) {                /* direct access?                    */
                                        /* extract the tail part             */
     tail = variable_name->extract(position, length);
     tails->push(tail);                 /* add to the tail piece list        */
@@ -252,7 +252,7 @@ void RexxCompoundVariable::set(
 }
 
 
-BOOL RexxCompoundVariable::exists(
+bool RexxCompoundVariable::exists(
   RexxActivation *context)             /* current execution context         */
 /******************************************************************************/
 /* Function:  Check to see if a compound variable exists in a directory       */

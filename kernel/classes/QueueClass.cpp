@@ -309,13 +309,13 @@ RexxObject *RexxQueue::supplier()
 RexxArray *RexxQueue::allIndexes()
 {
     // create an array and protect it.
-    arraysize_t arraysize = this->items();
+    size_t arraysize = this->items();
 
     RexxArray *result = new_array(arraysize);
     ProtectedObject p(result);
 
     // now just make an array containing each index value.
-    for (arraysize_t i = 1; i <= arraysize; i++)
+    for (size_t i = 1; i <= arraysize; i++)
     {
         result->put(new_integer(i), i);
     }

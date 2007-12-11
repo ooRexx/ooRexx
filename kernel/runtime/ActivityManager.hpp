@@ -56,7 +56,7 @@ public:
         return firstWaitingActivity;
     }
     static RexxActivity *findActivity();
-    static RexxActivity *findActivity(LONG);
+    static RexxActivity *findActivity(thread_id_t);
     static RexxActivity *getActivity();
     static void returnActivity() { returnActivity(currentActivity); }
     static void returnActivity(RexxActivity *);
@@ -76,12 +76,12 @@ public:
     static RexxActivity *newActivity(int priority);
     static void haltAllActivities();
     static void traceAllActivities(bool on);
-    static bool setActivityTrace(LONG thread_id, bool on_or_off);
+    static bool setActivityTrace(thread_id_t thread_id, bool on_or_off);
     static void clearActivityPool();
     static bool poolActivity(RexxActivity *activity);
-    static bool haltActivity(LONG thread_id, RexxString * description);
+    static bool haltActivity(thread_id_t thread_id, RexxString * description);
     static void yieldCurrentActivity();
-    static bool yieldActivity(LONG thread_id);
+    static bool yieldActivity(thread_id_t thread_id);
     static void exit(int retcode);
     static void startup();
     static void relinquish(RexxActivity *activity);

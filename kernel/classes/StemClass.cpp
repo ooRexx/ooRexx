@@ -82,7 +82,7 @@ RexxStem::RexxStem(
   OrefSet(this, this->value, name);    /* fill in the default value         */
   tails.init(this);                    /* initialize the tail table         */
                                        /* create a tails table              */
-  this->dropped = TRUE;                /* no explicit value                 */
+  this->dropped = true;                /* no explicit value                 */
 }
 
 RexxObject *RexxStem::copy(void)
@@ -95,9 +95,21 @@ RexxObject *RexxStem::copy(void)
                                        /* copies the object variables       */
   newObj = (RexxStem *)this->RexxObject::copy();
   ProtectedObject p(newObj);
-  newObj->tails.copy(newObj, this);    /* have the tail table copy itself   */
+  newObj->copyFrom(tails);             /* have the tail table copy itself   */
   return newObj;                       /* return the new object             */
 }
+
+/**
+ * Copy the tails from another stem object into this stem.
+ *
+ * @param _tails The source tail collection.
+ */
+void RexxStem::copyFrom(RexxCompoundTable &_tails)
+{
+    tails.init(this);
+    tails.copyFrom(_tails);
+}
+
 
 void RexxStem::live()
 /******************************************************************************/
@@ -147,7 +159,7 @@ void RexxStem::setValue(
 /******************************************************************************/
 {
   OrefSet(this, this->value, _value);  /* set the new value                 */
-  this->dropped = FALSE;               /* now have an explict value         */
+  this->dropped = false;               /* now have an explict value         */
 }
 
 void RexxStem::dropValue()
@@ -157,7 +169,7 @@ void RexxStem::dropValue()
 {
                                        /* reset to the default value        */
   OrefSet(this, this->value, this->stemName);
-  this->dropped = TRUE;                /* no explict value any more         */
+  this->dropped = true;                /* no explict value any more         */
 }
 
 RexxObject *RexxStem::unknown(
@@ -357,7 +369,7 @@ RexxObject *RexxStem::bracketEqual(
                                        /* set the new default value         */
     OrefSet(this, this->value, new_value);
     this->tails.clear();               /* clear out the dictionary          */
-    this->dropped = FALSE;             /* now have an explicit value        */
+    this->dropped = false;             /* now have an explicit value        */
     return this->value;                /* just return the default value     */
   }
                                        /* create a searchable tail from the array elements */
@@ -385,37 +397,44 @@ RexxString *RexxStem::stringValue()
   return (RexxString *)this->value->stringValue();
 }
 
-long  RexxStem::longValue(size_t precision)
+bool RexxStem::numberValue(wholenumber_t &result, stringsize_t digits)
 /******************************************************************************/
-/* Function:  Forward long request on to the default value                    */
-/******************************************************************************/
-{                                      /* just forward to default value     */
-   return this->value->longValue(precision);
-}
-
-double  RexxStem::doubleValue()
-/******************************************************************************/
-/* Function:  Forward double request on to the default value                  */
+/* Function:  Convert a REXX object to a long value                           */
 /******************************************************************************/
 {
-   return this->value->doubleValue();  /* just forward to default value     */
+    return value->numberValue(result, digits);
 }
 
-long  RexxStem::longValueNoNOSTRING(size_t precision)
+bool RexxStem::numberValue(wholenumber_t &result)
 /******************************************************************************/
-/* Function:  Forward long request on to the default value                    */
-/******************************************************************************/
-{                                      /* just forward to default value     */
-   return this->value->longValueNoNOSTRING(precision);
-}
-
-double  RexxStem::doubleValueNoNOSTRING()
-/******************************************************************************/
-/* Function:  Forward double request on to the default value                  */
+/* Function:  Convert a REXX object to a long value                           */
 /******************************************************************************/
 {
-                                       /* just forward to default value     */
-   return this->value->doubleValueNoNOSTRING();
+    return value->numberValue(result);
+}
+
+bool RexxStem::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
+/******************************************************************************/
+/* Function:  Convert a REXX object to a long value                           */
+/******************************************************************************/
+{
+    return value->unsignedNumberValue(result, digits);
+}
+
+bool RexxStem::unsignedNumberValue(stringsize_t &result)
+/******************************************************************************/
+/* Function:  Convert a REXX object to a long value                           */
+/******************************************************************************/
+{
+    return value->unsignedNumberValue(result);
+}
+
+bool RexxStem::doubleValue(double &result)
+/******************************************************************************/
+/* Function:  Convert a primitive internal object to a double value           */
+/******************************************************************************/
+{
+    return value->doubleValue(result);
 }
 
 RexxNumberString *RexxStem::numberString()
@@ -502,7 +521,7 @@ RexxCompoundElement *RexxStem::getCompoundVariable(
 /******************************************************************************/
 {
                                         /* get/create an entry in the table */
-    return tails.findEntry(name, TRUE)->realVariable();
+    return tails.findEntry(name, true)->realVariable();
 }
 
 
@@ -516,7 +535,7 @@ RexxCompoundElement *RexxStem::exposeCompoundVariable(
     // first see if the compound variable already exists.  If it does, then
     // it might represent an explicitly dropped varaible.  We leave this along
     // in that case.
-    RexxCompoundElement *variable = tails.findEntry(name, FALSE);
+    RexxCompoundElement *variable = tails.findEntry(name, false);
     // ok, it's already there, return the real variable value.
     if (variable != OREF_NULL)
     {
@@ -525,7 +544,7 @@ RexxCompoundElement *RexxStem::exposeCompoundVariable(
 
     // we're creating a real variable.  If the stem has an explicit value,
     // then we need to set that now.
-    variable = tails.findEntry(name, TRUE)->realVariable();
+    variable = tails.findEntry(name, true)->realVariable();
     /* if this variable does not have a value, we need to check the */
     /* stem for a default value and assign it. */
     if (variable->getVariableValue() == OREF_NULL) {
@@ -752,7 +771,7 @@ void RexxStem::expose(
 /******************************************************************************/
 {
                                        /* create the equivalent in this stem */
-  RexxCompoundElement *new_variable = tails.findEntry(old_variable->getName(), TRUE);
+  RexxCompoundElement *new_variable = tails.findEntry(old_variable->getName(), true);
   new_variable->expose(old_variable);  /* make the association between the two */
 }
 
@@ -768,7 +787,7 @@ RexxArray *RexxStem::allItems()
     // populate it, using the same traversal logic as before
     RexxArray *array = new_array(items());
     // we index the array with a origin-one index, so we start with one this time
-    arraysize_t count = 1;
+    size_t count = 1;
 
     RexxCompoundElement *variable = tails.first();
     while (variable != OREF_NULL)
@@ -811,9 +830,9 @@ RexxCompoundElement *RexxStem::findByValue(RexxObject *target)
  *
  * @return The number of non-dropped items.
  */
-arraysize_t RexxStem::items()
+size_t RexxStem::items()
 {
-    arraysize_t count = 0;
+    size_t count = 0;
 
     RexxCompoundElement *variable = tails.first();
     while (variable != OREF_NULL)
@@ -876,7 +895,7 @@ RexxSupplier *RexxStem::supplier()
 {
     // essentially the same logic as allItems(), but both the item and the
     // tail value are accumulated.
-    arraysize_t count = 0;
+    size_t count = 0;
     RexxCompoundElement *variable = tails.first();
     while (variable != OREF_NULL)
     {
@@ -909,6 +928,7 @@ RexxSupplier *RexxStem::supplier()
 }
 
 
+// TODO:  qsort has some portability problems.  Replace with custom version
 
 /******************************************************************************/
 /* Function:  Below are a series of comparison routines used by the qsort()   */
@@ -979,7 +999,7 @@ int SysCall compare_desc_i_cols(const void *arg1, const void *arg2)
 }
 
 
-BOOL RexxStem::sort(RexxString *prefix, int order, int type, size_t firstElement, size_t last, size_t firstcol, size_t lastcol)
+bool RexxStem::sort(RexxString *prefix, int order, int type, size_t firstElement, size_t last, size_t firstcol, size_t lastcol)
 /******************************************************************************/
 /* Function:  Sort elements of a stem variable as if it was an array.  This   */
 /*            routine assumes that element ".0" of the stem contains a size   */
@@ -993,31 +1013,31 @@ BOOL RexxStem::sort(RexxString *prefix, int order, int type, size_t firstElement
     RexxCompoundTail stem_size(prefix, (size_t)0);
     RexxCompoundElement *size_element = findCompoundVariable(&stem_size);
     if (size_element == OREF_NULL) {
-        return FALSE;
+        return false;
     }
     RexxObject *size_value = size_element->getVariableValue();
     if (size_value == OREF_NULL) {
-        return FALSE;
+        return false;
     }
     /* get the integer value of this.  It must be a valid numeric */
     /* value. */
-    size_t count = size_value->longValue(Numerics::DEFAULT_DIGITS);
-    if (count == NO_LONG) {
-        return FALSE;
+    stringsize_t count;
+    if (!size_value->unsignedNumberValue(count)) {
+        return false;
     }
     if (count == 0)         // if the count is zero, sorting is easy!
     {
-        return TRUE;
+        return true;
     }
 
     /* if this is not specified, sort to the end */
-    if (last == ULONG_MAX) {
+    if (last == SIZE_MAX) {
         last = count;
     }
 
     /* verify we're fully within the bounds */
     if (firstElement > count || last > count) {
-        return FALSE;
+        return false;
     }
     size_t bounds = last - firstElement + 1;
 
@@ -1032,12 +1052,12 @@ BOOL RexxStem::sort(RexxString *prefix, int order, int type, size_t firstElement
         RexxCompoundElement *next_element = findCompoundVariable(&nextStem);
 
         if (next_element == OREF_NULL) {
-            return FALSE;
+            return false;
         }
 
         RexxObject *nextValue = next_element->getVariableValue();
         if (nextValue == OREF_NULL) {
-            return FALSE;
+            return false;
         }
         /* force this to a string value. */
         nextValue = REQUEST_STRING(nextValue);
@@ -1048,7 +1068,7 @@ BOOL RexxStem::sort(RexxString *prefix, int order, int type, size_t firstElement
 
     char *aData = (char *)array->data(bounds + 1);
 
-    if ((firstcol == 0) && (lastcol == ULONG_MAX)) {
+    if ((firstcol == 0) && (lastcol == SIZE_MAX)) {
       /* no special columns to check */
       switch (type) {
 
@@ -1088,5 +1108,5 @@ BOOL RexxStem::sort(RexxString *prefix, int order, int type, size_t firstElement
         element->set(v);
     }
     /* make sure we discard the array before returning */
-    return TRUE;
+    return true;
 }

@@ -56,7 +56,7 @@
   void live();
   void liveGeneral();
   void flatten(RexxEnvelope*);
-  size_t copyData(PVOID, size_t);
+  size_t copyData(void *, size_t);
 
   inline size_t getCurrent() {return this->current;}
   inline RexxBuffer *getBuffer() {return this->buffer;}

@@ -73,10 +73,6 @@
 /*                                                                            */
 /******************************************************************************/
 
-#define INCL_RXQUEUE
-#define INCL_RXSUBCOM
-#include "PlatformDefinitions.h"
-#include SYSREXXSAA
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -112,30 +108,28 @@
 
 #define LOCAL             1
 
-extern int errno;
 extern REXXAPIDATA  *apidata;  /* Global state data                  */
 
 /*********************************************************************/
 /*                Function prototypes for local routines.            */
 /*********************************************************************/
 
-static LONG   val_queue_name(PSZ);
-static ULONG  search(PSZ);
-static LONG   queue_allocate(PSZ, PULONG);
-static INT    create_queue_sem(ULONG);
-static VOID delete_queue_sem(ULONG);
-static VOID   release_queue_item(ULONG, INT, ULONG);
-static LONG   allocate_queue_entry(ULONG, PULONG, char *);
-VOID GetDateTime(PDATETIME);
-ULONG CreateMutexSem(INT *);
-ULONG CreateEventSem(INT *);
-VOID CloseMutexSem(INT);
-VOID CloseEventSem(INT);
-VOID PostEventSem(INT);
-ULONG RequestMutexSem(INT,INT);
-VOID ResetEventSem(INT);
-ULONG WaitEventSem(INT,INT);
-VOID ReleaseMutexSem(INT);
+static int    val_queue_name(const char *);
+static size_t search(const char *);
+static int    queue_allocate(const char *, size_t *);
+static int    create_queue_sem(size_t);
+static void delete_queue_sem(size_t);
+static void   release_queue_item(size_t, int, size_t);
+void GetDateTime(REXXDATETIME *);
+int CreateMutexSem(int *);
+int CreateEventSem(int *);
+void CloseMutexSem(int);
+void CloseEventSem(int);
+void PostEventSem(int);
+int  RequestMutexSem(int, int); 
+void ResetEventSem(int);
+int  WaitEventSem(int, int); 
+void ReleaseMutexSem(int);
 
 char rxqueue_name_mask[]="S%02dQ%010u";
 
@@ -159,20 +153,19 @@ char rxqueue_name_mask[]="S%02dQ%010u";
 /*  Output:          return code indicating validity                 */
 /*                                                                   */
 /*********************************************************************/
-static LONG   val_queue_name(
-  PSZ   usrname)                       /* User's name.               */
+static int val_queue_name(
+  const char *   usrname)              /* User's name.               */
 {
-   LONG        rc;                     /* Return code.               */
-   PSZ         valptr;                 /* Used to validate name.     */
+   int         rc;                     /* Return code.               */
+   const char *valptr;                 /* Used to validate name.     */
    char        ch;
-   ULONG       namelen;                /* Length of the user's name. */
+   size_t      namelen;                /* Length of the user's name. */
 
    if (!usrname)                       /* NULL is OK.                */
       return (1);                      /* return code indication     */
 
    namelen = strlen(usrname);
-   if (rc = ((0 < namelen) &&
-       (namelen <= MAX_NAME_LENGTH) ) ) {
+   if ((rc = ((0 < namelen) && (namelen <= MAX_NAME_LENGTH)))) {
 
      valptr = usrname;                 /* point to name              */
      while(rc && (ch = *(valptr++))) { /* While have not reached end */
@@ -189,7 +182,6 @@ static LONG   val_queue_name(
 }
 
 
-/*$PE*/
 /*********************************************************************/
 /*                                                                   */
 /*  Function:        search()                                        */
@@ -207,36 +199,35 @@ static LONG   val_queue_name(
 /*  Output:          Address of the queue header.  Null if not found */
 /*                                                                   */
 /*********************************************************************/
-static ULONG  search(
-  PSZ  name)
+static size_t search(const char *  name)
 {
-ULONG current;                         /* Current queue element      */
-ULONG previous;                        /* Previous queue element     */
+    size_t current;                         /* Current queue element      */
+    size_t previous;                        /* Previous queue element     */
 
-  previous = NULL;                     /* no previous yet            */
-  current = apidata->base;             /* get current base pointer   */
+    previous = 0;                        /* no previous yet            */
+    current = apidata->base;             /* get current base pointer   */
 
-  while (current) {                    /* while more queues          */
-                                       /* if we have a match         */
-    if (!rxstricmp(name,QHDATA(current)->queue_name)) {
-      if (previous) {                  /* if we have a predecessor   */
-//      EnterMustComplete();           /* make sure we can complete  */
-        QHDATA(previous)->next =       /* rearrange the chain to     */
-          QHDATA(current)->next;       /* move this to the front     */
-        QHDATA(current)->next = apidata->base;
-        apidata->base = current;
-//      ExitMustComplete();            /* end of must complete part  */
-      }
-      return (current);                /* we are finished            */
+    while (current)
+    {                    /* while more queues          */
+                         /* if we have a match         */
+        if (!strcasecmp(name,QHDATA(current)->queue_name))
+        {
+            if (previous)
+            {                  /* if we have a predecessor   */
+                QHDATA(previous)->next =       /* rearrange the chain to     */
+                                               QHDATA(current)->next;       /* move this to the front     */
+                QHDATA(current)->next = apidata->base;
+                apidata->base = current;
+            }
+            return(current);                /* we are finished            */
+        }
+        previous = current;                /* remember this block        */
+        current = QHDATA(current)->next;   /* step to the next block     */
     }
-    previous = current;                /* remember this block        */
-    current = QHDATA(current)->next;   /* step to the next block     */
-  }
-  return (NULL);                       /* not found, tell caller so  */
+    return 0;                           /* not found, tell caller so  */
 }
 
 
-/*$PE*/
 /*********************************************************************/
 /*                                                                   */
 /*  Function:       queue_allocate()                                 */
@@ -259,12 +250,12 @@ ULONG previous;                        /* Previous queue element     */
 /*  Effects:        Storage allocated.                               */
 /*                                                                   */
 /*********************************************************************/
-static LONG   queue_allocate(
-  PSZ                 name,            /* External queue name.       */
-  PULONG       pnew)                   /* New queue header (returned)*/
+static int    queue_allocate(
+  const char * name,                   /* External queue name.       */
+  size_t*pnew)                         /* New queue header (returned)*/
 {
-   ULONG  size;                        /* size to allocate           */
-   ULONG tag;                          /* unique queue identifier    */
+   size_t size;                        /* size to allocate           */
+   size_t tag;                         /* unique queue identifier    */
 
   size = sizeof(QUEUEHEADER);
   /* Allocate the header record.  If it fails, terminate processing. */
@@ -279,29 +270,29 @@ static LONG   queue_allocate(
       }
 
       if (!name) {                    /* If no name                  */
-        tag = (ULONG)QDATA(*pnew);    /* get value of pointer        */
-        name = QHDATA(*pnew)->queue_name;/* new name will be buffer  */
+        tag = (size_t)QDATA(*pnew);   /* get value of pointer        */
+        char *newname = QHDATA(*pnew)->queue_name;/* new name will be buffer  */
         for (;;) {                    /* now create a unique name    */
-          sprintf(name,               /* create a new queue name     */
+          sprintf(newname,            /* create a new queue name     */
                   rxqueue_name_mask,  /* from the session id and the */
                   apidata->SessionId, /* address of the control block*/
-                  (ULONG)tag);
+                  tag);
                                       /* if unique, we're done       */
-          if (!search(name))
+          if (!search(newname))
             break;                    /* get out                     */
           tag++;                      /* try a new number            */
         }
       }
       else {
-                                      /* make it uppercase           */
-                                      /* Do not uppercase the given space */
-//        for(int j=0;j<(strlen(name));j++)
-//          *(name+j) = toupper(*(name+j));
+        char *newname = QHDATA(*pnew)->queue_name;
                                       /* copy the name over          */
-        strcpy(QHDATA(*pnew)->queue_name,name);
+        strcpy(newname, name);
                                       /* make it uppercase           */
-        for(int j=0;j<(strlen(name));j++)
-          *((QHDATA(*pnew)->queue_name)+j) = toupper(*((QHDATA(*pnew)->queue_name)+j));
+        while(*newname != '\0')                 
+        {
+            *newname = toupper(*newname); 
+            newname++; 
+        }
       }
       return (0);                     /* worked fine                 */
    }
@@ -310,7 +301,6 @@ static LONG   queue_allocate(
 }
 
 
-/*$PE*/
 /*********************************************************************/
 /*                                                                   */
 /*  Function:        create_queue_sem                                */
@@ -327,8 +317,8 @@ static LONG   queue_allocate(
 /*  Output:          Success/failure return code.                    */
 /*                                                                   */
 /*********************************************************************/
-static INT create_queue_sem(
-    ULONG   queue)                     /* new queue                  */
+static int create_queue_sem(
+    size_t  queue)                     /* new queue                  */
 {
                                        /* create a mutex sem         */
   if (CreateMutexSem(&(QHDATA(queue)->enqsem)))
@@ -343,7 +333,6 @@ static INT create_queue_sem(
   return (0);
 }
 
-/*$PE*/
 /*********************************************************************/
 /*                                                                   */
 /*  Function:        release_queue_item()                            */
@@ -363,9 +352,7 @@ static INT create_queue_sem(
 /*  Effects:         Memory deleted.                                 */
 /*                                                                   */
 /*********************************************************************/
-/*THU009C begin */
-static VOID   release_queue_item(
-  ULONG   item, INT flag, ULONG current)                        /* queue item to release      */
+static void   release_queue_item(size_t item, int flag, size_t current) 
 {
   /* Release header and data together to increase performance of the */
   /* memory manager                                                  */
@@ -373,12 +360,10 @@ static VOID   release_queue_item(
 
   if (QIDATA(item)->size)              /* empty entry ?              */
   {                              /* delete header and data            */
-//   RxFreeMemQue(item,sizeof(QUEUEITEM)+QIDATA(item)->size,flag, current);
      RxFreeMemQue(item,RXROUNDUP(sizeof(QUEUEITEM)+QIDATA(item)->size, SHM_OFFSET),flag, current);
   }
   else                                       /* no data !            */
   {                                    /* just delete header          */
-//   RxFreeMemQue(item, sizeof(QUEUEITEM), flag, current);
      RxFreeMemQue(item, RXROUNDUP(sizeof(QUEUEITEM),SHM_OFFSET), flag, current); /*THU012A */
   }
 }
@@ -400,8 +385,8 @@ static VOID   release_queue_item(
 /*  Output:          None                                            */
 /*                                                                   */
 /*********************************************************************/
-static VOID delete_queue_sem(
-    ULONG   queue)                     /* deleted queue              */
+static void delete_queue_sem(
+    size_t  queue)                     /* deleted queue              */
 {
                                        /* delete the mutex sem       */
   CloseMutexSem(QHDATA(queue)->enqsem);
@@ -427,12 +412,11 @@ static VOID delete_queue_sem(
 /*                                                                   */
 /*********************************************************************/
 void  queue_detach(
-  ULONG current)                       /* queue to delete            */
+  size_t current)                      /* queue to delete            */
 {
-  ULONG previous;
-  ULONG curr_item;
-  ULONG next_item;
-  ULONG temp;
+  size_t curr_item;
+  size_t next_item;
+  size_t temp;
 
   if(apidata == NULL)                 /* nothing happend at all      */
     return;
@@ -459,7 +443,7 @@ void  queue_detach(
     delete_queue_sem(current);      /* free the semaphores         */
     removeshmem(apidata->qbasememId);/* remove the queue mem pool  */
     detachshmem(apidata->qbase);    /* force the deletion          */
-    apidata->qbase == NULL;         /* reset the memory pointer    */
+    apidata->qbase = NULL;          /* reset the memory pointer    */
     apidata->qmemsizeused = 1;
   }
   else                     /* we have still Named or/and Sessionqueues in shared memory */
@@ -518,20 +502,19 @@ void  queue_detach(
 /*  Output:          Address of the queue header.                    */
 /*                                                                   */
 /*********************************************************************/
-ULONG  search_session(VOID)
+size_t search_session(void)
 {
-ULONG        current;                  /* Current queue element      */
-ULONG        previous;                 /* Previous queue element     */
-ULONG        next;
+size_t       current;                  /* Current queue element      */
+size_t       previous;                 /* Previous queue element     */
+size_t       next;
 
-  previous = NULL;                     /* no previous yet            */
+  previous = 0;                        /* no previous yet            */
   current = apidata->session_base;     /* get current base pointer   */
   apidata->SessionId = getpgid(0);     /* get the session id         */
 
   /* look for queue garbage                                          */
   while (current) {                    /* while more queues          */
     next = QHDATA(current)->next;
-//  if((getpgid(QHDATA(current)->queue_session) == -1) && (errno == ESRCH))
     if( kill(QHDATA(current)->queue_session, 0 ) == -1 )
     {
        queue_detach(current);
@@ -544,13 +527,6 @@ ULONG        next;
   while (current) {                    /* while more queues          */
                                        /* if we have a match         */
     if (QHDATA(current)->queue_session == apidata->SessionId) {
-//      if (previous) {                  /* if we have a predecessor   */
-//        QHDATA(previous)->next =       /* rearrange the chain to     */
-//          QHDATA(current)->next;       /* move this to the front     */
-//        QHDATA(current)->next = apidata->session_base;
-//        apidata->session_base = current;
-//    }
-//      printf("now ending function SEARCH_SESSION \n");
       return (current);                /* we are finished            */
     }
     previous = current;                /* remember this block        */
@@ -562,7 +538,7 @@ ULONG        next;
     if (create_queue_sem(current)) {   /* create queue semaphores    */
                                        /* release the header         */
       RxFreeMemQue(current, sizeof(QUEUEHEADER), QMEMSESSION, current);  /* this is always session queue */
-      return NULL;                     /* can't find this            */
+      return 0;                        /* can't find this            */
     }
     QHDATA(current)->next = apidata->session_base;   /* add to front */
     apidata->session_base = current;
@@ -590,22 +566,18 @@ ULONG        next;
 /*                                                                   */
 /*********************************************************************/
 
-static LONG   alloc_queue_entry(
-  ULONG       size,                   /* size of queue entry.        */
-  PULONG      element,                /* Address of queue element    */
-  char       *data)                   /* actual queue data           */
+static int alloc_queue_entry(
+  size_t      size,                   /* size of queue entry.        */
+  size_t     *element,                /* Address of queue element    */
+  const char *data)                   /* actual queue data           */
 {
-   LONG     rc = RXQUEUE_OK;          /* Function result.            */
-   ULONG    entry;                    /* temp variable               */
-   ULONG    addsize;
+   size_t   addsize;
                                       /* first allocate header block */
 
 
    /* no chance, QUEUEITEM and element must be allocated together    */
    /* because otherwhile the rearrangement fails. Conceptually this  */
    /* should not be a problem THU                                    */
-
-   /*addsize = size + sizeof(QUEUEITEM);  RXROUNDUP added to align queue data */
    addsize = RXROUNDUP( size + sizeof(QUEUEITEM), SHM_OFFSET );
 
    if (RxAllocMem(element, addsize, QMEM))
@@ -613,41 +585,19 @@ static LONG   alloc_queue_entry(
       return (1);
    }
 
-//   if (RxAllocMem(element,sizeof(QUEUEITEM),QMEM))
-//     return (1);                      /* can't get it, error         */
-
-                                      /* next get the queue element  */
-//   if (size) {                        /* but only if not a null str. */
-//     if (RxAllocMem(&entry,size,QMEM)) {
-                                      /* didn't work, so return head */
-//     apidata->qmemsizeused = apidata->qmemsizeused - sizeof(QUEUEITEM);
-//       RxFreeMem(*element,sizeof(QUEUEITEM),QMEM);
-//       return (1);                    /* and quit                    */
-//   }
-// apidata->qmemsizeused = apidata->qmemsizeused + addsize;
-
    QIDATA(*element)->size = size;     /* fill in the size            */
                                       /* fill in the data and time   */
-   GetDateTime((PDATETIME)&(QIDATA(*element)->addtime));
+   GetDateTime(&(QIDATA(*element)->addtime));
 
    if (size == 0)
    {
-      QIDATA(*element)->queue_element = NULL;
+      QIDATA(*element)->queue_element = 0;    
    }
    else
    {
      QIDATA(*element)->queue_element = (*element) + sizeof(QUEUEITEM);
      memcpy(QDATA(QIDATA(*element)->queue_element),data,size);
    }
-
-//   QIDATA(*element)->queue_element = entry;
-//                                      /* copy the queue data in      */
-//                                      /* if we actually have any     */
-//     memcpy(QDATA(QIDATA(*element)->queue_element),data,size);
-//   }
-//   else                               /* make a null pointer         */
-//     QIDATA(*element)->queue_element = NULL;
-
    return(0);
 }
 
@@ -662,7 +612,7 @@ static LONG   alloc_queue_entry(
 /*  Output:          none                                            */
 /*                                                                   */
 /*********************************************************************/
-VOID GetDateTime(PDATETIME datetime){
+void GetDateTime(REXXDATETIME *datetime){
   tm *dt;                             /* struct to hold info          */
   time_t t;
 
@@ -672,17 +622,15 @@ VOID GetDateTime(PDATETIME datetime){
   datetime->hours        = dt->tm_hour;
   datetime->minutes      = dt->tm_min;
   datetime->seconds      = dt->tm_sec;
-  datetime->hundredths   = NULL;      /* not possible                 */
+  datetime->hundredths   = 0;         /* not possible                 */
   datetime->day          = dt->tm_mday;
   datetime->month        = dt->tm_mon;
   datetime->year         = 1900 + (dt->tm_year);
   datetime->weekday      = dt->tm_wday;
-  datetime->microseconds = NULL;      /* not possible                 */
+  datetime->microseconds = 0;         /* not possible                 */
   datetime->yearday      = dt->tm_yday;
-  datetime->valid        = 1;
 }
 
-/*$PE*/
 /*********************************************************************/
 /*                                                                   */
 /*  Function:        RexxCreateQueue()                               */
@@ -732,21 +680,21 @@ VOID GetDateTime(PDATETIME datetime){
 /*  Effects:         New queue created.                              */
 /*                                                                   */
 /*********************************************************************/
-ULONG  APIENTRY RexxCreateQueue(
-  PSZ     name,                        /* Internal name (returned).  */
-  ULONG   size,                        /* Length of name buffer.     */
-  PSZ     usrrequest,                  /* Desired name.              */
-  PULONG  pdup)                        /* Duplicate name flag.       */
+APIRET APIENTRY RexxCreateQueue(
+  char *name,                          /* Internal name (returned).  */
+  size_t  size,                        /* Length of name buffer.     */
+  const char *usrrequest,              /* Desired name.              */
+  size_t *pdup)                        /* Duplicate name flag.       */
 {
-  ULONG        rc;
-  ULONG        temp;
+  APIRET       rc;
+  size_t       temp;
 
   APISTARTUP(QUEUECHAIN);              /* do common entry code       */
 
   if (usrrequest) {                    /* given a name?              */
                                        /* Is the user's name valid?  */
     if ((!val_queue_name(usrrequest)) ||
-        (!rxstricmp(usrrequest,        /* cannot create a queue named*/
+        (!strcasecmp(usrrequest,        /* cannot create a queue named*/
         "SESSION"))) {                 /* "SESSION"                  */
       APICLEANUP(QUEUECHAIN);          /* release shared resources   */
       return (RXQUEUE_BADQNAME);       /* return with proper code    */
@@ -772,7 +720,6 @@ ULONG  APIENTRY RexxCreateQueue(
 
 
   if (!rc) {                           /* if no errors to this point */
-//  EnterMustComplete();               /* make sure we can complete  */
     if (!(rc = queue_allocate(         /* the queue is allocated     */
           usrrequest,
           &temp))) {
@@ -781,7 +728,6 @@ ULONG  APIENTRY RexxCreateQueue(
                                        /* copy the new name into buf */
       strcpy(name,QHDATA(temp)->queue_name);
     }
-//  ExitMustComplete();                /* end of critical section    */
   }
   APICLEANUP(QUEUECHAIN);              /* release shared resources   */
   return (rc);                         /* and exit                   */
@@ -803,66 +749,53 @@ ULONG  APIENTRY RexxCreateQueue(
 /*  Effects:          Queue and all its entries deleted.             */
 /*                                                                   */
 /*********************************************************************/
-ULONG  APIENTRY RexxDeleteQueue(
-  PSZ name)                            /* name of queue to delete    */
+APIRET APIENTRY RexxDeleteQueue(
+  const char * name)                   /* name of queue to delete    */
 {
-  ULONG        rc;                     /* return code from call      */
-  ULONG        curr_item;              /* current queue item         */
-  ULONG        next_item;              /* next queue item            */
-  ULONG        previous;               /* previous list entry        */
-  ULONG        current;                /* current list entry         */
-  BOOL found = FALSE;
+  APIRET       rc;                     /* return code from call      */
+  size_t       curr_item;              /* current queue item         */
+  size_t       next_item;              /* next queue item            */
+  size_t       previous;               /* previous list entry        */
+  size_t       current;                /* current list entry         */
+  bool found = false;
                                        /* Exception handler record   */
 
   if (!val_queue_name(name))           /* Did the user supply a      */
                                        /* valid name?                */
     return (RXQUEUE_BADQNAME);         /* No, get out.               */
-  else if (!rxstricmp(name,"SESSION")) /* trying to delete "SESSION" */
+  else if (!strcasecmp(name,"SESSION")) /* trying to delete "SESSION" */
     return (RXQUEUE_BADQNAME);         /*   then signal an error     */
 
 
   APISTARTUP(QUEUECHAIN);              /* do common entry code       */
 
   rc = RXQUEUE_NOTREG;                 /* default to bad name        */
-  previous = NULL;                     /* no previous one yet        */
+  previous = 0;                        /* no previous one yet        */
   current = apidata->base;             /* get queue base             */
   while ( (current) && (!found) )
   {
-    if (!rxstricmp(name,               /* if we have a name match    */
+    if (!strcasecmp(name,               /* if we have a name match    */
                   QHDATA(current)->queue_name))
     {
-      found = TRUE;
+      found = true;
       if (QHDATA(current)->waiting)    /* if someone waiting on this */
       {
         rc=RXQUEUE_ACCESS;             /* tell the caller            */
         break;                         /* and get out of here        */
       }
-//    EnterMustComplete();             /* start of critical section  */
                                        /* while there is an item     */
       curr_item = QHDATA(current)->queue_first;
       while(curr_item != 0 )
       {
         next_item = QIDATA(curr_item)->next;
-//      QHDATA(current)->queue_first = QIDATA(curr_item)->next;
-                                       /* this was the last item ?   */
-//      if(QHDATA(current)->queue_first == 0 )
-//        QHDATA(current)->queue_last = 0; /* reset the last ptr     */
         release_queue_item(curr_item, QMEMNAMEDQUE, current);/* return storage for this one */
         curr_item = next_item;
       }
-//      if (!previous)                   /* if releasing first item    */
-//                                       /* just remove from front     */
-//        apidata->base = QHDATA(current)->next;
-//      else
-//        QHDATA(previous)->next =       /* we need to close up the    */
-//           QHDATA(current)->next;      /* chain                      */
       delete_queue_sem(current);       /* get rid of semaphores      */
       RxFreeMemQue(current,               /* get rid of queue header    *//* always a named queue */
                 sizeof(QUEUEHEADER),
                 QMEMNAMEDQUE, current);
       rc=RXQUEUE_OK;                   /* set good return code       */
-//    apidata->qmemsizeused -= sizeof(QUEUEHEADER);
-//    ExitMustComplete();              /* end of critical section    */
       break;                           /* and get out of here        */
     }
     previous = current;                /* save predecessor           */
@@ -887,12 +820,12 @@ ULONG  APIENTRY RexxDeleteQueue(
 /*  Effects:          Count of queue elements.                       */
 /*                                                                   */
 /*********************************************************************/
-ULONG  APIENTRY RexxQueryQueue(
-  PSZ    name,                        /* Queue to query.             */
-  PULONG count)                       /* Length of queue (returned)  */
+APIRET APIENTRY RexxQueryQueue(
+  const char *name,                    /* Queue to query.             */
+  size_t *count)                       /* Length of queue (returned)  */
 {
-  ULONG        rc;
-  ULONG current;
+  APIRET       rc;
+  size_t current;
 
   if (!val_queue_name(name))           /* Did the user supply a      */
                                        /* valid name?                */
@@ -901,7 +834,7 @@ ULONG  APIENTRY RexxQueryQueue(
   APISTARTUP(QUEUECHAIN);              /* do common entry code       */
 
   *count=0;                            /* initialize the count       */
-  if (!rxstricmp(name,"SESSION")) {    /* trying to delete "SESSION" */
+  if (!strcasecmp(name,"SESSION")) {    /* trying to delete "SESSION" */
     current = search_session();        /* get current session queue  */
     if (current) {                     /* found or allocated?        */
       *count = QHDATA(current)->item_count;/*return the current count*/
@@ -938,14 +871,14 @@ ULONG  APIENTRY RexxQueryQueue(
 /*                    queue.                                         */
 /*                                                                   */
 /*********************************************************************/
-ULONG  APIENTRY RexxAddQueue(
-  PSZ       name,
-  PRXSTRING data,
-  ULONG     flag)
+APIRET APIENTRY RexxAddQueue(
+  const char *name,
+  PCONSTRXSTRING data,
+  size_t    flag)
 {
-  ULONG        rc;
-  ULONG        current;
-  ULONG        item;                   /* Local (allocation) pointer.*/
+  APIRET       rc;
+  size_t       current;
+  size_t       item;                   /* Local (allocation) pointer.*/
 
   rc = RXQUEUE_OK;                   /* worked well                */
   if (!val_queue_name(name))           /* Did the user supply a      */
@@ -965,7 +898,7 @@ ULONG  APIENTRY RexxAddQueue(
   }
   else
   {
-    if (!rxstricmp(name,"SESSION"))      /* trying to delete "SESSION" */
+    if (!strcasecmp(name,"SESSION"))      /* trying to delete "SESSION" */
     {
       current = search_session();        /* get current session queue  */
     }
@@ -993,7 +926,7 @@ ULONG  APIENTRY RexxAddQueue(
       {                                /* add to the end             */
         QIDATA(QHDATA(current)->queue_last)->next=item;
         QHDATA(current)->queue_last=item;/* set new last pointer     */
-        QIDATA(item)->next = NULL;     /* nothing after this one     */
+        QIDATA(item)->next = 0;        /* nothing after this one     */
       }
     }
   }
@@ -1006,14 +939,11 @@ ULONG  APIENTRY RexxAddQueue(
       PostEventSem(QHDATA(current)->waitsem);
     }
   }
-//ExitMustComplete();                  /* end of critical section    */
-
   APICLEANUP(QUEUECHAIN);              /* release shared resources   */
   return (rc);                         /* return with return code    */
 }
 
 
-/*$PE*/
 /*********************************************************************/
 /*                                                                   */
 /*  Function:         RexxPullQueue()                                */
@@ -1043,20 +973,19 @@ ULONG  APIENTRY RexxAddQueue(
 /*                    queued to the queue data manager.              */
 /*                                                                   */
 /*********************************************************************/
-ULONG  APIENTRY RexxPullQueue(
-  PSZ         name,
+APIRET APIENTRY RexxPullQueue(
+  const char *name,
   PRXSTRING   data_buf,
-  PDATETIME   dt,
-  ULONG       waitflag)
+  REXXDATETIME *dt,
+  size_t      waitflag)
 {
-  ULONG        rc = RXQUEUE_OK;
-  ULONG        mutexrc;                             //THUTHU
-  ULONG        current;
-  ULONG        item;
-  INT          mutexsem;               /* semaphore to wait onTHUTHU */
-  INT          waitsem;                /* semaphore to wait on       */
-  INT          rexxapisem;             /* semaphore to wait onTHUTHU */
-  INT          sessionflag;
+  APIRET       rc = RXQUEUE_OK;
+  size_t       current;
+  size_t       item;
+  int          mutexsem;               /* semaphore to wait on       */
+  int          waitsem;                /* semaphore to wait on       */
+  int          rexxapisem;             /* semaphore to wait on       */
+  int          sessionflag;
                                        /* got a good wait flag?      */
   if (waitflag!=RXQUEUE_NOWAIT && waitflag!=RXQUEUE_WAIT)
     return (RXQUEUE_BADWAITFLAG);      /* no, just exit              */
@@ -1067,7 +996,7 @@ ULONG  APIENTRY RexxPullQueue(
 
   APISTARTUP(QUEUECHAIN);              /* do common entry code       */
 
-  if (!rxstricmp(name,"SESSION")) {    /* trying to delete "SESSION" */
+  if (!strcasecmp(name,"SESSION")) {    /* trying to delete "SESSION" */
     current = search_session();        /* get current session queue  */
     sessionflag = QMEMSESSION;
   }
@@ -1080,7 +1009,7 @@ ULONG  APIENTRY RexxPullQueue(
     rc = RXQUEUE_NOTREG;               /* we have an unknown queue   */
   else
   {
-    item = NULL;                       /* set to no item initially   */
+    item = 0;                          /* set to no item initially   */
     if (QHDATA(current)->item_count)   /* if items in the queue      */
       item = QHDATA(current)->queue_first;/* get the first one       */
                                        /* if no items in the queue   */
@@ -1089,59 +1018,6 @@ ULONG  APIENTRY RexxPullQueue(
     while (!item && waitflag) {
       QHDATA(current)->waiting++;      /* update the waiters count  */
 
-            /********************************************************/
-            /* Extablish an exit handler in case we get terminated  */
-            /* while waiting for data.                              */
-            /********************************************************/
-
-                                       /* now release lock on global */
-                                       /* data so someone else can   */
-//                                     /* add a queue entry          */
-// APICLEANUP(QUEUECHAIN);
-// EnterMustComplete();
-                                       /* now request the queue sem  */
-// if (RequestMutexSem(QHDATA(current)->enqsem))
-// {                                /* if non-zero, then exit     */
-//   detachall(QUEUECHAIN);         /* clean up everything        */
-//   ExitMustComplete();
-//   return (RXQUEUE_MEMFAIL);      /* error if we couldn't get it*/
-// }
-                                       /* now rerequest global, so   */
-                                       /* we can ensure proper access*/
-// if (RxAPIStartUp(QUEUECHAIN)) {
-
-      /* The memory can now be rearranged. So search the queue again */
-      /* to be sure that the pointer is  valid.                      */
-//   if (!rxstricmp(name,"SESSION")) {
-//     current = search_session();    /* get current session queue  */
-//   }
-//   else
-//     current = search(name);        /* or named queue             */
-
-//   QHDATA(current)->waiting--;    /* remove the wait            */
-//   detachall(QUEUECHAIN);         /* clean up everything        */
-//   ExitMustComplete();
-//   return (RXQUEUE_MEMFAIL);      /* error if we couldn't get it*/
-// }
-      /* The memory can now be rearranged. So search the queue again */
-      /* to be sure that the pointer is  valid.                      */
-// if (!rxstricmp(name,"SESSION")) {
-//   current = search_session();    /* get current session queue  */
-// }
-// else
-//   current = search(name);        /* or named queue             */
-
-/* now let me try to give others access to shared memory, although   */
-/* i want to keep track of it, in case someone else has made an      */
-/* entry in the queue. If another one has made an entry, he signals  */
-/* an event and starts me again. Then, let me try to lock the base   */
-/* semaphore again, rearrange the memory and catch the item in the   */
-/* queue. Protection with Mutexes is needed in case another process  */
-/* has the same idea.                                                */
-
-// if (!QHDATA(current)->item_count) {/* if still nothing on queue*/
-                                       /* clear event sem first      */
-//   ResetEventSem(QHDATA(current)->waitsem);
       waitsem = QHDATA(current)->waitsem;      /*get local semaphore copy  */
       mutexsem = QHDATA(current)->enqsem;
       rexxapisem = apidata->rexxapisemaphore;
@@ -1152,7 +1028,7 @@ ULONG  APIENTRY RexxPullQueue(
         if (WaitEventSem(rexxapisem,waitsem))             /* theres something wrong   */
         {
           APISTARTUP(QUEUECHAIN);              /* do common entry code       */
-          if (!rxstricmp(name,"SESSION"))       /* rearrange memory        */
+          if (!strcasecmp(name,"SESSION"))       /* rearrange memory        */
           {
             current = search_session();
           }
@@ -1169,7 +1045,7 @@ ULONG  APIENTRY RexxPullQueue(
         else                           /* everythings gona be alright*/
         {
           APISTARTUP(QUEUECHAIN);              /* do common entry code       */
-          if (!rxstricmp(name,"SESSION"))       /* rearrange memory        */
+          if (!strcasecmp(name,"SESSION"))       /* rearrange memory        */
           {
             current = search_session();
           }
@@ -1188,43 +1064,8 @@ ULONG  APIENTRY RexxPullQueue(
       QHDATA(current)->waiting--;              /* remove the wait            */
       ReleaseMutexSem(QHDATA(current)->enqsem);
     }                                          /* end the while loop         */
-            /********************************************************/
-            /* Now that an add to our queue has woken us up, we     */
-            /* want to remove the item from the queue.              */
-            /*                                                      */
-            /* Note that another thread may grab the item before    */
-            /* we can get exclusive access to the API.  In that     */
-            /* case, we wave off and go around again.               */
-            /*                                                      */
-            /* Note, too, that the current thread has already       */
-            /* registered itself as holding the main queue API      */
-            /* semaphore.  We do not want to create duplicate       */
-            /* registration blocks in the queue header memory,      */
-            /* therefore we set the queue semaphore directly with   */
-            /* DosRequestMutexSem() instead of calling getQsem().   */
-            /********************************************************/
-//
-//    QHDATA(current)->waiting--;      /* remove our wait flag       */
-//                                     /* release the mutex          */
-//    ReleaseMutexSem(QHDATA(current)->enqsem);
-//    item=QHDATA(current)->queue_first;       /* get the new item   */
-//  }
-
-
     if (item)                          /* if we got an item          */
     {
-//    EnterMustComplete();             /* start of critical section  */
-            /*********************************************************/
-            /* We have located the queue and determined that an item */
-            /* is available.  Obtain addressability to the queue     */
-            /* item.                                                 */
-            /*********************************************************/
-
-                                       /* dechain, updating the end  */
-                                       /* pointer if necessary       */
-//      if ((QHDATA(current)->queue_first=QIDATA(item)->next) == 0 )
-//        QHDATA(current)->queue_last = 0;                           /*let this be done by RxFreeMem */
-
       QHDATA(current)->item_count--;   /* reduce the queue size      */
 
       if (data_buf->strptr &&          /* given a default buffer?    */
@@ -1236,16 +1077,15 @@ ULONG  APIENTRY RexxPullQueue(
                  QIDATA(item)->size);
                                        /* set the proper length      */
         data_buf->strlength = QIDATA(item)->size;
-        memcpy((unsigned char *)dt,    /* set the datetime info      */
-               (unsigned char *)&(QIDATA(item)->addtime),
-               sizeof(DATETIME));
+        memcpy((char *)dt,    /* set the datetime info      */
+               (char *)&(QIDATA(item)->addtime),
+               sizeof(REXXDATETIME));
         release_queue_item(item, sessionflag, current);      /* get rid if the queue item  */
       }
       else {                           /* give up memory directly    */
         if (QIDATA(item)->size) {      /* if not a null string       */
                                        /* allocate a new block       */
           if (!(data_buf->strptr = (char *)malloc(QIDATA(item)->size))) {
-//          ExitMustComplete();        /* end of critical section    */
             APICLEANUP(QUEUECHAIN);    /*   clean up everything      */
             return (RXQUEUE_MEMFAIL);  /* error if we couldn't get it*/
           }
@@ -1259,12 +1099,11 @@ ULONG  APIENTRY RexxPullQueue(
                                        /* set the length             */
         data_buf->strlength =QIDATA(item)->size;
 
-        memcpy((unsigned char *)dt,    /* set the datetime info      */
-               (unsigned char *)&(QIDATA(item)->addtime),
-               sizeof(DATETIME));
+        memcpy((char *)dt,    /* set the datetime info      */
+               (const char *)&(QIDATA(item)->addtime),
+               sizeof(REXXDATETIME));
         release_queue_item(item, sessionflag, current);      /* free up the queue item     */
       }
-//    ExitMustComplete();              /* end of critical section    */
     }
     else
       rc=RXQUEUE_EMPTY;
@@ -1284,48 +1123,16 @@ ULONG  APIENTRY RexxPullQueue(
 /*                                                                   */
 /*                                                                   */
 /*********************************************************************/
-VOID Queue_Detach(ULONG pid)
+void Queue_Detach(process_id_t pid)
 {
-  ULONG current;
-  ULONG previous;
-  ULONG curr_item;
-  ULONG next_item;              /* next queue item            */
+  size_t current;
+  size_t curr_item;
+  size_t next_item;              /* next queue item            */
 
   if(apidata == NULL)                 /* nothing happend at all      */
     return;
 
-/* this is for LINUX only. AIX does not create different PID's for   */
-/* different threads. The 'start' and 'reply' methods do not cause   */
-/* new PID's to be created. Only 'rexx newprg' create a new process  */
-/* with new PID (not: call 'newprg') and therefor a new session queue*/
-/* is (and must) be created.                                         */
-
-/* concerning the waiting flag: Should be no problem, because this   */
-/* routine should only be called, when all threads of the process    */
-/* have ended, and no other process (because it is the sessionqueue) */
-/* can wait on it. Therefor i don't have to care on that             */
-
-//#ifdef LINUX
-//  if(pid == getpgid(0)){            /* if this is the parent pocess*/
-//#endif
     current = search_session();       /* get the session queue       */
-
-
-/* let RxFreeMem do this for us                                        */
-
-//    if(apidata->session_base == current)/* if this is the first one  */
-//       apidata->session_base = QHDATA(current)->next;/* chain it out */
-//    else{                             /* looking for the previous one*/
-//      previous = apidata->session_base;/* take the first             */
-//      while(QHDATA(previous)->next != current){
-//        previous = QHDATA(previous)->next;/* next one please         */
-//      }
-//                                      /* now we chan chain it out    */
-//      QHDATA(previous)->next = QHDATA(current)->next;
-//    }
-                               /* if this was actually the last queue*/
-
-
 /* let me free the items of the session queue of this process          */
 
     curr_item = QHDATA(current)->queue_first;
@@ -1348,7 +1155,7 @@ VOID Queue_Detach(ULONG pid)
       delete_queue_sem(current);      /* free the semaphores         */
       removeshmem(apidata->qbasememId);/* remove the queue mem pool  */
       detachshmem(apidata->qbase);    /* force the deletion          */
-      apidata->qbase == NULL;         /* reset the memory pointer    */
+      apidata->qbase = NULL;          /* reset the memory pointer    */
       apidata->qmemsizeused = 1;
     }
     else                     /* we have still Named or/and Sessionqueues in shared memory */
@@ -1358,14 +1165,6 @@ VOID Queue_Detach(ULONG pid)
                         /* rithm resets apidata values. After that lo */
                         /* cal copies of apidata values need a reiniti*/
                         /* alization                                  */
-//#ifdef LINUX
-//  }
-//#endif
-  /* It's possible that the process terminates until a RexxPullQueue */
-  /* command is waiting on a queue. So let's clean up the semaphores */
-  /* and the wait count of the appropriate queue.                    */
-  /* don't forget to reinitialize the local copies of apidata values */
-
                                        /* first for the named queues */
   current = apidata->base;             /* get the anchor             */
   while(current){
@@ -1398,7 +1197,7 @@ VOID Queue_Detach(ULONG pid)
 /*********************************************************************/
 
 
-ULONG CreateMutexSem(INT *handle)
+int CreateMutexSem(int *handle)
 {
   if(apidata->qsemcount < MAXSEM-1){ /* if two sem unused            */
     for(int i=1;i<MAXSEM+1;i++){     /* find an unused semaphore     */
@@ -1406,15 +1205,15 @@ ULONG CreateMutexSem(INT *handle)
         apidata->qsemfree[i] = 1;    /* mark it as used              */
         *handle = i;                 /* and return it                */
         apidata->qsemcount++;        /* don't forget to count        */
-        return ((ULONG)0);           /* worked well                  */
+        return 0;                    /* worked well                  */
       }
     }
   }
-  return ((ULONG)1);                 /* semaphore set is full        */
+  return 1;                          /* semaphore set is full        */
 }
 
 
-ULONG CreateEventSem(INT *handle)
+int CreateEventSem(int *handle)
 {
   if(apidata->qsemcount < MAXSEM){   /* if one sem is unused         */
     for(int i=1;i<MAXSEM+1;i++){     /* find the unused semaphore    */
@@ -1422,57 +1221,55 @@ ULONG CreateEventSem(INT *handle)
         apidata->qsemfree[i] = 1;    /* mark it as used              */
         *handle = i;                 /* and return it                */
         (apidata->qsemcount)++;      /* don't forget to count        */
-        return ((ULONG)0);           /* worked well                  */
+        return 0;                    /* worked well                  */
       }
     }
   }
-  return ((ULONG)1);                 /* semaphore set is full        */
+  return 1;                          /* semaphore set is full        */
 }
 
-ULONG RequestMutexSem(INT rexxapisem, INT handle){
-
-//return (locksem(apidata->rexxapisemaphore, handle));
+int RequestMutexSem(int rexxapisem, int handle){
   return (locksem(rexxapisem, handle));
 }
 
-VOID ReleaseMutexSem(INT handle){
+void ReleaseMutexSem(int handle){
 
   unlocksem(apidata->rexxapisemaphore, handle);
 }
 
 
-VOID ResetEventSem(INT handle){
+void ResetEventSem(int handle){
 
                             /* do the initialisation                */
   init_sema(apidata->rexxapisemaphore, handle);
   locksem(apidata->rexxapisemaphore, handle);
 }
 
-ULONG WaitEventSem(INT rexxapisem, INT handle){
+int WaitEventSem(int rexxapisem, int handle){
   /* wait until a post call wakes me up                            */
 //return locksem(apidata->rexxapisemaphore, handle);
   return (locksem(rexxapisem, handle));
 }
 
 
-VOID CloseMutexSem(INT handle){
+void CloseMutexSem(int handle){
 
                                     /* do the initialisation        */
   init_sema(apidata->rexxapisemaphore, handle);
-  apidata->qsemfree[handle] = NULL; /* mark it as unused            */
+  apidata->qsemfree[handle] = 0;    /* mark it as unused            */
   --(apidata->qsemcount);           /* decrment counter             */
 }
 
-VOID CloseEventSem(INT handle){
+void CloseEventSem(int handle){
 
                                     /* do the initialisation        */
   init_sema(apidata->rexxapisemaphore, handle);
-  apidata->qsemfree[handle] = NULL; /* mark it as unused            */
+  apidata->qsemfree[handle] = 0;    /* mark it as unused            */
   --(apidata->qsemcount);           /* decrment counter             */
 }
 
 
-VOID PostEventSem(INT handle){
+void PostEventSem(int handle){
   /* unlock the sem to wake the one who waits                      */
   unlocksem(apidata->rexxapisemaphore, handle);
 }

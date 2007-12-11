@@ -50,7 +50,6 @@
 #include "rexx.h"                      /* for REXX functionality     */
 #include "SubcommandAPI.h"             /* get RexxLoadSubcom calls   */
 #include "RexxAPIManager.h"
-#include "APIUtil.h"                   /* get rxstricmp routines     */
 #include "RexxErrorCodes.h"            /* error constants            */
 
 #define BUFFERLEN         256          /* Length of message bufs used*/

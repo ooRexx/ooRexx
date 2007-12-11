@@ -42,10 +42,10 @@
 /*                                                                            */
 /******************************************************************************/
 
-/* we check the value of .system~intname */
+/* we check the value of .system~internalname */
 /*  and load the appropriate system routine */
 
-sysIntName = .system~intname~translate
+sysIntName = .system~internalname~translate
 
 /* The independant xxmeths routines must return a directory             */
 /* of the created methods.  It must also set the value of systemExists  */

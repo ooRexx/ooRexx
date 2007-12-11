@@ -222,7 +222,7 @@ RexxString *RexxString::insert(RexxString  *newStrObj,
     FCharLen = NChar;                  /* NChar front chars                 */
     BCharLen = TCharLen - NChar;       /* and some trailer too              */
   }
-  NCharLen = min(NCharLen, ReqLenChar);/* truncate new, if needed           */
+  NCharLen = Numerics::minVal(NCharLen, ReqLenChar);/* truncate new, if needed           */
   ReqPadChar = ReqLenChar - NCharLen;  /* calculate pad chars               */
                                        /* calculate result size             */
   BuffSiz = NCharLen + TargetSize + ReqPadChar + ReqLeadPad;
@@ -286,7 +286,7 @@ RexxString *RexxString::left(RexxInteger *_length,
     Retval = OREF_NULLSTRING;          /* return a null string              */
   else {
     Retval = raw_string(Size);         /* allocate a result string          */
-    CopyLength = min(Length, Size);    /* adjust the length                 */
+    CopyLength = Numerics::minVal(Length, Size);    /* adjust the length                 */
                                        /* point to data part                */
     Current = Retval->getWritableData();
     if (CopyLength) {                  /* have real data?                   */
@@ -450,7 +450,7 @@ RexxString *RexxString::right(RexxInteger *_length,
     Retval = OREF_NULLSTRING;
   else {
     Retval = raw_string(Size);         /* allocate a result string          */
-    CopyLength = min(Length, Size);    /* adjust the length                 */
+    CopyLength = Numerics::minVal(Length, Size);    /* adjust the length                 */
                                        /* point to data part                */
     Current = Retval->getWritableData();
     if (Size > Length) {               /* need to pad?                      */
@@ -608,7 +608,7 @@ RexxString *RexxString::substr(RexxInteger *position,
     }
     else {                             /* have something to copy            */
                                        /* get string size                   */
-      SubstrLength = min(Length, StringLength - Position);
+      SubstrLength = Numerics::minVal(Length, StringLength - Position);
                                        /* and number of pad chars           */
       PadCount = Length - SubstrLength;
     }

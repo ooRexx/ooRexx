@@ -54,14 +54,14 @@ class RexxParseVariable : public RexxVariableBase {
   inline void  operator delete(void *, void *) { ; }
 
   inline RexxParseVariable(RESTORETYPE restoreType) { ; };
-  RexxParseVariable(RexxString *, LONG);
+  RexxParseVariable(RexxString *, size_t);
   void live();
   void liveGeneral();
   void flatten(RexxEnvelope *);
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
   RexxObject *getValue(RexxVariableDictionary *);
   RexxObject *getValue(RexxActivation *);
-  BOOL exists(RexxActivation *);
+  bool exists(RexxActivation *);
   void set(RexxActivation *, RexxObject *) ;
   void set(RexxVariableDictionary *, RexxObject *) ;
   void assign(RexxActivation *, RexxExpressionStack *, RexxObject *);
@@ -72,7 +72,9 @@ class RexxParseVariable : public RexxVariableBase {
   void procedureExpose(RexxActivation *, RexxActivation *, RexxExpressionStack *);
   RexxString *getName();
 
+protected:
+
   RexxString *variableName;            // name of the variable
-  LONG        index;                   /* lookaside table index             */
+  size_t      index;                   /* lookaside table index             */
 };
 #endif

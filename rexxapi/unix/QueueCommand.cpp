@@ -62,13 +62,13 @@
 # include <nl_types.h>
 #endif
 
-#include "PlatformDefinitions.h"
 #include <limits.h>
 #include <stdio.h>             /* needed for screen output           */
 #include <stdlib.h>            /* needed for miscellaneous functions */
 #include <string.h>            /* needed for string functions        */
 #include "RexxAPIManager.h"
 #include "rexx.h"              /* needed for queue functions & codes */
+#include "PlatformDefinitions.h"
 #include "RexxMessageNumbers.h"
 
 #define RXQUEUE_CLEAR    -2    /* used for queue mode CLEAR flag     */
@@ -81,40 +81,37 @@
 #define CATD_ERR -1
 #endif
 
-extern BOOL CALL_BY_RXQUEUE;
+extern bool CALL_BY_RXQUEUE;
 
 char  line[4096];              /* buffer for data to add to queue    */
 char  work[256];               /* buffer for queue name, if default  */
-LONG  queuemode=-1;            /* mode for access to queue           */
+int   queuemode=-1;            /* mode for access to queue           */
 
-VOID  options_error(           /* function called on errors          */
-          LONG  type,
-          PSZ   queuename ) ;
+void  options_error(int type, const char *queuename ) ;
 
                                /* function to read stdin             */
-ULONG get_line(char *, ULONG, PULONG);
+size_t get_line(char *, size_t, size_t *);
 
 
 int main(
   int   argc,
-  PSZ   argv[] )
+  char *argv[] )
 {
-  LONG      i;                 /* loop counter for arguments         */
-  LONG      rc;                /* return code from API calls         */
-  ULONG     entries;           /* number of entries in queue         */
-  DATETIME  dt;                /* date/time structure for reading    */
-  PSZ       quename=NULL;      /* initialize queuename to NULL       */
-  ULONG     linelen ;          /* input line length                  */
-  RXSTRING  queuedata;         /* data added to the queue            */
-  PSZ       t;                 /* argument pointer                   */
+  int       i;                 /* loop counter for arguments         */
+  int       rc;                /* return code from API calls         */
+  size_t    entries;           /* number of entries in queue         */
+  REXXDATETIME  dt;            /* date/time structure for reading    */
+  const char *quename=NULL;    /* initialize queuename to NULL       */
+  size_t    linelen ;          /* input line length                  */
+  CONSTRXSTRING  queuedata;    /* data added to the queue            */
+  char *t;                     /* argument pointer                   */
 
 
-/*$PE*/
 /*********************************************************************/
 /*  Initialize string buffers to empty strings:                      */
 /*********************************************************************/
 
-  CALL_BY_RXQUEUE = TRUE;
+  CALL_BY_RXQUEUE = true;
 
   memset(line, '\0', sizeof(line)); /* clear buffer 'line' -for data */
   memset(work, '\0', sizeof(work)); /* clear buffer 'work' -for      */
@@ -129,13 +126,13 @@ int main(
     t = argv[i];               /* point to next argument             */
     if((t[0]=='/') || (t[0]=='-')) {/*if options character in        */
       t[0]='/';                /* argument,  then make character '/' */
-      if( !rxstricmp(t,"/FIFO") && /* if FIFO flag and               */
+      if( !strcasecmp(t,"/FIFO") && /* if FIFO flag and               */
           queuemode==-1)       /*   no queuemode selected yet, then  */
         queuemode=RXQUEUE_FIFO;/*   set queuemode to FIFO, otherwise */
-      else if( !rxstricmp(t,"/LIFO") &&  /* if LIFO flag and         */
+      else if( !strcasecmp(t,"/LIFO") &&  /* if LIFO flag and         */
                queuemode==-1)  /*   no queuemode selected yet, then  */
         queuemode=RXQUEUE_LIFO;/*   set queuemode to LIFO, otherwise */
-      else if( !rxstricmp(t,"/CLEAR") &&  /* if CLEAR flag and       */
+      else if( !strcasecmp(t,"/CLEAR") &&  /* if CLEAR flag and       */
                queuemode==-1)  /*   no queuemode selected yet, then  */
         queuemode=RXQUEUE_CLEAR;/*   set queue for CLEAR, otherwise  */
       else
@@ -163,13 +160,12 @@ int main(
     if (!(quename = getenv("RXQUEUE")) || !quename)    /*THU008M */
       quename = "SESSION";     /* use session if not found           */
 
-/*$PE*/
 /*********************************************************************/
 /*  Call RxQueueQuery() to check for the existence of the queue:     */
 /*********************************************************************/
 
-  if (rc=RexxQueryQueue(quename,/* search for existence of 'quename' */
-                      &entries ))/*ÀŽ> get number of entries in queue*/
+  if ((rc=RexxQueryQueue(quename,/* search for existence of 'quename' */
+                      &entries)))/*ÀŽ> get number of entries in queue*/
     options_error( rc,         /* generate error if API fails        */
                    quename );
 
@@ -184,23 +180,25 @@ int main(
                      &linelen))
     {                                  /* express in RXSTRING form   */
       MAKERXSTRING(queuedata, line, linelen);
-      if(rc=RexxAddQueue(              /*   write info to the queue  */
+      if((rc=RexxAddQueue(              /*   write info to the queue  */
                         quename,       /*     queue to write into    */
                         &queuedata,    /*information to add to queue */
-                        queuemode))    /* size of information to add */
+                        queuemode)))   /* size of information to add */
                                        /* FIFO || LIFO mode          */
         options_error( rc,             /* generate error if API fails*/
                        quename ) ;
     }
   }
   else {
-    MAKERXSTRING(queuedata,NULL,0);    /* make an empty RXSTRING     */
-    rc = RexxPullQueue(quename, &queuedata, &dt, RXQUEUE_NOWAIT);
+    RXSTRING pulldata; 
+
+    MAKERXSTRING(pulldata,NULL,0);    /* make an empty RXSTRING     */
+    rc = RexxPullQueue(quename, &pulldata, &dt, RXQUEUE_NOWAIT);
     while (!rc) {
-      if (queuedata.strlength)
-        free(queuedata.strptr);
-      MAKERXSTRING(queuedata,NULL,0);  /* make a new empty RXSTRING  */
-      rc = RexxPullQueue(quename, &queuedata, &dt, RXQUEUE_NOWAIT);
+      if (pulldata.strlength)
+        free(pulldata.strptr);
+      MAKERXSTRING(pulldata,NULL,0);  /* make a new empty RXSTRING  */
+      rc = RexxPullQueue(quename, &pulldata, &dt, RXQUEUE_NOWAIT);
     }
   }
   exit(0);
@@ -210,8 +208,7 @@ int main(
 /*********************************************************************/
 /*                             End Of Main Program                   */
 /*********************************************************************/
-/*$PE*/
-/*$FD.options_error()*/
+
 /*********************************************************************/
 /* Function:           Print errors from RXQUEUE.EXE.                */
 /*                                                                   */
@@ -230,19 +227,17 @@ int main(
 /*                                                                   */
 /*********************************************************************/
 
-VOID options_error( LONG  type,        /* Error type.                */
-                    PSZ   quename )    /* Name of offending queue.   */
+void options_error( int   type,        /* Error type.                */
+                    const char *quename )    /* Name of offending queue.   */
 {
-  LONG     rc = 0;                     /* Exit return code.          */
   char     DataArea[ MSG_BUF_SIZE ];   /* Message buffer.            */
   char     achIMessage[2*MSG_BUF_SIZE];/* Message with insertion.    */
-  ULONG    MsgNumber;                  /* Message number.            */
-  ULONG    MsgLength;                  /* Length of returned message */
+  int      MsgNumber;                  /* Message number.            */
 #if defined( HAVE_NL_TYPES_H )
   nl_catd  catd;                       /* catalog descriptor         */
 #endif
   int      set_num = 1;                /* message set 1 from catalog */
-  PSZ      pszMessage;                 /* message pointer            */
+  const char *pszMessage;              /* message pointer            */
   char    *pInsert = NULL;             /* Pointer for insertion char */
 
   /*******************************************************************/
@@ -275,10 +270,6 @@ VOID options_error( LONG  type,        /* Error type.                */
       MsgNumber = Error_RXQUE_size_msg;
       break;
 
-    case RXQUEUE_NOEMEM:
-      MsgNumber = Error_RXQUE_nomem_msg;
-      break;
-
     case RXQUEUE_BADQNAME:
       MsgNumber = Error_RXQUE_name_msg;
       break;
@@ -289,10 +280,6 @@ VOID options_error( LONG  type,        /* Error type.                */
 
     case RXQUEUE_NOTREG:
       MsgNumber = Error_RXQUE_exist_msg;
-      break;
-
-    case RXQUEUE_MEMFAIL:
-      MsgNumber = Error_RXQUE_memfail_msg;
       break;
 
     default:
@@ -354,8 +341,8 @@ VOID options_error( LONG  type,        /* Error type.                */
 
   exit(type);
 }
-/*$PE*/
-/*$FD.get_line()*/
+
+
 /*********************************************************************/
 /* Function:           Read a line from stdin into a buffer          */
 /*                                                                   */
@@ -373,19 +360,18 @@ VOID options_error( LONG  type,        /* Error type.                */
 /*                                                                   */
 /*********************************************************************/
 
-ULONG       get_line( char  *buffer,   /* Read buffer                */
-                      ULONG  bufsize,  /* Buffer size                */
-                      PULONG linelen)  /* length of line             */
+size_t      get_line( char  *buffer,   /* Read buffer                */
+                      size_t bufsize,  /* Buffer size                */
+                      size_t *linelen) /* length of line             */
 {
   static char savechar = '\0';         /* cached character           */
-  static BOOL eof = FALSE;             /* not hit eof yet            */
-  ULONG actual;                        /* actual bytes read          */
-  ULONG rc;                            /* DosRead return code        */
+  static bool eof = false;             /* not hit eof yet            */
+  size_t actual;                       /* actual bytes read          */
   char  newchar;                       /* character read             */
-  ULONG length;                        /* length read                */
+  size_t length;                       /* length read                */
 
   if (eof)                             /* already hit end?           */
-    return TRUE;                       /* all done                   */
+    return true;                       /* all done                   */
 
   length = 0;                          /* nothing read yet           */
   if (savechar) {                      /* have a saved character     */
@@ -399,10 +385,10 @@ ULONG       get_line( char  *buffer,   /* Read buffer                */
     if (!actual) {                     /* EOF?                       */
       *linelen = length;               /* set length                 */
       if (!length)                     /* nothing read?              */
-        return TRUE;                   /* raise end of file          */
+        return true;                   /* raise end of file          */
       else {
-        eof = TRUE;                    /* quick out next time        */
-        return FALSE;                  /* have real line here        */
+        eof = true;                    /* quick out next time        */
+        return false;                  /* have real line here        */
       }
     }
     if (newchar == '\r') {             /* end of line                */
@@ -412,18 +398,18 @@ ULONG       get_line( char  *buffer,   /* Read buffer                */
                                        /* newline char?              */
       if (!ferror(stdin) && actual && newchar != '\n')
         savechar = newchar;            /* save this for next time    */
-      return FALSE;                    /* should be ok this time     */
+      return false;                    /* should be ok this time     */
     }
     else if (newchar == '\n') {        /* end of line                */
       *linelen = length;               /* passback length read       */
-      return FALSE;                    /* should be ok this time     */
+      return false;                    /* should be ok this time     */
     }
     else if (newchar == 0x1a) {        /* EOF character?             */
       *linelen = length;               /* give length                */
-      eof = TRUE;                      /* set flag for next time     */
+      eof = true;                      /* set flag for next time     */
       if (length)                      /* if something read          */
-        return TRUE;                   /* this is EOF now            */
-      else return FALSE;               /* no error yet               */
+        return true;                   /* this is EOF now            */
+      else return false;               /* no error yet               */
     }
     else {                             /* real character             */
       if (length < bufsize) {          /* room for this?             */
@@ -437,11 +423,11 @@ ULONG       get_line( char  *buffer,   /* Read buffer                */
                                        /* had an error               */
   if (length) {                        /* something read?            */
     *linelen = length;                 /* return this                */
-    eof = TRUE;                        /* can't read more            */
-    return FALSE;                      /* but no error yet           */
+    eof = true;                        /* can't read more            */
+    return false;                      /* but no error yet           */
   }
   else
-    return TRUE;                       /* treat this as an EOF       */
+    return true;                       /* treat this as an EOF       */
 }
 
 

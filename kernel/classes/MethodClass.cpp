@@ -664,7 +664,7 @@ RexxMethod *RexxMethodClass::newNative(
 }
 
 
-RexxMethod *RexxMethodClass::newEntry( PFN entry)
+RexxMethod *RexxMethodClass::newEntry(PNMF entry)
                         /* routine entry point               */
 /******************************************************************************/
 /* Function:  Create a native method from an entry point                      */

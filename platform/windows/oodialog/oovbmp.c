@@ -134,7 +134,6 @@ BOOL DrawBitmapButton(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lPara
     RECT r, ri;
     LONG rc;
     HPEN oP, nP;
-    HBRUSH nB;
     BITMAP bmpInfo;
     LONG left = 0, top = 0;
     POINT lp;
@@ -765,7 +764,7 @@ ULONG APIENTRY ScrollTheWindow(
 {
    HWND w;
    RECT r, rs;
-   INT i, x, y;
+   INT x, y;
    HDC hDC;
    HBRUSH hbr, oB;
    HPEN oP, hpen;

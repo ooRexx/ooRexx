@@ -52,7 +52,6 @@
 /*********************************************************************/
 
 
-#define INCL_REXXSAA
 #include <windows.h>
 #include <rexx.h>                           /* needed for RexxStart()     */
 #include <malloc.h>
@@ -64,8 +63,7 @@ BOOL   APIENTRY RexxInitialize (void);
 }
 
                                          /* Global inducator */
-extern  _declspec(dllimport) BOOL RexxStartedByApplication;
-extern  _declspec(dllimport) BOOL ProcessSaveImage;
+extern  _declspec(dllimport) bool ProcessSaveImage;
 extern  _declspec(dllimport) HANDLE RexxTerminated;           /* Termination complete semaphore.   */
 
 //
@@ -83,21 +81,19 @@ extern "C" char *APIENTRY RexxGetVersionInformation(void);
 //
 int __cdecl main(int argc, char *argv[])
 {
-//  RXSYSEXIT exit_list[9];              /* Exit list array                 */
-  LONG     rexxrc = 0;                 /* return code from rexx             */
+  short    rexxrc = 0;                 /* return code from rexx             */
   INT   i;                             /* loop counter                      */
   LONG  rc;                            /* actually running program RC       */
-  PCHAR program_name;                  /* name to run                       */
-  CHAR  arg_buffer[8192];              /* starting argument buffer          */
+  const char *program_name;            /* name to run                       */
+  char  arg_buffer[8192];              /* starting argument buffer          */
   char *cp;                            /* option character pointer          */
-  RXSTRING arguments;                  /* rexxstart argument                */
-  ULONG argcount;
+  CONSTRXSTRING arguments;             /* rexxstart argument                */
+  size_t argcount;
   RXSTRING rxretbuf;                   // program return buffer
   BOOL from_string = FALSE;            /* running from command line string? */
   BOOL real_argument = TRUE;           /* running from command line string? */
   RXSTRING instore[2];
 
-  RexxStartedByApplication = FALSE;    /* Call NOT from internal            */
   rc = 0;                              /* set default return                */
 
    /*
@@ -116,7 +112,7 @@ int __cdecl main(int argc, char *argv[])
     if ((*(cp=*(argv+i)) == '-' || *cp == '/'))
       switch (*++cp) {
         case 'i': case 'I':            /* image build                       */
-          ProcessSaveImage = TRUE;     /* say this is a save image          */
+          ProcessSaveImage = true;     /* say this is a save image          */
           break;
 
         case 'e': case 'E':            /* execute from string               */
@@ -197,41 +193,32 @@ int __cdecl main(int argc, char *argv[])
       /* Here we call the interpreter.  We don't really need to use     */
       /* all the casts in this call; they just help illustrate          */
       /* the data types used.                                           */
-      rc=REXXSTART((LONG)       argcount,      /* number of arguments   */
-                   (PRXSTRING)  &arguments,     /* array of arguments   */
-                   (PSZ)        program_name,  /* name of REXX file     */
-                   (PRXSTRING)  instore,       /* rexx code from command line */
-                   (PSZ)        "CMD",         /* Command env. name     */
-                   (LONG)       RXCOMMAND,     /* Code for how invoked  */
- //                  (PRXSYSEXIT) exit_list,     /* No EXITs on this call */
-                    NULL,
-                   (PSHORT)     &rexxrc,       /* Rexx program output   */
-                   (PRXSTRING)  &rxretbuf );   /* Rexx program output   */
+      rc=REXXSTART(argcount,       /* number of arguments   */
+                   &arguments,     /* array of arguments   */
+                   program_name,   /* name of REXX file     */
+                   instore,        /* rexx code from command line */
+                   "CMD",          /* Command env. name     */
+                   RXCOMMAND,      /* Code for how invoked  */
+                   NULL,
+                   &rexxrc,        /* Rexx program output   */
+                   &rxretbuf );    /* Rexx program output   */
     }
     else
     {
-      rc=REXXSTART((LONG)       argcount,      /* number of arguments   */
-                   (PRXSTRING)  &arguments,     /* array of arguments   */
-                   (PSZ)        program_name,  /* name of REXX file     */
-                   (PRXSTRING)  0,             /* No INSTORE used       */
-                   (PSZ)        "CMD",         /* Command env. name     */
-                   (LONG)       RXCOMMAND,     /* Code for how invoked  */
- //                  (PRXSYSEXIT) exit_list,     /* No EXITs on this call */
-                    NULL,
-                   (PSHORT)     &rexxrc,       /* Rexx program output   */
-                   (PRXSTRING)  &rxretbuf );   /* Rexx program output   */
+      rc=REXXSTART(argcount,      /* number of arguments   */
+                   &arguments,    /* array of arguments   */
+                   program_name,  /* name of REXX file     */
+                   NULL,          /* No INSTORE used       */
+                   "CMD",         /* Command env. name     */
+                   RXCOMMAND,     /* Code for how invoked  */
+                   NULL,
+                   &rexxrc,       /* Rexx program output   */
+                   &rxretbuf );   /* Rexx program output   */
     }
-    /* wait until all activities did finish so no activity will be canceled */
-    RexxWaitForTermination();
-
-    /* free for DB2 2.1.1 version */
- //   #undef free
- //   if (rc==0) free(rxretbuf.strptr);        /* Release storage only if*/
                          /* rexx procedure executed*/
     if ((rc==0) && rxretbuf.strptr) GlobalFree(rxretbuf.strptr);        /* Release storage only if*/
     freeArguments(NULL, &arguments);
 
- //   RexxDeregisterExit("MY_IOC",NULL);     // remove the exit in exe exit list
   }
   /* try to unload the orexx memory manager */
   RexxShutDownAPI();
@@ -239,45 +226,5 @@ int __cdecl main(int argc, char *argv[])
   return rc ? rc : rexxrc;                    // rexx program return cd
 }
 
-
-/*
-LONG APIENTRY MY_IOEXIT(
-     LONG ExitNumber,
-     LONG Subfunction,
-     PEXIT parmblock)
-{
-   RXSIOSAY_PARM *sparm ;
-   RXSIOTRC_PARM *tparm ;
-   RXSIOTRD_PARM *rparm ;
-   RXSIODTR_PARM *dparm ;
-
-   _setmode( _fileno( stdout ), _O_BINARY );
-   switch (Subfunction) {
-   case RXSIOSAY:
-      sparm = ( RXSIOSAY_PARM * )parmblock ;
-      printf("%s\n",sparm->rxsio_string.strptr);
-      break;
-   case RXSIOTRC:
-      tparm = ( RXSIOTRC_PARM * )parmblock ;
-      printf("%s\n",tparm->rxsio_string.strptr);
-      break;
-   case RXSIOTRD:
-      rparm = (RXSIOTRD_PARM * )parmblock ;
-      gets(rparm->rxsiotrd_retc.strptr);
-      rparm->rxsiotrd_retc.strlength=strlen(rparm->rxsiotrd_retc.strptr);
-      break;
-   case RXSIODTR:
-      dparm = (RXSIODTR_PARM * )parmblock ;
-      gets(dparm->rxsiodtr_retc.strptr);
-      dparm->rxsiodtr_retc.strlength=strlen(dparm->rxsiodtr_retc.strptr);
-      break;
-   default:
-      break;
-   } // endswitch
-
-   return RXEXIT_HANDLED;
-
-}
-*/
 
 

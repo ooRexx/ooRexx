@@ -279,7 +279,7 @@ ULONG APIENTRY ScrollText(
 
          if (Timer)
          {
-             WaitForSingleObject(TimerEvent, (int)sleep*1.5);
+             WaitForSingleObject(TimerEvent, (DWORD)((double)sleep*1.5));
              ResetEvent(TimerEvent);
          }
 

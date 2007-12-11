@@ -498,7 +498,7 @@ RexxObject *RexxHashTable::primitiveHasItem(
     RexxObject *_index )                /* index to locate                   */
 /******************************************************************************/
 /* Function:  Determine if a tuple (value, item) pair exists in the hash      */
-/*            table.  Return TRUE if found, FALSE other wise.                 */
+/*            table.  Return true if found, false other wise.                 */
 /******************************************************************************/
 {
   HashLink position;                   /* target hash position              */
@@ -522,7 +522,7 @@ RexxObject *RexxHashTable::hasItem(
     RexxObject *_index )                /* index to locate                   */
 /******************************************************************************/
 /* Function:  Determine if a tuple (value, item) pair exists in the hash      */
-/*            table.  Return TRUE if found, FALSE other wise.                 */
+/*            table.  Return true if found, false other wise.                 */
 /******************************************************************************/
 {
   HashLink position;                   /* target hash position              */

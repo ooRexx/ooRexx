@@ -40,7 +40,7 @@
 MAINTAINERCLEANFILES 	= Makefile.in *~
 
 AM_CFLAGS		= @CFLAGS@
-INCLUDES 		= -I $(top_srcdir)/rexxapi/unix
+INCLUDES 		= -I $(top_srcdir)/api -I $(top_srcdir)/api/platform/unix
 
 EXTRA_DIST              = aspitest1.rex
 #pkgdata_SCRIPTS         = aspitest1.rex

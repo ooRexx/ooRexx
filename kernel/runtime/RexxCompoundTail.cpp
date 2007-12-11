@@ -167,13 +167,13 @@ void RexxCompoundTail::buildTail(
 {
   RexxString * part;                   /* added part of tail                */
   size_t       i;                      /* loop counter                      */
-  BOOL         first = TRUE;           /* first tail piece indicator        */
+  bool         first = true;           /* first tail piece indicator        */
 
   for (i = 0; i < count; i++) {
       if (!first) {                    /* if not the first tail piece       */
           addDot();                    /* add a dot to the buffer           */
       }
-      first = FALSE;                   /* we need to add a dot from here on */
+      first = false;                   /* we need to add a dot from here on */
       part = (RexxString *)tails[i];   /* get the next element              */
       if (part == OREF_NULL)           /* omitted piece?                    */
           part = OREF_NULLSTRING;      /* use a null string                 */

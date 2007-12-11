@@ -154,9 +154,9 @@ class DeadObjectPool
 
     inline void  setID(const char *poolID) { this->id = poolID; }
     inline void  empty() { anchor.reset(); }
-    inline BOOL  isEmpty() { return anchor.next->isReal(); }
+    inline bool  isEmpty() { return anchor.next->isReal(); }
     inline void  emptySingle() { anchor.next = NULL; }
-    inline BOOL  isEmptySingle() { return anchor.next == NULL; }
+    inline bool  isEmptySingle() { return anchor.next == NULL; }
     inline
            void  checkObjectGrain(DeadObject *obj);
     inline void  add(DeadObject *obj) {

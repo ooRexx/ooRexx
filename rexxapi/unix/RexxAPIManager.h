@@ -35,8 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include "PlatformDefinitions.h"
-#include SYSREXXSAA
+#include "rexx.h"
 #include "ThreadSupport.hpp"
 #include "APIDefinitions.h"
 
@@ -92,8 +91,8 @@
 #define QIDATA(offset)   ((PQUEUEITEM)(apidata->qbase+offset))
 #define QDATA(offset)   (apidata->qbase+offset)
 
-ULONG  RegDeregFunc(PSZ, LONG );  /* Drop all api blocks from the chain */
-INT rxstricmp(PSZ, PSZ);
+int    RegDeregFunc(const char *, int);  /* Drop all api blocks from the chain */
+int rxstricmp(const char *, const char *);
 
 #define APISTARTUP(chain){\
   if(RxAPIStartUp(chain))\
@@ -109,25 +108,25 @@ INT rxstricmp(PSZ, PSZ);
 #define  REGNOOFTYPES      3           /* Number of types supported. */
 
 typedef struct _QUEUEITEM {
-    ULONG    next;
-    ULONG    queue_element;
-    ULONG    size;
-    DATETIME addtime;
+    size_t   next;
+    size_t   queue_element;
+    size_t   size;
+    REXXDATETIME addtime;
     } QUEUEITEM;
 typedef QUEUEITEM *PQUEUEITEM;
 
 
 typedef struct _QUEUEHEADER {
-    ULONG   next;
-    ULONG  waiting;                    /* count of processes waiting */
-    ULONG item_count;                  /* number of items in queue   */
-    PID   waitprocess;                 /* process waiting on queue   */
-    KMTX  waitsem;                     /* event semaphore for pull   */
-    KMTX  enqsem;                      /* pull exclusion semaphore   */
-    ULONG      queue_first;            /* first queue item           */
-    ULONG      queue_last;             /* last queue item            */
+    size_t  next;
+    size_t waiting;                    /* count of processes waiting */
+    size_t item_count;                 /* number of items in queue   */
+    process_id_t waitprocess;          /* process waiting on queue   */
+    int   waitsem;                     /* event semaphore for pull   */
+    int   enqsem;                      /* pull exclusion semaphore   */
+    size_t     queue_first;            /* first queue item           */
+    size_t     queue_last;             /* last queue item            */
     char   queue_name[MAXNAME];        /* queue name                 */
-    PID queue_session;               /* session of queue (<=> process group ID of the greating porcess)*/
+    process_id_t queue_session;        /* session of queue (<=> process group ID of the greating porcess)*/
     } QUEUEHEADER;
 
 typedef QUEUEHEADER *PQUEUEHEADER;     /* pointer to a queue header  */
@@ -137,58 +136,56 @@ typedef QUEUEHEADER *PQUEUEHEADER;     /* pointer to a queue header  */
 
 typedef struct _MEMORYBLOCK {
     struct _MEMORYBLOCK *next;         /* Next block in chain        */
-    PUCHAR  low_bound;                 /* Low bound of block         */
-    PUCHAR  high_bound;                /* High address of block      */
-    ULONG   allocations;               /* number of allocations made */
+    char   *low_bound;                 /* Low bound of block         */
+    char   *high_bound;                /* High address of block      */
+    size_t  allocations;               /* number of allocations made */
     } MEMORYBLOCK;
 typedef MEMORYBLOCK *PMEMORYBLOCK;
 
 typedef struct _MEMORYBASE {
     PMEMORYBLOCK   base;               /* base of allocated memory   */
-    ULONG          count;              /* count of allocated blocks  */
+    size_t         count;              /* count of allocated blocks  */
     } MEMORYBASE;
 typedef MEMORYBASE *PMEMORYBASE;
 
 
 typedef struct _REXXAPIDATA {          /* Do not move next two items */
-  LONG          init;                  /* Initialization flag        */
-  HQUEUE        queue_handle;          /* Rexx queue handle          */
-  ULONG         base;                  /* Base of queues             */
-  ULONG         session_base;          /* Base for session queues    */
-  PUCHAR        queue_buf_ptr;         /* Address of queue buffer    */
+  int           init;                  /* Initialization flag        */
+  size_t        queue_handle;          /* Rexx queue handle          */
+  size_t        base;                  /* Base of queues             */
+  size_t        session_base;          /* Base for session queues    */
+  char         *queue_buf_ptr;         /* Address of queue buffer    */
   char         *qbase;                 /* ptr to the queue memory pool*/
-  INT           qbasememId;            /* memory ID of the pool      */
-  ULONG         qmemsize;              /* Size of the queue space    */
-  ULONG         qmemsizeused;          /* THU006A */
-  ULONG         trialcounter;          /* THU006A */
-  ULONG         qmemtop;               /* number of bytes used in the queue space */
-  INT           qsemfree[MAXSEM+1];    /* Indicates the unused semaphores */
-  INT           qsemcount;             /* semaphore count            */
-  KMTX          rexxapisemaphore;      /* Initialization semaphore and queue semaphores  */
-  PID           init_processid;        /* Initial processid          */
-  ULONG         num_sessions;          /* Number of possible sessions*/
-  ULONG         baseblock[REGNOOFTYPES];/* Registration chains(offsets)*/
+  int           qbasememId;            /* memory ID of the pool      */
+  size_t        qmemsize;              /* Size of the queue space    */
+  size_t        qmemsizeused;          /* THU006A */
+  size_t        trialcounter;          /* THU006A */
+  size_t        qmemtop;               /* number of bytes used in the queue space */
+  int           qsemfree[MAXSEM+1];    /* Indicates the unused semaphores */
+  int           qsemcount;             /* semaphore count            */
+  int           rexxapisemaphore;      /* Initialization semaphore and queue semaphores  */
+  process_id_t  init_processid;        /* Initial processid          */
+  size_t        num_sessions;          /* Number of possible sessions*/
+  size_t        baseblock[REGNOOFTYPES];/* Registration chains(offsets)*/
   char         *sebase;                /* ptr to the se memory pool     */
-  ULONG         sememsize;             /* current size of the se memory pool*/
-  ULONG         sememtop;              /* number of bytes used in se space */
-  INT           sebasememId;           /* memory ID of the pool      */
+  size_t        sememsize;             /* current size of the se memory pool*/
+  size_t        sememtop;              /* number of bytes used in se space */
+  int           sebasememId;           /* memory ID of the pool      */
   MEMORYBASE    memory_base;           /* Memory management chain    */
   MEMORYBASE    macro_base;            /* Memory management chain    */
-  PID           ProcessId;             /* Current process id         */
-  TID           ThreadId;              /* Current thread id          */
-  ULONG         SessionId;             /* Current session id         */
-  ULONG         mbase;                 /* ptr to macro space fnc lst */
+  process_id_t  ProcessId;             /* Current process id         */
+  thread_id_t   ThreadId;              /* Current thread id          */
+  process_id_t  SessionId;             /* Current session id         */
+  size_t        mbase;                 /* ptr to macro space fnc lst */
   char         *macrobase;             /* Pointer to Macro Space memory pool    */
-  INT           mbasememId;            /* memory ID of the pool      */
-  ULONG         macrosize;             /* Size of the macro space    */
-  ULONG         mmemtop;               /* number of bytes used in macro space */
-  ULONG         macrocount;            /* count of fncs in macrospc  */
-  ULONG         mcount;                /* count of fncs for tmp list */
-  INT           rexxutilsems;          /* ID for the util semaphore set*/
+  int           mbasememId;            /* memory ID of the pool      */
+  size_t        macrosize;             /* Size of the macro space    */
+  size_t        mmemtop;               /* number of bytes used in macro space */
+  size_t        macrocount;            /* count of fncs in macrospc  */
+  size_t        mcount;                /* count of fncs for tmp list */
+  int           rexxutilsems;          /* ID for the util semaphore set*/
   SEMCONT       utilsemfree[MAXUTILSEM];/* control array for util semaphores*/
-//ULONG         lazy_block;            /* performance fix            */
-//ULONG         lazy_size;             /* performance fix            */
-  INT           moveareaqid;
+  int           moveareaqid;
   char         *moveareaq;             /* performance fix for queue  */
 }  REXXAPIDATA;
 

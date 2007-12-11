@@ -49,8 +49,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define  INCL_REXXSAA
-#define  INCL_DOSMEMMGR
 #include <rexx.h>
 
 /*********************************************************************/
@@ -69,7 +67,7 @@ extern "C" {
 /*   Array of names of the REXXASP1 functions.                       */
 /*   This list is used for registration and deregistration.          */
 /*********************************************************************/
-static PSZ  AspiFncTable[] =
+static const char *AspiFncTable[] =
    {
       "Aspi_Output_From_C",
       "Aspi_Output_From_REXX",
@@ -88,23 +86,22 @@ static PSZ  AspiFncTable[] =
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY AspiLoadFuncs(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY AspiLoadFuncs(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT    entries;                      /* Num of entries             */
-  INT    j;                            /* Counter                    */
+  int    entries;                      /* Num of entries             */
+  int    j;                            /* Counter                    */
 
 
-  entries = sizeof(AspiFncTable)/sizeof(PSZ);
+  entries = sizeof(AspiFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
   {
-    RexxRegisterFunctionDll(AspiFncTable[j],
-          "rexxasp1", AspiFncTable[j]);
+    RexxRegisterFunctionDll(AspiFncTable[j], "rexxasp1", AspiFncTable[j]);
   }
   return VALID_ROUTINE;
 }
@@ -121,15 +118,15 @@ LONG APIENTRY AspiLoadFuncs(
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY AspiDeregFunc(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY AspiDeregFunc(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT    entries;                      /* Num of entries             */
-  INT    j;                            /* Counter                    */
+  int    entries;                      /* Num of entries             */
+  int    j;                            /* Counter                    */
 
   retstr->strlength = 0;               /* set return value           */
 
@@ -137,7 +134,7 @@ LONG APIENTRY AspiDeregFunc(
     return INVALID_ROUTINE;
 
 
-  entries = sizeof(AspiFncTable)/sizeof(PSZ);
+  entries = sizeof(AspiFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
   {
@@ -158,12 +155,12 @@ LONG APIENTRY AspiDeregFunc(
 * Return:    Version of this ASPI support DLL                            *
 *************************************************************************/
 
-LONG APIENTRY Aspi_Output_From_C(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY Aspi_Output_From_C(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
 
   if (numargs > 0)
@@ -189,12 +186,12 @@ LONG APIENTRY Aspi_Output_From_C(
 * Return:    Version of this ASPI support DLL                            *
 *************************************************************************/
 
-LONG APIENTRY Aspi_Output_From_REXX(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY Aspi_Output_From_REXX(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   if (numargs > 0)
   {
@@ -206,6 +203,8 @@ LONG APIENTRY Aspi_Output_From_REXX(
   retstr->strlength = strlen(retstr->strptr);
   return VALID_ROUTINE;
 }
+
+
 /*************************************************************************
 * Function:  Aspi_Exchange_Data                                          *
 *                                                                        *
@@ -218,19 +217,16 @@ LONG APIENTRY Aspi_Output_From_REXX(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-LONG APIENTRY Aspi_Exchange_Data(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY Aspi_Exchange_Data(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   int    parm1 = 0;
   int    parm2 = 0;
   char   outbuf[255];
-  char   *ptr;
-  int    i;
-  SHVBLOCK shvb;
 
   /* we expect 3 arguments */
 
@@ -255,7 +251,6 @@ LONG APIENTRY Aspi_Exchange_Data(
   fflush(NULL);
 
   return VALID_ROUTINE;
-
 }
 
 #ifdef __cplusplus

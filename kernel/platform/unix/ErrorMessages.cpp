@@ -99,7 +99,7 @@ RexxString * SysMessageText(           /* simplified whole code             */
 #endif
  int            set_num = 1;           /* message set 1 from catalog        */
  ERROR_MESSAGE *p;                     /* message table scan pointer        */
- ULONG          msgid;                 /* message number                    */
+ int            msgid;                 /* message number                    */
  char           DataArea[256];         /* buf to return message             */
  char          *message;
                                        /* loop through looking for the      */

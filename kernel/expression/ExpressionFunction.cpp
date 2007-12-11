@@ -61,7 +61,7 @@ RexxExpressionFunction::RexxExpressionFunction(
     size_t      argCount,              /* count of arguments                */
     RexxQueue  *arglist,               /* function arguments                */
     size_t      builtinIndex,          /* index of possible built-in func   */
-    BOOL        string )               /* string or symbol invocation       */
+    bool        string )               /* string or symbol invocation       */
 /******************************************************************************/
 /* Function:  Create a function expression object                             */
 /******************************************************************************/

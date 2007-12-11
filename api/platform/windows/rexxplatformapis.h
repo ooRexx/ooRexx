@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,36 +35,18 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/* REXX Kernel                                                  okfloat.c     */
-/*                                                                            */
-/* Floating Point Conversions                                                 */
-/*                                                                            */
-/******************************************************************************/
-#include <string.h>
+#ifndef REXXPLATFORMAPIS_INCLUDED
+#define REXXPLATFORMAPIS_INCLUDED
 
-#include <math.h>
-#include <float.h>
-#include "RexxCore.h"
+/***    RexxPullQueue - Retrieve data from an External Data Queue */
 
-BOOL double2Float(double value, float *newValue)
-/******************************************************************************/
-/* Arguments:  Double vallue to convert                                       */
-/*             Pointer to float, for converted value.                         */
-/*                                                                            */
-/*  Returned:  TRUE is converted sucessfully, FALSE otherwise                 */
-/*                                                                            */
-/* This routine will convert a double to a float.  And make check for         */
-/*   overFlow/underFlow conditions.                                           */
-/*                                                                            */
-/* NOTE:  The C runtime routines used are NOT ANSI.  Many C compilers seem    */
-/*        to have them so this isn't in a system dependant file.  It can be   */
-/*         moved is necessary.                                                */
-/******************************************************************************/
-{
-                                       /* outside of float range?           */
-  if (value < (double)FLT_MIN || value > (double)FLT_MAX)
-    return FALSE;                      /* can't convert                     */
-  *newValue = (float)value;            /* assign value.                     */
-  return TRUE;                         /* converted ok                      */
-}
+APIRET APIENTRY RexxPullQueue (
+        const char *,                          /* Name of queue to read from  */
+        PRXSTRING,                             /* RXSTRING to receive data    */
+        SYSTEMTIME *,                          /* Stor for data date/time     */
+        unsigned int);                         /* wait status (WAIT|NOWAIT)   */
+typedef APIRET (APIENTRY *PFNREXXPULLQUEUE)(const char *, PCONSTRXSTRING, SYSTEMTIME *,
+                                           unsigned int);
+
+#endif /* REXXPLATFORMAPIS_INCLUDED */
+

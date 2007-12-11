@@ -72,12 +72,6 @@
 #include "ExpressionCompoundVariable.hpp"
 #include "ProtectedObject.hpp"
 
-#define INCL_RXSYSEXIT
-#define INCL_RXMACRO   /* we now need macrospace definitions */
-#define INCL_RXOBJECT  /* use Object REXX defines from REXXSAA.H */
-#include SYSREXXSAA
-
-
 /* max instructions without a yield */
 #define MAX_INSTRUCTIONS  100
                                        /* routine to restore the Environment*/
@@ -127,10 +121,10 @@ RexxActivation::RexxActivation(
 {
   this->clearObject();                 /* start with a fresh object         */
   if (context == DEBUGPAUSE) {         /* actually a debug pause?           */
-    this->debug_pause = TRUE;          /* set up for debugging intercepts   */
+    this->debug_pause = true;          /* set up for debugging intercepts   */
     context = INTERPRET;               /* this is really an interpret       */
   }
-  this->settings.intermediate_trace = FALSE;
+  this->settings.intermediate_trace = false;
   this->activation_context = context;  /* save the context                  */
   this->receiver = _receiver;          /* save the message receiver         */
   this->method = _method;              /* save the method pointer           */
@@ -161,14 +155,14 @@ RexxActivation::RexxActivation(
       this->settings.flags &= ~traps_copied;
       this->settings.flags &= ~reply_issued; /* this is a new activation that can use its own return */
                                        /* invalidate the timestamp          */
-      this->settings.timestamp.valid = FALSE;
+      this->settings.timestamp.valid = false;
     }
     /* this is a nested call until we issue a procedure */
     settings.local_variables.setNested();
   }
   else {                               /* external method activation        */
                                        /* get initial settings template     */
-    memcpy((PVOID)&this->settings, (PVOID)&activationSettingsTemplate, sizeof(this->settings));
+    this->settings = activationSettingsTemplate;
                                        /* set up for internal calls         */
     this->settings.parent_method = this->method;
                                        /* save the source also              */
@@ -349,7 +343,7 @@ RexxObject * RexxActivation::run(
 
                 nextInst->execute(this, localStack);  /* execute the instruction           */
                 localStack->clear();                  /* Force the stack clear             */
-                this->settings.timestamp.valid = FALSE;
+                this->settings.timestamp.valid = false;
                 SysClauseBoundary(this);           /* process any required system stuff */
                                                    /* need to process inter-clause stuff*/
                 if (this->settings.flags&clause_boundary)
@@ -369,7 +363,7 @@ RexxObject * RexxActivation::run(
                 if (this->activation_context == INTERPRET)
                 {
                     /* save the nested setting */
-                    BOOL nested = this->sender->settings.local_variables.isNested();
+                    bool nested = this->sender->settings.local_variables.isNested();
                     /* propagate parent's settings back  */
                     this->sender->getSettings(this->settings);
                     if (!nested)
@@ -384,7 +378,7 @@ RexxObject * RexxActivation::run(
                 resultObj = this->result;  /* save the result                   */
                 // TODO:  Replace this with protected object
                 if (resultObj != OREF_NULL) saveObject(resultObj);
-                this->activity->pop(FALSE);        /* now pop the current activity      */
+                this->activity->pop(false);        /* now pop the current activity      */
                 /* now go run the uninit stuff       */
                 memoryObject.checkUninitQueue();
             }
@@ -429,7 +423,7 @@ RexxObject * RexxActivation::run(
                 oldActivity->releaseStackFrame(framePtr);
 
                 this->activity->push(this);        /* push it on to the activity stack  */
-                oldActivity->pop(TRUE);            /* pop existing one off the stack    */
+                oldActivity->pop(true);            /* pop existing one off the stack    */
                                                    /* is the scope reserved?            */
                 if (this->object_scope == SCOPE_RESERVED)
                 {
@@ -458,11 +452,11 @@ RexxObject * RexxActivation::run(
             while ((activation = this->activity->current()) != this)
             {
                 activation->termination();       /* prepare the activation for termin */
-                this->activity->pop(FALSE);      /* pop the activation off the stack  */
+                this->activity->pop(false);      /* pop the activation off the stack  */
             }
             this->stack.clear();               /* Force the stack clear             */
                                                /* invalidate the timestamp          */
-            this->settings.timestamp.valid = FALSE;
+            this->settings.timestamp.valid = false;
             if (this->debug_pause)
             {           /* in a debug pause?                 */
                 this->execution_state = RETURNED;/* cause termination                 */
@@ -684,7 +678,7 @@ void RexxActivation::setTrace(
                                        /* save the trace option             */
       this->settings.traceoption = traceoption;
       /* turn on the special fast-path test */
-      this->settings.intermediate_trace = TRUE;
+      this->settings.intermediate_trace = true;
       break;
 
     case TRACE_OFF:                    /* TRACE OFF                         */
@@ -1122,7 +1116,7 @@ void RexxActivation::exitFrom(
         do
         {
             activation->termination();       /* make sure this level cleans up    */
-            ActivityManager::currentActivity->pop(FALSE);     /* pop this level off                */
+            ActivityManager::currentActivity->pop(false);     /* pop this level off                */
                                              /* get the next level                */
             activation = ActivityManager::currentActivity->getCurrentActivation();
         } while (!activation->isTopLevel());
@@ -1279,7 +1273,7 @@ void RexxActivation::raiseExit(
       this->activity->sysExitTerm(this);
     ProtectedObject p(this);
     this->termination();               /* remove guarded status on object   */
-    this->activity->pop(FALSE);        /* pop ourselves off active list     */
+    this->activity->pop(false);        /* pop ourselves off active list     */
                                        /* propogate the condition backward  */
     this->sender->raiseExit(condition, rc, description, additional, resultObj, conditionobj);
   }
@@ -1305,7 +1299,7 @@ void RexxActivation::raise(
     {
         /* get the original condition name   */
         condition = (RexxString *)conditionobj->at(OREF_CONDITION);
-        propagated = TRUE;                 /* this is propagated                */
+        propagated = true;                 /* this is propagated                */
                                            /* fill in the propagation status    */
         conditionobj->put(TheTrueObject, OREF_PROPAGATED);
         if (resultObj == OREF_NULL)        /* no result specified?              */
@@ -1322,7 +1316,7 @@ void RexxActivation::raise(
         conditionobj->put(OREF_NULLSTRING, OREF_DESCRIPTION);
         /* fill in the propagation status    */
         conditionobj->put(TheFalseObject, OREF_PROPAGATED);
-        propagated = FALSE;                /* remember for later                */
+        propagated = false;                /* remember for later                */
     }
     if (rc != OREF_NULL)                 /* have an RC value?                 */
     {
@@ -1348,7 +1342,7 @@ void RexxActivation::raise(
         if (propagated)
         {                  /* reraising a condition?            */
             this->termination();             /* do the termination cleanup on ourselves */
-            this->activity->pop(FALSE);      /* pop ourselves off active list     */
+            this->activity->pop(false);      /* pop ourselves off active list     */
                                              /* go propagate the condition        */
             ActivityManager::currentActivity->reraiseException(conditionobj);
         }
@@ -1635,7 +1629,7 @@ bool RexxActivation::trap(             /* trap a condition                  */
 /* Function:  Check the activation to see if this is trapping a condition.    */
 /*            For SIGNAL traps, control goes back to the point of the trap    */
 /*            via throw.  For CALL ON traps, the condition is saved, and      */
-/*            the method returns TRUE to indicate the trap was handled.       */
+/*            the method returns true to indicate the trap was handled.       */
 /******************************************************************************/
 {
     RexxArray     *traphandler;          /* trap handler instruction          */
@@ -1674,7 +1668,7 @@ bool RexxActivation::trap(             /* trap a condition                  */
                   /* non-terminal condition?           */
         if (!condition->strCompare(CHAR_SYNTAX))
         {
-            return FALSE;                    /* flag as not-handled               */
+            return false;                    /* flag as not-handled               */
         }
                                              /* go display the messages           */
         this->activity->displayDebug(exception_object);
@@ -1778,7 +1772,7 @@ void RexxActivation::mergeTraps(
 /*            parent activation's queues.                                     */
 /******************************************************************************/
 {
-  LONG   items;                        /* number of items to merge          */
+  size_t items;                        /* number of items to merge          */
 
   if (source_condition_queue != OREF_NULL) {  /* have something to add?            */
                                        /* no condition queue yet?           */
@@ -1875,7 +1869,7 @@ void RexxActivation::debugInterpret(   /* interpret interactive debug input */
     RexxActivation * newActivation;      /* new activation for call           */
     RexxObject     * resultObj;
 
-    this->debug_pause = TRUE;            /* now in debug pause                */
+    this->debug_pause = true;            /* now in debug pause                */
     try
     {
         /* translate the code                */
@@ -1900,7 +1894,7 @@ void RexxActivation::debugInterpret(   /* interpret interactive debug input */
         {
             throw;
         }
-        this->debug_pause = FALSE;         /* no longer in debug                */
+        this->debug_pause = false;         /* no longer in debug                */
     }
 }
 
@@ -1950,7 +1944,7 @@ RexxObject * RexxActivation::externalCall(
   RexxMethod   * routine;              /* resolved call pointer             */
   RexxObject   * resultObj;            /* command return code               */
   RexxObject   **_arguments;           /* argument array                    */
-  BOOL           found;
+  bool           found;
 
   routine = OREF_NULL;                 /* set not found condition           */
                                        /* get the arguments array           */
@@ -2028,7 +2022,7 @@ bool RexxActivation::callExternalRexx(
     }
     this->stack.pop();                 /* remove the protected name         */
     if (routine == OREF_NULL)          /* Do we have a method???            */
-      return FALSE;                    /* No, return not found              */
+      return false;                    /* No, return not found              */
     else {                             /* Try to run method                 */
       ProtectedObject p(routine);
                                        /* run as a call                     */
@@ -2055,8 +2049,8 @@ RexxObject * RexxActivation::loadRequired(
   RexxDirectory * securityArgs = OREF_NULL;   /* security check arguments          */
   RexxObject    * resultObj;
   unsigned short  usMacroPosition;     /* macro search order                */
-  BOOL            fFileExists = TRUE;  /* does required file exist          */
-  BOOL            fMacroExists = FALSE;/* does required macro exist         */
+  bool            fFileExists = true;  /* does required file exist          */
+  bool            fMacroExists = false;/* does required macro exist         */
 
                                        /* set the current instruction for   */
   this->current = instruction;         /* error reporting                   */
@@ -2079,12 +2073,12 @@ RexxObject * RexxActivation::loadRequired(
   /* if fullname is still OREF_NULL then no file was found, remember this */
   if (fullname == OREF_NULL)
   {
-    fFileExists = FALSE;
+    fFileExists = false;
     fullname = target; /* use target name for all other things */
   }
 
   /* check to see whether a macro exists */
-  fMacroExists = (RexxQueryMacro(const_cast<char *>(target->getStringData()), &usMacroPosition) == 0);
+  fMacroExists = (RexxQueryMacro(target->getStringData(), &usMacroPosition) == 0);
   if (fMacroExists && (usMacroPosition == RXMACRO_SEARCH_BEFORE))
     fullname = target; /* use target name for references because macro will be used */
 
@@ -2341,10 +2335,10 @@ RexxInteger * RexxActivation::random(
 /*            seed value.                                                     */
 /******************************************************************************/
 {
-   LONG   minimum;                     /* minimum value                     */
-   LONG   maximum;                     /* maximum value                     */
-   ULONG  work;                        /* working random number             */
-   ULONG  seed;                        /* copy of the seed number           */
+   wholenumber_t  minimum;             /* minimum value                     */
+   wholenumber_t  maximum;             /* maximum value                     */
+   size_t work;                        /* working random number             */
+   size_t seed;                        /* copy of the seed number           */
    size_t i;                           /* loop counter                      */
 
                                        /* go get the seed value             */
@@ -2784,9 +2778,9 @@ RexxString * RexxActivation::formatTrace(
                                        /* extract the source string         */
                                        /* (formatted for tracing)           */
   if (this->settings.traceindent < MAX_TRACEBACK_INDENT)
-      return _source->traceBack(location, this->settings.traceindent, TRUE);
+      return _source->traceBack(location, this->settings.traceindent, true);
   else
-      return _source->traceBack(location, MAX_TRACEBACK_INDENT, TRUE);
+      return _source->traceBack(location, MAX_TRACEBACK_INDENT, true);
 }
 
                                        /* process clause boundary stuff     */
@@ -2906,7 +2900,7 @@ bool RexxActivation::debugPause(RexxInstruction * instr)
   RexxInstruction  * currentInst;      /* current instruction               */
 
   if (this->debug_pause)               /* instruction during debug pause?   */
-    return FALSE;                      /* just get out quick                */
+    return false;                      /* just get out quick                */
 
   if (this->settings.flags&debug_bypass)
                                        /* turn off for the next time        */
@@ -2922,7 +2916,7 @@ bool RexxActivation::debugPause(RexxInstruction * instr)
   }
   else {                               /* real work to do                   */
     if (!this->code->isTraceable())    /* if we don't have real source      */
-      return FALSE;                    /* just ignore for this              */
+      return false;                    /* just ignore for this              */
                                        /* newly into debug mode?            */
     if (!(this->settings.flags&debug_prompt_issued)) {
                                        /* write the initial prompt          */
@@ -2942,7 +2936,7 @@ bool RexxActivation::debugPause(RexxInstruction * instr)
                                        /* a re-execute request?             */
       else if (response->getLength() == 1 && response->getChar(0) == '=') {
         this->next = this->current;    /* reset the execution pointer       */
-        return TRUE;                   /* finished (inform block instrs)    */
+        return true;                   /* finished (inform block instrs)    */
       }
       else {                           /* need to execute an instruction    */
         this->debugInterpret(response);/* go execute this                   */
@@ -2996,13 +2990,13 @@ RexxObject * RexxActivation::command(
   RexxObject * rc;                     /* return code                       */
   RexxString * condition;              /* raised conditions                 */
   RexxString * rc_trace;               /* traced return code                */
-  BOOL         instruction_traced;     /* instruction has been traced       */
+  bool         instruction_traced;     /* instruction has been traced       */
 
                                        /* instruction already traced?       */
   if ((this->settings.flags&trace_all) || (this->settings.flags&trace_commands))
-    instruction_traced = TRUE;         /* remember we traced this           */
+    instruction_traced = true;         /* remember we traced this           */
   else
-    instruction_traced = FALSE;        /* not traced yet                    */
+    instruction_traced = false;        /* not traced yet                    */
                                        /* if exit declines call             */
   if (this->activity->sysExitCmd(this, commandString, address, &condition, &rc))
                                        /* go issue the command              */
@@ -3019,10 +3013,13 @@ RexxObject * RexxActivation::command(
       this->traceClause(this->current, TRACE_PREFIX_CLAUSE);
                                        /* then we always trace full command */
       this->traceValue(commandString, TRACE_PREFIX_RESULT);
-      instruction_traced = TRUE;       /* we've now traced this             */
+      instruction_traced = true;       /* we've now traced this             */
     }
+
+    wholenumber_t rcValue;
                                        /* need to trace the RC info too?    */
-    if (instruction_traced && rc->longValue(9) != 0) {
+    if (instruction_traced && rc->numberValue(rcValue) && rcValue != 0)
+    {
                                        /* get RC as a string                */
       rc_trace = rc->stringValue();
                                        /* tack on the return code           */
@@ -3275,7 +3272,7 @@ RexxVariableBase  *RexxActivation::getVariableRetriever(
                                        /* if it is a compound               */
     case STRING_COMPOUND_NAME:
                                        /* create a new compound retriever   */
-      return (RexxVariableBase *)buildCompoundVariable(variable, FALSE);
+      return (RexxVariableBase *)buildCompoundVariable(variable, false);
                                        /* if it is a simple                 */
     case STRING_NAME:
                                        /* create a new variable retriever   */
@@ -3294,11 +3291,11 @@ RexxVariableBase  *RexxActivation::getDirectVariableRetriever(
 /*            no substitution in compound variable tails)                     */
 /******************************************************************************/
 {
-  LONG        scan;                    /* string scan pointer               */
-  BOOL        literal;                 /* literal indicator                 */
-  LONG        length;                  /* length of variable name           */
+  size_t      scan;                    /* string scan pointer               */
+  bool        literal;                 /* literal indicator                 */
+  stringsize_t length;                 /* length of variable name           */
   char        character;               /* current character                 */
-  LONG        nonnumeric;              /* count of non-numeric characters   */
+  size_t      nonnumeric;              /* count of non-numeric characters   */
   char        last;                    /* previous character                */
   size_t      compound;                /* count of period characters        */
 
@@ -3307,11 +3304,11 @@ RexxVariableBase  *RexxActivation::getDirectVariableRetriever(
   character = variable->getChar(0);
                                        /* constant symbol?                  */
   if (character == '.' || (character >= '0' && character <= '9'))
-    literal = TRUE;                    /* this is a literal value           */
+    literal = true;                    /* this is a literal value           */
   else
-    literal = FALSE;                   /* not a literal value               */
+    literal = false;                   /* not a literal value               */
                                        /* have a valid length?              */
-  if (length <= MAX_SYMBOL_LENGTH && length > 0) {
+  if (length <= (size_t)MAX_SYMBOL_LENGTH && length > 0) {
     compound = 0;                      /* no periods yet                    */
     scan = 0;                          /* start at string beginning         */
     nonnumeric = 0;                    /* count of non-numeric characters   */
@@ -3322,7 +3319,7 @@ RexxVariableBase  *RexxActivation::getDirectVariableRetriever(
       if (character == '.') {          /* have a period?                    */
         if (!literal)                  /* not a literal value?              */
                                        /* don't process past here           */
-          return (RexxVariableBase *)buildCompoundVariable(variable, TRUE);
+          return (RexxVariableBase *)buildCompoundVariable(variable, true);
         else
           compound++;                  /* count the character               */
       }
@@ -3368,7 +3365,7 @@ RexxVariableBase  *RexxActivation::getDirectVariableRetriever(
 
 RexxObject *buildCompoundVariable(
     RexxString *variable_name,          /* full variable name of compound    */
-    BOOL direct)                        /* this is direct access             */
+    bool direct)                        /* this is direct access             */
 /******************************************************************************/
 /* Function:  Build a dynamically created compound variable                   */
 /******************************************************************************/
@@ -3398,7 +3395,7 @@ RexxObject *buildCompoundVariable(
   ProtectedObject p1(tails);
   position++;                          /* step past previous period         */
   length--;                            /* adjust the length                 */
-  if (direct == TRUE) {                /* direct access?                    */
+  if (direct == true) {                /* direct access?                    */
                                        /* extract the tail part             */
     tail = variable_name->extract(position, length);
     tails->push(tail);                 /* add to the tail piece list        */

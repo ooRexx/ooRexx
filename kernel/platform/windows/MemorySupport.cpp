@@ -45,8 +45,6 @@
 #include "RexxMemory.hpp"
 #include "ActivityManager.hpp"
 
-#define APIRET ULONG
-
 // retrofit by IH
 #define MEMSIZE   4194304   /* get pools in 4M chunks. */
 #define PAGESIZE  4096
@@ -83,12 +81,12 @@ void SysReleaseResultMemory(
 bool SysAccessPool(MemorySegmentPool **pool)
 /*********************************************************************/
 /*   Function:  Access/Create the 1st block as Named Storage         */
-/*              return TRUE is an access, FALSE is created.          */
+/*              return true is an access, false is created.          */
 /*********************************************************************/
 {
   MemorySegmentPool *  newPool;
-  PVOID  tmpPtr;
-  ULONG              segmentSize;
+  void  *tmpPtr;
+  size_t             segmentSize;
                                        /* create the shared memory segemnt  */
                                        /* if already exists then this       */
                                        /* isn't a coldstart.                */
@@ -125,11 +123,11 @@ bool SysAccessPool(MemorySegmentPool **pool)
     newPool->nextLargeAlloc = ((char*) newPool) + MEMSIZE;
 
     new (newPool) MemorySegmentPool;   /* Initialize as a segmentPool       */
-    return FALSE;                      /* newly created.                    */
+    return false;                      /* newly created.                    */
   }
   else
     reportException(Error_System_resources);
-return FALSE;
+return false;
 }
 
 
@@ -141,7 +139,7 @@ void     *MemorySegmentPool::operator new(size_t size, size_t minSize)
 /*********************************************************************/
 {
   MemorySegmentPool *newPool;
-  PVOID  tmpPtr;
+  void  *tmpPtr;
   size_t initialSegSize;
   size_t poolSize;
 
@@ -224,7 +222,7 @@ MemorySegment *MemorySegmentPool::newSegment(size_t minSize)
    size_t segmentSize;
    MemorySegment *newSeg;
    MemorySegmentPool *newPool;
-   PVOID  tmpPtr;
+   void  *tmpPtr;
 
                                        /* Any spare segments left over      */
                                        /* from initial pool alloc?          */
@@ -238,7 +236,7 @@ MemorySegment *MemorySegmentPool::newSegment(size_t minSize)
                                        /* enough space for request          */
    if (this->uncommitted >= segmentSize) {
                                        /* commit next portion               */
-     tmpPtr = VirtualAlloc(PVOID(this->nextAlloc), segmentSize, MEM_COMMIT,PAGE_READWRITE);
+     tmpPtr = VirtualAlloc((void *)this->nextAlloc, segmentSize, MEM_COMMIT,PAGE_READWRITE);
          this->nextAlloc = (char *)tmpPtr;
      if (!tmpPtr)
      {
@@ -282,7 +280,7 @@ MemorySegment *MemorySegmentPool::newLargeSegment(size_t minSize)
    size_t segmentSize;
    MemorySegment *newSeg;
    MemorySegmentPool *newPool;
-   PVOID  tmpPtr;
+   void  *tmpPtr;
 
                                        /* Any spare segments left over      */
                                        /* from initial pool alloc?          */
@@ -298,7 +296,7 @@ MemorySegment *MemorySegmentPool::newLargeSegment(size_t minSize)
                                        /* enough space for request          */
    if (this->uncommitted >= segmentSize) {
                                        /* commit next portion               */
-     tmpPtr = VirtualAlloc(PVOID(this->nextLargeAlloc - segmentSize), segmentSize, MEM_COMMIT,PAGE_READWRITE);
+     tmpPtr = VirtualAlloc((void *)(this->nextLargeAlloc - segmentSize), segmentSize, MEM_COMMIT,PAGE_READWRITE);
      this->nextLargeAlloc = (char *)tmpPtr;
      if (!tmpPtr)
      {
@@ -342,7 +340,7 @@ bool    MemorySegmentPool::accessNextPool()
      return true;                      /* Return one accessed               */
    }
    else {
-     return false;                     /* At the end, return FALSE (NO_MORE)*/
+     return false;                     /* At the end, return false (NO_MORE)*/
    }
 }
 

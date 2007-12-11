@@ -43,6 +43,13 @@
 /******************************************************************************/
 #ifndef Included_RexxNativeCode
 #define Included_RexxNativeCode
+                                       /* pointer to native method function */
+typedef char *(REXXENTRY *PNMF)(void **);
+
+typedef struct internalmethodentry {   /* internal method table entry       */
+  const char *entryName;               /* internal entry point name         */
+  PNMF   entryPoint;                   /* method entry point                */
+} internalMethodEntry;
 
 class RexxNativeCode : public RexxInternalObject {
   public:
@@ -52,23 +59,23 @@ class RexxNativeCode : public RexxInternalObject {
    inline void  operator delete(void *, void *) { ; }
 
    inline RexxNativeCode(RESTORETYPE restoreType) { ; };
-   RexxNativeCode(RexxString *, RexxString *, PFN, LONG);
+   RexxNativeCode(RexxString *, RexxString *, PNMF, size_t);
    void        reinit(RexxInteger *);
    void        live();
    void        liveGeneral();
    void        flatten(RexxEnvelope *envelope);
    RexxObject *unflatten(RexxEnvelope *envelope);
 
-   inline PFN         getEntry() { return this->entry; };
-   inline void        setEntry(PFN v) { this->entry = v; };
+   inline PNMF        getEntry() { return this->entry; };
+   inline void        setEntry(PNMF v) { this->entry = v; };
    static void        createClass();
    static void        restoreClass();
 
 protected:
    RexxString *library;               // the library name
    RexxString *procedure;             /* External Procedur name            */
-   PFN         entry;                 /* method entry point.               */
-   LONG        index;                 /* internal native method            */
+   PNMF        entry;                 /* method entry point.               */
+   size_t      index;                 /* internal native method            */
 };
 
 class RexxNativeCodeClass : public RexxClass {
@@ -85,7 +92,7 @@ class RexxNativeCodeClass : public RexxClass {
    void        liveGeneral();
    void        reload(RexxDirectory *);
    RexxDirectory  * load(RexxString *);
-   RexxNativeCode * newInternal(LONG);
+   RexxNativeCode * newInternal(size_t);
    inline RexxDirectory  * getLibraries() { return this->libraries; };
 
 protected:

@@ -90,6 +90,14 @@ $(OR_OUTDIR)\rexxutil.dll : $(RXUTILOBJ) $(RXDBG_OBJ)   \
     @ECHO Compiling $(**)
     $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(**)
 
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_ORYXLSRC directory
+#
+{$(XPLATFORM)}.cpp{$(OR_OUTDIR)}.obj:
+    @ECHO .
+    @ECHO Compiling $(**)
+    $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
+
 
 # Update the version information block
 $(OR_OUTDIR)\verinfo.res: $(KWINDOWS)\verinfo.rc

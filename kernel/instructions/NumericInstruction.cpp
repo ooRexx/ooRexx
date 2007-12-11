@@ -82,8 +82,7 @@ void RexxInstructionNumeric::execute(
 {
   RexxObject  *result;                 /* expression evaluation result      */
   RexxString  *stringResult;           /* converted string                  */
-  wholenumber_t  setting;              /* binary form of the setting        */
-  wholenumber_t  tempVal;              /* temporary value for errors        */
+  stringsize_t setting;                /* binary form of the setting        */
 
   context->traceInstruction(this);     /* trace if necessary                */
                                        /* process the different types of    */
@@ -98,19 +97,18 @@ void RexxInstructionNumeric::execute(
                                        /* get the expression value          */
         result = this->expression->evaluate(context, stack);
         context->traceResult(result);  /* trace if necessary                */
-                                       /* convert the value                 */
-        setting = REQUEST_LONG(result, NO_LONG);
                                        /* bad value?                        */
-        if (setting == (wholenumber_t)NO_LONG || setting < 1)
+        if (!result->requestUnsignedNumber(setting, number_digits()) || setting < 1)
+        {
                                        /* report an exception               */
-          reportException(Error_Invalid_whole_number_digits, result);
-                                       /* problem with the fuzz setting?    */
-        if (setting <= (wholenumber_t)context->fuzz()) {
-          tempVal = context->fuzz();   /* get the value                     */
-                                       /* this is an error                  */
-          reportException(Error_Expression_result_digits, setting, tempVal);
+            reportException(Error_Invalid_whole_number_digits, result);
         }
-        context->setDigits((size_t)setting); /* now adjust the setting            */
+                                       /* problem with the fuzz setting?    */
+        if (setting <= context->fuzz()) {
+                                       /* this is an error                  */
+          reportException(Error_Expression_result_digits, setting, context->fuzz());
+        }
+        context->setDigits(setting);   /* now adjust the setting            */
       }
       break;
 
@@ -122,18 +120,17 @@ void RexxInstructionNumeric::execute(
                                        /* get the expression value          */
         result = this->expression->evaluate(context, stack);
         context->traceResult(result);  /* trace if necessary                */
-                                       /* convert the value                 */
-        setting = REQUEST_LONG(result, NO_LONG);
                                        /* bad value?                        */
-        if (setting == (wholenumber_t)NO_LONG || setting < 0)
-                                       /* report an exception               */
-          reportException(Error_Invalid_whole_number_fuzz, result);
-                                       /* problem with the digits setting?  */
-        if (setting >= (wholenumber_t)context->digits())
+        if (!result->requestUnsignedNumber(setting, number_digits()))
         {
-          tempVal = context->digits(); /* Get the value                     */
+                                       /* report an exception               */
+            reportException(Error_Invalid_whole_number_fuzz, result);
+        }
+                                       /* problem with the digits setting?  */
+        if (setting >= context->digits())
+        {
                                        /* and issue the error               */
-          reportException(Error_Expression_result_digits, tempVal, setting);
+            reportException(Error_Expression_result_digits, context->digits(), setting);
         }
         context->setFuzz(setting);     /* set the new value                 */
       }

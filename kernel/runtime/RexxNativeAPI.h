@@ -41,14 +41,12 @@
 /* Header file for REXX methods written in C.                                 */
 /*                                                                            */
 /******************************************************************************/
-#ifndef ORYX_H_INCLUDED
-#define ORYX_H_INCLUDED
+#ifndef RexxNativeAPI_H_INCLUDED
+#define RexxNativeAPI_H_INCLUDED
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include SYSREXXSAA                    /* include REXX APIs also            */
 
 /******************************************************************************/
 /* Types (for general use)                                                    */
@@ -74,47 +72,41 @@ typedef REXXOBJECT STRING;             /* REXX string object                */
 /* Constant values (for general use)                                          */
 /* Also in RexxCore.h */
 /******************************************************************************/
-#ifndef NO_INT
-# define NO_INT                0x80000000
-#endif
-#ifndef NO_LONG
-# define NO_LONG               0x80000000
-#endif
 #ifndef NO_CSTRING
 # define NO_CSTRING            NULL
 #endif
-#define NULLOBJ               0L
 
 /******************************************************************************/
 /* New-style macros and functions                                             */
 /******************************************************************************/
-#define RexxArray(s)           REXX_ARRAY_NEW(s)
-#define RexxArray1(v1)         REXX_ARRAY_NEW1(v1)
-#define RexxArray2(v1,v2)      REXX_ARRAY_NEW2(v1,v2)
-#define RexxBuffer(l)          REXX_BUFFER_NEW(l)
-#define RexxInteger(v)         REXX_INTEGER_NEW(v)
-#define RexxPointer(v)         REXX_INTEGER_NEW((LONG)v)
-#define RexxReceiver()         REXX_RECEIVER()
-#define RexxSend(r,n,aa)       REXX_SEND(r,n,aa)
-#define RexxSend0(r,n)         REXX_SEND(r,n,RexxArray(0))
-#define RexxSend1(r,n,a1)      REXX_SEND(r,n,RexxArray1(a1))
-#define RexxSend2(r,n,a1,a2)   REXX_SEND(r,n,RexxArray2(a1,a2))
-#define RexxString(s)          REXX_STRING_NEW(s, strlen(s))
-#define RexxStringUpper(s)     REXX_STRING_NEW_UPPER(s)
-#define RexxStringD(d)         REXX_STRING_NEWD(&d)
-#define RexxStringL(s,l)       REXX_STRING_NEW(s,l)
-#define RexxSuper(n,aa)        REXX_SUPER(n,aa)
-#define RexxSuper0(n)          REXX_SUPER(n,RexxArray(0))
-#define RexxSuper1(n,a1)       REXX_SUPER(n,RexxArray1(a1))
-#define RexxSuper2(n,a1,a2)    REXX_SUPER(n,RexxArray2(a1,a2))
-#define RexxTable()            REXX_TABLE_NEW)
-#define RexxVarSet(n,v)        REXX_SETVAR(n,v)
-#define RexxVarValue(n)        REXX_GETVAR(n)
-#define RexxNil                REXX_NIL()
-#define RexxTrue               REXX_TRUE()
-#define RexxFalse              REXX_FALSE()
-#define RexxEnvironment        REXX_ENVIRONMENT()
-#define RexxLocal              REXX_LOCAL()
+#define ooRexxArray(s)           REXX_ARRAY_NEW(s)
+#define ooRexxArray1(v1)         REXX_ARRAY_NEW1(v1)
+#define ooRexxArray2(v1,v2)      REXX_ARRAY_NEW2(v1,v2)
+#define ooRexxBuffer(l)          REXX_BUFFER_NEW(l)
+#define ooRexxInteger(v)         REXX_INTEGER_NEW(v)
+#define ooRexxPointer(v)         REXX_INTEGER_NEW((intptr_t)v)
+#define ooRexxReceiver()         REXX_RECEIVER()
+#define ooRexxSend(r,n,aa)       REXX_SEND(r,n,aa)
+#define ooRexxSend0(r,n)         REXX_SEND(r,n,ooRexxArray(0))
+#define ooRexxSend1(r,n,a1)      REXX_SEND(r,n,ooRexxArray1(a1))
+#define ooRexxSend2(r,n,a1,a2)   REXX_SEND(r,n,ooRexxArray2(a1,a2))
+#define ooRexxString(s)          REXX_STRING_NEW(s, strlen(s))
+#define ooRexxStringUpper(s)     REXX_STRING_NEW_UPPER(s)
+#define ooRexxStringD(d)         REXX_STRING_NEWD(d)
+#define ooRexxStringL(s,l)       REXX_STRING_NEW(s,l)
+#define ooRexxSuper(n,aa)        REXX_SUPER(n,aa)
+#define ooRexxSuper0(n)          REXX_SUPER(n,ooRexxArray(0))
+#define ooRexxSuper1(n,a1)       REXX_SUPER(n,ooRexxArray1(a1))
+#define ooRexxSuper2(n,a1,a2)    REXX_SUPER(n,ooRexxArray2(a1,a2))
+#define ooRexxTable()            REXX_TABLE_NEW()
+#define ooRexxVarSet(n,v)        REXX_SETVAR(n,v)
+#define ooRexxVarValue(n)        REXX_GETVAR(n)
+#define ooRexxNil                REXX_NIL()
+#define ooRexxTrue               REXX_TRUE()
+#define ooRexxFalse              REXX_FALSE()
+#define ooRexxEnvironment        REXX_ENVIRONMENT()
+#define ooRexxLocal              REXX_LOCAL()
+#define ooRexxRaiseCondition(c, d, a, r) REXX_RAISE(c, d, a, r)
 
 #ifndef __cplusplus
 #define RexxMethod0(r,n) r  n##_m (void); \
@@ -207,7 +199,7 @@ r  n##_m (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5, t6 p6)
 #define _isdirectory(r)          REXX_ISDIRECTORY(r)
 #define _isinteger(r)            REXX_ISINTEGER(r)
 #define _ispinteger(r)           REXX_INTEGER(r)
-#define _isstring(r)             REXX_ISASTRING(r)
+#define _isstring(r)             REXX_ISSTRING(r)
 #define _string(r)               REXX_OBJECT_STRING(r)
 
 #define area_get(r,s,b,l)        REXX_BUFFER_GETDATA(r,s,(CSTRING)b,l)
@@ -225,7 +217,8 @@ r  n##_m (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5, t6 p6)
 #define buffer_put(r,s,b,l)      REXX_BUFFER_COPYDATA(r,s,(CSTRING)b,l)
 
 #define integer_value(r)         REXX_INTEGER_VALUE(r)
-#define pointer_value(r)         ((PVOID)REXX_INTEGER_VALUE(r))
+// TODO:  HACK!!!!!!!!!!!!!!!!
+#define pointer_value(r)         ((void *)REXX_INTEGER_VALUE(r))
 
 #define string_get(r,s,b,l)      REXX_STRING_GET(r,s,b,l)
 #define string_length(r)         REXX_STRING_LENGTH(r)
@@ -241,7 +234,6 @@ r  n##_m (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5, t6 p6)
 #define send_condition(c,d,a)    REXX_CONDITION(c,d,a)
 #define send_exception(m)        REXX_EXCEPT(m,NULLOBJECT)
 #define send_exception1(m,a1)    REXX_EXCEPT(m,a1)
-#define RexxRaiseCondition(c, d, a, r) REXX_RAISE(c, d, a, r)
 
 
 /******************************************************************************/
@@ -253,8 +245,8 @@ r  n##_m (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5, t6 p6)
 /******************************************************************************/
 #define ONULL   REXXOBJECT
 #define OSELF   REXXOBJECT
-#define CSELF   PVOID
-#define BUFFER  PVOID
+#define CSELF   void *
+#define BUFFER  void *
 #define ARGLIST REXXOBJECT
 #define SCOPE   REXXOBJECT
 #define MSGNAME REXXOBJECT
@@ -268,7 +260,7 @@ extern "C" {
 
 
 REXXOBJECT REXXENTRY REXX_ARRAY_AT(REXXOBJECT, size_t);
-size_t     REXXENTRY REXX_ARRAY_HASINDEX(REXXOBJECT, size_t);
+bool       REXXENTRY REXX_ARRAY_HASINDEX(REXXOBJECT, size_t);
 void       REXXENTRY REXX_ARRAY_PUT(REXXOBJECT, REXXOBJECT, size_t);
 size_t     REXXENTRY REXX_ARRAY_SIZE(REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_ARRAY_NEW(size_t);
@@ -277,8 +269,8 @@ REXXOBJECT REXXENTRY REXX_ARRAY_NEW2(REXXOBJECT, REXXOBJECT);
 
 char *     REXXENTRY REXX_BUFFER_ADDRESS(REXXOBJECT);
 size_t     REXXENTRY REXX_BUFFER_LENGTH(REXXOBJECT);
-long       REXXENTRY REXX_BUFFER_GETDATA(REXXOBJECT, long, PVOID, ULONG);
-long       REXXENTRY REXX_BUFFER_COPYDATA(REXXOBJECT, long, PVOID, ULONG);
+size_t     REXXENTRY REXX_BUFFER_GETDATA(REXXOBJECT, size_t, void *, size_t);
+size_t     REXXENTRY REXX_BUFFER_COPYDATA(REXXOBJECT, size_t, void *, size_t);
 REXXOBJECT REXXENTRY REXX_BUFFER_NEW(size_t);
 REXXOBJECT REXXENTRY REXX_BUFFER_EXTEND(REXXOBJECT, size_t);
 
@@ -286,32 +278,27 @@ int        REXXENTRY REXX_INTEGER_VALUE(REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_INTEGER_NEW(int);
 
 double     REXXENTRY REXX_DOUBLE(REXXOBJECT);
-BOOL       REXXENTRY REXX_ISDOUBLE(REXXOBJECT);
-BOOL       REXXENTRY REXX_ISASTRING(REXXOBJECT);
-BOOL       REXXENTRY REXX_ISDIRECTORY(REXXOBJECT);
+bool       REXXENTRY REXX_ISDOUBLE(REXXOBJECT);
+bool       REXXENTRY REXX_ISSTRING(REXXOBJECT);
+bool       REXXENTRY REXX_ISDIRECTORY(REXXOBJECT);
 void       REXXENTRY REXX_EXCEPT(int, REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_CONDITION(REXXOBJECT, REXXOBJECT, REXXOBJECT);
 void       REXXENTRY REXX_RAISE(CSTRING, REXXOBJECT, REXXOBJECT, REXXOBJECT);
 int        REXXENTRY REXX_INTEGER(REXXOBJECT);
 size_t     REXXENTRY REXX_UNSIGNED_INTEGER(REXXOBJECT);
-BOOL       REXXENTRY REXX_ISINTEGER(REXXOBJECT);
+bool       REXXENTRY REXX_ISINTEGER(REXXOBJECT);
 CSTRING    REXXENTRY REXX_STRING(REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_MSGNAME(void);
 REXXOBJECT REXXENTRY REXX_RECEIVER(void);
-BOOL       REXXENTRY REXX_PTYPE(REXXOBJECT, REXXOBJECT);
+bool       REXXENTRY REXX_PTYPE(REXXOBJECT, REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_SEND(REXXOBJECT, CSTRING, REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_DISPATCH(REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_SUPER(CSTRING, REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_SETVAR(CSTRING, REXXOBJECT);
-REXXOBJECT REXXENTRY REXX_SETVAR2(CSTRING, REXXOBJECT);
-REXXOBJECT REXXENTRY REXX_SETFUNC(CSTRING, REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_GETFUNCTIONNAMES(char ***, int*);
 REXXOBJECT REXXENTRY REXX_GETVAR(CSTRING);
-ULONG      REXXENTRY REXX_VARIABLEPOOL(PVOID);
-ULONG      REXXENTRY REXX_VARIABLEPOOL2(PVOID);      // for everyone
-ULONG      REXXENTRY REXX_STEMSORT(CSTRING, int, int, size_t, size_t, size_t, size_t);
-void       REXXENTRY REXX_ENABLE_VARIABLEPOOL(void);
-void       REXXENTRY REXX_DISABLE_VARIABLEPOOL(void);
+int        REXXENTRY REXX_VARIABLEPOOL(void *);
+int        REXXENTRY REXX_STEMSORT(CSTRING, int, int, size_t, size_t, size_t, size_t);
 void       REXXENTRY REXX_PUSH_ENVIRONMENT(REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_POP_ENVIRONMENT(void);
 REXXOBJECT REXXENTRY REXX_NIL(void);
@@ -334,19 +321,16 @@ size_t     REXXENTRY REXX_STRING_LENGTH(REXXOBJECT);
 CSTRING    REXXENTRY REXX_STRING_DATA(REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_STRING_NEW(CSTRING, size_t);
 REXXOBJECT REXXENTRY REXX_STRING_NEW_UPPER(CSTRING);
-REXXOBJECT REXXENTRY REXX_STRING_NEWD(double *);
+REXXOBJECT REXXENTRY REXX_STRING_NEWD(double);
 
 REXXOBJECT REXXENTRY REXX_TABLE_ADD(REXXOBJECT, REXXOBJECT, REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_TABLE_GET(REXXOBJECT, REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_TABLE_REMOVE(REXXOBJECT, REXXOBJECT);
 
-BOOL       REXXENTRY RexxQuery (void);
+bool       REXXENTRY RexxQuery (void);
 int        REXXENTRY RexxTerminate (void);
-BOOL       REXXENTRY RexxInitialize (void);
-int        VLAREXXENTRY RexxSendMessage (REXXOBJECT receiver, const char *msgname, REXXOBJECT start_class, const char *interfacedefn, void *result, ...);
-REXXOBJECT REXXENTRY RexxDispatch (REXXOBJECT argList);
-int        VLAREXXENTRY RexxCallProgram (CSTRING filename, CSTRING interfacedefn, PVOID result, ...);
-int        VLAREXXENTRY RexxCallString  (CSTRING filename, CSTRING interfacedefn, PVOID result, ...);
+bool       REXXENTRY RexxInitialize (void);
+int        REXXENTRY RexxSendMessage (REXXOBJECT receiver, const char *msgname, REXXOBJECT start_class, const char *interfacedefn, void *result, ...);
 
 #ifdef __cplusplus
 }
@@ -355,21 +339,24 @@ int        VLAREXXENTRY RexxCallString  (CSTRING filename, CSTRING interfacedefn
 /******************************************************************************/
 /* Interface Datatypes (used in macro expansions)                             */
 /******************************************************************************/
-#define REXXD_void         1
-#define REXXD_OBJECT       2
-#define REXXD_REXXOBJECT   REXXD_OBJECT
-#define REXXD_int          3
-#define REXXD_long         4
-#define REXXD_double       5
-#define REXXD_CSTRING      6
-#define REXXD_OSELF        7
-#define REXXD_ARGLIST      8
-#define REXXD_MSGNAME      9
-#define REXXD_SCOPE       10
-#define REXXD_POINTER     11
-#define REXXD_CSELF       12
-#define REXXD_STRING      13
-#define REXXD_BUFFER      14
+#define REXXD_void          1
+#define REXXD_OBJECT        2
+#define REXXD_REXXOBJECT    REXXD_OBJECT
+#define REXXD_int           3
+#define REXXD_size_t        4
+#define REXXD_ssize_t       5
+#define REXXD_stringsize_t  6
+#define REXXD_wholenumber_t 7
+#define REXXD_double        8
+#define REXXD_CSTRING       9
+#define REXXD_OSELF         10
+#define REXXD_ARGLIST       11
+#define REXXD_MSGNAME       12
+#define REXXD_SCOPE         13
+#define REXXD_POINTER       14
+#define REXXD_CSELF         15
+#define REXXD_STRING        16
+#define REXXD_BUFFER        17
 
 /******************************************************************************/
 /* Internal Macros (used in macro expansions)                                 */
@@ -377,7 +364,10 @@ int        VLAREXXENTRY RexxCallString  (CSTRING filename, CSTRING interfacedefn
 #define REXX_ret_void(v)           v
 #define REXX_ret_REXXOBJECT(v)    *((REXXOBJECT *)*a) = v
 #define REXX_ret_int(v)           *((int *)*a) = v
-#define REXX_ret_long(v)          *((long *)*a) = v
+#define REXX_ret_size_t(v)        *((size_t *)*a) = v
+#define REXX_ret_ssize_t(v)       *((ssize_t *)*a) = v
+#define REXX_ret_stringsize_t(v)  *((stringsize_t *)*a) = v
+#define REXX_ret_wholenumber_t(v) *((wholenumber_t *)*a) = v
 #define REXX_ret_double(v)        *((double *)*a) = v
 #define REXX_ret_CSTRING(v)       *((CSTRING *)*a) = v
 #define REXX_ret_POINTER(v)       *((void  **)*a) = v

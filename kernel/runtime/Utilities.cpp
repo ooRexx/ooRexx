@@ -70,35 +70,33 @@ int message_number(
 /******************************************************************************/
 {
   const char *decimalPoint;            /* location of decimalPoint in errorcode*/
-  int  primary;                        /* Primary part of error code, major */
-  int  secondary;                      /* Secondary protion (minor code)    */
-  int  count;
+  wholenumber_t  primary = 0;          /* Primary part of error code, major */
+  wholenumber_t  secondary = 0;        /* Secondary protion (minor code)    */
+  wholenumber_t  count;
 
                                        /* make sure we get errorcode as str */
   errorcode = (RexxString *)errorcode->stringValue();
                                        /* scan to decimal Point or end of   */
                                        /* error code.                       */
   for (decimalPoint = errorcode->getStringData(), count = 0; *decimalPoint && *decimalPoint != '.'; decimalPoint++, count++);
-                                       /* get the primary portion of code   */
-  primary = (new_string(errorcode->getStringData(), count)->longValue(9)) * 1000;
-                                       /* did major code compute to long    */
-                                       /* and within range                  */
-  if (primary == (int)NO_LONG || primary < 1 || primary >= 100000) {
+
+  // must be a whole number in the correct range
+  if (!new_string(errorcode->getStringData(), count)->numberValue(primary) || primary < 1 || primary >= 100)
+  {
                                        /* Nope raise an error.              */
-    reportException(Error_Expression_result_raise);
+      reportException(Error_Expression_result_raise);
+
   }
+  // now shift over the decimal position.
+  primary *= 1000;
+
 
   if (*decimalPoint) {                 /* Was there a decimal point specified?*/
-                                       /* Yes, compute its decimal value.   */
-    secondary = new_string(decimalPoint + 1, errorcode->getLength() - count -1)->longValue(9);
                                        /* is the subcode invalid or too big?*/
-    if (secondary == (int)NO_LONG || secondary < 0  || secondary >= 1000) {
+    if (!new_string(decimalPoint + 1, errorcode->getLength() - count -1)->numberValue(secondary) || secondary < 0  || secondary >= 1000) {
                                        /* Yes, raise an error.              */
-      reportException(Error_Expression_result_raise);
+        reportException(Error_Expression_result_raise);
     }
-  }
-  else {
-    secondary = 0;
   }
   return primary + secondary;          /* add two portions together, return */
 }
@@ -137,7 +135,7 @@ void process_new_args(
 }
 
 void missing_argument(
-    LONG  argumentPosition)            /* position of the missing argument  */
+    int   argumentPosition)            /* position of the missing argument  */
 /******************************************************************************/
 /* Function:  Raise an error for a missing argument, given the target         */
 /*            position.                                                       */

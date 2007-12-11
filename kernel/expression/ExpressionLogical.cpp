@@ -153,7 +153,7 @@ RexxObject *RexxExpressionLogical::evaluate(RexxActivation *context, RexxExpress
 
         // the comparison methods return either .true or .false, so we
         // can to a quick test against those.
-        if (value != TheTrueObject)    // most of the time, these will be TRUE so test that first.
+        if (value != TheTrueObject)    // most of the time, these will be true so test that first.
         {
             if (value == TheFalseObject)
             {

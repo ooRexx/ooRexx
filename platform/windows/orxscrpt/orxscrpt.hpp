@@ -276,7 +276,7 @@ class OrxScript : public LLLContent,
   }
 
   inline IInternetHostSecurityManager* getIESecurityManager() { return pIESecurityManager; }
-  inline bool checkObjectCreation() { return fCheckObjectCreation; }
+  inline BOOL checkObjectCreation() { return fCheckObjectCreation; }
   inline void setObjectCreation(bool f) { fCheckObjectCreation = f; }
 
   STDMETHODIMP GetSourceIDispatch(LPCOLESTR   ItemName,

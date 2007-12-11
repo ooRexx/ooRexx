@@ -68,7 +68,7 @@ class RexxDirectory : public RexxHashTableCollection {
   RexxObject   *entryRexx(RexxString *);
   RexxObject   *hasEntry(RexxString *);
   RexxObject   *hasIndex(RexxString *);
-  long          items();
+  size_t        items();
   RexxObject   *itemsRexx();
   RexxObject   *remove(RexxString *);
   RexxObject   *setEntry(RexxString *, RexxObject *);

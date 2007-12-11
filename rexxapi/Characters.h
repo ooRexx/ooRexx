@@ -61,25 +61,4 @@
 #define InNum(c) (first_char[c] & INNUM)
 #define FunctionNo(c) (first_char[c] & LOMASK)
 
-/*********************************************************************/
-/*                                                                   */
-/* Definitions of character functions                                */
-/*                                                                   */
-/*********************************************************************/
-#undef islower
-#undef isupper
-#undef isdigit
-#undef isspace
-#undef isxdigit
-#undef tolower
-#undef toupper
-
-#define toupper(c)    ( upper_case_table[(UCHAR)(c)] )
-#define tolower(c)    ( lower_case_table[(UCHAR)(c)] )
-#define islower(c)    ( upper_case_table[(UCHAR)(c)] != (UCHAR)(c) )
-#define isupper(c)    ( lower_case_table[(UCHAR)(c)] != (UCHAR)(c) )
-#define isdigit(c)    ( (c) >= '0' && (c) <= '9' )
-#define isspace(c)    ( (c) == ' ' )
-#define isxdigit(c)   ( isdigit(c) || ((c) >= 'a' && (c) <= 'f') || ((c) >= 'A' && (c) <= 'F') )
-
 #endif

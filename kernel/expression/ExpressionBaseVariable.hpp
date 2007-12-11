@@ -47,7 +47,7 @@
 class RexxVariableBase : public RexxInternalObject {
  public:
   RexxVariableBase() { ; };
-  virtual BOOL exists(RexxActivation *) { return FALSE; }
+  virtual bool exists(RexxActivation *) { return false; }
   virtual void set(RexxActivation *, RexxObject *) {;}
   virtual void set(RexxVariableDictionary *, RexxObject *) {;}
   virtual void assign(RexxActivation *, RexxExpressionStack *, RexxObject *) {;}

@@ -41,6 +41,8 @@
 #define WINRXAPI_H_INCLUDED
 #include <setjmp.h>
 
+#include "rexx.h"
+
 #include "APIServiceTables.h"
 #define  MAXNAMESIZE      30           /* maximum internal name size */
 #define  REGNOOFTYPES      3           /* Number of types supported. */
@@ -87,6 +89,9 @@ typedef QUEUEHEADER *PQUEUEHEADER;     /* pointer to a queue header  */
 
 #define qhdr_size sizeof(QUEUEHEADER)
 
+#define RXQUEUE_WAITACTIVE   13
+#define RXQUEUE_ENDWAIT          2
+
 typedef  struct {
    UINT message;
    WPARAM wParam;
@@ -112,7 +117,7 @@ typedef struct _GLOBALREXXAPIDATA {    /* Do not move next two items */
   PVOID         comblock[NUMBEROFCOMBLOCKS];
   ULONG         comblockQueue_ExtensionLevel;
   ULONG         comblockMacro_ExtensionLevel;
-  PID           MemMgrPid;
+  process_id_t  MemMgrPid;
   ULONG         MemMgrVersion;         /* to check if dlls match */
   RXAPI_MESSAGE msg;
   LONG          UID;
@@ -165,84 +170,6 @@ typedef struct {
 
 #define  RXFMLIFO   1                  /* fifo/lifo addition         */
 
-/***    Queing Services */
-#ifdef INCL_RXQUEUE
-
-/***    Request flags for External Data Queue access */
-
-#define RXQUEUE_FIFO          0    /* Access queue first-in-first-out */
-#define RXQUEUE_LIFO          1    /* Access queue last-in-first-out  */
-
-#define RXQUEUE_NOWAIT        0    /* Wait for data if queue empty    */
-#define RXQUEUE_WAIT          1    /* Don't wait on an empty queue    */
-#define RXQUEUE_ENDWAIT          2
-
-
-/***    Return Codes from RxQueue interface */
-
-#define RXQUEUE_OK            0        /* Successful return           */
-#define RXQUEUE_NOTINIT       1000     /* Queues not initialized      */
-
-#define RXQUEUE_STORAGE       1        /* Ret info buf not big enough */
-#define RXQUEUE_SIZE          2        /* Data size > 64K-64          */
-#define RXQUEUE_DUP           3        /* Attempt-duplicate queue name*/
-#define RXQUEUE_NOEMEM     1002        /* failure in api manager      */
-#define RXQUEUE_BADQNAME      5        /* Not a valid queue name      */
-#define RXQUEUE_PRIORITY      6        /* Not accessed as LIFO|FIFO   */
-#define RXQUEUE_BADWAITFLAG   7        /* Not accessed as WAIT|NOWAIT */
-#define RXQUEUE_EMPTY         8        /* No data in queue            */
-#define RXQUEUE_NOTREG        9        /* Queue does not exist        */
-#define RXQUEUE_ACCESS       10        /* Queue busy and wait active  */
-#define RXQUEUE_MAXREG       11        /* No memory to create a queue */
-#define RXQUEUE_MEMFAIL      12        /* Failure in memory management*/
-#define RXQUEUE_WAITACTIVE   13
-
-
-
-/***    RexxCreateQueue - Create an External Data Queue */
-
-
-
-ULONG  APIENTRY RexxCreateQueue (
-        PSZ,                           /* Name of queue created       */
-        ULONG,                         /* Size of buf for ret name    */
-        PSZ,                           /* Requested name for queue    */
-        PULONG ) ;                     /* Duplicate name flag.        */
-
-
-/***    RexxDeleteQueue - Delete an External Data Queue */
-
-ULONG  APIENTRY RexxDeleteQueue (
-        PSZ );                         /* Name of queue to be deleted */
-
-
-/*** RexxQueryQueue - Query an External Data Queue for number of      */
-/***                  entries                                         */
-
-ULONG  APIENTRY RexxQueryQueue (
-        PSZ,                           /* Name of queue to query      */
-        PULONG );                      /* Place to put element count  */
-
-
-/***    RexxAddQueue - Add an entry to an External Data Queue */
-
-ULONG  APIENTRY RexxAddQueue (
-        PSZ,                           /* Name of queue to add to     */
-        PRXSTRING,                     /* Data string to add          */
-        ULONG );                       /* Queue type (FIFO|LIFO)      */
-
-
-/***    RexxPullQueue - Retrieve data from an External Data Queue */
-
-ULONG  APIENTRY RexxPullQueue (
-        PSZ,                           /* Name of queue to read from  */
-        PRXSTRING,                     /* RXSTRING to receive data    */
-        SYSTEMTIME * PDATETIME,
-        ULONG );                       /* wait status (WAIT|NOWAIT)   */
-
-
-#endif /* INCL_RXQUEUE */
-
 #define TERM         0xffff    /* service termination flag           */
 #define TEST         0xfffe    /* service test flag                  */
 #define INIT         0xfffd    /* service initialization             */
@@ -251,10 +178,6 @@ ULONG  APIENTRY RexxPullQueue (
 #define FREE_MEMORY  0xfffa    /* free memory                        */
 #define FREE_POOL    0xfff9    /* free memory pool                   */
 #define INIT_POOL    0xfff8    /* initialize memory pool             */
-
-
-#define DosEnterMustComplete(ptr) EnterCriticalSection(ptr)
-#define DosExitMustComplete(ptr) LeaveCriticalSection(ptr)
 
 #define MUTEXCOUNT 6
 #define API_API 0
@@ -308,27 +231,18 @@ VOID RxFreeProcessSubcomList(ULONG pid);
 ULONG RxQueueDetach(ULONG pid);
 ULONG RxInterProcessInit(BOOL sessionqueue);
 
-#ifdef INCL_RXMACRO
 
-    APIRET APIENTRY RexxExecuteMacroFunction (
-           PSZ,                   /* name of function to locate      */
-           PRXSTRING );           /* pointer to return pcode+lits    */
-#endif /* INCL_RXMACRO */
+APIRET APIENTRY RexxExecuteMacroFunction (
+       const char *,          /* name of function to locate      */
+       PRXSTRING );           /* pointer to return pcode+lits    */
 
 #ifdef __cplusplus
 }
 #endif
 
 ULONG           RxAPIStartUp(int chain);
-LONG            FillAPIComBlock(HAPIBLOCK *,
-                                PSZ,
-                                PSZ,
-                                PSZ);
-ULONG  RxGetModAddress( PSZ       dll_name,
-                        PSZ       function_name,
-                        PULONG    error_codes,
-                        PFN *     function_address,
-                        PULONG    call_type);
+int             FillAPIComBlock(HAPIBLOCK *, const char *, const char *, const char *);
+int  RxGetModAddress(const char *dll_name, char *function_name, size_t *error_codes, REXXPFN *function_address);
 ULONG get_session(void);
 BOOL  Initialize( VOID ) ;
 

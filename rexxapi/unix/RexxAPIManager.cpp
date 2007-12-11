@@ -118,29 +118,25 @@
 #else
 # define CCHMAXPATH 512+1
 #endif
-INT  iSemShmMode = 384;              /* Set MODE 600 for sem and shm         */
+int  iSemShmMode = 384;              /* Set MODE 600 for sem and shm         */
 char achRexxHomeDir[ CCHMAXPATH+2 ]; /* Save home dir at startup             */
 
-extern int errno;
-extern HEV  RexxTerminated;          /* Termination complete semaphore.      */
+extern SEV  RexxTerminated;          /* Termination complete semaphore.      */
 REXXAPIDATA  *apidata = NULL;
 
 /* Save the caller for signal blocking to filter pairs for unblocking */
 /* Pairs are : 1 - 50, 5 - 51/52, 6 - 53/54, 1 - 60                   */
-INT      iCallSigSet = 0;
+int      iCallSigSet = 0;
 
-//BOOL WAITANDRESET = FALSE;            /* to add SysCreateEventSem Flag  */
-BOOL CALL_BY_RXQUEUE = FALSE;           /* THU021A */
+bool CALL_BY_RXQUEUE = false;           /* THU021A */
 
-INT opencnt[MAXUTILSEM][2] = {0};      /* array for remembering the  */
+int opencnt[MAXUTILSEM][2] = {{0},{0}};/* array for remembering the  */
                                        /* open calls to the rexxutil */
                                        /* semaphores.And TIDs        */
 
 void attachall(int);                   /* attach shared memory blocks*/
                                        /* deregister proc specific   */
 void RxSubcomExitList();               /*  subcomands or exits       */
-
-void RxExitClear(int);
 void RxExitClearNormal();
 
 #define ALREADY_INIT      1            /* queue manager status       */
@@ -148,9 +144,6 @@ void RxExitClearNormal();
 #ifdef HAVE_SIGPROCMASK
 static sigset_t oldmask,newmask;
 #endif
-//#define  lazy_block apidata->lazy_block
-//#define  lazy_size apidata->lazy_size
-
 
 /*********************************************************************/
 /* Function:           Serialize REXX API function execution and     */
@@ -176,242 +169,223 @@ static sigset_t oldmask,newmask;
 /*                                                                   */
 /*********************************************************************/
 
-ULONG  RxAPIStartUp(INT chain)
+int RxAPIStartUp(int chain)
 {
-KMTX        SemId;
-INT         ShmemId = 0;
-INT         semrc, value;
-ULONG       current;                   /* session queue              */
-key_t       ipckey;
-shmid_ds    buf;                       /* buf to hold memory info    */
-INT         used;                      /* semaphore used flag        */
-LONG        lRC;
+    int         SemId;
+    int         ShmemId = 0;
+    int         semrc, value;
+    size_t      current;                   /* session queue              */
+    key_t       ipckey = 0; 
+    shmid_ds    buf;                       /* buf to hold memory info    */
+    int         used;                      /* semaphore used flag        */
+    int         lRC;
 
-  if (iCallSigSet == 0 )                   /* No signal hold set             */
-  {
+    if (iCallSigSet == 0 )                   /* No signal hold set             */
+    {
 #if defined( HAVE_SIGPROCMASK )
-     sigemptyset( &newmask );
-     sigaddset( &newmask, SIGINT );
-     sigaddset( &newmask, SIGTERM );
-     sigaddset( &newmask, SIGILL );
-     sigaddset( &newmask, SIGSEGV );
-     sigprocmask( SIG_BLOCK, &newmask , &oldmask );
+        sigemptyset( &newmask );
+        sigaddset( &newmask, SIGINT );
+        sigaddset( &newmask, SIGTERM );
+        sigaddset( &newmask, SIGILL );
+        sigaddset( &newmask, SIGSEGV );
+        sigprocmask( SIG_BLOCK, &newmask , &oldmask );
 #elif defined( HAVE_SIGHOLD )
-     sighold(SIGINT);
-     sighold(SIGTERM);
-     sighold(SIGILL);
-     sighold(SIGSEGV);
+        sighold(SIGINT);
+        sighold(SIGTERM);
+        sighold(SIGILL);
+        sighold(SIGSEGV);
 #endif
-     iCallSigSet = 1;
-//   EnterMustComplete(1);             /* signals need to be blocked through */
-  }
-                                       /* critical section                  */
- if ( achRexxHomeDir[0] != '/' )
- {
-   lRC = RxAPIHOMEset();                /* Set the REXX HOME                */
-   if ( lRC )
-      exit(-1);                         /* Exit anyway                      */
-   /* For API functions fist time cleanup of shared memory to drop functions */
+        iCallSigSet = 1;
+    }
+    /* critical section                  */
+    if ( achRexxHomeDir[0] != '/' )
+    {
+        lRC = RxAPIHOMEset();                /* Set the REXX HOME                */
+        if ( lRC )
+            exit(-1);                         /* Exit anyway                      */
+        /* For API functions fist time cleanup of shared memory to drop functions */
 #ifndef OPSYS_AIX41
-   if(!CALL_BY_RXQUEUE)
-      atexit(RxExitClearNormal);
+        if (!CALL_BY_RXQUEUE)
+            atexit(RxExitClearNormal);
 #endif
 
-    /* Set the cleanup handler for unconditional process termination  */
-    struct sigaction new_action;
-    struct sigaction old_action;        /* test if signal set already */
+        /* Set the cleanup handler for unconditional process termination  */
+        struct sigaction new_action;
+        struct sigaction old_action;        /* test if signal set already */
 
-    /* Set up the structure to specify the new action                           */
-    new_action.sa_handler = RxExitClear;
-    old_action.sa_handler = NULL;
-    sigfillset(&new_action.sa_mask);
-    new_action.sa_flags = SA_RESTART;
+        /* Set up the structure to specify the new action                           */
+        new_action.sa_handler = RxExitClear;
+        old_action.sa_handler = NULL;
+        sigfillset(&new_action.sa_mask);
+        new_action.sa_flags = SA_RESTART;
 
 /* Termination signals are set by Object REXX whenever the signals were not set */
 /* from outside (calling C-routine). The SIGSEGV signal is not set any more, so */
 /* that we now get a coredump instead of a hang up                              */
 
-   sigaction(SIGINT, NULL, &old_action);
-   if (old_action.sa_handler == NULL)           /* not set by ext. exit handler */
-   {
-     sigaction(SIGINT, &new_action, NULL);  /* exitClear on SIGTERM signal      */
-   }
- }
- if(!apidata)                           /* if memory anchor not attached  */
- {                                      /* create the semaphore set       */
-   ipckey = ftok(achRexxHomeDir, 'r');  /* generate a unique key          */
-   if ( ipckey == -1)                   /* No key error                   */
-   {
-      perror(" *E*  No key generated for shared memory.\n");
-      send_exception(Error_System_service);
-      exit(-1);                         /* Stop anyway                    */
-   }
+        sigaction(SIGINT, NULL, &old_action);
+        if (old_action.sa_handler == NULL)           /* not set by ext. exit handler */
+        {
+            sigaction(SIGINT, &new_action, NULL);  /* exitClear on SIGTERM signal      */
+        }
+    }
+    if (!apidata)                           /* if memory anchor not attached  */
+    {
+        /* create the semaphore set       */
+        ipckey = ftok(achRexxHomeDir, 'r');  /* generate a unique key          */
+        if ( ipckey == -1)                   /* No key error                   */
+        {
+            perror(" *E*  No key generated for shared memory.\n");
+            send_exception(Error_System_service);
+            exit(-1);                         /* Stop anyway                    */
+        }
 /* ipckey = ftok(getenv("HOME"),'r');    * generate a unique key          */
 /* semrc = createsem(&SemId,ipckey, MAXSEM+1);                      */
-   semrc = createsem(&SemId,ipckey, MAXSEM);
-   if(semrc == -1)                      /* already exists             */
-   {
-     if(opensem(&SemId,ipckey))         /* open the API semaphore     */
-     {
-        perror(" *E* Open of API semaphore failed.\n");
-        send_exception(Error_System_service);
-        exit(-1);                       /* Stop anyway                    */
-     }
-   }
-   else
-     if(semrc > 0 )                     /* error while create             */
-     {
-       fprintf(stderr," *E* No further API user possible!\n");
-       send_exception(Error_System_service);
-       exit(-1);                       /* Stop anyway                     */
-     }
- }
- else
-  SemId = apidata->rexxapisemaphore;
+        semrc = createsem(&SemId,ipckey, MAXSEM);
+        if (semrc == -1)                      /* already exists             */
+        {
+            if (opensem(&SemId,ipckey))         /* open the API semaphore     */
+            {
+                perror(" *E* Open of API semaphore failed.\n");
+                send_exception(Error_System_service);
+                exit(-1);                       /* Stop anyway                    */
+            }
+        }
+        else
+            if (semrc > 0 )                     /* error while create             */
+        {
+            fprintf(stderr," *E* No further API user possible!\n");
+            send_exception(Error_System_service);
+            exit(-1);                       /* Stop anyway                     */
+        }
+    }
+    else
+        SemId = apidata->rexxapisemaphore;
 /* Check if the semaphore owner exists                               */
-  if(!(getval(SemId, 0)) &&                   /* semaphore is set    */
-                                              /* and owner died      */
-     ((kill(semgetpid(SemId,0), 0)) == -1 ) )
-//   ((getpgid(semgetpid(SemId,0)) == -1) && (errno == ESRCH)))
-       unlocksem(SemId,0);                    /* unlock the sem      */
+    if (!(getval(SemId, 0)) &&                   /* semaphore is set    */
+        /* and owner died      */
+        ((kill(semgetpid(SemId,0), 0)) == -1 ) )
+        unlocksem(SemId,0);                    /* unlock the sem      */
 
 /*Check if the semaphore is in an undefined state, clear if necessary*/
-  if(((value=getval((SemId), 0)) > 1)
-     || (getval((SemId), 0) < 0 )) {
-    if(value > 1){
-      while(value != 1){                /* unlock the sem            */
-        locksem(SemId, 0);              /* NULL */
-        --value;
-      }
-    }
-    else if(value < 0 ){
-      while(value != 1){                /* unlock the sem            */
-        unlocksem(SemId, 0);            /* NULL */
-        value++;
-      }
-    }
-  }
-                                       /* serialize API function     */
-                                       /* execution.  Wait forever   */
-                                       /* for the API semaphore.     */
-                                       /* Execution is single-       */
-                                       /* threaded past this point.  */
-  locksem(SemId, 0);
-
-  if (!apidata){                     /* if memory anchor not attached*/
-                                     /* create or open the shared    */
-                                     /* API memory anchor            */
-    ShmemId = getshmem(ipckey, sizeof(REXXAPIDATA));
-    if(ShmemId == -1)                /* already exists               */
-      ShmemId = openshmem(ipckey, sizeof(REXXAPIDATA));
-    else
-     if(ShmemId == -2)               /* system limit reached         */
-     {
-        fprintf(stderr," *E*  No further API user possible !\n");
-        send_exception(Error_System_service);
-        exit(-1);                    /* Stop anyway                  */
-     }
-    if(ShmemId == -1)                /* open failed                  */
+    if (((value=getval((SemId), 0)) > 1)
+        || (getval((SemId), 0) < 0 ))
     {
-       perror(" *E*  Open of the shared memory failed!\n");
-       send_exception(Error_System_service);
-    }
-                                     /* attach the anchor            */
-    apidata =(REXXAPIDATA *)attachshmem(ShmemId);
-  }
-
-  apidata->rexxapisemaphore = SemId;
-
-  attachall(chain);                      /*get all shared memory blocks*/
-
-  apidata->ThreadId=(TID)SysQueryThreadID();
-  if(apidata->ThreadId!=(TID)-1){/* if Rexx is up*/
-                                         /*if no session queue exitsts */
-                                         /*greate one                  */
-    if(chain != QUEUECHAIN)
-      attachall(QUEUECHAIN);             /* get the queue memory       */
-    current = search_session();          /* greate the session queue   */
-    if(chain != QUEUECHAIN)              /* release the queue memeory  */
-      detachall(QUEUECHAIN);
-//  ExitMustComplete();                  /* exit critical section      */
-  }
-//else{                                  /* only API call              */
-//                                       /* establish cleanup handlers */
-//  /* Set the cleanup handler for unconditional process termination              */
-//  struct sigaction new_action;
-//  struct sigaction old_action;         /* test if signal set already */
-//
-//  /* Set up the structure to specify the new action                             */
-//  new_action.sa_handler = RxExitClear;
-//  old_action.sa_handler = NULL;
-//  sigfillset(&new_action.sa_mask);
-//  new_action.sa_flags = SA_RESTART;
-
-/* Termination signals are set by Object REXX whenever the signals were not set */
-/* from outside (calling C-routine). The SIGSEGV signal is not set any more, so */
-/* that we now get a coredump instead of a hang up                              */
-//
-//sigaction(SIGINT, NULL, &old_action);
-//if (old_action.sa_handler == NULL)                       /* not set by ext. exit handler*/
-//{
-//  sigaction(SIGINT, &new_action, NULL);  /* exitClear on SIGTERM signal         */
-//}
-/* THU012 end                                                                   */
-
-    /* this is for normal process termination                                   */
-
-//  atexit(RxExitClearNormal);
-//}
-  apidata->ProcessId = getpid();       /* set the process id                    */
-
-  apidata->init = ALREADY_INIT;
-
-  /* Check for rexxutil semaphores an their usecounts. The usecount  */
-  /* can be to high if one process died without cleanup.             */
-
-  if(apidata->rexxutilsems){           /* if we have util semaphores */
-    if(!ShmemId){                       /* if we have no mem ID       */
-      ipckey = ftok(achRexxHomeDir, 'r'); /* generate a unique key          */
-      if ( ipckey == -1)                 /* No key error                    */
-      {
-        perror(" *E*  No key generated for the shared memory");
-        send_exception(Error_System_service);
-        exit(-1);                      /* Stop anyway                       */
-      }
-/*ipckey = ftok(getenv("HOME"),'r');    * generate a unique key             */
-   /* ipckey = ftok(getenv("HOME"),'r'); * generate the key and      */
-      ShmemId = openshmem(ipckey, sizeof(REXXAPIDATA));/* get the ID */
-    }
-    shmctl(ShmemId,IPC_STAT,&buf);     /* get the memory info        */
-    if(buf.shm_nattch == 1){           /*if only I can work with sems*/
-      for(int i=0;i<MAXUTILSEM;i++){/* for all possible semaphores   */
-        if(((apidata->utilsemfree[i]).usecount))/* if it is used     */
-          if(!(opencnt[i][0])){        /* but not from me            */
-                                       /* clear the name array       */
-              memset((apidata->utilsemfree[i]).name, 0, MAXNAME);
-              (apidata->utilsemfree[i]).usecount=0;/* free it        */
-              /* Possibly this was the last used sem. So we can remove the       */
-              /* semaphore set. Check this possibility.                          */
-          }
-      }
-      used = 0;
-      for(int j=0;j<MAXUTILSEM;j++)
-      {                                       /* for all semaphores    */
-        if((apidata->utilsemfree[j]).usecount != 0 ) /* a used one ?   */
+        if (value > 1)
         {
-          used = 1;                      /* remember it                */
-          break;
+            while (value != 1)
+            {                /* unlock the sem            */
+                locksem(SemId, 0);              /* NULL */
+                --value;
+            }
         }
-      }
-      if(!used)
-      {                                     /* if all sems are unused  */
-         removesem(apidata->rexxutilsems);  /* remove the semaphore set*/
-         apidata->rexxutilsems = 0;         /* delete the old ID       */
-      }
+        else if (value < 0 )
+        {
+            while (value != 1)
+            {                /* unlock the sem            */
+                unlocksem(SemId, 0);            /* NULL */
+                value++;
+            }
+        }
     }
-  }
+    /* serialize API function     */
+    /* execution.  Wait forever   */
+    /* for the API semaphore.     */
+    /* Execution is single-       */
+    /* threaded past this point.  */
+    locksem(SemId, 0);
 
-  return (0);                            /* it all worked              */
+    if (!apidata)
+    {                     /* if memory anchor not attached*/
+                          /* create or open the shared    */
+                          /* API memory anchor            */
+        ShmemId = getshmem(ipckey, sizeof(REXXAPIDATA));
+        if (ShmemId == -1)                /* already exists               */
+            ShmemId = openshmem(ipckey, sizeof(REXXAPIDATA));
+        else
+            if (ShmemId == -2)               /* system limit reached         */
+        {
+            fprintf(stderr," *E*  No further API user possible !\n");
+            send_exception(Error_System_service);
+            exit(-1);                    /* Stop anyway                  */
+        }
+        if (ShmemId == -1)                /* open failed                  */
+        {
+            perror(" *E*  Open of the shared memory failed!\n");
+            send_exception(Error_System_service);
+        }
+        /* attach the anchor            */
+        apidata =(REXXAPIDATA *)attachshmem(ShmemId);
+    }
+
+    apidata->rexxapisemaphore = SemId;
+
+    attachall(chain);                      /*get all shared memory blocks*/
+
+    apidata->ThreadId=(thread_id_t)SysQueryThreadID();
+    if (apidata->ThreadId!=(thread_id_t)-1)
+    {/* if Rexx is up*/
+        /*if no session queue exitsts */
+        /*greate one                  */
+        if (chain != QUEUECHAIN)
+            attachall(QUEUECHAIN);             /* get the queue memory       */
+        current = search_session();          /* greate the session queue   */
+        if (chain != QUEUECHAIN)              /* release the queue memeory  */
+            detachall(QUEUECHAIN);
+    }
+    apidata->ProcessId = getpid();       /* set the process id                    */
+
+    apidata->init = ALREADY_INIT;
+
+    /* Check for rexxutil semaphores an their usecounts. The usecount  */
+    /* can be to high if one process died without cleanup.             */
+
+    if (apidata->rexxutilsems)
+    {           /* if we have util semaphores */
+        if (!ShmemId)
+        {                       /* if we have no mem ID       */
+            ipckey = ftok(achRexxHomeDir, 'r'); /* generate a unique key          */
+            if ( ipckey == -1)                 /* No key error                    */
+            {
+                perror(" *E*  No key generated for the shared memory");
+                send_exception(Error_System_service);
+                exit(-1);                      /* Stop anyway                       */
+            }
+            ShmemId = openshmem(ipckey, sizeof(REXXAPIDATA));/* get the ID */
+        }
+        shmctl(ShmemId,IPC_STAT,&buf);     /* get the memory info        */
+        if (buf.shm_nattch == 1)
+        {           /*if only I can work with sems*/
+            for (int i=0;i<MAXUTILSEM;i++)
+            {/* for all possible semaphores   */
+                if (((apidata->utilsemfree[i]).usecount))/* if it is used     */
+                    if (!(opencnt[i][0]))
+                    {        /* but not from me            */
+                             /* clear the name array       */
+                        memset((apidata->utilsemfree[i]).name, 0, MAXNAME);
+                        (apidata->utilsemfree[i]).usecount=0;/* free it        */
+                        /* Possibly this was the last used sem. So we can remove the       */
+                        /* semaphore set. Check this possibility.                          */
+                    }
+            }
+            used = 0;
+            for (int j=0;j<MAXUTILSEM;j++)
+            {                                       /* for all semaphores    */
+                if ((apidata->utilsemfree[j]).usecount != 0 ) /* a used one ?   */
+                {
+                    used = 1;                      /* remember it                */
+                    break;
+                }
+            }
+            if (!used)
+            {                                     /* if all sems are unused  */
+                removesem(apidata->rexxutilsems);  /* remove the semaphore set*/
+                apidata->rexxutilsems = 0;         /* delete the old ID       */
+            }
+        }
+    }
+
+    return(0);                            /* it all worked              */
 }
 
 /*********************************************************************/
@@ -433,10 +407,8 @@ LONG        lRC;
 /*                                                                   */
 /*********************************************************************/
 
-void RxAPICleanUp(INT chain, INT iSigCntl)
+void RxAPICleanUp(int chain, int iSigCntl)
 {
-
-
   detachall(chain);                    /* detach shared memory       */
 
    /******************************************************************/
@@ -446,7 +418,6 @@ void RxAPICleanUp(INT chain, INT iSigCntl)
 
                                        /* Release the semaphore.     */
    unlocksem(apidata->rexxapisemaphore, 0);
-// if (iSigCntl)                       /* If SIGCNTL_RELEASE         */
    if (iCallSigSet == 1 )              /* Signal set                 */
    {
 #if defined( HAVE_SIGPROCMASK )
@@ -458,7 +429,6 @@ void RxAPICleanUp(INT chain, INT iSigCntl)
       sigrelse(SIGSEGV);
 #endif
       iCallSigSet = 0;
-//    ExitMustComplete(50);
    }
 }
 /* Function added                                                    */
@@ -479,86 +449,85 @@ void RxAPICleanUp(INT chain, INT iSigCntl)
 /*                                                                   */
 /*********************************************************************/
 
-LONG RxAPIHOMEset( void )
+int  RxAPIHOMEset()
 {
-  char * pcharHome;                       /* Pointer to environmet var HOME */
-//char   charCodeHome = '/';              /* RXHOME or HOME var is used     */
-  int    iHandleHome;                     /* File handle for IPC anchor     */
-  struct stat statbuf;                    /* structure for stat system calls*/
+    const char * pcharHome;                 /* Pointer to environmet var HOME */
+    int    iHandleHome;                     /* File handle for IPC anchor     */
+    struct stat statbuf;                    /* structure for stat system calls*/
 #if defined( HAVE_GETPWUID )
-  struct passwd * pstUsrDat;
+    struct passwd * pstUsrDat;
 #endif
-  char *pcharUsername;
+    const char *pcharUsername;
 
-  if (!(pcharHome = getenv("RXHOME")))    /* Get pointer to group home var  */
-  {
-    // get the username once
+    if (!(pcharHome = getenv("RXHOME")))    /* Get pointer to group home var  */
+    {
+        // get the username once
 #if defined( HAVE_GETPWUID )
-    pstUsrDat = getpwuid(geteuid());
-    pcharUsername = pstUsrDat->pw_name;
-    pcharHome = pstUsrDat->pw_dir;        /* Get pointer to own home var    */
+        pstUsrDat = getpwuid(geteuid());
+        pcharUsername = pstUsrDat->pw_name;
+        pcharHome = pstUsrDat->pw_dir;        /* Get pointer to own home var    */
 #elif defined( HAVE_IDTOUSER )
-    pcharUsername = IDtouser(geteuid()));
-    #if defined( HAVE_GETUSERATTR )
+        pcharUsername = IDtouser(geteuid()));
+#if defined( HAVE_GETUSERATTR )
         getuserattr(pcharUsername, S_HOME, &pcharHome, SEC_CHAR);
-    #else
+#else
         /* this is not the best method to obtain the user's home dir as it      */
         /* could fail on LDAP enabled systems.                                  */
         pcharHome = getenv("HOME");           /* Get pointer to own home var    */
-    #endif
-#else
-    pcharUsername = "unknown";
-    /* this is not the best method to obtain the user's home dir as it      */
-    /* could fail on LDAP enabled systems.                                  */
-    pcharHome = getenv("HOME");           /* Get pointer to own home var    */
 #endif
-    sprintf(achRexxHomeDir,"%s/..OOREXX%d.%d.%d.%d_%s",
-              pcharHome, ORX_VER, ORX_REL, ORX_MOD, ORX_FIX, pcharUsername );
-    iHandleHome = open( achRexxHomeDir, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR );
-    if ( iHandleHome < 0 )
-    {
-       sprintf(achRexxHomeDir,"/tmp/..OOREXX%d.%d.%d.%d_%s",
-                        ORX_VER, ORX_REL, ORX_MOD, ORX_FIX, pcharUsername );
-       iHandleHome = open( achRexxHomeDir, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR );
-       if ( iHandleHome < 0 )
-       {
-          fprintf(stderr," *E* No HOME directory and file anchor for REXX!\n");
-          return(-1);                        /* all done ERROR end          */
-       }
-    }
-    close( iHandleHome );
-  }
-  else
-  {
-    strcpy(achRexxHomeDir, pcharHome);       /* Save HOME directory          */
-    if ( achRexxHomeDir[0] != '/' )
-    {
-      fprintf(stderr," *E* The directory and file > %s < is not fully qualified!\n",
-              achRexxHomeDir );
-      return(-1);                            /* all done ERROR end           */
-    }
-    if ( stat(achRexxHomeDir, &statbuf) < 0 ) /* If file is found,           */
-    {
-      fprintf(stderr," *E* The directory or file > %s < does not exist!\n",
-              achRexxHomeDir );
-      return(-1);                            /* all done ERROR end           */
+#else
+        pcharUsername = "unknown";
+        /* this is not the best method to obtain the user's home dir as it      */
+        /* could fail on LDAP enabled systems.                                  */
+        pcharHome = getenv("HOME");           /* Get pointer to own home var    */
+#endif
+        sprintf(achRexxHomeDir,"%s/..OOREXX%d.%d.%d.%d_%s",
+                pcharHome, ORX_VER, ORX_REL, ORX_MOD, ORX_FIX, pcharUsername );
+        iHandleHome = open( achRexxHomeDir, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR );
+        if ( iHandleHome < 0 )
+        {
+            sprintf(achRexxHomeDir,"/tmp/..OOREXX%d.%d.%d.%d_%s",
+                    ORX_VER, ORX_REL, ORX_MOD, ORX_FIX, pcharUsername );
+            iHandleHome = open( achRexxHomeDir, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR );
+            if ( iHandleHome < 0 )
+            {
+                fprintf(stderr," *E* No HOME directory and file anchor for REXX!\n");
+                return(-1);                        /* all done ERROR end          */
+            }
+        }
+        close( iHandleHome );
     }
     else
-    {                                        /* Check group and user permission */
-      if ( ((statbuf.st_gid != getegid()) ||
-           ((statbuf.st_mode & (S_IRGRP | S_IWGRP)) != (S_IRGRP | S_IWGRP))) &&
-           ((statbuf.st_uid != geteuid()) ||
-           ((statbuf.st_mode & (S_IRUSR | S_IWUSR)) != (S_IRUSR | S_IWUSR))) )
-      {
-        fprintf(stderr," *E* No read and write permission for REXX to use > %s < !\n",
-                achRexxHomeDir );
-        return(-1);                          /* all done ERROR end            */
-      }
-      else
-        iSemShmMode = 432;                   /* Set MODE 660 for sem and shm  */
+    {
+        strcpy(achRexxHomeDir, pcharHome);       /* Save HOME directory          */
+        if ( achRexxHomeDir[0] != '/' )
+        {
+            fprintf(stderr," *E* The directory and file > %s < is not fully qualified!\n",
+                    achRexxHomeDir );
+            return(-1);                            /* all done ERROR end           */
+        }
+        if ( stat(achRexxHomeDir, &statbuf) < 0 ) /* If file is found,           */
+        {
+            fprintf(stderr," *E* The directory or file > %s < does not exist!\n",
+                    achRexxHomeDir );
+            return(-1);                            /* all done ERROR end           */
+        }
+        else
+        {                                        /* Check group and user permission */
+            if ( ((statbuf.st_gid != getegid()) ||
+                  ((statbuf.st_mode & (S_IRGRP | S_IWGRP)) != (S_IRGRP | S_IWGRP))) &&
+                 ((statbuf.st_uid != geteuid()) ||
+                  ((statbuf.st_mode & (S_IRUSR | S_IWUSR)) != (S_IRUSR | S_IWUSR))) )
+            {
+                fprintf(stderr," *E* No read and write permission for REXX to use > %s < !\n",
+                        achRexxHomeDir );
+                return(-1);                          /* all done ERROR end            */
+            }
+            else
+                iSemShmMode = 432;                   /* Set MODE 660 for sem and shm  */
+        }
     }
-  }
-  return(0);
+    return(0);
 }
 
 /*********************************************************************/
@@ -575,163 +544,171 @@ LONG RxAPIHOMEset( void )
 /*                                                                   */
 /*********************************************************************/
 
-/*THU017C begin */
-LONG  RxAllocMem(
-  PULONG block,                      /* offset to reach the block    */
-  ULONG size,                        /* size to allocate             */
-  INT flag)                          /* from which memory to allocate*/
+int   RxAllocMem(
+  size_t *block,                     /* offset to reach the block    */
+  size_t size,                       /* size to allocate             */
+  int flag)                          /* from which memory to allocate*/
 {
-  key_t key;
-  char  *newmem;                     /* new memory                   */
-  char  *runptr;                     /* runs through shared memory   */
-  INT   newmemId;                    /* ID of the new memory         */
-  ULONG mbase, baseblock, next, movesize, base, newbase, session_base, newsession_base, first, last, inext, temptop, tempapidatasize;
-  PQUEUEHEADER queueheader;
-  PQUEUEITEM item;
-  ULONG addsize;                      /*THU025A */
-  char *tempptr;                      /*THU025A */
+    char  *newmem;                     /* new memory                   */
+    char  *runptr;                     /* runs through shared memory   */
+    int   newmemId;                    /* ID of the new memory         */
+    size_t next, base, newbase, session_base, newsession_base, first, last, inext, temptop, tempapidatasize;
+    PQUEUEHEADER queueheader;
+    PQUEUEITEM item;
+    size_t addsize;        
+    char *tempptr;         
 
 
-  if(flag == MACROMEM){         /* allocate in the macro memory pool?*/
-    if(apidata->macrobase == NULL){  /*if no macros until now        */
-      /* Allocate a shared memory segment of the standard size       */
-      if(((apidata->mbasememId) = getshmem(IPC_PRIVATE, MSTDSIZE)) == -2)
-        return (1);                  /* system limit reached         */
-                                     /* attach the memory            */
-      apidata->macrobase = attachshmem(apidata->mbasememId);
-                                     /* and clear it out             */
-      memset((void*)apidata->macrobase, 0, MSTDSIZE);
-      apidata->macrosize = MSTDSIZE; /* remember the size            */
-      apidata->mmemtop = SHM_OFFSET; /* the memory is empty          */
-      apidata->mbase = 0;            /* set end of chain             */
-      apidata->macrocount = 0;       /* make sure, no garbage        */
-    }
-    /* Do we need a larger segment to provide the memory ?           */
-    if(size > ((apidata->macrosize) - (apidata->mmemtop))
-                                  -10){/* sub 10 to be sure          */
-                                     /* while segment to small       */
-      while(size > (((apidata->macrosize) - (apidata->mmemtop)-10))){
-                                     /* alloc a larger segment       */
-        if((newmemId = getshmem(IPC_PRIVATE,((apidata->macrosize)+MSTDSIZE))) == -2)
-          return (1);                /* no more memory avialble      */
-                                     /* attach the new memory        */
-        newmem = attachshmem(newmemId);
-                                     /* and clear it out             */
-        memset((void*)newmem, 0, ((apidata->macrosize)+MSTDSIZE));
-                                     /* copy the data                */
-        memcpy((void*)newmem, (void*)apidata->macrobase,
-                              (size_t)apidata->mmemtop);
-        removeshmem(apidata->mbasememId); /* remove the old memory   */
-        detachshmem(apidata->macrobase);  /* force the deletion      */
-        apidata->macrobase = newmem; /* remember the new pointer     */
-        apidata->mbasememId = newmemId; /* and the new memory ID     */
-                                     /* don't forget the new size    */
-        apidata->macrosize = ((apidata->macrosize)+MSTDSIZE);
-      }
-      *block = apidata->mmemtop;     /* return the space             */
-      apidata->mmemtop += size;      /* set the new top              */
-    }
-    else {                           /* there is enough space        */
-      *block = apidata->mmemtop;     /* return the space             */
-      apidata->mmemtop += size;      /* set the new top              */
+    if (flag == MACROMEM)
+    {         /* allocate in the macro memory pool?*/
+        if (apidata->macrobase == NULL)
+        {  /*if no macros until now        */
+            /* Allocate a shared memory segment of the standard size       */
+            if (((apidata->mbasememId) = getshmem(IPC_PRIVATE, MSTDSIZE)) == -2)
+                return(1);                  /* system limit reached         */
+                                            /* attach the memory            */
+            apidata->macrobase = attachshmem(apidata->mbasememId);
+            /* and clear it out             */
+            memset((void*)apidata->macrobase, 0, MSTDSIZE);
+            apidata->macrosize = MSTDSIZE; /* remember the size            */
+            apidata->mmemtop = SHM_OFFSET; /* the memory is empty          */
+            apidata->mbase = 0;            /* set end of chain             */
+            apidata->macrocount = 0;       /* make sure, no garbage        */
+        }
+        /* Do we need a larger segment to provide the memory ?           */
+        if (size > ((apidata->macrosize) - (apidata->mmemtop))
+            -10)
+        {/* sub 10 to be sure          */
+            /* while segment to small       */
+            while (size > (((apidata->macrosize) - (apidata->mmemtop)-10)))
+            {
+                /* alloc a larger segment       */
+                if ((newmemId = getshmem(IPC_PRIVATE,((apidata->macrosize)+MSTDSIZE))) == -2)
+                    return(1);                /* no more memory avialble      */
+                                              /* attach the new memory        */
+                newmem = attachshmem(newmemId);
+                /* and clear it out             */
+                memset((void*)newmem, 0, ((apidata->macrosize)+MSTDSIZE));
+                /* copy the data                */
+                memcpy((void*)newmem, (void*)apidata->macrobase,
+                       (size_t)apidata->mmemtop);
+                removeshmem(apidata->mbasememId); /* remove the old memory   */
+                detachshmem(apidata->macrobase);  /* force the deletion      */
+                apidata->macrobase = newmem; /* remember the new pointer     */
+                apidata->mbasememId = newmemId; /* and the new memory ID     */
+                /* don't forget the new size    */
+                apidata->macrosize = ((apidata->macrosize)+MSTDSIZE);
+            }
+            *block = apidata->mmemtop;     /* return the space             */
+            apidata->mmemtop += size;      /* set the new top              */
+        }
+        else
+        {                           /* there is enough space        */
+            *block = apidata->mmemtop;     /* return the space             */
+            apidata->mmemtop += size;      /* set the new top              */
 
+        }
+        return(0);                      /* worked well                  */
     }
-    return (0);                      /* worked well                  */
-  }
-  /* allocate in the se (subcom,exit,func) memory pool ?             */
-  else if(flag ==SEMEM){
-    if(apidata->sebase == NULL){     /*if no registations until now  */
-      /* Allocate a shared memory segment of the standard size       */
-      if(((apidata->sebasememId) = getshmem(IPC_PRIVATE, SESTDSIZE)) == -2)
-        return (1);                  /* system limit reached         */
-                                     /* attach the memory            */
-      apidata->sebase = attachshmem(apidata->sebasememId);
-                                     /* and clear it out             */
-      memset((void*)apidata->sebase, 0, SESTDSIZE);
-      apidata->sememsize = SESTDSIZE;/* remember the size            */
-      apidata->sememtop = SHM_OFFSET;/* the memory is empty          */
-                                     /* set all chains to empty      */
-      apidata->baseblock[REGSUBCOMM] = 0;
-      apidata->baseblock[REGSYSEXIT] = 0;
-      apidata->baseblock[REGFUNCTION] = 0;
-    }
-    /* Do we need a larger segment to provide the memory ?           */
-    if(size > ((apidata->sememsize) - (apidata->sememtop))
-                                  -10){/* sub 10 to be sure          */
-                                     /* while segment to small       */
-      while(size > (((apidata->sememsize) - (apidata->sememtop)-10))){
-                                     /* allocate a greater segment   */
-        if((newmemId = getshmem(IPC_PRIVATE,((apidata->sememsize)+SESTDSIZE))) == -2)
-          return (1);                /* no more memory avialble       */
-        newmem = attachshmem(newmemId);/* attach the new memory       */
-                                     /* and clear it out              */
-        memset((void*)newmem, 0, ((apidata->sememsize)+SESTDSIZE));
-        memcpy((void*)newmem, (void*)apidata->sebase,/* copy the data */
-                                            (size_t)apidata->sememtop);
-        removeshmem(apidata->sebasememId);/* remove the old memory    */
-        detachshmem(apidata->sebase);/* force the deletion            */
-        apidata->sebase = newmem;    /* remember the new pointer      */
-        apidata->sebasememId = newmemId;/* and the new memory ID      */
-                                     /* don't forget the new size     */
-        apidata->sememsize = ((apidata->sememsize)+SESTDSIZE);
-      }
-      *block = apidata->sememtop;    /* return the space              */
-      apidata->sememtop += size;     /* set the new top               */
-    }
-    else {                           /* there is enough space         */
-      *block = apidata->sememtop;    /* return the space              */
-      apidata->sememtop += size;     /* set the new top               */
-
-    }
-    return (0);                      /* worked well                   */
-  }
-  /* allocate in the queue  memory pool ?                             */
-  else if(flag == QMEM)
-  {
-    if((apidata->base == 0 )         /*if no queues until now         */
-          && (apidata->session_base == 0 ))
+    /* allocate in the se (subcom,exit,func) memory pool ?             */
+    else if (flag ==SEMEM)
     {
-      /* Allocate a shared memory segment of the standard size       */
-      if(((apidata->qbasememId) = getshmem(IPC_PRIVATE, QSTDSIZE)) == -2)
-        return (1);                  /* system limit reached          */
-                                     /* attach the memory             */
-      apidata->qbase = attachshmem(apidata->qbasememId);
-                                     /* and clear it out              */
-      memset((void*)apidata->qbase, 0, QSTDSIZE);
-      apidata->qmemsize = QSTDSIZE;  /* remember the size             */
-      apidata->qmemtop = SHM_OFFSET; /* the memory is empty           */
-                                     /* set all chains to empty       */
-      apidata->qmemsizeused = SHM_OFFSET; /* THU as for new implementa*/
-                                     /* tion i need to know the total */
-                                     /* size of all still alive elem  */
-                                     /* ents in shared memory.The rea */
-                                     /* son is, that qmemtop does not */
-                                     /* give me the right value any   */
-                                     /* more, as we have gaps in betw */
-                                     /* een the elements. And this    */
-                                     /* value is essential if i decide*/
-                                     /* to decrease shared memory.    */
-      apidata->trialcounter = 0;     /* The trialcounter is used to   */
-                                     /* check, how many elements have */
-                                     /* been successfully pulled from */
-                                     /* the shared memory, until the  */
-                                     /* last time of rearranging the  */
-                                     /* queue. If not at least three  */
-                                     /* elements have been pulled from*/
-                                     /* queue since last time of re   */
-                                     /* arrangement, i will increase  */
-                                     /* shared memory in any way      */
+        if (apidata->sebase == NULL)
+        {     /*if no registations until now  */
+            /* Allocate a shared memory segment of the standard size       */
+            if (((apidata->sebasememId) = getshmem(IPC_PRIVATE, SESTDSIZE)) == -2)
+                return(1);                  /* system limit reached         */
+                                            /* attach the memory            */
+            apidata->sebase = attachshmem(apidata->sebasememId);
+            /* and clear it out             */
+            memset((void*)apidata->sebase, 0, SESTDSIZE);
+            apidata->sememsize = SESTDSIZE;/* remember the size            */
+            apidata->sememtop = SHM_OFFSET;/* the memory is empty          */
+                                           /* set all chains to empty      */
+            apidata->baseblock[REGSUBCOMM] = 0;
+            apidata->baseblock[REGSYSEXIT] = 0;
+            apidata->baseblock[REGFUNCTION] = 0;
+        }
+        /* Do we need a larger segment to provide the memory ?           */
+        if (size > ((apidata->sememsize) - (apidata->sememtop))
+            -10)
+        {/* sub 10 to be sure          */
+            /* while segment to small       */
+            while (size > (((apidata->sememsize) - (apidata->sememtop)-10)))
+            {
+                /* allocate a greater segment   */
+                if ((newmemId = getshmem(IPC_PRIVATE,((apidata->sememsize)+SESTDSIZE))) == -2)
+                    return(1);                /* no more memory avialble       */
+                newmem = attachshmem(newmemId);/* attach the new memory       */
+                /* and clear it out              */
+                memset((void*)newmem, 0, ((apidata->sememsize)+SESTDSIZE));
+                memcpy((void*)newmem, (void*)apidata->sebase,/* copy the data */
+                       (size_t)apidata->sememtop);
+                removeshmem(apidata->sebasememId);/* remove the old memory    */
+                detachshmem(apidata->sebase);/* force the deletion            */
+                apidata->sebase = newmem;    /* remember the new pointer      */
+                apidata->sebasememId = newmemId;/* and the new memory ID      */
+                /* don't forget the new size     */
+                apidata->sememsize = ((apidata->sememsize)+SESTDSIZE);
+            }
+            *block = apidata->sememtop;    /* return the space              */
+            apidata->sememtop += size;     /* set the new top               */
+        }
+        else
+        {                           /* there is enough space         */
+            *block = apidata->sememtop;    /* return the space              */
+            apidata->sememtop += size;     /* set the new top               */
+
+        }
+        return(0);                      /* worked well                   */
     }
+    /* allocate in the queue  memory pool ?                             */
+    else if (flag == QMEM)
+    {
+        if ((apidata->base == 0 )         /*if no queues until now         */
+            && (apidata->session_base == 0 ))
+        {
+            /* Allocate a shared memory segment of the standard size       */
+            if (((apidata->qbasememId) = getshmem(IPC_PRIVATE, QSTDSIZE)) == -2)
+                return(1);                  /* system limit reached          */
+                                            /* attach the memory             */
+            apidata->qbase = attachshmem(apidata->qbasememId);
+            /* and clear it out              */
+            memset((void*)apidata->qbase, 0, QSTDSIZE);
+            apidata->qmemsize = QSTDSIZE;  /* remember the size             */
+            apidata->qmemtop = SHM_OFFSET; /* the memory is empty           */
+                                           /* set all chains to empty       */
+            apidata->qmemsizeused = SHM_OFFSET; /* THU as for new implementa*/
+            /* tion i need to know the total */
+            /* size of all still alive elem  */
+            /* ents in shared memory.The rea */
+            /* son is, that qmemtop does not */
+            /* give me the right value any   */
+            /* more, as we have gaps in betw */
+            /* een the elements. And this    */
+            /* value is essential if i decide*/
+            /* to decrease shared memory.    */
+            apidata->trialcounter = 0;     /* The trialcounter is used to   */
+                                           /* check, how many elements have */
+                                           /* been successfully pulled from */
+                                           /* the shared memory, until the  */
+                                           /* last time of rearranging the  */
+                                           /* queue. If not at least three  */
+                                           /* elements have been pulled from*/
+                                           /* queue since last time of re   */
+                                           /* arrangement, i will increase  */
+                                           /* shared memory in any way      */
+        }
 
-      base = apidata->base;            /* get the anchor of the chain*/
-                                       /* apidata->base points to the*/
-                                       /* queue,that was created last*/
-                                       /* apidata->qbase points to th*/
-                                       /* e beginning of shared mem  */
+        base = apidata->base;            /* get the anchor of the chain*/
+                                         /* apidata->base points to the*/
+                                         /* queue,that was created last*/
+                                         /* apidata->qbase points to th*/
+                                         /* e beginning of shared mem  */
 
-      session_base = apidata->session_base;
-      ULONG previous = 0;
-      previous = base;
+        session_base = apidata->session_base;
+        size_t previous = 0;
+        previous = base;
 
 /* Do we need a larger segment to provide the memory ?                             */
 /* qmemtop does not show how much memory is used at whole (only if no item is being*/
@@ -742,294 +719,286 @@ LONG  RxAllocMem(
 /* of the shared memory, qmemtop is the place where the next element should be plac*/
 /* ed), qmemsizeused is the amount of data alive in shared memory                  */
 
-    if(size > ((apidata->qmemsize) - (apidata->qmemtop)) - 10) /* sub 10 to be sure */
-    {
+        if (size > ((apidata->qmemsize) - (apidata->qmemtop)) - 10) /* sub 10 to be sure */
+        {
 #ifdef QUEUE_DBG
-       printf("now i know the item goes behind the actual shared memory, i need to have special processing \n");
-       printf("Element size : %d , qmemsize: %d \n ", size, apidata->qmemsize);
+            printf("now i know the item goes behind the actual shared memory, i need to have special processing \n");
+            printf("Element size : %d , qmemsize: %d \n ", size, apidata->qmemsize);
 #endif
 
-       /* memory would be rearranged, but only if at least 5 items have been pulled  */
-       /* from the queue. This is to prevent rearrangement, if queue-processing is on its limit */
+            /* memory would be rearranged, but only if at least 5 items have been pulled  */
+            /* from the queue. This is to prevent rearrangement, if queue-processing is on its limit */
 
-       if (size < (apidata->qmemsize - (apidata->qmemsizeused + 10)) && (apidata->trialcounter > 5))
-       {
-          /* we first start with a shared memory segement that is equal the memory       */
-          /* of the existing shared memory.                                              */
-
-#ifdef QUEUE_DBG
-          printf("now i know the item would fit into the buffer, if i would rearrange, size: %d  \n", size);
-          printf("Size of element: %d, apidata->qmemsize: %d, apidata->qmemsizeused: %d, apidata->trialcounter: %d\n", size, apidata->qmemsize, apidata->qmemsizeused, apidata->trialcounter);
-#endif
-          if(((newmemId) = getshmem(IPC_PRIVATE, apidata->qmemsize)) == -2)
-            return (1);
-          newmem = attachshmem(newmemId);
-          memset((void*)newmem, 0, ((apidata->qmemsize)));
-          runptr = newmem;
-
-//          runptr++;                         /* qmemtop always starts with '1'          */
-          runptr = runptr + SHM_OFFSET;       /* qmemtop starts at position 4            */
-          /* now i need to copy: for every queue (session queue as well as named queue   */
-          /* in the shared memory), let us first copy the queuehaeder to the new desti   */
-          /* nation. After that, the elements (itemheaders and items) of that queue.     */
-
-          newsession_base = 0;
-          newbase = 0;
-          if (session_base)
-          {
-             newsession_base = runptr - newmem;
-          }
-          while(session_base!=0)                   /* while there are session queues  */
-          {
-            queueheader = (PQUEUEHEADER) runptr; /* for creating new next values  */
-            next = QHDATA(session_base)->next;     /* remember the next session queue in old shared mem*/
-
-            /* first copy the header of the queue                           */
-            memcpy(runptr, QHDATA(session_base), sizeof(QUEUEHEADER));
-            /*  printf("queueheader->next is equal %d\n", (queueheader)->next);                 */
-            /*  printf("QHDATA(session_base)->next is equal %d\n", QHDATA(session_base)->next); */
-            runptr = runptr + sizeof(QUEUEHEADER);
-            first = QHDATA(session_base)->queue_first; /*this is the first element  */
-                                               /* of this queue             */
-            last = QHDATA(session_base)->queue_last;   /*this is the last element   */
-                                               /* of this queue             */
-                                               /* move through item chain   */
-            if (first)
+            if (size < (apidata->qmemsize - (apidata->qmemsizeused + 10)) && (apidata->trialcounter > 5))
             {
+                /* we first start with a shared memory segement that is equal the memory       */
+                /* of the existing shared memory.                                              */
+
 #ifdef QUEUE_DBG
-               printf("There is at least one element in the session queue it is located at: %d element: %s\n", first,QDATA(QIDATA(first)->queue_element));
-               printf("There is at least one element in the session queue it is located at: %p \n", first);
+                printf("now i know the item would fit into the buffer, if i would rearrange, size: %d  \n", size);
+                printf("Size of element: %d, apidata->qmemsize: %d, apidata->qmemsizeused: %d, apidata->trialcounter: %d\n", size, apidata->qmemsize, apidata->qmemsizeused, apidata->trialcounter);
 #endif
-               queueheader->queue_first = runptr - newmem;  /* proceed to the place where i can put my first element, also be  */
-            }                                               /* necessary if the first element == last element                  */
+                if (((newmemId) = getshmem(IPC_PRIVATE, apidata->qmemsize)) == -2)
+                    return(1);
+                newmem = attachshmem(newmemId);
+                memset((void*)newmem, 0, ((apidata->qmemsize)));
+                runptr = newmem;
+
+                runptr = runptr + SHM_OFFSET;       /* qmemtop starts at position 4            */
+                /* now i need to copy: for every queue (session queue as well as named queue   */
+                /* in the shared memory), let us first copy the queuehaeder to the new desti   */
+                /* nation. After that, the elements (itemheaders and items) of that queue.     */
+
+                newsession_base = 0;
+                newbase = 0;
+                if (session_base)
+                {
+                    newsession_base = runptr - newmem;
+                }
+                while (session_base!=0)                   /* while there are session queues  */
+                {
+                    queueheader = (PQUEUEHEADER) runptr; /* for creating new next values  */
+                    next = QHDATA(session_base)->next;     /* remember the next session queue in old shared mem*/
+
+                    /* first copy the header of the queue                           */
+                    memcpy(runptr, QHDATA(session_base), sizeof(QUEUEHEADER));
+                    /*  printf("queueheader->next is equal %d\n", (queueheader)->next);                 */
+                    /*  printf("QHDATA(session_base)->next is equal %d\n", QHDATA(session_base)->next); */
+                    runptr = runptr + sizeof(QUEUEHEADER);
+                    first = QHDATA(session_base)->queue_first; /*this is the first element  */
+                    /* of this queue             */
+                    last = QHDATA(session_base)->queue_last;   /*this is the last element   */
+                    /* of this queue             */
+                    /* move through item chain   */
+                    if (first)
+                    {
+#ifdef QUEUE_DBG
+                        printf("There is at least one element in the session queue it is located at: %d element: %s\n", first,QDATA(QIDATA(first)->queue_element));
+                        printf("There is at least one element in the session queue it is located at: %p \n", first);
+#endif
+                        queueheader->queue_first = runptr - newmem;  /* proceed to the place where i can put my first element, also be  */
+                    }                                               /* necessary if the first element == last element                  */
+                    else
+                    {
+                        queueheader->queue_first = 0;
+                        queueheader->queue_last = 0;
+                        /*  printf("There was nothing in this session queue \n"); */
+                    }
+                    while ((first) && (first!=last))
+                    {
+                        inext = QIDATA(first)->next;     /* remember the next item    */
+                        /* now let me start with the itemheader                       */
+                        item = (PQUEUEITEM) runptr;
+                        memcpy(runptr, QIDATA(first), sizeof(QUEUEITEM));
+                        addsize = RXROUNDUP(sizeof(QUEUEITEM) + QIDATA(first)->size, SHM_OFFSET );
+                        tempptr= runptr;
+                        runptr = runptr + sizeof(QUEUEITEM);
+                        /* and the element                                            */
+                        item->queue_element = runptr - newmem;      /* here is the element located */
+                        memcpy(runptr, QDATA(QIDATA(first)->queue_element), QIDATA(first)->size);
+                        runptr = tempptr + addsize;
+                        if (inext)
+                        {
+                            (item)->next = runptr - newmem;      /* remember the next item*/
+                        }
+                        else
+                        {
+                            (item)->next = 0;                    /* remember the next item*/
+                        }
+                        first = inext;
+                    }
+                    if (last)
+                    {
+#ifdef QUEUE_DBG
+                        printf("now i copy the last item to the new shared memory\n");
+#endif
+                        queueheader->queue_last = runptr - newmem;
+                        item = (PQUEUEITEM) runptr;
+                        memcpy(runptr, QIDATA(last), sizeof(QUEUEITEM));
+                        addsize = RXROUNDUP(sizeof(QUEUEITEM) + QIDATA(last)->size, SHM_OFFSET );
+                        tempptr= runptr;
+                        runptr = runptr + sizeof(QUEUEITEM);
+                        /* and the last in line                                          */
+                        item->queue_element = runptr - newmem;
+                        memcpy(runptr, QDATA(QIDATA(last)->queue_element), QIDATA(last)->size);
+                        runptr = tempptr + addsize;
+                        item->next = 0;                    /* there is nothing left to do*/
+                    }
+                    /* if last = 0 there is no action, because the correct value is taken */
+                    /* from the copy of the QUEUEHEADER                                   */
+
+                    /* the 'next' value of the new queueheader is still wrong, correct it           */
+                    if (next) /* this is the place in old shared memory, where next queuehaeder is   */
+                    {
+                        (queueheader)->next = runptr - newmem;/* here is the place where we can start with the next session queue */
+#ifdef QUEUE_DBG
+                        printf("There is another session queue in shared memory, (queueheader)->next: %d\n",(queueheader)->next);
+#endif
+                    }
+                    else
+                    {
+#ifdef QUEUE_DBG
+                        printf("There is no other session queue in shared memory, nothing left do for session queues, queueheader->next = 0 \n");
+#endif
+                        (queueheader)->next = 0;             /* there is no next queue */
+                    }
+                    session_base = next;                   /* take the next queue        */
+                }
+
+                /* now the named queues. it is important that the session queue(s) are copied BEFORE */
+                /* the named queues. This is because otherwhile the anchor-points (apidata->base and */
+                /* apidata->session_base wont fit)                                                   */
+
+                if (base)
+                {
+                    newbase = runptr - newmem;
+                }
+
+                while (base!=0)                   /* while there are named queues  */
+                {
+                    next = QHDATA(base)->next;     /* remember the next named queue in old shared mem*/
+                    queueheader = (PQUEUEHEADER) runptr; /* for creating new next values  */
+
+                    /* first copy the header of the queue                           */
+                    memcpy(runptr, QHDATA(base), sizeof(QUEUEHEADER));
+                    runptr = runptr + sizeof(QUEUEHEADER);
+                    first = QHDATA(base)->queue_first; /*this is the first element  */
+                                                       /* of this queue             */
+                    last = QHDATA(base)->queue_last;   /*this is the last element   */
+                                                       /* of this queue             */
+                                                       /* move through item chain   */
+                    if (first)
+                    {
+                        queueheader->queue_first = runptr - newmem;
+                    }
+                    else
+                    {
+                        queueheader->queue_first = 0;
+                        queueheader->queue_last = 0;
+                    }
+                    while ((first) && (first!=last))
+                    {
+                        inext = QIDATA(first)->next;     /* remember the next item    */
+                        /* now let me start with the itemheader                       */
+                        item = (PQUEUEITEM) runptr;
+                        memcpy(runptr, QIDATA(first), sizeof(QUEUEITEM));
+                        addsize = RXROUNDUP(sizeof(QUEUEITEM) + QIDATA(first)->size, SHM_OFFSET );
+                        tempptr= runptr;
+                        runptr = runptr + sizeof(QUEUEITEM);
+                        /* and the element                                            */
+                        item->queue_element = runptr - newmem;      /* here is the element located */
+                        memcpy(runptr, QDATA(QIDATA(first)->queue_element), QIDATA(first)->size);
+                        runptr = tempptr + addsize;
+                        if (inext)
+                        {
+                            (item)->next = runptr - newmem;      /* remember the next item*/
+                        }
+                        else
+                        {
+                            (item)->next = 0;                    /* remember the next item*/
+                        }
+                        first = inext;
+                    }
+                    if (last)
+                    {
+#ifdef QUEUE_DBG
+                        /*   printf("now i copy the last item to the new shared memory\n"); */
+#endif
+                        queueheader->queue_last = runptr - newmem;
+                        item = (PQUEUEITEM) runptr;
+                        memcpy(runptr, QIDATA(last), sizeof(QUEUEITEM));
+                        addsize = RXROUNDUP(sizeof(QUEUEITEM) + QIDATA(last)->size, SHM_OFFSET );
+                        tempptr= runptr;
+                        runptr = runptr + sizeof(QUEUEITEM);
+                        /* and the last in line                                          */
+                        item->queue_element = runptr - newmem;
+                        memcpy(runptr, QDATA(QIDATA(last)->queue_element), QIDATA(last)->size);
+                        runptr = tempptr + addsize;
+                    }
+                    /* if last = 0 there is no action, because the correct value is taken */
+                    /* from the copy of the QUEUEHEADER                                   */
+
+                    /* the 'next' value of the new queueheader is still wrong, correct it           */
+                    if (next) /* this is the place in old shared memory, where next queuehaeder is   */
+                    {
+                        (queueheader)->next = runptr - newmem;/* remember the next named queue */
+                    }
+                    else
+                    {
+                        (queueheader)->next = 0;             /* there is no next queue */
+                    }
+                    base = next;                   /* take the next queue        */
+                }
+                /* now we have rearranged the new shared memory, let us forget*/
+                /* about the old one. Make the new one the one and only       */
+
+                removeshmem(apidata->qbasememId);
+                detachshmem(apidata->qbase);
+                apidata->qbase = newmem;
+                apidata->qbasememId = newmemId;
+                apidata->session_base = newsession_base;
+                apidata->base = newbase;
+                apidata->qmemtop = runptr - newmem; /*rearrange qmemtop         */
+                *block = apidata->qmemtop;     /* return the space              */
+                apidata->qmemtop += size;      /* set the new top               */
+
+                /* set back trialcounter,to see the next time whether at least*/
+                /* 5 items have been pulled from the queue. If not it makes no*/
+                /* sense to rearrange, because we are permanently on the limit*/
+                /* of the actual shared memory                                */
+
+                apidata->trialcounter = 0;
+            }
+            /* either the item would not fit although i rearrange the shared memory*/
+            /* or there are not at least 5 elements pulled from the queue, so let  */
+            /* us increase the memory so far, that the new item would fit in. Be-  */
+            /* for chaining it into apidata, we need to copy the old shared memory */
             else
             {
-               queueheader->queue_first = 0;
-               queueheader->queue_last = 0;
-               /*  printf("There was nothing in this session queue \n"); */
-            }
-            while((first) && (first!=last))
-            {
-              inext = QIDATA(first)->next;     /* remember the next item    */
-              /* now let me start with the itemheader                       */
-              item = (PQUEUEITEM) runptr;
-              memcpy(runptr, QIDATA(first), sizeof(QUEUEITEM));
-              addsize = RXROUNDUP(sizeof(QUEUEITEM) + QIDATA(first)->size, SHM_OFFSET );
-              tempptr= runptr;
-              runptr = runptr + sizeof(QUEUEITEM);
-              /* and the element                                            */
-              item->queue_element = runptr - newmem;      /* here is the element located */
-              memcpy(runptr, QDATA(QIDATA(first)->queue_element), QIDATA(first)->size);
-//            runptr = runptr + QIDATA(first)->size;
-              runptr = tempptr + addsize;
-              if(inext)
-              {
-                 (item)->next = runptr - newmem;      /* remember the next item*/
-              }
-              else
-              {
-                 (item)->next = 0;                    /* remember the next item*/
-              }
-              first = inext;
-            }
-            if(last)
-            {
 #ifdef QUEUE_DBG
-              printf("now i copy the last item to the new shared memory\n");
+                printf("the item would not fit into shared memory although i rearrange, let me increase and copy over\n");
+                printf("The size of the item: %d, the size of the buffer(qmemsize): %d, end of itemchain (qmemtop): %d \n", size, apidata->qmemsize, apidata->qmemtop);
 #endif
-              queueheader->queue_last = runptr - newmem;
-              item = (PQUEUEITEM) runptr;
-              memcpy(runptr, QIDATA(last), sizeof(QUEUEITEM));
-              addsize = RXROUNDUP(sizeof(QUEUEITEM) + QIDATA(last)->size, SHM_OFFSET );
-              tempptr= runptr;
-              runptr = runptr + sizeof(QUEUEITEM);
-              /* and the last in line                                          */
-              item->queue_element = runptr - newmem;
-              memcpy(runptr, QDATA(QIDATA(last)->queue_element), QIDATA(last)->size);
-//            runptr = runptr + QIDATA(last)->size; /* now the runptr is behind the last element */
-              runptr = tempptr + addsize;
-              item->next = 0;                    /* there is nothing left to do*/
-            }
-            /* if last = 0 there is no action, because the correct value is taken */
-            /* from the copy of the QUEUEHEADER                                   */
-
-            /* the 'next' value of the new queueheader is still wrong, correct it           */
-            if(next) /* this is the place in old shared memory, where next queuehaeder is   */
-            {
-               (queueheader)->next = runptr - newmem;/* here is the place where we can start with the next session queue */
+                while (size > ((apidata->qmemsize) - (apidata->qmemtop)-10) )
+                {
+                    if ((newmemId = getshmem(IPC_PRIVATE,((apidata->qmemsize) * 2))) == -2)
+                        return(1);                /* no more memory avialble       */
+                    newmem = attachshmem(newmemId);/* attach the new memory       */
+                    /* and clear it out              */
+                    memset((void*)newmem, 0, ((apidata->qmemsize)+QSTDSIZE));
+                    memcpy((void*)newmem, (void*)apidata->qbase,/* copy the data  */
+                           (size_t)apidata->qmemtop);
+                    temptop = apidata->qmemtop;
+                    tempapidatasize = apidata->qmemsize;
+                    removeshmem(apidata->qbasememId);/* remove the old memory     */
+                    detachshmem(apidata->qbase); /* force the deletion            */
+                    apidata->qbase = newmem;     /* remember the new pointer      */
+                    apidata->qbasememId = newmemId;/* and the new memory ID       */
+                    /* don't forget the new size     */
+                    apidata->qmemsize = tempapidatasize * 2;
 #ifdef QUEUE_DBG
-               printf("There is another session queue in shared memory, (queueheader)->next: %d\n",(queueheader)->next);
+                    printf("New buffer size: %d \n", apidata->qmemsize);
 #endif
-            }
-            else
-            {
+                    apidata->qmemtop = temptop;
+                }/* end while */
+                *block = apidata->qmemtop;     /* return the space              */
+                apidata->qmemtop += size;      /* set the new top               */
+                apidata->trialcounter = 0;     /* reset for next time           */
+            } /* end else */
+        }
+        else                             /* there is enough space         */
+        {
+            *block = apidata->qmemtop;     /* return the space              */
+            apidata->qmemtop += size;      /* set the new top               */
+        }
 #ifdef QUEUE_DBG
-               printf("There is no other session queue in shared memory, nothing left do for session queues, queueheader->next = 0 \n");
+        printf("now increasing qmemsizeused. actual: %d, size: %d, new: %d \n", apidata->qmemsizeused, size, apidata->qmemsizeused +size);
 #endif
-               (queueheader)->next = 0;             /* there is no next queue */
-            }
-            session_base = next;                   /* take the next queue        */
-          }
-
-          /* now the named queues. it is important that the session queue(s) are copied BEFORE */
-          /* the named queues. This is because otherwhile the anchor-points (apidata->base and */
-          /* apidata->session_base wont fit)                                                   */
-
-          if (base)
-          {
-             newbase = runptr - newmem;
-          }
-
-          while(base!=0)                   /* while there are named queues  */
-          {
-            next = QHDATA(base)->next;     /* remember the next named queue in old shared mem*/
-            queueheader = (PQUEUEHEADER) runptr; /* for creating new next values  */
-
-            /* first copy the header of the queue                           */
-            memcpy(runptr, QHDATA(base), sizeof(QUEUEHEADER));
-            runptr = runptr + sizeof(QUEUEHEADER);
-            first = QHDATA(base)->queue_first; /*this is the first element  */
-                                               /* of this queue             */
-            last = QHDATA(base)->queue_last;   /*this is the last element   */
-                                               /* of this queue             */
-                                               /* move through item chain   */
-            if (first)
-            {
-               queueheader->queue_first = runptr - newmem;
-            }
-            else
-            {
-               queueheader->queue_first = 0;
-               queueheader->queue_last = 0;
-            }
-            while((first) && (first!=last))
-            {
-              inext = QIDATA(first)->next;     /* remember the next item    */
-              /* now let me start with the itemheader                       */
-              item = (PQUEUEITEM) runptr;
-              memcpy(runptr, QIDATA(first), sizeof(QUEUEITEM));
-              addsize = RXROUNDUP(sizeof(QUEUEITEM) + QIDATA(first)->size, SHM_OFFSET );
-              tempptr= runptr;
-              runptr = runptr + sizeof(QUEUEITEM);
-              /* and the element                                            */
-              item->queue_element = runptr - newmem;      /* here is the element located */
-              memcpy(runptr, QDATA(QIDATA(first)->queue_element), QIDATA(first)->size);
-//            runptr = runptr + QIDATA(first)->size;
-              runptr = tempptr + addsize;
-              if(inext)
-              {
-                 (item)->next = runptr - newmem;      /* remember the next item*/
-              }
-              else
-              {
-                 (item)->next = 0;                    /* remember the next item*/
-              }
-              first = inext;
-            }
-            if(last)
-            {
-#ifdef QUEUE_DBG
-              /*   printf("now i copy the last item to the new shared memory\n"); */
-#endif
-              queueheader->queue_last = runptr - newmem;
-              item = (PQUEUEITEM) runptr;
-              memcpy(runptr, QIDATA(last), sizeof(QUEUEITEM));
-              addsize = RXROUNDUP(sizeof(QUEUEITEM) + QIDATA(last)->size, SHM_OFFSET );
-              tempptr= runptr;
-              runptr = runptr + sizeof(QUEUEITEM);
-              /* and the last in line                                          */
-              item->queue_element = runptr - newmem;
-              memcpy(runptr, QDATA(QIDATA(last)->queue_element), QIDATA(last)->size);
-//            runptr = runptr + QIDATA(last)->size; /* now the runptr is behind the last element */
-              runptr = tempptr + addsize;
-            }
-            /* if last = 0 there is no action, because the correct value is taken */
-            /* from the copy of the QUEUEHEADER                                   */
-
-            /* the 'next' value of the new queueheader is still wrong, correct it           */
-            if(next) /* this is the place in old shared memory, where next queuehaeder is   */
-            {
-               (queueheader)->next = runptr - newmem;/* remember the next named queue */
-            }
-            else
-            {
-               (queueheader)->next = 0;             /* there is no next queue */
-            }
-            base = next;                   /* take the next queue        */
-          }
-          /* now we have rearranged the new shared memory, let us forget*/
-          /* about the old one. Make the new one the one and only       */
-
-          removeshmem(apidata->qbasememId);
-          detachshmem(apidata->qbase);
-          apidata->qbase = newmem;
-          apidata->qbasememId = newmemId;
-          apidata->session_base = newsession_base;
-          apidata->base = newbase;
-          apidata->qmemtop = runptr - newmem; /*rearrange qmemtop         */
-          *block = apidata->qmemtop;     /* return the space              */
-          apidata->qmemtop += size;      /* set the new top               */
-
-          /* set back trialcounter,to see the next time whether at least*/
-          /* 5 items have been pulled from the queue. If not it makes no*/
-          /* sense to rearrange, because we are permanently on the limit*/
-          /* of the actual shared memory                                */
-
-          apidata->trialcounter = 0;
-       }
-       /* either the item would not fit although i rearrange the shared memory*/
-       /* or there are not at least 5 elements pulled from the queue, so let  */
-       /* us increase the memory so far, that the new item would fit in. Be-  */
-       /* for chaining it into apidata, we need to copy the old shared memory */
-       else
-       {
-#ifdef QUEUE_DBG
-          printf("the item would not fit into shared memory although i rearrange, let me increase and copy over\n");
-          printf("The size of the item: %d, the size of the buffer(qmemsize): %d, end of itemchain (qmemtop): %d \n", size, apidata->qmemsize, apidata->qmemtop);
-#endif
-          while(size > ((apidata->qmemsize) - (apidata->qmemtop)-10) )
-          {
-//           if((newmemId = getshmem(IPC_PRIVATE,((apidata->qmemsize)+QSTDSIZE))) == -2)
-             if((newmemId = getshmem(IPC_PRIVATE,((apidata->qmemsize) * 2))) == -2)
-               return (1);                /* no more memory avialble       */
-             newmem = attachshmem(newmemId);/* attach the new memory       */
-                                          /* and clear it out              */
-             memset((void*)newmem, 0, ((apidata->qmemsize)+QSTDSIZE));
-             memcpy((void*)newmem, (void*)apidata->qbase,/* copy the data  */
-                                               (size_t)apidata->qmemtop);
-             temptop = apidata->qmemtop;
-             tempapidatasize = apidata->qmemsize;
-             removeshmem(apidata->qbasememId);/* remove the old memory     */
-             detachshmem(apidata->qbase); /* force the deletion            */
-             apidata->qbase = newmem;     /* remember the new pointer      */
-             apidata->qbasememId = newmemId;/* and the new memory ID       */
-                                        /* don't forget the new size     */
-//           apidata->qmemsize = tempapidatasize + QSTDSIZE;
-             apidata->qmemsize = tempapidatasize * 2;
-#ifdef QUEUE_DBG
-             printf("New buffer size: %d \n", apidata->qmemsize);
-#endif
-             apidata->qmemtop = temptop;
-          }/* end while */
-          *block = apidata->qmemtop;     /* return the space              */
-          apidata->qmemtop += size;      /* set the new top               */
-          apidata->trialcounter = 0;     /* reset for next time           */
-       } /* end else */
+        apidata->qmemsizeused = apidata->qmemsizeused + size;
+        return(0);                      /* worked well                   */
     }
-    else                             /* there is enough space         */
-    {
-      *block = apidata->qmemtop;     /* return the space              */
-      apidata->qmemtop += size;      /* set the new top               */
-    }
-#ifdef QUEUE_DBG
-    printf("now increasing qmemsizeused. actual: %d, size: %d, new: %d \n", apidata->qmemsizeused, size, apidata->qmemsizeused +size);
-#endif
-    apidata->qmemsizeused = apidata->qmemsizeused + size;
-    return (0);                      /* worked well                   */
-  }
-  else return (1);                   /* return unknown memory pool    */
+    else return(1);                   /* return unknown memory pool    */
 }
-/*THU017C end */
 
 /*********************************************************************/
 /* Function:           Release a control block for one of the apis   */
@@ -1043,23 +1012,18 @@ LONG  RxAllocMem(
 /* Outputs:            Return code                                   */
 /*                                                                   */
 /*********************************************************************/
-LONG  RxFreeMem(
-  ULONG      pblock,                 /* returned block               */
-  ULONG      size,                   /* size of the block            */
-  INT        flag)                   /* form which memory to drop    */
+int   RxFreeMem(
+  size_t     pblock,                 /* returned block               */
+  size_t     size,                   /* size of the block            */
+  int        flag)                   /* form which memory to drop    */
 {
                                      /* offsets                      */
-  ULONG mbase, baseblock, next, movesize, base, newbase, session_base, newsession_base, first, last, inext, temptop, tempapidatasize;
-  key_t key;
-  INT i;
-  PVOID movearea;
-  INT newmemId;                    /* ID of the new memory         */
+  size_t mbase, next, movesize;
+  void *movearea;
+  int newmemId;                    /* ID of the new memory         */
   char *newmem;                      /* new memory                   */
-  LONG temp_cblock;
-  LONG temp_nblock;
-  ULONG previousitem = 0;
-  ULONG previousbase  = 0;
-  BOOL found = FALSE;
+  size_t temp_cblock;
+  size_t temp_nblock;
 
   if(flag == MACROMEM){              /* free in the macro memory pool*/
     mbase = apidata->mbase;          /* get the anchor               */
@@ -1111,21 +1075,6 @@ LONG  RxFreeMem(
     return (0);                              /* Yep !             */
   }
   else if(flag == SEMEM){              /* free in the se memory pool */
-//  for(i=0;i<REGNOOFTYPES;i++){       /* for all chains             */
-//                                     /* get the anchor of the chain*/
-//    baseblock = apidata->baseblock[i];
-//                                 /* if there are registation blocks*/
-//    if((baseblock!=0) && (baseblock > pblock))
-//      apidata->baseblock[i] -= size; /* redurce the offset         */
-//    while(baseblock!=0){             /* while there are macros     */
-//                                     /* remember the next one      */
-//      next = ((PMACRO)((apidata->sebase)+baseblock))->next;
-//      if(next && (next > pblock))    /* if not the last in chain   */
-//                                     /* reduce the 'next' offset   */
-//        ((PMACRO)((apidata->sebase)+baseblock))->next -= size;
-//      baseblock = next;              /* take the next one in chain */
-//    }
-//  }
     /* move the data to close the gap (the 'memmove' function does not work well !) */
     movesize = apidata->sememtop-(pblock+size);/* size to move       */
     if(movesize > 0)
@@ -1202,25 +1151,17 @@ LONG  RxFreeMem(
 /* Outputs:            Return code                                   */
 /*                                                                   */
 /*********************************************************************/
-/*THU017C begin */
-LONG  RxFreeMemQue(
-  ULONG      pblock,                 /* returned block               */
-  ULONG      size,                   /* size of the block            */
-  INT        flag,                   /* named or unnamed queue       */
-  ULONG      current)                /* base block of the queue      */
+int   RxFreeMemQue(
+  size_t     pblock,                 /* returned block               */
+  size_t     size,                   /* size of the block            */
+  int        flag,                   /* named or unnamed queue       */
+  size_t     current)                /* base block of the queue      */
 {
                                      /* offsets                      */
-  ULONG mbase, baseblock, next, movesize, base, newbase, session_base, newsession_base, first, last, inext, temptop, tempapidatasize;
-  key_t key;
-  INT i;
-  PVOID movearea;
-  INT newmemId;                      /* ID of the new memory         */
-  char *newmem;                      /* new memory                   */
-  LONG temp_cblock;
-  LONG temp_nblock;
-  ULONG previousitem = 0;
-  ULONG previousbase  = 0;
-  BOOL found = FALSE;
+  size_t base, session_base, first, last;
+  size_t previousitem = 0;
+  size_t previousbase  = 0;
+  bool found = false;
 
   if(flag == QMEMNAMEDQUE)               /* free named queue element in the queue pool     */
   {
@@ -1234,7 +1175,7 @@ LONG  RxFreeMemQue(
        } /* endwhile */
        if (base)
        {
-          found = TRUE;
+          found = true;
           if( (previousbase == 0) && (QHDATA(base)->next == 0) )
           {        /*This was the only named queue in shared memory          */
              apidata->base = 0;        /* chain out the base                 */
@@ -1267,7 +1208,7 @@ LONG  RxFreeMemQue(
     {
        if(first == pblock)                           /* that is a queueitem needs to be chained out    */
        {
-          found = TRUE;
+          found = true;
           if( (!previousitem) && (QIDATA(first)->next == 0) ) /* the item to be chained out is the only element in queue  */
           {
              QHDATA(current)->queue_first = 0;
@@ -1293,24 +1234,6 @@ LONG  RxFreeMemQue(
           first = QIDATA(first)->next;
        }
     } /* end while for items */
-//       if (!found)
-//       {
-//          previousbase = base;
-//          base = next;
-//          if ( base == pblock )
-//          {
-//             found = TRUE;
-//             if (QHDATA(base)->next != NULL)
-//             {
-//                QHDATA(previousbase)->next = QHDATA(base)->next;
-//             }
-//             else
-//             {
-//                QHDATA(previousbase)->next = NULL;                         /* chain out the base                               */
-//             }
-//          }
-//       }
-//    } /* end while for named queues */
     apidata->trialcounter += 1;        /* increase for every element */
                                        /* pulled from the queue      */
     apidata->qmemsizeused = apidata->qmemsizeused - size;
@@ -1328,7 +1251,7 @@ LONG  RxFreeMemQue(
        } /* endwhile */
        if (session_base)
        {
-          found = TRUE;
+          found = true;
           if( (previousbase == 0) && (QHDATA(session_base)->next == 0) ) /*This was the only named queue in shared memory */
           {
 #ifdef QUEUE_DBG
@@ -1368,7 +1291,7 @@ LONG  RxFreeMemQue(
     {
        if(first == pblock)                           /* that is a queueitem needs to be chained out    */
        {
-          found = TRUE;
+          found = true;
           if( (!previousitem) && (QIDATA(first)->next == 0) ) /* the item to be chained out is the only element in queue  */
           {
              QHDATA(current)->queue_first = 0;
@@ -1405,8 +1328,6 @@ LONG  RxFreeMemQue(
   else return (1);                     /* unknown memory pool        */
 }
 
-/*THU017C end */
-
 /*********************************************************************/
 /* Function:           Rearrange the shared memory if possible.      */
 /*                                                                   */
@@ -1420,17 +1341,16 @@ LONG  RxFreeMemQue(
 /*                                                                   */
 /*********************************************************************/
 
-/*THU017A begin */
-LONG CheckForMemory()
+int  CheckForMemory()
 {
-   INT newmemId,i;                    /* ID of the new memory         */
+   int newmemId;                      /* ID of the new memory         */
    char *newmem;                      /* new memory                   */
    char *runptr;                      /* runs through shared memory   */
    char *tempptr;
    PQUEUEHEADER queueheader;
    PQUEUEITEM item;
-   ULONG addsize;
-   ULONG mbase, baseblock, next, movesize, base, newbase, session_base, newsession_base, first, last, inext, temptop, tempapidatasize;
+   size_t addsize;
+   size_t next, base, newbase, session_base, newsession_base, first, last, inext, tempapidatasize;
 
    while( (apidata->qmemsizeused < ((apidata->qmemsize)/4)) && (apidata->qmemsize > QSTDSIZE) )
    {
@@ -1444,7 +1364,6 @@ LONG CheckForMemory()
       tempapidatasize = apidata->qmemsize / 2;
       runptr = newmem;
 
-//      runptr++;                         /* qmemtop always starts with SHM_OFFSET   */
       runptr = runptr + SHM_OFFSET;       /*                                         */
       session_base = apidata->session_base;
       base = apidata->base;              /* get the anchor of the chain*/
@@ -1502,7 +1421,6 @@ LONG CheckForMemory()
            runptr = runptr + sizeof(QUEUEITEM);
            item->queue_element = runptr - newmem;
            memcpy(runptr, QDATA(QIDATA(first)->queue_element), QIDATA(first)->size);
-//         runptr = runptr + QIDATA(first)->size; /* now the runptr is behind the last element */
            runptr = tempptr + addsize;
 
            /* and the element                                            */
@@ -1529,7 +1447,6 @@ LONG CheckForMemory()
            runptr = runptr + sizeof(QUEUEITEM);
            item->queue_element = runptr - newmem;
            memcpy(runptr, QDATA(QIDATA(last)->queue_element), QIDATA(last)->size);
-//         runptr = runptr + QIDATA(last)->size; /* now the runptr is behind the last element */
            runptr = tempptr + addsize;
            item->next = 0;                    /* there is nothing left to do*/
          }
@@ -1598,7 +1515,6 @@ LONG CheckForMemory()
            runptr = runptr + sizeof(QUEUEITEM);
            item->queue_element = runptr - newmem;
            memcpy(runptr, QDATA(QIDATA(first)->queue_element), QIDATA(first)->size);
-//         runptr = runptr + QIDATA(first)->size; /* now the runptr is behind the last element */
            runptr = tempptr + addsize;
             if(inext)
             {
@@ -1623,7 +1539,6 @@ LONG CheckForMemory()
            runptr = runptr + sizeof(QUEUEITEM);
            item->queue_element = runptr - newmem;
            memcpy(runptr, QDATA(QIDATA(last)->queue_element), QIDATA(last)->size);
-//         runptr = runptr + QIDATA(last)->size; /* now the runptr is behind the last element */
            runptr = tempptr + addsize;
          }
          /* if last = 0 there is no action, because the correct value is taken */
@@ -1657,7 +1572,8 @@ LONG CheckForMemory()
    }
    return (0);
 }
-/*THU017A end */
+
+
 /*********************************************************************/
 /* Function:           Release a control block for one of the apis.  */
 /*                                                                   */
@@ -1668,7 +1584,7 @@ LONG CheckForMemory()
 /*                                                                   */
 /*********************************************************************/
 void RxFreeAPIBlock(
-  ULONG offset, ULONG size )
+  size_t offset, size_t size )
 {
   RxFreeMem(offset,size,SEMEM);
 }
@@ -1683,43 +1599,46 @@ void RxFreeAPIBlock(
 /* Outputs:            The allocated APIBLOCK.                       */
 /*                                                                   */
 /*********************************************************************/
-LONG  RxAllocAPIBlock(
-  PAPIBLOCK *block,                    /* allocated block            */
-  PSZ        name,                     /* api name                   */
-  PSZ        dll_name,                 /* name of dll                */
-  PSZ        dll_proc)                 /* dll procedure name         */
+int   RxAllocAPIBlock(
+                     PAPIBLOCK *block,                    /* allocated block            */
+                     const char *name,                     /* api name                   */
+                     const char *dll_name,                 /* name of dll                */
+                     const char *dll_proc)                 /* dll procedure name         */
 {
-LONG    size;                          /* total allocation size      */
-ULONG   offset;
+    size_t    size;                          /* total allocation size      */
+    size_t    offset;
 
- /* Until now the arrays of the names have a constant length of 64   */
- /* characters.                                                      */
+    /* Until now the arrays of the names have a constant length of 64   */
+    /* characters.                                                      */
 
-  /* Check the sizes!             Simplified the size checks MAE004M */
-  if((name && strlen(name) >= MAXNAME) ||
-     (dll_name && strlen(dll_name) >= MAXNAME) ||
-     (dll_proc && strlen(dll_proc) >= MAXNAME)) {
-    printf("\n*E*  API, DLL or procedure name is larger than 63 characters!\n");
-    return (1);
-  }
-  size = APISIZE;                      /* get minimum size           */
-  if (RxAllocMem(&offset, size,        /* Request the control block  */
-      SEMEM))
-    return (1);                        /* Get failed, return error   */
-  *block = ((PAPIBLOCK)(apidata->sebase+offset));/* get the ptr      */
-  strcpy(((*block)->apiname),name);    /* copy the name into block   */
-  if (dll_name) {                      /* if we have a dll_name      */
-    strcpy(((*block)->apidll_name),dll_name);/* copy the dll_name too*/
-  }
-  else
-    *((*block)->apidll_name) = 0;      /* otherwise say no dll used  */
+    /* Check the sizes!             Simplified the size checks MAE004M */
+    if ((name && strlen(name) >= MAXNAME) ||
+        (dll_name && strlen(dll_name) >= MAXNAME) ||
+        (dll_proc && strlen(dll_proc) >= MAXNAME))
+    {
+        printf("\n*E*  API, DLL or procedure name is larger than 63 characters!\n");
+        return(1);
+    }
+    size = APISIZE;                      /* get minimum size           */
+    if (RxAllocMem(&offset, size,        /* Request the control block  */
+                   SEMEM))
+        return(1);                        /* Get failed, return error   */
+    *block = ((PAPIBLOCK)(apidata->sebase+offset));/* get the ptr      */
+    strcpy(((*block)->apiname),name);    /* copy the name into block   */
+    if (dll_name)
+    {                      /* if we have a dll_name      */
+        strcpy(((*block)->apidll_name),dll_name);/* copy the dll_name too*/
+    }
+    else
+        *((*block)->apidll_name) = 0;      /* otherwise say no dll used  */
 
-  if (dll_proc) {                      /* if we have a dll_proc      */
-    strcpy(((*block)->apidll_proc),dll_proc);/* copy the dll_proc too*/
-  }
-  else
-    *((*block)->apidll_proc) = 0;      /* otherwise say no dll used  */
-  return (0);                          /* no errors, return nicely   */
+    if (dll_proc)
+    {                      /* if we have a dll_proc      */
+        strcpy(((*block)->apidll_proc),dll_proc);/* copy the dll_proc too*/
+    }
+    else
+        *((*block)->apidll_proc) = 0;      /* otherwise say no dll used  */
+    return(0);                          /* no errors, return nicely   */
 }
 
 
@@ -1733,11 +1652,8 @@ ULONG   offset;
 /* Outputs:            none                                          */
 /*                                                                   */
 /*********************************************************************/
-void attachall(int chain){
-  PAPIBLOCK current;
-//EnterMustComplete(2);           /* enter critical section          */
-  PMACRO mcurrent;
-
+void attachall(int chain)
+{
   switch (chain) {
     case ALLCHAINS: {
       /* Attach Subcom,Exits and Functions                           */
@@ -1783,7 +1699,6 @@ void attachall(int chain){
     }
 
   }
-//ExitMustComplete();                /* exit critical section        */
 }
 
 /*********************************************************************/
@@ -1794,45 +1709,43 @@ void attachall(int chain){
 /* Outputs:            none                                          */
 /*                                                                   */
 /*********************************************************************/
-void detachall(int chain){
-  PAPIBLOCK current, pdetach;
-  PMACRO    mcurrent, mpdetach;
-//EnterMustComplete(3);          /* enter critical section.          */
+void detachall(int chain)
+{
+    switch (chain)
+    {
+        case ALLCHAINS: {
+                /* Detach Subcom,Exits and Fuctions                                */
+                if (apidata->sebase != NULL)
+                    detachshmem(apidata->sebase);
+                /* Detach the macro space                                          */
+                if (apidata->macrobase != NULL)
+                {/* if there are macros              */
+                    detachshmem(apidata->macrobase);  /* detach the space            */
+                }
+                /* Detach the queue space                                          */
+                if (apidata->qbase != NULL)     /* if there are queues              */
+                    detachshmem(apidata->qbase); /* detach the space                 */
+                break;
+            }
+        case QUEUECHAIN: {
+                if (apidata->qbase != NULL)     /* if there are queues              */
+                    detachshmem(apidata->qbase); /* detach the space                 */
+                break;
+            }
+        case SECHAIN: {
+                if (apidata->sebase != NULL)
+                    detachshmem(apidata->sebase);
+                break;
+            }
 
-
-  switch (chain) {
-    case ALLCHAINS: {
-      /* Detach Subcom,Exits and Fuctions                                */
-      if(apidata->sebase != NULL)
-        detachshmem(apidata->sebase);
-      /* Detach the macro space                                          */
-      if(apidata->macrobase != NULL){/* if there are macros              */
-        detachshmem(apidata->macrobase);  /* detach the space            */
-      }
-      /* Detach the queue space                                          */
-      if(apidata->qbase != NULL)     /* if there are queues              */
-        detachshmem(apidata->qbase); /* detach the space                 */
-      break;
+        case MACROCHAIN: {
+                if (apidata->macrobase != NULL)
+                {/* if there are macros              */
+                    detachshmem(apidata->macrobase);  /* detach the space            */
+                }
+                break;
+            }
     }
-    case QUEUECHAIN: {
-      if(apidata->qbase != NULL)     /* if there are queues              */
-        detachshmem(apidata->qbase); /* detach the space                 */
-      break;
-    }
-    case SECHAIN: {
-      if(apidata->sebase != NULL)
-        detachshmem(apidata->sebase);
-      break;
-    }
-
-    case MACROCHAIN: {
-      if(apidata->macrobase != NULL){/* if there are macros              */
-        detachshmem(apidata->macrobase);  /* detach the space            */
-      }
-      break;
-    }
-  }
-//ExitMustComplete();                /* exit critical section  */
 }
 
 /*********************************************************************/
@@ -1851,190 +1764,167 @@ void detachall(int chain){
 /*                                                                   */
 /*********************************************************************/
 
-VOID  RxExitClear(INT sig) {
-
-  INT value, i;
-  ULONG  ulRC;
-  INT used;
-  RexxActivity * activity;
-  RexxActivationBase * currentActivation;
-
-  if (iCallSigSet == 0 )              /* If siganls nor set          */
-  {
+void  RxExitClear(int sig) 
+{
+    int used;
+    if (iCallSigSet == 0 )              /* If siganls nor set          */
+    {
 #if defined( HAVE_SIGPROCMASK )
-     sigemptyset( &newmask );
-     sigaddset( &newmask, SIGINT );
-     sigaddset( &newmask, SIGTERM );
-     sigaddset( &newmask, SIGILL );
-     sigaddset( &newmask, SIGSEGV );
-     sigprocmask( SIG_BLOCK, &newmask , &oldmask );
+        sigemptyset( &newmask );
+        sigaddset( &newmask, SIGINT );
+        sigaddset( &newmask, SIGTERM );
+        sigaddset( &newmask, SIGILL );
+        sigaddset( &newmask, SIGSEGV );
+        sigprocmask( SIG_BLOCK, &newmask , &oldmask );
 #elif defined( HAVE_SIGHOLD )
-     sighold(SIGINT);
-     sighold(SIGTERM);
-     sighold(SIGILL);
-     sighold(SIGSEGV);
+        sighold(SIGINT);
+        sighold(SIGTERM);
+        sighold(SIGILL);
+        sighold(SIGSEGV);
 #endif
-     iCallSigSet = 5;
-//   EnterMustComplete(5);
-  }
-  /* THU006M begin                                                   */
-  if(apidata != NULL){       /* if we have access to the semaphore   */
-  /* Check if the semaphore owner exists                             */
-    if( (getval((apidata->rexxapisemaphore), 0) == 0) /* if locked   */
-       && (kill(semgetpid(apidata->rexxapisemaphore,0), 0) == -1 ) )
-//     && ((getpgid(semgetpid(apidata->rexxapisemaphore,0)) == -1)
-//     && (errno == ESRCH)))
-          unlocksem(apidata->rexxapisemaphore, 0);/* unlock API sem  */
-// @MIC Preprocessor error
-//#ifdef 0
-//   if(((value=getval((apidata->rexxapisemaphore), 0)) > 1)
-//      || (getval((apidata->rexxapisemaphore), 0) < NULL)) {
-//     if(value > 1){
-//       while(value != 1){                    /* unlock the sem      */
-//         locksem(apidata->rexxapisemaphore, NULL);
-//         --value;
-//       }
-//     }
-//     else if(value < NULL){
-//       while(value != 1){                   /* unlock the sem       */
-//         unlocksem(apidata->rexxapisemaphore, NULL);
-//         value++;
-//       }
-//     }
-//   }
-//#endif
-// Do not drop own functions for SIGINT because of call on halt .....
-//  ulRC = RegDeregFunc( NULL, REGFUNCTION); /* Drop the reg function or */
-                                             /* enable for reuse         */
-    RxSubcomExitList();        /* remove process specific registrations*/
-    locksem(apidata->rexxapisemaphore, 0);
-    attachall(QUEUECHAIN);     /* get the queue memeory pool           */
-    if(SysQueryThreadID()!=-1) /* if Rexx is up                       */
-      Queue_Detach(getpid());  /* remove the session queue             */
-    detachall(QUEUECHAIN);     /* release the queue memory pool        */
-
-    if(apidata->rexxutilsems){ /* if we have rexxutil semaphores       */
-      for(int i=0;i<MAXUTILSEM;i++){/* for all possible semaphores     */
-        if((opencnt[i][0])){   /* if I have it open                    */
-          for(int k=0;k<(opencnt[i][0]);k++){/* for every open I've made */
-            --((apidata->utilsemfree[i]).usecount);/*decrement usecount*/
-            if(!(apidata->utilsemfree[i]).usecount){/*sem now unused ? */
-                               /* clear the name array                 */
-              memset((apidata->utilsemfree[i]).name, 0, MAXNAME);
-              /* make sure the sem  is in a clear state                */
-              init_sema(apidata->rexxutilsems, i);
-            }
-          }
-        }
-      }
-      /* Possibly this was the last used sem. So we can remove the       */
-      /* semaphore set. Check this possibility.                          */
-      used = 0;
-      for(int j=0;j<MAXUTILSEM;j++)
-      {                                           /* for all semaphores  */
-         if((apidata->utilsemfree[j]).usecount != 0 )/* a used one ?     */
-           used = 1;                /* remember it                */
-      }
-      if(!used)
-      {                                    /* if all sems are unused     */
-        removesem(apidata->rexxutilsems);  /* remove the semaphore set   */
-        apidata->rexxutilsems = 0;         /* delete the old ID          */
-      }
+        iCallSigSet = 5;
     }
-    unlocksem(apidata->rexxapisemaphore, 0 );
+    if (apidata != NULL)
+    {       /* if we have access to the semaphore   */
+        /* Check if the semaphore owner exists                             */
+        if ( (getval((apidata->rexxapisemaphore), 0) == 0) /* if locked   */
+             && (kill(semgetpid(apidata->rexxapisemaphore,0), 0) == -1 ) )
+            unlocksem(apidata->rexxapisemaphore, 0);/* unlock API sem  */
+        /* enable for reuse         */
+        RxSubcomExitList();        /* remove process specific registrations*/
+        locksem(apidata->rexxapisemaphore, 0);
+        attachall(QUEUECHAIN);     /* get the queue memeory pool           */
+        if (SysQueryThreadID()!=(thread_id_t)-1) /* if Rexx is up                       */
+            Queue_Detach(getpid());  /* remove the session queue             */
+        detachall(QUEUECHAIN);     /* release the queue memory pool        */
 
-  } /* if apidata not equal NULL */
+        if (apidata->rexxutilsems)
+        { /* if we have rexxutil semaphores       */
+            for (int i=0;i<MAXUTILSEM;i++)
+            {/* for all possible semaphores     */
+                if ((opencnt[i][0]))
+                {   /* if I have it open                    */
+                    for (int k=0;k<(opencnt[i][0]);k++)
+                    {/* for every open I've made */
+                        --((apidata->utilsemfree[i]).usecount);/*decrement usecount*/
+                        if (!(apidata->utilsemfree[i]).usecount)
+                        {/*sem now unused ? */
+                            /* clear the name array                 */
+                            memset((apidata->utilsemfree[i]).name, 0, MAXNAME);
+                            /* make sure the sem  is in a clear state                */
+                            init_sema(apidata->rexxutilsems, i);
+                        }
+                    }
+                }
+            }
+            /* Possibly this was the last used sem. So we can remove the       */
+            /* semaphore set. Check this possibility.                          */
+            used = 0;
+            for (int j=0;j<MAXUTILSEM;j++)
+            {                                           /* for all semaphores  */
+                if ((apidata->utilsemfree[j]).usecount != 0 )/* a used one ?     */
+                    used = 1;                /* remember it                */
+            }
+            if (!used)
+            {                                    /* if all sems are unused     */
+                removesem(apidata->rexxutilsems);  /* remove the semaphore set   */
+                apidata->rexxutilsems = 0;         /* delete the old ID          */
+            }
+        }
+        unlocksem(apidata->rexxapisemaphore, 0 );
+
+    } /* if apidata not equal NULL */
 
 #ifdef ORXAP_DEBUG
-              switch(sig){
-                case (SIGINT):
-                  printf("\n*** Rexx interrupted.\n");
-                  break;
-                case (SIGTERM):
-                  printf("\n*** Rexx terminated.\n*** Closing Rexx !\n");  /* exit(0); */
-                  break;
-                case (SIGSEGV):
-                  printf("\n*** Segmentation fault.\n*** Closing Rexx !\n");
-                  break;
-                case (SIGFPE):
-                  printf("\n*** Floating point error.\n*** Closing Rexx\n");
-                  break;
-                case (SIGBUS):
-                  printf("\n*** Bus error.\n*** Closing Rexx\n");
-                  break;
-                case (SIGPIPE):
-                  printf("\n*** Broken pipe.\n*** Closing Rexx\n");
-                  break;
-                default:
-                  printf("\n*** Error,closing REXX !\n");
-                  break;
-}
-#endif
-
-
-#ifdef ORXAP_DEBUG
-  switch(sig){
-    case (SIGINT):
-      printf("\n*** Rexx interrupted.\n");
-      break;
-    case (SIGTERM):
-      printf("\n*** Rexx terminated.\n*** Closing Rexx !\n");
-      break;
-    case (SIGSEGV):
-      printf("\n*** Segmentation fault.\n*** Closing Rexx !\n");
-      break;
-    case (SIGFPE):
-      printf("\n*** Floating point error.\n*** Closing Rexx\n");
-      break;
-    case (SIGBUS):
-      printf("\n*** Bus error.\n*** Closing Rexx\n");
-      break;
-    case (SIGPIPE):
-      printf("\n*** Broken pipe.\n*** Closing Rexx\n");
-      break;
-    default:
-      printf("\n*** Error,closing REXX !\n");
-      break;
-  }
-#endif
-
-  if (sig == SIGINT)                    /* special for interrupt             */
-  {
-     ActivityManager::haltAllActivities();
-    if (iCallSigSet == 5 )                     /* Signal set                 */
+    switch (sig)
     {
-#if defined( HAVE_SIGPROCMASK )
-       sigprocmask( SIG_SETMASK, &oldmask , NULL );
-#elif defined( HAVE_SIGHOLD )
-       sigrelse(SIGINT);
-       sigrelse(SIGTERM);
-       sigrelse(SIGILL);
-       sigrelse(SIGSEGV);
+        case (SIGINT):
+            printf("\n*** Rexx interrupted.\n");
+            break;
+        case (SIGTERM):
+            printf("\n*** Rexx terminated.\n*** Closing Rexx !\n");  /* exit(0); */
+            break;
+        case (SIGSEGV):
+            printf("\n*** Segmentation fault.\n*** Closing Rexx !\n");
+            break;
+        case (SIGFPE):
+            printf("\n*** Floating point error.\n*** Closing Rexx\n");
+            break;
+        case (SIGBUS):
+            printf("\n*** Bus error.\n*** Closing Rexx\n");
+            break;
+        case (SIGPIPE):
+            printf("\n*** Broken pipe.\n*** Closing Rexx\n");
+            break;
+        default:
+            printf("\n*** Error,closing REXX !\n");
+            break;
+    }
 #endif
-      iCallSigSet = 0;
+
+
+#ifdef ORXAP_DEBUG
+    switch (sig)
+    {
+        case (SIGINT):
+            printf("\n*** Rexx interrupted.\n");
+            break;
+        case (SIGTERM):
+            printf("\n*** Rexx terminated.\n*** Closing Rexx !\n");
+            break;
+        case (SIGSEGV):
+            printf("\n*** Segmentation fault.\n*** Closing Rexx !\n");
+            break;
+        case (SIGFPE):
+            printf("\n*** Floating point error.\n*** Closing Rexx\n");
+            break;
+        case (SIGBUS):
+            printf("\n*** Bus error.\n*** Closing Rexx\n");
+            break;
+        case (SIGPIPE):
+            printf("\n*** Broken pipe.\n*** Closing Rexx\n");
+            break;
+        default:
+            printf("\n*** Error,closing REXX !\n");
+            break;
+    }
+#endif
+
+    if (sig == SIGINT)                    /* special for interrupt             */
+    {
+        ActivityManager::haltAllActivities();
+        if (iCallSigSet == 5 )                     /* Signal set                 */
+        {
+#if defined( HAVE_SIGPROCMASK )
+            sigprocmask( SIG_SETMASK, &oldmask , NULL );
+#elif defined( HAVE_SIGHOLD )
+            sigrelse(SIGINT);
+            sigrelse(SIGTERM);
+            sigrelse(SIGILL);
+            sigrelse(SIGSEGV);
+#endif
+            iCallSigSet = 0;
 //   ExitMustComplete(51);
-     }
-     return;
-  }
-  else
-  {
-    if (iCallSigSet == 5 )                     /* Signal set                 */
+        }
+        return;
+    }
+    else
     {
+        if (iCallSigSet == 5 )                     /* Signal set                 */
+        {
 #if defined( HAVE_SIGPROCMASK )
-       sigprocmask( SIG_SETMASK, &oldmask , NULL );
+            sigprocmask( SIG_SETMASK, &oldmask , NULL );
 #elif defined( HAVE_SIGHOLD )
-       sigrelse(SIGINT);
-       sigrelse(SIGTERM);
-       sigrelse(SIGILL);
-       sigrelse(SIGSEGV);
+            sigrelse(SIGINT);
+            sigrelse(SIGTERM);
+            sigrelse(SIGILL);
+            sigrelse(SIGSEGV);
 #endif
-       iCallSigSet = 0;
-//     ExitMustComplete(52);
-     }
-     exit(0);
-  }
+            iCallSigSet = 0;
+        }
+        exit(0);
+    }
 }
-    /* THU006M end                                                           */
 
 /*********************************************************************/
 /* Function:           Exception handler to ensure that the global   */
@@ -2052,11 +1942,10 @@ VOID  RxExitClear(INT sig) {
 /*                                                                   */
 /*********************************************************************/
 
-VOID  RxExitClearNormal() {
-
-  INT value;
-  ULONG  ulRC;
-  INT used;
+void  RxExitClearNormal() 
+{
+  int    ulRC;
+  int used;
 
   if (iCallSigSet == 0 )                     /* Set signals          */
   {
@@ -2074,40 +1963,18 @@ VOID  RxExitClearNormal() {
      sighold(SIGSEGV);
 #endif
      iCallSigSet = 6;
-//   EnterMustComplete();
   }
   if(apidata != NULL){       /* if we have access to the semaphore   */
 /* Check if the semaphore owner exists                               */
     if((getval((apidata->rexxapisemaphore), 0) == 0 ) /* if locked   */
        && (kill(semgetpid(apidata->rexxapisemaphore,0), 0) == -1 ) )
-//     && ((getpgid(semgetpid(apidata->rexxapisemaphore,0)) == -1)
-//     && (errno == ESRCH)))
         unlocksem(apidata->rexxapisemaphore, 0);/* unlock API sem    */
-// @MIC Preprocessor error
-//#ifdef 0
-//   if(((value=getval((apidata->rexxapisemaphore), 0)) > 1)
-//      || (getval((apidata->rexxapisemaphore), 0) < NULL)) {
-//     if(value > 1){
-//       while(value != 1){                    /* unlock the sem      */
-//         locksem(apidata->rexxapisemaphore, NULL);
-//         --value;
-//       }
-//     }
-//     else if(value < NULL){
-//       while(value != 1){                   /* unlock the sem       */
-//         unlocksem(apidata->rexxapisemaphore, NULL);
-//         value++;
-//       }
-//     }
-//   }
-//#endif
-
     ulRC = RegDeregFunc( NULL, REGFUNCTION); /* Drop the reg function or */
                                              /* enable for reuse         */
     RxSubcomExitList();        /* remove process specific registrations*/
     locksem(apidata->rexxapisemaphore, 0 );
     attachall(QUEUECHAIN);     /* get the queue memeory pool           */
-    if(SysQueryThreadID()!=-1) /* if Rexx is up                        */
+    if(SysQueryThreadID()!=(thread_id_t)-1) /* if Rexx is up                        */
       Queue_Detach(getpid());  /* remove the session queue             */
     detachall(QUEUECHAIN);     /* release the queue memory pool        */
 
@@ -2151,7 +2018,6 @@ VOID  RxExitClearNormal() {
           sigrelse(SIGSEGV);
 #endif
           iCallSigSet = 0;
-//      ExitMustComplete();
         }
         return;
       }
@@ -2171,54 +2037,7 @@ VOID  RxExitClearNormal() {
       sigrelse(SIGSEGV);
 #endif
       iCallSigSet = 0;
-//  ExitMustComplete();
   }
-}
-
-/*********************************************************************/
-/* Function:          EnterMustComplete                              */
-/*                                                                   */
-/* Description:       Set the signal mask of the process to block    */
-/*                    all signals (not the errors)                   */
-/*                                                                   */
-/* Inputs:             None                                          */
-/*                                                                   */
-/* Outputs:            None                                          */
-/*                                                                   */
-/*********************************************************************/
-void EnterMustComplete()
-{
-#ifndef ORXNO_MUSTDEB
-  sigset_t sigSet;
-  sigfillset(&sigSet);                /* fill the set for all signals*/
-  sigdelset(&sigSet, SIGSEGV);        /* but not for error signals   */
-  sigdelset(&sigSet, SIGFPE);
-  sigdelset(&sigSet, SIGILL);
-  sigdelset(&sigSet, SIGBUS);
-
-  sigprocmask(SIG_SETMASK, &sigSet, NULL); /* set the mask           */
-#endif
-}
-
-/*********************************************************************/
-/* Function:          ExitMustComplete                               */
-/*                                                                   */
-/* Description:       Set the signal mask of the process to get      */
-/*                    all signals                                    */
-/*                                                                   */
-/* Inputs:             None                                          */
-/*                                                                   */
-/* Outputs:            None                                          */
-/*                                                                   */
-/*********************************************************************/
-
-void ExitMustComplete()
-{
-#ifndef ORXNO_MUSTDEB
-  sigset_t sigSet;
-  sigemptyset(&sigSet);               /* fill the set for all signals*/
-  sigprocmask(SIG_SETMASK, &sigSet, NULL); /* set the mask           */
-#endif
 }
 
 #ifdef __cplusplus
@@ -2246,18 +2065,15 @@ extern "C" {
 APIRET  APIENTRY RexxShutDownAPI(void)
 {
   int semId;                           /* API semaphore ID            */
-  PAPIBLOCK current;
-  PMACRO mcurrent;
   shmid_ds buf;                        /* to hold the shmem info      */
   int      ShmemId;                    /* ID of the API anchor block  */
   key_t    ipckey;
-  LONG     lRC = 0;
-  LONG temp_cblock;
-  LONG temp_nblock;
-  ULONG ulBlockSize;
-  ULONG  ulQcurrent  = 0;             /* Current queue element        */
-  ULONG  ulQprevious = 0;             /* Previous queue element       */
-  ULONG  ulQnext     = 0;             /* Next queue element           */
+  int      lRC = 0;
+  size_t temp_cblock;
+  size_t temp_nblock;
+  size_t ulBlockSize;
+  size_t ulQcurrent  = 0;             /* Current queue element        */
+  size_t ulQnext     = 0;             /* Next queue element           */
 
   if ( achRexxHomeDir[0] != '/' )
   {
@@ -2282,7 +2098,6 @@ APIRET  APIENTRY RexxShutDownAPI(void)
                                        /* which has attached the API  */
   if(buf.shm_nattch <= 1)              /* data, start the shutdown    */
   {
-//  EnterMustComplete(16);
     APISTARTUP(ALLCHAINS);
     /* Check whether a PID still exists for rexx queues -------------------- */
 
@@ -2358,7 +2173,6 @@ APIRET  APIENTRY RexxShutDownAPI(void)
       detachshmem((char*)apidata);
       apidata = NULL;
 
-//    unlocksem(semId, NULL);
       removesem(semId);
 
 #if defined( HAVE_SIGPROCMASK )
@@ -2370,7 +2184,6 @@ APIRET  APIENTRY RexxShutDownAPI(void)
       sigrelse(SIGSEGV);
 #endif
       iCallSigSet = 0;
-//    ExitMustComplete(60);
       return (0);                        /* shutdown worked well        */
     }
   }
@@ -2388,7 +2201,6 @@ APIRET  APIENTRY RexxShutDownAPI(void)
   sigrelse(SIGSEGV);
 #endif
   iCallSigSet = 0;
-//ExitMustComplete(61);
   return (1);                            /* shutdown not possible       */
 
 }
@@ -2409,11 +2221,9 @@ APIRET  APIENTRY RexxShutDownAPI(void)
 /*  Return Value:    The allocated Block of memory (PVOID)           */
 /*                                                                   */
 /*********************************************************************/
-PVOID APIENTRY RexxAllocateMemory(ULONG size)
+void *APIENTRY RexxAllocateMemory(size_t size)
 {
-   PVOID tmpPtr;
-   tmpPtr = (void *) malloc(size);
-   return tmpPtr;
+   return malloc(size);
 }
 
 /*********************************************************************/
@@ -2433,7 +2243,7 @@ PVOID APIENTRY RexxAllocateMemory(ULONG size)
 /*  Return Value:    The allocated Block of memory (PVOID)           */
 /*                                                                   */
 /*********************************************************************/
-ULONG RexxFreeMemory(PVOID ptr)
+APIRET RexxFreeMemory(void *ptr)
 {
    free(ptr);
    return 0;

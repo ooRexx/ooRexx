@@ -105,11 +105,9 @@ extern _declspec(dllimport) APIRET APICreateQueue(ULONG Pid, BOOL newProcess);
 extern _declspec(dllimport) APIRET APISessionQueue(ULONG Pid, BOOL newProcess);
 extern _declspec(dllimport) APIRET APIDeleteQueue(ULONG Pid, BOOL SessionQ);
 extern _declspec(dllimport) LONG APIQueryQueue(void);
-extern _declspec(dllimport) LONG addPID(PAPIBLOCK cblock, PID processID);
-extern _declspec(dllimport) LONG removePID(PAPIBLOCK cblock, PID processID);
+extern _declspec(dllimport) LONG addPID(PAPIBLOCK cblock, process_id_t processID);
+extern _declspec(dllimport) LONG removePID(PAPIBLOCK cblock, process_id_t processID);
 extern _declspec(dllimport) char** APInamedObjects;
-
-#define rxstricmp(a,b) _stricmp(a,b)
 
 /* the name_size had to be changed because of win95 using high session IDs */
 #define INTERNAL_NAME_SIZE 20
@@ -916,7 +914,7 @@ BOOL APIMessageHandler()
           while (cblock) {
             // remove this PID as using any block that
             // is registered
-            removePID(cblock, (PID) RX.msg.lParam);
+            removePID(cblock, (process_id_t) RX.msg.lParam);
             cblock = cblock->next;
           }
           APIRETURN(0);

@@ -79,14 +79,12 @@ $(OR_OUTDIR)\rxsock.dll : $(OBJS) $(RXDBG_OBJ) $(OR_OUTDIR)\rxsock.lib \
              $(OR_OUTDIR)\rexxapi.lib \
              $(libs_dll)
 
-#
-# *** wrxutil.obj
-#
 
-$(OBJS):  $(@B).c
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_ORYXLSRC directory
+#
+$(OBJS):  $(@B).cpp
     @ECHO .
-    @ECHO Compiling $(@B).c
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL)  $(OR_ORYXRSRC)\$(@B).c
-
-
+    @ECHO Compiling $(@B).cpp
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL)  $(OR_ORYXRSRC)\$(@B).cpp
 

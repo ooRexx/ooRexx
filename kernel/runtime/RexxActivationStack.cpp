@@ -129,7 +129,7 @@ void RexxActivationStack::expandCapacity(size_t entries)
 /******************************************************************************/
 {
     RexxActivationFrameBuffer *next;
-    entries = max(entries, DefaultFrameBufferSize);
+    entries = Numerics::maxVal(entries, (stringsize_t)DefaultFrameBufferSize);
     /* do we have an unused one we're holding ready that has enough */
     /* room? */
     if (unused != OREF_NULL && unused->hasCapacity(entries)) {

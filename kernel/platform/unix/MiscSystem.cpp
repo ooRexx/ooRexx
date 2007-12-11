@@ -89,13 +89,16 @@ void RxExitClear(int);
 void RxExitClearNormal();
 
 
-extern BOOL bProcessExitInitFlag;
-
-extern ULONG mustCompleteNest;         /* Global variable for MustComplete  */
+extern bool bProcessExitInitFlag;
 
 unsigned int iClauseCounter=0;         // count of clauses
 unsigned int iTransClauseCounter=0;    // count of clauses in translator
 #define LOADED_OBJECTS 100
+
+#define CCHMAXPATH PATH_MAX+1
+
+char achRexxCurDir[ CCHMAXPATH+2 ];          /* Save current working direct */
+extern int  SecureFlag;
 
 void SysTermination(void)
 /******************************************************************************/
@@ -109,35 +112,54 @@ void SysInitialize(void)
 /* Function:   Perform system specific initialization.                        */
 /******************************************************************************/
 {
-//   DosExitList(EXLST_ADD,(PFNEXITLIST)exit_handler);
-//SysThreadInit();             /* initialize the main thread of the main process*/
+    int  lRC;                            /* Return Code                       */
+    if (!getcwd(achRexxCurDir, CCHMAXPATH))    /* Save current working direct */
+    {
+        strncpy( achRexxCurDir, getenv("PWD"), CCHMAXPATH);
+        achRexxCurDir[CCHMAXPATH - 1] = '\0';
+        if (achRexxCurDir[0] != '/' )
+        {
+            fprintf(stderr," *** ERROR: No current working directory for REXX!\n");
+            exit(-1);                              /* all done ERROR end          */
+        }
+        else
+            lRC = RxAPIHOMEset();            /* Set the REXX HOME                 */
+    }
+    lRC = RxAPIHOMEset();                /* Set the REXX HOME                 */
 
+    if ( lRC )
+    {
+        fprintf(stderr," *** ERROR: No HOME or RXHOME directory for REXX!\n");
+        exit(-1);                                /* all done ERROR end          */
+    }
+
+    SecureFlag = 1;
 
 /* this is for normal process termination                                     */
-  if (bProcessExitInitFlag == FALSE)
-  {
-     bProcessExitInitFlag = TRUE;
-     atexit(RxExitClearNormal);
-    /* Set the cleanup handler for unconditional process termination          */
-    struct sigaction new_action;
-    struct sigaction old_action;
+    if (bProcessExitInitFlag == false)
+    {
+        bProcessExitInitFlag = true;
+        atexit(RxExitClearNormal);
+        /* Set the cleanup handler for unconditional process termination          */
+        struct sigaction new_action;
+        struct sigaction old_action;
 
-    /* Set up the structure to specify the new action                         */
-    new_action.sa_handler = RxExitClear;
-    old_action.sa_handler = NULL;
-    sigfillset(&new_action.sa_mask);
-    new_action.sa_flags = SA_RESTART;
+        /* Set up the structure to specify the new action                         */
+        new_action.sa_handler = RxExitClear;
+        old_action.sa_handler = NULL;
+        sigfillset(&new_action.sa_mask);
+        new_action.sa_flags = SA_RESTART;
 
 /* Termination signals are set by Object REXX whenever the signals were not set */
 /* from outside (calling C-routine). The SIGSEGV signal is not set any more, so */
 /* that we now get a coredump instead of a hang up                              */
 
-    sigaction(SIGINT, NULL, &old_action);
-    if (old_action.sa_handler == NULL)           /* not set by ext. exit handler*/
-    {
-      sigaction(SIGINT, &new_action, NULL);  /* exitClear on SIGTERM signal     */
+        sigaction(SIGINT, NULL, &old_action);
+        if (old_action.sa_handler == NULL)           /* not set by ext. exit handler*/
+        {
+            sigaction(SIGINT, &new_action, NULL);  /* exitClear on SIGTERM signal     */
+        }
     }
-  }
 }
 
 RexxString *SysVersion(void)
@@ -153,14 +175,14 @@ RexxString *SysVersion(void)
   return new_string(info.release);    /* return as a string                */
 }
 
-PFN SysLoadProcedure(
+void *SysLoadProcedure(
   RexxInteger * LibraryHandle,         /* library load handle               */
   RexxString  * Procedure)             /* required procedure name           */
 /******************************************************************************/
 /* Function:  Resolve a named procedure in a library                          */
 /******************************************************************************/
 {
-   PFN load_address;
+   void *load_address;
    load_address = dlsym((void *)LibraryHandle->getValue(), Procedure->getStringData());
    if (load_address == NULL)
    {
@@ -177,24 +199,22 @@ RexxInteger * SysLoadLibrary(
 {
   RexxString *result;
   RexxString *tempresult;
-  LONG plib;
+  void *plib;
 
   result = (RexxString*) new_string("lib");
   result = result->concatWithCstring(Library->getStringData());
   result = result->concatWithCstring(ORX_SHARED_LIBRARY_EXT);
   tempresult = (RexxString *)result->copy();
 
-  if (!(plib = (LONG) dlopen(result->getStringData(), RTLD_LAZY )))
+  if (!(plib = dlopen(result->getStringData(), RTLD_LAZY )))
   {
-//     result = result->concatToCstring("/usr/lib/");
-
-     if (!(plib = (LONG) dlopen(result->getStringData(), RTLD_LAZY )))
+     if (!(plib = dlopen(result->getStringData(), RTLD_LAZY )))
      {
         fprintf(stderr, " *** Error dlopen: %s\n", dlerror());
         reportException(Error_Execution_library, tempresult);
      }
   }
-  return new_integer((LONG)plib);
+  return new_pointer(plib);
 }
 
 #define MAX_ADDRESS_NAME_LENGTH  250   /* maximum command environment name  */
@@ -286,26 +306,6 @@ void SysRegisterSignals(
 /* Function:   Establish exception handlers                                   */
 /******************************************************************************/
 {
-#if !defined(AIX) && !defined(LINUX)
-  PTIB   tibp;                         /* process information block         */
-  PPIB   pibp;                         /* thread information block          */
-  ULONG  NestingLevel;                 /* signal trap nesting level         */
-                                       /* pointer to the exception record   */
-  EXCEPTIONREGISTRATIONRECORD *exception_record;
-
-                                       /* cast to the OS/2 block type       */
-  exception_record = (EXCEPTIONREGISTRATIONRECORD *)exception_info;
-  DosGetInfoBlocks(&tibp, &pibp);      /* get the process and thread blocks */
-                                       /* establish the exception handler   */
-  exception_record->ExceptionHandler = SysExceptionHandler;
-                                       /* register the handler              */
-  DosSetExceptionHandler(exception_info);
-                                       /* running in a PM session?          */
-  if (pibp->pib_ultype != SSF_TYPE_PM) {
-                                       /* Nope setup Ctrl-C exception       */
-    DosSetSignalExceptionFocus(SIG_SETFOCUS, &NestingLevel);
-  }
-#endif   // AIX and LINUX
 }
 
 void SysDeregisterSignals(
@@ -314,19 +314,6 @@ void SysDeregisterSignals(
 /* Function:   Clear out registered exception handlers                        */
 /******************************************************************************/
 {
-#if !defined(AIX) && !defined(LINUX)
-  PTIB   tibp;                         /* process information block         */
-  PPIB   pibp;                         /* thread information block          */
-  ULONG  NestingLevel;                 /* signal trap nesting level         */
-
-  DosGetInfoBlocks(&tibp, &pibp);      /* get the process and thread blocks */
-                                       /* running in a PM session?          */
-  if (pibp->pib_ultype != SSF_TYPE_PM)
-                                       /* NOPE, reset Cntl-C trapping       */
-    DosSetSignalExceptionFocus(SIG_UNSETFOCUS, &NestingLevel);
-                                       /* remove the exception handler      */
-  DosUnsetExceptionHandler(exception_info);
-#endif  // AIX and LINUX
 }
 
 void SysClauseBoundary(RexxActivation *stub)

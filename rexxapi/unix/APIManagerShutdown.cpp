@@ -45,14 +45,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define INCL_RXFUNC
 #include "rexx.h"
 
 extern char achRexxHomeDir[];
 
 int main(
-          int argc,
-          char **argv[] )
+    int argc,
+    char **argv[] )
 {
   int  iRC = 0;
   char * pcharHome;                 /* Pointer to environment var HOME          */

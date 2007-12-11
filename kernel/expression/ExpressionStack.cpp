@@ -82,8 +82,8 @@ void RexxExpressionStack::flatten(RexxEnvelope * envelope)
 {
   setUpFlatten(RexxExpressionStack)
 
-  long i;                              /* pointer for scanning stack entries*/
-  long count;                          /* number of elements                */
+  size_t i;                            /* pointer for scanning stack entries*/
+  size_t count;                        /* number of elements                */
 
   count = this->top - this->stack;     /* get the total count               */
                                        /* loop through the stack entries    */
@@ -189,25 +189,24 @@ RexxInteger *RexxExpressionStack::requiredIntegerArg(
 /*            convert it into an integer argument.                            */
 /******************************************************************************/
 {
-  RexxObject   *argument;              /* processed argument                */
-  RexxInteger  *newInt;                /* converted value                   */
-  LONG          long_value;            /* converted long value              */
-  LONG          tempCount;             /* actual function argument position */
 
-  argument = this->peek(position);     /* get the argument in question      */
-  if (isOfClass(Integer, argument))    /* integer object already?           */
-    return (RexxInteger *)argument;    /* finished                          */
-                                       /* return the string form of argument*/
-  long_value = REQUEST_LONG(argument, Numerics::DEFAULT_DIGITS);
-  if (long_value == (long)NO_LONG) { /* not convertable?                  */
-    tempCount = argcount - position;   /* get the actual argument number    */
-                                       /* report an exception               */
-    reportException(Error_Incorrect_call_whole, function, tempCount, argument);
-  }
-  newInt = new_integer(long_value);    /* create an integer object          */
-  this->replace(position, newInt);     /* replace the argument              */
-  return newInt;                       /* return the replacement value      */
+    RexxObject *argument = this->peek(position);     /* get the argument in question      */
+    if (isOfClass(Integer, argument))    /* integer object already?           */
+    {
+        return(RexxInteger *)argument;    /* finished                          */
+    }
+    /* return the string form of argument*/
+    wholenumber_t numberValue;           /* converted long value              */
+    if (!argument->requestNumber(numberValue, Numerics::DEFAULT_DIGITS))
+    {
+        /* report an exception               */
+        reportException(Error_Incorrect_call_whole, function, argcount - position, argument);
+    }
+    RexxInteger *newInt = new_integer(numberValue);   /* create an integer object          */
+    this->replace(position, newInt);     /* replace the argument              */
+    return newInt;                       /* return the replacement value      */
 }
+
 
 RexxInteger *RexxExpressionStack::optionalIntegerArg(
      int    position,                  /* position of argument              */
@@ -218,25 +217,24 @@ RexxInteger *RexxExpressionStack::optionalIntegerArg(
 /*            convert it into an integer argument.                            */
 /******************************************************************************/
 {
-  RexxObject   *argument;              /* processed argument                */
-  RexxInteger  *newInt;                /* converted value                   */
-  LONG          long_value;            /* converted long value              */
-  LONG          tempCount;             /* actual function argument position */
-
-  argument = this->peek(position);     /* get the argument in question      */
-  if (argument == OREF_NULL)           /* missing an optional argument?     */
-    return OREF_NULL;                  /* nothing there                     */
-  if (isOfClass(Integer, argument))        /* integer object already?           */
-    return (RexxInteger *)argument;    /* finished                          */
-                                       /* return the string form of argument*/
-  long_value = REQUEST_LONG(argument, Numerics::DEFAULT_DIGITS);
-  if (long_value == (long)NO_LONG) {   /* not convertable?                  */
-    tempCount = argcount - position;   /* get the actual argument number    */
-                                       /* report an exception               */
-    reportException(Error_Incorrect_call_whole, function, tempCount, argument);
-  }
-  newInt = new_integer(long_value);    /* create an integer object          */
-  this->replace(position, newInt);     /* replace the argument              */
-  return newInt;                       /* return the replacement value      */
+    RexxObject *argument = this->peek(position);     /* get the argument in question      */
+    if (argument == OREF_NULL)           /* missing an optional argument?     */
+    {
+        return OREF_NULL;                  /* nothing there                     */
+    }
+    if (isOfClass(Integer, argument))    /* integer object already?           */
+    {
+        return(RexxInteger *)argument;    /* finished                          */
+    }
+    /* return the string form of argument*/
+    wholenumber_t numberValue;           /* converted long value              */
+    if (!argument->requestNumber(numberValue, Numerics::DEFAULT_DIGITS))
+    {
+        /* report an exception               */
+        reportException(Error_Incorrect_call_whole, function, argcount - position, argument);
+    }
+    RexxInteger *newInt = new_integer(numberValue);   /* create an integer object          */
+    this->replace(position, newInt);     /* replace the argument              */
+    return newInt;                       /* return the replacement value      */
 }
 

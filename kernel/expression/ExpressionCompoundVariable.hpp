@@ -46,6 +46,8 @@
 
 #include "ExpressionBaseVariable.hpp"
 
+class RexxQueue;
+
 /* Prototypes of external subroutine */
 
 class RexxCompoundVariable : public RexxVariableBase {
@@ -56,7 +58,7 @@ class RexxCompoundVariable : public RexxVariableBase {
   inline void  operator delete(void *, int) { ; }
   inline void  operator delete(void *, void *) { ; }
 
-  RexxCompoundVariable(RexxString *, LONG, RexxQueue *, LONG);
+  RexxCompoundVariable(RexxString *, size_t, RexxQueue *, size_t);
   inline RexxCompoundVariable(RESTORETYPE restoreType) { ; };
   void live();
   void liveGeneral();
@@ -64,7 +66,7 @@ class RexxCompoundVariable : public RexxVariableBase {
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
   RexxObject *getValue(RexxActivation *context);
   RexxObject *getValue(RexxVariableDictionary *context);
-  BOOL exists(RexxActivation *);
+  bool exists(RexxActivation *);
   void set(RexxActivation *, RexxObject *) ;
   void set(RexxVariableDictionary *, RexxObject *);
   void assign(RexxActivation *, RexxExpressionStack *, RexxObject *);
@@ -76,8 +78,8 @@ class RexxCompoundVariable : public RexxVariableBase {
   inline RexxString * variableStem() {return this->stemName;};
 
   RexxString *stemName;                // the stem variable name
-  LONG        index;                   /* lookaside table index             */
-  LONG        tailCount;               /* count of tails.                   */
+  size_t      index;                   /* lookaside table index             */
+  size_t      tailCount;               /* count of tails.                   */
   RexxObject *tails[1];                /* array of tail elements            */
 };
 #endif

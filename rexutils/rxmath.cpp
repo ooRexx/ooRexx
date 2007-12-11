@@ -98,24 +98,14 @@ extern int errno;
 /*------------------------------------------------------------------
  * rexx includes
  *------------------------------------------------------------------*/
-#define INCL_REXXSAA
+#include "rexx.h"
 
 #if defined(OPSYS_AIX) || defined(LINUX)
-#include "rexx.h"
-#include "PlatformDefinitions.h"
 #include "locale.h"
-#else
-#ifdef WIN32
-#include <rexx.h>
-#define NO_SYSTIMESLICEELAPSED
-#include "PlatformDefinitions.h"
-#else
-#include <rexxsaa.h>
 #endif
-#endif
+
 #include <sys/types.h>
 #include <errno.h>
-#include "RexxNativeAPI.h"
 #include "RexxErrorCodes.h"
 #include "RexxMessageNumbers.h"           /* include  definition of errorcodes */
 #include "RexxMessageTable.h"             /* include actual table definition   */
@@ -153,7 +143,7 @@ extern int errno;
 #define  VALID_ROUTINE    0            /* Successful completion      */
 
 
-BOOL bErrorFlag = FALSE;
+bool bErrorFlag = false;
 
 /* Turn off optimization under Windows. If this is compiler under    */
 /* Windows with the MS Visual C++ copiler and optimization is on     */
@@ -168,7 +158,7 @@ BOOL bErrorFlag = FALSE;
 /*   This list is used for registration and deregistration.          */
 /*********************************************************************/
 
-static PSZ  MathFncTable[] =
+static const char *MathFncTable[] =
    {
       "MathLoadFuncs",
       "MATHLOADFUNCS",
@@ -195,9 +185,9 @@ static PSZ  MathFncTable[] =
 extern "C" {
 #endif
 
-void SearchPrecision(PULONG);
-void RxErrMsgSet(PSZ);
-void RxErrMsgSet1(PSZ);
+void SearchPrecision(size_t *);
+void RxErrMsgSet(const char *);
+void RxErrMsgSet1(const char *);
 
 /*************************************************************************
 * Function:  MathLoadFuncs                                               *
@@ -214,30 +204,28 @@ void RxErrMsgSet1(PSZ);
  * load the function package
  *------------------------------------------------------------------*/
 #if defined(LINUX) || defined(OPSYS_AIX)
-ULONG MATHLOADFUNCS(PUCHAR, ULONG, PRXSTRING, PSZ, PRXSTRING);
-ULONG APIENTRY MathLoadFuncs (
-   PUCHAR     name,
-   ULONG      argc,
-   PRXSTRING  argv,
-   PSZ        qName,
-   PRXSTRING  retStr
-   )
+APIRET MATHLOADFUNCS(const char *, size_t, PCONSTRXSTRING, const char *, PRXSTRING);
+APIRET APIENTRY MathLoadFuncs (
+    const char *name,                    /* Function name              */
+    size_t      argc,                    /* Number of arguments        */
+    PCONSTRXSTRING argv,                 /* Argument array             */
+    const char * qName,                  /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-   return( MATHLOADFUNCS( name, argc, argv, qName, retStr) );
+   return( MATHLOADFUNCS( name, argc, argv, qName, retstr) );
 }
 #endif
-ULONG APIENTRY MATHLOADFUNCS (
-   PUCHAR     name,
-   ULONG      argc,
-   PRXSTRING  argv,
-   PSZ        qName,
-   PRXSTRING  retStr
-   )
+APIRET APIENTRY MATHLOADFUNCS (
+    const char *name,                    /* Function name              */
+    size_t      argc,                    /* Number of arguments        */
+    PCONSTRXSTRING argv,                 /* Argument array             */
+    const char * qName,                  /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-   INT    entries;                      /* Num of entries             */
-   INT    j;                            /* Counter                    */
+   int    entries;                      /* Num of entries             */
+   int    j;                            /* Counter                    */
 
-   retStr->strlength = 0;
+   retstr->strlength = 0;
 
    if (argc)
    {
@@ -248,7 +236,7 @@ ULONG APIENTRY MATHLOADFUNCS (
       fprintf(stdout, "\n");
    }
 
-   entries = sizeof(MathFncTable)/sizeof(PSZ);
+   entries = sizeof(MathFncTable)/sizeof(const char *);
 
    for (j = 0; j < entries; j++) {
      RexxRegisterFunctionDll(MathFncTable[j],
@@ -265,22 +253,22 @@ ULONG APIENTRY MATHLOADFUNCS (
 * Return:    NO_UTIL_ERROR - Successful.                                 *
 *************************************************************************/
 
-LONG APIENTRY MathDropFuncs(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY MathDropFuncs(
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    PCONSTRXSTRING argv,                 /* Argument array             */
+    const char * qName,                  /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT     entries;                     /* Num of entries             */
-  INT     j;                           /* Counter                    */
+  int     entries;                     /* Num of entries             */
+  int     j;                           /* Counter                    */
 
   if (numargs != 0)                    /* no arguments for this      */
     return INVALID_ROUTINE;            /* raise an error             */
 
   retstr->strlength = 0;               /* return a null string result*/
 
-  entries = sizeof(MathFncTable)/sizeof(PSZ);
+  entries = sizeof(MathFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
     RexxDeregisterFunction(MathFncTable[j]);
@@ -308,9 +296,9 @@ int matherr(struct __exception *x)         /* return string            */
 #endif
 #if defined(WIN32) || defined(OPSYS_SUN) || defined(OPSYS_AIX)
 {
-  LONG rc;
+  int  rc;
   rc = errno;
-  bErrorFlag = TRUE;
+  bErrorFlag = true;
 
   if (x->type == DOMAIN)
   {
@@ -347,58 +335,58 @@ int matherr(struct __exception *x)         /* return string            */
 #endif
 
 /********************************************************************
-* Function:  string2ulong(string, number)                           *
+* Function:  string2size_t(string, number)                          *
 *                                                                   *
 * Purpose:   Validates and converts an ASCII-Z string from string   *
-*            form to an unsigned long.  Returns FALSE if the number *
-*            is not valid, TRUE if the number was successfully      *
+*            form to an unsigned long.  Returns false if the number *
+*            is not valid, true if the number was successfully      *
 *            converted.                                             *
 *                                                                   *
-* RC:        TRUE - Good number converted                           *
-*            FALSE - Invalid number supplied.                       *
+* RC:        true - Good number converted                           *
+*            false - Invalid number supplied.                       *
 *********************************************************************/
-BOOL string2ulong(
-  PSZ    string,                       /* string to convert          */
-  PULONG number)                       /* converted number           */
+bool string2size_t( 
+  const char *string,                  /* string to convert          */
+  size_t *number)                      /* converted number           */
 {
-  ULONG    accumulator;                /* converted number           */
-  INT      length;                     /* length of number           */
+  size_t   accumulator;                /* converted number           */
+  size_t   length;                     /* length of number           */
 
   length = strlen(string);             /* get length of string       */
   if (length == 0 ||                   /* if null string             */
       length > MAX_DIGITS + 1)         /* or too long                */
-    return FALSE;                      /* not valid                  */
+    return false;                      /* not valid                  */
 
   accumulator = 0;                     /* start with zero            */
 
   while (length) {                     /* while more digits          */
     if (!isdigit(*string))             /* not a digit?               */
-      return FALSE;                    /* tell caller                */
+      return false;                    /* tell caller                */
                                        /* add to accumulator         */
     accumulator = accumulator * 10 + (*string - '0');
     length--;                          /* reduce length              */
     string++;                          /* step pointer               */
   }
   *number = accumulator;               /* return the value           */
-  return TRUE;                         /* good number                */
+  return true;                         /* good number                */
 }
 
 /*********************************************************************/
 /* Function FormatFloat:  Common routine to format a floating point  */
 /* result for the math functions                                     */
 /*********************************************************************/
-LONG MathFormatResult(
+int MathFormatResult(
   double    result,                    /* formatted result           */
-  ULONG     precision,                 /* required precision         */
+  size_t    precision,                 /* required precision         */
   PRXSTRING retstr )                   /* return string              */
 {
 
-  LONG      rc;                        /* validation code            */
+  int       rc;                        /* validation code            */
   rc = VALID_ROUTINE;                  /* set default completion     */
 
   if (bErrorFlag)                      /* error occured during       */
   {
-    bErrorFlag = FALSE;
+    bErrorFlag = false;
     strcpy(retstr->strptr, "ERROR");   /* matherr has set bErrorFlag */
     retstr->strlength = strlen(retstr->strptr);
     rc = VALID_ROUTINE;
@@ -420,13 +408,13 @@ LONG MathFormatResult(
 /* Function ValidateMath: Common validation routine for math         */
 /* that are of the form fn(number, <precision>)                      */
 /*********************************************************************/
-LONG  ValidateMath(
-  LONG      numargs,                   /* Number of arguments.       */
-  RXSTRING  args[],                    /* Function arguments.        */
+int   ValidateMath(
+  size_t    numargs,                   /* Number of arguments.       */
+  CONSTRXSTRING  args[],               /* Function arguments.        */
   double   *x,                         /* input number               */
-  PULONG    precision )                /* returned precision         */
+  size_t   *precision )                /* returned precision         */
 {
-  LONG      rc;                        /* validation code            */
+  int       rc;                        /* validation code            */
 
   rc = VALID_ROUTINE;                  /* set default completion     */
 
@@ -451,7 +439,7 @@ LONG  ValidateMath(
     rc = INVALID_ROUTINE;              /* this is invalid            */
   }
   else if (numargs == 2 &&             /* have a precision, override activity precision */
-      !string2ulong(args[1].strptr, precision))
+      !string2size_t(args[1].strptr, precision))
   {
     RxErrMsgSet1("The second argument is invalid");
     rc = INVALID_ROUTINE;              /* this is invalid            */
@@ -468,19 +456,19 @@ LONG  ValidateMath(
 /* Function ValidateTrig: Common validation routine for math         */
 /* that are of the form fn(number, <precision>, <unit>)              */
 /*********************************************************************/
-LONG  ValidateTrig(
-  LONG      numargs,                   /* Number of arguments.       */
-  RXSTRING  args[],                    /* Function arguments.        */
+int   ValidateTrig(
+  size_t    numargs,                   /* Number of arguments.       */
+  CONSTRXSTRING  args[],               /* Function arguments.        */
   PRXSTRING retstr,                    /* return string              */
-  INT       function )                 /* function to perform        */
+  int       function )                 /* function to perform        */
 {
-  LONG      rc;                        /* validation code            */
-  INT       units;                     /* angle type                 */
+  int       rc;                        /* validation code            */
+  int       units;                     /* angle type                 */
   double    angle;                     /* working angle              */
   double    nsi;                       /* convertion factor          */
   double    nco;                       /* convertion factor          */
-  ULONG     precision;                 /* returned precision         */
-  double    result;                    /* result                     */
+  size_t    precision;                 /* returned precision         */
+  double    result = 0.0;              /* result                     */
 
   rc = VALID_ROUTINE;                  /* set default completion     */
   units = DEGREES;                     /* default angle is degrees   */
@@ -512,7 +500,7 @@ LONG  ValidateTrig(
   }
   else if (numargs >= 2 &&             /* have a precision           */
       RXVALIDSTRING(args[1]) &&        /* and it is real string      */
-      !string2ulong(args[1].strptr, &precision))
+      !string2size_t(args[1].strptr, &precision))
   {
     RxErrMsgSet1("The second argument is invalid");
     rc = INVALID_ROUTINE;              /* this is invalid            */
@@ -624,18 +612,18 @@ LONG  ValidateTrig(
 /* Function ValidateATrig: Common validation routine for math        */
 /* that are of the form fn(number, <precision>, <units>)             */
 /*********************************************************************/
-LONG  ValidateArcTrig(
-  LONG       numargs,                  /* Number of arguments.       */
-  RXSTRING   args[],                   /* Function arguments.        */
+int   ValidateArcTrig(
+  size_t     numargs,                  /* Number of arguments.       */
+  CONSTRXSTRING   args[],              /* Function arguments.        */
   PRXSTRING  retstr,                   /* return string              */
-  INT        function )                /* function to perform        */
+  int        function )                /* function to perform        */
 {
-  LONG      rc;                        /* validation code            */
-  INT       units;                     /* angle type                 */
-  double    angle;                     /* working angle              */
+  int       rc;                        /* validation code            */
+  int       units;                     /* angle type                 */
+  double    angle = 0.0;               /* working angle              */
   double    nsi;                       /* convertion factor          */
   double    nco;                       /* convertion factor          */
-  ULONG     precision;                 /* returned precision         */
+  size_t    precision;                 /* returned precision         */
   double    x;                         /* input number               */
 
   rc = VALID_ROUTINE;                  /* set default completion     */
@@ -664,7 +652,7 @@ LONG  ValidateArcTrig(
   }
   else if (numargs >= 2 &&             /* have a precision           */
       RXVALIDSTRING(args[1]) &&        /* and it is real string      */
-      !string2ulong(args[1].strptr, &precision))
+      !string2size_t(args[1].strptr, &precision))
   {
     RxErrMsgSet1("The second argument is invalid");
     rc = INVALID_ROUTINE;              /* this is invalid            */
@@ -736,21 +724,16 @@ LONG  ValidateArcTrig(
 /*   result = func_name(x <, prec>)                                 */
 /*                                                                  */
 /********************************************************************/
-LONG  APIENTRY RxCalcSqrt(             /* Square root function.      */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcSqrt(             /* Square root function.      */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
-  LONG      rc;                        /* function return code       */
+  size_t    precision;                 /* precision used             */
+  int       rc;                        /* function return code       */
 
   errno = 0;                                     /* validate the inputs        */
                                        /* validate the inputs        */
@@ -762,22 +745,17 @@ LONG  APIENTRY RxCalcSqrt(             /* Square root function.      */
 }
 
 /*==================================================================*/
-LONG  APIENTRY RxCalcExp(              /* Exponential function.      */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcExp(              /* Exponential function.      */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
 
-  LONG      rc;                        /* validation return code     */
+  int       rc;                        /* validation return code     */
 
   errno = 0;                                     /* validate the inputs        */
 
@@ -789,22 +767,17 @@ LONG  APIENTRY RxCalcExp(              /* Exponential function.      */
 }
 
 /*==================================================================*/
-LONG  APIENTRY RxCalcLog(              /* Logarithm function.        */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcLog(              /* Logarithm function.        */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
 
-  LONG      rc;                        /* validation return code     */
+  int       rc;                        /* validation return code     */
 
   errno = 0;                                     /* validate the inputs        */
                                        /* validate the inputs        */
@@ -817,22 +790,17 @@ LONG  APIENTRY RxCalcLog(              /* Logarithm function.        */
 
 
 /*==================================================================*/
-LONG  APIENTRY RxCalcLog10(            /* Log base 10 function.      */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcLog10(            /* Log base 10 function.      */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
 
-  LONG      rc;                        /* validation return code     */
+  int       rc;                        /* validation return code     */
 
   errno = 0;                                     /* validate the inputs        */
                                        /* validate the inputs        */
@@ -844,22 +812,17 @@ LONG  APIENTRY RxCalcLog10(            /* Log base 10 function.      */
 }
 
 /*==================================================================*/
-LONG  APIENTRY RxCalcSinH(             /* Hyperbolic sine function.  */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcSinH(             /* Hyperbolic sine function.  */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
 
-  LONG      rc;                        /* validation return code     */
+  int       rc;                        /* validation return code     */
 
   errno = 0;                                     /* validate the inputs        */
                                        /* validate the inputs        */
@@ -871,22 +834,17 @@ LONG  APIENTRY RxCalcSinH(             /* Hyperbolic sine function.  */
 }
 
 /*==================================================================*/
-LONG  APIENTRY RxCalcCosH(             /* Hyperbolic cosine funct.   */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcCosH(             /* Hyperbolic cosine funct.   */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
 
-  LONG      rc;                        /* validation return code     */
+  int       rc;                        /* validation return code     */
 
   errno = 0;                                     /* validate the inputs        */
                                        /* validate the inputs        */
@@ -898,22 +856,17 @@ LONG  APIENTRY RxCalcCosH(             /* Hyperbolic cosine funct.   */
 }
 
 /*==================================================================*/
-LONG  APIENTRY RxCalcTanH(             /* Hyperbolic tangent funct.  */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcTanH(             /* Hyperbolic tangent funct.  */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
 
-  LONG      rc;                        /* validation return code     */
+  int       rc;                        /* validation return code     */
 
   errno = 0;                                     /* validate the inputs        */
                                        /* validate the inputs        */
@@ -938,23 +891,18 @@ LONG  APIENTRY RxCalcTanH(             /* Hyperbolic tangent funct.  */
 /*   result = func_name(x, y <, prec>)                              */
 /*                                                                  */
 /********************************************************************/
-LONG  APIENTRY RxCalcPower(            /* Power function.           */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcPower(            /* Power function.           */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
   double    y;                         /* second input number        */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
 
-  LONG      rc;                        /* validation code            */
+  int       rc;                        /* validation code            */
 
   errno = 0;                                     /* validate the inputs        */
 
@@ -992,7 +940,7 @@ LONG  APIENTRY RxCalcPower(            /* Power function.           */
     rc = INVALID_ROUTINE;              /* this is invalid            */
   }
   else if (numargs == 3 &&             /* have a precision           */
-      !string2ulong(args[2].strptr, &precision))
+      !string2size_t(args[2].strptr, &precision))
   {
     RxErrMsgSet1("The third argument is invalid");
     rc = INVALID_ROUTINE;              /* this is invalid            */
@@ -1025,17 +973,12 @@ LONG  APIENTRY RxCalcPower(            /* Power function.           */
 /*   x = func_name(angle <, prec> <, [R | D | G]>)                  */
 /*                                                                  */
 /********************************************************************/
-LONG  APIENTRY RxCalcSin(              /* Sine function.             */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcSin(              /* Sine function.             */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
                                        /* call common routine        */
   errno = 0;                                     /* validate the inputs        */
@@ -1043,17 +986,12 @@ LONG  APIENTRY RxCalcSin(              /* Sine function.             */
 }
 
 /*==================================================================*/
-LONG  APIENTRY RxCalcCos(              /* Cosine function.           */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcCos(              /* Cosine function.           */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
                                        /* call common routine        */
   errno = 0;                                     /* validate the inputs        */
@@ -1061,17 +999,12 @@ LONG  APIENTRY RxCalcCos(              /* Cosine function.           */
 }
 
 /*==================================================================*/
-LONG  APIENTRY RxCalcTan(              /* Tangent function.          */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcTan(              /* Tangent function.          */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
                                        /* call common routine        */
   errno = 0;                                     /* validate the inputs        */
@@ -1079,17 +1012,12 @@ LONG  APIENTRY RxCalcTan(              /* Tangent function.          */
 }
 
 /*==================================================================*/
-LONG  APIENTRY RxCalcCotan(            /* Cotangent function.        */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcCotan(            /* Cotangent function.        */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
                                        /* call common routine        */
   errno = 0;                                     /* validate the inputs        */
@@ -1107,20 +1035,15 @@ LONG  APIENTRY RxCalcCotan(            /* Cotangent function.        */
 /*   result = RxCalcpi(<precision>)                                    */
 /*                                                                  */
 /********************************************************************/
-LONG  APIENTRY RxCalcPi(               /* Pi function                */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcPi(               /* Pi function                */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  ULONG     precision;                 /* required precision         */
-  LONG rc;
+  size_t    precision;                 /* required precision         */
+  int  rc;
   errno = 0;                                     /* validate the inputs        */
   rc = VALID_ROUTINE;
   SearchPrecision(&precision);
@@ -1132,7 +1055,7 @@ LONG  APIENTRY RxCalcPi(               /* Pi function                */
     RxErrMsgSet1("Invalid number of arguments");
     rc = INVALID_ROUTINE;              /* this is invalid            */
   }
-  else if ( (numargs == 1) &&  (!string2ulong(args[0].strptr, &precision)) )
+  else if ( (numargs == 1) &&  (!string2size_t(args[0].strptr, &precision)) )
   {
     RxErrMsgSet1("The argument is invalid");
     rc = INVALID_ROUTINE;              /* this is invalid            */
@@ -1165,17 +1088,12 @@ LONG  APIENTRY RxCalcPi(               /* Pi function                */
 /*   a = func_name(arg <, prec> <, [R | D | G]>)                    */
 /*                                                                  */
 /********************************************************************/
-LONG  APIENTRY RxCalcArcSin(           /* Arc Sine function.         */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcArcSin(           /* Arc Sine function.         */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
                                        /* call common routine        */
   errno = 0;                                     /* validate the inputs        */
@@ -1183,17 +1101,12 @@ LONG  APIENTRY RxCalcArcSin(           /* Arc Sine function.         */
 }
 
 /*==================================================================*/
-LONG  APIENTRY RxCalcArcCos(           /* Arc Cosine function.       */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcArcCos(           /* Arc Cosine function.       */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
                                        /* call common routine        */
   errno = 0;                                     /* validate the inputs        */
@@ -1201,17 +1114,12 @@ LONG  APIENTRY RxCalcArcCos(           /* Arc Cosine function.       */
 }
 
 /*==================================================================*/
-LONG  APIENTRY RxCalcArcTan(           /* Arc Tangent function.      */
-  PSZ       name,                      /* Function name              */
-
-  LONG      numargs,                   /* Number of arguments        */
-
-  RXSTRING  args[],                    /* Argument array             */
-
-  PSZ       queuename,                 /* Current queue              */
-
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY RxCalcArcTan(           /* Arc Tangent function.      */
+    const char *name,                    /* Function name              */
+    size_t      numargs,                 /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
                                        /* call common routine        */
   errno = 0;                                     /* validate the inputs        */
@@ -1220,11 +1128,11 @@ LONG  APIENTRY RxCalcArcTan(           /* Arc Tangent function.      */
 }
 
 void RxErrMsgSet1(
-   PSZ name)
+   const char * name)
 {
    SHVBLOCK shv;
-   PSZ  pszVariable;
-   PSZ  pszValue;
+   char *  pszVariable;
+   char *  pszValue;
 
    pszVariable = (char *)malloc((strlen("MATHERRNO"))+1);
    strcpy(pszVariable,"MATHERRNO");

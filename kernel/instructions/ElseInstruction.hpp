@@ -46,6 +46,8 @@
 
 #include "RexxInstruction.hpp"
 
+class RexxEndInstructionEndIf;
+
 class RexxInstructionElse : public RexxInstructionSet {
  public:
 

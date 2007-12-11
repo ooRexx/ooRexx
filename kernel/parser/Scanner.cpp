@@ -219,7 +219,7 @@ void RexxSource::comment()
 {
   int          level;                  /* comment nesting level             */
   unsigned int inch;                   /* next character                    */
-  LONG         startline;              /* starting line for error reports   */
+  size_t       startline;              /* starting line for error reports   */
 
   level = 1;                           /* start the comment nesting         */
   this->line_offset += 2;              /* step over the comment start       */
@@ -261,10 +261,10 @@ unsigned int RexxSource::locateToken(
 {
  unsigned int    inch;                 /* current input character           */
  unsigned int    inch2;                /* secondary input character         */
- LONG            startline;            /* backward reset line number        */
- LONG            startoffset;          /* backward reset offset             */
+ size_t          startline;            /* backward reset line number        */
+ size_t          startoffset;          /* backward reset offset             */
  unsigned int    character;            /* returned character type           */
- BOOL            blanks;               /* are blanks significant?           */
+ bool            blanks;               /* are blanks significant?           */
 
  character = 0;                        /* no specific character type yet    */
                                        /* check if blanks should be returned*/
@@ -275,9 +275,9 @@ unsigned int RexxSource::locateToken(
       previous->classId == TOKEN_LITERAL ||
       previous->classId == TOKEN_RIGHT ||
       previous->classId == TOKEN_SQRIGHT))
-   blanks = TRUE;                      /* blanks are significant here       */
+   blanks = true;                      /* blanks are significant here       */
  else
-   blanks = FALSE;                     /* not looking for blanks            */
+   blanks = false;                     /* not looking for blanks            */
 
                                        /* no more lines in file?            */
  if (this->line_number > this->line_count)
@@ -391,7 +391,7 @@ RexxString *RexxSource::packLiteral(
   int    i;                            /* loop counter                      */
   int    j;                            /* loop counter                      */
   int    k;                            /* loop counter                      */
-  LONG   m;                            /* temporary integer                 */
+  int    m;                            /* temporary integer                 */
   int    byte;                         /* individual byte of literal        */
   int    nibble;                       /* individual nibble of literal      */
   int    oddhex;                       /* odd number of characters in first */
@@ -401,9 +401,9 @@ RexxString *RexxSource::packLiteral(
   int    real_length;                  /* real number of digits in string   */
   char   error_output[2];              /* used for formatting error         */
 
- _first = TRUE;                        /* initialize group flags and        */
+ _first = true;                        /* initialize group flags and        */
  count = 0;                            /* counters                          */
- blanks = FALSE;
+ blanks = false;
  error_output[1] = '\0';               /* terminate string                  */
                                        /* set initial input/output positions*/
  inpointer = start;                    /* get initial starting position     */
@@ -418,7 +418,7 @@ RexxString *RexxSource::packLiteral(
   for (i = 0; i < length; i++) {       /* loop through entire string        */
                                        /* got a blank?                      */
    if (this->current[inpointer] == ' ' || this->current[inpointer] == '\t') {
-     blanks = TRUE;                    /* remember scanning blanks          */
+     blanks = true;                    /* remember scanning blanks          */
     /* don't like initial blanks or groups after the first                  */
     /* which are not in twos (hex) or fours (binary)                        */
      if (i == 0 ||                     /* if at the beginning               */
@@ -439,8 +439,8 @@ RexxString *RexxSource::packLiteral(
    }
    else {
      if (blanks)                       /* had a blank group?                */
-       _first = FALSE;                 /* no longer on the lead grouping    */
-     blanks = FALSE;                   /* not processing blanks now         */
+       _first = false;                 /* no longer on the lead grouping    */
+     blanks = false;                   /* not processing blanks now         */
      count++;                          /* count this significant character  */
    }
    inpointer++;                        /* step the input position           */
@@ -557,16 +557,16 @@ RexxToken *RexxSource::sourceNextToken(
  RexxToken  *token = OREF_NULL;        /* working token                     */
  RexxString *value;                    /* associate string value            */
  unsigned int inch;                    /* working input character           */
- LONG   eoffset;                       /* location of exponential           */
+ size_t eoffset;                       /* location of exponential           */
  int    state;                         /* state of symbol scanning          */
- LONG   start;                         /* scan start location               */
- LONG   litend;                        /* end of literal data               */
- LONG   length;                        /* length of extracted token         */
+ size_t start;                         /* scan start location               */
+ size_t litend;                        /* end of literal data               */
+ size_t length;                        /* length of extracted token         */
  int    dot_count;                     /* count of periods in symbol        */
  unsigned int literal_delimiter;       /* literal string delimiter          */
  int    type;                          /* type of literal token             */
- LONG   i;                             /* loop counter                      */
- LONG   j;                             /* loop counter                      */
+ size_t i;                             /* loop counter                      */
+ size_t j;                             /* loop counter                      */
  int    subclass;                      /* sub type of the token             */
  int    numeric;                       /* numeric type flag                 */
  SourceLocation location;              /* token location information        */
@@ -755,7 +755,7 @@ RexxToken *RexxSource::sourceNextToken(
         value = this->commonString(value);
                                        /* record current position in clause */
         this->clause->setEnd(this->line_number, this->line_offset);
-        if (length > MAX_SYMBOL_LENGTH)/* result too long?                  */
+        if (length > (size_t)MAX_SYMBOL_LENGTH)/* result too long?                  */
                                        /* report the error                  */
           report_error1(Error_Name_too_long_name, value);
         inch = this->current[start];   /* get the first character           */
@@ -765,7 +765,7 @@ RexxToken *RexxSource::sourceNextToken(
         else if (inch >= '0' && inch <= '9') {
           subclass = SYMBOL_CONSTANT;  /* have a constant symbol            */
                                        /* can we optimize to an integer?    */
-          if (state == EXP_DIGIT && length < (long)Numerics::DEFAULT_DIGITS) {
+          if (state == EXP_DIGIT && length < Numerics::DEFAULT_DIGITS) {
                                        /* no leading zero or only zero?     */
             if (inch != '0' || length == 1)
                                        /* we can make this an integer object*/

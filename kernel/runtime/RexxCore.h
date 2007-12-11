@@ -47,14 +47,19 @@
 #ifndef RexxCore_INCLUDED
 #define RexxCore_INCLUDED
 
+#include "rexx.h"                 // this is the core to everything
+
 /* ANSI C definitions */
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 
 /* REXX Library definitions */
-#include "RexxLibrary.h"
+#define OREF_NULL NULL                 /* definition of a NULL REXX object  */
+
+#include "RexxPlatformDefinitions.h"
 
 /******************************************************************************/
 /* Literal definitions                                                        */
@@ -83,28 +88,6 @@ const int ARG_EIGHT  = 8;
 const int ARG_NINE   = 9;
 const int ARG_TEN    = 10;
 
-/******************************************************************************/
-/* Constants used for trace prefixes                                          */
-/******************************************************************************/
-
-enum TracePrefixes {
-    TRACE_PREFIX_CLAUSE   ,
-    TRACE_PREFIX_ERROR    ,
-    TRACE_PREFIX_RESULT   ,
-    TRACE_PREFIX_DUMMY    ,
-    TRACE_PREFIX_VARIABLE ,
-    TRACE_PREFIX_DOTVARIABLE ,
-    TRACE_PREFIX_LITERAL  ,
-    TRACE_PREFIX_FUNCTION ,
-    TRACE_PREFIX_PREFIX   ,
-    TRACE_PREFIX_OPERATOR ,
-    TRACE_PREFIX_COMPOUND ,
-    TRACE_PREFIX_MESSAGE  ,
-    TRACE_PREFIX_ARGUMENT ,
-};
-
-#define MAX_TRACEBACK_LIST 80      /* 40 messages are displayed */
-#define MAX_TRACEBACK_INDENT 20    /* 10 messages are indented */
 
 /******************************************************************************/
 /* Constants used for setting trace                                           */
@@ -133,9 +116,9 @@ const int DEBUG_TOGGLE      =  0x04;
 /* Random number generation constants                                         */
 /******************************************************************************/
 
-const long RANDOM_FACTOR = 1664525L;   /* random multiplication factor      */
+const size_t RANDOM_FACTOR = 1664525;   /* random multiplication factor      */
                                        /* randomize a seed number           */
-inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
+inline size_t RANDOMIZE(size_t seed) { return (seed * RANDOM_FACTOR + 1); }
 
 /* Object Reference Assignment */
 #ifndef CHECKOREFS
@@ -160,7 +143,7 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 #define new_method(i,e,a,c)               (new RexxMethod (i, e, a, c))
 #define new_CPPmethod(p,s,c)              (new RexxMethod (p, s, c))
 #define new_nmethod(p,l)                  (TheNativeCodeClass->newClass(p, l))
-#define new_pointer(p)                    (TheIntegerClass->newCache((LONG)p))
+#define new_pointer(p)                    (TheIntegerClass->newCache((uintptr_t)p))
 #define new_smartbuffer()                 (new RexxSmartBuffer(1024))
 #define new_sizedSmartBuffer(size)        (new RexxSmartBuffer(size))
 #define new_stack(s)                      (new(s) RexxStack (s))
@@ -172,17 +155,9 @@ inline long RANDOMIZE(long seed) { return (seed * RANDOM_FACTOR + 1); }
 #define MSSCPP 0                       /* C++ class method start index      */
 
 
-typedef struct internalmethodentry {   /* internal method table entry       */
-  const char *entryName;               /* internal entry point name         */
-  PFN    entryPoint;                   /* method entry point                */
-} internalMethodEntry;
 
-// a couple of convience typedefs to make it easier to write code that can be
-// moved to the 4.0 codebase.
-typedef size_t stringsize_t;
-typedef int    wholenumber_t;
-typedef size_t arraysize_t;
 
+class RexxExpressionStack;
                                        /* builtin function prototype        */
 typedef RexxObject *builtin_func(RexxActivation *, int, RexxExpressionStack *);
 typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
@@ -234,6 +209,22 @@ typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
 EXTERN RexxObject* (__stdcall *NovalueCallback)(const char *) INITGLOBALPTR;
 #endif
 
+class RexxClass;
+class RexxDirectory;
+class RexxIntegerClass;
+class RexxListClass;
+class RexxMethodClass;
+class RexxNativeCodeClass;
+class RexxArray;
+class RexxNumberStringClass;
+class RexxStringClass;
+class RexxMemory;
+
+// this one is special, and is truly global.
+EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
+
+// TODO:  make these into statics inside classes.
+
 EXTERN RexxClass  * TheArrayClass INITGLOBALPTR;     /* array class                       */
 EXTERN RexxClass  * TheClassClass INITGLOBALPTR;     /* class of classes                  */
 EXTERN RexxClass  * TheDirectoryClass INITGLOBALPTR; /* directory class                   */
@@ -242,8 +233,6 @@ EXTERN RexxDirectory * TheEnvironment INITGLOBALPTR; /* environment object      
 EXTERN RexxDirectory * ThePublicRoutines INITGLOBALPTR; /* public_routines directory                */
 EXTERN RexxDirectory * TheStaticRequires INITGLOBALPTR; /* static_requires directory                */
 
-EXTERN MemorySegmentPool *GlobalPoolBase INITGLOBALPTR;
-
 EXTERN RexxDirectory * TheEnvironmentBase INITGLOBALPTR; // environment object base ptr
                                        /* function table                    */
 EXTERN RexxDirectory * TheFunctionsDirectory INITGLOBALPTR;
@@ -251,8 +240,6 @@ EXTERN RexxDirectory * TheFunctionsDirectory INITGLOBALPTR;
 EXTERN RexxIntegerClass  * TheIntegerClass INITGLOBALPTR;
 EXTERN RexxDirectory  * TheKernel INITGLOBALPTR;     /* kernel directory                  */
 EXTERN RexxListClass  * TheListClass INITGLOBALPTR;  /* list class                        */
-EXTERN RexxMemory * TheMemoryObject INITGLOBALPTR;   /* memory object                     */
-EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
 EXTERN RexxClass  * TheMessageClass INITGLOBALPTR;   /* message class                     */
                                        /* method class                      */
 EXTERN RexxMethodClass  * TheMethodClass INITGLOBALPTR;
@@ -577,17 +564,9 @@ EXTERN RexxInteger * IntegerMinusOne INITGLOBALPTR;  /* Static integer -1       
 
 #define RXROUNDUP(n,to)  ((((n)+(to-1))/(to))*to)
 #define rounddown(n,to)  (((n)/(to))*to)
-#define same_behaviour(oref) ((oref)->behaviour==this->behaviour)
-
-                                       /* current object's behaviour        */
-#define THIS_BEHAVIOUR (this->behaviour)
-#define PASTE3(a1,a2,a3) a1##a2##a3
 
 #define isOfClass(t,r) (r)->isObjectType(The##t##Behaviour)
 #define isOfClassType(t,r) (r)->isObjectType(T_##t)
-
-                                       /* access an object's hash value     */
-#define HASHVALUE(r) ((ULONG)((r)->hashvalue))
 
 /******************************************************************************/
 /* Utility Functions                                                          */
@@ -602,7 +581,7 @@ const char *mempbrk(const char *, const char *, size_t);     /* search for chara
 #define env_find(s) (TheEnvironment->entry(s))
                                        /* various exception/condition       */
                                        /* reporting routines                */
-void missing_argument(LONG position);
+void missing_argument(int position);
 int  message_number(RexxString *);
                                        /* verify argument presence          */
 #define required_arg(arg, position) if (arg == OREF_NULL) missing_argument(ARG_##position)
@@ -617,19 +596,12 @@ int  message_number(RexxString *);
 /* Constant GLobal values (for general use)                                   */
 /******************************************************************************/
 
-/* Also in RexxNativeAPI.h */
-#ifndef NO_INT
-# define NO_INT                0x80000000
-#endif
-#ifndef NO_LONG
-# define NO_LONG               0x80000000
-#endif
 #ifndef NO_CSTRING
 # define NO_CSTRING            NULL
 #endif
 #define NO_RSTRING       NULL
 
-extern double NO_DOUBLE;
+// TODO:  Make these a name space
 
 /******************************************************************************/
 /* Global Objects - Names                                                     */
@@ -641,25 +613,6 @@ extern double NO_DOUBLE;
 #ifndef GDATA_BUILD_BEHAVIOURS
 
 #include "ObjectClass.hpp"               /* get real definition of Object     */
-
-
-/******************************************************************************/
-/* Method pointer special types                                               */
-/******************************************************************************/
-
- typedef RexxObject *  (RexxObject::*PCPPM0)();
- typedef RexxObject *  (RexxObject::*PCPPM1)(RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM2)(RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM3)(RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM4)(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM5)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM6)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM7)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPMA1)(RexxArray *);
- typedef RexxObject *  (RexxObject::*PCPPMC1)(RexxObject **, size_t);
-                                       /* pointer to method function        */
- typedef RexxObject *  (VLAENTRY RexxObject::*PCPPM) (...);
- #define CPPM(n) ((PCPPM)&n)
 
  #include "TableClass.hpp"
  #include "StackClass.hpp"
@@ -685,9 +638,13 @@ const size_t A_COUNT   = 127;            /* pass arguments as pointer/count pair
 const int RC_OK         = 0;
 const int RC_LOGIC_ERROR  = 2;
 
+// TODO:  These belong on an activity basis
+
 RexxString *last_msgname (void);       /* last message issued               */
 RexxMethod *last_method  (void);       /* last method invoked               */
 
+
+// MAKE a static method on ClassClass.
                                        /* data converstion and validation   */
                                        /* routines                          */
 void process_new_args(RexxObject **, size_t, RexxObject ***, size_t *, size_t, RexxObject **, RexxObject **);
@@ -722,7 +679,7 @@ inline RexxString *REQUEST_STRING(RexxObject *object)
 /* The next routine is specifically for REQUESTing a STRING needed as a method*/
 /* argument.  This raises an error if the object cannot be converted to a     */
 /* string value.                                                              */
-inline RexxString * REQUIRED_STRING(RexxObject *object, LONG position)
+inline RexxString * REQUIRED_STRING(RexxObject *object, int position)
 {
   if (object == OREF_NULL)             /* missing argument?                 */
     missing_argument(position);        /* raise an error                    */
@@ -739,21 +696,6 @@ inline RexxArray * REQUEST_ARRAY(RexxObject *obj) { return ((obj)->requestArray(
 /* The next macro is specifically for REQUESTing an INTEGER,                  */
 inline RexxInteger * REQUEST_INTEGER(RexxObject *obj) { return ((obj)->requestInteger(Numerics::DEFAULT_DIGITS));}
 
-/* The next macro is specifically for REQUESTing a LONG value                 */
-inline long REQUEST_LONG(RexxObject *obj, int precision) { return ((obj)->requestLong(precision)); }
-
-/* The next macro is specifically for REQUESTing an LONG value                */
-inline long REQUIRED_LONG(RexxObject *obj, int precision, int position) { return ((obj)->requiredLong(position, precision)); }
-
-/******************************************************************************/
-/* Floating-point conversions                                                 */
-/******************************************************************************/
-
-void db2st (double source, char *target);
-int  st2db (char *source, int length, double *target);
-void ln2db (long source, double *target);
-BOOL double2Float(double value, float *newValue);
-
 /******************************************************************************/
 /* Version number (okver.c)                                                   */
 /******************************************************************************/
@@ -764,39 +706,12 @@ RexxString *version_number (void);
 /* Typed method invocation macros                                             */
 /******************************************************************************/
 
-inline RexxObject * callOperatorMethod(RexxObject *object, LONG methodOffset, RexxObject *argument) {
+inline RexxObject * callOperatorMethod(RexxObject *object, size_t methodOffset, RexxObject *argument) {
                                        /* get the entry point               */
   PCPPM cppEntry = object->behaviour->getOperatorMethod(methodOffset);
                                        /* go issue the method               */
   return (object->*((PCPPM1)cppEntry))(argument);
 }
-
-/******************************************************************************/
-/* Native method and external interface macros                                */
-/******************************************************************************/
-                                       /* macros for creating methods that  */
-                                       /* are part of the native code       */
-                                       /* interface.  These are used to     */
-                                       /* create directly callable methods  */
-                                       /* that can be called from native    */
-                                       /* methods (via the RexxNativeAPI.h macros)   */
-#define native0(result, name) result REXXENTRY REXX_##name(REXXOBJECT self)
-#define native1(result, name, t1, a1) result REXXENTRY REXX_##name(REXXOBJECT self, t1 a1)
-#define native2(result, name, t1, a1, t2, a2) result REXXENTRY REXX_##name(REXXOBJECT self, t1 a1, t2 a2)
-#define native3(result, name, t1, a1, t2, a2, t3, a3) result REXXENTRY REXX_##name(REXXOBJECT self, t1 a1, t2 a2, t3 a3)
-#define native4(result, name, t1, a1, t2, a2, t3, a3, t4, a4) result REXXENTRY REXX_##name(REXXOBJECT self, t1 a1, t2 a2, t3 a3, t4 a4)
-#define native5(result, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5) result REXXENTRY REXX_##name(REXXOBJECT self, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5)
-#define native6(result, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6) result REXXENTRY REXX_##name(REXXOBJECT self, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6)
-#define native7(result, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6, t7, a7) result REXXENTRY REXX_##name(REXXOBJECT self, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7)
-
-#define nativei0(result, name) result REXXENTRY REXX_##name(void)
-#define nativei1(result, name, t1, a1) result REXXENTRY REXX_##name(t1 a1)
-#define nativei2(result, name, t1, a1, t2, a2) result REXXENTRY REXX_##name(t1 a1, t2 a2)
-#define nativei3(result, name, t1, a1, t2, a2, t3, a3) result REXXENTRY REXX_##name(t1 a1, t2 a2, t3 a3)
-#define nativei4(result, name, t1, a1, t2, a2, t3, a3, t4, a4) result REXXENTRY REXX_##name(t1 a1, t2 a2, t3 a3, t4 a4)
-#define nativei5(result, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5) result REXXENTRY REXX_##name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5)
-#define nativei6(result, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6) result REXXENTRY REXX_##name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6)
-#define nativei7(result, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6, t7, a7) result REXXENTRY REXX_##name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7)
 
                                        /* native method cleanup             */
 #define native_release(value)          ActivityManager::currentActivity->nativeRelease(value)

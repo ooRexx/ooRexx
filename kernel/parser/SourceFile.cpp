@@ -140,7 +140,7 @@ void RexxSource::initBuffered(
   descriptor.position = 0;             /* fill in the "zeroth" position     */
   descriptor.length = 0;               /* and the length                    */
                                        /* add to the line list              */
-  (((RexxSmartBuffer *)(this->sourceIndices)))->copyData((PVOID)&descriptor, sizeof(descriptor));
+  (((RexxSmartBuffer *)(this->sourceIndices)))->copyData(&descriptor, sizeof(descriptor));
   this->line_count = 0;                /* start with zero lines             */
                                        /* look for an EOF mark              */
   scan = (const char *)memchr(start, ctrl_z, length);
@@ -181,7 +181,7 @@ void RexxSource::initBuffered(
       _current = scan;                 /* copy the scan pointer             */
     }
                                        /* add to the line list              */
-    (((RexxSmartBuffer *)(this->sourceIndices)))->copyData((PVOID)&descriptor, sizeof(descriptor));
+    (((RexxSmartBuffer *)(this->sourceIndices)))->copyData(&descriptor, sizeof(descriptor));
   }
                                        /* throw away the buffer "wrapper"   */
   OrefSet(this, this->sourceIndices, (((RexxSmartBuffer *)(this->sourceIndices)))->buffer);
@@ -292,36 +292,36 @@ void RexxSource::needVariableOrDotSymbol(
   }
 }
 
-BOOL RexxSource::terminator(
+bool RexxSource::terminator(
     int         terminators,           /* set of possible terminators       */
     RexxToken  *token)                 /* token being processed             */
 /******************************************************************************/
 /* Function:  test for a terminator token in the given context                */
 /******************************************************************************/
 {
-  BOOL    endtoken;                    /* found the end flag                */
+  bool    endtoken;                    /* found the end flag                */
 
-  endtoken = FALSE;                    /* not found the end yet             */
+  endtoken = false;                    /* not found the end yet             */
 
   switch (token->classId) {            /* process based on terminator class */
 
     case  TOKEN_EOC:                   /* found the end-of-clause           */
-      endtoken = TRUE;                 /* this is always an end marker      */
+      endtoken = true;                 /* this is always an end marker      */
       break;
 
     case  TOKEN_RIGHT:                 /* found a right paren               */
       if (terminators&TERM_RIGHT)      /* terminate on this?                */
-        endtoken = TRUE;               /* set the flag                      */
+        endtoken = true;               /* set the flag                      */
       break;
 
     case  TOKEN_SQRIGHT:               /* found a right square bracket      */
       if (terminators&TERM_SQRIGHT)    /* terminate on this?                */
-        endtoken = TRUE;               /* set the flag                      */
+        endtoken = true;               /* set the flag                      */
       break;
 
     case  TOKEN_COMMA:                 /* found a comma                     */
       if (terminators&TERM_COMMA)      /* terminate on this?                */
-        endtoken = TRUE;               /* set the flag                      */
+        endtoken = true;               /* set the flag                      */
       break;
 
     case  TOKEN_SYMBOL:                /* have a symbol, need to resolve    */
@@ -331,33 +331,33 @@ BOOL RexxSource::terminator(
 
           case SUBKEY_TO:              /* TO subkeyword                     */
             if (terminators&TERM_TO)   /* terminate on this?                */
-              endtoken = TRUE;         /* set the flag                      */
+              endtoken = true;         /* set the flag                      */
             break;
 
           case SUBKEY_BY:              /* BY subkeyword                     */
             if (terminators&TERM_BY)   /* terminate on this?                */
-              endtoken = TRUE;         /* set the flag                      */
+              endtoken = true;         /* set the flag                      */
             break;
 
           case SUBKEY_FOR:             /* FOR subkeyword                    */
             if (terminators&TERM_FOR)  /* terminate on this?                */
-              endtoken = TRUE;         /* set the flag                      */
+              endtoken = true;         /* set the flag                      */
             break;
 
           case SUBKEY_WHILE:           /* WHILE subkeyword                  */
           case SUBKEY_UNTIL:           /* UNTIL subkeyword                  */
             if (terminators&TERM_WHILE)/* terminate on this?                */
-              endtoken = TRUE;         /* set the flag                      */
+              endtoken = true;         /* set the flag                      */
             break;
 
           case SUBKEY_WITH:            /* WITH subkeyword                   */
             if (terminators&TERM_WITH) /* terminate on this?                */
-              endtoken = TRUE;         /* set the flag                      */
+              endtoken = true;         /* set the flag                      */
             break;
 
           case SUBKEY_THEN:            /* THEN subkeyword                   */
             if (terminators&TERM_THEN) /* terminate on this?                */
-              endtoken = TRUE;         /* set the flag                      */
+              endtoken = true;         /* set the flag                      */
             break;
 
           default:                     /* not a terminator for others       */
@@ -369,7 +369,7 @@ BOOL RexxSource::terminator(
   }
   if (endtoken)                        /* found the end one?                */
     previousToken();                   /* push it back on the clause        */
-  return endtoken;                     /* return the TRUE/FALSE flag        */
+  return endtoken;                     /* return the true/false flag        */
 }
 
 void RexxSource::nextLine()
@@ -3568,7 +3568,7 @@ RexxVariableBase *RexxSource::getRetriever(
 
     case STRING_COMPOUND_NAME:         /* compound variable name            */
                                        /* get a direct retriever for this   */
-      retriever = (RexxVariableBase *)buildCompoundVariable(name, TRUE);
+      retriever = (RexxVariableBase *)buildCompoundVariable(name, true);
       break;
 
     default:                           /* all other invalid cases           */

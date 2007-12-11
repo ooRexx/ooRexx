@@ -194,10 +194,10 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
 
       // does argument count match? does object have method?
       if ( (pList->iParmCount == (int) pDispParams->cArgs) &&
-           (RexxSend1(self, "HASMETHOD", RexxString(pList->pszFuncName)) == RexxTrue) ) {
+           (ooRexxSend1(self, "HASMETHOD", ooRexxString(pList->pszFuncName)) == ooRexxTrue) ) {
         char upperBuffer[128];
 
-        rxArray=RexxArray(pDispParams->cArgs);
+        rxArray=ooRexxArray(pDispParams->cArgs);
         // convert VARIANTs to Rexx Objects...
         for (i=0;i<(int) pDispParams->cArgs;i++) {
           rxResult = Variant2Rexx(&pDispParams->rgvarg[i]);
@@ -205,11 +205,11 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
         }
         strcpy(upperBuffer,pList->pszFuncName);
         strupr(upperBuffer);
-        rxResult = RexxSend(self,upperBuffer,rxArray);
+        rxResult = ooRexxSend(self,upperBuffer,rxArray);
 
         // if method returned something, see if out paramters can be filled in
         // otherwise ignore them
-        if ( !(rxResult == NULL) && !(rxResult == RexxNil) ) {
+        if ( !(rxResult == NULL) && !(rxResult == ooRexxNil) ) {
           for (i=j=0;i<(int) pDispParams->cArgs;i++)
             if (pList->pusOptFlags[i] & PARAMFLAG_FOUT) j++;
 
@@ -229,18 +229,18 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
               char        szBuff[8];
               int         k;
 
-              RexxStr = RexxSend0(rxArray,"DIMENSION");
-              pString = string_data((RexxString*) RexxSend0(RexxStr,"STRING"));
+              RexxStr = ooRexxSend0(rxArray,"DIMENSION");
+              pString = string_data((RexxString*) ooRexxSend0(RexxStr,"STRING"));
               sscanf(pString,"%d",&k);
               if (k == 1) {
-                RexxStr = RexxSend0(rxArray,"SIZE");
-                pString = string_data((RexxString*) RexxSend0(RexxStr,"STRING"));
+                RexxStr = ooRexxSend0(rxArray,"SIZE");
+                pString = string_data((RexxString*) ooRexxSend0(RexxStr,"STRING"));
                 sscanf(pString,"%d",&k);
 
                 for (i=1,j=0; i <= k && j < pDispParams->cArgs; j++) {
                   if (pList->pusOptFlags[j] & PARAMFLAG_FOUT) {
                     sprintf(szBuff,"%d",i);
-                    Rexx2Variant(RexxSend1(rxArray,"AT",RexxString(szBuff)),&pDispParams->rgvarg[j],pDispParams->rgvarg[j].vt,-1);
+                    Rexx2Variant(ooRexxSend1(rxArray,"AT",ooRexxString(szBuff)),&pDispParams->rgvarg[j],pDispParams->rgvarg[j].vt,-1);
                     i++;
                   } /* end if */
                 } /* end for */

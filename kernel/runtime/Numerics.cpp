@@ -62,7 +62,7 @@ wholenumber_t Numerics::MIN_WHOLENUMBER = -999999999;
 stringsize_t Numerics::DEFAULT_DIGITS  = ((stringsize_t)9);
     // the digits setting used internally for function/method arguments to allow
     // for the full binary value range
-stringsize_t Numerics::ARGUMENT_DIGITS  = ((stringsize_t)10);
+stringsize_t Numerics::ARGUMENT_DIGITS  = ((stringsize_t)9);
 #endif
     // max numeric digits value for explicit 64-bit conversions
 stringsize_t Numerics::DIGITS64 = ((stringsize_t)20);
@@ -173,28 +173,10 @@ RexxObject *Numerics::toObject(stringsize_t v)
 bool Numerics::objectToWholeNumber(RexxObject *source, wholenumber_t &result, wholenumber_t maxValue, wholenumber_t minValue)
 {
     wholenumber_t temp;
-
-    // is this an integer value (very common)
-    if (isInteger(source))
+    // if not a valid whole number, reject this too
+    if (!source->numberValue(temp, ARGUMENT_DIGITS))
     {
-        temp = ((RexxInteger *)source)->wholeNumber();
-    }
-    else
-    {
-        // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
-        // not convertible to number string?  get out now
-        if (nString == OREF_NULL)
-        {
-            return false;
-        }
-        temp = (wholenumber_t)nString->longValue(ARGUMENT_DIGITS);
-
-        // if not a valid whole number, reject this too
-        if (temp == (wholenumber_t)NO_LONG)
-        {
-            return false;
-        }
+        return false;
     }
 
     // outside of the minimum range?  reject this too.
@@ -222,29 +204,10 @@ bool Numerics::objectToWholeNumber(RexxObject *source, wholenumber_t &result, wh
 bool Numerics::objectToStringSize(RexxObject *source, stringsize_t &result, stringsize_t maxValue)
 {
     stringsize_t temp;
-
-    // is this an integer value (very common)
-    if (isInteger(source))
+    // if not a valid whole number, reject this too
+    if (!source->unsignedNumberValue(temp, ARGUMENT_DIGITS))
     {
-        temp = ((RexxInteger *)source)->stringSize();
-    }
-    else
-    {
-        // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
-        // not convertible to number string?  get out now
-        if (nString == OREF_NULL)
-        {
-            return false;
-        }
-
-        temp = (stringsize_t)nString->longValue(ARGUMENT_DIGITS);
-
-        // if not a valid whole number, reject this too
-        if (temp == NO_LONG)
-        {
-            return false;
-        }
+        return false;
     }
 
     // outside of the minimum range?  reject this too.

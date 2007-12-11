@@ -51,8 +51,8 @@
 #ifdef OPSYS_AIX41
 #include <rexx.h>
 
-#define bool   BOOL
-#define false  FALSE
+#define bool   bool
+#define false  false
 #define true   TRUE
 #endif
 

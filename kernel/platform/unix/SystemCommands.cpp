@@ -58,18 +58,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define INCL_RXSUBCOM                       /* Include subcom declares        */
-#define INCL_RXFUNC                         /* and external function...       */
-#define INCL_RXSYSEXIT                      /* and system exits               */
-#define ALL_RETURN_CODES
-
 #include "RexxCore.h"                         /* global REXX declarations       */
 #include "StringClass.hpp"
 #include "RexxActivity.hpp"
 #include "RexxNativeAPI.h"                           /* Lot's of useful REXX macros    */
 #include "ActivityManager.hpp"
 
-#include SYSREXXSAA                         /* Include REXX header            */
 #include "SystemCommands.h"
 #include "SubcommandAPI.h"                  /* Get private REXX API's         */
 #include <sys/types.h>
@@ -106,7 +100,7 @@ extern char achRexxCurDir[ CCHMAXPATH+2 ];  /* Save current working direct    */
 
 char * args[MAX_COMMAND_ARGS+1];            /* Array for argument parsing */
 
-LONG sys_command(const char *cmd, CMD_TYPE local_env_type);
+int sys_command(const char *cmd, CMD_TYPE local_env_type);
 void scan_cmd(const char *parm_cmd, char **args);
 
 /******************************************************************************/
@@ -142,7 +136,7 @@ bool SysExitHandler(
   activity->exitKernel(activation, OREF_SYSEXITHANDLER, enable);
 
                                        /* go call the handler               */
-rc = RexxCallExit(const_cast<char *>(handler_name), NULL, function, subfunction, (PEXIT)exitbuffer);
+rc = RexxCallExit(handler_name, NULL, function, subfunction, (PEXIT)exitbuffer);
 
 
   activity->enterKernel();             /* now re-enter the kernel           */
@@ -160,9 +154,9 @@ rc = RexxCallExit(const_cast<char *>(handler_name), NULL, function, subfunction,
     reportException(Error_System_service_service, exitname);
   }
   if (rc == RXEXIT_HANDLED)            /* Did exit handle task?             */
-    return FALSE;                      /* Yep                               */
+    return false;                      /* Yep                               */
   else                                 /* rc = RXEXIT_NOT_HANDLED           */
-    return TRUE;                       /* tell caller to handle             */
+    return true;                       /* tell caller to handle             */
 }
 
 
@@ -191,9 +185,9 @@ RexxObject * SysCommand(
 {
   int          rc    = 0;              /* Return code from call             */
   const char  *current_address;        /* Subcom handler that gets cmd      */
-  RXSTRING     rxstrcmd;               /* Command to be executed            */
+  CONSTRXSTRING     rxstrcmd;          /* Command to be executed            */
   unsigned short flags = 0;            /* Subcom error flags                */
-  short        sbrc  = 0;              /* Subcom return code                */
+  wholenumber_t sbrc  = 0;             /* Subcom return code                */
   RXSTRING     retstr;                 /* Subcom result string              */
   CMD_TYPE     local_env_type;
   const char * shell_cmd;
@@ -209,7 +203,7 @@ RexxObject * SysCommand(
   MAKERXSTRING(retstr, default_return_buffer, DEFRXSTRING);
 
                                        /* set up the command RXSTRING       */
-  MAKERXSTRING(rxstrcmd, const_cast<char *>(command->getStringData()), command->getLength());
+  MAKERXSTRING(rxstrcmd, command->getStringData(), command->getLength());
 
                                        /* get the current environment       */
   current_address = environment->getStringData();
@@ -230,8 +224,8 @@ RexxObject * SysCommand(
 
   sbrc = 0;                               /* set initial subcom return code */
                                        /* get ready to call the function    */
-  activity->exitKernel(activation, OREF_COMMAND, TRUE);
-  rc=RexxCallSubcom(const_cast<char *>(current_address), NULL, &rxstrcmd, &flags, (unsigned short *)&sbrc, (PRXSTRING)&retstr);
+  activity->exitKernel(activation, OREF_COMMAND, true);
+  rc=RexxCallSubcom(current_address, NULL, &rxstrcmd, &flags, &sbrc, &retstr);
   activity->enterKernel();             /* now re-enter the kernel           */
 
 /* END CRITICAL window here -->>  kernel calls now allowed again            */
@@ -313,10 +307,10 @@ RexxObject * SysCommand(
 
 
 /* Handle "export" command in same process */
-BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
+bool sys_process_export(const char * cmd, int *rc, int flag)
 {
   char *Env_Var_String = NULL;         /* Environment variable string for   */
-  ULONG size, allocsize;               /* size of the string                */
+  size_t size, allocsize;              /* size of the string                */
   char      **Environment;             /* environment pointer               */
   char  *np;
   size_t i,j,k,l,iLength, copyval;
@@ -330,7 +324,7 @@ BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
   char   value[1281];                   /* is the part behind =              */
   char  *del = NULL;                    /* ptr to old unused memory          */
   char  *hit = NULL;
-  BOOL   HitFlag = FALSE;
+  bool   HitFlag = false;
   l = 0;
   j = 0;
   allocsize = 1281 * 2;
@@ -358,7 +352,7 @@ BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
 
   if ( ((flag == EXPORT_FLAG) || (flag == SET_FLAG)) &&  (iLength == 1) )
   {
-     return FALSE;
+     return false;
   }
 
   if(!putflag)
@@ -375,7 +369,7 @@ BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
   putflag = 1;                         /* prevent do it again               */
   Environment = environ;               /* reset the environment pointer     */
 
-/* do we have a assignment operator? If not return TRUE           */
+/* do we have a assignment operator? If not return true           */
 /* The operating system treads this like no command, and so do we */
 
   if ( !(strchr(name, '=')) && (flag != UNSET_FLAG) ) /*only set and export */
@@ -384,12 +378,12 @@ BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
 /* controlled output                                              */
      if ( (strchr(name, '|'))  || (strchr(name, '>')) || (strstr(name, ">>")) )
      {
-       return FALSE;
+       return false;
      }
      else
      {
        *rc = 0;
-       return TRUE;
+       return true;
      }
   }
 
@@ -397,7 +391,7 @@ BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
 
   if ( (strchr(name, '=')) && (flag == UNSET_FLAG) )
   {
-     return FALSE;
+     return false;
   }
 
   for(i=0;(name[i]!='=')&&(i<iLength);name[i++])
@@ -426,7 +420,7 @@ BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
   while((tmpptr = (strchr(runptr, '$'))) != 0)
   {
     Environment = environ;   /* get the beginning of the environment*/
-    HitFlag = TRUE;          /* if not true inputvalue= outputvalue*/
+    HitFlag = true;          /* if not true inputvalue= outputvalue*/
     copyval = tmpptr - runptr;
     if (copyval)   /* runarray should keep the 'real' environment  */
     {
@@ -488,7 +482,7 @@ BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
     }
   }   /* end while loop */
 
-  if (HitFlag == TRUE)
+  if (HitFlag == true)
   {
     if (runptr < endptr)
     {
@@ -555,12 +549,12 @@ BOOL sys_process_export(const char * cmd, LONG * rc, int flag)
   {
     *rc = 0;
   }
-  return TRUE;
+  return true;
 }
 
 
 /* Handle "cd XXX" command in same process */
-BOOL sys_process_cd(const char * cmd, LONG * rc)
+bool sys_process_cd(const char * cmd, int * rc)
 {
     const char * st;
     const char *home_dir = NULL;            /* home directory path        */
@@ -574,7 +568,7 @@ BOOL sys_process_cd(const char * cmd, LONG * rc)
     {
       home_dir = getenv("HOME");
       if(!home_dir)
-          return FALSE;
+          return false;
       dir_buf = (char *)malloc(strlen(home_dir)+1);
       strcpy(dir_buf, home_dir);
     }                                  /* if no user name            */
@@ -584,11 +578,11 @@ BOOL sys_process_cd(const char * cmd, LONG * rc)
                                        /* get home directory path    */
         home_dir = getenv("HOME");     /* from the environment       */
         if(!home_dir)                  /* if no home dir info        */
-          return FALSE;
+          return false;
                                        /* get space for the buf      */
         dir_buf = (char *)malloc(strlen(home_dir)+strlen(st)+1);
         if(!dir_buf)
-          return FALSE;
+          return false;
                                        /* merge the strings          */
         sprintf(dir_buf, "%s/%s", home_dir, st);
       }
@@ -598,7 +592,7 @@ BOOL sys_process_cd(const char * cmd, LONG * rc)
                                        /* get space for the buf      */
         dir_buf = (char *)malloc(strlen(home_dir)+1);
         if(!dir_buf)
-          return FALSE;
+          return false;
         sprintf(dir_buf, "%s/", home_dir);
       }
     }
@@ -611,7 +605,7 @@ BOOL sys_process_cd(const char * cmd, LONG * rc)
                                        /* get space for the buf      */
         dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+1);
         if(!dir_buf)
-          return FALSE;
+          return false;
                                        /* merge the strings          */
         sprintf(dir_buf, "%s/", ppwd->pw_dir);
       }
@@ -625,7 +619,7 @@ BOOL sys_process_cd(const char * cmd, LONG * rc)
                                        /* get space for the buf      */
         dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+strlen(slash)+1);
         if(!dir_buf)
-          return FALSE;
+          return false;
                                        /* merge the strings          */
         sprintf(dir_buf, "%s/%s", ppwd->pw_dir, slash);
       }
@@ -642,7 +636,7 @@ BOOL sys_process_cd(const char * cmd, LONG * rc)
       if (achRexxCurDir[0] != '/' )
         reportException(Error_System_service);  /* Complain if it fails        */
     }
-    return TRUE;
+    return true;
 }
 
 /******************************************************************************/
@@ -658,9 +652,9 @@ BOOL sys_process_cd(const char * cmd, LONG * rc)
 /*             and invoke the shell indicated by the local_env_type argument. */
 /*             This is modeled after command handling done in Classic REXX.   */
 /******************************************************************************/
-LONG sys_command(const char *cmd, CMD_TYPE local_env_type)
+int  sys_command(const char *cmd, CMD_TYPE local_env_type)
 {
-  LONG        rc;                      /* Return code                       */
+  int         rc;                      /* Return code                       */
   int         pid;                     /* process id of child from fork     */
   int         status;
 #ifdef LINUX

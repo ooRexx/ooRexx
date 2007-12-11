@@ -56,19 +56,18 @@
 
 typedef struct apireg_node {
     struct apireg_node *next;          /* pointer to the next block  */
-    PSZ    apiname;                    /* routine name               */
-    PSZ    apidll_name;                /* module name                */
-    PSZ    apidll_proc;                /* procedure name             */
-    UCHAR  apiuser[USERLENGTH];        /* user area                  */
-    PFN    apiaddr;                    /* routine address            */
-    LONG   apitype;                    /* 16 or 32-bit flag          */
+    char  *apiname;                    /* routine name               */
+    char  *apidll_name;                /* module name                */
+    char  *apidll_proc;                /* procedure name             */
+    char   apiuser[USERLENGTH];        /* user area                  */
+    void  *apiaddr;                    /* routine address            */
     ULONG  apimod_handle;              /* dynalink module handle     */
     ULONG  apidrop_auth;               /* Permission to drop         */
-    PID    apipid;                     /* Pid of Registrant          */
+    process_id_t  apipid;              /* Pid of Registrant          */
     ULONG  apisid;                     /* Session ID.                */
-    ULONG  apisize;                    /* actual total size of block */
-    PID   *pUserPIDs;                  /* processes using this block */
-    ULONG  uPIDBlockSize;              /* size of array of PIDs      */
+    size_t apisize;                    /* actual total size of block */
+    process_id_t *pUserPIDs;           /* processes using this block */
+    size_t uPIDBlockSize;              /* size of array of PIDs      */
     } APIBLOCK;
 
 typedef APIBLOCK *PAPIBLOCK;
@@ -80,10 +79,10 @@ typedef HANDLE    HAPIBLOCK;           /* Handle of APIBLOCK memory  */
 
 typedef struct _MACRO {                /****** MACRO structure *******/
       struct _MACRO *next;             /* pointer to next function   */
-      CHAR           name[NAMESIZE];   /* function name              */
+      char           name[NAMESIZE];   /* function name              */
       RXSTRING       image;            /* pcode+literals image       */
-      ULONG          i_size;           /* size of image              */
-      ULONG          srch_pos;         /* search order position      */
+      size_t         i_size;           /* size of image              */
+      int            srch_pos;         /* search order position      */
       } MACRO;                         /******************************/
                                        /******************************/
 typedef MACRO *PMACRO;                 /* pointer to MACRO structure */

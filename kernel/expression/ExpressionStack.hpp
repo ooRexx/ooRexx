@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ExpressionStack.hpp  */
+/* REXX Kernel                                           ExpressionStack.hpp  */
 /*                                                                            */
 /* Primitive Expression Stack Class Definitions                               */
 /*                                                                            */

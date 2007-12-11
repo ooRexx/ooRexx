@@ -45,6 +45,7 @@
 #define Included_RexxInstructionParse
 
 #include "RexxInstruction.hpp"
+#include "ParseTrigger.hpp"
 
 #define parse_upper         0x01       /* doing a parse upper               */
 #define parse_lower         0x02       /* doing a parse lower               */
@@ -59,7 +60,7 @@ class RexxInstructionParse : public RexxInstruction {
   inline void operator delete(void *) { }
   inline void operator delete(void *, void *) { }
 
-  RexxInstructionParse(RexxObject *, unsigned short, size_t, LONG, RexxQueue *);
+  RexxInstructionParse(RexxObject *, unsigned short, size_t, size_t, RexxQueue *);
   inline RexxInstructionParse(RESTORETYPE restoreType) { ; };
   void execute(RexxActivation *, RexxExpressionStack *);
   void live();

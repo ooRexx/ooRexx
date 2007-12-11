@@ -54,7 +54,7 @@ void integer_create (void);
 class RexxInteger : public RexxObject {
  public:
   inline RexxInteger(RESTORETYPE restoreType) { ; };
-  inline RexxInteger(long intValue) { this->value = intValue; };
+  inline RexxInteger(wholenumber_t intValue) { this->value = intValue; };
   inline void *operator new(size_t size, void *ptr) {return ptr;};
   void *operator new(size_t);
   void live();
@@ -62,9 +62,12 @@ class RexxInteger : public RexxObject {
   void flatten(RexxEnvelope*);
   virtual HashCode getHashValue();
 
-  long         longValue(size_t);
+  bool         numberValue(wholenumber_t &result, size_t precision);
+  bool         numberValue(wholenumber_t &result);
+  bool         unsignedNumberValue(stringsize_t &result, size_t precision);
+  bool         unsignedNumberValue(stringsize_t &result);
+  bool         doubleValue(double &result);
   RexxNumberString *numberString();
-  double       doubleValue();
   RexxInteger *integerValue(size_t);
   RexxString  *makeString();
   void         copyIntoTail(RexxCompoundTail *);
@@ -77,7 +80,7 @@ class RexxInteger : public RexxObject {
   RexxSupplier *instanceMethods(RexxClass *);
 
   bool        isEqual(RexxObject *);
-  long        strictComp(RexxObject *);
+  int         strictComp(RexxObject *);
   inline int  comp(RexxObject *other)
     {
       required_arg(other, ONE);            /* make sure this is really there    */
@@ -134,7 +137,7 @@ class RexxInteger : public RexxObject {
                                        /* numberstring operator forwarders  */
   koper (integer_operator_not)
 
-  inline int  getValue() {return this->value;}
+  inline wholenumber_t getValue() {return this->value;}
   inline wholenumber_t wholeNumber() {return this->value;}
   inline stringsize_t stringSize() {return (stringsize_t)this->value;}
   inline int  incrementValue() {return ++this->value;}
@@ -146,7 +149,7 @@ class RexxInteger : public RexxObject {
 protected:
 
     RexxString *stringrep;              /* integer string representation     */
-    int  value;                         /* actual integer value              */
+    wholenumber_t value;                /* actual integer value              */
 
     static int validMaxWhole[];         // table of maximum values per digits setting
 };

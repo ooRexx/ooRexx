@@ -47,7 +47,6 @@
 # include "config.h"
 #endif
 
-#define INCL_BASE                      /* Include OS/2 definitions          */
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -63,7 +62,6 @@
 
 #include "PlatformDefinitions.h"        /* added for cat name + defs          */
 #include "RexxMessageNumbers.h"
-#include SYSREXXSAA
 
 #define BUFFERLEN         256           /* Length of message bufs used        */
 #define CCHMAXPATH PATH_MAX+1
@@ -77,19 +75,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-LONG APIENTRY RexxTranslateProgram(PSZ, PSZ);
+APIRET APIENTRY RexxTranslateProgram(const char *, const char *);
 #ifdef __cplusplus
 }
 #endif
 
 
-void DisplayError(ULONG msgid)         /* simplified catalog access@MAE004M */
+void DisplayError(int msgid)           /* simplified catalog access@MAE004M */
 {
 #if defined( HAVE_NL_TYPES_H )
  nl_catd        catd;                  /* catalog descriptor from catopen() */
 #endif
  int            set_num = 1;           /* message set 1 from catalog        */
- PSZ            message;               /* message pointer                   */
+ const char    *message;               /* message pointer                   */
  char           DataArea[256];         /* buf to return message             */
 
 #if defined( HAVE_CATOPEN )
@@ -137,14 +135,14 @@ void DisplayError(ULONG msgid)         /* simplified catalog access@MAE004M */
 
 int main (int argc, char **argv)
 {
-  BOOL silent = FALSE;
-  INT silentp;
+  bool silent = false;
+  int silentp;
   char *ptr;
                                        /* check for /s option               */
   for (silentp = 1; silentp < argc; silentp++) {
     if (argv[silentp][0] == '-' &&
         (argv[silentp][1] == 's' || argv[silentp][1] == 'S')) {
-      silent = TRUE;
+      silent = true;
       break;
     }
   }

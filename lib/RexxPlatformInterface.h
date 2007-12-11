@@ -43,10 +43,18 @@
 /* have not overridden these with a define.                                   */
 /*                                                                            */
 /******************************************************************************/
-#ifndef SYSDEF_H
-#define SYSDEF_H
+#ifndef RexxPlatformInterface_H
+#define RexxPlatformInterface_H
 
+class RexxObject;
+class RexxString;
+class RexxInteger;
+class RexxActivity;
+class RexxActivation;
+class RexxMethod;
 class RexxDateTime;
+class RexxNativeActivation;
+class RexxBuffer;
 
 #ifndef SysGetCurrentTime
 void SysGetCurrentTime(RexxDateTime *);/* get the current time              */
@@ -54,7 +62,7 @@ void SysGetCurrentTime(RexxDateTime *);/* get the current time              */
 
 #ifndef SysVariablePool
                                        /* process external vpool requests   */
-extern ULONG SysVariablePool(RexxNativeActivation *, PVOID, BOOL);
+extern int SysVariablePool(RexxNativeActivation *, void *, bool);
 #endif
 
 #ifndef SysResolveProgramName
@@ -94,10 +102,6 @@ void SysRegisterSignals(SYSEXCEPTIONBLOCK *);
 void SysDeregisterSignals(SYSEXCEPTIONBLOCK *);
 #endif
 
-#ifndef SysProcessName
-RexxObject *SysProcessName(void);      /* get a process "name" object       */
-#endif
-
 #ifndef SysTermination
 void SysTermination(void);             /* perform system specific cleanup   */
 #endif
@@ -134,7 +138,7 @@ void SysReleaseResultMemory(void *);   /* release a result memory block     */
 
 #ifndef SysExternalFunction
                                        /* call an external function         */
-RexxObject * SysExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxObject **, size_t, RexxString *, BOOL *);
+RexxObject * SysExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxObject **, size_t, RexxString *, bool *);
 #endif
 
 #ifndef SysGetMacroCode
@@ -161,7 +165,7 @@ void SysThreadInit(void);              /* do system thread initialization   */
 #endif
 
 #ifndef SysQueryThreadID
-int SysQueryThreadID(void);            /* query the current thread          */
+thread_id_t SysQueryThreadID();        /* query the current thread          */
 #endif
 
 #ifndef SysGetThreadStackBase
@@ -170,12 +174,12 @@ char *SysGetThreadStackBase(size_t);   /* query current thread stack start  */
 
 #ifndef SysCreateThread
                                        /* create a new thread               */
-int SysCreateThread (PTHREADFN, size_t, PVOID);
+int SysCreateThread (PTHREADFN, size_t, void *);
 #endif
 
 #ifndef SysLoadProcedure
                                        /* load a named procedure            */
-PFN SysLoadProcedure (RexxInteger *, RexxString *);
+void *SysLoadProcedure (RexxInteger *, RexxString *);
 #endif
 
 #ifndef SysLoadLibrary
@@ -249,7 +253,7 @@ void SysLoadImage(char **, size_t *);    /* load the image file               */
 
 #ifndef SysTerminateThread
                                        /* thread being terminated           */
-void SysTerminateThread(TID threadid);
+void SysTerminateThread(thread_id_t threadid);
 #endif
 
 #ifndef SysIsThreadEqual
@@ -259,11 +263,6 @@ void SysTerminateThread(TID threadid);
 #ifndef SysInitializeThread
                                        /* thread being started              */
 void SysInitializeThread();
-#endif
-
-/* defect 2325: CHM added definition of PTRSUB2 for Doug Griswold           */
-#ifndef PTRSUB2
-#define PTRSUB2   PTRSUB
 #endif
 
 /******************************************************************************/

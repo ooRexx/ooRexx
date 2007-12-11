@@ -44,7 +44,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 
-char *  build_date = __DATE__;         /* date of last build                */
+const char *  build_date = __DATE__;  /* date of last build                */
 
 RexxString *version_number (void)
 /******************************************************************************/

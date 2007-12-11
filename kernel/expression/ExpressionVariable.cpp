@@ -52,7 +52,7 @@
 
 RexxParseVariable::RexxParseVariable(
   RexxString *variable_name,           /* variable name to access           */
-  long var_index)                      /* dictionary lookaside index        */
+  size_t var_index)                    /* dictionary lookaside index        */
 /******************************************************************************/
 /* Complete initialization of a variable object                               */
 /******************************************************************************/
@@ -214,7 +214,7 @@ void RexxParseVariable::set(
     context->setLocalVariable(variableName, index, value);
 }
 
-BOOL RexxParseVariable::exists(
+bool RexxParseVariable::exists(
   RexxActivation *context)             /* current activation context        */
 /******************************************************************************/
 /*  Function:  Check the existance of a REXX variable                         */

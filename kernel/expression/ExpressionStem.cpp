@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ExpressionStem.c     */
+/* REXX Translator                                       ExpressionStem.c     */
 /*                                                                            */
 /* Primitive Translator Expression Parsing Stem Reference Class               */
 /*                                                                            */
@@ -54,7 +54,7 @@
 
 RexxStemVariable::RexxStemVariable(
      RexxString * stemName,            /* stem name to access               */
-     LONG         var_index)           /* lookaside index for stem          */
+     size_t       var_index)           /* lookaside index for stem          */
 /******************************************************************************/
 /* Function:  Initialize a translator STEM object                             */
 /******************************************************************************/
@@ -189,7 +189,7 @@ void RexxStemVariable::set(
 }
 
 
-BOOL RexxStemVariable::exists(
+bool RexxStemVariable::exists(
   RexxActivation *context)             /* current activation context        */
 /******************************************************************************/
 /*  Function:  Check the existance of a REXX stem variable                    */
@@ -298,7 +298,9 @@ void RexxStemVariable::clearGuard(
   variable = context->getLocalStemVariable(this->stem, this->index);
   variable->uninform(ActivityManager::currentActivity); /* mark the variable entry           */
 }
-BOOL RexxStemVariable::sort(
+
+
+bool RexxStemVariable::sort(
     RexxActivation *context, RexxString *prefix, int order, int type, size_t start,
     size_t end, size_t firstcol, size_t lastcol)
 /******************************************************************************/

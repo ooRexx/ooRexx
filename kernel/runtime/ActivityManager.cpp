@@ -502,7 +502,7 @@ bool ActivityManager::poolActivity(RexxActivity *activity)
 
 
 bool ActivityManager::haltActivity(
-     LONG         thread_id,           /* target thread id                  */
+     thread_id_t  thread_id,           /* target thread id                  */
      RexxString * description )        /* description to use                */
 /******************************************************************************/
 /* Function:   Flip on a bit in a target activities top activation            */
@@ -526,7 +526,7 @@ bool ActivityManager::haltActivity(
 }
 
 bool ActivityManager::yieldActivity(
-     LONG         thread_id)           /* target thread id                  */
+     thread_id_t  thread_id)           /* target thread id                  */
 /****************************************************************************/
 /* Function:   Flip on a bit in a target activities top activation          */
 /*             called from rexxsetyield                                     */
@@ -551,7 +551,7 @@ bool ActivityManager::yieldActivity(
 
 
 bool ActivityManager::setActivityTrace(
-     LONG  thread_id,                  /* target thread id                  */
+     thread_id_t thread_id,            /* target thread id                  */
      bool  on_or_off )                 /* trace on/off flag                 */
 /******************************************************************************/
 /* Function:   Flip on a bit in a target activities top activation            */
@@ -592,7 +592,7 @@ void ActivityManager::yieldCurrentActivity()
 }
 
 
-RexxActivity *ActivityManager::findActivity(LONG threadId)
+RexxActivity *ActivityManager::findActivity(thread_id_t threadId)
 /******************************************************************************/
 /* Function:  Locate the activity associated with a thread                    */
 /******************************************************************************/

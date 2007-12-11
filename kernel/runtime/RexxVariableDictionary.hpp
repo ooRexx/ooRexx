@@ -103,7 +103,7 @@ class RexxVariableDictionary : public RexxInternalObject {
       return variable;                     /* return the stem                   */
     }
 
-  inline void setCompoundVariable(RexxString *stemName, RexxObject **tail, LONG tailCount, RexxObject *value)
+  inline void setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxObject *value)
     {
       RexxStem     *stem_table;            /* retrieved stem table              */
                                            /* new tail for compound             */
@@ -123,8 +123,8 @@ class RexxVariableDictionary : public RexxInternalObject {
   void         release(RexxActivity *);
   bool         transfer(RexxActivity *);
 
-  RexxCompoundElement *getCompoundVariable(RexxString *stemName, RexxObject **tail, LONG tailCount);
-  RexxObject  *getCompoundVariableValue(RexxString *stemName, RexxObject **tail, LONG        tailCount);
+  RexxCompoundElement *getCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
+  RexxObject  *getCompoundVariableValue(RexxString *stemName, RexxObject **tail, size_t tailCount);
 
   RexxObject  *realStemValue(RexxString *stemName);
 

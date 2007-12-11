@@ -78,6 +78,8 @@ runtime_dir = $(kernel_dir)/runtime
 streamlibrary_dir = $(kernel_dir)/streamLibrary
 messages_dir = $(kernel_dir)/messages
 lib_dir = $(top_srcdir)/lib
+api_dir = $(top_srcdir)/api
+platform_api_dir = $(api_dir)/platform/unix
 
 rexutils_dir = $(top_srcdir)/rexutils
 rexutils_unix_dir = $(rexutils_dir)/unix
@@ -224,8 +226,7 @@ runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/RexxVariableDictionary.hpp
 streamlibraryHeaders = $(streamlibrary_dir)/StreamCommandParser.h \
                        $(streamlibrary_dir)/StreamNative.h
-libHeaders = $(lib_dir)/RexxLibrary.h \
-             $(lib_dir)/RexxPlatformDefinitions.h \
+libHeaders = $(lib_dir)/RexxPlatformDefinitions.h \
              $(lib_dir)/RexxPlatformInterface.h
 rexxapiHeaders = $(rexxapi_dir)/APIUtil.h \
                  $(rexxapi_dir)/ASCIISymbols.h \
@@ -300,7 +301,11 @@ pkgdata_SCRIPTS = $(platform_unix_dir)/rexx.sh $(platform_unix_dir)/rexx.csh
 #
 # headers to install
 #
-include_HEADERS = $(rexxapi_unix_dir)/rexx.h
+include_HEADERS = $(api_dir)/rexx.h \
+                  $(api_dir)/rexxapidefs.h \
+                  $(platform_api_dir)/rexxapitypes.h \
+                  $(platform_api_dir)/rexxplatformapis.h \
+                  $(platform_api_dir)/rexxplatformdefs.h
 
 #
 # man pages to install
@@ -325,6 +330,8 @@ librexxapi_la_SOURCES = $(rexxapi_unix_dir)/SubcommandAPI.cpp \
 #
 librexxapi_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                           -I$(lib_dir) \
+                          -I$(api_dir) \
+                          -I$(platform_api_dir) \
                           -I$(kernel_dir) \
                           -I$(expression_dir) \
                           -I$(instructions_dir) \
@@ -442,7 +449,6 @@ platform_sources = $(kernel_platform_unix_dir)/ErrorMessages.cpp \
                    $(kernel_platform_unix_dir)/VariablePool.cpp
 #                   $(runtime_dir)/RexxVariableDictionary2.cpp
 runtime_sources  = $(runtime_dir)/DeadObject.cpp \
-                   $(runtime_dir)/FloatUtilities.cpp \
                    $(runtime_dir)/GlobalData.cpp \
                    $(runtime_dir)/GlobalNames.cpp \
                    $(runtime_dir)/Initialization.cpp \
@@ -500,6 +506,8 @@ core_platform_classes = $(kernel_platform_unix_dir)/PlatformObjects.orx \
 #
 librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(lib_dir) \
+                       -I$(api_dir) \
+                       -I$(platform_api_dir) \
                        -I$(kernel_dir) \
                        -I$(expression_dir) \
                        -I$(instructions_dir) \
@@ -522,6 +530,8 @@ rexx_SOURCES = $(platform_unix_dir)/rexx.cpp
 #
 rexx_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                  -I$(lib_dir) \
+                 -I$(api_dir) \
+                 -I$(platform_api_dir) \
                  -I$(messages_dir) \
                  -I$(kernel_platform_unix_dir) \
                  -I$(rexxapi_unix_dir)
@@ -540,6 +550,8 @@ rexxc_SOURCES = $(platform_unix_dir)/RexxCompiler.cpp
 #
 rexxc_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                   -I$(lib_dir) \
+                  -I$(api_dir) \
+                  -I$(platform_api_dir) \
                   -I$(messages_dir) \
                   -I$(kernel_platform_unix_dir) \
                   -I$(rexxapi_unix_dir)
@@ -561,6 +573,8 @@ rxqueue_SOURCES =  $(rexxapi_unix_dir)/QueueCommand.cpp
 #
 rxqueue_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                     -I$(lib_dir) \
+                    -I$(api_dir) \
+                    -I$(platform_api_dir) \
                     -I$(kernel_platform_unix_dir) \
                     -I$(messages_dir) \
                     -I$(rexxapi_unix_dir)
@@ -579,6 +593,8 @@ rxsubcom_SOURCES =  $(rexxapi_unix_dir)/SUBCOMCommand.cpp
 #
 rxsubcom_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                     -I$(lib_dir) \
+                    -I$(api_dir) \
+                    -I$(platform_api_dir) \
                     -I$(kernel_platform_unix_dir) \
                     -I$(messages_dir) \
                     -I$(rexxapi_unix_dir)
@@ -595,10 +611,9 @@ rxdelipc_SOURCES =  $(rexxapi_unix_dir)/APIManagerShutdown.cpp
 #
 # Preprocessor flags for rxdelipc
 #
-rxdelipc_CXXFLAGS  = $(COMMON_CPPFLAGS)
-#                    -I$(top_srcdir)/lib \
-#                    -I$(kernel_platform_unix_dir) \
-#                    -I$(top_srcdir)/kernel/messages
+rxdelipc_CXXFLAGS  = $(COMMON_CPPFLAGS) \
+                     -I$(api_dir) \
+                     -I$(platform_api_dir)  
 #
 # Extra libraries for rxdelipc
 #
@@ -610,6 +625,8 @@ rxdelipc_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #
 librexxutil_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
                           -I$(lib_dir) \
+                          -I$(api_dir) \
+                          -I$(platform_api_dir) \
                           -I$(kernel_dir) \
                           -I$(messages_dir) \
                           -I$(kernel_platform_common_dir) \
@@ -630,6 +647,8 @@ librexxutil_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 #
 librxmath_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
                         -I$(top_srcdir)/lib \
+                        -I$(api_dir) \
+                        -I$(platform_api_dir) \
                         -I$(kernel_dir) \
                         -I$(messages_dir) \
                         -I$(kernel_platform_common_dir) \
@@ -649,13 +668,15 @@ librxmath_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 #################### librxsock.so ################
 # Preprocessor flags for librxsock.so
 #
-librxsock_la_CFLAGS = $(COMMON_CPPFLAGS) \
+librxsock_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
+                      -I$(api_dir) \
+                      -I$(platform_api_dir) \
                       -I$(rexxapi_unix_dir)
 #
 # Sources for librxsock.so
 #
-librxsock_la_SOURCES = $(rexutils_dir)/rxsock.c \
-                       $(rexutils_dir)/rxsockfn.c
+librxsock_la_SOURCES = $(rexutils_dir)/rxsock.cpp \
+                       $(rexutils_dir)/rxsockfn.cpp
 #
 # Extra libraries for librxsock.so (maybe)
 #
@@ -667,6 +688,8 @@ librxsock_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 #
 librxregexp_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
                           -I$(top_srcdir)/lib \
+                          -I$(api_dir) \
+                          -I$(platform_api_dir) \
                           -I$(kernel_dir) \
                           -I$(expression_dir) \
                           -I$(classes_dir) \
@@ -739,6 +762,7 @@ EXTRA_DIST = $(messages_dir)/RexxMessageNumbers.xsl \
              $(runtimeHeaders) \
              $(streamlibraryHeaders) \
              $(libHeaders) \
+	     $(include_HEADERS) \
              $(rexxapiHeaders) \
              $(rexxapiunixHeaders) \
              $(rxregexpHeaders) \

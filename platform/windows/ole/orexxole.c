@@ -1090,7 +1090,7 @@ RexxObject *SafeArray2RexxArray(VARIANT *pVariant)
   LONG        lDIdx;               // dimension index
   PVOID       pTarget;
   RexxObject *RxItem;
-  RexxObject *ResultObj = RexxNil;
+  RexxObject *ResultObj = ooRexxNil;
   RexxObject *ArrayObjectClass = NULL;
   RexxObject *argArray = NULL;     // argument array for "new" of multidimensional array
   HRESULT     hResult;
@@ -1120,7 +1120,7 @@ RexxObject *SafeArray2RexxArray(VARIANT *pVariant)
   lpLowBound=(PLONG) ORexxOleAlloc(sizeof(LONG)*lDimensions);
 
   /* build argument array for construction of multidimensional array */
-  argArray=RexxArray(lDimensions);
+  argArray=ooRexxArray(lDimensions);
 
   lNumOfElements=1;  // total number of elements
   for (lDIdx=1;lDIdx<=lDimensions;lDIdx++) {
@@ -1130,24 +1130,24 @@ RexxObject *SafeArray2RexxArray(VARIANT *pVariant)
     sprintf(szBuffer2,"%d",lDIdx);
     lNumOfElements*=(lpUpperBound[lDIdx-1]-lpLowBound[lDIdx-1]+1);
     // put number of elements for this dimension into argument array
-    RexxSend2(argArray,"PUT",RexxString(szBuffer1),RexxString(szBuffer2));
+    ooRexxSend2(argArray,"PUT",ooRexxString(szBuffer1),ooRexxString(szBuffer2));
     // initial value of indices vector = [LowBound[1],...,LowBound[n]]
     lpIndices[lDIdx-1]=lpLowBound[lDIdx-1];
   }
 
-  ArrayObjectClass = RexxSend0(RexxEnvironment,"ARRAY");
+  ArrayObjectClass = ooRexxSend0(ooRexxEnvironment,"ARRAY");
   // create an array with lDimensions dimensions
-  ResultObj=RexxSend(ArrayObjectClass,"NEW",argArray);
+  ResultObj=ooRexxSend(ArrayObjectClass,"NEW",argArray);
 
   /* process all elements */
   for (lIdx=0;lIdx<lNumOfElements;lIdx++) {
     /* now build message array to put element at its place in rexx array */
     /* the indices for each dimension get place at 2,...,n+1, because    */
     /* 1 is reserved for the object itself (see PUT of array method)     */
-    argArray=RexxArray(lDimensions+1);
+    argArray=ooRexxArray(lDimensions+1);
     for (i=0;i<lDimensions;i++) {
       sprintf(szBuffer1,"%d",1-lpLowBound[i]+lpIndices[i]);  // rexx array always start at one
-      array_put(argArray, RexxString(szBuffer1), i+2);       // index of array index (starts at 2, see above)
+      array_put(argArray, ooRexxString(szBuffer1), i+2);       // index of array index (starts at 2, see above)
     }
 
     /* get the element at current indices, transform it into a rexx object and */
@@ -1175,7 +1175,7 @@ RexxObject *SafeArray2RexxArray(VARIANT *pVariant)
     VariantClear(&sVariant);
 
     array_put(argArray,RxItem, 1);         // put object at index 1, indices follow thereafter
-    RexxSend(ResultObj,"PUT", argArray);   // put object into rexx array
+    ooRexxSend(ResultObj,"PUT", argArray);   // put object into rexx array
 
     /* increment indices vector (to access safearray elements) */
     fCarryBit=TRUE;
@@ -1278,14 +1278,14 @@ RexxObject *Variant2Rexx(VARIANT *pVariant)
                 if (pszAnsiStr[j] == pBuffer[0]) pszAnsiStr[j]='.';
             }
 
-            ResultObj = RexxString(pszAnsiStr);
+            ResultObj = ooRexxString(pszAnsiStr);
             ORexxOleFree(pszAnsiStr);
           }
         }
         else
         {
           sprintf(szBuffer, "%s", pszDbgVarType(V_VT(pVariant)));
-          send_exception1(Error_Variant2Rexx,RexxArray1(RexxString(szBuffer)));
+          send_exception1(Error_Variant2Rexx,ooRexxArray1(ooRexxString(szBuffer)));
         } /* endif */
         // if (fByRef) V_VT(pVariant)^=VT_BYREF; // VariantChangeType does not like VT_BYREF
         VariantClear(&sTempVariant);
@@ -1294,9 +1294,9 @@ RexxObject *Variant2Rexx(VARIANT *pVariant)
       case VT_BOOL:
         /* some special handling for VT_BOOL */
         if (V_BOOL(pVariant) == 0)
-          ResultObj = RexxFalse;
+          ResultObj = ooRexxFalse;
         else
-          ResultObj = RexxTrue;
+          ResultObj = ooRexxTrue;
         break;
 
       case VT_UNKNOWN:
@@ -1313,15 +1313,15 @@ RexxObject *Variant2Rexx(VARIANT *pVariant)
           if ((hResult == S_OK) && pDispatch)
           {
             sprintf(szBuffer, "IDISPATCH=%p", pDispatch);
-            OLEObjectClass = RexxSend0(RexxEnvironment, "OLEOBJECT");
-            ResultObj = RexxSend1(OLEObjectClass, "NEW", RexxString(szBuffer));
+            OLEObjectClass = ooRexxSend0(ooRexxEnvironment, "OLEOBJECT");
+            ResultObj = ooRexxSend1(OLEObjectClass, "NEW", ooRexxString(szBuffer));
             pDispatch->Release();
           } /* endif */
         } /* endif */
 
         if (ResultObj == NULL)
         {
-          ResultObj = RexxNil;
+          ResultObj = ooRexxNil;
         } /* endif */
         break;
 
@@ -1332,19 +1332,19 @@ RexxObject *Variant2Rexx(VARIANT *pVariant)
         if (pOleObject)
         {
           sprintf(szBuffer, "IDISPATCH=%p", pOleObject);
-          OLEObjectClass = RexxSend0(RexxEnvironment, "OLEOBJECT");
-          ResultObj = RexxSend1(OLEObjectClass, "NEW", RexxString(szBuffer));
+          OLEObjectClass = ooRexxSend0(ooRexxEnvironment, "OLEOBJECT");
+          ResultObj = ooRexxSend1(OLEObjectClass, "NEW", ooRexxString(szBuffer));
         }
         else
         {
-          ResultObj = RexxNil;
+          ResultObj = ooRexxNil;
         } /* endif */
         break;
 
       case VT_EMPTY:
       case VT_NULL:
       case VT_VOID:
-        ResultObj = RexxNil;
+        ResultObj = ooRexxNil;
         break;
 
       case VT_ERROR:
@@ -1362,13 +1362,13 @@ RexxObject *Variant2Rexx(VARIANT *pVariant)
       case VT_USERDEFINED:
       default:
           sprintf(szBuffer, "%s", pszDbgVarType(V_VT(pVariant)));
-          send_exception1(Error_Variant2Rexx,RexxArray1(RexxString(szBuffer)));
+          send_exception1(Error_Variant2Rexx,ooRexxArray1(ooRexxString(szBuffer)));
         break;
     } /* end switch */
   } /* endif */
 
   if (ResultObj == NULL)
-    ResultObj = (RexxObject*) RexxString(szBuffer);
+    ResultObj = (RexxObject*) ooRexxString(szBuffer);
 
   return ResultObj;
 }
@@ -1407,7 +1407,7 @@ VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT
   /* arguments are filled in from the end of the array */
   VariantInit(pVariant);
 
-  if ((RxObject == NULL) || (RxObject == RexxNil))
+  if ((RxObject == NULL) || (RxObject == ooRexxNil))
   {
     /* omitted argument */
     V_VT(pVariant) = VT_ERROR;
@@ -1418,7 +1418,7 @@ VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT
     /* is this an OLEObject providing an !IDISPATCH property? */
     if (fIsOLEObject(RxObject))
     {
-      RxString = (RexxString *)RexxSend1(RxObject, "!GETVAR", RexxString("!IDISPATCH"));
+      RxString = (RexxString *)ooRexxSend1(RxObject, "!GETVAR", ooRexxString("!IDISPATCH"));
       pszRxString = string_data(RxString);
       if (*pszRxString != '!')
       {
@@ -1454,13 +1454,13 @@ VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT
     {
       if (!fDone)
       {
-        if (RxObject == RexxFalse || RxObject == RexxTrue) {
+        if (RxObject == ooRexxFalse || RxObject == ooRexxTrue) {
           if (fByRef) {
             V_VT(pVariant) = VT_BOOL|VT_BYREF;
-            *V_BOOLREF(pVariant) = (RxObject==RexxTrue) ? VARIANT_TRUE : VARIANT_FALSE;
+            *V_BOOLREF(pVariant) = (RxObject==ooRexxTrue) ? VARIANT_TRUE : VARIANT_FALSE;
           } else {
             V_VT(pVariant) = VT_BOOL;
-            V_BOOL(pVariant) = (RxObject==RexxTrue) ? VARIANT_TRUE : VARIANT_FALSE;
+            V_BOOL(pVariant) = (RxObject==ooRexxTrue) ? VARIANT_TRUE : VARIANT_FALSE;
           }
           fDone = TRUE;
         }
@@ -1498,15 +1498,15 @@ VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT
       if ( DestVt == VT_BOOL ) {
         VARIANT_BOOL targetValue;
 
-        if (RxObject == RexxTrue)
+        if (RxObject == ooRexxTrue)
           targetValue = VARIANT_TRUE;
-        else  if (RxObject == RexxFalse)
+        else  if (RxObject == ooRexxFalse)
           targetValue = VARIANT_FALSE;
         else {
           LPOLESTR  lpUniBuffer = NULL;
           int       d=0;
 
-          RxString = (RexxString *) RexxSend0(RxObject, "STRING");
+          RxString = (RexxString *) ooRexxSend0(RxObject, "STRING");
           sscanf(string_data(RxString),"%d",&d);
           if (d == 0)
             targetValue = VARIANT_FALSE;
@@ -1529,9 +1529,9 @@ VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT
     {
       LPOLESTR  lpUniBuffer = NULL;
 
-      RxString = (RexxString *) RexxSend0(RxObject, "STRING");
+      RxString = (RexxString *) ooRexxSend0(RxObject, "STRING");
       if (RxString == OREF_NULL) {
-        send_exception1(Error_Rexx2Variant,RexxArray1(RexxString("given object")));
+        send_exception1(Error_Rexx2Variant,ooRexxArray1(ooRexxString("given object")));
       }
 
       int uniBufferLength;
@@ -1584,7 +1584,7 @@ VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT
       {
         V_VT(pVariant) = VT_ERROR;
         V_ERROR(pVariant) = DISP_E_PARAMNOTFOUND;
-        send_exception1(Error_Rexx2Variant,RexxArray1((RexxString *) RexxSend0(RxObject, "STRING")));
+        send_exception1(Error_Rexx2Variant,ooRexxArray1((RexxString *) ooRexxSend0(RxObject, "STRING")));
       } /* endif */
     } /* endif */
   } /* endif */
@@ -1594,8 +1594,8 @@ VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT
 BOOL fIsRexxArray(RexxObject *TestObject)
 {
   if ( TestObject &&
-       (RexxSend1(TestObject, "HASMETHOD", RexxString("DIMENSION")) == RexxTrue) &&
-       (RexxSend1(TestObject, "HASMETHOD", RexxString("HASINDEX")) == RexxTrue))
+       (ooRexxSend1(TestObject, "HASMETHOD", ooRexxString("DIMENSION")) == ooRexxTrue) &&
+       (ooRexxSend1(TestObject, "HASMETHOD", ooRexxString("HASINDEX")) == ooRexxTrue))
     return TRUE;
   else
     return FALSE;
@@ -1605,7 +1605,7 @@ BOOL fIsRexxArray(RexxObject *TestObject)
 BOOL fIsOLEObject(RexxObject *TestObject)
 {
   if (TestObject &&
-      RexxSend1(TestObject, "HASMETHOD", RexxString("!OLEOBJECT")) == RexxTrue)
+      ooRexxSend1(TestObject, "HASMETHOD", ooRexxString("!OLEOBJECT")) == ooRexxTrue)
     return TRUE;
   else
     return FALSE;
@@ -1614,7 +1614,7 @@ BOOL fIsOLEObject(RexxObject *TestObject)
 BOOL fIsOleVariant(RexxObject *TestObject)
 {
   if ( TestObject &&
-       RexxSend1(TestObject, "HASMETHOD", RexxString("!OLEVARIANT_")) == RexxTrue)
+       ooRexxSend1(TestObject, "HASMETHOD", ooRexxString("!OLEVARIANT_")) == ooRexxTrue)
     return TRUE;
   else
     return FALSE;
@@ -1667,8 +1667,8 @@ BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, INT iArgPo
   HRESULT         hResult;
   BOOL            fCarryBit;
 
-  RexxStr=RexxSend0(RxArray,"DIMENSION");
-  pString=string_data((RexxString*) RexxSend0(RexxStr,"STRING"));
+  RexxStr=ooRexxSend0(RxArray,"DIMENSION");
+  pString=string_data((RexxString*) ooRexxSend0(RexxStr,"STRING"));
 
   // if dimension cannot be read => error!
   if (sscanf(pString,"%ld",&lDimensions) != 1)
@@ -1691,8 +1691,8 @@ BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, INT iArgPo
   for (i=0;i<lDimensions;i++) {
     sprintf(szBuffer,"%d",i+1);
     // get approx. number of elements in this dimension
-    RexxStr=RexxSend1(RxArray,"DIMENSION",RexxString(szBuffer));
-    pString=string_data((RexxString*) RexxSend0(RexxStr,"STRING"));
+    RexxStr=ooRexxSend1(RxArray,"DIMENSION",ooRexxString(szBuffer));
+    pString=string_data((RexxString*) ooRexxSend0(RexxStr,"STRING"));
     sscanf(pString,"%ld",&lCount);
     // calculate the number of overall elements
     lSize*=lCount;
@@ -1712,18 +1712,18 @@ BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, INT iArgPo
 
     /* get each element and transform it into a VARIANT */
     for (i=0;i<lSize;i++) {
-      argArray=RexxArray(lDimensions);
+      argArray=ooRexxArray(lDimensions);
       for (j=0;j<lDimensions;j++) {
         sprintf(szBuffer,"%d",lpIndices[j]+1);          // rexx indices start at 1!
-        array_put(argArray,RexxString(szBuffer),j+1);   // put j-th index in msg array
+        array_put(argArray,ooRexxString(szBuffer),j+1);   // put j-th index in msg array
       }
       /* get item from RexxArray */
-      RexxItem=RexxSend(RxArray,"AT",argArray);
+      RexxItem=ooRexxSend(RxArray,"AT",argArray);
 
       /* convert it into a VARIANT */
       VariantInit(&sVariant);
 
-      if (RexxItem == RexxNil)                          // special handling of .nil (avoid VT_ERROR)
+      if (RexxItem == ooRexxNil)                          // special handling of .nil (avoid VT_ERROR)
         V_VT(&sVariant)=VT_EMPTY;
       else
         Rexx2Variant(RexxItem,&sVariant,VT_EMPTY,0);
@@ -2238,13 +2238,13 @@ RexxMethod4(REXXOBJECT,                // Return type
   if (iInstanceCount == 0) OleInitialize(NULL);
   iInstanceCount++;
 
-  argString = (RexxString *) RexxSend1(objectClass, "REQUEST", RexxString("STRING"));
+  argString = (RexxString *) ooRexxSend1(objectClass, "REQUEST", ooRexxString("STRING"));
   if ( !_isstring(argString) )
-    send_exception1(Error_Incorrect_method_string, RexxArray1(RexxString("1")));
+    send_exception1(Error_Incorrect_method_string, ooRexxArray1(ooRexxString("1")));
   if (events) {
-    eventString = (RexxString *) RexxSend1(events, "REQUEST", RexxString("STRING"));
+    eventString = (RexxString *) ooRexxSend1(events, "REQUEST", ooRexxString("STRING"));
     if ( !_isstring(eventString) )
-      send_exception1(Error_Incorrect_method_string, RexxArray1(RexxString("2")));
+      send_exception1(Error_Incorrect_method_string, ooRexxArray1(ooRexxString("2")));
   }
 
   /* get pointer to string data and convert to Unicode */
@@ -2282,7 +2282,7 @@ RexxMethod4(REXXOBJECT,                // Return type
     if (SUCCEEDED(hResult)) CoTaskMemFree(lpOleStrBuffer); // memory was not freed
     if (pszAnsiStr)
     {
-      REXX_SETVAR("!CLSID", RexxString(pszAnsiStr));
+      REXX_SETVAR("!CLSID", ooRexxString(pszAnsiStr));
       pClsInfo = psFindClassInfo(pszAnsiStr, NULL);
       if ( pClsInfo )
       {
@@ -2300,7 +2300,7 @@ RexxMethod4(REXXOBJECT,                // Return type
     if (SUCCEEDED(hResult)) CoTaskMemFree(lpOleStrBuffer); // memory was not freed
     if (pszAnsiStr)
     {
-      REXX_SETVAR("!PROGID", RexxString(pszAnsiStr));
+      REXX_SETVAR("!PROGID", ooRexxString(pszAnsiStr));
       if (pClsInfo) {
         if (!pClsInfo->pszProgId)
           pClsInfo->pszProgId = pszAnsiStr;
@@ -2316,10 +2316,10 @@ RexxMethod4(REXXOBJECT,                // Return type
     if (FAILED(hResult)) {
       char errmsg[256];
       sprintf(errmsg, "an external security manager denies creation of %s",pszArg);
-      send_exception1(Error_System_service_service, RexxArray1(RexxString(errmsg)));
+      send_exception1(Error_System_service_service, ooRexxArray1(ooRexxString(errmsg)));
     }
 
-    if (getObjectFlag == RexxTrue)
+    if (getObjectFlag == ooRexxTrue)
     {
       hResult = GetActiveObject(clsID, NULL, &pUnknown);
     }
@@ -2379,12 +2379,12 @@ RexxMethod4(REXXOBJECT,                // Return type
     }
     else
     {
-      send_exception1(Error_Execution_noclass, RexxArray1(RexxString(pszArg)));
+      send_exception1(Error_Execution_noclass, ooRexxArray1(ooRexxString(pszArg)));
     } /* endif */
   } /* endif */
 
   sprintf(szBuffer, "%p", pDispatch);
-  REXX_SETVAR("!IDISPATCH", RexxString(szBuffer));
+  REXX_SETVAR("!IDISPATCH", ooRexxString(szBuffer));
 
   if ( (hResult != S_OK) || (pDispatch == NULL) )
     send_exception(Error_No_OLE_instance);
@@ -2405,14 +2405,14 @@ RexxMethod4(REXXOBJECT,                // Return type
       /* store type info with object */
       if (SUCCEEDED(hResult)) { // when successful
         sprintf(szBuffer, "%p", pTypeInfo);
-        REXX_SETVAR("!ITYPEINFO", RexxString(szBuffer));
+        REXX_SETVAR("!ITYPEINFO", ooRexxString(szBuffer));
       }
 
       if (!pClsInfo && (hResult == S_OK) && pTypeInfo)
       {
         /* store type info with object */
 //M        sprintf(szBuffer, "%p", pTypeInfo);
-//M        REXX_SETVAR("!ITYPEINFO", RexxString(szBuffer));
+//M        REXX_SETVAR("!ITYPEINFO", ooRexxString(szBuffer));
 
         /* search/allocate class info block for this typeinfo */
         pClsInfo = psFindClassInfo(NULL, pTypeInfo);
@@ -2424,7 +2424,7 @@ RexxMethod4(REXXOBJECT,                // Return type
     } /* endif */
   } /* endif */
 
-  REXX_SETVAR("!OUTARRAY", RexxNil);    // set array of out parameters to nonexistent
+  REXX_SETVAR("!OUTARRAY", ooRexxNil);    // set array of out parameters to nonexistent
 
   if (pClsInfo && !(pClsInfo->pTypeInfo)) {
     /* store typeinfo pointer in object data }*/
@@ -2453,7 +2453,7 @@ RexxMethod4(REXXOBJECT,                // Return type
   if (FAILED(hResult)) {
     char errmsg[256];
     sprintf(errmsg, "an external security manager denies usage of %s",pszArg);
-    send_exception1(Error_System_service_service, RexxArray1(RexxString(errmsg)));
+    send_exception1(Error_System_service_service, ooRexxArray1(ooRexxString(errmsg)));
   }
 #endif
   // if pTypeInfo is not set (happens when an instance of the class was already created),
@@ -2493,11 +2493,11 @@ RexxMethod4(REXXOBJECT,                // Return type
               hResult = pConnectionPoint->Advise((IUnknown*) pEventHandler, &dwCookie);
               if (hResult == S_OK) {
                 sprintf(szBuffer, "%p", pEventHandler);
-                REXX_SETVAR("!EVENTHANDLER", RexxString(szBuffer));
+                REXX_SETVAR("!EVENTHANDLER", ooRexxString(szBuffer));
                 sprintf(szBuffer, "%ld", dwCookie);
-                REXX_SETVAR("!EVENTHANDLERCOOKIE", RexxString(szBuffer));
+                REXX_SETVAR("!EVENTHANDLERCOOKIE", ooRexxString(szBuffer));
                 sprintf(szBuffer, "%p", pConnectionPoint);
-                REXX_SETVAR("!CONNECTIONPOINT", RexxString(szBuffer));
+                REXX_SETVAR("!CONNECTIONPOINT", ooRexxString(szBuffer));
               } else {
                 pConnectionPoint->Release();
                 pEventHandler->Release();
@@ -2505,7 +2505,7 @@ RexxMethod4(REXXOBJECT,                // Return type
             } else {
               // just "fake" a connection
               sprintf(szBuffer, "%p", pEventHandler);
-              REXX_SETVAR("!EVENTHANDLER", RexxString(szBuffer));
+              REXX_SETVAR("!EVENTHANDLER", ooRexxString(szBuffer));
               pConnectionPoint->Release();
             }
           } /* end if event list */
@@ -2516,7 +2516,7 @@ RexxMethod4(REXXOBJECT,                // Return type
     } /* end if event string == "WITHEVENTS" */
   } /* end if event string != null */
 
-  return RexxNil;
+  return ooRexxNil;
 }
 
 //******************************************************************************
@@ -2636,7 +2636,7 @@ RexxMethod1(REXXOBJECT,                // Return type
       OleUninitialize();
     }
   }
-  return RexxNil;
+  return ooRexxNil;
 }
 
 
@@ -2959,15 +2959,15 @@ RexxMethod3(REXXOBJECT,                // Return type
   POLEFUNCINFO    pFuncInfo = NULL;
   BOOL            fFound = FALSE;
   VARTYPE         DestVt;
-  RexxObject     *ResultObj = RexxNil;
+  RexxObject     *ResultObj = ooRexxNil;
 
   if ( !fInitialized )
     OLEInit();
 
-  if (msgName == NULL || msgName == RexxNil)
-    send_exception1(Error_Incorrect_method_noarg,RexxArray1(RexxString("1")));
+  if (msgName == NULL || msgName == ooRexxNil)
+    send_exception1(Error_Incorrect_method_noarg,ooRexxArray1(ooRexxString("1")));
 
-  REXX_SETVAR("!OUTARRAY",RexxNil);
+  REXX_SETVAR("!OUTARRAY",ooRexxNil);
 
   if (msgArgs != NULL && fIsRexxArray(msgArgs))
     iArgCount = array_size(msgArgs);
@@ -3078,7 +3078,7 @@ RexxMethod3(REXXOBJECT,                // Return type
   ORexxOleFree(pszFunction);
 
   if (!fFound)
-    send_exception1(Error_No_method_name, RexxArray2(self, msgName));
+    send_exception1(Error_No_method_name, ooRexxArray2(self, msgName));
 
   /* now assemble the parameters for the function call */
 //  pVarArgs = (VARIANTARG *) ORexxOleAlloc(sizeof(VARIANTARG) * iArgCount);
@@ -3195,22 +3195,22 @@ RexxMethod3(REXXOBJECT,                // Return type
       int         index=1;
       char        indexBuffer[32];
 
-      if (outArray == RexxNil) {
-        outArray = RexxArray(1);
+      if (outArray == ooRexxNil) {
+        outArray = ooRexxArray(1);
         REXX_SETVAR("!OUTARRAY",outArray);
       }
       else {
-        rxIndex = RexxSend0(outArray, "LAST");
-        pszRxString = string_data((RexxString*) RexxSend0(rxIndex,"STRING"));
+        rxIndex = ooRexxSend0(outArray, "LAST");
+        pszRxString = string_data((RexxString*) ooRexxSend0(rxIndex,"STRING"));
         sscanf(pszRxString, "%d", &index);
         index++; // next entry
       }
       outObject = Variant2Rexx(&(dp.rgvarg[dp.cArgs-i-1]));
       sprintf(indexBuffer,"%d",index);
-      RexxSend2(outArray,"PUT",outObject,RexxString(indexBuffer));
+      ooRexxSend2(outArray,"PUT",outObject,ooRexxString(indexBuffer));
 
       if ( fIsOleVariant(arrItem) )
-        RexxSend1(arrItem, "!VARVALUE_=", outObject);
+        ooRexxSend1(arrItem, "!VARVALUE_=", outObject);
 
       // if the call changed an out parameter, we have to clear the original variant that
       // was overwritten
@@ -3226,8 +3226,8 @@ RexxMethod3(REXXOBJECT,                // Return type
     handleVariantClear(&(dp.rgvarg[dp.cArgs-i-1]), arrItem);
     if ( fIsOleVariant(arrItem) )
     {
-       RexxSend1(arrItem, "!CLEARVARIANT_=", RexxTrue);
-       RexxSend1(arrItem, "!VARIANTPOINTER_=", RexxInteger(0));
+       ooRexxSend1(arrItem, "!CLEARVARIANT_=", ooRexxTrue);
+       ooRexxSend1(arrItem, "!VARIANTPOINTER_=", ooRexxInteger(0));
     }
   } /* endfor */
 
@@ -3251,7 +3251,7 @@ RexxMethod3(REXXOBJECT,                // Return type
         break;
       case DISP_E_EXCEPTION:
         formatDispatchException(&sExc, szBuffer);
-        send_exception1(Error_OLE_Exception, RexxArray1(RexxString(szBuffer)));
+        send_exception1(Error_OLE_Exception, ooRexxArray1(ooRexxString(szBuffer)));
         break;
       case DISP_E_MEMBERNOTFOUND:
         send_exception(Error_Unknown_OLE_Method);
@@ -3261,7 +3261,7 @@ RexxMethod3(REXXOBJECT,                // Return type
         break;
       case DISP_E_TYPEMISMATCH:
         sprintf(szBuffer, "%d", uArgErr + 1);
-        send_exception1(Error_Coercion_Failed_Type_Mismatch,RexxArray1(RexxString(szBuffer)));
+        send_exception1(Error_Coercion_Failed_Type_Mismatch,ooRexxArray1(ooRexxString(szBuffer)));
         break;
       case DISP_E_PARAMNOTOPTIONAL:
         send_exception(Error_Parameter_Omitted);
@@ -3276,11 +3276,11 @@ RexxMethod3(REXXOBJECT,                // Return type
         // uArgErr contains the index of the wrong parameter
       default:
         sprintf(szBuffer, "%8.8X", hResult);
-        send_exception1(Error_Unknown_OLE_Error,RexxArray1(RexxString(szBuffer)));
+        send_exception1(Error_Unknown_OLE_Error,ooRexxArray1(ooRexxString(szBuffer)));
         break;
     } /* endswitch */
 
-    ResultObj = (RexxObject*) RexxString(szBuffer);
+    ResultObj = (RexxObject*) ooRexxString(szBuffer);
   } /* endif */
 
   /* remove reference count for result object */
@@ -3332,11 +3332,11 @@ BOOL checkForOverride( VARIANT *pVariant, RexxObject *RxObject, VARTYPE DestVt,
   }
   else
   {
-    RexxObject *tmpRxObj = RexxSend0(RxObject, "!_VT_");
+    RexxObject *tmpRxObj = ooRexxSend0(RxObject, "!_VT_");
     char        szBuffer[32];
 
-    *pRxObject = RexxSend0(RxObject, "!VARVALUE_");
-    if ( tmpRxObj == RexxNil )
+    *pRxObject = ooRexxSend0(RxObject, "!VARVALUE_");
+    if ( tmpRxObj == ooRexxNil )
     {
       /* Do not override default conversion. */
       *pDestVt = DestVt;
@@ -3358,7 +3358,7 @@ BOOL checkForOverride( VARIANT *pVariant, RexxObject *RxObject, VARTYPE DestVt,
           break;
 
         case VT_DISPATCH :
-          if ( *pRxObject == RexxNil || *pRxObject == NULL )
+          if ( *pRxObject == ooRexxNil || *pRxObject == NULL )
           {
             IDispatch **ppDisp = NULL;
 
@@ -3380,8 +3380,8 @@ BOOL checkForOverride( VARIANT *pVariant, RexxObject *RxObject, VARTYPE DestVt,
             }
             /* ooRexx, not VariantClear, must clear this variant. */
             sprintf(szBuffer, "%p", ppDisp);
-            RexxSend1(RxObject, "!CLEARVARIANT_=", RexxFalse);
-            RexxSend1(RxObject, "!VARIANTPOINTER_=", RexxString(szBuffer));
+            ooRexxSend1(RxObject, "!CLEARVARIANT_=", ooRexxFalse);
+            ooRexxSend1(RxObject, "!VARIANTPOINTER_=", ooRexxString(szBuffer));
             converted = TRUE;
             break;
           }
@@ -3389,7 +3389,7 @@ BOOL checkForOverride( VARIANT *pVariant, RexxObject *RxObject, VARTYPE DestVt,
           break;
 
         case VT_UNKNOWN :
-          if ( *pRxObject == RexxNil || *pRxObject == NULL )
+          if ( *pRxObject == ooRexxNil || *pRxObject == NULL )
           {
             IUnknown **ppU = NULL;
 
@@ -3410,8 +3410,8 @@ BOOL checkForOverride( VARIANT *pVariant, RexxObject *RxObject, VARTYPE DestVt,
             }
             /* ooRexx, not VariantClear, must clear this variant. */
             sprintf(szBuffer, "%p", ppU);
-            RexxSend1(RxObject, "!CLEARVARIANT_=", RexxFalse);
-            RexxSend1(RxObject, "!VARIANTPOINTER_=", RexxString(szBuffer));
+            ooRexxSend1(RxObject, "!CLEARVARIANT_=", ooRexxFalse);
+            ooRexxSend1(RxObject, "!VARIANTPOINTER_=", ooRexxString(szBuffer));
             converted = TRUE;
             break;
           }
@@ -3454,8 +3454,8 @@ BOOL isOutParam( RexxObject *param, POLEFUNCINFO pFuncInfo, INT i )
 
   if ( fIsOleVariant(param) )
   {
-    RexxObject *tmpRxObj = RexxSend0(param, "!_PFLAGS_");
-    if ( tmpRxObj != RexxNil )
+    RexxObject *tmpRxObj = ooRexxSend0(param, "!_PFLAGS_");
+    if ( tmpRxObj != ooRexxNil )
     {
       paramFlags = (USHORT)_integer(tmpRxObj);
       overridden = TRUE;
@@ -3493,7 +3493,7 @@ VOID handleVariantClear( VARIANT *pVariant, RexxObject *RxObject )
      * OLEVariant object.  Memory allocated in checkForOverride(), that needs to
      * be freed, is freed here.
      */
-    const char *pszRxString = string_data((RexxString*)RexxSend0(RxObject, "!VARIANTPOINTER_"));
+    const char *pszRxString = string_data((RexxString*)ooRexxSend0(RxObject, "!VARIANTPOINTER_"));
 
     switch ( V_VT(pVariant) & VT_TYPEMASK )
     {
@@ -3547,7 +3547,7 @@ __inline BOOL okayToClear( RexxObject *RxObject )
 {
   if ( fIsOleVariant(RxObject) )
   {
-    return (RexxSend0(RxObject, "!CLEARVARIANT_") == RexxTrue);
+    return (ooRexxSend0(RxObject, "!CLEARVARIANT_") == ooRexxTrue);
   }
   return TRUE;
 }
@@ -3612,7 +3612,7 @@ RexxMethod2(REXXOBJECT,                // Return type
   HRESULT         hResult;
   const char     *pszRxString;
   RexxString     *RxString;
-  RexxObject     *ResultObj = RexxNil;
+  RexxObject     *ResultObj = ooRexxNil;
   RexxObject     *RxItem;
   IDispatch      *pDispatch = NULL;
   IDispatchEx    *pDispatchEx = NULL;
@@ -3701,7 +3701,7 @@ RexxMethod2(REXXOBJECT,                // Return type
           iItemCount = 1;
 
           hResult = pEnum->Reset();     // set enumerator to first item
-          ResultObj = RexxArray(0);     // create REXX array
+          ResultObj = ooRexxArray(0);     // create REXX array
 
           VariantInit(&sResult);
 
@@ -3709,7 +3709,7 @@ RexxMethod2(REXXOBJECT,                // Return type
             RxItem = Variant2Rexx(&sResult);
             sprintf(pszBuff,"%d",iItemCount++);
             //array_put(ResultObj, RxItem, iItemCount);
-            RexxSend2(ResultObj,"PUT",RxItem,RexxString(pszBuff));
+            ooRexxSend2(ResultObj,"PUT",RxItem,ooRexxString(pszBuff));
             VariantClear(&sResult);
             //iItemCount++;
           }
@@ -3725,7 +3725,7 @@ RexxMethod2(REXXOBJECT,                // Return type
           switch (sExc.scode) {
           case 0x800704b8:        // IADsContainer does not contain items
           case 0x800704c6:        // Network not present
-            ResultObj = RexxArray(0);
+            ResultObj = ooRexxArray(0);
             fFound = 1;
             break;
           // more error codes are expected...
@@ -3769,7 +3769,7 @@ RexxMethod2(REXXOBJECT,                // Return type
           else
           {
             // VARIANT change to integer failed (should not happen, really)
-            send_exception1(Error_Execution_noarray,RexxArray1((RexxString*) RexxSend0(self,"STRING")));
+            send_exception1(Error_Execution_noarray,ooRexxArray1((RexxString*) ooRexxSend0(self,"STRING")));
           } /* endif */
 
           VariantClear(&sResult);
@@ -3780,7 +3780,7 @@ RexxMethod2(REXXOBJECT,                // Return type
           if (fFound)
           {
             /* Count & Item are understood -> return an array in any case */
-            ResultObj = RexxArray(iItemCount);
+            ResultObj = ooRexxArray(iItemCount);
             /* fill the array with the items */
             for (iIdx = 0; iIdx < iItemCount; iIdx++)
             {
@@ -3880,7 +3880,7 @@ RexxMethod2(REXXOBJECT,                // Return type
   ITypeInfo       *pTypeInfo = NULL;
   POLECLASSINFO   pClsInfo = NULL;
   POLECONSTINFO   pConstInfo = NULL;
-  RexxObject      *RxResult = RexxNil;
+  RexxObject      *RxResult = ooRexxNil;
   BOOL            fFound = FALSE;
 
   if ( !fInitialized )
@@ -3921,20 +3921,20 @@ RexxMethod2(REXXOBJECT,                // Return type
     char upperBuffer[256]="!";
     //int iCount = 0;
     pConstInfo = pClsInfo->pConstInfo;
-    RxResult = RexxSend0(RexxSend0(RexxEnvironment,"STEM"),"NEW");
+    RxResult = ooRexxSend0(ooRexxSend0(ooRexxEnvironment,"STEM"),"NEW");
 
-    while ( pConstInfo && RxResult != RexxNil ) {
+    while ( pConstInfo && RxResult != ooRexxNil ) {
       /* hide constants that start with _ (MS convention) */
       if (pConstInfo->pszConstName[0] != '_') {
         strcpy(upperBuffer+1,pConstInfo->pszConstName);
         strupr(upperBuffer);
-        RexxSend2(RxResult,"[]=",Variant2Rexx(&pConstInfo->sValue),RexxString(upperBuffer));
+        ooRexxSend2(RxResult,"[]=",Variant2Rexx(&pConstInfo->sValue),ooRexxString(upperBuffer));
       }
       pConstInfo = pConstInfo->pNext;
       //iCount++;
     }
     //sprintf(upperBuffer,"%d",iCount);
-    //RexxSend2(RxResult,"[]=",RexxString(upperBuffer),RexxString("0"));
+    //ooRexxSend2(RxResult,"[]=",ooRexxString(upperBuffer),ooRexxString("0"));
   }
 
   return RxResult;
@@ -3984,42 +3984,42 @@ void InsertTypeInfo(ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, RexxObject *RxRes
         // store member id
         sprintf(szBuffer,"%08x",pFuncDesc->memid);
         sprintf(szSmallBuffer,"%d.!MEMID",*pIndex);
-        RexxSend2(RxResult,"[]=",RexxString(szBuffer),RexxString(szSmallBuffer));
+        ooRexxSend2(RxResult,"[]=",ooRexxString(szBuffer),ooRexxString(szSmallBuffer));
 
         // store return type
         sprintf(szBuffer,"%s",pszDbgVarType(pFuncDesc->elemdescFunc.tdesc.vt));
         sprintf(szSmallBuffer,"%d.!RETTYPE",*pIndex);
-        RexxSend2(RxResult,"[]=",RexxString(szBuffer),RexxString(szSmallBuffer));
+        ooRexxSend2(RxResult,"[]=",ooRexxString(szBuffer),ooRexxString(szSmallBuffer));
 
         // store invoke kind
         sprintf(szBuffer,"%d",pFuncDesc->invkind);
         sprintf(szSmallBuffer,"%d.!INVKIND",*pIndex);
-        RexxSend2(RxResult,"[]=",RexxString(szBuffer),RexxString(szSmallBuffer));
+        ooRexxSend2(RxResult,"[]=",ooRexxString(szBuffer),ooRexxString(szSmallBuffer));
 
         if (bName)
         {
           // store name
           sprintf(szBuffer,"%S",bName);
           sprintf(szSmallBuffer,"%d.!NAME",*pIndex);
-          RexxSend2(RxResult,"[]=",RexxString(szBuffer),RexxString(szSmallBuffer));
+          ooRexxSend2(RxResult,"[]=",ooRexxString(szBuffer),ooRexxString(szSmallBuffer));
 
         }
         else { // could not retrieve name of method (should never happen, really)
           sprintf(szBuffer,"???");
           sprintf(szSmallBuffer,"%d.!NAME",*pIndex);
-          RexxSend2(RxResult,"[]=",RexxString(szBuffer),RexxString(szSmallBuffer));
+          ooRexxSend2(RxResult,"[]=",ooRexxString(szBuffer),ooRexxString(szSmallBuffer));
         }
 
         // store doc string
         if (bDocString) {
           sprintf(szBuffer,"%S",bDocString);
           sprintf(szSmallBuffer,"%d.!DOC",*pIndex);
-          RexxSend2(RxResult,"[]=",RexxString(szBuffer),RexxString(szSmallBuffer));
+          ooRexxSend2(RxResult,"[]=",ooRexxString(szBuffer),ooRexxString(szSmallBuffer));
         }
 
         sprintf(szSmallBuffer,"%d.!PARAMS.0",*pIndex);
         sprintf(szBuffer,"%d",pFuncDesc->cParams);
-        RexxSend2(RxResult,"[]=",RexxString(szBuffer),RexxString(szSmallBuffer));
+        ooRexxSend2(RxResult,"[]=",ooRexxString(szBuffer),ooRexxString(szSmallBuffer));
         for (i=0;i<pFuncDesc->cParams;i++) {
 
           szBuffer[0]=0x00;
@@ -4037,19 +4037,19 @@ void InsertTypeInfo(ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, RexxObject *RxRes
               strcat(szBuffer,"]");
           }
           sprintf(szSmallBuffer,"%d.!PARAMS.%d.!FLAGS",*pIndex,i+1);
-          RexxSend2(RxResult,"[]=",RexxString(szBuffer),RexxString(szSmallBuffer));
+          ooRexxSend2(RxResult,"[]=",ooRexxString(szBuffer),ooRexxString(szSmallBuffer));
 
           // display variant type
           sprintf(szBuffer,"%s",pszDbgVarType(pFuncDesc->lprgelemdescParam[i].tdesc.vt));
           sprintf(szSmallBuffer,"%d.!PARAMS.%d.!TYPE",*pIndex,i+1);
-          RexxSend2(RxResult,"[]=",RexxString(szBuffer),RexxString(szSmallBuffer));
+          ooRexxSend2(RxResult,"[]=",ooRexxString(szBuffer),ooRexxString(szSmallBuffer));
 
           // display name
           if (i+1 < (int) uFlags) sprintf(szBuffer,"%S",pbStrings[i+1]);
           else sprintf(szBuffer,"<unnamed>");
 
           sprintf(szSmallBuffer,"%d.!PARAMS.%d.!NAME",*pIndex,i+1);
-          RexxSend2(RxResult,"[]=",RexxString(szBuffer),RexxString(szSmallBuffer));
+          ooRexxSend2(RxResult,"[]=",ooRexxString(szBuffer),ooRexxString(szSmallBuffer));
         }
 
         SysFreeString(bName);
@@ -4095,7 +4095,7 @@ void InsertTypeInfo(ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, RexxObject *RxRes
         SysFreeString(bDocString);
 
         sprintf(szSmallBuffer,"%d",(*pIndex)++);
-        RexxSend2(RxResult,"[]=",RexxString(szBuffer),RexxString(szSmallBuffer));
+        ooRexxSend2(RxResult,"[]=",ooRexxString(szBuffer),ooRexxString(szSmallBuffer));
       }
     }
 
@@ -4128,7 +4128,7 @@ RexxMethod1(REXXOBJECT,                // Return type
             OSELF, self)               // Pointer to self
 {
   RexxString      *RxString;
-  RexxObject      *RxResult = RexxNil;
+  RexxObject      *RxResult = ooRexxNil;
   IDispatch       *pDispatch = NULL;
   ITypeInfo       *pTypeInfo = NULL;
   ITypeLib        *pTypeLib = NULL;
@@ -4157,7 +4157,7 @@ RexxMethod1(REXXOBJECT,                // Return type
       // did we get a ITypeInfo interface pointer?
       if (pTypeInfo) {
         // create a Stem that will contain all info
-        RxResult = RexxSend0(RexxSend0(RexxEnvironment,"STEM"),"NEW");
+        RxResult = ooRexxSend0(ooRexxSend0(ooRexxEnvironment,"STEM"),"NEW");
 
         // get type library
         hResult = pTypeInfo->GetContainingTypeLib(&pTypeLib,&iTypeIndex); // AddRef type lib pointer
@@ -4169,11 +4169,11 @@ RexxMethod1(REXXOBJECT,                // Return type
           hResult = pTypeLib->GetDocumentation(-1,&bName,&bDoc,NULL,NULL);
           if (bName) {
             sprintf(pszInfoBuffer,"%S",bName);
-            RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString("!LIBNAME"));
+            ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!LIBNAME"));
           }
           if (bDoc) {
             sprintf(pszInfoBuffer,"%S",bDoc);
-            RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString("!LIBDOC"));
+            ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!LIBDOC"));
           }
           SysFreeString(bName);
           SysFreeString(bDoc);
@@ -4182,11 +4182,11 @@ RexxMethod1(REXXOBJECT,                // Return type
           hResult = pTypeLib->GetDocumentation(iTypeIndex,&bName,&bDoc,NULL,NULL);
           if (bName) {
             sprintf(pszInfoBuffer,"%S",bName);
-            RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString("!COCLASSNAME"));
+            ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!COCLASSNAME"));
           }
           if (bDoc) {
             sprintf(pszInfoBuffer,"%S",bDoc);
-            RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString("!COCLASSDOC"));
+            ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!COCLASSDOC"));
           }
 
           hResult = pTypeLib->GetTypeInfo(iTypeIndex,&pTypeInfo2);   // AddRef type info pointer2
@@ -4203,7 +4203,7 @@ RexxMethod1(REXXOBJECT,                // Return type
           SysFreeString(bDoc);
 
           sprintf(pszInfoBuffer,"%d",iCount);
-          RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString("0"));
+          ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("0"));
 
         }
 
@@ -4248,7 +4248,7 @@ RexxMethod2(REXXOBJECT,                      // Return type
             OSELF, self,                     // Pointer to self
             CSTRING, className)              // string defining class name
 {
-  RexxObject *RxResult = RexxNil;
+  RexxObject *RxResult = ooRexxNil;
   LPOLESTR    lpUniBuffer = NULL;
   PSZ         pszAnsiStr = NULL;
   CHAR        pszInfoBuffer[2048];
@@ -4328,13 +4328,13 @@ RexxMethod2(REXXOBJECT,                      // Return type
         ITypeInfo   *pTypeInfo2 = NULL;
 
         // create a Stem that will contain all info
-        RxResult = RexxSend0(RexxSend0(RexxEnvironment,"STEM"),"NEW");
+        RxResult = ooRexxSend0(ooRexxSend0(ooRexxEnvironment,"STEM"),"NEW");
 
         hResult = pTypeLib->GetDocumentation(/*iTypeIndex*/-1,&bName,&bDoc,NULL,NULL);
         sprintf(pszInfoBuffer,"%S",bName);
-        RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString("!LIBNAME"));
+        ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!LIBNAME"));
         sprintf(pszInfoBuffer,"%S",bDoc);
-        RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString("!LIBDOC"));
+        ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!LIBDOC"));
 
         SysFreeString(bName);
         SysFreeString(bDoc);
@@ -4347,10 +4347,10 @@ RexxMethod2(REXXOBJECT,                      // Return type
           hResult = pTypeLib->GetDocumentation(iTypeIndex,&bName,&bDoc,NULL,NULL);
           sprintf(pszInfoBuffer,"%S",bName);
           sprintf(pszInfoBuffer+1024,"!LIBNAME.%d",iTypeIndex);
-          RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString(pszInfoBuffer+1024));
+          ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString(pszInfoBuffer+1024));
           sprintf(pszInfoBuffer,"%S",bDoc);
           sprintf(pszInfoBuffer+1024,"!LIBDOC.%d",iTypeIndex);
-          RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString(pszInfoBuffer+1024));
+          ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString(pszInfoBuffer+1024));
 
           SysFreeString(bName);
           SysFreeString(bDoc);
@@ -4368,7 +4368,7 @@ RexxMethod2(REXXOBJECT,                      // Return type
         }
 
         sprintf(pszInfoBuffer,"%d",iCount);
-        RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString("0"));
+        ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("0"));
 
       }
       if (pTypeLib) pTypeLib->Release();                           // Release type lib pointer
@@ -4398,7 +4398,7 @@ RexxMethod1(REXXOBJECT,                // Return type
             OSELF, self)               // Pointer to self
 {
   RexxString     *RxString;
-  RexxObject     *RxResult = RexxNil;
+  RexxObject     *RxResult = ooRexxNil;
   const char     *pszRxString;
 //  HRESULT         hResult;
   INT             iCount = 0;
@@ -4424,31 +4424,31 @@ RexxMethod1(REXXOBJECT,                // Return type
       pEventList = pEventHandler->getEventList();
       if (pEventList) {
         // create a Stem that will contain all info
-        RxResult = RexxSend0(RexxSend0(RexxEnvironment,"STEM"),"NEW");
+        RxResult = ooRexxSend0(ooRexxSend0(ooRexxEnvironment,"STEM"),"NEW");
 
         while (pEventList) {
           iCount++;
 
           sprintf(pszInfoBuffer,"%s",pEventList->pszFuncName);
           sprintf(pszSmall,"%d.!NAME",iCount);
-          RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString(pszSmall));
+          ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString(pszSmall));
 
           sprintf(pszInfoBuffer,"%s",pEventList->pszDocString);
           sprintf(pszSmall,"%d.!DOC",iCount);
-          RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString(pszSmall));
+          ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString(pszSmall));
 
           sprintf(pszInfoBuffer,"%d",pEventList->iParmCount);
           sprintf(pszSmall,"%d.!PARAMS.0",iCount);
-          RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString(pszSmall));
+          ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString(pszSmall));
 
           for (j=0;j<pEventList->iParmCount;j++) {
             sprintf(pszInfoBuffer,"%s",pEventList->pszName[j]);
             sprintf(pszSmall,"%d.!PARAMS.%d.!NAME",iCount,j+1);
-            RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString(pszSmall));
+            ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString(pszSmall));
 
             sprintf(pszInfoBuffer,"%s",pszDbgVarType(pEventList->pOptVt[j]));
             sprintf(pszSmall,"%d.!PARAMS.%d.!TYPE",iCount,j+1);
-            RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString(pszSmall));
+            ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString(pszSmall));
 
             wFlags=pEventList->pusOptFlags[j];
             pszInfoBuffer[0] = 0x00;
@@ -4465,14 +4465,14 @@ RexxMethod1(REXXOBJECT,                // Return type
             strcat(pszInfoBuffer,"]");
 
             sprintf(pszSmall,"%d.!PARAMS.%d.!FLAGS",iCount,j+1);
-            RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString(pszSmall));
+            ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString(pszSmall));
           }
 
           pEventList = pEventList->pNext;
         }
 
         sprintf(pszInfoBuffer,"%d",iCount);
-        RexxSend2(RxResult,"[]=",RexxString(pszInfoBuffer),RexxString("0"));
+        ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("0"));
       }
     }
   }
@@ -4501,7 +4501,7 @@ RexxMethod3(REXXOBJECT,                // Return type
             REXXOBJECT, monikerName,   // Class specifier for new object
             REXXOBJECT, optClass)      // an optional class that is to be used when created
 {
-  RexxObject  *ResultObj = RexxNil;
+  RexxObject  *ResultObj = ooRexxNil;
   RexxString  *argString;
   HRESULT      hResult;
   LPOLESTR     lpUniBuffer = NULL;
@@ -4513,14 +4513,14 @@ RexxMethod3(REXXOBJECT,                // Return type
   long         iLast = iInstanceCount;
 
   if (monikerName == NULL)
-    send_exception1(Error_Incorrect_method_noarg, RexxArray1(RexxString("1")));
+    send_exception1(Error_Incorrect_method_noarg, ooRexxArray1(ooRexxString("1")));
 
-  argString = (RexxString *) RexxSend1(monikerName, "REQUEST", RexxString("STRING"));
+  argString = (RexxString *) ooRexxSend1(monikerName, "REQUEST", ooRexxString("STRING"));
 
   if ( !_isstring(argString) )
-    send_exception1(Error_Incorrect_method_string, RexxArray1(RexxString("1")));
+    send_exception1(Error_Incorrect_method_string, ooRexxArray1(ooRexxString("1")));
 
-  OLEObjectClass = RexxSend0(RexxEnvironment, "OLEOBJECT");
+  OLEObjectClass = ooRexxSend0(ooRexxEnvironment, "OLEOBJECT");
 
   // if a class argument has been supplied, make sure that it is a class derived
   // from OLEObject. if not, return a nil object!
@@ -4530,9 +4530,9 @@ RexxMethod3(REXXOBJECT,                // Return type
     int i;
     BOOL fFound = false;
 
-    superClasses = (RexxArray*) RexxSend0(optClass, "SUPERCLASSES");
-    if (superClasses != RexxNil) {
-      arSize = (RexxString*) RexxSend0(RexxSend0(superClasses,"SIZE"),"STRING");
+    superClasses = (RexxArray*) ooRexxSend0(optClass, "SUPERCLASSES");
+    if (superClasses != ooRexxNil) {
+      arSize = (RexxString*) ooRexxSend0(ooRexxSend0(superClasses,"SIZE"),"STRING");
       sscanf(string_data(arSize),"%d",&i);
       while (i>=1)
         // one of the superclasses is OLEObjectClass?
@@ -4572,9 +4572,9 @@ RexxMethod3(REXXOBJECT,                // Return type
         {
           sprintf(szBuffer, "IDISPATCH=%p", pDispatch);
           if (OLEObjectClass == optClass)
-            ResultObj = RexxSend2(optClass, "NEW", RexxString(szBuffer), RexxString("WITHEVENTS"));
+            ResultObj = ooRexxSend2(optClass, "NEW", ooRexxString(szBuffer), ooRexxString("WITHEVENTS"));
           else
-            ResultObj = RexxSend1(OLEObjectClass, "NEW", RexxString(szBuffer));
+            ResultObj = ooRexxSend1(OLEObjectClass, "NEW", ooRexxString(szBuffer));
 
           // ~new has called AddRef for the object, so we must Release it here once
           rc = pDispatch->Release();

@@ -49,8 +49,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define  INCL_REXXSAA
-#define  INCL_DOSMEMMGR
 #include <rexx.h>
 
 /*********************************************************************/
@@ -70,7 +68,7 @@ extern "C" {
 /*   Array of names of the REXXASPI functions.                       */
 /*   This list is used for registration and deregistration.          */
 /*********************************************************************/
-static PSZ  AspiFncTable[] =
+static const char *AspiFncTable[] =
    {
       "Aspi_Exchange_Data",
       "AspiDeregFunc3",
@@ -89,23 +87,22 @@ static PSZ  AspiFncTable[] =
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY AspiLoadFuncs3(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY AspiLoadFuncs3(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT    entries;                      /* Num of entries             */
-  INT    j;                            /* Counter                    */
+  int    entries;                      /* Num of entries             */
+  int    j;                            /* Counter                    */
 
 
-  entries = sizeof(AspiFncTable)/sizeof(PSZ);
+  entries = sizeof(AspiFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
   {
-    RexxRegisterFunctionDll(AspiFncTable[j],
-          "rexxasp3", AspiFncTable[j]);
+    RexxRegisterFunctionDll(AspiFncTable[j], "rexxasp3", AspiFncTable[j]);
   }
   return VALID_ROUTINE;
 }
@@ -121,15 +118,15 @@ LONG APIENTRY AspiLoadFuncs3(
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY AspiDeregFunc3(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY AspiDeregFunc3(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT    entries;                      /* Num of entries             */
-  INT    j;                            /* Counter                    */
+  int    entries;                      /* Num of entries             */
+  int    j;                            /* Counter                    */
 
   retstr->strlength = 0;               /* set return value           */
 
@@ -137,7 +134,7 @@ LONG APIENTRY AspiDeregFunc3(
     return INVALID_ROUTINE;
 
 
-  entries = sizeof(AspiFncTable)/sizeof(PSZ);
+  entries = sizeof(AspiFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
   {
@@ -165,17 +162,15 @@ LONG APIENTRY AspiDeregFunc3(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-LONG APIENTRY Aspi_Read_All_Variables_From_REXX_VP(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY Aspi_Read_All_Variables_From_REXX_VP(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-   SHVBLOCK *prxshv, *prxshvtop;
-   RXSTRING rxstrName, rxstrValue;
+   SHVBLOCK *prxshv;
    APIRET rc;
-   char *pch;
    int i = 1;
 
    strcpy(retstr->strptr, "0");
@@ -241,8 +236,8 @@ LONG APIENTRY Aspi_Read_All_Variables_From_REXX_VP(
       }
       i++;
       printf("Name of the variable from the Variable Pool: %s, Value: %s \n", prxshv->shvname.strptr, prxshv->shvvalue.strptr);
-      free(prxshv->shvname.strptr);
-      free(prxshv->shvvalue.strptr);
+      RexxFreeMemory((void *)prxshv->shvname.strptr);
+      RexxFreeMemory((void *)prxshv->shvvalue.strptr);
    }
   return VALID_ROUTINE;
 }
@@ -267,15 +262,14 @@ LONG APIENTRY Aspi_Read_All_Variables_From_REXX_VP(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-LONG APIENTRY Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
    SHVBLOCK *prxshv, *temp, *interim, rxshv;
-   RXSTRING rxstrName, rxstrValue;
    APIRET rc;
    char array[20], value[10];
    char *pch, *result;
@@ -356,13 +350,13 @@ LONG APIENTRY Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
    {
       printf("Name of the Stem-variable from the Rexx Variable Pool: %s, Value: %s \n", temp->shvname.strptr, temp->shvvalue.strptr);
       interim = temp;
-      free(temp->shvname.strptr);
-      free(temp->shvvalue.strptr);
+      RexxFreeMemory((void *)temp->shvname.strptr);
+      RexxFreeMemory((void *)temp->shvvalue.strptr);
       temp = temp->shvnext;
       free(interim);
    }
 
-   free(prxshv->shvvalue.strptr);
+   RexxFreeMemory((void *)prxshv->shvvalue.strptr);
    free(pch);
 
    return VALID_ROUTINE;

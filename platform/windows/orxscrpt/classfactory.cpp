@@ -149,7 +149,7 @@ int StringFromGuidA(REFIID riid, LPSTR pszBuf)
 
 STDMETHODIMP OrxClassFactory::QueryInterface(REFIID riid, void** ppvObj) {
 
-  char    cIID[100],*IIDName,TrulyUnknown[]="??????";
+  char    cIID[100],TrulyUnknown[]="??????";
 
   StringFromGUID2(riid,(LPOLESTR)cIID,sizeof(cIID)/2);
 #if defined(DEBUGC)+defined(DEBUGZ)
@@ -178,6 +178,7 @@ STDMETHODIMP OrxClassFactory::QueryInterface(REFIID riid, void** ppvObj) {
 
   if (*ppvObj == NULL) {
 #if defined(DEBUGZ)
+    char *IIDName;
     if(!(IIDName = NameThatInterface((OLECHAR *)&cIID[0]))) IIDName = &TrulyUnknown[0];
     FPRINTF2(::DLLlogfile,"OrxClassFactory::QueryInterface Unsupported Interface (%s)\n",IIDName);
     if(IIDName != &TrulyUnknown[0]) free(IIDName);
@@ -407,7 +408,6 @@ STDMETHODIMP OrxClassFactory::UnregisterServer()
 {
   HKEY     hk;
   HKEY     hkSub;
-  HKEY     hkSub2;
   HRESULT  hr = S_OK;
 
 #if defined(DEBUGC)+defined(DEBUGZ)

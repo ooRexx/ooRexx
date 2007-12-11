@@ -59,117 +59,18 @@
 #define TOTAL_STACK_SIZE 1024*512
 #define C_STACK_SIZE TOTAL_STACK_SIZE
 
+// No definition needed on Linux systems.
+#define SysCall
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-// The limit values for the portable int types are only included in C++ if the
-// following is defined before including stdint.h.
-#define __STDC_LIMIT_MACROS
-
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-
-// this does not always end up getting defined on all platforms (e.g, the Mac).
-#ifndef INT64_MAX
-#define INT64_MAX        9223372036854775807LL
-#endif
-
-
-/******************************************************************************/
-/* REQUIRED:  The following type definitions are used throughout the REXX     */
-/* kernel code, so definitions are required for all of these.  If the system  */
-/* in questions (e.g., OS/2) provides definitions for these via other include */
-/* files, any of these items can be deleted from the system specific file and */
-/* and replaced by any replacement #includes at this point.                   */
-/******************************************************************************/
-#ifndef TRUE
-#define TRUE            1
-#endif
-
-#ifndef FALSE
-#define FALSE           0
-#endif
-
-#define HQUEUE          unsigned long
-#define ULONG           unsigned long
-#define PULONG          ULONG *
-#define PVOID           void *
-
-#ifdef LINUX
-#define PPVOID          void **
-#endif
-
-// #define SHORT           short
-#define LONG            long
-#define PLONG           LONG *
-// #define USHORT          unsigned short
-// #define PSHORT          SHORT *
-// #define PUSHORT         USHORT *
-
-// #define UCHAR           unsigned char
-// #define PUCHAR          UCHAR *
-// #define CHAR            char
-// #define PCHAR           CHAR *
-// #define INT             int
-// #define UINT            unsigned int
-// #define PINT            int *
-// #define PCH             PCHAR
-// #define PSZ             PCHAR
-#define APIENTRY
-#define APIRET          ULONG
-// #define CONST           const
-#define LPCTSTR         LPCSTR
-#define BYTE            unsigned char
-#define BOOL            unsigned long
-#define UBYTE           unsigned char
-#ifndef TID
-#ifndef LINUX
-#define TID             tid_t
-#else
-#define TID             pthread_t
-#endif
-#endif
-#ifndef PID
-#define PID             pid_t
-#endif
-#define VOID            void
-#define near
-#define far
-#define _loadds
-#define PFN             void *
-
-#if defined(LINUX) && defined(PPC)
-#define VAPVOID         void *
-#define VACHAR          int
-#define VAINT           int
-#define VASHORT         int
-#define VAULONG         long long
-#define VAUSHORT        int
-#define VALONG          long long
-#define VAOREF          void *
-
-#else
-#define VAPVOID         PVOID
-#define VACHAR          CHAR
-#define VAINT           INT
-#define VASHORT         SHORT
-#define VAULONG         ULONG
-#define VAUSHORT        USHORT
-#define VALONG          LONG
-#define VAOREF          OREF
-
-#endif
 
 #ifdef LINUX
 #define FNONBLOCK       O_NONBLOCK
 #endif
 
-
-#define SysCall
-#define SysCallV
-//#define PATH_MAX        POSIX_PATH_MAX
 
 #define RXTRACE_SUPPORT
 
@@ -179,13 +80,6 @@
 /******************************************************************************/
 
 #define STACKCHECK
-
-/******************************************************************************/
-/* OPTIONAL:  Need support for non-ansi string routines strdup, strupr,       */
-/* strlwr, stricmp, and memicmp.                                              */
-/******************************************************************************/
-
-//#define NEED_NON_ANSI
 
 /******************************************************************************/
 /* OPTIONAL:  No time slicing support for REXX activation yields is available.*/
@@ -224,11 +118,10 @@
 #include "ThreadSupport.hpp"
 #include "SystemSemaphores.h"
 
-#define KMTX INT               /* kernel semaphore ID               */
+#define KMTX int               /* kernel semaphore ID               */
 #define SMTX RexxMutex *       /* semaphore data types              */
 #define HMTX SMTX
 #define SEV  RexxSemaphore *
-#define HEV  SEV
                              // semaphore definitions and init
 //#ifdef AIX
 extern SMTX initialize_sem;
@@ -239,7 +132,7 @@ extern int SecureFlag;
 #define SysSharedSemaphoreDefn SMTX  rexx_resource_semaphore = 0;   \
                                SMTX  rexx_wait_queue_semaphore = 0; \
                                SEV   rexxTimeSliceSemaphore = 0;    \
-                               ULONG rexxTimeSliceTimerOwner;
+                               size_t rexxTimeSliceTimerOwner;
 /******************************************************************************/
 /* REQUIRED:  Define the REXX type for exceptions.  These can be system       */
 /* specific exception registration info or any place holder type if this      */
@@ -254,21 +147,6 @@ typedef int SYSEXCEPTIONBLOCK;
 /******************************************************************************/
 
 typedef void *(* PTHREADFN)(void *);    /* define a thread function          */
-
-/******************************************************************************/
-/* REQUIRED:  Define any special requirements for external entry calls back   */
-/* into the interpreter.  The default is no special requirements.             */
-/******************************************************************************/
-
-#define REXXENTRY APIENTRY
-
-/******************************************************************************/
-/* REQUIRED:  This was needed for Windows. Any entry points containing        */
-/* variable length arguments need to use __cdecl calling convention.          */
-/******************************************************************************/
-
-#define VLAREXXENTRY APIENTRY          /* external entry points       */
-#define VLAENTRY                       /* internal entry points       */
 
 /******************************************************************************/
 /* REQUIRED:  Definitions for REXX semaphore functions.  These default to     */
@@ -339,7 +217,7 @@ typedef void *(* PTHREADFN)(void *);    /* define a thread function          */
 /*   OS/2 uses the DosStartTimer, continious Asynch Timer.                    */
 /******************************************************************************/
 
-BOOL SysTimeSliceElapsed( void );
+bool SysTimeSliceElapsed();
 
 /******************************************************************************/
 /* REQUIRED:  Routine to start a new TimeSlice period.                        */
@@ -391,11 +269,6 @@ void SysStartTimeSlice( void );
 /******************************************************************************/
 
 #define INIT_SEM_NAME "INIT_SEM"
-
-//******************************************************************************
-// REQUIRED:  Define name of rexxsaa.h toolkit header file for your platform
-//******************************************************************************
-#define SYSREXXSAA "rexx.h"
 
 /******************************************************************************/
 /* Priority values used for adjusting thead priorities                        */
@@ -473,13 +346,6 @@ void SysStartTimeSlice( void );
 #define OPT_CHAR  '-'                  /* Option char for UNIX               */
 
 /******************************************************************************/
-/* REQUIRED:  Define the REXX type for a native method function               */
-/******************************************************************************/
-
-                                       /* pointer to native method function */
-typedef char *(far *REXXENTRY PNMF)(void **);
-
-/******************************************************************************/
 /* OPTIONAL:  Overrides for any functions defined in sysdef.h.  These         */
 /* can map the calls directly to inline code or comment them out all together.*/
 /* The following lines are examples from the OS/2 code.                       */
@@ -498,27 +364,16 @@ typedef char *(far *REXXENTRY PNMF)(void **);
 #define SysINTName() new_string("LINUX",5)
                                        // Thread yielding functions in
                                        // threading package
-//#define SysThreadYield()   sched_yield()
 #endif
-//#define SysQueryThreadID() LinThreadQueryID()
-//#define SysGetThreadStackBase(int) NULL
-
-//#define SysTerminateThread(t) { pthread_detach((t)); }
 
 #ifdef AIX
 #define SysIsThreadEqual(pth1, pth2) (pthread_equal(pth1, pth2))
 #endif
 
 #define SysThreadArg(a) a->args
-//#define SysCreateThread(PTHREADFN, int, PVOID) LinThreadCreate(PTHREADFN, int, PVOID)
 #define SysInitialAddressName() OREF_INITIALADDRESS
 
 #define SysGetTempFileName()  tmpnam(NULL)
-/******************************************************************************/
-/* REQUIRED:  Define the macro for pointer subtraction                        */
-/******************************************************************************/
-
-#define PTRSUB(f,s) ((char *)(f)-(char *)(s))
 
 /******************************************************************************/
 /* OPTIONAL:  Finally, any other global defined constants for system specific */
@@ -526,29 +381,24 @@ typedef char *(far *REXXENTRY PNMF)(void **);
 /******************************************************************************/
 
 #define DEFRXSTRING 256                /* Default RXSTRING return size      */
-extern ULONG ProcessMustCompleteNest;  /* The must complete nest            */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-char * APIENTRY RexxGetVersionInformation(void);
-//void SysResetEventSem (SEV *psem);     /* reset an event semaphore          */
-//void SysCreateMutexSem (SMTX *psem);   /* create/open a mutex semaphore     */
+char * APIENTRY RexxGetVersionInformation();
 #ifdef SEMAPHORE_DEBUG
 void SysRequestMutexSem (SMTX psem);   /* request a mutex semaphore         */
                                        /* request a mutex (immediate return)*/
-LONG SysRequestImmediateMutexSem (SMTX psem);
+int SysRequestImmediateMutexSem (SMTX psem);
 #define REXXTIMESLICE 100              /* 100 milliseconds (1/10 second)    */
 #endif
                                        /* moved from olcrtmis.h             */
 #define stricmp(s1, s2) strcasecmp(s1, s2)
-#define memicmp(s1, s2, l) strncasecmp(s1, s2, l)
                                        /* both functions can only be used   */
                                        /* without a return value & radix=10 */
 #define _ultoa(val, str, radix)  sprintf(str, "%u", val)
 
-//#include "olcrtmis.h"
-
+#include "APIDefinitions.h"
 
 #ifdef __cplusplus
 }

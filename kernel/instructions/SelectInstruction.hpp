@@ -46,6 +46,7 @@
 
 #include "RexxInstruction.hpp"
 
+class RexxInstructionOtherWise;
 
 class RexxInstructionSelect : public RexxBlockInstruction
 {

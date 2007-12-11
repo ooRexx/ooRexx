@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  StringClass.hpp  */
+/* REXX Kernel                                               StringClass.hpp  */
 /*                                                                            */
 /* Primitive String Class Definition                                          */
 /*                                                                            */
@@ -104,9 +104,12 @@ class RexxStringClass : public RexxClass {
    }
    HashCode getObjectHashCode();
 
-   long        longValue(size_t);
+   bool         numberValue(wholenumber_t &result, size_t precision);
+   bool         numberValue(wholenumber_t &result);
+   bool         unsignedNumberValue(stringsize_t &result, size_t precision);
+   bool         unsignedNumberValue(stringsize_t &result);
+   bool         doubleValue(double &result);
    RexxNumberString *numberString();
-   double      doubleValue();
    RexxInteger *integerValue(size_t);
    RexxString  *makeString();
    RexxString  *primitiveMakeString();
@@ -117,8 +120,8 @@ class RexxStringClass : public RexxClass {
    bool        isEqual(RexxObject *);
    bool        primitiveIsEqual(RexxObject *);
    bool        primitiveCaselessIsEqual(RexxObject *);
-   long        strictComp(RexxObject *);
-   long        comp(RexxObject *);
+   int         strictComp(RexxObject *);
+   int         comp(RexxObject *);
    wholenumber_t compareTo(RexxObject *);
    RexxInteger *equal(RexxObject *);
    RexxInteger *strictEqual(RexxObject *);
@@ -140,7 +143,7 @@ class RexxStringClass : public RexxClass {
    RexxString *concatToCstring(const char *);
    RexxString *concatWithCstring(const char *);
    RexxString *concatBlank(RexxObject *);
-   BOOL        checkLower();
+   bool        checkLower();
    RexxString *upper();
    RexxString *upper(size_t, size_t);
    RexxString *upperRexx(RexxInteger *, RexxInteger *);
@@ -242,7 +245,7 @@ class RexxStringClass : public RexxClass {
    RexxString  *x2b();
    RexxString  *x2c();
    RexxString  *x2d(RexxInteger *);
-   RexxString  *x2dC2d(RexxInteger *, BOOL);
+   RexxString  *x2dC2d(RexxInteger *, bool);
 
    RexxInteger *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
    RexxInteger *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
@@ -325,7 +328,7 @@ class RexxStringClass : public RexxClass {
        if (compareLength > other->length) {
            compareLength = other->length;
        }
-       int result = memicmp(stringData, other->stringData, compareLength);
+       int result = CaselessCompare(stringData, other->stringData, compareLength);
        if (result == 0) {
            if (length > other->length) {
                result = 1;
@@ -384,7 +387,7 @@ class RexxStringClass : public RexxClass {
                compareLength = stringLength;
            }
 
-           result = memicmp(stringData + startCol, other->stringData + startCol, compareLength);
+           result = CaselessCompare(stringData + startCol, other->stringData + startCol, compareLength);
            if (result == 0 && stringLength < colLength) {
                if (length > other->length) {
                    result = 1;

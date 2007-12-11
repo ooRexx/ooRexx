@@ -199,33 +199,12 @@
 # include "config.h"
 #endif
 
-/* Include files */
-
-#define  INCL_WPCLASS
-#define  INCL_WINWORKPLACE
-#define  INCL_WINSHELLDATA
-#define  INCL_WINSWITCHLIST
-#define  INCL_WINPROGRAMLIST
-#define  INCL_WINPOINTERS
-#define  INCL_SHLERRORS
-#define  INCL_DOS
-#define  INCL_DOSFILEMGR
-#define  INCL_DOSMEMMGR
-#define  INCL_DOSFILEMGR
-#define  INCL_DOSNMPIPES
-#define  INCL_DOSNLS
-#define  INCL_ERRORS
-#define  INCL_REXXSAA
-#define  INCL_RXMACRO
-#define  INCL_KBD
-#define  INCL_VIO
-
 #include "PlatformDefinitions.h"
 #if defined( HAVE_LOCALE_H )
 # include <locale.h>
 #endif
 
-#include SYSREXXSAA
+#include "rexx.h"
 #include "RexxAPIManager.h"
 #include "APIUtilities.h"
 
@@ -300,7 +279,6 @@
 #include <termios.h>                   /* needed for SysGetKey       */
 #include "ThreadSupport.hpp"           /* for the SysGetKey semaphore*/
 #include <fnmatch.h>                   /* fnmatch()                  */
-#include "RexxLibrary.h"
 
 #if !defined( HAVE_UNION_SEMUN )
 union semun {
@@ -311,12 +289,10 @@ union semun {
 #endif
 
 extern REXXAPIDATA  *apidata;          /* Global state data          */
-extern INT opencnt[][2];               /* open count array for sems  */
-//extern BOOL WAITANDRESET;              /* for creating sems  */
+extern int opencnt[][2];               /* open count array for sems  */
 extern char *resolve_tilde(const char *);
-extern BOOL rexxutil_call;             /* internal call flag         */
+extern bool rexxutil_call;             /* internal call flag         */
 extern RexxMutex rexxutil_call_sem;
-/*extern INT rxstrnicmp(PSZ, PSZ, INT);  */
 
 #define INVALID_ROUTINE 40
 #define  MAX_DIGITS     9
@@ -406,14 +382,11 @@ extern RexxMutex rexxutil_call_sem;
 }
 
 
-#if defined(AIX) || defined(LINUX)
 #define RETVAL(retc) { \
   sprintf(retstr->strptr, "%d", retc); \
   retstr->strlength = strlen(retstr->strptr); \
   return VALID_ROUTINE; \
 }
-#endif
-
 
 /*********************************************************************/
 /* Defines uses by SysTree                                           */
@@ -452,15 +425,15 @@ extern void SysInitialize(void);
 /*********************************************************************/
 
 typedef struct RxTreeData {
-    ULONG count;                       /* Number of lines processed  */
+    size_t count;                      /* Number of lines processed  */
     SHVBLOCK shvb;                     /* Request block for RxVar    */
-    ULONG stemlen;                     /* Length of stem             */
-    ULONG vlen;                        /* Length of variable value   */
-    CHAR TargetSpec[MAX+1];            /* Target filespec            */
-    CHAR truefile[MAX+1];              /* expanded file name         */
-    CHAR Temp[MAX+80];                 /* buffer for returned values */
-    CHAR varname[MAX];                 /* Buffer for variable name   */
-    ULONG nattrib;                     /* New attrib, diff for each  */
+    size_t stemlen;                    /* Length of stem             */
+    size_t vlen;                       /* Length of variable value   */
+    char TargetSpec[MAX+1];            /* Target filespec            */
+    char truefile[MAX+1];              /* expanded file name         */
+    char Temp[MAX+80];                 /* buffer for returned values */
+    char varname[MAX];                 /* Buffer for variable name   */
+    size_t nattrib;                    /* New attrib, diff for each  */
 } RXTREEDATA;
 
 
@@ -469,11 +442,11 @@ typedef struct RxTreeData {
 /*********************************************************************/
 
 typedef struct _GetFileData {
-  PCHAR        buffer;                 /* file read buffer           */
-  ULONG        size;                   /* file size                  */
-  ULONG        data;                   /* data left in buffer        */
-  ULONG        residual;               /* size left to read          */
-  PCHAR        scan;                   /* current scan position      */
+  char *       buffer;                 /* file read buffer           */
+  size_t       size;                   /* file size                  */
+  size_t       data;                   /* data left in buffer        */
+  size_t       residual;               /* size left to read          */
+  const char  *scan;                   /* current scan position      */
   FILE         *handle;                /* file handle                */
 } GetFileData;
 
@@ -485,16 +458,16 @@ typedef struct _GetFileData {
 
 typedef struct RxStemData {
     SHVBLOCK shvb;                     /* Request block for RxVar    */
-    CHAR ibuf[IBUF_LEN];               /* Input buffer               */
-    CHAR varname[MAX];                 /* Buffer for the variable    */
+    char ibuf[IBUF_LEN];               /* Input buffer               */
+    char varname[MAX];                 /* Buffer for the variable    */
                                        /* name                       */
-    CHAR stemname[MAX];                /* Buffer for the variable    */
+    char stemname[MAX];                /* Buffer for the variable    */
                                        /* name                       */
-    ULONG stemlen;                     /* Length of stem.            */
-    ULONG vlen;                        /* Length of variable value   */
-    ULONG j;                           /* Temp counter               */
-    ULONG tlong;                       /* Temp counter               */
-    ULONG count;                       /* Number of elements         */
+    size_t stemlen;                    /* Length of stem.            */
+    size_t vlen;                       /* Length of variable value   */
+    size_t j;                          /* Temp counter               */
+    size_t tlong;                      /* Temp counter               */
+    size_t count;                      /* Number of elements         */
                                        /* processed                  */
 } RXSTEMDATA;
 
@@ -502,19 +475,13 @@ typedef struct RxStemData {
 /* SORTMEM used by SysStemSort                                       */
 /*********************************************************************/
 typedef struct _SORT_MEM {
-  ULONG                 ulSize;
-  ULONG                 ulRemaining;
-  ULONG                 ulItems;
-  PCHAR                 pNextBlock;
+  size_t                ulSize;
+  size_t                ulRemaining;
+  size_t                ulItems;
+  char *                pNextBlock;
   struct _SORT_MEM      *pNext;
-  CHAR                  pData;
+  char                  pData;
 } SORTMEM, *PSORTMEM;
-
-/*********************************************************************/
-/* Sorting column delimiters for SysStemSort                         */
-/*********************************************************************/
-static   ULONG ulStartCol = 0;
-static   ULONG ulCompLength = 0;
 
 /*********************************************************************/
 /* RxFncTable                                                        */
@@ -522,15 +489,8 @@ static   ULONG ulCompLength = 0;
 /*   This list is used for registration and deregistration.          */
 /*********************************************************************/
 
-static PSZ  RxFncTable[] =
+static const char *  RxFncTable[] =
    {
-//      "SysBootDrive",
-//      "SysElapsedTime",
-//      "SysQueryEAList",
-//      "SysWildCard",
-//      "SysFileSystemType",
-//      "SysAddFileHandle",
-//      "SysSetFileHandle",
       "SysCreateMutexSem",
       "SysOpenMutexSem",
       "SysCloseMutexSem",
@@ -543,12 +503,6 @@ static PSZ  RxFncTable[] =
       "SysPostEventSem",
       "SysWaitEventSem",
       "SysSetPriority",
-//      "SysProcessType",
-//      "SysGetCollate",
-//      "SysNationalLanguageCompare",
-//      "SysMapCase",
-//      "SysSetProcessCodePage",
-//      "SysQueryProcessCodePage",
       "SysAddRexxMacro",
       "SysDropRexxMacro",
       "SysReorderRexxMacro",
@@ -556,10 +510,6 @@ static PSZ  RxFncTable[] =
       "SysClearRexxMacroSpace",
       "SysLoadRexxMacroSpace",
       "SysSaveRexxMacroSpace",
-//      "SysShutDownSystem",
-//      "SysSwitchSession",
-//      "SysLoadLibrary",
-//      "SysDropLibrary",
 #if defined(AIX)
       "SysAddFuncPkg",
       "SysAddCmdPkg",
@@ -571,19 +521,13 @@ static PSZ  RxFncTable[] =
       "SysWait",
       "SysCreatePipe",
       "SysCls",
-//      "SysCurPos",
-//      "SysCurState",
-//      "SysDriveInfo",
-//      "SysDriveMap",
       "SysDropFuncs",
       "SysFileDelete",
       "SysFileSearch",
       "SysFileTree",
-//      "SysGetEA",
       "SysGetKey",
       "SysGetMessage",
       "SysGetMessageX",
-//      "SysIni",
       "SysLoadFuncs",
       "SysMkDir",
 #ifdef LINUX
@@ -607,25 +551,6 @@ static PSZ  RxFncTable[] =
       "SysIsFile",
       "SysIsFileDirectory",
       "SysIsFileLink",
-//      "SysTextScreenRead",
-//      "SysTextScreenSize",
-//      "SysGetEA",
-//      "SysPutEA",
-//      "SysWaitNamedPipe",
-//      "SysSetIcon",
-//      "SysRegisterObjectClass",
-//      "SysDeregisterObjectClass",
-//      "SysCreateObject",
-//      "SysQueryClassList",
-//      "SysDestroyObject",
-//      "SysSetObjectData",
-//      "SysSaveObject",
-//      "SysOpenObject",
-//      "SysMoveObject",
-//      "SysCopyObject",
-//      "SysCreateShadow",
-//      "SysWaitForShell",
-//      "SysQuerySwitchList"
    };
 
 #ifdef __cplusplus
@@ -633,48 +558,48 @@ extern "C" {
 #endif
 
 #if defined(AIX) || defined(LINUX)
-LONG APIENTRY SysLoadFuncs(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr );                  /* Return RXSTRING            */
+APIRET APIENTRY SysLoadFuncs(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr );                  /* Return RXSTRING            */
 
 /********************************************************************
 * Function:  string2ulong(string, number)                           *
 *                                                                   *
 * Purpose:   Validates and converts an ASCII-Z string from string   *
-*            form to an unsigned long.  Returns FALSE if the number *
-*            is not valid, TRUE if the number was successfully      *
+*            form to an unsigned long.  Returns false if the number *
+*            is not valid, true if the number was successfully      *
 *            converted.                                             *
 *                                                                   *
-* RC:        TRUE - Good number converted                           *
-*            FALSE - Invalid number supplied.                       *
+* RC:        true - Good number converted                           *
+*            false - Invalid number supplied.                       *
 *********************************************************************/
-BOOL string2ulong(
-  PSZ    string,                       /* string to convert          */
-  PULONG number)                       /* converted number           */
+bool string2size_t(
+  const char *string,                  /* string to convert          */
+  size_t *number)                      /* converted number           */
 {
-  ULONG    accumulator;                /* converted number           */
-  INT      length;                     /* length of number           */
+  size_t   accumulator;                /* converted number           */
+  size_t   length;                     /* length of number           */
 
   length = strlen(string);             /* get length of string       */
   if (length == 0 ||                   /* if null string             */
       length > MAX_DIGITS + 1)         /* or too long                */
-    return FALSE;                      /* not valid                  */
+    return false;                      /* not valid                  */
 
   accumulator = 0;                     /* start with zero            */
 
   while (length) {                     /* while more digits          */
     if (!isdigit(*string))             /* not a digit?               */
-      return FALSE;                    /* tell caller                */
+      return false;                    /* tell caller                */
                                        /* add to accumulator         */
     accumulator = accumulator * 10 + (*string - '0');
     length--;                          /* reduce length              */
     string++;                          /* step pointer               */
   }
   *number = accumulator;               /* return the value           */
-  return TRUE;                         /* good number                */
+  return true;                         /* good number                */
 }
 
 #endif
@@ -693,11 +618,11 @@ BOOL string2ulong(
 * RC:        0       buffer was read                                *
 *            1     - error occurred reading buffer                  *
 *********************************************************************/
-INT ReadNextBuffer(
+int ReadNextBuffer(
    GetFileData  *filedata )            /* global file information    */
 {
-  ULONG     size;                      /* size to read               */
-  PCHAR     endptr;                    /* end of file pointer        */
+  size_t    size;                      /* size to read               */
+  char     *endptr;                    /* end of file pointer        */
                                        /* get size of this read      */
   if(filedata->residual >= MAX_READ)
     size = MAX_READ;                   /* read as much as possible   */
@@ -712,11 +637,11 @@ INT ReadNextBuffer(
   else                                 /* residual is remainder      */
     filedata->residual = filedata->residual - size;
                                        /* look for a EOF mark        */
-  endptr = (PCHAR)memchr(filedata->buffer, CH_EOF, filedata->data);
+  endptr = (char *)memchr(filedata->buffer, CH_EOF, filedata->data);
 
   if (endptr) {                        /* found an EOF mark          */
                                        /* set new length             */
-    filedata->data = (ULONG)(endptr - filedata->buffer);
+    filedata->data = (size_t)(endptr - filedata->buffer);
     filedata->residual = 0;            /* no residual                */
   }
   filedata->scan = filedata->buffer;   /* set position to beginning  */
@@ -727,7 +652,7 @@ INT ReadNextBuffer(
 /* Function: strupr(string)                                            */
 /* Purpose:  Uppercas the given string                                 */
 /***********************************************************************/
-void strupr(PCHAR string){
+void strupr(char * string){
 
   for(;*string != '\0';string++){        /* while not at the end       */
     *string = toupper(*string);
@@ -743,12 +668,12 @@ void strupr(PCHAR string){
 *            1     - file open error occurred                       *
 *********************************************************************/
 
-INT OpenFile(
-   PSZ          file,                  /* file name                  */
+int OpenFile(
+   const char  *file,                  /* file name                  */
    GetFileData *filedata )             /* global file information    */
 {
    struct stat finfo;                  /* file information           */
-   PCHAR       endptr = NULL;          /* end of buffer pointer      */
+   char *      endptr = NULL;          /* end of buffer pointer      */
 
                                        /* try to open the file       */
   if((filedata->handle = fopen(file,"r")) == NULL)
@@ -760,7 +685,7 @@ INT OpenFile(
   }
   if (finfo.st_size <= MAX_READ) {     /* less than a single buffer  */
                                        /* allocate buffer for file   */
-    if((filedata->buffer = (PCHAR)malloc(finfo.st_size)) == NULL ){
+    if((filedata->buffer = (char *)malloc(finfo.st_size)) == NULL ){
       fclose(filedata->handle);        /* close the file             */
       return (1);                      /* and quit                   */
     }
@@ -769,20 +694,20 @@ INT OpenFile(
                                        /* read the file in           */
     filedata->data = fread(filedata->buffer, 1,
                                       finfo.st_size, filedata->handle);
-    if(filedata->data != finfo.st_size){/*  problems ?               */
+    if(filedata->data != (size_t)finfo.st_size){/*  problems ?               */
       free(filedata->buffer);          /* free the buffer            */
       fclose(filedata->handle);        /* close the file             */
       return (1);                      /* and quit                   */
     }                                  /* look for a EOF mark        */
-    endptr = (PCHAR)memchr(filedata->buffer, CH_EOF, filedata->data);
+    endptr = (char *)memchr(filedata->buffer, CH_EOF, filedata->data);
     if (endptr)                        /* found an EOF mark          */
                                        /* set new length             */
-      filedata->data = (ULONG)(endptr - filedata->buffer);
+      filedata->data = (size_t)(endptr - filedata->buffer);
     filedata->scan = filedata->buffer; /* set position to beginning  */
   }
   else {                               /* need to read partial       */
                                        /* allocate buffer for read   */
-    if((filedata->buffer = (PCHAR)malloc(MAX_READ)) == NULL ){
+    if((filedata->buffer = (char *)malloc(MAX_READ)) == NULL ){
       fclose(filedata->handle);        /* close the file             */
       return (1);                      /* and quit                   */
     }
@@ -817,18 +742,18 @@ void CloseFile(
 * Purpose:   Reads a line of data using buffered reads.  At end of  *
 *            file, zero is returned to indicate nothing left.       *
 *                                                                   *
-* RC:        TRUE -  line was read successfully                     *
-*            FALSE - end of file was reached                        *
+* RC:        true -  line was read successfully                     *
+*            false - end of file was reached                        *
 *********************************************************************/
 
-INT GetLine(
-   PSZ          line,                  /* returned line              */
-   ULONG        size,                  /* size of line buffer        */
-   GetFileData *filedata )             /* file handle                */
+int GetLine(
+   char *line,                        /* returned line              */
+   size_t      size,                  /* size of line buffer        */
+   GetFileData *filedata )            /* file handle                */
 {
-   PCHAR        scan;                  /* current scan pointer       */
-   ULONG        length;                /* line length                */
-   ULONG        copylength;            /* copied length              */
+   const char *scan;                    /* current scan pointer       */
+   size_t        length;                /* line length                */
+   size_t        copylength;            /* copied length              */
 
 
   if (!(filedata->data)) {             /* if out of current buffer   */
@@ -841,11 +766,15 @@ INT GetLine(
       return (1);                      /* return EOF condition       */
   }
                                        /* look for a line feed       */
-  scan = (PCHAR)memchr(filedata->scan, CH_NL, filedata->data);
+  scan = (const char *)memchr(filedata->scan, CH_NL, filedata->data);
   if (scan) {                          /* found one                  */
                                        /* calculate the length       */
-    length = (ULONG)(scan - filedata->scan);
-    copylength = min(length, size);    /* get length to copy         */
+    length = scan - filedata->scan;
+    copylength = length; 
+    if (copylength > size)
+    {
+        copylength = size; 
+    }
                                        /* copy over the data         */
     memcpy(line, filedata->scan, copylength);
     line[copylength] = '\0';           /* make into ASCIIZ string    */
@@ -853,7 +782,7 @@ INT GetLine(
     /* we don't want the CR character in the result string*/
     if ( line[copylength - 1] == CH_CR ) {
       line[copylength - 1] = '\0';
-    } /* endif */
+    } 
 
     filedata->data -= length + 1;      /* reduce the length          */
     filedata->scan = scan + 1;         /* set new scan point         */
@@ -861,18 +790,7 @@ INT GetLine(
     if (!filedata->data) {             /* all used up                */
       if (filedata->residual)          /* more to read               */
         ReadNextBuffer(filedata);      /* read the next buffer       */
-
-//      if (filedata->data &&            /* if more to read            */
-//        *filedata->scan == CH_NL) {    /* may need to skip a char    */
-//        filedata->scan++;              /* step past new line         */
-//        filedata->data--;              /* reduce size by one         */
-//      }
     }
-                                       /* may need to skip a char    */
-//    else if (*filedata->scan == CH_NL) {
-//      filedata->scan++;                /* step past new line       */
-//      filedata->data--;                /* reduce size by one       */
-//    }
     return 0;                            /* this worked ok           */
   }
   else                                   /* ran off the end          */
@@ -901,20 +819,12 @@ INT GetLine(
        memcpy(line, filedata->scan, copylength);
        line[copylength] = '\0';           /* make into ASCIIZ string    */
 
-    /* we don't want the CR character in the result string*/
-    /* we have not found LF, so why look for CR                      */
-//     if ( line[copylength - 1] == CH_CR )
-//     {
-//       line[copylength - 1] = '\0';
-//     } /* endif */
-
      /* all data should be read, filedata->data must be zero          */
        filedata->data -= copylength;
      /* scan should be at the end                                     */
        filedata->scan += copylength;    /* set new scan point         */
 
     /* if no more data to read in the file, return OK     */
-//       if (!filedata->residual && !filedata->data)
        if (!filedata->residual)
           return 0;
        else
@@ -922,17 +832,16 @@ INT GetLine(
     }
     else        /* the line is full, scan until LF found but no copy */
     {
-       copylength = min(size, filedata->data);
+       copylength = filedata->data; 
+       if (size < copylength)
+       {
+           copylength = size; 
+       }
                                       /* copy over the data         */
        memcpy(line, filedata->scan, copylength);
        line[copylength] = '\0';           /* make into ASCIIZ string    */
 
     /* we don't want the CR character in the result string*/
-//     if ( line[copylength - 1] == CH_CR )
-//     {
-//       line[copylength - 1] = '\0';
-//     } /* endif */
-
        filedata->data  = 0;             /* no data in buffer          */
        filedata->scan += filedata->data;     /* set scan point to end */
 
@@ -945,118 +854,7 @@ INT GetLine(
           return 0;
     }
   }
-
-//    /* if line didn't fit into buffer, then we look at it */
-//    /* as multiple lines                                             */
-//    if ( size > copylength) {
-//      /* buffer was not full, read additional data from file */
-//    } else {
-//      filedata->scan += copylength;    /* set new scan point         */
-//
-//      if (!filedata->data) {           /* all used up                */
-//        if (filedata->residual)        /* more to read               */
-//          ReadNextBuffer(filedata);    /* read the next buffer       */
-//      }
-//
-//      return 0;
-//    } /* endif */
 }
-
-/********************************************************************
-* Function:  GetLine(line, size, filedata)                          *
-*                                                                   *
-* Purpose:   Reads a line of data using buffered reads.  At end of  *
-*            file, zero is returned to indicate nothing left.       *
-*                                                                   *
-* RC:        TRUE -  line was read successfully                     *
-*            FALSE - end of file was reached                        *
-*********************************************************************/
-
-//INT GetLine(
-//   PSZ          line,                  /* returned line              */
-//   ULONG        size,                  /* size of line buffer        */
-//   GetFileData *filedata )             /* file handle                */
-//{
-//   PCHAR        scan;                  /* current scan pointer       */
-//   ULONG        length;                /* line length                */
-//   ULONG        copylength;            /* copied length              */
-//
-//  if (!(filedata->data)) {             /* if out of current buffer   */
-//    if (filedata->residual) {          /* may be another buffer      */
-//      ReadNextBuffer(filedata);        /* try to read one            */
-//      if (!filedata->data)             /* nothing more?              */
-//        return 1;                      /* all done                   */
-//    }
-//    else
-//      return (1);                      /* return EOF condition       */
-//  }
-//                                       /* look for a line feed        */
-//  scan = (PCHAR)memchr(filedata->scan, CH_NL, filedata->data);
-//  if (scan) {                          /* found one                  */
-//                                       /* calculate the length       */
-//    length = (ULONG)(scan - filedata->scan);
-//                                       /* get the length to copy     */
-//    if(size <= length)
-//      copylength = size;               /* copy as much as possible   */
-//    else
-//      copylength = length;             /* take the whole line        */
-//    if(*(scan-1) == CH_CR)
-//      --copylength;                    /* do not copy CH_CR          */
-//                                       /* copy over the data         */
-//    memcpy(line, filedata->scan, copylength);
-//    line[copylength] = '\0';           /* make into ASCIIZ string    */
-//    filedata->data -= length + 1;      /* reduce the length          */
-//    filedata->scan = scan + 1;         /* set new scan point         */
-//    if (!filedata->data) {             /* all used up                */
-//      if (filedata->residual)          /* more to read               */
-//        ReadNextBuffer(filedata);      /* read the next buffer       */
-//      if (filedata->data &&            /* if more to read            */
-//        *filedata->scan == CH_NL) {    /* may need to skip a char    */
-//        filedata->scan++;              /* step past new line         */
-//        filedata->data--;              /* reduce size by one         */
-//      }
-//    }
-//                                       /* may need to skip a char    */
-//    else if (*filedata->scan == CH_NL) {
-//      filedata->scan++;                /* step past new line         */
-//      filedata->data--;                /* reduce size by one         */
-//    }
-//    return 0;                          /* this worked ok             */
-//  }
-//  else {                               /* ran off the end            */
-//                                       /* get the length to copy     */
-//    if(filedata->data <= size)
-//      copylength = filedata->data;     /* copy as much as possible   */
-//    else
-//      copylength = size;               /* take the whole line        */
-//                                       /* copy over the data         */
-//    memcpy(line, filedata->scan, copylength);
-//    line[copylength] = '\0';           /* make into ASCIIZ string    */
-//
-//    filedata->data -= copylength;
-//
-//    if (!filedata->residual)           /* all used up?               */
-//      return 0;                        /* finished reading           */
-//                                       /* line split over buffer     */
-//                                       /* recursively call function  */
-//
-//    /* if line didn't fit into buffer, then we look at it */
-//    /* as multiple lines                                             */
-//    if ( size > copylength) {
-//      return GetLine(line + copylength, size - copylength, filedata);
-//    } else {
-//      filedata->scan += copylength;    /* set new scan point         */
-//
-//      if (!filedata->data) {           /* all used up                */
-//        if (filedata->residual)        /* more to read               */
-//          ReadNextBuffer(filedata);    /* read the next buffer       */
-//      }
-//
-//      return 1;
-//    } /* endif */
-//  }
-//}
-
 
 /********************************************************************
 * Function:  mystrstr(haystack, needle, hlen, nlen, sensitive)      *
@@ -1075,17 +873,17 @@ INT GetLine(
 * Used By:   SysFileSearch()                                        *
 *********************************************************************/
 
-ULONG mystrstr(
-  CHAR   *haystack,
-  CHAR   *needle,
-  ULONG   hlen,
-  ULONG   nlen,
-  BOOL    sensitive)
+const char *mystrstr(
+  const char   *haystack,
+  const char   *needle,
+  size_t   hlen,
+  size_t   nlen,
+  bool    sensitive)
 
 {
-  CHAR line[MAX_LINE_LEN];
-  CHAR target[MAX_LINE_LEN];
-  ULONG p;
+  char line[MAX_LINE_LEN];
+  char target[MAX_LINE_LEN];
+  size_t p;
 
  /* Copy line  - Change nulls to spaces and uppercase if needed      */
 
@@ -1095,7 +893,7 @@ ULONG mystrstr(
       line[p] = ' ';
     else if (sensitive)
       line[p] = haystack[p];
-    else line[p] = (CHAR)toupper(haystack[p]);
+    else line[p] = toupper(haystack[p]);
   }
   line[p] = '\0';
  /* Copy target  - Change nulls to spaces and uppercase if needed    */
@@ -1106,10 +904,16 @@ ULONG mystrstr(
       target[p] = ' ';
     else if (sensitive)
       target[p] = needle[p];
-    else target[p] = (CHAR)toupper(needle[p]);
+    else target[p] = toupper(needle[p]);
   }
   target[p] = '\0';
-  return ((ULONG)strstr(line, target));
+  const char *hit = strstr(line, target); 
+  if (hit == NULL)
+  {
+      return NULL; 
+  }
+  // adjust original pointer to offset 
+  return haystack +  (hit - line);
 }
 
 /*************************************************************************
@@ -1121,11 +925,11 @@ ULONG mystrstr(
 * Return:    0 - read successful                                         *
 *            1 - end of environment entry                                *
 *************************************************************************/
-INT get_next_path(
-  PCHAR *ppenv,                      /* environment pointer              */
-  PCHAR path_buf)                    /* path buffer                      */
+int get_next_path(
+  char * *ppenv,                      /* environment pointer              */
+  char * path_buf)                    /* path buffer                      */
 {
-  INT i;                             /* counter                          */
+  int i;                             /* counter                          */
 
   if(*ppenv == NULL)                 /* environment entry available ?    */
     return (1);                      /* return end of envrionment        */
@@ -1153,25 +957,25 @@ INT get_next_path(
 * Return:    0 - found the file(=>buf is modified)                       *
 *            1 - not found                                               *
 *************************************************************************/
-INT SearchPath(
-  INT   SearchFlag,                    /* search curr dir first ?    */
-  PCHAR path,                          /* environment variable name  */
-  PCHAR filename,                      /* searched file              */
-  PCHAR buf,                           /* returned filespec if found */
-  INT   buf_size)                      /* size of the return buffer  */
+int SearchPath(
+  int   SearchFlag,                    /* search curr dir first ?    */
+  const char * path,                   /* environment variable name  */
+  const char * filename,               /* searched file              */
+  char * buf,                          /* returned filespec if found */
+  size_t   buf_size)                   /* size of the return buffer  */
 {
 
-  INT   rc = 1;                        /* init rc to not found       */
+  int   rc = 1;                        /* init rc to not found       */
   DIR   *dp;                           /* directory pointer          */
   struct dirent *ep;                   /* directory entry pointer    */
-  INT   length;                        /* path length                */
-  CHAR  path_buf[IBUF_LEN];            /* current search path        */
-  PCHAR penv;                          /* ptr to the environment     */
+  int   length;                        /* path length                */
+  char  path_buf[IBUF_LEN];            /* current search path        */
+  char * penv;                          /* ptr to the environment     */
 
   if(!SearchFlag){                     /* search curr dir first ?    */
     dp = opendir("./");                /* open current directory     */
     if(dp != NULL){                    /* worked well ?              */
-      while(ep = readdir(dp)){         /* while entries in the dir   */
+      while((ep = readdir(dp))){       /* while entries in the dir   */
                                        /* if we have a match         */
         if(!strcmp(ep->d_name,filename)){
           if(!getcwd(buf,buf_size))    /* copy the cwd to return buf */
@@ -1182,7 +986,7 @@ INT SearchPath(
           buf[length] = '/';           /* add a slash                */
           buf[length+1] = '\0';        /* and update the terminater  */
           strcat(buf,filename);        /* now complete the filespec  */
-          rc = NULL;                   /* Yep,found !                */
+          rc = 0;                      /* Yep,found !                */
         }
       }
       (void)closedir(dp);              /* close the directory        */
@@ -1200,7 +1004,7 @@ INT SearchPath(
   while(!get_next_path(&penv,path_buf)){
     dp = opendir(path_buf);            /* open the directory         */
     if(dp != NULL){                    /* worked well ?              */
-      while(ep = readdir(dp)){         /* while entries in the dir   */
+      while((ep = readdir(dp))){       /* while entries in the dir   */
                                        /* if we have a match         */
         if(!strcmp(ep->d_name,filename)){
           if(strlen(path_buf)>buf_size)/* check the size             */
@@ -1213,7 +1017,7 @@ INT SearchPath(
           buf[length+1] = '\0';        /* and update the terminater  */
           strcat(buf,filename);        /* now complete the filespec  */
           (void)closedir(dp);          /* close the directory        */
-          return (NULL);               /* Yep,found !                */
+          return 0;                    /* Yep,found !                */
         }
       }
       (void)closedir(dp);              /* close the directory        */
@@ -1231,8 +1035,8 @@ INT SearchPath(
 *************************************************************************/
 int initUtilSems()
 {
-  INT rc=NULL;
-  INT semId;
+  int rc = 0; 
+  int semId;
 
   if(!apidata->rexxutilsems){          /* if no semaphore set aviable    */
                                        /* greate one                     */
@@ -1245,8 +1049,8 @@ int initUtilSems()
     /* reset the semaphore control array                                 */
     for(int i=0;i<MAXUTILSEM;i++){     /* for the whole array            */
                                        /* clear the name array           */
-      memset((apidata->utilsemfree[i]).name,NULL,MAXNAME);
-      (apidata->utilsemfree[i]).usecount = NULL;/* reset usecount        */
+      memset((apidata->utilsemfree[i]).name,'\0',MAXNAME);
+      (apidata->utilsemfree[i]).usecount = 0;   /* reset usecount        */
     }
   }
   return rc;
@@ -1262,7 +1066,7 @@ int initUtilSems()
 *************************************************************************/
 void dead(int sig)
 {
-  PVOID status=NULL;
+  void * status=NULL;
 
   pthread_exit(status);                 /* exit timeout thread           */
 }
@@ -1276,17 +1080,10 @@ void dead(int sig)
 *************************************************************************/
 void* tout(void * brk){
   struct timeval tv;                 /* time for the select func   */
-  INT * bk;
+  int * bk;
 
-//#ifdef LINUX
-//  pthread_signal(SIGUSR1,dead);
-//#else
   signal(SIGUSR1,dead);
-//pthread_signal_to_cancel_np((sigset_t*)SIGUSR1,
-//                            (pthread_t*)dead);
-//#endif
-
-  bk = (INT *)brk;
+  bk = (int *)brk;
   bk[1] = bk[1] * 1000;              /* convert to mircoseconds    */
   if(bk[1]<1000000){                 /* less than one second ?     */
     tv.tv_sec = 0;                   /* set seconds to NULL        */
@@ -1313,14 +1110,14 @@ void* tout(void * brk){
 *                                                                *
 *****************************************************************/
 
-VOID getpath(
-             CHAR *string,
-             CHAR *path,
-             CHAR *filename )
+void getpath(
+    char *string,
+    char *path,
+    char *filename )
 {
-  INT    iLen;                         /* length of filespec         */
-  INT    LastSlashPos;                 /* position of last slash     */
-  CHAR   szSavePath[IBUF_LEN];         /* Keep path to get back to   */
+  int    iLen;                         /* length of filespec         */
+  int    LastSlashPos;                 /* position of last slash     */
+  char   szSavePath[IBUF_LEN];         /* Keep path to get back to   */
 
   if (!strcmp(string, "."))            /* period case?               */
     strcpy(string, "./*");             /* make it a * request        */
@@ -1383,24 +1180,16 @@ VOID getpath(
 * Note:  '?' is currently not supported. Add the impletmentation here !      *
 ******************************************************************************/
 int LinFindNextFile(
-  PCHAR filespec,                      /* filespec to search for     */
-  PCHAR path,                          /* current path               */
+  const char * filespec,               /* filespec to search for     */
+  const char * path,                   /* current path               */
   DIR *dir_handle,                     /* directory handle           */
   struct stat *finfo,                  /* return buf for the finfo   */
-  PCHAR *d_name,                       /* name of the file found     */
-  ULONG caseless)                      /* case insensitive matching  */
+  char * *d_name,                      /* name of the file found     */
+  size_t caseless)                     /* case insensitive matching  */
 {
   struct dirent *dir_entry;            /* Directory entry            */
-  CHAR full_path[IBUF_LEN+1];
-  CHAR filespec_t[IBUF_LEN+3];         /* copy of filespec for the   */
+  char full_path[IBUF_LEN+1];
                                        /* strtok routine             */
-  PCHAR token;                         /* ptr to current token       */
-  PCHAR start_ptr;                     /* ptr to begin of filename   */
-  PCHAR found;                         /* ptr to substring found     */
-  PCHAR last_token;
-  PCHAR last_found;
-  INT bad,no_delimiter,found_flag;
-
 
  if(!(dir_entry = readdir(dir_handle)))/* get first entry            */
    return 0;                           /* no entry or EOF            */
@@ -1419,9 +1208,9 @@ int LinFindNextFile(
      S_ISFIFO(finfo->st_mode)){        /* or a FIFO                  */
 
     if (caseless) {                    /* if caseless search         */
-      CHAR dup_d_name[IBUF_LEN+1];     /* compare upper cased copy   */
-      PCHAR pDest = dup_d_name;        /* of the entry name          */
-      PCHAR pSrc  = dir_entry->d_name;
+      char dup_d_name[IBUF_LEN+1];     /* compare upper cased copy   */
+      char * pDest = dup_d_name;        /* of the entry name          */
+      char * pSrc  = dir_entry->d_name;
 
       for ( ; *pSrc; pDest++, pSrc++ )
         *pDest = toupper(*pSrc);
@@ -1440,91 +1229,8 @@ int LinFindNextFile(
     }
   }
    }
- while(dir_entry = readdir(dir_handle));/* while have entries       */
+ while((dir_entry = readdir(dir_handle)));/* while have entries       */
  return 0;                            /* no file found or EOF       */
-
-
-//#ifdef 0
-//  if(!(dir_entry = readdir(dir_handle)))/* get first entry           */
-//    return 0;                          /* no entry or EOF            */
-//
-//  do{
-//                                       /* make full spec             */
-//    sprintf(full_path, "%s%s", path, dir_entry->d_name);
-//    lstat(full_path, finfo);           /* read the info about it     */
-//
-//  if(S_ISREG(finfo->st_mode) ||        /* if it is a file            */
-//     S_ISCHR(finfo->st_mode) ||        /* or a device special        */
-//     S_ISBLK(finfo->st_mode) ||        /* file                       */
-//     S_ISSOCK(finfo->st_mode) ||       /* or a socket                */
-//     S_ISLNK(finfo->st_mode) ||        /* or a symbolic link         */
-//     S_ISFIFO(finfo->st_mode)){        /* or a FIFO                  */
-//
-//    if(!strcmp(filespec,"*")){         /*want all files              */
-//      *d_name = dir_entry->d_name;     /* retptr to the name location*/
-//      return 1;                        /* return success             */
-//    }
-//    else if(strstr(filespec,"*")){     /* substring search ?         */
-//       strcpy(filespec_t,filespec);    /* copy the filespec          */
-//       start_ptr = filespec_t;         /* get ptr to first char      */
-//       if(filespec_t[0] == '*')        /* if filespec begins with '*'*/
-//         start_ptr = filespec_t+1;     /* jump over                  */
-//
-//       found_flag = 0;                 /* init found flag            */
-//       bad = 0;                        /* init no match flag         */
-//       found =  last_found = dir_entry->d_name;/* init found ptrs    */
-//       token = strtok(start_ptr,"*\0");/* get the first token        */
-//
-//       /* if filespec doesn't begin with a '*'                       */
-//       if(filespec[0] != '*'){
-//         /* first token must match the begining of the filename      */
-//         if(strncmp(dir_entry->d_name, token, strlen(token)))
-//           bad = 1;
-//       }
-//
-//       do {
-//         last_token = token;           /* remember the last token    */
-//         if(found_flag)                /* first found ?              */
-//           if((found = strstr(dir_entry->d_name,token)) &&/*found      */
-//                (strlen(found) < strlen(last_found)))/* not before => ok  */
-//              last_found = found;        /* remember the last found ptr*/
-//             else
-//               bad = 1;                    /* not a possible name      */
-//         else
-//           if((found = strstr(dir_entry->d_name,token)) &&/*found      */
-//                (strlen(found) <= strlen(last_found))){/* not before => ok */
-//              last_found = found;        /* remember the last found ptr*/
-//              found_flag = 1;            /* and set the found flag     */
-//           }
-//             else
-//               bad = 1;                    /* not a possible name      */
-//       }
-//       while(token = strtok(NULL,"*\0"));/* get next token           */
-//
-//       /* if filespec doesn't end in a '*'                           */
-//       if(filespec[strlen(filespec)-1] != '*'){
-//         /* check if last_token matchs the end of the filename       */
-//         if(strcmp(dir_entry->d_name+(strlen(dir_entry->d_name)-
-//                                strlen(last_token)),last_token))
-//           bad = 1;
-//       }
-//
-//       if(!bad){
-//         *d_name = dir_entry->d_name;  /* retptr to the name location*/
-//         return 1;                     /* return success             */
-//       }
-//    }
-//    else{                              /* we need a full match       */
-//      if(!strcmp(dir_entry->d_name,filespec)){ /* have a full match ?*/
-//        *d_name = dir_entry->d_name;   /* retptr to the name location*/
-//        return 1;                      /* return success             */
-//      }
-//    }
-//  }
-//  }
-//  while(dir_entry = readdir(dir_handle));/* while have entries       */
-//  return 0;                            /* no file found or EOF       */
-//#endif
 }
 
 /*****************************************************************
@@ -1538,26 +1244,16 @@ int LinFindNextFile(
 *        here !                                                  *
 *****************************************************************/
 int LinFindNextDir(
-  PCHAR filespec,                      /* filespec to search for     */
-  PCHAR path,                          /* current path               */
+  const char * filespec,               /* filespec to search for     */
+  const char * path,                   /* current path               */
   DIR *dir_handle,                     /* directory handle           */
   struct stat *finfo,                  /* return buf for the finfo   */
-  PCHAR *d_name,                       /* name of the file found     */
-  ULONG caseless)                      /* case insensitive matching  */
+  char * *d_name,                      /* name of the file found     */
+  size_t caseless)                     /* case insensitive matching  */
 {
   struct dirent *dir_entry;            /* Directory entry            */
-  CHAR full_path[IBUF_LEN+1];
-  CHAR filespec_t[IBUF_LEN+3];         /* copy of filespec for the   */
+  char full_path[IBUF_LEN+1];
                                        /* strtok routine             */
-  PCHAR token;                         /* ptr to current token       */
-  PCHAR start_ptr;                     /* ptr to begin of filename   */
-  PCHAR found;                         /* ptr to substring found     */
-  PCHAR last_token;
-  PCHAR last_found;
-  INT bad,no_delimiter,found_flag;
-
-
-
 
  if(!(dir_entry = readdir(dir_handle)))/* get first entry           */
    return 0;                           /* no entry or EOF            */
@@ -1571,9 +1267,9 @@ int LinFindNextDir(
     if(S_ISDIR(finfo->st_mode)){       /* if it is a directory       */
 
       if (caseless) {                    /* if caseless search         */
-        CHAR dup_d_name[IBUF_LEN+1];     /* compare upper cased copy   */
-        PCHAR pDest = dup_d_name;        /* of the entry name          */
-        PCHAR pSrc  = dir_entry->d_name;
+        char dup_d_name[IBUF_LEN+1];     /* compare upper cased copy   */
+        char * pDest = dup_d_name;        /* of the entry name          */
+        char * pSrc  = dir_entry->d_name;
 
         for ( ; *pSrc; pDest++, pSrc++ )
           *pDest = toupper(*pSrc);
@@ -1592,94 +1288,12 @@ int LinFindNextDir(
       }
     }
    }
- while(dir_entry = readdir(dir_handle));/* while have entries       */
+ while((dir_entry = readdir(dir_handle)));/* while have entries       */
  return 0;                            /* no file found or EOF       */
-
-
-
-
-//#ifdef 0
-//
-//  if(!(dir_entry = readdir(dir_handle)))/* get first entry           */
-//    return 0;                          /* no entry or EOF            */
-//                                       /* and its full spec          */
-//
-//  do{
-//                                       /* make full spec             */
-//    sprintf(full_path, "%s%s", path, dir_entry->d_name);
-//    lstat(full_path, finfo);           /* read the info about it     */
-//
-//    if(S_ISDIR(finfo->st_mode)){       /* if it is a directory       */
-//    if(!strcmp(filespec,"*")){         /*want all dirs               */
-//      *d_name = dir_entry->d_name;     /* retptr to the name location*/
-//      return 1;                        /* return success             */
-//    }
-//    else if(strstr(filespec,"*")){     /* substring search ?         */
-//       strcpy(filespec_t,filespec);    /* copy the filespec          */
-//       start_ptr = filespec_t;         /* get ptr to first char      */
-//       if(filespec_t[0] == '*')        /* if filespec begins with '*'*/
-//         start_ptr = filespec_t+1;     /* jump over                  */
-//
-//       found_flag = 0;                 /* init found flag            */
-//       bad = 0;                        /* init no match flag         */
-//       found =  last_found = dir_entry->d_name;/* init found ptrs    */
-//       token = strtok(start_ptr,"*\0");/* get the first token        */
-//
-//       /* if filespec doesn't begin with a '*'                       */
-//       if(filespec[0] != '*'){
-//         /* first token must match the begining of the filename      */
-//         if(strncmp(dir_entry->d_name, token, strlen(token)))
-//           bad = 1;
-//       }
-//
-//       do {
-//         last_token = token;           /* remember the last token    */
-//         if(found_flag)                /* first found ?              */
-//           if((found = strstr(dir_entry->d_name,token)) &&/*found      */
-//                (strlen(found) < strlen(last_found)))/* not before => ok  */
-//              last_found = found;        /* remember the last found ptr*/
-//             else
-//               bad = 1;                    /* not a possible name      */
-//         else
-//           if((found = strstr(dir_entry->d_name,token)) &&/*found      */
-//                (strlen(found) <= strlen(last_found))){/* not before => ok */
-//              last_found = found;        /* remember the last found ptr*/
-//              found_flag = 1;            /* and set the found flag     */
-//           }
-//             else
-//               bad = 1;                    /* not a possible name      */
-//       }
-//       while(token = strtok(NULL,"*\0"));/* get next token           */
-//
-//       /* if filespec doesn't end in a '*'                           */
-//       if(filespec[strlen(filespec)-1] != '*'){
-//         /* check if last_token matchs the end of the filename       */
-//         if(strcmp(dir_entry->d_name+(strlen(dir_entry->d_name)-
-//                                strlen(last_token)),last_token))
-//           bad = 1;
-//       }
-//
-//       if(!bad){
-//         *d_name = dir_entry->d_name;  /* retptr to the name location*/
-//         return 1;                     /* return success             */
-//       }
-//    }
-//    else{                              /* we need a full match       */
-//      if(!strcmp(dir_entry->d_name,filespec)){ /* have a full match ?*/
-//        *d_name = dir_entry->d_name;   /* retptr to the name location*/
-//        return 1;                      /* return success             */
-//      }
-//    }
-//  }
-//  }
-//  while(dir_entry = readdir(dir_handle));/* while have entries       */
-//
-//  return 0;                            /* no file found or EOF       */
-//#endif
 }
 
 /*********************************************************************/
-/* Function: ULONG FormatFile(                                       */
+/* Function: size_t FormatFile(                                       */
 /*                                                                   */
 /* Purpose:  Returns the new file attribute, given the mask of       */
 /*           attributes to be cleared/set and the current attribute  */
@@ -1687,18 +1301,16 @@ int LinFindNextDir(
 /*                                                                   */
 /*********************************************************************/
 
-ULONG FormatFile(
+size_t FormatFile(
   RXTREEDATA   *ldp,                   /* Pointer to local data      */
-  INT          *smask,                 /* Mask of attributes to      */
+  int          *smask,                 /* Mask of attributes to      */
                                        /* search for                 */
-  INT          *dmask,                 /* Mask of attributes to set  */
-  ULONG         options,               /* Search and output format   */
+  int          *dmask,                 /* Mask of attributes to set  */
+  size_t        options,               /* Search and output format   */
   struct stat  *finfo )                /* File info sturcture        */
 {
-  USHORT rc;
   struct tm *timestamp;                /* Time info about the file   */
-  struct tm stTimestamp;               /* Time info about the file   */
-  CHAR tp;                             /* type of the entry          */
+  char tp;                             /* type of the entry          */
 
   if (options&NAME_ONLY)               /* name only?                 */
     strcpy(ldp->Temp, ldp->truefile);  /* just copy it over          */
@@ -1737,7 +1349,7 @@ ULONG FormatFile(
           (timestamp->tm_year)%100,
           (timestamp->tm_hour < 13?
           timestamp->tm_hour:
-          (timestamp->tm_hour-(SHORT)12)),
+          (timestamp->tm_hour-12)),
           timestamp->tm_min,
           ((timestamp->tm_hour < 12 ||
           timestamp->tm_hour == 24)?'a':'p'),
@@ -1777,7 +1389,7 @@ ULONG FormatFile(
                                        /* Place new string in Stem   */
   ldp->vlen = strlen(ldp->Temp);
   ldp->count++;
-  sprintf(ldp->varname+ldp->stemlen, "%d\0", ldp->count);
+  sprintf(ldp->varname+ldp->stemlen, "%d", ldp->count);
   ldp->shvb.shvnext = NULL;
   ldp->shvb.shvname.strptr = ldp->varname;
   ldp->shvb.shvname.strlength = strlen(ldp->varname);
@@ -1788,7 +1400,7 @@ ULONG FormatFile(
   ldp->shvb.shvcode = RXSHV_SET;
   ldp->shvb.shvret = 0;
 
-  rc = RexxVariablePool(&ldp->shvb);
+  int rc = RexxVariablePool(&ldp->shvb);
   if (rc & (RXSHV_BADN | RXSHV_MEMFL))
   {
     return INVALID_ROUTINE;
@@ -1852,21 +1464,21 @@ ULONG FormatFile(
 *                                                                            *
 *****************************************************************************/
 
-LONG RecursiveFindFile(
-  PSZ         FileSpec,                /* Filespecs to search for    */
-  PSZ         path,                    /* current directory          */
+int  RecursiveFindFile(
+  const char *FileSpec,                /* Filespecs to search for    */
+  const char *path,                    /* current directory          */
   RXTREEDATA *ldp,                     /* Pointer to local data      */
-  INT        *smask,                   /* Mask of attributes to      */
+  int        *smask,                   /* Mask of attributes to      */
                                        /* search for                 */
-  INT        *dmask,                   /* Mask of attributes to set  */
-  ULONG       options )                /* Search and output format   */
+  int        *dmask,                   /* Mask of attributes to set  */
+  size_t       options )                /* Search and output format   */
                                        /* options                    */
 {
-  CHAR  tempfile[MAX+1];               /* Used to hold temp file name*/
+  char  tempfile[MAX+1];               /* Used to hold temp file name*/
   DIR *dir_handle;                     /* Directory handle           */
   struct stat finfo;                   /* file information           */
-  PCHAR filename;
-  ULONG caseless = options&CASELESS;
+  char * filename;
+  size_t caseless = options&CASELESS;
 
 
   /********************************************************************
@@ -1944,21 +1556,21 @@ LONG RecursiveFindFile(
 * Function:  string2long(string, number)                            *
 *                                                                   *
 * Purpose:   Validates and converts an ASCII-Z string from string   *
-*            form to an unsigned long.  Returns FALSE if the number *
-*            is not valid, TRUE if the number was successfully      *
+*            form to an unsigned long.  Returns false if the number *
+*            is not valid, true if the number was successfully      *
 *            converted.                                             *
 *                                                                   *
-* RC:        TRUE - Good number converted                           *
-*            FALSE - Invalid number supplied.                       *
+* RC:        true - Good number converted                           *
+*            false - Invalid number supplied.                       *
 *********************************************************************/
 
-BOOL string2long(
-  PSZ string,
-  LONG *number)
+bool string2int(
+  const char * string,
+  int  *number)
 {
-  ULONG    accumulator;                /* converted number           */
-  INT      length;                     /* length of number           */
-  INT      sign;                       /* sign of number             */
+  int       accumulator;                /* converted number           */
+  int      length;                     /* length of number           */
+  int      sign;                       /* sign of number             */
 
   sign = 1;                            /* set default sign           */
   if (*string == '-') {                /* negative?                  */
@@ -1969,25 +1581,25 @@ BOOL string2long(
   length = strlen(string);             /* get length of string       */
   if (length == 0 ||                   /* if null string             */
       length > MAX_DIGITS)             /* or too long                */
-    return FALSE;                      /* not valid                  */
+    return false;                      /* not valid                  */
 
   accumulator = 0;                     /* start with zero            */
 
   while (length) {                     /* while more digits          */
     if (!isdigit(*string))             /* not a digit?               */
-      return FALSE;                    /* tell caller                */
+      return false;                    /* tell caller                */
                                        /* add to accumulator         */
     accumulator = accumulator * 10 + (*string - '0');
     length--;                          /* reduce length              */
     string++;                          /* step pointer               */
   }
   *number = accumulator * sign;        /* return the value           */
-  return TRUE;                         /* good number                */
+  return true;                         /* good number                */
 }
 
 
 
-void restore_terminal(INT signal){
+void restore_terminal(int signal){
 
   stty(STDIN_FILENO,&in_orig);          /* restore the terminal settings        */
   SysInitialize();                      /* restore all signal handler           */
@@ -1997,15 +1609,13 @@ void restore_terminal(INT signal){
 /******************************************************************************/
 /* getkey                                                                     */
 /******************************************************************************/
-/* echo == FALSE => no echo                                                   */
-/* echo == TRUE  => echo                                                      */
+/* echo == false => no echo                                                   */
+/* echo == true  => echo                                                      */
 /******************************************************************************/
-int getkey(char *ret, BOOL echo){
+int getkey(char *ret, bool echo){
   /* restore original TTY settings on exit */
 
-INT ttyfd = STDIN_FILENO;              /* standard tty filedescriptor        */
-int tty_mode = -1;                     /* 1: raw, 0: cooked, -1: initial     */
-int need_tty_reset = 0;                /* do we need a reset                 */
+int ttyfd = STDIN_FILENO;              /* standard tty filedescriptor        */
 /* Set the cleanup handler for unconditional process termination              */
 struct sigaction new_action;
 
@@ -2067,10 +1677,6 @@ sigaction(SIGPIPE, &new_action, NULL); /* exitClear on broken pipe            */
   return 0;                             /* everything is fine                 */
 }
 
-
-
-
-
 /*************************************************************************
 * Function:  SysSleep                                                    *
 *                                                                        *
@@ -2081,25 +1687,24 @@ sigaction(SIGPIPE, &new_action, NULL); /* exitClear on broken pipe            */
 * Return:    NO_UTIL_ERROR                                               *
 *************************************************************************/
 
-LONG APIENTRY SysSleep(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysSleep(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  LONG  secs;                          /* Time to sleep in secs      */
-  LONG  length;                        /* length of the count        */
-  PCHAR string;                        /* input sleep time           */
-  LONG  nanoseconds;                   /* decimals value             */
-  LONG  digits;                        /* number of decimal digits   */
-  struct timeval tv;                   /* time for the select func   */
+  int   secs;                          /* Time to sleep in secs      */
+  size_t length;                       /* length of the count        */
+  const char * string;                 /* input sleep time           */
+  int   nanoseconds = 0;               /* decimals value             */
+  int   digits;                        /* number of decimal digits   */
 #if defined( HAVE_NANOSLEEP )
   struct timespec    Rqtp, Rmtp;
 #elif defined( HAVE_NSLEEP )
   struct timestruc_t Rqtp, Rmtp;
 #endif
-  LONG nano;
+  int  nano;
   if (numargs != 1)                    /* Must have one argument     */
     return INVALID_ROUTINE;
 
@@ -2171,36 +1776,35 @@ LONG APIENTRY SysSleep(
 * Return:    null string                                                 *
 *************************************************************************/
 /* Entry for upper case function name                                */
-LONG APIENTRY SYSLOADFUNCS(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SYSLOADFUNCS(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
    return( SysLoadFuncs( name, numargs, args, queuename,  retstr ) );
 }
 
-LONG APIENTRY SysLoadFuncs(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysLoadFuncs(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT    entries;                      /* Num of entries             */
-  INT    j;                            /* Counter                    */
+  int    entries;                      /* Num of entries             */
+  int    j;                            /* Counter                    */
 
   retstr->strlength = 0;               /* set return value           */
                                        /* check arguments            */
   if (numargs > 0)
     return INVALID_ROUTINE;
 
-  entries = sizeof(RxFncTable)/sizeof(PSZ);
+  entries = sizeof(RxFncTable)/sizeof(char *);
 
   for (j = 0; j < entries; j++) {
-    RexxRegisterFunctionDll(RxFncTable[j],
-          "rexxutil", RxFncTable[j]);
+    RexxRegisterFunctionDll(RxFncTable[j], "rexxutil", RxFncTable[j]);
   }
   return VALID_ROUTINE;
 }
@@ -2214,22 +1818,22 @@ LONG APIENTRY SysLoadFuncs(
 * Return:    NO_UTIL_ERROR - Successful.                                 *
 *************************************************************************/
 
-LONG APIENTRY SysDropFuncs(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysDropFuncs(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT     entries;                     /* Num of entries             */
-  INT     j;                           /* Counter                    */
+  int     entries;                     /* Num of entries             */
+  int     j;                           /* Counter                    */
 
   if (numargs != 0)                    /* no arguments for this      */
     return INVALID_ROUTINE;            /* raise an error             */
 
   retstr->strlength = 0;               /* return a null string result*/
 
-  entries = sizeof(RxFncTable)/sizeof(PSZ);
+  entries = sizeof(RxFncTable)/sizeof(char *);
 
   for (j = 0; j < entries; j++)
     RexxDeregisterFunction(RxFncTable[j]);
@@ -2246,12 +1850,12 @@ LONG APIENTRY SysDropFuncs(
 * Return:    NO_UTIL_ERROR - Successful.                              *
 **********************************************************************/
 
-LONG APIENTRY SysCls(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysCls(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   if (numargs)                         /* arguments specified?       */
     return INVALID_ROUTINE;            /* raise the error            */
@@ -2272,16 +1876,15 @@ LONG APIENTRY SysCls(
 * Return:    return code from RexxAddMacro                               *
 *************************************************************************/
 
-LONG APIENTRY SysAddRexxMacro(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY SysAddRexxMacro(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   APIRET      rc;                      /* creation return code       */
-  ULONG       position;                /* added position             */
+  size_t       position;                /* added position             */
 
   if (numargs < 2 || numargs > 3 ||    /* wrong number?              */
       !RXVALIDSTRING(args[0]) ||       /* first is omitted           */
@@ -2302,7 +1905,7 @@ LONG APIENTRY SysAddRexxMacro(
       return INVALID_ROUTINE;          /* raise an error             */
   }
   rexxutil_call_sem.request();
-  rexxutil_call = TRUE;                /* no RexxInitialize !        */
+  rexxutil_call = true;                /* no RexxInitialize !        */
                                        /* try to add the macro       */
   rc = RexxAddMacro(args[0].strptr, args[1].strptr, position);
   if(rc)
@@ -2323,12 +1926,12 @@ LONG APIENTRY SysAddRexxMacro(
 * Return:    return code from RexxDropMacro                              *
 *************************************************************************/
 
-LONG APIENTRY SysDropRexxMacro(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysDropRexxMacro(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   APIRET      rc;                      /* creation return code       */
 
@@ -2341,8 +1944,6 @@ LONG APIENTRY SysDropRexxMacro(
   return VALID_ROUTINE;                /* good completion            */
 }
 
-
-
 /*************************************************************************
 * Function:  SysClearRexxMacroSpace                                      *
 *                                                                        *
@@ -2353,12 +1954,12 @@ LONG APIENTRY SysDropRexxMacro(
 * Return:    return code from RexxClearMacroSpace()                      *
 *************************************************************************/
 
-LONG APIENTRY SysClearRexxMacroSpace(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysClearRexxMacroSpace(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   APIRET      rc;                      /* creation return code       */
 
@@ -2380,12 +1981,12 @@ LONG APIENTRY SysClearRexxMacroSpace(
 *                                                                        *
 * Return:    return code from RexxSaveMacroSpace()                       *
 *************************************************************************/
-LONG APIENTRY SysSaveRexxMacroSpace(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysSaveRexxMacroSpace(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   APIRET      rc;                      /* creation return code       */
 
@@ -2409,12 +2010,12 @@ LONG APIENTRY SysSaveRexxMacroSpace(
 * Return:    return code from RexxLoadMacroSpace()                       *
 *************************************************************************/
 
-LONG APIENTRY SysLoadRexxMacroSpace(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysLoadRexxMacroSpace(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   APIRET      rc;                      /* creation return code       */
 
@@ -2437,16 +2038,14 @@ LONG APIENTRY SysLoadRexxMacroSpace(
 *                                                                        *
 * Return:    position of the macro ('B' or 'A'), returns null for errors.*
 *************************************************************************/
-LONG APIENTRY SysQueryRexxMacro(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY SysQueryRexxMacro(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  APIRET      rc;                      /* creation return code       */
-  USHORT      position;                /* returned position          */
+  unsigned short position;             /* returned position          */
 
   if (numargs != 1)                    /* wrong number?              */
     return INVALID_ROUTINE;            /* raise error condition      */
@@ -2474,15 +2073,15 @@ LONG APIENTRY SysQueryRexxMacro(
 *                                                                        *
 * Return:    return code from RexxReorderMacro                           *
 *************************************************************************/
-LONG APIENTRY SysReorderRexxMacro(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysReorderRexxMacro(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   APIRET      rc;                      /* creation return code       */
-  ULONG       position;                /* added position             */
+  size_t       position;                /* added position             */
 
   if (numargs != 2 ||                  /* wrong number?              */
       !RXVALIDSTRING(args[0]) ||       /* first is omitted           */
@@ -2515,17 +2114,16 @@ LONG APIENTRY SysReorderRexxMacro(
 *                                                                        *
 *************************************************************************/
 
-LONG APIENTRY SysMkDir(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysMkDir(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  ULONG  rc;                           /* Ret code of func           */
-  PCHAR  path;                         /* given path                 */
-  PCHAR  home_dir = NULL;              /* home directory path        */
-  PCHAR  dir_buf = NULL;               /* full directory path        */
+  size_t  rc;                           /* Ret code of func           */
+  const char *  path;                   /* given path                 */
+  char *  dir_buf = NULL;               /* full directory path        */
 
   if (numargs != 1)
                                        /* If no args, then its an    */
@@ -2599,17 +2197,16 @@ LONG APIENTRY SysMkDir(
 *                                                                        *
 *************************************************************************/
 
-LONG APIENTRY SysRmDir(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysRmDir(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  ULONG  rc;                           /* Ret code of func           */
-  PCHAR  path;                         /* given path                 */
-  PCHAR  home_dir = NULL;              /* home directory path        */
-  PCHAR  dir_buf = NULL;               /* full directory path        */
+  size_t  rc;                           /* Ret code of func           */
+  const char *  path;                   /* given path                 */
+  char *  dir_buf = NULL;               /* full directory path        */
 
   if (numargs != 1)
                                        /* If no args, then its an    */
@@ -2691,17 +2288,16 @@ LONG APIENTRY SysRmDir(
 * Return:    Return code from DosDelete() function.                      *
 *************************************************************************/
 
-LONG APIENTRY SysFileDelete(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysFileDelete(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  ULONG  rc;                           /* Ret code of func           */
-  PCHAR  path;                         /* given path                 */
-  PCHAR  home_dir = NULL;              /* home directory path        */
-  PCHAR  dir_buf = NULL;               /* full directory path        */
+  size_t  rc;                           /* Ret code of func           */
+  const char *  path;                   /* given path                 */
+  char *  dir_buf = NULL;               /* full directory path        */
 
   if (numargs != 1)
                                        /* If no args, then its an    */
@@ -2771,30 +2367,28 @@ LONG APIENTRY SysFileDelete(
 *            ERROR_NOMEM     - Out of memory.                            *
 *************************************************************************/
 
-LONG APIENTRY SysFileSearch(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysFileSearch(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  PSZ         target;                  /* search string              */
-  PSZ         file;                    /* search file                */
-  PSZ         opts;                    /* option string              */
-//  CHAR        line[MAX_LINE_LEN];      /* Line read from file      */
-  ULONG       ptr;                     /* Pointer to char str found  */
-  ULONG       num = 0;                 /* Line number                */
-  ULONG       len;                     /* Length of string           */
-  ULONG       len2;                    /* Length of string           */
-  BOOL        linenums = FALSE;        /* Set TRUE for linenums in   */
+  const char *target;                  /* search string              */
+  const char *file;                    /* search file                */
+  const char *opts;                    /* option string              */
+  const char *ptr;                     /* Pointer to char str found  */
+  size_t      num = 0;                 /* Line number                */
+  size_t      len;                     /* Length of string           */
+  size_t      len2;                    /* Length of string           */
+  bool        linenums = false;        /* Set true for linenums in   */
                                        /* output                     */
-  BOOL        sensitive = FALSE;       /* Set TRUE for case-sens     */
+  bool        sensitive = false;       /* Set true for case-sens     */
                                        /* search                     */
   RXSTEMDATA  ldp;                     /* stem data                  */
   GetFileData filedata;                /* file read information      */
-  PCHAR       home_dir;                /* ptr to the environment     */
-  PCHAR       dir_buf = NULL;          /* directory buffer           */
-  PCHAR       line = NULL;             /* Line read from file        */
+  char *       dir_buf = NULL;          /* directory buffer           */
+  char *       line = NULL;             /* Line read from file        */
 
   BUILDRXSTRING(retstr, NO_UTIL_ERROR);/* pass back result           */
                                        /* validate arguments         */
@@ -2814,10 +2408,10 @@ LONG APIENTRY SysFileSearch(
   if (numargs == 4) {                  /* process options            */
     opts = args[3].strptr;             /* point to the options       */
     if (strstr(opts, "N") || strstr(opts, "n"))
-      linenums = TRUE;
+      linenums = true;
 
     if (strstr(opts, "C") || strstr(opts, "c"))
-      sensitive = TRUE;
+      sensitive = true;
   }
                                        /* Initialize data area       */
   ldp.count = 0;
@@ -2833,7 +2427,7 @@ LONG APIENTRY SysFileSearch(
     return VALID_ROUTINE;              /* finished                   */
   }
 
-  line = (CHAR *) malloc(4096 * sizeof(CHAR));
+  line = (char *) malloc(4096 * sizeof(char));
                                        /* do the search...found lines*/
                                        /* are saved in stem vars     */
   while (!GetLine(line, MAX_LINE_LEN - 1, &filedata)) {
@@ -2845,17 +2439,15 @@ LONG APIENTRY SysFileSearch(
       if (linenums) {
         sprintf(ldp.ibuf, "%d ", num);
         len2 = strlen(ldp.ibuf);
-//      memcpy(ldp.ibuf+len2, line, len);
-        memcpy(ldp.ibuf+len2, line, min(len, IBUF_LEN-len2));
-//        ldp.vlen = len+len2;
-        ldp.vlen = min(IBUF_LEN, len+len2);
+        memcpy(ldp.ibuf+len2, line, len < IBUF_LEN-len2 ? len : IBUF_LEN-len2);
+        ldp.vlen = IBUF_LEN < len+len2 ? IBUF_LEN : len + len2;
       }
       else {
         memcpy(ldp.ibuf, line, len);
         ldp.vlen = len;
       }
       ldp.count++;
-      sprintf(ldp.varname+ldp.stemlen, "%d\0", ldp.count);
+      sprintf(ldp.varname+ldp.stemlen, "%d", ldp.count);
       if (ldp.ibuf[ldp.vlen-1] == '\n')
         ldp.vlen--;
       ldp.shvb.shvnext = NULL;
@@ -2879,7 +2471,7 @@ LONG APIENTRY SysFileSearch(
   free(line);
   CloseFile(&filedata);                /* Close that file            */
                                        /* set stem.0 to lines read   */
-  sprintf(ldp.ibuf, "%d\0", ldp.count);
+  sprintf(ldp.ibuf, "%d", ldp.count);
   ldp.varname[ldp.stemlen] = '0';
   ldp.varname[ldp.stemlen+1] = 0;
   ldp.shvb.shvnext = NULL;
@@ -2917,18 +2509,18 @@ LONG APIENTRY SysFileSearch(
 *            ''     - Specified file not found along path.               *
 *************************************************************************/
 
-LONG APIENTRY SysSearchPath(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysSearchPath(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  CHAR     buf[IBUF_LEN]={0};          /* returned file name         */
-  PSZ      opts;                       /* option string              */
-  INT      SearchFlag;                 /* Search control variable    */
+  char     buf[IBUF_LEN]={0};          /* returned file name         */
+  const char *      opts;                       /* option string              */
+  int      SearchFlag;                 /* Search control variable    */
                                        /* default=search current 1st */
-  INT      ulRc;                       /* return value of SearchPath */
+  int      ulRc;                       /* return value of SearchPath */
 
 
   SearchFlag = CURRENT_DIR_FIRST;      /* set default search flag    */
@@ -2953,16 +2545,18 @@ LONG APIENTRY SysSearchPath(
   }
 
   ulRc = SearchPath(SearchFlag, args[0].strptr, args[1].strptr,
-                       (PCHAR)buf, sizeof(buf));
+                       (char *)buf, sizeof(buf));
 
   /* if environment variable could not be found, try again with      */
   /* uppercase name.                                                 */
   if (ulRc)
   {
-    strupr( args[0].strptr );
-    ulRc = SearchPath(SearchFlag, args[0].strptr, args[1].strptr,
-                         (PCHAR)buf, sizeof(buf));
-  } /* endif */
+    char *temp = strdup(args[0].strptr); 
+    strupr(temp); 
+    ulRc = SearchPath(SearchFlag, temp, args[1].strptr,
+                         (char *)buf, sizeof(buf));
+    free(temp); 
+  } 
 
   BUILDRXSTRING(retstr, (const char *)buf);          /* pass back result           */
   return VALID_ROUTINE;
@@ -2976,12 +2570,12 @@ LONG APIENTRY SysSearchPath(
 * Return:    Linux Version                                               *
 *************************************************************************/
 
-LONG APIENTRY SysLinVer(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysLinVer(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
 
   struct utsname info;                 /* info structur              */
@@ -2989,7 +2583,7 @@ LONG APIENTRY SysLinVer(
   if (numargs != 0)                    /* validate arg count         */
     return INVALID_ROUTINE;
 
-  if(uname(&info)<NULL)                /* if no info stored          */
+  if(uname(&info) < 0)                   /* if no info stored          */
     return INVALID_ROUTINE;            /* get out                    */
 
   sprintf(retstr->strptr, "%s %s",info.sysname,info.release);
@@ -3006,12 +2600,12 @@ LONG APIENTRY SysLinVer(
 * Return:    Operating System name (LINUX/AIX/WINDOWS) and Version       *
 *************************************************************************/
 
-LONG APIENTRY SysVersion(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysVersion(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
 
   struct utsname info;                 /* info structur              */
@@ -3019,7 +2613,7 @@ LONG APIENTRY SysVersion(
   if (numargs != 0)                    /* validate arg count         */
     return INVALID_ROUTINE;
 
-  if(uname(&info)<NULL)                /* if no info stored          */
+  if(uname(&info) < 0)                 /* if no info stored          */
     return INVALID_ROUTINE;            /* get out                    */
 
   sprintf(retstr->strptr, "%s %s.%s",info.sysname, info.version, info.release);
@@ -3042,19 +2636,17 @@ LONG APIENTRY SysVersion(
 *                     SysCloseEventSem, and SysOpenEventSem              *
 *            '' - Empty string in case of any error                      *
 *************************************************************************/
-LONG APIENTRY SysCreateEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysCreateEventSem(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT handle;                          /* semaphore handle           */
-  INT i;                               /* counter                    */
-  BOOL bwaitreset = FALSE;
-  int val = 1;
+  int handle;                          /* semaphore handle           */
+  int i;                               /* counter                    */
+  bool bwaitreset = false;
   union semun semopts;               /* for semaphore control      */
-/*  if (numargs > 1)                    Too many arguments?          */
   if (numargs > 2)                     /* Too many arguments?        */
       return INVALID_ROUTINE;          /* raise error too many       */
 
@@ -3067,7 +2659,7 @@ LONG APIENTRY SysCreateEventSem(
 
   if (!args[1].strlength)
   {
-    bwaitreset = TRUE;
+    bwaitreset = true;
   }
 
   if ((numargs) && (args[0].strlength))
@@ -3082,7 +2674,7 @@ LONG APIENTRY SysCreateEventSem(
     /* check wheather semaphore exists                               */
     handle = -1;                       /* reset handle               */
     for(i=0;i<MAXUTILSEM;i++){         /* for all semaphores         */
-      if(((apidata->utilsemfree[i]).usecount > NULL) &&/* a used     */
+      if(((apidata->utilsemfree[i]).usecount > 0) &&/* a used     */
              ((apidata->utilsemfree[i]).type == EVENT)){/*event sem ?*/
                                        /* if we have a match         */
         if(!strcmp((apidata->utilsemfree[i]).name,args[0].strptr)){
@@ -3126,11 +2718,6 @@ LONG APIENTRY SysCreateEventSem(
       semopts.val = 1;                 /* initial value                  */
                                        /* do the initialisation          */
       semctl(apidata->rexxutilsems, handle, SETVAL, semopts);
-/*semctl is fine, now everyone can catch the semaphore               */
-
-/* Thats not fine, creation should open but not lock                 */
-
-/*      locksem(apidata->rexxutilsems, handle); lock the semaphore */
                                        /* format the result          */
       sprintf(retstr->strptr, "%d", (handle+OFFSET));
       retstr->strlength = strlen(retstr->strptr);
@@ -3162,11 +2749,6 @@ LONG APIENTRY SysCreateEventSem(
       semopts.val = 1;                 /* initial value                  */
                                        /* do the initialisation          */
       semctl(apidata->rexxutilsems, handle, SETVAL, semopts);
-/*semctl is fine, now everyone can catch the semaphore               */
-
-/* Thats not fine, creation should open but not lock                 */
-
-/*      locksem(apidata->rexxutilsems, handle); lock the semaphore   */
                                        /* format the result          */
       sprintf(retstr->strptr, "%d", (handle+OFFSET));
       retstr->strlength = strlen(retstr->strptr);
@@ -3185,29 +2767,29 @@ LONG APIENTRY SysCreateEventSem(
 * Return:    result - return code from DosOpenEventSem                   *
 *************************************************************************/
 
-LONG APIENTRY SysOpenEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysOpenEventSem(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT       handle;                    /* semaphore  handle          */
-  PCHAR     character;
-  CHAR      c[2]= {'\0','\0'};
+  int       handle;                    /* semaphore  handle          */
+  const char *character;
+  char      c[2]= {'\0','\0'};
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* for each char of the handle*/
-  for(character=args[0].strptr;*character != '\0';character++){
+  for(character=args[0].strptr; *character != '\0';character++){
     c[0] = *character;
     if(!strpbrk(c,"1234567890"))      /* if it is no number         */
       return INVALID_ROUTINE;          /* get out                    */
   }
                                        /* get a binary handle        */
-  handle = strtoul(args[0].strptr,NULL,NULL);
+  handle = strtoul(args[0].strptr, NULL, 10);
   handle = handle - OFFSET;            /* make it real               */
-  if (handle < NULL || handle >= MAXUTILSEM){/* if bad handle        */
+  if (handle < 0 || handle >= MAXUTILSEM){/* if bad handle        */
     sprintf(retstr->strptr, "%d", 6);  /* say so                     */
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
@@ -3249,18 +2831,17 @@ LONG APIENTRY SysOpenEventSem(
 * Return:    result - return code from DosResetEventSem                  *
 *************************************************************************/
 
-LONG APIENTRY SysResetEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysResetEventSem(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT       handle;                    /* semaphore  handle          */
+  int       handle;                    /* semaphore  handle          */
   union semun semopts;               /* for semaphore control        */
-  PCHAR     character;
-  int val = 1;
-  CHAR      c[2]={'\0','\0'};
+  const char *character;
+  char      c[2]={'\0','\0'};
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
@@ -3271,9 +2852,9 @@ LONG APIENTRY SysResetEventSem(
       return INVALID_ROUTINE;          /* get out                    */
   }
                                        /* get a binary handle        */
-  handle = strtoul(args[0].strptr,NULL,NULL);
+  handle = strtoul(args[0].strptr, NULL, 10);
   handle = handle - OFFSET;            /* make it real               */
-  if (handle < NULL || handle >= MAXUTILSEM){/* if bad handle        */
+  if (handle < 0 || handle >= MAXUTILSEM){/* if bad handle        */
     sprintf(retstr->strptr, "%d", 6);  /* say so                     */
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
@@ -3324,16 +2905,16 @@ LONG APIENTRY SysResetEventSem(
 * Return:    result - return code from DosPostEventSem                   *
 *************************************************************************/
 
-LONG APIENTRY SysPostEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysPostEventSem(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT       handle;                    /* semaphore  handle          */
-  PCHAR     character;
-  CHAR      c[2]={'\0','\0'};
+  int       handle;                    /* semaphore  handle          */
+  const char *character;
+  char      c[2]={'\0','\0'};
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
@@ -3344,9 +2925,9 @@ LONG APIENTRY SysPostEventSem(
       return INVALID_ROUTINE;          /* get out                    */
   }
                                        /* get a binary handle        */
-  handle = strtoul(args[0].strptr,NULL,NULL);
+  handle = strtoul(args[0].strptr, NULL, 10);
   handle = handle - OFFSET;            /* make it real               */
-  if (handle < NULL || handle >= MAXUTILSEM){/* if bad handle        */
+  if (handle < 0 || handle >= MAXUTILSEM){/* if bad handle        */
     sprintf(retstr->strptr, "%d", 6);  /* say so                     */
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
@@ -3393,20 +2974,19 @@ LONG APIENTRY SysPostEventSem(
 * Return:    result - return code from DosCloseEventSem                  *
 *************************************************************************/
 
-LONG APIENTRY SysCloseEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysCloseEventSem(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT       handle;                    /* semaphore  handle          */
+  int       handle;                    /* semaphore  handle          */
   union semun semopts;               /* for semaphore control          */
-  INT i;                               /* counter                    */
-  int val = 1;
-  INT used = NULL;
-  PCHAR     character;
-  CHAR      c[2]={'\0','\0'};
+  int i;                               /* counter                    */
+  int used = 0;    
+  const char *     character;
+  char      c[2]={'\0','\0'};
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
@@ -3417,9 +2997,9 @@ LONG APIENTRY SysCloseEventSem(
       return INVALID_ROUTINE;          /* get out                    */
   }
                                        /* get a binary handle        */
-  handle = strtoul(args[0].strptr,NULL,NULL);
+  handle = strtoul(args[0].strptr, NULL, 10);
   handle = handle - OFFSET;            /* make it real               */
-  if (handle < NULL || handle >= MAXUTILSEM){/* if bad handle        */
+  if (handle < 0 || handle >= MAXUTILSEM){/* if bad handle        */
     sprintf(retstr->strptr, "%d", 6);  /* say so                     */
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
@@ -3465,7 +3045,7 @@ LONG APIENTRY SysCloseEventSem(
   }
   if(!(apidata->utilsemfree[handle]).usecount){/*sem now unused ?    */
                                        /* clear the name array       */
-    memset((apidata->utilsemfree[handle]).name,NULL,MAXNAME);
+    memset((apidata->utilsemfree[handle]).name, '\0', MAXNAME);
     /* make sure the sem  is in a clear state                        */
     semopts.val = 1;                   /* initial value                  */
                                        /* do the initialisation          */
@@ -3479,7 +3059,7 @@ LONG APIENTRY SysCloseEventSem(
   }
   if(!used){                           /* if all sems are unused     */
     removesem(apidata->rexxutilsems);  /* remove the semaphore set   */
-    apidata->rexxutilsems = NULL;      /* delete the old ID          */
+    apidata->rexxutilsems = 0;         /* delete the old ID          */
   }
   retstr->strlength = strlen(retstr->strptr);
   APICLEANUP(MACROCHAIN);
@@ -3496,23 +3076,19 @@ LONG APIENTRY SysCloseEventSem(
 * Return:    result - return code from DosWaitEventSem                   *
 *************************************************************************/
 
-LONG APIENTRY SysWaitEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysWaitEventSem(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT       handle;                    /* semaphore  handle          */
-  INT       timeout;                   /* time for timeout           */
-  pid_t     pid;                       /* id of the child process    */
-  struct sigaction timer;              /* action for the signal      */
-  sigset_t block_mask;                 /* signals to block           */
-  PCHAR     character;
-  CHAR      c[2]={'\0','\0'};
+  int       handle;                    /* semaphore  handle          */
+  int       timeout = 0;               /* time for timeout           */
+  const char *character;
+  char      c[2]={'\0','\0'};
   pthread_t  thread;                   /* timeout thread             */
-  BOOL bwaitandreset = FALSE;
-//INT     *brk;                        /* timeout and timeout flag   */
+  bool bwaitandreset = false;
 
   if (numargs < 1 ||                   /* too few, or                */
       numargs > 2 ||                   /* too many, or               */
@@ -3527,7 +3103,7 @@ LONG APIENTRY SysWaitEventSem(
         return INVALID_ROUTINE;        /* get out                    */
     }
                                        /* get number of seconds      */
-    timeout = strtol(args[1].strptr,NULL,NULL);
+    timeout = strtol(args[1].strptr, NULL, 0);
   }
                                        /* for each char of the handle*/
   for(character=args[0].strptr;*character != '\0';character++){
@@ -3535,9 +3111,9 @@ LONG APIENTRY SysWaitEventSem(
     if(!strpbrk(c,"1234567890"))       /* if it is no number        */
       return INVALID_ROUTINE;          /* get out                    */
   }
-  handle = strtoul(args[0].strptr,NULL,NULL);/* get binary handle    */
+  handle = strtoul(args[0].strptr, NULL, 10);/* get binary handle    */
   handle = handle - OFFSET;            /* make it real               */
-  if (handle < NULL || handle >= MAXUTILSEM){/* if bad handle        */
+  if (handle < 0 || handle >= MAXUTILSEM){/* if bad handle        */
     sprintf(retstr->strptr, "%d", 6);  /* say so                     */
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
@@ -3569,7 +3145,7 @@ LONG APIENTRY SysWaitEventSem(
     /* try to lock the sem to do the wait                            */
     locksem(apidata->rexxutilsems, handle);
 
-    /* take care, if WAITANDRESET == TRUE don't unlock               */
+    /* take care, if WAITANDRESET == true don't unlock               */
 
     if(!bwaitandreset)
     {
@@ -3580,7 +3156,7 @@ LONG APIENTRY SysWaitEventSem(
     return VALID_ROUTINE;              /* good completion            */
   }
   else {                               /* need timeout               */
-    INT brk[2];                        /* timeout flag and value     */
+    int brk[2];                        /* timeout flag and value     */
     struct sembuf sem_lock = {handle, -1,IPC_NOWAIT};
 
     if((!timeout) || (timeout > INT_MAX/1000)){/* if zero timeout    */
@@ -3599,15 +3175,8 @@ LONG APIENTRY SysWaitEventSem(
       return VALID_ROUTINE;
     }
     APICLEANUP(MACROCHAIN);            /* release the shared resouces*/
-//#ifdef AIX
-//    pthread_yield();                 /* must give the timeout thrd           */
-//    pthread_yield();                 /* some time to register sig            */
-//#else
-//    sched_yield();                   /* must give the timeout thrd          */
-//    sched_yield();                   /* some time to register sig           */
     SysThreadYield();                  /* some time to register sig           */
     SysThreadYield();                  /* some time to register sig           */
-//#endif                               /* try to lock the semaphore           */
                                        /* while no success           */
     while(semop(apidata->rexxutilsems,&sem_lock,1) != 0 ){
       if((errno) && (errno != EAGAIN)){/* if there was a real error  */
@@ -3616,12 +3185,7 @@ LONG APIENTRY SysWaitEventSem(
        return VALID_ROUTINE;
       }
       else {
-//#ifdef AIX
-//        pthread_yield();           /* free the processor           */
-//#else
-//      sched_yield();
         SysThreadYield();            /* free the processor           */
-//#endif
         if(brk[0])                   /* if time out                  */
           break;                     /*no longer tying to get the sem*/
       }
@@ -3631,7 +3195,7 @@ LONG APIENTRY SysWaitEventSem(
       sprintf(retstr->strptr, "%d", 640);/* error timeout            */
     }
     else {/* immediatly release the sem                              */
-    /* take care, if WAITANDRESET == TRUE don't unlock               */
+    /* take care, if WAITANDRESET == true don't unlock               */
       if(!bwaitandreset)
       {
         unlocksem(apidata->rexxutilsems, handle);
@@ -3655,16 +3219,15 @@ LONG APIENTRY SysWaitEventSem(
 *                     SysCloseEventSem, and SysOpenEventSem              *
 *            '' - Empty string in case of any error                      *
 *************************************************************************/
-LONG APIENTRY SysCreateMutexSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysCreateMutexSem(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT handle;                          /* semaphore handle           */
-  INT i;                               /* counter                    */
-  int val = 1;
+  int handle;                          /* semaphore handle           */
+  int i;                               /* counter                    */
   union semun semopts;               /* for semaphore control          */
 
   if (numargs > 1)                     /* Too many arguments?        */
@@ -3689,7 +3252,7 @@ LONG APIENTRY SysCreateMutexSem(
     /* check wheather semaphore exists                               */
     handle = -1;                       /* reset handle               */
     for(i=0;i<MAXUTILSEM;i++){         /* for all semaphores         */
-      if(((apidata->utilsemfree[i]).usecount > NULL) &&/* a used     */
+      if(((apidata->utilsemfree[i]).usecount > 0) &&/* a used     */
              ((apidata->utilsemfree[i]).type == MUTEX)){/*mutex sem ?*/
                                        /* if we have a match         */
         if(!strcmp((apidata->utilsemfree[i]).name,args[0].strptr)){
@@ -3780,16 +3343,16 @@ LONG APIENTRY SysCreateMutexSem(
 * Return:    result - return code from DosOpenEventSem                   *
 *************************************************************************/
 
-LONG APIENTRY SysOpenMutexSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysOpenMutexSem(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT       handle;                    /* semaphore  handle          */
-  PCHAR     character;
-  CHAR      c[2]={'\0','\0'};
+  int       handle;                    /* semaphore  handle          */
+  const char *character;
+  char      c[2]={'\0','\0'};
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
@@ -3800,9 +3363,9 @@ LONG APIENTRY SysOpenMutexSem(
       return INVALID_ROUTINE;          /* get out                    */
   }
                                        /* get a binary handle        */
-  handle = strtoul(args[0].strptr,NULL,NULL);
+  handle = strtoul(args[0].strptr, NULL, 10);
   handle = handle - OFFSET;            /* make it real               */
-  if (handle < NULL || handle >= MAXUTILSEM){/* if bad handle        */
+  if (handle < 0 || handle >= MAXUTILSEM){/* if bad handle        */
     sprintf(retstr->strptr, "%d", 6);  /* say so                     */
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
@@ -3844,20 +3407,18 @@ LONG APIENTRY SysOpenMutexSem(
 * Return:    result - return code from DosWaitEventSem                   *
 *************************************************************************/
 
-LONG APIENTRY SysRequestMutexSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysRequestMutexSem(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT       handle;                    /* semaphore  handle          */
-  INT       timeout;                   /* time for timeout           */
-  pid_t     pid;                       /* id of the child process    */
-  struct sigaction timer;              /* action for the signal      */
+  int       handle;                    /* semaphore  handle          */
+  int       timeout = 0;               /* time for timeout           */
   pthread_t thread;                    /* timeout thread             */
-  PCHAR     character;
-  CHAR      c[2]={'\0','\0'};
+  const char *character;
+  char      c[2]={'\0','\0'};
 
   if (numargs < 1 ||                   /* too few, or                */
       numargs > 2 ||                   /* too many, or               */
@@ -3872,7 +3433,7 @@ LONG APIENTRY SysRequestMutexSem(
         return INVALID_ROUTINE;        /* get out                    */
     }
                                        /* get number of seconds      */
-    timeout = strtol(args[1].strptr,NULL,NULL);
+    timeout = strtol(args[1].strptr, NULL, 10);
   }
                                        /* for each char of the handle*/
   for(character=args[0].strptr;*character != '\0';character++){
@@ -3880,18 +3441,16 @@ LONG APIENTRY SysRequestMutexSem(
     if(!strpbrk(c,"1234567890"))       /* if it is no number        */
       return INVALID_ROUTINE;          /* get out                    */
   }
-  handle = strtoul(args[0].strptr,NULL,NULL);/* get binary handle    */
+  handle = strtoul(args[0].strptr, NULL, 10);/* get binary handle    */
   handle = handle - OFFSET;            /* make it real               */
-  if (handle < NULL || handle >= MAXUTILSEM){/* if bad handle        */
+  if (handle < 0 || handle >= MAXUTILSEM){/* if bad handle        */
     sprintf(retstr->strptr, "%d", 6);  /* say so                     */
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
   }
-//  APISTARTUP(MACROCHAIN);
   if(!apidata->rexxutilsems){          /* no sems created until now  */
     sprintf(retstr->strptr, "%d", 6);  /* invalid handle             */
     retstr->strlength = strlen(retstr->strptr);
-//    APICLEANUP(MACROCHAIN);
     return VALID_ROUTINE;
   }
   /* if the semaphore is unused or isn't a mutex semaphore           */
@@ -3899,36 +3458,31 @@ LONG APIENTRY SysRequestMutexSem(
          ((apidata->utilsemfree[handle]).type != MUTEX)){
     sprintf(retstr->strptr, "%d", 6);  /* invalid handle             */
     retstr->strlength = strlen(retstr->strptr);
-//    APICLEANUP(MACROCHAIN);
     return VALID_ROUTINE;
   }
   if(!(opencnt[handle][0])){           /* if I haven't open the sem  */
     sprintf(retstr->strptr, "%d", 6);  /* invalid handle             */
     retstr->strlength = strlen(retstr->strptr);
-//    APICLEANUP(MACROCHAIN);
     return VALID_ROUTINE;
   }
   if(numargs == 1){                    /* indefinit wait             */
 
     if(!getval(apidata->rexxutilsems, handle)){/* if sem is locked     */
                                                /* and I'm the owner    */
-      if((opencnt[handle][1])== SysQueryThreadID()){
-//        APICLEANUP(MACROCHAIN);          /* release the shared resouces*/
+      if((opencnt[handle][1]) == (int)pthread_self()){
         sprintf(retstr->strptr, "%d", 0);    /* no errors              */
       }
       else {                             /* wait for it                */
-//        APICLEANUP(MACROCHAIN);          /* release the shared resouces*/
         /* try to lock the sem                                         */
         locksem(apidata->rexxutilsems, handle);
-        (opencnt[handle][1])= SysQueryThreadID();/* TID of the owner   */
+        (opencnt[handle][1])= pthread_self();/* TID of the owner   */
         sprintf(retstr->strptr, "%d", 0);  /* no errors                */
       }
     }
     else {                               /* sem unlocked               */
       /*        lock the sem                                           */
       locksem(apidata->rexxutilsems, handle);
-      (opencnt[handle][1])= SysQueryThreadID();/* TID of the owner     */
-//      APICLEANUP(MACROCHAIN);            /* release the shared resouces*/
+      (opencnt[handle][1])= pthread_self();/* TID of the owner     */
       sprintf(retstr->strptr, "%d", 0);  /* no errors                  */
     }
     retstr->strlength = strlen(retstr->strptr);
@@ -3937,16 +3491,14 @@ LONG APIENTRY SysRequestMutexSem(
   else {                                 /* need timeout porcess       */
       if(!getval(apidata->rexxutilsems, handle)){/* if sem is locked   */
                                                  /* and I'm the owner  */
-        if((opencnt[handle][1])== SysQueryThreadID()){
-//          APICLEANUP(MACROCHAIN);        /* release the shared resouces*/
+        if((opencnt[handle][1])== (int)pthread_self()){
           sprintf(retstr->strptr, "%d", 0);/* no errors                */
         }
         else {                           /* wait for it                */
-          INT brk[2];
+          int brk[2];
           struct sembuf sem_lock = {handle, -1,IPC_NOWAIT};
           if((!timeout) || (timeout > INT_MAX/1000)){/* if zero timeout*/
             sprintf(retstr->strptr, "%d", 640);/* error timeout        */
-//            APICLEANUP(MACROCHAIN);      /* release the shared resouces*/
             retstr->strlength = strlen(retstr->strptr);
             return VALID_ROUTINE;        /* good completion            */
           }
@@ -3955,20 +3507,11 @@ LONG APIENTRY SysRequestMutexSem(
                                          /* start the timeout thread   */
           if(pthread_create(&thread,NULL,tout,(void*)brk)){
             sprintf(retstr->strptr, "%d", 95);/*error not enough memory*/
-//            APICLEANUP(MACROCHAIN);      /* release the shared resouces*/
             retstr->strlength = strlen(retstr->strptr);
             return VALID_ROUTINE;
           }
-//          APICLEANUP(MACROCHAIN);        /* release the shared resouces*/
-//#ifdef AIX
-//          pthread_yield();             /* must give the timeout thrd */
-//          pthread_yield();             /* some time to register sig  */
-//#else
-//          sched_yield();               /* must give the timeout thrd          */
-//          sched_yield();               /* some time to register sig           */
           SysThreadYield();              /* free the processor           */
           SysThreadYield();              /* free the processor           */
-//#endif                                 /* try to lock the semaphore           */
                                          /* while no success           */
           while(semop(apidata->rexxutilsems,&sem_lock,1) != 0 ){
             if((errno) && (errno != EAGAIN)){/* if there was a real error  */
@@ -3977,12 +3520,7 @@ LONG APIENTRY SysRequestMutexSem(
              return VALID_ROUTINE;
             }
             else {
-//#ifdef AIX
-//              pthread_yield();       /* free the processor           */
-//#else
-//              sched_yield();         /* free the processor           */
               SysThreadYield();        /* free the processor           */
-//#endif
               if(brk[0])               /* if time out                  */
                 break;                 /*no longer tying to get the sem*/
             }
@@ -3992,7 +3530,7 @@ LONG APIENTRY SysRequestMutexSem(
             sprintf(retstr->strptr, "%d", 640);/* error timeout        */
           }
           else {/* got it                                              */
-            (opencnt[handle][1])= SysQueryThreadID();/*TID of the owner*/
+            (opencnt[handle][1])= pthread_self();/*TID of the owner*/
             sprintf(retstr->strptr, "%d", 0);/* no error               */
           }
           retstr->strlength = strlen(retstr->strptr);
@@ -4003,8 +3541,7 @@ LONG APIENTRY SysRequestMutexSem(
 
         /*        lock the sem                                         */
         locksem(apidata->rexxutilsems, handle);
-        (opencnt[handle][1])= SysQueryThreadID();/* TID of the owner   */
-//        APICLEANUP(MACROCHAIN);        /* release the shared resouces  */
+        (opencnt[handle][1])= pthread_self();/* TID of the owner   */
         sprintf(retstr->strptr, "%d", 0);/* no errors                  */
       }
     retstr->strlength = strlen(retstr->strptr);
@@ -4023,19 +3560,16 @@ LONG APIENTRY SysRequestMutexSem(
 * Return:    result - return code from DosCloseEventSem                  *
 *************************************************************************/
 
-LONG APIENTRY SysReleaseMutexSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysReleaseMutexSem(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT       handle;                    /* semaphore  handle          */
-//  union semun semopts;             /* for semaphore control          */
-  INT i;                               /* counter                    */
-  INT used = NULL;
-  PCHAR     character;
-  CHAR      c[2]={'\0','\0'};
+  int       handle;                    /* semaphore  handle          */
+  const char *character;
+  char      c[2]={'\0','\0'};
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
@@ -4046,18 +3580,16 @@ LONG APIENTRY SysReleaseMutexSem(
       return INVALID_ROUTINE;          /* get out                    */
   }
                                        /* get a binary handle        */
-  handle = strtoul(args[0].strptr,NULL,NULL);
+  handle = strtoul(args[0].strptr, NULL, 10);
   handle = handle - OFFSET;            /* make it real               */
-  if (handle < NULL || handle >= MAXUTILSEM){/* if bad handle        */
+  if (handle < 0 || handle >= MAXUTILSEM){/* if bad handle        */
     sprintf(retstr->strptr, "%d", 6);  /* say so                     */
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
   }
-//  APISTARTUP(MACROCHAIN);
   if(!apidata->rexxutilsems){          /* no sems created until now  */
     sprintf(retstr->strptr, "%d", 6);  /* invalid handle             */
     retstr->strlength = strlen(retstr->strptr);
-//    APICLEANUP(MACROCHAIN);
     return VALID_ROUTINE;
   }
   /* if the semaphore is unused or isn't a mutex semaphore           */
@@ -4065,18 +3597,16 @@ LONG APIENTRY SysReleaseMutexSem(
          ((apidata->utilsemfree[handle]).type != MUTEX)){
     sprintf(retstr->strptr, "%d", 6);  /* invalid handle             */
     retstr->strlength = strlen(retstr->strptr);
-//    APICLEANUP(MACROCHAIN);
     return VALID_ROUTINE;
   }
   if(!(opencnt[handle][0])){           /* if I haven't open the sem  */
     sprintf(retstr->strptr, "%d", 6);  /* invalid handle             */
     retstr->strlength = strlen(retstr->strptr);
-//    APICLEANUP(MACROCHAIN);
     return VALID_ROUTINE;
   }
   if(!getval(apidata->rexxutilsems, handle)){/* if sem is locked     */
                                              /* and I'm the owner    */
-    if((opencnt[handle][1])== SysQueryThreadID()){
+    if((opencnt[handle][1])== (int)pthread_self()){
       /* unlock the sem                                              */
       unlocksem(apidata->rexxutilsems, handle);
       (opencnt[handle][1])= 0;         /* reset the owner TID        */
@@ -4088,7 +3618,6 @@ LONG APIENTRY SysReleaseMutexSem(
   else
     sprintf(retstr->strptr, "%d", 288);/* error not owner            */
   retstr->strlength = strlen(retstr->strptr);
-//  APICLEANUP(MACROCHAIN);
   return VALID_ROUTINE;                /* good completion            */
 }
 /*************************************************************************
@@ -4101,20 +3630,19 @@ LONG APIENTRY SysReleaseMutexSem(
 * Return:    result - return code from DosCloseEventSem                  *
 *************************************************************************/
 
-LONG APIENTRY SysCloseMutexSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysCloseMutexSem(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  INT       handle;                    /* semaphore  handle          */
+  int       handle;                    /* semaphore  handle          */
   union semun semopts;               /* for semaphore control          */
-  INT i;                               /* counter                    */
-  int val = 1;
-  INT used = NULL;
-  PCHAR     character;
-  CHAR      c[2]={'\0','\0'};
+  int i;                               /* counter                    */
+  int used = 0;    
+  const char *character;
+  char      c[2]={'\0','\0'};
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
@@ -4125,9 +3653,9 @@ LONG APIENTRY SysCloseMutexSem(
       return INVALID_ROUTINE;          /* get out                    */
   }
                                        /* get a binary handle        */
-  handle = strtoul(args[0].strptr,NULL,NULL);
+  handle = strtoul(args[0].strptr, NULL, 10);
   handle = handle - OFFSET;            /* make it real               */
-  if (handle < NULL || handle >= MAXUTILSEM){/* if bad handle        */
+  if (handle < 0 || handle >= MAXUTILSEM){/* if bad handle        */
     sprintf(retstr->strptr, "%d", 6);  /* say so                     */
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
@@ -4173,7 +3701,7 @@ LONG APIENTRY SysCloseMutexSem(
   }
   if(!(apidata->utilsemfree[handle]).usecount){/*sem now unused ?    */
                                        /* clear the name array       */
-    memset((apidata->utilsemfree[handle]).name,NULL,MAXNAME);
+    memset((apidata->utilsemfree[handle]).name, '\0', MAXNAME);
     /* make sure the sem  is in a clear state                        */
     semopts.val = 1;                   /* initial value                  */
                                        /* do the initialisation          */
@@ -4190,7 +3718,7 @@ LONG APIENTRY SysCloseMutexSem(
   }
   if(!used){                           /* if all sems are unused     */
     removesem(apidata->rexxutilsems);  /* remove the semaphore set   */
-    apidata->rexxutilsems = NULL;      /* delete the old ID          */
+    apidata->rexxutilsems = 0;         /* delete the old ID          */
   }
   retstr->strlength = strlen(retstr->strptr);
   APICLEANUP(MACROCHAIN);
@@ -4219,22 +3747,21 @@ LONG APIENTRY SysCloseMutexSem(
 *            ERROR_NOMEM     - Out of memory.                            *
 *************************************************************************/
 
-LONG APIENTRY SysFileTree(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysFileTree(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  CHAR        FileSpec[IBUF_LEN];      /* File spec to look for      */
-  CHAR        path[IBUF_LEN];          /* path to search along       */
-  PCHAR       optptr;                  /* option scan pointer        */
-  ULONG       options;                 /* Mask of options            */
-  ULONG       y;                       /* Temp counter (II)          */
-  INT         smask[5];                /* Source attribute mask      */
-  INT         dmask[5];                /* Target attribute mask      */
+  char        FileSpec[IBUF_LEN];      /* File spec to look for      */
+  char        path[IBUF_LEN];          /* path to search along       */
+  const char *optptr;                  /* option scan pointer        */
+  size_t       options;                /* Mask of options            */
+  int         smask[5];                /* Source attribute mask      */
+  int         dmask[5];                /* Target attribute mask      */
   RXTREEDATA  ldp;                     /* local data                 */
-  PCHAR       temp;
+  char *       temp;
 
   options = DO_FILES|DO_DIRS;          /* Clear if we should not     */
                                        /* display files              */
@@ -4254,11 +3781,7 @@ LONG APIENTRY SysFileTree(
   strcpy(ldp.varname, args[1].strptr);
   ldp.stemlen = args[1].strlength;
   /* uppercase the name  */
-  temp = ldp.varname;
-  for(int k=0;k<strlen(ldp.varname);k++) {/* loop through mem and    */
-    *temp = toupper(*temp);            /* uppercase each char        */
-    temp++;
-  }
+  strupr(ldp.varname); 
 
   if (ldp.varname[ldp.stemlen-1] != '.')
     ldp.varname[ldp.stemlen++] = '.';
@@ -4334,7 +3857,7 @@ LONG APIENTRY SysFileTree(
   getpath(FileSpec, path, ldp.TargetSpec);
 
   if ( options & CASELESS ) {          /* if caseless upper case     */
-    PCHAR p = ldp.TargetSpec;          /* file name portion now      */
+    char * p = ldp.TargetSpec;          /* file name portion now      */
     for ( ; *p; ++p ) {
       *p = toupper(*p);
     }
@@ -4379,20 +3902,20 @@ LONG APIENTRY SysFileTree(
 *            ''    - No more files exist given specified template.       *
 *************************************************************************/
 
-LONG APIENTRY SysTempFileName(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysTempFileName(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  CHAR   filler;                       /* filler character           */
-  CHAR numstr[6];
-  ULONG  num, start, max;
-  CHAR   *array;
-  CHAR   *dir;                         /* the directory              */
-  CHAR   *file;                        /* the file prefix            */
-  CHAR *tmp;                           /* temporary                  */
+  char   filler;                       /* filler character           */
+  char numstr[6];
+  size_t  num, max;
+  char   *array;
+  char   *dir;                         /* the directory              */
+  char   *file;                        /* the file prefix            */
+  char *tmp;                           /* temporary                  */
   int x, j, i;
   j = 0;                                     /* get a copy of the argument */
   i = 0;
@@ -4519,7 +4042,6 @@ LONG APIENTRY SysTempFileName(
 }
 
 
-
 /*************************************************************************
 * Function:  SysSetPriority                                              *
 *                                                                        *
@@ -4536,20 +4058,15 @@ LONG APIENTRY SysTempFileName(
 *                                                                        *
 *************************************************************************/
 
-LONG APIENTRY SysSetPriority(
-  PSZ       name,                      /* Function name                       */
-
-  LONG      numargs,                   /* Number of arguments                 */
-
-  RXSTRING  args[],                    /* Argument array                      */
-
-  PSZ       queuename,                 /* Current queue                       */
-
-  PRXSTRING retstr )                   /* Return RXSTRING                     */
-
+APIRET APIENTRY SysSetPriority(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  LONG      pclass;                    /* priority class                      */
-  LONG      level;                     /* priority level                      */
+  int       pclass;                    /* priority class                      */
+  int       level;                     /* priority level                      */
   APIRET    rc;                        /* creation return code                */
 
   if (numargs != 2 ||                  /* must have two                       */
@@ -4557,16 +4074,16 @@ LONG APIENTRY SysSetPriority(
     return INVALID_ROUTINE;            /* raise error condition               */
                                        /* get class of change                 */
 
-  if(!string2long(args[0].strptr,&pclass) || /* set the value for pclass      */
-     !string2long(args[1].strptr,&level))    /* set the value for level       */
+  if(!string2int(args[0].strptr,&pclass) || /* set the value for pclass      */
+     !string2int(args[1].strptr,&level))    /* set the value for level       */
     return INVALID_ROUTINE;
 
-  if ((ULONG)pclass == 0){              /* class 0 -> no change               */
+  if (pclass == 0){                     /* class 0 -> no change               */
     rc = 0;                             /* no error                           */
   }
                                         /* change the priority                */
                                         /* change according to delta          */
-  else if (((ULONG)pclass > 0) && ((ULONG)pclass <= 4)){
+  else if (((size_t)pclass > 0) && ((size_t)pclass <= 4)){
     int pid;                            /* PID                                */
     pid = getpid();                     /* current PID                        */
 
@@ -4610,36 +4127,34 @@ LONG APIENTRY SysSetPriority(
 *            Reason: keep portability                                    *
 *************************************************************************/
 
-LONG APIENTRY SysGetMessage(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysGetMessage(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  LONG msgnum;                         /* Message number to get      */
-  INT setnum = 1;                      /* Set number (const 1)       */
+  int  msgnum;                         /* Message number to get      */
+  int setnum = 1;                      /* Set number (const 1)       */
 #if defined( HAVE_CATOPEN )
   nl_catd catalog;                     /* catalog handle             */
 #endif
                                        /* default error msg          */
-  CHAR default_message[] = {"Error: Message catalog not open !\0"};
+  const char default_message[] = {"Error: Message catalog not open !\0"};
                                        /* msg not found  msg         */
-  CHAR not_found_message[] = {"Error: Message not found !\0"};
+  const char not_found_message[] = {"Error: Message not found !\0"};
                                        /* insertion error  msg       */
-  CHAR error_insertions[] = {"Error: Unable to generate message \
+  const char error_insertions[] = {"Error: Unable to generate message \
                               (wrong insertions)\0"};
                                        /* cat not found  msg         */
-  CHAR cat_not_found_message[] = {"Error: Message catalog not found !\0"};
-                                       /* catopen not supported      */
-  CHAR cat_not_supported_message[] = {"Error: Message catalog (catopen) not supported !\0"};
+  const char cat_not_found_message[] = {"Error: Message catalog not found !\0"};
 
-  PCHAR msg;                           /* msg retrieved from catalog */
-  INT icount;                          /* number of insertions       */
-  INT msg_length = 0;                  /* length of the return msg   */
-  PCHAR msgfile;                       /* name of the message file   */
-  PCHAR temp;
-  INT count = 0;                       /* number of '%s' in the msg  */
+  const char * msg;                    /* msg retrieved from catalog */
+  int icount;                          /* number of insertions       */
+  int msg_length = 0;                  /* length of the return msg   */
+  const char * msgfile;                /* name of the message file   */
+  char * temp;
+  int count = 0;                       /* number of '%s' in the msg  */
 
 
   if (numargs < 1 || numargs > 11 ||   /* validate arguments         */
@@ -4647,7 +4162,7 @@ LONG APIENTRY SysGetMessage(
     return INVALID_ROUTINE;            /* exit with error            */
 
                                        /* get message number         */
-  if (!string2long(args[0].strptr, &msgnum) || msgnum < 0)
+  if (!string2int(args[0].strptr, &msgnum) || msgnum < 0)
     return INVALID_ROUTINE;            /* exit with error            */
 
                                        /* Get message file name.     */
@@ -4665,14 +4180,14 @@ LONG APIENTRY SysGetMessage(
 #if defined( HAVE_CATOPEN )
                                        /* open the catalog           */
   if((catalog = catopen(msgfile, NL_CAT_LOCALE)) == (nl_catd)-1){
-    retstr->strptr = (PCHAR)malloc(strlen(cat_not_found_message)+1);
+    retstr->strptr = (char *)malloc(strlen(cat_not_found_message)+1);
     strcpy(retstr->strptr, cat_not_found_message);
     retstr->strlength = strlen(cat_not_found_message);
     return VALID_ROUTINE;
   }
 
                                        /* retrieve msg from catalog  */
-  msg = catgets(catalog, setnum, (INT)msgnum, default_message);
+  msg = catgets(catalog, setnum, (int)msgnum, default_message);
 
   if(*msg == '\0')                     /* if empty string returned   */
     msg = not_found_message;           /* it means msg not found     */
@@ -4690,16 +4205,16 @@ LONG APIENTRY SysGetMessage(
   msg_length -= icount*2;
 
   /* alloc needed space for the return message (add 100 for default msgs)  */
-  if(!(retstr->strptr = (PCHAR)malloc(msg_length+100))){
+  if(!(retstr->strptr = (char *)malloc(msg_length+100))){
      BUILDRXSTRING(retstr, ERROR_NOMEM);
       catclose(catalog);
       return VALID_ROUTINE;
   }
 
   /* check for too much '%s' in the message                          */
-  temp = msg;
+  temp = const_cast<char *>(msg);
   /* replace all &1..&9 with %s                                         */
-  while(temp = strstr(temp, "&")){
+  while((temp = strstr(temp, "&"))){
     if(isdigit(*(temp+1))){             /* replace &1..&9 ?             */
       *(temp++) = '%';
       *(temp++) = 's';                  /* %s expected                  */
@@ -4709,8 +4224,8 @@ LONG APIENTRY SysGetMessage(
       temp++;
   }
   /* now look for number of replacement variables                       */
-  temp = msg;                            /* reset temp pointer          */
-  while(temp = strstr(temp,"%s")){       /* search for the %s           */
+  temp = const_cast<char *>(msg);        /* reset temp pointer          */
+  while((temp = strstr(temp,"%s"))){     /* search for the %s           */
     count ++;                            /* increment counter           */
     temp += 2;                           /* jump over %s                */
   }
@@ -4814,7 +4329,10 @@ LONG APIENTRY SysGetMessage(
   catclose(catalog);                   /* close the catalog          */
   return VALID_ROUTINE;                /* no error on call           */
 #else
-  retstr->strptr = (PCHAR)malloc(strlen(cat_not_supported_message)+1);
+                                       /* catopen not supported      */
+  const char cat_not_supported_message[] = {"Error: Message catalog (catopen) not supported !\0"};
+
+  retstr->strptr = (char *)malloc(strlen(cat_not_supported_message)+1);
   strcpy(retstr->strptr, cat_not_supported_message);
   retstr->strlength = strlen(cat_not_supported_message);
   return VALID_ROUTINE;
@@ -4841,36 +4359,34 @@ LONG APIENTRY SysGetMessage(
 *            supports the selection of a set in the msg catalog.         *
 *************************************************************************/
 
-LONG APIENTRY SysGetMessageX(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysGetMessageX(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  LONG msgnum;                         /* Message number to get      */
-  LONG setnum;                         /* Set number                 */
+  int  msgnum;                         /* Message number to get      */
+  int  setnum;                         /* Set number                 */
 #if defined( HAVE_CATOPEN )
   nl_catd catalog;                     /* catalog handle             */
 #endif
                                        /* default error msg          */
-  CHAR default_message[] = {"Error: Message catalog not open !\0"};
+  const char default_message[] = {"Error: Message catalog not open !\0"};
                                        /* msg not found  msg         */
-  CHAR not_found_message[] = {"Error: Message not found !\0"};
+  const char not_found_message[] = {"Error: Message not found !\0"};
                                        /* insertion error  msg       */
-  CHAR error_insertions[] = {"Error: Unable to generate message \
+  const char error_insertions[] = {"Error: Unable to generate message \
                               (wrong insertions)\0"};
                                        /* cat not found  msg         */
-  CHAR cat_not_found_message[] = {"Error: Message catalog not found !\0"};
-                                       /* catopen not supported      */
-  CHAR cat_not_supported_message[] = {"Error: Message catalog (catopen) not supported !\0"};
+  const char cat_not_found_message[] = {"Error: Message catalog not found !\0"};
 
-  PCHAR msg;                           /* msg retrieved from catalog */
-  INT icount;                          /* number of insertions       */
-  INT msg_length = 0;                  /* length of the return msg   */
-  PCHAR msgfile;                       /* name of the message file   */
-  PCHAR temp;
-  INT count = 0;                       /* number of '%s' in the msg  */
+  char * msg;                           /* msg retrieved from catalog */
+  int icount;                          /* number of insertions       */
+  int msg_length = 0;                  /* length of the return msg   */
+  const char * msgfile;                /* name of the message file   */
+  char * temp;
+  int count = 0;                       /* number of '%s' in the msg  */
 
 
   if (numargs < 1 || numargs > 12 ||   /* validate arguments         */
@@ -4879,11 +4395,11 @@ LONG APIENTRY SysGetMessageX(
     return INVALID_ROUTINE;            /* exit with error            */
 
                                        /* get set number             */
-  if (!string2long(args[0].strptr, &setnum) || setnum < 0)
+  if (!string2int(args[0].strptr, &setnum) || setnum < 0)
     return INVALID_ROUTINE;            /* exit with error            */
 
                                        /* get message number         */
-  if (!string2long(args[1].strptr, &msgnum) || msgnum < 0)
+  if (!string2int(args[1].strptr, &msgnum) || msgnum < 0)
     return INVALID_ROUTINE;            /* exit with error            */
 
                                        /* Get message file name.     */
@@ -4897,17 +4413,17 @@ LONG APIENTRY SysGetMessageX(
 #if defined( HAVE_CATOPEN )
                                        /* open the catalog           */
   if((catalog = catopen(msgfile, NL_CAT_LOCALE)) == (nl_catd)-1){
-    retstr->strptr = (PCHAR)malloc(strlen(cat_not_found_message)+1);
+    retstr->strptr = (char *)malloc(strlen(cat_not_found_message)+1);
     strcpy(retstr->strptr, cat_not_found_message);
     retstr->strlength = strlen(cat_not_found_message);
     return VALID_ROUTINE;
   }
 
                                        /* retrieve msg from catalog  */
-  msg = catgets(catalog, (INT)setnum, (INT)msgnum, default_message);
+  msg = catgets(catalog, setnum, msgnum, default_message);
 
   if(*msg == '\0')                     /* if empty string returned   */
-    msg = not_found_message;           /* it means msg not found     */
+    msg = const_cast<char *>(not_found_message);  /* it means msg not found     */
 
                                        /* set number of insertions   */
   if (numargs >= 3)
@@ -4922,7 +4438,7 @@ LONG APIENTRY SysGetMessageX(
   msg_length -= icount*2;
 
   /* alloc needed space for the return message (add 100 for default msgs)  */
-  if(!(retstr->strptr = (PCHAR)malloc(msg_length+100))){
+  if(!(retstr->strptr = (char *)malloc(msg_length+100))){
      BUILDRXSTRING(retstr, ERROR_NOMEM);
       catclose(catalog);
       return VALID_ROUTINE;
@@ -4931,7 +4447,7 @@ LONG APIENTRY SysGetMessageX(
   /* check for to much '%s' in the message                           */
   temp = msg;
   /* replace all &1..&9 with %s                                         */
-  while(temp = strstr(temp, "&")){
+  while((temp = strstr(temp, "&"))){
     if(isdigit(*(temp+1))){             /* replace &1..&9 ?             */
       *(temp++) = '%';
       *(temp++) = 's';                  /* %s expected                  */
@@ -4941,7 +4457,7 @@ LONG APIENTRY SysGetMessageX(
   }
   /* now look for number of replacement variables                       */
   temp = msg;                            /* reset temp pointer          */
-  while(temp = strstr(temp,"%s")){       /* search for the %s           */
+  while((temp = strstr(temp,"%s"))){     /* search for the %s           */
     count++;                             /* increment counter           */
     temp += 2;                           /* jump over %s                */
   }
@@ -5046,7 +4562,10 @@ LONG APIENTRY SysGetMessageX(
   catclose(catalog);                   /* close the catalog          */
   return VALID_ROUTINE;                /* no error on call           */
 #else
-  retstr->strptr = (PCHAR)malloc(strlen(cat_not_supported_message)+1);
+                                       /* catopen not supported      */
+  const char cat_not_supported_message[] = {"Error: Message catalog (catopen) not supported !\0"};
+
+  retstr->strptr = (char *)malloc(strlen(cat_not_supported_message)+1);
   strcpy(retstr->strptr, cat_not_supported_message);
   retstr->strlength = strlen(cat_not_supported_message);
   return VALID_ROUTINE;
@@ -5067,14 +4586,14 @@ LONG APIENTRY SysGetMessageX(
 * Return:    The key striked.                                            *
 *************************************************************************/
 
-LONG APIENTRY SysGetKey(
- PSZ       name,                       /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysGetKey(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  BOOL      echo = TRUE;               /* Set to FALSE if we         */
+  bool      echo = true;               /* Set to false if we         */
                                        /* shouldn't echo             */
   RexxMutex *mutex;                    /* serialization semaphore    */
 
@@ -5086,7 +4605,7 @@ LONG APIENTRY SysGetKey(
 
   if (numargs == 1) {                  /* validate arguments         */
     if (!rxstricmp(args[0].strptr, "NOECHO"))
-      echo = FALSE;
+      echo = false;
     else if (rxstricmp(args[0].strptr, "ECHO"))
       return INVALID_ROUTINE;          /* Invalid option             */
   }
@@ -5114,17 +4633,17 @@ LONG APIENTRY SysGetKey(
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY SysAddFuncPkg(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysAddFuncPkg(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  LONG   rc = NULL;
-  INT    j;                            /* Counter                    */
-  LONG   arglength;                    /* length of the count        */
-  PCHAR  argstring;                    /* input sleep time           */
+  APIRET rc = NULL;
+  int    j;                            /* Counter                    */
+  size_t arglength;                    /* length of the count        */
+  char *  argstring;                    /* input sleep time           */
   RXFUNCBLOCK *funcblock;              /* Base for function blocks   */
   PRXINITFUNCPKG InitFunc;             /* Pointer returned from load */
 
@@ -5173,7 +4692,7 @@ LONG APIENTRY SysAddFuncPkg(
           RexxRegisterFunctionDll( funcblock[j].name,
                                    argstring, funcblock[j].name);
         }
-    } /* endfor */
+    } 
   }
   return VALID_ROUTINE;
 }
@@ -5182,23 +4701,20 @@ LONG APIENTRY SysAddFuncPkg(
 * Function:  SysAddCmdPkg    like SysAddFuncPkg                          *
 *                                                                        *
 *************************************************************************/
-LONG APIENTRY SysAddCmdPkg(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysAddCmdPkg(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
- LONG lRc;
-
- lRc = SysAddFuncPkg(
+    return SysAddFuncPkg(
                         name,          /* Function name              */
                         numargs,       /* Number of arguments        */
                         args,          /* Argument array             */
                         queuename,     /* Current queue              */
                         retstr );      /* Return RXSTRING            */
 
-  return lRc;
 }
 
 /*************************************************************************
@@ -5214,17 +4730,17 @@ LONG APIENTRY SysAddCmdPkg(
 * Return:    NO_UTIL_ERROR - Successful.                                 *
 *************************************************************************/
 
-LONG APIENTRY SysDropFuncPkg(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysDropFuncPkg(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  LONG   rc = NULL;
-  INT    j;                            /* Counter                    */
-  LONG   arglength;                    /* length of the count        */
-  PCHAR  argstring;                    /* input sleep time           */
+  APIRET rc = NULL;
+  int    j;                            /* Counter                    */
+  size_t arglength;                    /* length of the count        */
+  char *  argstring;                    /* input sleep time           */
   RXFUNCBLOCK *funcblock;              /* Base for function blocks   */
   PRXINITFUNCPKG InitFunc;             /* Pointer returned from load */
 
@@ -5280,23 +4796,19 @@ LONG APIENTRY SysDropFuncPkg(
 * Function:  SysDropCmdPkg    like SysDropFuncPkg                        *
 *                                                                        *
 *************************************************************************/
-LONG APIENTRY SysDropCmdPkg(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysDropCmdPkg(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
- LONG lRc;
-
- lRc = SysDropFuncPkg(
+    return SysDropFuncPkg(
                         name,          /* Function name              */
                         numargs,       /* Number of arguments        */
                         args,          /* Argument array             */
                         queuename,     /* Current queue              */
                         retstr );      /* Return RXSTRING            */
-
-  return lRc;
 }
 
 /*************************************************************************
@@ -5309,12 +4821,12 @@ LONG APIENTRY SysDropCmdPkg(
 * Return:    Process_ID                                                  *
 *************************************************************************/
 
-LONG APIENTRY SysGetpid(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysGetpid(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   retstr->strlength = 0;               /* set return value           */
                                        /* check arguments            */
@@ -5339,12 +4851,12 @@ LONG APIENTRY SysGetpid(
 * Return:    Process_ID   ( to parent child''s ID / to child the ID 0 )  *
 *************************************************************************/
 
-LONG APIENTRY SysFork(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysFork(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   retstr->strlength = 0;               /* set return value           */
                                        /* check arguments            */
@@ -5368,12 +4880,12 @@ LONG APIENTRY SysFork(
 * Return:    exit code of child                                          *
 *************************************************************************/
 
-LONG APIENTRY SysWait(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysWait(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   int iStatus;
   retstr->strlength = 0;               /* set return value           */
@@ -5400,16 +4912,16 @@ LONG APIENTRY SysWait(
 * Return:    'handle handle'     ( handle for read and handle for write )*
 *************************************************************************/
 
-LONG APIENTRY SysCreatePipe(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysCreatePipe(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   int  iStatus;
   int  iaH[2];
-  char cBlocking;
+  char cBlocking = 0;
   retstr->strlength = 0;                     /* set return value           */
                                              /* check arguments ---------- */
   if (numargs > 1)                           /* More than one arg?         */
@@ -5446,10 +4958,6 @@ LONG APIENTRY SysCreatePipe(
   return VALID_ROUTINE;                      /* no error on call           */
 }
 
-//#endif
-
-
-
 /*************************************************************************
 * Function:  SysDumpVariables                                            *
 *                                                                        *
@@ -5462,17 +4970,17 @@ LONG APIENTRY SysCreatePipe(
 *            -1 - failure during dump                                     *
 *************************************************************************/
 
-LONG APIENTRY SysDumpVariables(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysDumpVariables(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  LONG      rc;                        /* Ret code                   */
+  APIRET    rc;                        /* Ret code                   */
   SHVBLOCK  shvb;
   int       handle;
-  BOOL      fCloseFile = FALSE;
+  bool      fCloseFile = false;
 
   if ( (numargs > 1) ||                /* wrong number of arguments? */
        ((numargs > 0) && !RXVALIDSTRING(args[0])) )
@@ -5481,7 +4989,7 @@ LONG APIENTRY SysDumpVariables(
   if (numargs > 0)
   {
     /* open output file for append */
-    fCloseFile = TRUE;
+    fCloseFile = true;
 
     handle = open(args[0].strptr, O_WRONLY | O_APPEND | O_CREAT, S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IWOTH | S_IROTH);
     if(handle < 0)
@@ -5516,8 +5024,8 @@ LONG APIENTRY SysDumpVariables(
       write(handle, "'\n", 2);
 
       /* free memory allocated by REXX */
-      free(shvb.shvname.strptr);
-      free(shvb.shvvalue.strptr);
+      RexxFreeMemory((void *)shvb.shvname.strptr);
+      RexxFreeMemory((void *)shvb.shvvalue.strptr);
 
       /* leave loop if this was the last var */
       if (shvb.shvret & RXSHV_LVAR)
@@ -5528,7 +5036,6 @@ LONG APIENTRY SysDumpVariables(
   if (fCloseFile)
      close(handle);          /* close the file             */
 
-/*if (rc != RXSHV_OK)       */
   if (rc != RXSHV_LVAR)
     RETVAL(-1)
   else
@@ -5546,19 +5053,18 @@ LONG APIENTRY SysDumpVariables(
 *            other - date and time as YYYY-MM-DD HH:MM:SS                *
 *************************************************************************/
 
-LONG APIENTRY SysGetFileDateTime(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysGetFileDateTime(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  LONG      rc;                        /* Ret code                   */
   struct    stat buf;
   struct    tm *newtime;
-  PCHAR     dir_buf = NULL;            /* full directory path        */
-  BOOL      fOk = TRUE;
-  BOOL      alloc_Flag = FALSE;
+  const char *dir_buf = NULL;            /* full directory path        */
+  bool      fOk = true;
+  bool      alloc_Flag = false;
 
   if ( (numargs < 1) || (numargs > 2) ||
        ((numargs == 2) && !RXVALIDSTRING(args[1])) )
@@ -5567,7 +5073,7 @@ LONG APIENTRY SysGetFileDateTime(
   if(*(args[0].strptr) == '~')
   {
     dir_buf = resolve_tilde(args[0].strptr);
-    alloc_Flag = TRUE;
+    alloc_Flag = true;
   }
   else
   {
@@ -5576,7 +5082,7 @@ LONG APIENTRY SysGetFileDateTime(
 
   if (stat(dir_buf, &buf) < 0)
   {
-     fOk = FALSE;
+     fOk = false;
   }
 
   if(fOk)
@@ -5613,8 +5119,8 @@ LONG APIENTRY SysGetFileDateTime(
              newtime->tm_sec);
              retstr->strlength = strlen(retstr->strptr);
   }
-  if( (dir_buf) && (alloc_Flag == TRUE) )
-    free(dir_buf);                         /* free the buffer memory  */
+  if( (dir_buf) && (alloc_Flag == true) )
+    free((void *)dir_buf);  /* free the buffer memory  */
   if (!fOk)
     RETVAL(-1)
   else
@@ -5634,22 +5140,20 @@ LONG APIENTRY SysGetFileDateTime(
 *            -1 - failure attribute update                               *
 *************************************************************************/
 
-LONG APIENTRY SysSetFileDateTime(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysSetFileDateTime(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  LONG      rc;                        /* Ret code                   */
-  BOOL      fOk = TRUE;
-  BOOL      fCloseFile = FALSE;
+  bool      fOk = true;
   struct utimbuf timebuf;
   struct tm *newtime;
   time_t ltime;
   struct stat buf;
-  PCHAR  dir_buf = NULL;
-  BOOL      alloc_Flag = FALSE;
+  const char *dir_buf = NULL;
+  bool      alloc_Flag = false;
 
   /* we expect one to three parameters, if three parameters are      */
   /* specified then the second may be omitted to set only a new time,*/
@@ -5663,7 +5167,7 @@ LONG APIENTRY SysSetFileDateTime(
   if(*(args[0].strptr) == '~')
   {
     dir_buf = resolve_tilde(args[0].strptr);
-    alloc_Flag = TRUE;
+    alloc_Flag = true;
   }
   else
   {
@@ -5672,7 +5176,7 @@ LONG APIENTRY SysSetFileDateTime(
 
   if (stat(dir_buf, &buf) < 0)
   {
-     fOk =  FALSE;
+     fOk =  false;
   }
 
   if (numargs == 1)
@@ -5681,7 +5185,7 @@ LONG APIENTRY SysSetFileDateTime(
     timebuf.modtime = ltime;
     if (utime(dir_buf, &timebuf) < 0)
     {
-       fOk = FALSE;
+       fOk = false;
     }
   }
   else
@@ -5693,7 +5197,7 @@ LONG APIENTRY SysSetFileDateTime(
        /* parse new date */
        if (sscanf(args[1].strptr, "%4d-%2d-%2d", &newtime->tm_year,
                   &newtime->tm_mon, &newtime->tm_mday) != 3)
-       fOk = FALSE;
+       fOk = false;
        newtime->tm_year -= 1900;
        newtime->tm_mon -= 1;
     }
@@ -5702,19 +5206,18 @@ LONG APIENTRY SysSetFileDateTime(
        /* parse new time */
        if (sscanf(args[2].strptr, "%2d:%2d:%2d", &newtime->tm_hour,
                   &newtime->tm_min, &newtime->tm_sec) != 3)
-            fOk = FALSE;
+            fOk = false;
     }
     ltime = mktime(newtime);
     timebuf.modtime = ltime;
-/*  if (utime(args[0].strptr, &timebuf) < 0)           */
     if (utime(dir_buf, &timebuf) < 0)
     {
-       fOk = FALSE;
+       fOk = false;
     }
   }
 
-  if( (dir_buf) && (alloc_Flag == TRUE) )
-    free(dir_buf);                         /* free the buffer memory  */
+  if( (dir_buf) && (alloc_Flag == true) )
+    free((void *)dir_buf);               /* free the buffer memory  */
   if (fOk)
     RETVAL(0)
   else
@@ -5722,203 +5225,7 @@ LONG APIENTRY SysSetFileDateTime(
 }
 
 
-/*-------------------------------------------------------------------*/
-
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   rxstrnicmp                                   */
-/*                                                                   */
-/*   Descriptive Name:  case insensitive string compare              */
-/*                                                                   */
-/*   Entry Point:       rxstrnicmp                                   */
-/*                                                                   */
-/*   Input:             pointers to two ASCII strings                */
-/*                                                                   */
-/*********************************************************************/
-int rxstrnicmp(
-  PSZ       s1,                        /* first string location      */
-  PSZ       s2,                        /* second string location     */
-  ULONG     count)
-{
-
-  int i = 0;
-
-  while ( 1 ) {
-    if ( ( tolower(*s1) != tolower(*s2) ) || !*s1 )
-      break;
-    ++s1;
-    ++s2;
-    i++;
-    if (i > count)
-       break;
-  }
-  return ( (INT)tolower(*s1) - (INT)tolower(*s2) );
-}
-
-int compare_asc(const void *arg1, const void *arg2)
-{
-  PRXSTRING     rxArg1 = (PRXSTRING)arg1;
-  PRXSTRING     rxArg2 = (PRXSTRING)arg2;
-
-  return (strcmp(rxArg1->strptr, rxArg2->strptr));
-}
-
-int compare_asc_cols(const void *arg1, const void *arg2)
-{
-  PRXSTRING     rxArg1 = (PRXSTRING)arg1;
-  PRXSTRING     rxArg2 = (PRXSTRING)arg2;
-
-  if ( (ulStartCol < rxArg1->strlength) && (ulStartCol < rxArg2->strlength) )
-  {
-    return (strncmp(rxArg1->strptr+ulStartCol,
-                    rxArg2->strptr+ulStartCol, ulCompLength));
-  }
-  else
-  {
-    if (rxArg1->strlength == rxArg2->strlength)
-      return 0;
-    else
-      return (rxArg1->strlength < rxArg2->strlength) ? -1 : 1;
-  } /* endif */
-}
-
-int compare_asc_i(const void *arg1, const void *arg2)
-{
-  PRXSTRING     rxArg1 = (PRXSTRING)arg1;
-  PRXSTRING     rxArg2 = (PRXSTRING)arg2;
-
-  return (stricmp(rxArg1->strptr, rxArg2->strptr));
-}
-
-int compare_asc_i_cols(const void *arg1, const void *arg2)
-{
-  PRXSTRING     rxArg1 = (PRXSTRING)arg1;
-  PRXSTRING     rxArg2 = (PRXSTRING)arg2;
-
-  if ( (ulStartCol < rxArg1->strlength) && (ulStartCol < rxArg2->strlength) )
-  {
-  return (rxstrnicmp(rxArg1->strptr+ulStartCol,
-                    rxArg2->strptr+ulStartCol, ulCompLength));
-
-  }
-  else
-  {
-    if (rxArg1->strlength == rxArg2->strlength)
-      return 0;
-    else
-      return (rxArg1->strlength < rxArg2->strlength) ? -1 : 1;
-  } /* endif */
-}
-
-int compare_asc_num(const void *arg1, const void *arg2)
-{
-  PRXSTRING     rxArg1 = (PRXSTRING)arg1;
-  PRXSTRING     rxArg2 = (PRXSTRING)arg2;
-
-  return (stricmp(rxArg1->strptr, rxArg2->strptr));
-}
-
-int compare_asc_num_cols(const void *arg1, const void *arg2)
-{
-  PRXSTRING     rxArg1 = (PRXSTRING)arg1;
-  PRXSTRING     rxArg2 = (PRXSTRING)arg2;
-
-  if ( (ulStartCol < rxArg1->strlength) && (ulStartCol < rxArg2->strlength) )
-  {
-    return (rxstrnicmp(rxArg1->strptr+ulStartCol,
-                    rxArg2->strptr+ulStartCol, ulCompLength));
-  }
-  else
-  {
-    if (rxArg1->strlength == rxArg2->strlength)
-      return 0;
-    else
-      return (rxArg1->strlength < rxArg2->strlength) ? -1 : 1;
-  } /* endif */
-}
-
-int compare_desc(const void *arg1, const void *arg2)
-{
-  PRXSTRING     rxArg1 = (PRXSTRING)arg1;
-  PRXSTRING     rxArg2 = (PRXSTRING)arg2;
-
-  return (-strcmp(rxArg1->strptr, rxArg2->strptr));
-}
-
-int compare_desc_cols(const void *arg1, const void *arg2)
-{
-  PRXSTRING     rxArg1 = (PRXSTRING)arg1;
-  PRXSTRING     rxArg2 = (PRXSTRING)arg2;
-
-  if ( (ulStartCol < rxArg1->strlength) && (ulStartCol < rxArg2->strlength) )
-  {
-    return (-strncmp(rxArg1->strptr+ulStartCol,
-                     rxArg2->strptr+ulStartCol, ulCompLength));
-  }
-  else
-  {
-    if (rxArg1->strlength == rxArg2->strlength)
-      return 0;
-    else
-      return (rxArg1->strlength > rxArg2->strlength) ? -1 : 1;
-  } /* endif */
-}
-
-int compare_desc_i(const void *arg1, const void *arg2)
-{
-  PRXSTRING     rxArg1 = (PRXSTRING)arg1;
-  PRXSTRING     rxArg2 = (PRXSTRING)arg2;
-
-  return (-stricmp(rxArg1->strptr, rxArg2->strptr));
-}
-
-int compare_desc_i_cols(const void *arg1, const void *arg2)
-{
-  PRXSTRING     rxArg1 = (PRXSTRING)arg1;
-  PRXSTRING     rxArg2 = (PRXSTRING)arg2;
-
-  if ( (ulStartCol < rxArg1->strlength) && (ulStartCol < rxArg2->strlength) )
-  {
-    return (-rxstrnicmp(rxArg1->strptr+ulStartCol,
-                      rxArg2->strptr+ulStartCol, ulCompLength));
-  }
-  else
-  {
-    if (rxArg1->strlength == rxArg2->strlength)
-      return 0;
-    else
-      return (rxArg1->strlength > rxArg2->strlength) ? -1 : 1;
-  } /* endif */
-}
-
-int compare_desc_num(const void *arg1, const void *arg2)
-{
-  PRXSTRING     rxArg1 = (PRXSTRING)arg1;
-  PRXSTRING     rxArg2 = (PRXSTRING)arg2;
-
-  return (-stricmp(rxArg1->strptr, rxArg2->strptr));
-}
-
-int compare_desc_num_cols(const void *arg1, const void *arg2)
-{
-  PRXSTRING     rxArg1 = (PRXSTRING)arg1;
-  PRXSTRING     rxArg2 = (PRXSTRING)arg2;
-
-  if ( (ulStartCol < rxArg1->strlength) && (ulStartCol < rxArg2->strlength) )
-  {
-    return (-rxstrnicmp(rxArg1->strptr+ulStartCol,
-                      rxArg2->strptr+ulStartCol, ulCompLength));
-  }
-  else
-  {
-    if (rxArg1->strlength == rxArg2->strlength)
-      return 0;
-    else
-      return (rxArg1->strlength > rxArg2->strlength) ? -1 : 1;
-  } /* endif */
-}
-
-APIRET APIENTRY RexxStemSort(PCHAR stemname, INT order, INT type,
+APIRET APIENTRY RexxStemSort(const char *stemname, int order, int type,
     size_t start, size_t end, size_t firstcol, size_t lastcol);
 
 /*************************************************************************
@@ -5939,21 +5246,20 @@ APIRET APIENTRY RexxStemSort(PCHAR stemname, INT order, INT type,
 *            -1 - sort failed                                            *
 *************************************************************************/
 
-LONG APIENTRY SysStemSort(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY SysStemSort(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-    CHAR          stemName[255];
+    char          stemName[255];
     size_t        first = 1;
-    size_t        last = ULONG_MAX;
+    size_t        last = SIZE_MAX;
     size_t        firstCol = 0;
-    size_t        lastCol = ULONG_MAX;
-    INT           sortType = SORT_CASESENSITIVE;
-    INT           sortOrder = SORT_ASCENDING;
+    size_t        lastCol = SIZE_MAX;
+    int           sortType = SORT_CASESENSITIVE;
+    int           sortOrder = SORT_ASCENDING;
 
     if ( (numargs < 1) || (numargs > 7) || /* validate arguments       */
         !RXVALIDSTRING(args[0]))
@@ -6002,7 +5308,7 @@ LONG APIENTRY SysStemSort(
 
     if ((numargs >= 4) && RXVALIDSTRING(args[3])) /* first element to sort */
     {
-      if (sscanf(args[3].strptr, "%ld", &first) != 1)
+      if (sscanf(args[3].strptr, "%u", &first) != 1)
         return INVALID_ROUTINE;
       if (first == 0)
         return INVALID_ROUTINE;
@@ -6010,7 +5316,7 @@ LONG APIENTRY SysStemSort(
 
     if ((numargs >= 5) && RXVALIDSTRING(args[4])) /* last element to sort */
     {
-      if (sscanf(args[4].strptr, "%ld", &last) != 1)
+      if (sscanf(args[4].strptr, "%u", &last) != 1)
         return INVALID_ROUTINE;
       if (last < first)
         return INVALID_ROUTINE;
@@ -6018,14 +5324,14 @@ LONG APIENTRY SysStemSort(
 
     if ((numargs >= 6) && RXVALIDSTRING(args[5])) /* first column to sort */
     {
-      if (sscanf(args[5].strptr, "%ld", &firstCol) != 1)
+      if (sscanf(args[5].strptr, "%u", &firstCol) != 1)
         return INVALID_ROUTINE;
       firstCol--;
     } /* endif */
 
     if ((numargs == 7) && RXVALIDSTRING(args[6])) /* last column to sort */
     {
-      if (sscanf(args[6].strptr, "%ld", &lastCol) != 1)
+      if (sscanf(args[6].strptr, "%u", &lastCol) != 1)
         return INVALID_ROUTINE;
       lastCol--;
       if (lastCol < firstCol)
@@ -6059,24 +5365,23 @@ LONG APIENTRY SysStemSort(
 *            -1 - delete failed                                          *
 *************************************************************************/
 
-LONG APIENTRY SysStemDelete(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY SysStemDelete(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   APIRET        rc;
-  CHAR          szStemName[255];
-  PSZ           pszStemIdx;
-  CHAR          szValue[255];
+  char          szStemName[255];
+  char *        pszStemIdx;
+  char          szValue[255];
   SHVBLOCK      shvb;
-  ULONG         ulIdx;
-  ULONG         ulFirst;
-  ULONG         ulItems = 1;
-  ULONG         ulCount;
-  BOOL          fOk = TRUE;
+  size_t         ulIdx;
+  size_t         ulFirst;
+  size_t         ulItems = 1;
+  size_t         ulCount;
+  bool          fOk = true;
 
   if ( (numargs < 2) || (numargs > 3) || /* validate arguments       */
       !RXVALIDSTRING(args[0]) || !RXVALIDSTRING(args[1]) ||
@@ -6091,13 +5396,13 @@ LONG APIENTRY SysStemDelete(
   pszStemIdx = &(szStemName[strlen(szStemName)]);
 
   /* get item index to be deleted */
-  if (sscanf(args[1].strptr, "%ld", &ulFirst) != 1)
+  if (sscanf(args[1].strptr, "%u", &ulFirst) != 1)
     return INVALID_ROUTINE;
 
   /* get number of items to delete */
   if (numargs == 3)
   {
-    if (sscanf(args[2].strptr, "%ld", &ulItems) != 1)
+    if (sscanf(args[2].strptr, "%u", &ulItems) != 1)
       return INVALID_ROUTINE;
     if (ulItems == 0)
       return INVALID_ROUTINE;
@@ -6117,7 +5422,7 @@ LONG APIENTRY SysStemDelete(
   if (RexxVariablePool(&shvb) == RXSHV_OK)
   {
     /* index retrieved fine */
-    if (sscanf(shvb.shvvalue.strptr, "%ld", &ulCount) != 1)
+    if (sscanf(shvb.shvvalue.strptr, "%u", &ulCount) != 1)
       return INVALID_ROUTINE;
 
     /* check wether supplied index and count is within limits */
@@ -6128,7 +5433,7 @@ LONG APIENTRY SysStemDelete(
     for (ulIdx = ulFirst; ulIdx + ulItems <= ulCount; ulIdx++)
     {
       /* get element to relocate */
-      sprintf(pszStemIdx, "%ld", ulIdx + ulItems);
+      sprintf(pszStemIdx, "%u", ulIdx + ulItems);
       shvb.shvnext = NULL;
       shvb.shvname.strptr = szStemName;
       shvb.shvname.strlength = strlen((const char *)szStemName);
@@ -6141,7 +5446,7 @@ LONG APIENTRY SysStemDelete(
 
       if (RexxVariablePool(&shvb) == RXSHV_OK)
       {
-        sprintf(pszStemIdx, "%ld", ulIdx);
+        sprintf(pszStemIdx, "%u", ulIdx);
         shvb.shvnext = NULL;
         shvb.shvname.strptr = szStemName;
         shvb.shvname.strlength = strlen((const char *)szStemName);
@@ -6151,13 +5456,13 @@ LONG APIENTRY SysStemDelete(
         shvb.shvret = 0;
         rc = RexxVariablePool(&shvb);
         if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-          fOk = FALSE;
+          fOk = false;
 
         /* free memory allocated by REXX */
         free(shvb.shvvalue.strptr);
       }
       else
-        fOk = FALSE;
+        fOk = false;
 
       if (!fOk)
         break;
@@ -6168,7 +5473,7 @@ LONG APIENTRY SysStemDelete(
       /* now delete the items at the end */
       for (ulIdx = ulCount - ulItems + 1; ulIdx <= ulCount; ulIdx++)
       {
-        sprintf(pszStemIdx, "%ld", ulIdx);
+        sprintf(pszStemIdx, "%u", ulIdx);
         shvb.shvnext = NULL;
         shvb.shvname.strptr = szStemName;
         shvb.shvname.strlength = strlen((const char *)szStemName);
@@ -6180,7 +5485,7 @@ LONG APIENTRY SysStemDelete(
         shvb.shvret = 0;
         if (RexxVariablePool(&shvb) != RXSHV_OK)
         {
-          fOk = FALSE;
+          fOk = false;
           break;
         } /* endif */
       } /* endfor */
@@ -6190,7 +5495,7 @@ LONG APIENTRY SysStemDelete(
     {
       /* set the new number of items in the stem array */
       strcpy(pszStemIdx, "0");
-      sprintf(szValue, "%ld", ulCount - ulItems);
+      sprintf(szValue, "%u", ulCount - ulItems);
       shvb.shvnext = NULL;
       shvb.shvname.strptr = szStemName;
       shvb.shvname.strlength = strlen((const char *)szStemName);
@@ -6202,12 +5507,12 @@ LONG APIENTRY SysStemDelete(
       shvb.shvret = 0;
       rc = RexxVariablePool(&shvb);
       if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-        fOk = FALSE;
+        fOk = false;
     } /* endif */
   }
   else
   {
-    fOk = FALSE;
+    fOk = false;
   } /* endif */
 
   if (fOk)
@@ -6230,23 +5535,22 @@ LONG APIENTRY SysStemDelete(
 *            -1 - insert failed                                          *
 *************************************************************************/
 
-LONG APIENTRY SysStemInsert(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY SysStemInsert(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   APIRET        rc;
-  CHAR          szStemName[255];
-  PSZ           pszStemIdx;
-  CHAR          szValue[255];
+  char          szStemName[255];
+  char *        pszStemIdx;
+  char          szValue[255];
   SHVBLOCK      shvb;
-  ULONG         ulIdx;
-  ULONG         ulPosition;
-  ULONG         ulCount;
-  BOOL          fOk = TRUE;
+  size_t         ulIdx;
+  size_t         ulPosition;
+  size_t         ulCount;
+  bool          fOk = true;
 
   if ( (numargs != 3) ||  /* validate arguments       */
       !RXVALIDSTRING(args[0]) || !RXVALIDSTRING(args[1]) ||
@@ -6261,7 +5565,7 @@ LONG APIENTRY SysStemInsert(
   pszStemIdx = &(szStemName[strlen(szStemName)]);
 
   /* get new item index */
-  if (sscanf(args[1].strptr, "%ld", &ulPosition) != 1)
+  if (sscanf(args[1].strptr, "%u", &ulPosition) != 1)
      return INVALID_ROUTINE;
 
   /* retrieve the number of elements in stem */
@@ -6278,7 +5582,7 @@ LONG APIENTRY SysStemInsert(
   if (RexxVariablePool(&shvb) == RXSHV_OK)
   {
     /* index retrieved fine */
-    if (sscanf(shvb.shvvalue.strptr, "%ld", &ulCount) != 1)
+    if (sscanf(shvb.shvvalue.strptr, "%u", &ulCount) != 1)
       return INVALID_ROUTINE;
 
     /* check wether new position is within limits */
@@ -6289,7 +5593,7 @@ LONG APIENTRY SysStemInsert(
     for (ulIdx = ulCount; ulIdx >= ulPosition; ulIdx--)
     {
       /* get element to relocate */
-      sprintf(pszStemIdx, "%ld", ulIdx);
+      sprintf(pszStemIdx, "%u", ulIdx);
       shvb.shvnext = NULL;
       shvb.shvname.strptr = szStemName;
       shvb.shvname.strlength = strlen((const char *)szStemName);
@@ -6302,7 +5606,7 @@ LONG APIENTRY SysStemInsert(
 
       if (RexxVariablePool(&shvb) == RXSHV_OK)
       {
-        sprintf(pszStemIdx, "%ld", ulIdx + 1);
+        sprintf(pszStemIdx, "%u", ulIdx + 1);
         shvb.shvnext = NULL;
         shvb.shvname.strptr = szStemName;
         shvb.shvname.strlength = strlen((const char *)szStemName);
@@ -6312,13 +5616,13 @@ LONG APIENTRY SysStemInsert(
         shvb.shvret = 0;
         rc = RexxVariablePool(&shvb);
         if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-          fOk = FALSE;
+          fOk = false;
 
         /* free memory allocated by REXX */
         free(shvb.shvvalue.strptr);
       }
       else
-        fOk = FALSE;
+        fOk = false;
 
       if (!fOk)
         break;
@@ -6327,11 +5631,11 @@ LONG APIENTRY SysStemInsert(
     if (fOk)
     {
       /* set the new item value */
-      sprintf(pszStemIdx, "%ld", ulPosition);
+      sprintf(pszStemIdx, "%u", ulPosition);
       shvb.shvnext = NULL;
       shvb.shvname.strptr = szStemName;
       shvb.shvname.strlength = strlen((const char *)szStemName);
-      shvb.shvvalue.strptr = args[2].strptr;
+      shvb.shvvalue.strptr = const_cast<char *>(args[2].strptr);
       shvb.shvvalue.strlength = args[2].strlength;
       shvb.shvnamelen = shvb.shvname.strlength;
       shvb.shvvaluelen = shvb.shvvalue.strlength;
@@ -6339,14 +5643,14 @@ LONG APIENTRY SysStemInsert(
       shvb.shvret = 0;
       rc = RexxVariablePool(&shvb);
       if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-        fOk = FALSE;
+        fOk = false;
     } /* endif */
 
     if (fOk)
     {
       /* set the new number of items in the stem array */
       strcpy(pszStemIdx, "0");
-      sprintf(szValue, "%ld", ulCount + 1);
+      sprintf(szValue, "%u", ulCount + 1);
       shvb.shvnext = NULL;
       shvb.shvname.strptr = szStemName;
       shvb.shvname.strlength = strlen((const char *)szStemName);
@@ -6358,12 +5662,12 @@ LONG APIENTRY SysStemInsert(
       shvb.shvret = 0;
       rc = RexxVariablePool(&shvb);
       if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-        fOk = FALSE;
+        fOk = false;
     } /* endif */
   }
   else
   {
-    fOk = FALSE;
+    fOk = false;
   } /* endif */
 
   if (fOk)
@@ -6390,29 +5694,28 @@ LONG APIENTRY SysStemInsert(
 *            -1 - stem copy failed                                       *
 *************************************************************************/
 
-LONG APIENTRY SysStemCopy(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+APIRET APIENTRY SysStemCopy(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   APIRET        rc;
-  CHAR          szFromStemName[255];
-  CHAR          szToStemName[255];
-  PSZ           pszFromStemIdx;
-  PSZ           pszToStemIdx;
-  CHAR          szValue[255];
+  char          szFromStemName[255];
+  char          szToStemName[255];
+  char *        pszFromStemIdx;
+  char *        pszToStemIdx;
+  char          szValue[255];
   SHVBLOCK      shvb;
-  ULONG         ulIdx;
-  ULONG         ulToCount;
-  ULONG         ulFromCount;
-  ULONG         ulFrom = 1;
-  ULONG         ulTo = 1;
-  ULONG         ulCopyCount = 0;
-  BOOL          fInsert = FALSE;
-  BOOL          fOk = TRUE;
+  size_t         ulIdx;
+  size_t         ulToCount;
+  size_t         ulFromCount;
+  size_t         ulFrom = 1;
+  size_t         ulTo = 1;
+  size_t         ulCopyCount = 0;
+  bool          fInsert = false;
+  bool          fOk = true;
 
   if ( (numargs < 2) || (numargs > 6) ||  /* validate arguments       */
       !RXVALIDSTRING(args[0]) || !RXVALIDSTRING(args[1]) ||
@@ -6434,17 +5737,17 @@ LONG APIENTRY SysStemCopy(
 
   /* get from item index */
   if ((numargs >= 3) && RXVALIDSTRING(args[2]))
-    if (sscanf(args[2].strptr, "%ld", &ulFrom) != 1)
+    if (sscanf(args[2].strptr, "%u", &ulFrom) != 1)
       return INVALID_ROUTINE;
 
   /* get to item index */
   if ((numargs >= 4) && RXVALIDSTRING(args[3]))
-    if (sscanf(args[3].strptr, "%ld", &ulTo) != 1)
+    if (sscanf(args[3].strptr, "%u", &ulTo) != 1)
       return INVALID_ROUTINE;
 
   /* get copy count */
   if ((numargs >= 5) && RXVALIDSTRING(args[4]))
-    if (sscanf(args[4].strptr, "%ld", &ulCopyCount) != 1)
+    if (sscanf(args[4].strptr, "%u", &ulCopyCount) != 1)
       return INVALID_ROUTINE;
 
   /* get copy type */
@@ -6454,11 +5757,11 @@ LONG APIENTRY SysStemCopy(
     {
       case 'I':
       case 'i':
-        fInsert = TRUE;
+        fInsert = true;
         break;
       case 'O':
       case 'o':
-        fInsert = FALSE;
+        fInsert = false;
         break;
       default:
         return INVALID_ROUTINE;
@@ -6479,14 +5782,14 @@ LONG APIENTRY SysStemCopy(
   if (RexxVariablePool(&shvb) == RXSHV_OK)
   {
     /* index retrieved fine */
-    if (sscanf(shvb.shvvalue.strptr, "%ld", &ulFromCount) != 1)
+    if (sscanf(shvb.shvvalue.strptr, "%u", &ulFromCount) != 1)
       return INVALID_ROUTINE;
 
     if ((ulCopyCount > ulFromCount) || (ulFromCount == 0))
       return INVALID_ROUTINE;
   }
   else
-    fOk = FALSE;
+    fOk = false;
 
   if (fOk)
   {
@@ -6504,7 +5807,7 @@ LONG APIENTRY SysStemCopy(
     if (rc == RXSHV_OK)
     {
       /* index retrieved fine */
-      if (sscanf(shvb.shvvalue.strptr, "%ld", &ulToCount) != 1)
+      if (sscanf(shvb.shvvalue.strptr, "%u", &ulToCount) != 1)
         return INVALID_ROUTINE;
     }
     else
@@ -6515,7 +5818,7 @@ LONG APIENTRY SysStemCopy(
         ulToCount = 0;
       }
       else
-        fOk = FALSE;
+        fOk = false;
     } /* endif */
 
     if (fOk)
@@ -6535,7 +5838,7 @@ LONG APIENTRY SysStemCopy(
     for (ulIdx = ulToCount; ulIdx >= ulTo; ulIdx--)
     {
       /* get element to relocate */
-      sprintf(pszToStemIdx, "%ld", ulIdx);
+      sprintf(pszToStemIdx, "%u", ulIdx);
       shvb.shvnext = NULL;
       shvb.shvname.strptr = szToStemName;
       shvb.shvname.strlength = strlen((const char *)szToStemName);
@@ -6548,7 +5851,7 @@ LONG APIENTRY SysStemCopy(
 
       if (RexxVariablePool(&shvb) == RXSHV_OK)
       {
-        sprintf(pszToStemIdx, "%ld", ulIdx + ulCopyCount);
+        sprintf(pszToStemIdx, "%u", ulIdx + ulCopyCount);
         shvb.shvnext = NULL;
         shvb.shvname.strptr = szToStemName;
         shvb.shvname.strlength = strlen((const char *)szToStemName);
@@ -6558,13 +5861,13 @@ LONG APIENTRY SysStemCopy(
         shvb.shvret = 0;
         rc = RexxVariablePool(&shvb);
         if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-          fOk = FALSE;
+          fOk = false;
 
         /* free memory allocated by REXX */
         free(shvb.shvvalue.strptr);
       }
       else
-        fOk = FALSE;
+        fOk = false;
 
       if (!fOk)
         break;
@@ -6575,7 +5878,7 @@ LONG APIENTRY SysStemCopy(
       /* set the new count for the target stem */
       strcpy(pszToStemIdx, "0");
       ulToCount += ulCopyCount;
-      sprintf(szValue, "%ld", ulToCount);
+      sprintf(szValue, "%u", ulToCount);
       shvb.shvnext = NULL;
       shvb.shvname.strptr = szToStemName;
       shvb.shvname.strlength = strlen((const char *)szToStemName);
@@ -6587,7 +5890,7 @@ LONG APIENTRY SysStemCopy(
       shvb.shvret = 0;
       rc = RexxVariablePool(&shvb);
       if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-        fOk = FALSE;
+        fOk = false;
     } /* endif */
   } /* endif */
 
@@ -6597,7 +5900,7 @@ LONG APIENTRY SysStemCopy(
     for (ulIdx = 0; ulIdx < ulCopyCount; ulIdx++)
     {
       /* get element to copy */
-      sprintf(pszFromStemIdx, "%ld", ulFrom + ulIdx);
+      sprintf(pszFromStemIdx, "%u", ulFrom + ulIdx);
       shvb.shvnext = NULL;
       shvb.shvname.strptr = szFromStemName;
       shvb.shvname.strlength = strlen((const char *)szFromStemName);
@@ -6610,7 +5913,7 @@ LONG APIENTRY SysStemCopy(
 
       if (RexxVariablePool(&shvb) == RXSHV_OK)
       {
-        sprintf(pszToStemIdx, "%ld", ulTo + ulIdx);
+        sprintf(pszToStemIdx, "%u", ulTo + ulIdx);
         shvb.shvnext = NULL;
         shvb.shvname.strptr = szToStemName;
         shvb.shvname.strlength = strlen((const char *)szToStemName);
@@ -6620,13 +5923,13 @@ LONG APIENTRY SysStemCopy(
         shvb.shvret = 0;
         rc = RexxVariablePool(&shvb);
         if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-          fOk = FALSE;
+          fOk = false;
 
         /* free memory allocated by REXX */
         free(shvb.shvvalue.strptr);
       }
       else
-        fOk = FALSE;
+        fOk = false;
 
       if (!fOk)
         break;
@@ -6638,7 +5941,7 @@ LONG APIENTRY SysStemCopy(
     /* set the new count for the target stem */
     strcpy(pszToStemIdx, "0");
     ulToCount = ulTo + ulCopyCount - 1;
-    sprintf(szValue, "%ld", ulToCount);
+    sprintf(szValue, "%u", ulToCount);
     shvb.shvnext = NULL;
     shvb.shvname.strptr = szToStemName;
     shvb.shvname.strlength = strlen((const char *)szToStemName);
@@ -6650,7 +5953,7 @@ LONG APIENTRY SysStemCopy(
     shvb.shvret = 0;
     rc = RexxVariablePool(&shvb);
     if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-      fOk = FALSE;
+      fOk = false;
   } /* endif */
 
   if (fOk)
@@ -6678,12 +5981,12 @@ LONG APIENTRY SysStemCopy(
 *    NEW:    "PRCVDSIG"  -  returns current process received signals      *
 ***************************************************************************/
 
-LONG APIENTRY SysQueryProcess(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysQueryProcess(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
 
   unsigned int uiUsedCPUTime  = 0;
@@ -6787,21 +6090,21 @@ LONG APIENTRY SysQueryProcess(
   else
   if (!stricmp(args[0].strptr, "PMEM"))  /* Show max memory RSS used   */
   {
-    sprintf(retstr->strptr, "Max_Memory_RSS: %d", struResUse.ru_maxrss);
+    sprintf(retstr->strptr, "Max_Memory_RSS: %ld", struResUse.ru_maxrss);
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;                /* no error on call           */
   }
   else
   if (!stricmp(args[0].strptr, "PSWAPS")) /* Memory has been swapped   */
   {
-    sprintf(retstr->strptr, "Memory_swaps: %d", struResUse.ru_nswap);
+    sprintf(retstr->strptr, "Memory_swaps: %ld", struResUse.ru_nswap);
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;                /* no error on call           */
   }
   else
   if (!stricmp(args[0].strptr, "PRCVDSIG")) /* Process received signals*/
   {
-    sprintf(retstr->strptr, "Received_signals: %d", struResUse.ru_nsignals);
+    sprintf(retstr->strptr, "Received_signals: %ld", struResUse.ru_nsignals);
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;                /* no error on call           */
   }
@@ -6819,12 +6122,12 @@ LONG APIENTRY SysQueryProcess(
 * Return:    Description or empty string                                 *
 *************************************************************************/
 
-LONG APIENTRY SysGetErrortext(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysGetErrortext(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
 
   int   errnum  = 0;
@@ -6859,12 +6162,12 @@ LONG APIENTRY SysGetErrortext(
 * Return:    REXXUTIL.DLL Version                                        *
 *************************************************************************/
 
-LONG APIENTRY SysUtilVersion(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysUtilVersion(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   if (numargs != 0)                    /* validate arg count         */
     return INVALID_ROUTINE;
@@ -6885,12 +6188,12 @@ LONG APIENTRY SysUtilVersion(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysIsFile(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysIsFile(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   struct stat finfo;                   /* return buf for the finfo   */
 
@@ -6918,12 +6221,12 @@ LONG APIENTRY SysIsFile(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysIsFileDirectory(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysIsFileDirectory(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
     struct stat finfo;                 /* return buf for the finfo   */
 
@@ -6950,12 +6253,12 @@ LONG APIENTRY SysIsFileDirectory(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysIsFileLink(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+APIRET APIENTRY SysIsFileLink(
+    const char *name,                    /* Function name              */
+    size_t numargs,                      /* Number of arguments        */
+    CONSTRXSTRING args[],                /* Argument array             */
+    const char * queuename,              /* Current queue              */
+    PRXSTRING retstr )                   /* Return RXSTRING            */
 {
     struct stat finfo;                 /* return buf for the finfo   */
 

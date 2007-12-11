@@ -41,6 +41,7 @@
 #include "RexxActivity.hpp"
 #include "ActivityManager.hpp"
 
+class RexxInstruction;
 
 class ProtectedObject
 {

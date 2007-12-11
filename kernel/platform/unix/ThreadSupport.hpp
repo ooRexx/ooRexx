@@ -47,6 +47,7 @@
 
 #include <pthread.h>
 #include <stdlib.h>
+#include "rexx.h"
 
 #ifdef AIX
 void RxLumCntl( long * result );
@@ -64,7 +65,7 @@ class RexxSemaphore {
   private:
      pthread_cond_t  semCond;
      pthread_mutex_t semMutex;
-     unsigned long   value;
+     size_t value;
 };
 
 class RexxMutex {
@@ -76,22 +77,18 @@ class RexxMutex {
      int release() { int rc; if (!mutex_value) {rc = pthread_mutex_unlock(&mutexMutex);} else{ mutex_value--;rc= 0;};return rc; SysThreadYield();}/* @THU007A return before yield else guard problem*/
 #else
      int request() { return pthread_mutex_lock(&mutexMutex);}
-//   int release() { int rc; rc = pthread_mutex_unlock(&mutexMutex);
      int release() { int rc; rc = pthread_mutex_unlock(&mutexMutex); return(rc);} /* @MIC010A */
 #endif
      int requestImmediate() { return pthread_mutex_trylock(&mutexMutex);}
   private:
      pthread_mutex_t mutexMutex;
-//     unsigned long mutex_value;
-     long mutex_value;
+     size_t mutex_value;
 };
 
 typedef struct _sysThreadArg {
-        long    threadId;
+        thread_id_t threadId;
         pthread_attr_t  threadAttr;
         void*   args;
 } SysThreadArg;
-
-
 #endif
 

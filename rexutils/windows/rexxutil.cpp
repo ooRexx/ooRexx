@@ -194,7 +194,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <conio.h>
-#include "APIUtil.h"
 #include <math.h>
 #include <limits.h>
 #include "wintypes.h"
@@ -219,7 +218,6 @@ VOID CALLBACK SleepTimerProc( HWND, UINT, UINT, DWORD);
 #define CH_NL          '\n'            /* new line character         */
 #define AllocFlag      PAG_COMMIT | PAG_WRITE  /* for DosAllocMem    */
 #define RNDFACTOR      1664525L
-#define rxstricmp(a,b) _stricmp(a,b)
 #define MAX_ENVVAR     1024
 #define MAX_LINE_LEN   4096            /* max line length            */
 
@@ -292,11 +290,11 @@ FILE_SYSTEM | FILE_ARCHIVED | MUST_HAVE_DIRECTORY | FILE_DIRECTORY
 /* RxTree Structure used by GetLine, OpenFile and CloseFile          */
 /*********************************************************************/
 typedef struct _GetFileData {
-  PUCHAR       buffer;                 /* file read buffer           */
-  ULONG        size;                   /* file size                  */
-  ULONG        data;                   /* data left in buffer        */
-  ULONG        residual;               /* size left to read          */
-  PUCHAR       scan;                   /* current scan position      */
+  char *       buffer;                 /* file read buffer           */
+  size_t       size;                   /* file size                  */
+  size_t       data;                   /* data left in buffer        */
+  size_t       residual;               /* size left to read          */
+  char *       scan;                   /* current scan position      */
   HANDLE       handle;                 /* file handle                */
 } GetFileData;
 
@@ -305,15 +303,15 @@ typedef struct _GetFileData {
 /*********************************************************************/
 
 typedef struct RxTreeData {
-    ULONG count;                       /* Number of lines processed  */
+    size_t count;                      /* Number of lines processed  */
     SHVBLOCK shvb;                     /* Request block for RxVar    */
-    ULONG stemlen;                     /* Length of stem             */
-    ULONG vlen;                        /* Length of variable value   */
-    CHAR TargetSpec[CCHMAXPATH+1];     /* Target filespec            */
-    CHAR truefile[CCHMAXPATH+1];       /* expanded file name         */
-    CHAR Temp[CCHMAXPATH+80];          /* buffer for returned values */
-    CHAR varname[MAX];                 /* Buffer for variable name   */
-    ULONG nattrib;                     /* New attrib, diff for each  */
+    size_t stemlen;                    /* Length of stem             */
+    size_t vlen;                       /* Length of variable value   */
+    char TargetSpec[CCHMAXPATH+1];     /* Target filespec            */
+    char truefile[CCHMAXPATH+1];       /* expanded file name         */
+    char Temp[CCHMAXPATH+80];          /* buffer for returned values */
+    char varname[MAX];                 /* Buffer for variable name   */
+    size_t nattrib;                    /* New attrib, diff for each  */
 } RXTREEDATA;
 
 /*********************************************************************/
@@ -324,16 +322,16 @@ typedef struct RxTreeData {
 
 typedef struct RxStemData {
     SHVBLOCK shvb;                     /* Request block for RxVar    */
-    CHAR ibuf[IBUF_LEN];               /* Input buffer               */
-    CHAR varname[MAX];                 /* Buffer for the variable    */
+    char ibuf[IBUF_LEN];               /* Input buffer               */
+    char varname[MAX];                 /* Buffer for the variable    */
                                        /* name                       */
-    CHAR stemname[MAX];                /* Buffer for the variable    */
+    char stemname[MAX];                /* Buffer for the variable    */
                                        /* name                       */
-    ULONG stemlen;                     /* Length of stem.            */
-    ULONG vlen;                        /* Length of variable value   */
-    ULONG j;                           /* Temp counter               */
-    ULONG tlong;                       /* Temp counter               */
-    ULONG count;                       /* Number of elements         */
+    size_t stemlen;                    /* Length of stem.            */
+    size_t vlen;                       /* Length of variable value   */
+    size_t j;                          /* Temp counter               */
+    size_t tlong;                      /* Temp counter               */
+    size_t count;                      /* Number of elements         */
                                        /* processed                  */
 } RXSTEMDATA;
 
@@ -343,7 +341,7 @@ typedef struct RxStemData {
 /*   This list is used for registration and deregistration.          */
 /*********************************************************************/
 
-static PSZ  RxFncTable[] =
+static const char *RxFncTable[] =
    {
       "SysCls",
       "SysCurpos",
@@ -443,8 +441,8 @@ static PSZ  RxFncTable[] =
 /*********************************************************************/
 /* Saved character status                                            */
 /*********************************************************************/
-static   INT   ExtendedFlag = 0;       /* extended character saved   */
-static   UCHAR ExtendedChar;           /* saved extended character   */
+static   int   ExtendedFlag = 0;       /* extended character saved   */
+static   char  ExtendedChar;           /* saved extended character   */
 
 /*********************************************************************/
 /* function pointer for GetDiskFreespaceEx for SysDriveInfo          */
@@ -494,7 +492,29 @@ static   P_GDFSE pGetDiskFreeSpaceEx = NULL;
 /****************  REXXUTIL Supporting Functions  ********************/
 /*********************************************************************/
 
-INT ReadNextBuffer( GetFileData *filedata );
+/*********************************************************************/
+/*                                                                   */
+/*   Subroutine Name:   memupper                                     */
+/*                                                                   */
+/*   Descriptive Name:  uppercase a memory location                  */
+/*                                                                   */
+/*   Entry Point:       memupper                                     */
+/*                                                                   */
+/*   Input:             memory to upper case                         */
+/*                      length of memory location                    */
+/*                                                                   */
+/*********************************************************************/
+
+void  memupper(
+  char    *location,                   /* location to uppercase      */
+  size_t   length)                     /* length to uppercase        */
+{
+  for (; length--; location++)         /* loop for entire string     */
+                                       /* uppercase in place         */
+    *location = toupper(*location);
+}
+
+bool ReadNextBuffer( GetFileData *filedata );
 
 /********************************************************************
 * Function:  OpenFile(file, filedata)                               *
@@ -505,8 +525,8 @@ INT ReadNextBuffer( GetFileData *filedata );
 *            1     - file open error occurred                       *
 *********************************************************************/
 
-INT MyOpenFile(
-   PSZ          file,                  /* file name                  */
+bool MyOpenFile(
+   const char  *file,                  /* file name                  */
    GetFileData *filedata )             /* global file information    */
 {
    DWORD       dwSize;                 /* file status information    */
@@ -516,7 +536,7 @@ INT MyOpenFile(
                             FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING,
                             FILE_FLAG_WRITE_THROUGH, 0))
                             == INVALID_HANDLE_VALUE)
-    return 1;                          /* return failure             */
+    return true;                          /* return failure             */
 
                                        /* retrieve the file size     */
   dwSize = GetFileSize(filedata->handle, NULL);
@@ -524,33 +544,33 @@ INT MyOpenFile(
                                        /* size=0                     */
   if (dwSize == 0xffffffff || !dwSize) {
     CloseHandle(filedata->handle);     /* close the file             */
-    return 1;                          /* and quit                   */
+    return true;                       /* and quit                   */
   }
   if (dwSize <= MAX_READ) {            /* less than a single buffer  */
                                        /* allocate buffer for file   */
-    if (!(filedata->buffer = GlobalAlloc(GMEM_ZEROINIT |
+    if (!(filedata->buffer = (char *)GlobalAlloc(GMEM_ZEROINIT |
                                          GMEM_FIXED, dwSize))) {
       CloseHandle(filedata->handle);   /* close the file             */
-      return 1;
+      return true;
     }
     filedata->size = dwSize;           /* save file size             */
     filedata->residual = 0;            /* no left over information   */
                                        /* read the file in           */
     if (!ReadFile(filedata->handle, filedata->buffer, dwSize,
-                &filedata->data, NULL)) {
+                (LPDWORD)&filedata->data, NULL)) {
       GlobalFree(filedata->buffer);    /* free the buffer            */
       CloseHandle(filedata->handle);   /* close the file             */
-      return 1;
+      return true;
     }
 
     filedata->scan = filedata->buffer; /* set position to beginning  */
   }
   else {                               /* need to read partial       */
                                        /* allocate buffer for read   */
-    if (!(filedata->buffer = GlobalAlloc(GMEM_ZEROINIT |
+    if (!(filedata->buffer = (char *)GlobalAlloc(GMEM_ZEROINIT |
                                          GMEM_FIXED, MAX_READ))) {
       CloseHandle(filedata->handle);   /* close the file             */
-      return 1;
+      return true;
     }
 
     filedata->size = dwSize;           /* save file size             */
@@ -560,10 +580,10 @@ INT MyOpenFile(
     if (ReadNextBuffer(filedata)) {
       GlobalFree(filedata->buffer);    /* free the buffer            */
       CloseHandle(filedata->handle);   /* close the file             */
-      return 1;
+      return true;
     }
   }
-  return 0;                            /* file is opened             */
+  return false;                        /* file is opened             */
 }
 
 /********************************************************************
@@ -586,17 +606,17 @@ void CloseFile(
 * RC:        0       buffer was read                                *
 *            1     - error occurred reading buffer                  *
 *********************************************************************/
-INT ReadNextBuffer(
+bool ReadNextBuffer(
    GetFileData  *filedata )            /* global file information    */
 {
-  ULONG     size;                      /* size to read               */
+  size_t    size;                      /* size to read               */
 
                                        /* get size of this read      */
   size = min(MAX_READ, filedata->residual);
 
                                        /* read the file in           */
   if (!ReadFile(filedata->handle, filedata->buffer, size,
-                &filedata->data, NULL))
+                (LPDWORD)&filedata->data, NULL))
       return 1;
 
   if (filedata->data != size)          /* not get all of it?         */
@@ -624,34 +644,34 @@ INT ReadNextBuffer(
 * Purpose:   Reads a line of data using buffered reads.  At end of  *
 *            file, zero is returned to indicate nothing left.       *
 *                                                                   *
-* RC:        TRUE -  line was read successfully                     *
-*            FALSE - end of file was reached                        *
+* RC:        true -  line was read successfully                     *
+*            false - end of file was reached                        *
 *********************************************************************/
 
-INT GetLine(
-   PSZ          line,                  /* returned line              */
-   ULONG        size,                  /* size of line buffer        */
+bool GetLine(
+   char        *line,                  /* returned line              */
+   size_t       size,                  /* size of line buffer        */
    GetFileData *filedata )             /* file handle                */
 {
-   PUCHAR       scan;                  /* current scan pointer       */
-   ULONG        length;                /* line length                */
-   ULONG        copylength;            /* copied length              */
+   char        *scan;                  /* current scan pointer       */
+   size_t       length;                /* line length                */
+   size_t       copylength;            /* copied length              */
 
 
   if (!(filedata->data)) {             /* if out of current buffer   */
     if (filedata->residual) {          /* may be another buffer      */
       ReadNextBuffer(filedata);        /* try to read one            */
       if (!filedata->data)             /* nothing more?              */
-        return 1;                      /* all done                   */
+        return true;                   /* all done                   */
     }
     else
-      return (1);                      /* return EOF condition       */
+      return true;                     /* return EOF condition       */
   }
                                        /* look for a carriage return */
-  scan = memchr(filedata->scan, CH_NL, filedata->data);
+  scan = (char *)memchr(filedata->scan, CH_NL, filedata->data);
   if (scan) {                          /* found one                  */
                                        /* calculate the length       */
-    length = (ULONG)(scan - filedata->scan);
+    length = scan - filedata->scan;
     copylength = min(length, size);    /* get length to copy         */
                                        /* copy over the data         */
     memcpy(line, filedata->scan, copylength);
@@ -668,19 +688,8 @@ INT GetLine(
     if (!filedata->data) {             /* all used up                */
       if (filedata->residual)          /* more to read               */
         ReadNextBuffer(filedata);      /* read the next buffer       */
-
-//      if (filedata->data &&            /* if more to read            */
-//        *filedata->scan == CH_NL) {    /* may need to skip a char    */
-//        filedata->scan++;              /* step past new line         */
-//        filedata->data--;              /* reduce size by one         */
-//      }
     }
-                                       /* may need to skip a char    */
-//    else if (*filedata->scan == CH_NL) {
-//      filedata->scan++;                /* step past new line         */
-//      filedata->data--;                /* reduce size by one         */
-//    }
-    return 0;                            /* this worked ok           */
+    return false;                        /* this worked ok           */
   }
   else                                   /* ran off the end          */
   {
@@ -708,22 +717,14 @@ INT GetLine(
        memcpy(line, filedata->scan, copylength);
        line[copylength] = '\0';          /* make into ASCIIZ string  */
 
-    /* we don't want the CR character in the result string*/
-    /* we have not found LF, so why look for CR                      */
-//     if ( line[copylength - 1] == CH_CR )
-//     {
-//       line[copylength - 1] = '\0';
-//     } /* endif */
-
      /* all data should be read, filedata->data must be zero         */
        filedata->data -= copylength;
      /* scan should be at the end                                    */
        filedata->scan += copylength;     /* set new scan point       */
 
     /* if no more data to read in the file, return OK     */
-//       if (!filedata->residual && !filedata->data)
        if (!filedata->residual)
-          return 0;
+          return false;
        else
           return GetLine(line + copylength, size - copylength, filedata);
     }
@@ -734,12 +735,6 @@ INT GetLine(
        memcpy(line, filedata->scan, copylength);
        line[copylength] = '\0';          /* make into ASCIIZ string  */
 
-    /* we don't want the CR character in the result string*/
-//     if ( line[copylength - 1] == CH_CR )
-//     {
-//       line[copylength - 1] = '\0';
-//     } /* endif */
-
        filedata->data  = 0;            /* no data in buffer          */
        filedata->scan += filedata->data; /* set scan point to end    */
 
@@ -749,24 +744,9 @@ INT GetLine(
            return GetLine(line + copylength, 0, filedata);
        }
        else
-          return 0;
+          return false;
     }
   }
-
-//    /* if line didn't fit into buffer, then we look at it */
-//    /* as multiple lines                                             */
-//    if ( size > copylength) {
-//      /* buffer was not full, read additional data from file */
-//    } else {
-//      filedata->scan += copylength;    /* set new scan point         */
-//
-//      if (!filedata->data) {           /* all used up                */
-//        if (filedata->residual)        /* more to read               */
-//          ReadNextBuffer(filedata);    /* read the next buffer       */
-//      }
-//
-//      return 0;
-//    } /* endif */
 }
 
 /********************************************************************
@@ -778,9 +758,9 @@ INT GetLine(
 * RC:        0    -  File attributes successfully changed           *
 *            1    -  Unable to change attributes                    *
 *********************************************************************/
-INT  SetFileMode(
-  PSZ      file,                       /* file name                  */
-  ULONG    attr )                      /* new file attributes        */
+bool SetFileMode(
+  const char *file,                    /* file name                  */
+  size_t   attr )                      /* new file attributes        */
 {
 
   DWORD         dwfileattrib;          /* file attributes            */
@@ -790,32 +770,32 @@ INT  SetFileMode(
                                        /* if worked                  */
                                        /* set the attributes         */
     if ((dwfileattrib = SetFileAttributes(file,attr)) != 0)
-      return 0;   /* give back success flag     */
+      return false;   /* give back success flag     */
     else
-      return 1;
+      return true;
   } else
-    return 1;
+    return true;
 }
 
 /********************************************************************
 * Function:  string2long(string, number)                            *
 *                                                                   *
 * Purpose:   Validates and converts an ASCII-Z string from string   *
-*            form to an unsigned long.  Returns FALSE if the number *
-*            is not valid, TRUE if the number was successfully      *
+*            form to an unsigned long.  Returns false if the number *
+*            is not valid, true if the number was successfully      *
 *            converted.                                             *
 *                                                                   *
-* RC:        TRUE - Good number converted                           *
-*            FALSE - Invalid number supplied.                       *
+* RC:        true - Good number converted                           *
+*            false - Invalid number supplied.                       *
 *********************************************************************/
 
-BOOL string2long(
-  PSZ string,
-  LONG *number)
+bool string2long(
+  char *string,
+  int *number)
 {
-  ULONG    accumulator;                /* converted number           */
-  INT      length;                     /* length of number           */
-  INT      sign;                       /* sign of number             */
+  int      accumulator;                /* converted number           */
+  size_t   length;                     /* length of number           */
+  int      sign;                       /* sign of number             */
 
   sign = 1;                            /* set default sign           */
   if (*string == '-') {                /* negative?                  */
@@ -826,58 +806,58 @@ BOOL string2long(
   length = strlen(string);             /* get length of string       */
   if (length == 0 ||                   /* if null string             */
       length > MAX_DIGITS)             /* or too long                */
-    return FALSE;                      /* not valid                  */
+    return false;                      /* not valid                  */
 
   accumulator = 0;                     /* start with zero            */
 
-  while (length) {                     /* while more digits          */
+  while (length != 0) {                /* while more digits          */
     if (!isdigit(*string))             /* not a digit?               */
-      return FALSE;                    /* tell caller                */
+      return false;                    /* tell caller                */
                                        /* add to accumulator         */
     accumulator = accumulator * 10 + (*string - '0');
     length--;                          /* reduce length              */
     string++;                          /* step pointer               */
   }
   *number = accumulator * sign;        /* return the value           */
-  return TRUE;                         /* good number                */
+  return true;                         /* good number                */
 }
 
 /********************************************************************
 * Function:  string2ulong(string, number)                           *
 *                                                                   *
 * Purpose:   Validates and converts an ASCII-Z string from string   *
-*            form to an unsigned long.  Returns FALSE if the number *
-*            is not valid, TRUE if the number was successfully      *
+*            form to an unsigned long.  Returns false if the number *
+*            is not valid, true if the number was successfully      *
 *            converted.                                             *
 *                                                                   *
-* RC:        TRUE - Good number converted                           *
-*            FALSE - Invalid number supplied.                       *
+* RC:        true - Good number converted                           *
+*            false - Invalid number supplied.                       *
 *********************************************************************/
 
-BOOL string2ulong(
-  PSZ    string,                       /* string to convert          */
-  PULONG number)                       /* converted number           */
+bool string2ulong(
+  char  *string,                       /* string to convert          */
+  size_t *number)                      /* converted number           */
 {
-  ULONG    accumulator;                /* converted number           */
-  INT      length;                     /* length of number           */
+  size_t   accumulator;                /* converted number           */
+  size_t   length;                     /* length of number           */
 
   length = strlen(string);             /* get length of string       */
   if (length == 0 ||                   /* if null string             */
       length > MAX_DIGITS + 1)         /* or too long                */
-    return FALSE;                      /* not valid                  */
+    return false;                      /* not valid                  */
 
   accumulator = 0;                     /* start with zero            */
 
   while (length) {                     /* while more digits          */
     if (!isdigit(*string))             /* not a digit?               */
-      return FALSE;                    /* tell caller                */
+      return false;                    /* tell caller                */
                                        /* add to accumulator         */
     accumulator = accumulator * 10 + (*string - '0');
     length--;                          /* reduce length              */
     string++;                          /* step pointer               */
   }
   *number = accumulator;               /* return the value           */
-  return TRUE;                         /* good number                */
+  return true;                         /* good number                */
 }
 
 /********************************************************************
@@ -897,26 +877,27 @@ BOOL string2ulong(
 * Used By:   SysFileSearch()                                        *
 *********************************************************************/
 
-ULONG mystrstr(
-  CHAR   *haystack,
-  CHAR   *needle,
-  ULONG   hlen,
-  ULONG   nlen,
-  BOOL    sensitive)
-
+char *mystrstr(
+  const char *haystack,
+  const char *needle,
+  size_t  hlen,
+  size_t  nlen,
+  bool    sensitive)
 {
-  CHAR line[MAX_LINE_LEN];
-  CHAR target[MAX_LINE_LEN];
-  ULONG p;
+// TODO:  This can be made a LOT more efficient
+
+  char line[MAX_LINE_LEN];
+  char target[MAX_LINE_LEN];
+  size_t p;
  /* Copy line  - Change nulls to spaces and uppercase if needed      */
 
-  for (p = 0; p < hlen; p++) {
-
+  for (p = 0; p < hlen; p++)
+  {
     if (haystack[p] == '\0')
       line[p] = ' ';
     else if (sensitive)
       line[p] = haystack[p];
-    else line[p] = (CHAR)toupper(haystack[p]);
+    else line[p] = (char)toupper(haystack[p]);
   }
   line[p] = '\0';
 
@@ -928,11 +909,11 @@ ULONG mystrstr(
       target[p] = ' ';
     else if (sensitive)
       target[p] = needle[p];
-    else target[p] = (CHAR)toupper(needle[p]);
+    else target[p] = (char)toupper(needle[p]);
   }
   target[p] = '\0';
 
-  return ((ULONG)strstr(line, target));
+  return strstr(line, target);
 }
 
 /*****************************************************************
@@ -944,19 +925,23 @@ ULONG mystrstr(
 *                                                                *
 *****************************************************************/
 
-VOID getpath(
-  CHAR *string,
-  CHAR *path,
-  CHAR *filename)
+void getpath(
+  char *string,
+  char *path,
+  char *filename)
 {
-  INT    len;                          /* length of filespec         */
-  INT    LastSlashPos;                 /* position of last slash     */
+  size_t len;                          /* length of filespec         */
+  size_t LastSlashPos;                 /* position of last slash     */
   char   szBuff[MAX_PATH];             /* used to save current dir   */
   char   drv[3];                       /* used to change dir         */
-  INT    i=0;
+  size_t i=0;
 
-  while (string[i] == ' ') i++;        /* skip leading blanks        */
-  if (i) {
+  while (string[i] == ' ')
+  {
+      i++;        /* skip leading blanks        */
+  }
+  if (i > 0)
+  {
       len = strlen(string);            /* Get length of full file    */
       if ((string[i] == '\\' || string[i] == '/') ||  /* if first after blank is \ */
           (string[i] == '.' &&
@@ -1013,7 +998,7 @@ VOID getpath(
       path[LastSlashPos+1] = '\0';     /* make into an ASCII-Z string*/
     }
     else {
-      CHAR fpath[MAX_PATH];
+      char fpath[MAX_PATH];
       char drive[_MAX_DRIVE];
       char dir[_MAX_DIR];
       char fname[_MAX_FNAME];
@@ -1064,9 +1049,9 @@ VOID getpath(
 /*********************************************************************/
 /* Function: ULONG SameAttr(mask, attr)                              */
 /*                                                                   */
-/* Purpose:  Returns the value TRUE if the attribute is identical to */
+/* Purpose:  Returns the value true if the attribute is identical to */
 /*           that specified by the mask.  If not the same, then      */
-/*           returns the value FALSE.                                */
+/*           returns the value false.                                */
 /*                                                                   */
 /*********************************************************************/
 
@@ -1079,47 +1064,47 @@ ULONG SameAttr(
                                        /* if only want directories   */
                                        /* and is not a directory     */
   if ((options&DO_DIRS) && !(options&DO_FILES) && !(attr&FILE_ATTRIBUTE_DIRECTORY))
-     return FALSE;
+     return false;
                                        /* if only want files and     */
                                        /* is a directory             */
   if (!(options&DO_DIRS) && (options&DO_FILES) && (attr&FILE_ATTRIBUTE_DIRECTORY))
-     return FALSE;
+     return false;
 
   if (mask[0] == RXIGNORE)
-     return  TRUE;
+     return  true;
 
 
   if (mask[0] < 0 && attr&FILE_ATTRIBUTE_ARCHIVE)
-    return  FALSE;
+    return  false;
 
   if (mask[0] > 0 && !(attr&FILE_ATTRIBUTE_ARCHIVE))
-    return  FALSE;
+    return  false;
 
   if (mask[1] < 0 && attr&FILE_ATTRIBUTE_DIRECTORY)
-    return  FALSE;
+    return  false;
 
   if (mask[1] > 0 && !(attr&FILE_ATTRIBUTE_DIRECTORY))
-    return  FALSE;
+    return  false;
 
   if (mask[2] < 0 && attr&FILE_ATTRIBUTE_HIDDEN)
-    return  FALSE;
+    return  false;
 
   if (mask[2] > 0 && !(attr&FILE_ATTRIBUTE_HIDDEN))
-    return  FALSE;
+    return  false;
 
   if (mask[3] < 0 && attr&FILE_ATTRIBUTE_READONLY)
-    return  FALSE;
+    return  false;
 
   if (mask[3] > 0 && !(attr&FILE_ATTRIBUTE_READONLY))
-    return  FALSE;
+    return  false;
 
   if (mask[4] < 0 && attr&FILE_ATTRIBUTE_SYSTEM)
-    return  FALSE;
+    return  false;
 
   if (mask[4] > 0 && !(attr&FILE_ATTRIBUTE_SYSTEM))
-    return  FALSE;
+    return  false;
 
-  return  TRUE;
+  return  true;
 }
 
 
@@ -1457,7 +1442,7 @@ VOID GetUniqueFileName(
 {
 
   CHAR numstr[6];
-  BOOL Unique = FALSE;
+  bool Unique = false;
 
   ULONG x,                             /* loop index                 */
         i,                             /*                            */
@@ -1486,7 +1471,7 @@ VOID GetUniqueFileName(
  /** Return NULL string if less than 1 or greater than 4 *           */
 
   if (j == 0 || j > 5) {
-    Unique = TRUE;
+    Unique = true;
     strcpy(file, "");
     return;
   }
@@ -1546,7 +1531,7 @@ VOID GetUniqueFileName(
     hSearch = FindFirstFile(file, &wfdFinfo);
 
     if (hSearch == INVALID_HANDLE_VALUE)/* file not found?           */
-      Unique = TRUE;                   /* got one                    */
+      Unique = true;                   /* got one                    */
 
     FindClose(hSearch);
     SetErrorMode(fuErrorMode);         /* Enable previous setting    */
@@ -1556,7 +1541,7 @@ VOID GetUniqueFileName(
     num = (num+1)%max;
 
     if (num == start && !Unique) {
-      Unique = TRUE;
+      Unique = true;
       strcpy(file, "");
     }
   }
@@ -1623,8 +1608,8 @@ LONG APIENTRY SysCurPos(
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
 
-  LONG   inrow;                        /* Row to change to           */
-  LONG   incol;                        /* Col to change to           */
+  int    inrow;                        /* Row to change to           */
+  int    incol;                        /* Col to change to           */
   COORD NewHome;                       /* Position to move cursor    */
   CONSOLE_SCREEN_BUFFER_INFO csbiInfo; /* Console information        */
   HANDLE hStdout;                      /* Handle to Standard Out     */
@@ -1697,9 +1682,9 @@ LONG APIENTRY SysCurState(
                                        /* Get the cursor info        */
   GetConsoleCursorInfo(hStdout,&CursorInfo);
                                        /* Get state and validate     */
-  if (rxstricmp(args[0].strptr, "ON") == 0)
-    CursorInfo.bVisible = TRUE;
-  else if (rxstricmp(args[0].strptr, "OFF") == 0)
+  if (_stricmp(args[0].strptr, "ON") == 0)
+    CursorInfo.bVisible = true;
+  else if (_stricmp(args[0].strptr, "OFF") == 0)
     CursorInfo.bVisible = FALSE;
   else
     return INVALID_ROUTINE;            /* Invalid state              */
@@ -2067,17 +2052,17 @@ LONG APIENTRY SysFileSearch(
   PSZ         file;                    /* search file                */
   PSZ         opts;                    /* option string              */
   CHAR        line[MAX_LINE_LEN];      /* Line read from file        */
-  ULONG       ptr;                     /* Pointer to char str found  */
+  char       *ptr;                     /* Pointer to char str found  */
   ULONG       num = 0;                 /* Line number                */
   ULONG       len;                     /* Length of string           */
   ULONG       len2;                    /* Length of string           */
   ULONG       rc = 0;                  /* Return code of this func   */
-  BOOL        linenums = FALSE;        /* Set TRUE for linenums in   */
+  bool        linenums = false;        /* Set true for linenums in   */
                                        /* output                     */
-  BOOL        sensitive = FALSE;       /* Set TRUE for case-sens     */
+  bool        sensitive = false;       /* Set true for case-sens     */
                                        /* search                     */
   RXSTEMDATA  ldp;                     /* stem data                  */
-  PUCHAR      buffer_pointer;          /* current buffer pointer     */
+  char       *buffer_pointer;          /* current buffer pointer     */
   GetFileData filedata;                /* file read information      */
 
   BUILDRXSTRING(retstr, NO_UTIL_ERROR);/* pass back result           */
@@ -2096,10 +2081,10 @@ LONG APIENTRY SysFileSearch(
   if (numargs == 4) {                  /* process options            */
     opts = args[3].strptr;             /* point to the options       */
     if (strstr(opts, "N") || strstr(opts, "n"))
-      linenums = TRUE;
+      linenums = true;
 
     if (strstr(opts, "C") || strstr(opts, "c"))
-      sensitive = TRUE;
+      sensitive = true;
   }
 
                                        /* Initialize data area       */
@@ -2123,7 +2108,7 @@ LONG APIENTRY SysFileSearch(
     num++;
     ptr = mystrstr(line, target, len, args[0].strlength, sensitive);
 
-    if (ptr != '\0') {
+    if (ptr != NULL) {
 
       if (linenums) {
         wsprintf(ldp.ibuf, "%d ", num);
@@ -2210,7 +2195,7 @@ LONG APIENTRY SysFileTree(
   CHAR        buff2[MAX];              /* buffer2 ...alloc new mem...*/
   CHAR       *FileSpec = buff1;        /* File spec to look for      */
   CHAR       *path = buff2;            /* path to search along       */
-  PUCHAR      optptr;                  /* option scan pointer        */
+  const char *optptr;                  /* option scan pointer        */
   ULONG       options;                 /* Mask of options            */
   ULONG       y;                       /* Temp counter (II)          */
   INT         smask[5];                /* Source attribute mask      */
@@ -2447,21 +2432,21 @@ LONG APIENTRY SysGetKey(
 {
   INT       tmp;                       /* Temp var used to hold      */
                                        /* keystroke value            */
-  BOOL      echo = TRUE;               /* Set to FALSE if we         */
+  bool      echo = true;               /* Set to false if we         */
                                        /* shouldn't echo             */
 
   if (numargs > 1)                     /* too many arguments         */
     return INVALID_ROUTINE;            /* raise an error             */
 
   if (numargs == 1) {                  /* validate arguments         */
-    if (!rxstricmp(args[0].strptr, "NOECHO"))
-      echo = FALSE;
-    else if (rxstricmp(args[0].strptr, "ECHO"))
+    if (!_stricmp(args[0].strptr, "NOECHO"))
+      echo = false;
+    else if (_stricmp(args[0].strptr, "ECHO"))
       return INVALID_ROUTINE;          /* Invalid option             */
   }
   if (ExtendedFlag) {                  /* if have an extended        */
     tmp = ExtendedChar;                /* get the second char        */
-    ExtendedFlag = FALSE;              /* do a real read next time   */
+    ExtendedFlag = false;              /* do a real read next time   */
   }
   else {
     tmp = _getch();                    /* read a character           */
@@ -2494,10 +2479,10 @@ LONG APIENTRY SysGetKey(
                                        /* If a function key or arrow */
     if ((tmp == 0x00) || (tmp == 0xe0)) {
       ExtendedChar = _getch();         /* Read another character     */
-      ExtendedFlag = TRUE;
+      ExtendedFlag = true;
     }
     else
-      ExtendedFlag = FALSE;
+      ExtendedFlag = false;
   }
   if (echo)                            /* echoing?                   */
     _putch(tmp);                       /* write the character back   */
@@ -2564,11 +2549,11 @@ LONG APIENTRY SysIni(
                                        /* App->Key                   */
   LONG        Error = FALSE;           /* Set to true if error       */
                                        /* encountered                */
-  BOOL        WildCard = FALSE;        /* Set to true if a wildcard  */
+  bool        WildCard = false;        /* Set to true if a wildcard  */
                                        /* operation                  */
-  BOOL        QueryApps;               /* Set to true if a query     */
+  bool        QueryApps;               /* Set to true if a query     */
                                        /* operation                  */
-  BOOL        terminate = TRUE;        /* perform WinTerminate call  */
+  bool        terminate = true;        /* perform WinTerminate call  */
   RXSTEMDATA  ldp;                     /* local data                 */
   PSZ         next;                    /* next returned string       */
   ULONG       buffersize;              /* return buffer size         */
@@ -2595,10 +2580,10 @@ LONG APIENTRY SysIni(
     Val = args[3].strptr;
                                        /* Check KEY and APP values   */
                                        /* for "WildCard"             */
-  if (!rxstricmp(App, "ALL:")) {
+  if (!_stricmp(App, "ALL:")) {
     App = "";
-    QueryApps = TRUE;
-    WildCard = TRUE;
+    QueryApps = true;
+    WildCard = true;
 
     if (numargs != 3)
       return INVALID_ROUTINE;          /* Error - Not enough args    */
@@ -2606,11 +2591,11 @@ LONG APIENTRY SysIni(
       x = 2;                           /* Arg number of STEM variable*/
   }
 
-  else if (!rxstricmp(Key, "ALL:")) {
+  else if (!_stricmp(Key, "ALL:")) {
     Key = "";
     Val = "";
-    QueryApps = FALSE;
-    WildCard = TRUE;
+    QueryApps = false;
+    WildCard = true;
 
     if (numargs != 4)
       return INVALID_ROUTINE;          /* Error - Not enough args    */
@@ -2622,7 +2607,7 @@ LONG APIENTRY SysIni(
                                        /* search, then allocate mem  */
                                        /* for stem struct and get the*/
                                        /* stem name                  */
-  if (WildCard == TRUE) {
+  if (WildCard == true) {
 
     ldp.count = 0;                     /* get the stem variable name */
     strcpy(ldp.varname, args[x].strptr);
@@ -2635,11 +2620,11 @@ LONG APIENTRY SysIni(
   }
 
                                          /* get value if is a query    */
-  if ((numargs == 3 && rxstricmp(Key, "DELETE:")) ||
-      WildCard == TRUE) {
+  if ((numargs == 3 && _stricmp(Key, "DELETE:")) ||
+      WildCard == true) {
     lSize = 0x0000ffffL;
                                        /* Allocate a large buffer    */
-    if (!(Val = GlobalAlloc(GPTR, lSize))) {
+    if (!(Val = (char *)GlobalAlloc(GPTR, lSize))) {
       BUILDRXSTRING(retstr, ERROR_NOMEM);
       return VALID_ROUTINE;
     }
@@ -2657,13 +2642,13 @@ LONG APIENTRY SysIni(
       lSize = GetPrivateProfileString(App, Key, "", Val, lSize, IniFile);
 
     if (lSize <= 0) {
-      Error = TRUE;
+      Error = true;
       BUILDRXSTRING(retstr, ERROR_RETSTR);
 //      GlobalFree(Val);                  /* release buffer             */
     }
-    else if (WildCard == FALSE) {
+    else if (WildCard == false) {
       if (lSize > buffersize)
-        if (!(retstr->strptr = GlobalAlloc(GMEM_FIXED, lSize))) { /* use GlobalAlloc */
+        if (!(retstr->strptr = (PCH)GlobalAlloc(GMEM_FIXED, lSize))) { /* use GlobalAlloc */
           if (GlobalFlags(Val) != GMEM_INVALID_HANDLE) GlobalFree(Val);  /* release buffer */
           BUILDRXSTRING(retstr, ERROR_NOMEM);
           return VALID_ROUTINE;
@@ -2675,12 +2660,12 @@ LONG APIENTRY SysIni(
   }
   else {                               /* Set or delete Key          */
 
-    if (!rxstricmp(Key, "DELETE:") || (numargs == 2) ||
+    if (!_stricmp(Key, "DELETE:") || (numargs == 2) ||
         !RXVALIDSTRING(args[2]))
                                        /* Delete application and all */
                                        /* associated keys            */
       Error = !WritePrivateProfileString(App, NULL, NULL, IniFile);
-    else if (!rxstricmp(Val, "DELETE:") ||
+    else if (!_stricmp(Val, "DELETE:") ||
         !RXVALIDSTRING(args[3]))
                                        /* Delete a single key        */
       Error = !WritePrivateProfileString(App, Key, NULL, IniFile);
@@ -2703,9 +2688,9 @@ LONG APIENTRY SysIni(
       * of values to a REXX stem variable.      *
       ******************************************/
 
-  if (WildCard == TRUE) {              /* fill stem variable         */
+  if (WildCard == true) {              /* fill stem variable         */
 
-    if (Error == FALSE) {
+    if (Error == false) {
       x = 0;
       ldp.count = 0;
 
@@ -2876,7 +2861,7 @@ LONG APIENTRY SysGetErrortext(
     retstr->strptr[0] = 0x00;
   else {                               /* succeeded                  */
     if (strlen(errmsg)>=retstr->strlength)
-      retstr->strptr = GlobalAlloc(GMEM_ZEROINIT | GMEM_FIXED, strlen(errmsg+1));
+      retstr->strptr = (PCH)GlobalAlloc(GMEM_ZEROINIT | GMEM_FIXED, strlen(errmsg+1));
     strcpy(retstr->strptr,errmsg);
     LocalFree(errmsg);
   }
@@ -3092,9 +3077,9 @@ LONG APIENTRY SysSearchPath(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  UCHAR    szFullPath[_MAX_PATH];      /* returned file name         */
-  UCHAR    szCurDir[MAX_ENVVAR + _MAX_PATH]; /* current directory    */
-  UCHAR    szEnvStr[MAX_ENVVAR];
+  char     szFullPath[_MAX_PATH];      /* returned file name         */
+  char     szCurDir[MAX_ENVVAR + _MAX_PATH]; /* current directory    */
+  char     szEnvStr[MAX_ENVVAR];
   PSZ      opts;                       /* option string              */
 
   LPTSTR pszOnlyFileName;              /* parm for searchpath        */
@@ -3136,8 +3121,6 @@ LONG APIENTRY SysSearchPath(
       return INVALID_ROUTINE;          /* Invalid option             */
   }
                                        /* use DosSearchPath          */
-//  DosSearchPath(SearchFlag, args[0].strptr, args[1].strptr,
-//                buf, sizeof(buf));
 
   errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
   if (0 == SearchPath(
@@ -3160,8 +3143,7 @@ LONG APIENTRY SysSearchPath(
 *                                                                        *
 * Syntax:    call SysSleep secs                                          *
 *                                                                        *
-* Params:    secs - Number of seconds to sleep.  The function accepts    *
-*            fractional seconds. (call SysSleep 1.5 is valid)            *
+* Params:    secs - Number of seconds to sleep.                          *
 *                                                                        *
 * Return:    NO_UTIL_ERROR                                               *
 *************************************************************************/
@@ -3227,6 +3209,7 @@ LONG APIENTRY SysSleep(
   else if (length != 0)                /* invalid character found?   */
     return INVALID_ROUTINE;            /* this is invalid            */
 
+
   /** Using Sleep with a long timeout risks sleeping on a thread with a message
    *  queue, which can make the system sluggish, or possibly deadlocked.  If the
    *  sleep is longer than 333 milliseconds use a window timer to avoid this
@@ -3248,6 +3231,7 @@ LONG APIENTRY SysSleep(
   {
       Sleep(secs);
   }
+
   BUILDRXSTRING(retstr, NO_UTIL_ERROR);
   return VALID_ROUTINE;
 }
@@ -3342,12 +3326,12 @@ LONG APIENTRY SysTextScreenRead(
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
 
-  LONG  row;                           /* Row from which to start    */
-  LONG  col;                           /* Column from which to start */
-  LONG  len;                           /* nunber of chars to be read */
-  LONG  lPos,lPosOffSet;               /* positioning                */
+  int   row;                           /* Row from which to start    */
+  int   col;                           /* Column from which to start */
+  int   len;                           /* nunber of chars to be read */
+  int   lPos,lPosOffSet;               /* positioning                */
                                        /* (132x50)                   */
-  LONG lBufferLen = 16000;             /* default: 200x80 characters */
+  int  lBufferLen = 16000;             /* default: 200x80 characters */
 
   COORD coordLine;                     /* coordinates of where to    */
                                        /* read characters from       */
@@ -3381,7 +3365,7 @@ LONG APIENTRY SysTextScreenRead(
 
   if (len > (LONG)retstr->strlength) {
                                        /* allocate a new one         */
-    if (!(temp_strptr = GlobalAlloc(GMEM_FIXED , len))) { /* use GlobalAlloc */
+    if (!(temp_strptr = (PCH)GlobalAlloc(GMEM_FIXED , len))) { /* use GlobalAlloc */
       BUILDRXSTRING(retstr, ERROR_NOMEM);
       return VALID_ROUTINE        ;
     }
@@ -3476,8 +3460,8 @@ LONG APIENTRY RxWinExec(
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
 
-  ULONG       CmdShow;                 /* show window style flags    */
-  INT         index;                   /* table index                */
+  int         CmdShow;                 /* show window style flags    */
+  int         index;                   /* table index                */
   ULONG       pid;                     /* PID or error return code   */
   ULONG       length;                  /* length of option           */
   STARTUPINFO si;
@@ -3541,7 +3525,7 @@ ULONG  show_flags[] =                  /* show window styles        */
   ZeroMemory(&si, sizeof(si));
   si.cb = sizeof(si);
   si.dwFlags = STARTF_USESHOWWINDOW;
-  si.wShowWindow = CmdShow;
+  si.wShowWindow = (WORD)CmdShow;
 
   if ( CreateProcess(NULL, (LPSTR)args[0].strptr, NULL, NULL, FALSE, 0, NULL,
                      NULL, &si, &procInfo ) ) {
@@ -3852,7 +3836,7 @@ LONG APIENTRY SysFileSystemType(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  UCHAR *      drive;
+  char *      drive;
   CHAR chDriveLetter[4];
   UINT errorMode;
 
@@ -3923,7 +3907,7 @@ LONG APIENTRY SysVolumeLabel(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  UCHAR *      drive;
+  char  *      drive;
   CHAR chDriveLetter[4];
 
                                        /* validate arguments         */
@@ -3992,7 +3976,7 @@ LONG APIENTRY SysCreateMutexSem(
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   HANDLE    handle;                    /* mutex handle               */
-  SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+  SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, true};
 
   handle = 0;                          /* zero the handle            */
   if (numargs == 1) {                  /* request for named sem      */
@@ -4068,7 +4052,7 @@ LONG APIENTRY SysReleaseMutexSem(
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (PULONG)&handle))
+  if (!string2ulong(args[0].strptr, (size_t *)&handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
   if (!ReleaseMutex(handle))
      RETVAL(GetLastError())
@@ -4098,7 +4082,7 @@ LONG APIENTRY SysCloseMutexSem(
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (PULONG)&handle))
+  if (!string2ulong(args[0].strptr, (size_t *)&handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
   if (!CloseHandle(handle))
      RETVAL(GetLastError())
@@ -4125,7 +4109,7 @@ LONG APIENTRY SysRequestMutexSem(
 {
   HANDLE    handle;                    /* mutex handle               */
   APIRET    rc;                        /* creation return code       */
-  LONG      timeout;                   /* timeout value              */
+  int       timeout;                   /* timeout value              */
 
   if (numargs < 1 ||                   /* too few, or                */
       numargs > 2 ||                   /* too many, or               */
@@ -4138,7 +4122,7 @@ LONG APIENTRY SysRequestMutexSem(
       return INVALID_ROUTINE;          /* raise error if bad         */
   }
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (PULONG)&handle))
+  if (!string2ulong(args[0].strptr, (size_t *)&handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
                                        /* request the semaphore      */
   rc = WaitForSingleObject(handle, timeout);
@@ -4172,14 +4156,14 @@ LONG APIENTRY SysCreateEventSem(
 {
   HANDLE    handle;                    /* mutex handle               */
   SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
-  BOOL      manual;
+  bool      manual;
 
   handle = 0;                          /* zero the handle            */
   if (numargs > 2)
     return INVALID_ROUTINE;            /* raise error condition      */
   else if (numargs == 2)
-     manual = TRUE;
-  else manual = FALSE;
+     manual = true;
+  else manual = false;
 
   if ((numargs >= 1) && args[0].strptr != 0 && (strlen(args[0].strptr) > 0))
   {                                    /* request for named sem      */
@@ -4254,7 +4238,7 @@ LONG APIENTRY SysPostEventSem(
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (PULONG)&handle))
+  if (!string2ulong(args[0].strptr, (size_t *)&handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
   if (!SetEvent(handle))
      RETVAL(GetLastError())
@@ -4284,7 +4268,7 @@ LONG APIENTRY SysResetEventSem(
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (PULONG)&handle))
+  if (!string2ulong(args[0].strptr, (size_t *)&handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
   if (!ResetEvent(handle))
      RETVAL(GetLastError())
@@ -4315,7 +4299,7 @@ LONG APIENTRY SysPulseEventSem(
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (PULONG)&handle))
+  if (!string2ulong(args[0].strptr, (size_t *)&handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
   if (!PulseEvent(handle))
      RETVAL(GetLastError())
@@ -4346,7 +4330,7 @@ LONG APIENTRY SysCloseEventSem(
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (PULONG)&handle))
+  if (!string2ulong(args[0].strptr, (size_t *)&handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
   if (!CloseHandle(handle))
      RETVAL(GetLastError())
@@ -4373,7 +4357,7 @@ LONG APIENTRY SysWaitEventSem(
 {
   HANDLE    handle;                    /* mutex handle               */
   APIRET    rc;                        /* creation return code       */
-  LONG      timeout;                   /* timeout value              */
+  int       timeout;                   /* timeout value              */
 
   if (numargs < 1 ||                   /* too few, or                */
       numargs > 2 ||                   /* too many, or               */
@@ -4386,7 +4370,7 @@ LONG APIENTRY SysWaitEventSem(
       return INVALID_ROUTINE;          /* raise error if bad         */
   }
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (PULONG)&handle))
+  if (!string2ulong(args[0].strptr, (size_t *)&handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
                                        /* request the semaphore      */
   rc = WaitForSingleObject(handle, timeout);
@@ -4417,8 +4401,8 @@ LONG APIENTRY SysSetPriority(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  LONG      class;                     /* priority class             */
-  LONG      level;                     /* priority level             */
+  int       pclass;                    /* priority class             */
+  int       level;                     /* priority level             */
   APIRET    rc;                        /* creation return code       */
   HANDLE    process;
   HANDLE    thread;
@@ -4431,11 +4415,11 @@ LONG APIENTRY SysSetPriority(
       !RXVALIDSTRING(args[0]))         /* first is omitted           */
     return INVALID_ROUTINE;            /* raise error condition      */
 
-  if (string2long(args[0].strptr, &class))
+  if (string2long(args[0].strptr, &pclass))
   {
-    if (class < 0 || class > 3)
+    if (pclass < 0 || pclass > 3)
         return INVALID_ROUTINE;        /* raise error condition      */
-    switch (class) {
+    switch (pclass) {
        case 0: iclass = IDLE_PRIORITY_CLASS;
                break;
        case 1: iclass = NORMAL_PRIORITY_CLASS;
@@ -4610,12 +4594,12 @@ LONG APIENTRY SysShutDownSystem(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  UCHAR * machine = NULL;
-  UCHAR * message = NULL;
-  ULONG  timeout= 0;
+  char  * machine = NULL;
+  char  * message = NULL;
+  size_t timeout= 0;
   LONG  rc = 0;
-  BOOL forceClose = FALSE;
-  BOOL reboot = FALSE;
+  size_t forceClose = false;
+  size_t reboot = false;
 
   if (numargs>5)                       /* arguments specified?       */
     return INVALID_ROUTINE;            /* raise the error            */
@@ -4696,7 +4680,7 @@ LONG APIENTRY SysWaitNamedPipe(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  LONG        timeout;                 /* timeout value              */
+  int         timeout;                 /* timeout value              */
 
   if (numargs < 1 ||                   /* wrong number of arguments? */
       numargs > 2 ||
@@ -4748,7 +4732,7 @@ LONG  ValidateMath(
   LONG      numargs,                   /* Number of arguments.       */
   RXSTRING  args[],                    /* Function arguments.        */
   double   *x,                         /* input number               */
-  PULONG    precision )                /* returned precision         */
+  size_t   *precision )                /* returned precision         */
 {
   LONG      rc;                        /* validation code            */
 
@@ -4785,7 +4769,7 @@ LONG  ValidateTrig(
   double    angle;                     /* working angle              */
   double    nsi;                       /* convertion factor          */
   double    nco;                       /* convertion factor          */
-  ULONG     precision;                 /* returned precision         */
+  size_t    precision;                 /* returned precision         */
   double    result;                    /* result                     */
 
   rc = VALID_ROUTINE;                  /* set default completion     */
@@ -4907,7 +4891,7 @@ LONG  ValidateArcTrig(
   double    angle;                     /* working angle              */
   double    nsi;                       /* convertion factor          */
   double    nco;                       /* convertion factor          */
-  ULONG     precision;                 /* returned precision         */
+  size_t    precision;                 /* returned precision         */
   double    x;                         /* input number               */
 
   rc = VALID_ROUTINE;                  /* set default completion     */
@@ -4985,7 +4969,7 @@ LONG  APIENTRY SysSqrt(                /* Square root function.      */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
   LONG      rc;                        /* function return code       */
 
                                        /* validate the inputs        */
@@ -5005,7 +4989,7 @@ LONG  APIENTRY SysExp(                 /* Exponential function.      */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
   LONG      rc;                        /* validation return code     */
 
                                        /* validate the inputs        */
@@ -5025,7 +5009,7 @@ LONG  APIENTRY SysLog(                 /* Logarithm function.        */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
   LONG      rc;                        /* validation return code     */
 
                                        /* validate the inputs        */
@@ -5045,7 +5029,7 @@ LONG  APIENTRY SysLog10(               /* Log base 10 function.      */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
   LONG      rc;                        /* validation return code     */
 
                                        /* validate the inputs        */
@@ -5065,7 +5049,7 @@ LONG  APIENTRY SysSinH(                /* Hyperbolic sine function.  */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
   LONG      rc;                        /* validation return code     */
 
                                        /* validate the inputs        */
@@ -5085,7 +5069,7 @@ LONG  APIENTRY SysCosH(                /* Hyperbolic cosine funct.   */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
   LONG      rc;                        /* validation return code     */
 
                                        /* validate the inputs        */
@@ -5105,7 +5089,7 @@ LONG  APIENTRY SysTanH(                /* Hyperbolic tangent funct.  */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
   double    x;                         /* input number               */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
   LONG      rc;                        /* validation return code     */
 
                                        /* validate the inputs        */
@@ -5139,7 +5123,7 @@ LONG  APIENTRY SysPower(               /* Power function.           */
 {
   double    x;                         /* input number               */
   double    y;                         /* second input number        */
-  ULONG     precision;                 /* precision used             */
+  size_t    precision;                 /* precision used             */
   LONG      rc;                        /* validation code            */
 
   rc = VALID_ROUTINE;                  /* set default completion     */
@@ -5247,7 +5231,7 @@ LONG  APIENTRY SysPi(                  /* Pi function                */
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  ULONG     precision;                 /* required precision         */
+  size_t    precision;                 /* required precision         */
 
   precision = DEFAULT_PRECISION;       /* set default precision      */
   if (numargs > 1 ||                   /* too many arguments?        */
@@ -5333,7 +5317,7 @@ LONG APIENTRY SysDumpVariables(
   LONG      rc;                        /* Ret code                   */
   SHVBLOCK  shvb;
   HANDLE    outFile = NULL;
-  BOOL      fCloseFile = FALSE;
+  bool      fCloseFile = false;
   DWORD     dwBytesWritten = 0;
   char     *buffer = NULL;             /* ENG: write result file to  */
   char     *current, *end;             /* memory first, much faster! */
@@ -5352,7 +5336,7 @@ LONG APIENTRY SysDumpVariables(
                          FILE_FLAG_WRITE_THROUGH, NULL);
     if (outFile)
     {
-      fCloseFile = TRUE;
+      fCloseFile = true;
 
       /* seek to end of file */
       SetFilePointer(outFile, 0, 0, FILE_END);
@@ -5397,7 +5381,7 @@ LONG APIENTRY SysDumpVariables(
         if (buffer_size - offset < new_size) {
           buffer_size = new_size + offset;
         }
-        buffer = realloc(buffer,buffer_size);
+        buffer = (char *)realloc(buffer,buffer_size);
         current = buffer + offset;
         end = buffer + buffer_size;
       }
@@ -5413,8 +5397,8 @@ LONG APIENTRY SysDumpVariables(
       current += 3;
 
       /* free memory allocated by REXX */
-      GlobalFree(shvb.shvname.strptr);
-      GlobalFree(shvb.shvvalue.strptr);
+      RexxFreeMemory((void *)shvb.shvname.strptr);
+      RexxFreeMemory((void *)shvb.shvvalue.strptr);
 
       /* leave loop if this was the last var */
       if (shvb.shvret & RXSHV_LVAR)
@@ -5489,10 +5473,10 @@ LONG APIENTRY SysSetFileDateTime(
         /* parse new date */
         if (sscanf(args[1].strptr, "%4hu-%2hu-%2hu", &sLocalSysTime.wYear,
                    &sLocalSysTime.wMonth, &sLocalSysTime.wDay) != 3)
-          fOk = FALSE;
+          fOk = false;
 
         if (sLocalSysTime.wYear < 1800)
-          fOk = FALSE;
+          fOk = false;
       }
 
       if ((numargs == 3) && RXVALIDSTRING(args[2]))
@@ -5500,7 +5484,7 @@ LONG APIENTRY SysSetFileDateTime(
         /* parse new time */
         if (sscanf(args[2].strptr, "%2hu:%2hu:%2hu", &sLocalSysTime.wHour,
                    &sLocalSysTime.wMinute, &sLocalSysTime.wSecond) != 3)
-          fOk = FALSE;
+          fOk = false;
       }
 
       if (numargs == 1)
@@ -5520,7 +5504,7 @@ LONG APIENTRY SysSetFileDateTime(
     CloseHandle(setFile);
   }
   else
-    fOk = FALSE;
+    fOk = false;
 
   if (fOk)
     RETVAL(0)
@@ -5610,7 +5594,7 @@ LONG APIENTRY SysGetFileDateTime(
     CloseHandle(setFile);
   }
   else
-    fOk = FALSE;
+    fOk = false;
 
   if (!fOk)
     RETVAL(-1)
@@ -5618,7 +5602,8 @@ LONG APIENTRY SysGetFileDateTime(
     return VALID_ROUTINE;
 }
 
-APIRET APIENTRY RexxStemSort(PCHAR stemname, INT order, INT type,
+
+APIRET APIENTRY RexxStemSort(const char *stemname, int order, int type,
     size_t start, size_t end, size_t firstcol, size_t lastcol);
 
 /*************************************************************************
@@ -5776,7 +5761,7 @@ LONG APIENTRY SysStemDelete(
   ULONG         ulFirst;
   ULONG         ulItems = 1;
   ULONG         ulCount;
-  BOOL          fOk = TRUE;
+  bool          fOk = true;
 
   if ( (numargs < 2) || (numargs > 3) || /* validate arguments       */
       !RXVALIDSTRING(args[0]) || !RXVALIDSTRING(args[1]) ||
@@ -5851,13 +5836,13 @@ LONG APIENTRY SysStemDelete(
         shvb.shvret = 0;
         rc = RexxVariablePool(&shvb);
         if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-          fOk = FALSE;
+          fOk = false;
 
         /* free memory allocated by REXX */
         GlobalFree(shvb.shvvalue.strptr);
       }
       else
-        fOk = FALSE;
+        fOk = false;
 
       if (!fOk)
         break;
@@ -5880,7 +5865,7 @@ LONG APIENTRY SysStemDelete(
         shvb.shvret = 0;
         if (RexxVariablePool(&shvb) != RXSHV_OK)
         {
-          fOk = FALSE;
+          fOk = false;
           break;
         } /* endif */
       } /* endfor */
@@ -5902,12 +5887,12 @@ LONG APIENTRY SysStemDelete(
       shvb.shvret = 0;
       rc = RexxVariablePool(&shvb);
       if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-        fOk = FALSE;
+        fOk = false;
     } /* endif */
   }
   else
   {
-    fOk = FALSE;
+    fOk = false;
   } /* endif */
 
   if (fOk)
@@ -5946,7 +5931,7 @@ LONG APIENTRY SysStemInsert(
   ULONG         ulIdx;
   ULONG         ulPosition;
   ULONG         ulCount;
-  BOOL          fOk = TRUE;
+  bool          fOk = true;
 
   if ( (numargs != 3) ||  /* validate arguments       */
       !RXVALIDSTRING(args[0]) || !RXVALIDSTRING(args[1]) ||
@@ -6012,13 +5997,13 @@ LONG APIENTRY SysStemInsert(
         shvb.shvret = 0;
         rc = RexxVariablePool(&shvb);
         if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-          fOk = FALSE;
+          fOk = false;
 
         /* free memory allocated by REXX */
         GlobalFree(shvb.shvvalue.strptr);
       }
       else
-        fOk = FALSE;
+        fOk = false;
 
       if (!fOk)
         break;
@@ -6039,7 +6024,7 @@ LONG APIENTRY SysStemInsert(
       shvb.shvret = 0;
       rc = RexxVariablePool(&shvb);
       if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-        fOk = FALSE;
+        fOk = false;
     } /* endif */
 
     if (fOk)
@@ -6058,12 +6043,12 @@ LONG APIENTRY SysStemInsert(
       shvb.shvret = 0;
       rc = RexxVariablePool(&shvb);
       if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-        fOk = FALSE;
+        fOk = false;
     } /* endif */
   }
   else
   {
-    fOk = FALSE;
+    fOk = false;
   } /* endif */
 
   if (fOk)
@@ -6111,8 +6096,8 @@ LONG APIENTRY SysStemCopy(
   ULONG         ulFrom = 1;
   ULONG         ulTo = 1;
   ULONG         ulCopyCount = 0;
-  BOOL          fInsert = FALSE;
-  BOOL          fOk = TRUE;
+  bool          fInsert = false;
+  bool          fOk = true;
 
   if ( (numargs < 2) || (numargs > 6) ||  /* validate arguments      */
       !RXVALIDSTRING(args[0]) || !RXVALIDSTRING(args[1]) ||
@@ -6154,11 +6139,11 @@ LONG APIENTRY SysStemCopy(
     {
       case 'I':
       case 'i':
-        fInsert = TRUE;
+        fInsert = true;
         break;
       case 'O':
       case 'o':
-        fInsert = FALSE;
+        fInsert = false;
         break;
       default:
         return INVALID_ROUTINE;
@@ -6186,7 +6171,7 @@ LONG APIENTRY SysStemCopy(
       return INVALID_ROUTINE;
   }
   else
-    fOk = FALSE;
+    fOk = false;
 
   if (fOk)
   {
@@ -6215,7 +6200,7 @@ LONG APIENTRY SysStemCopy(
         ulToCount = 0;
       }
       else
-        fOk = FALSE;
+        fOk = false;
     } /* endif */
 
     if (fOk)
@@ -6258,13 +6243,13 @@ LONG APIENTRY SysStemCopy(
         shvb.shvret = 0;
         rc = RexxVariablePool(&shvb);
         if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-          fOk = FALSE;
+          fOk = false;
 
         /* free memory allocated by REXX */
         GlobalFree(shvb.shvvalue.strptr);
       }
       else
-        fOk = FALSE;
+        fOk = false;
 
       if (!fOk)
         break;
@@ -6287,7 +6272,7 @@ LONG APIENTRY SysStemCopy(
       shvb.shvret = 0;
       rc = RexxVariablePool(&shvb);
       if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-        fOk = FALSE;
+        fOk = false;
     } /* endif */
   } /* endif */
 
@@ -6320,13 +6305,13 @@ LONG APIENTRY SysStemCopy(
         shvb.shvret = 0;
         rc = RexxVariablePool(&shvb);
         if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-          fOk = FALSE;
+          fOk = false;
 
         /* free memory allocated by REXX */
         GlobalFree(shvb.shvvalue.strptr);
       }
       else
-        fOk = FALSE;
+        fOk = false;
 
       if (!fOk)
         break;
@@ -6350,7 +6335,7 @@ LONG APIENTRY SysStemCopy(
     shvb.shvret = 0;
     rc = RexxVariablePool(&shvb);
     if ((rc != RXSHV_OK) && (rc != RXSHV_NEWV))
-      fOk = FALSE;
+      fOk = false;
   } /* endif */
 
   if (fOk)
@@ -6390,8 +6375,8 @@ LONG APIENTRY SysUtilVersion(
 *            internal function to set a stem value in the varpool        *
 *            for not UNICODE character strings                           *
 *                                                                        *
-* Return:    FALSE - failed                                              *
-*            TRUE  - no error                                            *
+* Return:    false - failed                                              *
+*            true  - no error                                            *
 *************************************************************************/
 LONG SetRexxStem(CHAR * name, char * tailname, CHAR * data)
 {
@@ -6410,8 +6395,8 @@ LONG SetRexxStem(CHAR * name, char * tailname, CHAR * data)
    shvb.shvcode = RXSHV_SYSET;
    shvb.shvret = 0;
    if (RexxVariablePool(&shvb) == RXSHV_BADN)
-     return FALSE;
-   return TRUE;
+     return false;
+   return true;
 }
 
 /*************************************************************************
@@ -6420,8 +6405,8 @@ LONG SetRexxStem(CHAR * name, char * tailname, CHAR * data)
 *            internal function to set a stem value in the varpool        *
 *            for not UNICODE character strings                           *
 *                                                                        *
-* Return:    FALSE - failed                                              *
-*            TRUE  - no error                                            *
+* Return:    false - failed                                              *
+*            true  - no error                                            *
 *************************************************************************/
 LONG SetRexxStemLength(CHAR * name, char * tailname, CHAR * data, LONG datalen)
 {
@@ -6440,8 +6425,8 @@ LONG SetRexxStemLength(CHAR * name, char * tailname, CHAR * data, LONG datalen)
    shvb.shvcode = RXSHV_SYSET;
    shvb.shvret = 0;
    if (RexxVariablePool(&shvb) == RXSHV_BADN)
-     return FALSE;
-   return TRUE;
+     return false;
+   return true;
 }
 
 /*************************************************************************
@@ -6554,19 +6539,19 @@ LONG APIENTRY SysFromUniCode(
     codePage = GetOEMCP();
   else
   {
-    if (rxstricmp(args[1].strptr, "THREAD_ACP") == 0)
+    if (_stricmp(args[1].strptr, "THREAD_ACP") == 0)
       codePage = CP_THREAD_ACP;
-    else if (rxstricmp(args[1].strptr,"ACP") == 0)
+    else if (_stricmp(args[1].strptr,"ACP") == 0)
       codePage = CP_ACP;
-    else if (rxstricmp(args[1].strptr,"MACCP") == 0)
+    else if (_stricmp(args[1].strptr,"MACCP") == 0)
       codePage = CP_MACCP;
-    else if (rxstricmp(args[1].strptr,"OEMCP") == 0)
+    else if (_stricmp(args[1].strptr,"OEMCP") == 0)
       codePage = CP_OEMCP;
-    else if (rxstricmp(args[1].strptr,"SYMBOL") == 0)
+    else if (_stricmp(args[1].strptr,"SYMBOL") == 0)
       codePage = CP_SYMBOL;
-    else if (rxstricmp(args[1].strptr,"UTF7") == 0)
+    else if (_stricmp(args[1].strptr,"UTF7") == 0)
       codePage = CP_UTF7;
-    else if (rxstricmp(args[1].strptr,"UTF8") == 0)
+    else if (_stricmp(args[1].strptr,"UTF8") == 0)
       codePage = CP_UTF8;
     else
       codePage = atoi(args[1].strptr);
@@ -6576,10 +6561,10 @@ LONG APIENTRY SysFromUniCode(
   if (args[2].strlength != 0)
   {
     /* all flags MUST also specify WC_COMPOSITECHECK */
-    if (mystrstr(args[2].strptr,"COMPOSITECHECK",args[2].strlength,14,FALSE)) dwFlags |= WC_COMPOSITECHECK;
-    if (mystrstr(args[2].strptr,"SEPCHARS",args[2].strlength,8,FALSE))        dwFlags |= WC_SEPCHARS | WC_COMPOSITECHECK;
-    if (mystrstr(args[2].strptr,"DISCARDNS",args[2].strlength,9,FALSE))       dwFlags |= WC_DISCARDNS| WC_COMPOSITECHECK;
-    if (mystrstr(args[2].strptr,"DEFAULTCHAR",args[2].strlength,11,FALSE))    dwFlags |= WC_DEFAULTCHAR | WC_COMPOSITECHECK;
+    if (mystrstr(args[2].strptr,"COMPOSITECHECK",args[2].strlength,14,false)) dwFlags |= WC_COMPOSITECHECK;
+    if (mystrstr(args[2].strptr,"SEPCHARS",args[2].strlength,8,false))        dwFlags |= WC_SEPCHARS | WC_COMPOSITECHECK;
+    if (mystrstr(args[2].strptr,"DISCARDNS",args[2].strlength,9,false))       dwFlags |= WC_DISCARDNS| WC_COMPOSITECHECK;
+    if (mystrstr(args[2].strptr,"DEFAULTCHAR",args[2].strlength,11,false))    dwFlags |= WC_DEFAULTCHAR | WC_COMPOSITECHECK;
     if (dwFlags == 0)
       return INVALID_ROUTINE;
   }
@@ -6609,7 +6594,7 @@ LONG APIENTRY SysFromUniCode(
   }
 
   /* Allocate space for the string, to allow double zero byte termination */
-  if (!(strptr = GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, args[0].strlength + 4)))
+  if (!(strptr = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, args[0].strlength + 4)))
     return INVALID_ROUTINE;
   memcpy ( (void*)strptr, (void*)args[0].strptr, (size_t)args[0].strlength ) ;
 
@@ -6626,7 +6611,7 @@ LONG APIENTRY SysFromUniCode(
   if (iBytesNeeded == 0) RETVAL(GetLastError())  // call to function fails
 
   // hard error, stop
-  if (!(str = GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, iBytesNeeded + 4)))
+  if (!(str = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, iBytesNeeded + 4)))
   {
     GlobalFree(strptr);          // free allocated string
     return INVALID_ROUTINE;
@@ -6703,8 +6688,8 @@ LONG APIENTRY SysFromUniCode(
 *            internal function to set a stem value in the varpool        *
 *            for UNICODE character strings                               *
 *                                                                        *
-* Return:    FALSE - failed                                              *
-*            TRUE  - no error                                            *
+* Return:    false - failed                                              *
+*            true  - no error                                            *
 *************************************************************************/
 
 LONG SetRexxUIStem(CHAR * name, char * tailname, LPWSTR data, int datalen)
@@ -6724,8 +6709,8 @@ LONG SetRexxUIStem(CHAR * name, char * tailname, LPWSTR data, int datalen)
    shvb.shvcode = RXSHV_SYSET;
    shvb.shvret = 0;
    if (RexxVariablePool(&shvb) == RXSHV_BADN)
-     return FALSE;
-   return TRUE;
+     return false;
+   return true;
 }
 
 /*
@@ -6802,19 +6787,19 @@ LONG APIENTRY SysToUniCode(
     codePage = GetOEMCP();
   else
   {
-    if (rxstricmp(args[1].strptr,"THREAD_ACP") == 0)
+    if (_stricmp(args[1].strptr,"THREAD_ACP") == 0)
       codePage = CP_THREAD_ACP;
-    else if (rxstricmp(args[1].strptr,"ACP") == 0)
+    else if (_stricmp(args[1].strptr,"ACP") == 0)
       codePage = CP_ACP;
-    else if (rxstricmp(args[1].strptr,"MACCP") == 0)
+    else if (_stricmp(args[1].strptr,"MACCP") == 0)
       codePage = CP_MACCP;
-    else if (rxstricmp(args[1].strptr,"OEMCP") == 0)
+    else if (_stricmp(args[1].strptr,"OEMCP") == 0)
       codePage = CP_OEMCP;
-    else if (rxstricmp(args[1].strptr,"SYMBOL") == 0)
+    else if (_stricmp(args[1].strptr,"SYMBOL") == 0)
       codePage = CP_SYMBOL;
-    else if (rxstricmp(args[1].strptr,"UTF7") == 0)
+    else if (_stricmp(args[1].strptr,"UTF7") == 0)
       codePage = CP_UTF7;
-    else if (rxstricmp(args[1].strptr,"UTF8") == 0)
+    else if (_stricmp(args[1].strptr,"UTF8") == 0)
       codePage = CP_UTF8;
     else
       codePage = atoi(args[1].strptr);
@@ -6823,10 +6808,10 @@ LONG APIENTRY SysToUniCode(
   // evaluate the mapping flags
   if (args[2].strlength != 0)
   {
-    if (mystrstr(args[2].strptr,"PRECOMPOSED",args[2].strlength,11,FALSE))   dwFlags |= MB_PRECOMPOSED;
-    if (mystrstr(args[2].strptr,"COMPOSITE",args[2].strlength,9,FALSE))     dwFlags  |= MB_COMPOSITE;
-    if (mystrstr(args[2].strptr,"ERR_INVALID",args[2].strlength,11,FALSE))   dwFlags |= MB_ERR_INVALID_CHARS;
-    if (mystrstr(args[2].strptr,"USEGLYPHCHARS",args[2].strlength,13,FALSE)) dwFlags |= MB_USEGLYPHCHARS;
+    if (mystrstr(args[2].strptr,"PRECOMPOSED",args[2].strlength,11,false))   dwFlags |= MB_PRECOMPOSED;
+    if (mystrstr(args[2].strptr,"COMPOSITE",args[2].strlength,9,false))     dwFlags  |= MB_COMPOSITE;
+    if (mystrstr(args[2].strptr,"ERR_INVALID",args[2].strlength,11,false))   dwFlags |= MB_ERR_INVALID_CHARS;
+    if (mystrstr(args[2].strptr,"USEGLYPHCHARS",args[2].strlength,13,false)) dwFlags |= MB_USEGLYPHCHARS;
     if (dwFlags == 0)
       return INVALID_ROUTINE;
   }
@@ -6856,7 +6841,7 @@ LONG APIENTRY SysToUniCode(
   ulDataLen = (ulWCharsNeeded)*2;
 
   // hard error, stop
-  if (!(lpwstr = GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, ulDataLen+4)))
+  if (!(lpwstr = (LPWSTR)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, ulDataLen+4)))
     return INVALID_ROUTINE;
 
 
@@ -6917,15 +6902,15 @@ LONG APIENTRY SysWinGetPrinters(
   if (args[0].strptr[args[0].strlength-1] != '.')
     return INVALID_ROUTINE;
 
-  while (fSuccess == FALSE) {
-    fSuccess = EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS, NULL, 2, pArray, currentSize, &realSize, &entries);
+  while (fSuccess == false) {
+    fSuccess = EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS, NULL, 2, (LPBYTE)pArray, currentSize, &realSize, &entries);
     if (currentSize < realSize) {
       currentSize = realSize;
       realSize = 0;
       pArray = (char*) realloc(pArray, sizeof(char)*currentSize);
-      fSuccess = FALSE;
+      fSuccess = false;
     } else
-      fSuccess = TRUE;
+      fSuccess = true;
   }
   pResult = (PRINTER_INFO_2*) pArray;
 
@@ -6942,11 +6927,11 @@ LONG APIENTRY SysWinGetPrinters(
   shvb.shvcode = RXSHV_SYSET;
   shvb.shvret = 0;
 
-  fSuccess = FALSE;
+  fSuccess = false;
 
   rc = RexxVariablePool(&shvb);
   if (rc == RXSHV_OK || rc == RXSHV_NEWV) {
-    fSuccess = TRUE;
+    fSuccess = true;
     while (entries--) {
       sprintf(szBuffer,"%s,%s,%s",pResult[entries].pPrinterName,pResult[entries].pDriverName,pResult[entries].pPortName);
       sprintf(args[0].strptr+args[0].strlength,"%d",entries+1);
@@ -6961,7 +6946,7 @@ LONG APIENTRY SysWinGetPrinters(
       shvb.shvret = 0;
       rc = RexxVariablePool(&shvb);
       if (rc != RXSHV_OK && rc != RXSHV_NEWV) {
-        fSuccess = FALSE;
+        fSuccess = false;
         break;
       }
     }
@@ -7098,7 +7083,7 @@ LONG APIENTRY SysWinSetDefaultPrinter(
 
     // The first GetPrinter() tells you how big our buffer should
     // be in order to hold ALL of PRINTER_INFO_2. Note that this will
-    // usually return FALSE. This only means that the buffer (the 3rd
+    // usually return false. This only means that the buffer (the 3rd
     // parameter) was not filled in. You don't want it filled in here...
     GetPrinter(hPrinter, 2, 0, 0, &dwNeeded);
     if (dwNeeded == 0)

@@ -42,18 +42,13 @@
 extern "C" {
 #endif
 
-LONG APIENTRY RexxCallExit(PSZ,
-                           PSZ,
-                           LONG,
-                           LONG,
-                           PEXIT ) ;
-
+int APIENTRY RexxCallExit(const char *, const char *, int, int, PEXIT);
 
 /***    RexxLoadSubcom - Load a Subcommand environment */
 
 APIRET APIENTRY RexxLoadSubcom(
-         PSZ,                          /* Name of the Environment    */
-         PSZ );                        /* DLL Module Name            */
+         const char *,                 /* Name of the Environment    */
+         const char *);                /* DLL Module Name            */
 
 /***   Uppercase Entry Point Name */
 #define REXXLOADSUBCOM  RexxLoadSubcom
@@ -63,11 +58,11 @@ APIRET APIENTRY RexxLoadSubcom(
 /***    RexxCallSubcom - Execute a command in an environment */
 
 APIRET APIENTRY RexxCallSubcom(
-         PSZ,                          /* Name of Subcommand Environ */
-         PSZ,                          /* Module name of its DLL     */
-         PRXSTRING,                    /* Command string to be passed*/
-         PUSHORT,                      /* Stor for error flag notice */
-         PUSHORT,                      /* Stor for rc from handler   */
+         const char *,                 /* Name of Subcommand Environ */
+         const char *,                 /* Module name of its DLL     */
+         PCONSTRXSTRING,               /* Command string to be passed*/
+         unsigned short *,             /* Stor for error flag notice */
+         wholenumber_t *,              /* Stor for rc from handler   */
          PRXSTRING );                  /* Stor for returned string   */
 
 /***   Uppercase Entry Point Name */
@@ -78,12 +73,12 @@ APIRET APIENTRY RexxCallSubcom(
 /***    RexxCallFunction - Call a function in the AFT */
 
 APIRET APIENTRY RexxCallFunction (
-        PSZ,                           /* Name of function to call   */
-        ULONG ,                        /* Number of arguments        */
-        PRXSTRING,                     /* Array of argument strings  */
-        PUSHORT,                       /* RC from function called    */
+        const char *,                  /* Name of function to call   */
+        size_t,                        /* Number of arguments        */
+        PCONSTRXSTRING,                /* Array of argument strings  */
+        int            *,              /* RC from function called    */
         PRXSTRING,                     /* Storage for returned data  */
-        PSZ );                         /* Name of active data queue  */
+        const char *);                 /* Name of active data queue  */
 
 #ifdef __cplusplus
 }

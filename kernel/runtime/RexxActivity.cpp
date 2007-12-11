@@ -69,9 +69,6 @@
 #include "RexxMemory.hpp"
 #include "RexxVariableDictionary.hpp"
 #include "ProtectedObject.hpp"
-#define INCL_RXSYSEXIT
-#define INCL_RXOBJECT
-#include SYSREXXSAA
 
 const size_t ACT_STACK_SIZE = 10;
 
@@ -161,7 +158,7 @@ void RexxActivity::runThread()
     SysDeregisterExceptions(&exreg);     /* remove exception trapping         */
     // tell the activity manager we're going away
     ActivityManager::activityEnded(this);
-    SysTerminateThread((TID)this->threadid);  /* system specific thread termination*/
+    SysTerminateThread((thread_id_t)this->threadid);  /* system specific thread termination*/
     return;                              /* finished                          */
 }
 
@@ -261,7 +258,7 @@ void RexxActivity::generateRandomNumberSeed()
 /******************************************************************************/
 {
   RexxDateTime  timestamp;             /* current timestamp                 */
-  LONG          i;                     /* loop counter                      */
+  int           i;                     /* loop counter                      */
   static int rnd = 0;
 
   rnd++;
@@ -274,13 +271,13 @@ void RexxActivity::generateRandomNumberSeed()
   }
 }
 
-long RexxActivity::error(size_t startDepth)
+wholenumber_t RexxActivity::error(size_t startDepth)
 /******************************************************************************/
 /* Function:  Force error termination on an activity, returning the resulting */
 /*            REXX error code.                                                */
 /******************************************************************************/
 {
-  LONG   rc;                           /* REXX error return code            */
+  wholenumber_t rc;                    /* REXX error return code            */
 
   while (this->depth > startDepth) {   /* while still have activations      */
                                        /* if we have a real activation      */
@@ -295,8 +292,8 @@ long RexxActivity::error(size_t startDepth)
   if (this->conditionobj != OREF_NULL) {
                                        /* force it to display               */
     this->display(this->conditionobj);
-                                       /* get the failure return code       */
-    rc = this->conditionobj->at(OREF_RC)->longValue(Numerics::DEFAULT_DIGITS);
+    // try to convert.  Leaves unchanged if not value
+    this->conditionobj->at(OREF_RC)->numberValue(rc);
   }
   return rc;                           /* return the error code             */
 }
@@ -737,10 +734,10 @@ RexxString *RexxActivity::messageSubstitution(
 /*            error message.                                                  */
 /******************************************************************************/
 {
-  LONG        substitutions;           /* number of substitutions           */
-  LONG        subposition;             /* substitution position             */
-  LONG        i;                       /* loop counter                      */
-  LONG        selector;                /* substitution position             */
+  int         substitutions;           /* number of substitutions           */
+  int         subposition;             /* substitution position             */
+  int         i;                       /* loop counter                      */
+  int         selector;                /* substitution position             */
   RexxString *newmessage;              /* resulting new error message       */
   RexxString *front;                   /* front message part                */
   RexxString *back;                    /* back message part                 */
@@ -1358,7 +1355,7 @@ void RexxActivity::checkDeadLock(
                                        /* waiting on a message object?      */
     if (isOfClass(Message, this->waitingObject))
                                        /* get the activity message is on    */
-      owningActivity = ((RexxMessage *)this->waitingObject)->startActivity;
+      owningActivity = ((RexxMessage *)this->waitingObject)->getActivity();
     else
                                        /* get the locking activity for vdict*/
       owningActivity = ((RexxVariableDictionary *)this->waitingObject)->getReservingActivity();
@@ -1586,8 +1583,8 @@ void RexxActivity::checkStackSpace()
 /******************************************************************************/
 {
 #ifdef STACKCHECK
-  long temp;                           /* if checking and there isn't room  */
-  if (PTRSUB2(&temp,this->nestedInfo.stackptr) < MIN_C_STACK && this->stackcheck == true)
+  size_t temp;                          /* if checking and there isn't room  */
+  if ((char *)&temp - (char *)this->nestedInfo.stackptr < MIN_C_STACK && this->stackcheck == true)
                                        /* go raise an exception             */
     reportException(Error_Control_stack_full);
 #endif
@@ -1601,12 +1598,12 @@ RexxObject *RexxActivity::localMethod()
   return ActivityManager::localEnvironment; // just return the .local directory
 }
 
-long  RexxActivity::threadIdMethod()
+thread_id_t  RexxActivity::threadIdMethod()
 /******************************************************************************/
 /* Function:  Retrieve the activities threadid                                */
 /******************************************************************************/
 {
-  return (long)this->threadid;         /* just return the thread id info    */
+  return this->threadid;                 /* just return the thread id info    */
 }
 
 void  RexxActivity::setShvVal(
@@ -1703,7 +1700,7 @@ bool  RexxActivity::sysExitSioSay(
                                        /* make into RXSTRING form           */
     MAKERXSTRING(exit_parm.rxsio_string, sayoutput->getWritableData(),  sayoutput->getLength());
                                        /* call the handler                  */
-    return SysExitHandler(this, activation, exitname, RXSIO, RXSIOSAY, (PVOID)&exit_parm, false);
+    return SysExitHandler(this, activation, exitname, RXSIO, RXSIOSAY, (void *)&exit_parm, false);
   }
   return true;                         /* exit didn't handle                */
 }
@@ -1725,7 +1722,7 @@ bool RexxActivity::sysExitSioTrc(
                                        /* make into RXSTRING form           */
     MAKERXSTRING(exit_parm.rxsio_string, traceoutput->getWritableData(), traceoutput->getLength());
                                        /* call the handler                  */
-    return SysExitHandler(this, activation, exitname, RXSIO, RXSIOTRC, (PVOID)&exit_parm, false);
+    return SysExitHandler(this, activation, exitname, RXSIO, RXSIOTRC, (void *)&exit_parm, false);
   }
   return true;                         /* exit didn't handle                */
 }
@@ -1752,7 +1749,7 @@ bool RexxActivity::sysExitSioTrd(
                                        /* init shvexit return buffer        */
     this->nestedInfo.shvexitvalue = OREF_NULL;
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXSIO, RXSIOTRD, (PVOID)&exit_parm, false))
+    if (SysExitHandler(this, activation, exitname, RXSIO, RXSIOTRD, (void *)&exit_parm, false))
       return true;                     /* this wasn't handled               */
                                        /* shv_exit return a value?          */
     if (this->nestedInfo.shvexitvalue != OREF_NULL) {
@@ -1793,7 +1790,7 @@ bool RexxActivity::sysExitSioDtr(
                                        /* init shvexit return buffer        */
     this->nestedInfo.shvexitvalue = OREF_NULL;
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXSIO, RXSIODTR, (PVOID)&exit_parm, false))
+    if (SysExitHandler(this, activation, exitname, RXSIO, RXSIODTR, (void *)&exit_parm, false))
       return true;                     /* this wasn't handled               */
                                        /* shv_exit return a value?          */
     if (this->nestedInfo.shvexitvalue != OREF_NULL) {
@@ -1828,7 +1825,7 @@ bool RexxActivity::sysExitFunc(
   RXFNCCAL_PARM exit_parm;             /* exit parameters                   */
   char          retbuffer[DEFRXSTRING];/* Default result buffer             */
   long          argindex;              /* Counter for arg array             */
-  PRXSTRING     argrxarray;            /* Array of args in PRXSTRING form   */
+  PCONSTRXSTRING argrxarray;           /* Array of args in PRXSTRING form   */
   RexxString   *temp;                  /* temporary argument                */
   RexxString   *stdqueue;              /* current REXX queue                */
   RexxDirectory *securityArgs;         /* security check arguments          */
@@ -1889,8 +1886,8 @@ bool RexxActivity::sysExitFunc(
     /* allocate enough memory for all arguments.           */
     /* At least one item needs to be allocated in order to avoid an error   */
     /* in the sysexithandler!                                               */
-    argrxarray = (PRXSTRING) SysAllocateResultMemory(
-                    sizeof(RXSTRING) * max(exit_parm.rxfnc_argc,1));
+    argrxarray = (PCONSTRXSTRING) SysAllocateResultMemory(
+                    sizeof(CONSTRXSTRING) * Numerics::maxVal((size_t)exit_parm.rxfnc_argc, (size_t)1));
     if (argrxarray == OREF_NULL)       /* memory error?                     */
       reportException(Error_System_resources);
                                        /* give the arg array pointer        */
@@ -1900,9 +1897,10 @@ bool RexxActivity::sysExitFunc(
                                        /* get the next argument             */
       if (this->exitObjects == true) {
         // store pointers to rexx objects
-        argrxarray[argindex].strlength = 8; // pointer length in ASCII
-        argrxarray[argindex].strptr = (char *)SysAllocateExternalMemory(16);
-        sprintf(argrxarray[argindex].strptr,"%p",arguments[argindex]); // ptr to object
+          char *value = (char *)SysAllocateExternalMemory(16);
+          sprintf(value, "%p", arguments[argindex]); // ptr to object
+          argrxarray[argindex].strlength = 8; // pointer length in ASCII
+          argrxarray[argindex].strptr = value;
       } else {
         // classic REXX style interface
         temp = (RexxString *)arguments[argindex];
@@ -1925,7 +1923,7 @@ bool RexxActivity::sysExitFunc(
                                        /* init shvexit return buffer        */
     this->nestedInfo.shvexitvalue = OREF_NULL;
                                        /* call the handler                  */
-    wasNotHandled = SysExitHandler(this, activation, exitname, RXFNC, RXFNCCAL, (PVOID)&exit_parm, true);
+    wasNotHandled = SysExitHandler(this, activation, exitname, RXFNC, RXFNCCAL, (void *)&exit_parm, true);
 
     /* release the memory allocated for the arguments */
     // free memory that was needed to pass objects
@@ -1933,7 +1931,7 @@ bool RexxActivity::sysExitFunc(
     {
         for (argindex=0; argindex < exit_parm.rxfnc_argc; argindex++)
         {
-            SysFreeExternalMemory(argrxarray[argindex].strptr);
+            SysFreeExternalMemory((void *)argrxarray[argindex].strptr);
         }
     }
     SysReleaseResultMemory(argrxarray);
@@ -2039,7 +2037,7 @@ bool RexxActivity::sysExitCmd(
                                        /* init shvexit return buffer        */
     this->nestedInfo.shvexitvalue = OREF_NULL;
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXCMD, RXCMDHST, (PVOID)&exit_parm, true))
+    if (SysExitHandler(this, activation, exitname, RXCMD, RXCMDHST, (void *)&exit_parm, true))
       return true;                     /* this wasn't handled               */
     if (exit_parm.rxcmd_flags.rxfcfail)/* need to raise failure condition?  */
 
@@ -2086,7 +2084,7 @@ bool  RexxActivity::sysExitMsqPll(
                                        /* init shvexit return buffer        */
     this->nestedInfo.shvexitvalue = OREF_NULL;
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQPLL, (PVOID)&exit_parm, false))
+    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQPLL, (void *)&exit_parm, false))
       return true;                     /* this wasn't handled               */
                                        /* Get input string and return it    */
                                        /* shv_exit return a value?          */
@@ -2134,7 +2132,7 @@ bool  RexxActivity::sysExitMsqPsh(
                                        /* make into RXSTRING form           */
     MAKERXSTRING(exit_parm.rxmsq_value, inputstring->getWritableData(), inputstring->getLength());
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQPSH, (PVOID)&exit_parm, false))
+    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQPSH, (void *)&exit_parm, false))
       return true;                     /* this wasn't handled               */
 
     return false;                      /* this was handled                  */
@@ -2158,7 +2156,7 @@ bool  RexxActivity::sysExitMsqSiz(
   exitname = this->querySysExits(RXMSQ);
   if (exitname != OREF_NULL) {         /* exit enabled?                     */
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQSIZ, (PVOID)&exit_parm, false))
+    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQSIZ, (void *)&exit_parm, false))
       return true;                     /* this wasn't handled               */
                                        /* Get queue size and return it      */
     tempSize = exit_parm.rxmsq_size;   /* temporary place holder for new_integer */
@@ -2187,7 +2185,7 @@ bool  RexxActivity::sysExitMsqNam(
                                        /* make into RXSTRING form           */
     MAKERXSTRING(exit_parm.rxmsq_name, (*inputstring)->getWritableData(), (*inputstring)->getLength());
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQNAM, (PVOID)&exit_parm, false))
+    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQNAM, (void *)&exit_parm, false))
       return true;                     /* this wasn't handled               */
     *inputstring = (RexxString *)new_string(exit_parm.rxmsq_name.strptr, exit_parm.rxmsq_name.strlength);
                                        /* user give us a new buffer?        */
@@ -2218,7 +2216,7 @@ bool RexxActivity::sysExitHltTst(
                                        /* init shvexit return buffer        */
     this->nestedInfo.shvexitvalue = OREF_NULL;
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXHLT, RXHLTTST, (PVOID)&exit_parm, false))
+    if (SysExitHandler(this, activation, exitname, RXHLT, RXHLTTST, (void *)&exit_parm, false))
       return true;                     /* this wasn't handled               */
                                        /* Was halt requested?               */
     if (exit_parm.rxhlt_flags.rxfhhalt == 1) {
@@ -2251,7 +2249,7 @@ bool RexxActivity::sysExitHltClr(
   exitname = this->querySysExits(RXHLT);
   if (exitname != OREF_NULL) {         /* exit enabled?                     */
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXHLT, RXHLTCLR, (PVOID)&exit_parm, false))
+    if (SysExitHandler(this, activation, exitname, RXHLT, RXHLTCLR, (void *)&exit_parm, false))
       return true;                     /* this wasn't handled               */
     return false;                      /* this was handled                  */
   }
@@ -2275,7 +2273,7 @@ bool  RexxActivity::sysExitTrcTst(
                                        /* Clear Trace bit before  call      */
     exit_parm.rxtrc_flags.rxftrace = 0;
                                        /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXTRC, RXTRCTST, (PVOID)&exit_parm, false))
+    if (SysExitHandler(this, activation, exitname, RXTRC, RXTRCTST, (void *)&exit_parm, false))
       return true;                     /* this wasn't handled               */
                                        /* if not tracing, and now it is     */
                                        /* requsted                          */
@@ -2505,14 +2503,7 @@ void process_message_arguments(
 /*            interface string.                                               */
 /******************************************************************************/
 {
-  LONG     i;                          /* loop counter/array index          */
-  PVOID    tempPointer;                /* temp converted pointer            */
-  RXSTRING tempRXSTRING;               /* temp argument rxstring            */
-  RexxObject *tempOREF;                /* temp argument object reference    */
-  LONG     tempLong;                   /* temp converted long               */
-  ULONG    tempULong;                  /* temp converted long               */
-  char     tempChar;                   /* temp character value              */
-  double   tempDouble;                 /* temp double value                 */
+  size_t   i;                          /* loop counter/array index          */
   va_list *subArguments;               /* indirect argument descriptor      */
   const char *subInterface;            /* indirect interface definition     */
 
@@ -2530,60 +2521,47 @@ void process_message_arguments(
 
       case 'b':                        /* BYTE                              */
       case 'c':                        /* CHARACTER                         */
-                                       /* get the character                 */
-        tempChar = (char) va_arg(*arguments, int);
+      {
                                        /* create a string object            */
-        argument_list->addLast(new_string(&tempChar, 1));
+        argument_list->addLast(new_string((char) va_arg(*arguments, int)));
         break;
+      }
+
 
       case 'i':                        /* int                               */
-                                       /* get the number                    */
-        tempLong = va_arg(*arguments, int);
                                        /* create an integer object          */
-        argument_list->addLast(new_integer(tempLong));
+        argument_list->addLast(new_integer(va_arg(*arguments, int)));
         break;
 
       case 's':                        /* short                             */
-                                       /* get the number                    */
-        tempLong = (LONG) (short) va_arg(*arguments, int);
                                        /* create an integer object          */
-        argument_list->addLast(new_integer(tempLong));
+        argument_list->addLast(new_integer((short) va_arg(*arguments, int)));
         break;
 
       case 'd':                        /* double                            */
       case 'f':                        /* floating point                    */
-                                       /* get a double value                */
-        tempDouble = va_arg(*arguments, double);
                                        /* convert to string form            */
-        argument_list->addLast(new_string(tempDouble));
+        argument_list->addLast(new_string((double)va_arg(*arguments, double)));
         break;
 
-      case 'g':                        /* ULONG                             */
-                                       /* get the number                    */
-        tempULong = va_arg(*arguments, ULONG);
+      case 'g':                        /* unsigned number                   */
                                        /* create an integer object          */
-        argument_list->addLast(new_numberstring((stringsize_t)tempULong));
+        argument_list->addLast(new_numberstring((stringsize_t)va_arg(*arguments, size_t)));
         break;
 
       case 'h':                        /* unsigned short                    */
-                                       /* get the number                    */
-        tempLong = (LONG) (unsigned short) va_arg(*arguments, int);
                                        /* create an integer object          */
-        argument_list->addLast(new_integer(tempLong));
+        argument_list->addLast(new_integer((unsigned short) va_arg(*arguments, int)));
         break;
 
       case 'l':                        /* LONG                              */
-                                       /* get the number                    */
-        tempLong = va_arg(*arguments, LONG);
                                        /* create an integer object          */
-        argument_list->addLast(new_integer(tempLong));
+        argument_list->addLast(new_integer(va_arg(*arguments, wholenumber_t)));
         break;
 
       case 'o':                        /* REXX object reference             */
-                                       /* get the OREF                      */
-        tempOREF = va_arg(*arguments, RexxObject *);
                                        /* insert directly into the array    */
-        argument_list->addLast(tempOREF);
+        argument_list->addLast(va_arg(*arguments, RexxObject *));
         break;
 
       case 'A':                        /* REXX array of objects             */
@@ -2592,21 +2570,23 @@ void process_message_arguments(
           RexxArray *tempArray;
           tempArray = va_arg(*arguments, RexxArray *);
                                        /* get the array size                */
-          tempLong = tempArray->size();
+          size_t arraySize = tempArray->size();
                                        /* for each argument,                */
-          for (i = 1; i <= tempLong; i++) {
+          for (i = 1; i <= arraySize; i++) {
                                        /* copy into the argument list       */
             argument_list->addLast(tempArray->get(i));
           }
         }
         break;
 
-      case 'r':                        /* RXSTRING                          */
-                                       /* get the RXSTRING                  */
-        tempRXSTRING = va_arg(*arguments, RXSTRING);
-                                       /* create a string object            */
-        argument_list->addLast(new_string(tempRXSTRING.strptr, tempRXSTRING.strlength));
-        break;
+        case 'r':                        /* RXSTRING                          */
+        {
+                                           /* get the RXSTRING                  */
+            RXSTRING temp = va_arg(*arguments, RXSTRING);
+                                           /* create a string object            */
+            argument_list->addLast(new_string(temp.strptr, temp.strlength));
+            break;
+        }
 
       case 'n':                        /* pointer to somId                  */
       case 'p':                        /* POINTER                           */
@@ -2617,16 +2597,13 @@ void process_message_arguments(
       case 'V':                        /* VOID *?                           */
       case 'R':                        /* RXSTRING *                        */
                                        /* get the pointer                   */
-        tempPointer = va_arg(*arguments, void *);
                                        /* create a pointer object           */
-        argument_list->addLast(new_pointer(tempPointer));
+        argument_list->addLast(new_pointer(va_arg(*arguments, void *)));
         break;
 
       case 'z':                        /* ASCII-Z string                    */
-                                       /* get the pointer                   */
-        tempPointer = va_arg(*arguments, void *);
                                        /* create a string object            */
-        argument_list->addLast(new_string((char *)tempPointer));
+        argument_list->addLast(new_string(va_arg(*arguments, char *)));
         break;
     }
   }
@@ -2634,7 +2611,7 @@ void process_message_arguments(
 
 void process_message_result(
   RexxObject *value,                   /* returned value                    */
-  PVOID    return_pointer,             /* pointer to return value location  */
+  void    *return_pointer,             /* pointer to return value location  */
   char     interfacedefn )             /* interface definition              */
 /******************************************************************************/
 /* Function:  Convert an OREF return value into the requested message return  */
@@ -2646,44 +2623,70 @@ void process_message_result(
   switch (interfacedefn) {             /* process the return type           */
 
       case 'b':                        /* BOOLEAN                           */
+      {
+        wholenumber_t temp = 0;
+        value->numberValue(temp, number_digits());
                                        /* get the number                    */
-        (*((bool *)return_pointer)) = value->longValue(NO_LONG) == 0 ? false : true;
+        (*((bool *)return_pointer)) = temp == 0 ? false : true;
         break;
+      }
       case 'c':                        /* CHARACTER                         */
                                        /* get the first character           */
         (*((char *)return_pointer)) = ((RexxString *)value)->getChar(0);
         break;
 
       case 'i':                        /* int                               */
+      {
+        wholenumber_t temp = 0;
+        value->numberValue(temp, number_digits());
                                        /* get the number                    */
-        (*((int *)return_pointer)) = (int)value->longValue(NO_LONG);
+        (*((int *)return_pointer)) = (int)temp;
         break;
+      }
 
       case 's':                        /* short                             */
+      {
+        wholenumber_t temp = 0;
+        value->numberValue(temp, number_digits());
                                        /* get the number                    */
-        (*((short *)return_pointer)) = (short)value->longValue(NO_LONG);
+        (*((short *)return_pointer)) = (short)temp;
         break;
+      }
 
       case 'd':                        /* double                            */
       case 'f':                        /* floating point                    */
-                                       /* get the double                    */
-        (*((double *)return_pointer)) = value->doubleValue();
-        break;
+      {
+          double temp = 0.0;
+          value->doubleValue(temp);
+                                         /* get the double                    */
+          (*((double *)return_pointer)) = temp;
+          break;
+      }
 
-      case 'g':                        /* ULONG                             */
-                                       /* get the number                    */
-        (*((ULONG *)return_pointer)) = (ULONG)value->longValue(NO_LONG);
-        break;
+      case 'g':                        /* unsigned number                   */
+      {
+          wholenumber_t temp = 0;
+          value->numberValue(temp, number_digits());
+          (*((unsigned long *)return_pointer)) = (unsigned long)temp;
+          break;
+      }
 
       case 'h':                        /* unsigned short                   */
+      {
+        wholenumber_t temp = 0;
+        value->numberValue(temp, number_digits());
                                        /* get the number                    */
-        (*((unsigned short *)return_pointer)) = (unsigned short)value->longValue(NO_LONG);
+        (*((unsigned short *)return_pointer)) = (unsigned short)temp;
         break;
+      }
 
       case 'l':                        /* LONG                              */
-                                       /* get the number                    */
-        (*((ULONG *)return_pointer)) = (ULONG)value->longValue(NO_LONG);
-        break;
+      {
+          wholenumber_t temp = 0;
+          value->numberValue(temp, number_digits());
+          (*((long *)return_pointer)) = (long)temp;
+          break;
+      }
 
       case 'o':                        /* REXX object reference             */
                                        /* copy the value directly           */
@@ -2699,7 +2702,7 @@ void process_message_result(
       case 'V':                        /* VOID *?                           */
       case 'R':                        /* RXSTRING *                        */
                                        /* get the pointer value             */
-          (*((PVOID *)return_pointer)) = (void *)((RexxInteger *)object_id)->getValue();
+          (*((void **)return_pointer)) = (void *)((RexxInteger *)object_id)->getValue();
         break;
 
       case 'v':                        /* nothing returned at all           */
@@ -2759,7 +2762,7 @@ int RexxActivity::messageSend(
   // make sure we get restored to the same base activation level.
   restoreActivationLevel(activityLevel);
   // give uninit objects a chance to run
-  TheMemoryObject->runUninits();
+  memoryObject.runUninits();
   this->restoreNestedInfo(saveInfo);   /* now restore to previous nesting   */
   SysDeregisterSignals(&exreg);        /* deregister the signal handlers    */
   this->popNil();                      /* remove the nil marker             */
@@ -2769,7 +2772,7 @@ int RexxActivity::messageSend(
 
 #include "RexxNativeAPI.h"             /* bring in the external definitions */
 
-int VLAREXXENTRY RexxSendMessage (
+int REXXENTRY RexxSendMessage (
   REXXOBJECT  receiver,                /* receiving object                  */
   const char *msgname,                 /* message to send                   */
   REXXOBJECT  start_class,             /* lookup starting class             */
@@ -2869,24 +2872,3 @@ RexxObject *RexxActivity::nativeRelease(
   return result;                       /* return the result object          */
 }
 
-
-REXXOBJECT REXXENTRY RexxDispatch (
-  REXXOBJECT argList)                  /* ArgLIst array.                    */
-/******************************************************************************/
-/* Function:  Dispatch message to rexx object.  All args are in a Rexx Array  */
-/******************************************************************************/
-{
-  RexxObject *receiver;                /* receiver of message               */
-  RexxString *message;                 /* message name to send to receiver  */
-  RexxArray  *args;                    /* argument array for message        */
-  RexxObject *result;                  /* returned result object            */
-
-  ActivityManager::lockKernel();
-  receiver = ((RexxArray *)argList)->get(1);
-  message  = (RexxString *)((RexxArray *)argList)->get(2);
-  args     = (RexxArray *)((RexxArray *)argList)->get(3);
-  ActivityManager::unlockKernel();
-                                       /* process the message               */
-  RexxSendMessage(receiver, message->getStringData(), OREF_NULL, "oA", &result, (RexxObject *)args);
-  return result;                       /* return the message result         */
-}

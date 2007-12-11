@@ -179,7 +179,6 @@ STDMETHODIMP OrxDispID::GetNextDispID(
   /* [in]  */ DWORD pFlags,               // Derived from fdexEnum... defines.
   /* [in]  */ DISPID pDispID,             // Previous DispID returned.
   /* [out] */ DISPID __RPC_FAR *pbDispID){  // Next DispID or -1.
-  HRESULT   RetCode;
   ListItem *Current;
   char      Name[MAX_PATH];
 

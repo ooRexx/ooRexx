@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  ArrayClass.hpp   */
+/* REXX Kernel                                               ArrayClass.hpp   */
 /*                                                                            */
 /* Primitive Array Class Definitions                                          */
 /*                                                                            */
@@ -84,13 +84,13 @@ typedef struct copyElelmentParm {
 
    inline void operator delete(void *) {;}
    inline void operator delete(void *, void *) {;}
-   inline void operator delete(void *, RexxObject **, arraysize_t, RexxClass *) {;}
+   inline void operator delete(void *, RexxObject **, size_t, RexxClass *) {;}
    inline void operator delete(void *, RexxObject *) {;}
    inline void operator delete(void *, RexxObject *, RexxObject *) {;}
    inline void operator delete(void *, RexxObject *, RexxObject *, RexxObject *) {;}
    inline void operator delete(void *, RexxObject *, RexxObject *, RexxObject *, RexxObject *) {;}
-   inline void operator delete(void *, arraysize_t, RexxObject **) {;}
-   inline void operator delete(void *, arraysize_t, RexxClass *cls) {;}
+   inline void operator delete(void *, size_t, RexxObject **) {;}
+   inline void operator delete(void *, size_t, RexxClass *cls) {;}
    inline void operator delete(void *, RexxObject **) { ; }
 
    inline RexxArray(RESTORETYPE restoreType) { ; };
@@ -119,7 +119,7 @@ typedef struct copyElelmentParm {
    RexxObject  *append(RexxObject *);
    void         setExpansion(RexxObject * expansion);
    RexxInteger *available(size_t position);
-   size_t       validateIndex(RexxObject **, size_t, size_t, size_t);
+   bool         validateIndex(RexxObject **, size_t, size_t, size_t, stringsize_t &);
    RexxInteger *sizeRexx();
    RexxObject  *firstRexx();
    RexxObject  *lastRexx();
@@ -130,7 +130,7 @@ typedef struct copyElelmentParm {
    RexxObject  *sectionRexx(RexxObject *, RexxObject *);
    RexxObject  *sectionSubclass(size_t, size_t);
    RexxInteger *hasIndex(RexxObject *);
-   size_t       hasIndexNative(size_t);
+   bool         hasIndexNative(size_t);
    RexxObject  *hasIndexRexx(RexxObject **, size_t);
    size_t       numItems();
    RexxObject  *items();
@@ -174,7 +174,7 @@ typedef struct copyElelmentParm {
    inline RexxObject **data() { return this->expansionArray->objects; }
    inline RexxObject **data(size_t pos) { return &((this->data())[pos-1]);}
    inline RexxArray   *getExpansion() { return this->expansionArray; }
-   arraysize_t         findSingleIndexItem(RexxObject *item);
+   size_t              findSingleIndexItem(RexxObject *item);
    RexxObject *        indexToArray(size_t idx);
    RexxObject *        convertIndex(size_t idx);
 
@@ -190,12 +190,12 @@ typedef struct copyElelmentParm {
  };
 
 
-inline RexxArray *new_externalArray(arraysize_t s, RexxClass *c)
+inline RexxArray *new_externalArray(size_t s, RexxClass *c)
 {
     return new (s, c) RexxArray;
 }
 
-inline RexxArray *new_array(arraysize_t s)
+inline RexxArray *new_array(size_t s)
 {
     return new (s) RexxArray;
 }

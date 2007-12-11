@@ -55,7 +55,6 @@
 #include "RexxActivity.hpp"
 #include "SourceFile.hpp"
 #include "ProtectedObject.hpp"
-#include SYSREXXSAA
 
 /*********************************************************************/
 /*         Definitions for use by the Meta I/O functionality         */
@@ -78,14 +77,14 @@ typedef struct _control {              /* meta date control info            */
     unsigned short Magic;              /* identifies as 'meta' prog         */
     unsigned short MetaVersion;        /* version of the meta prog          */
     char           RexxVersion[40];    /* version of rexx intrpreter        */
-    LONG           ImageSize;          /* size of the method info           */
+    size_t         ImageSize;          /* size of the method info           */
 } FILE_CONTROL;                        /* saved control info                */
                                        /* size of control structure         */
 #define  CONTROLSZ      sizeof(FILE_CONTROL)
 
 typedef FILE_CONTROL *PFILE_CONTROL;   /* pointer to file info              */
 
-extern BOOL ProcessSaveImage;
+extern bool ProcessSaveImage;
 RexxMethod *SysRestoreTranslatedProgram(RexxString *,FILE *);
 
 /*********************************************************************/
@@ -107,7 +106,7 @@ RexxMethod *SysRestoreProgram(
   FILE         *Handle;                /* file handle                       */
   RexxMethod   *Method;                /* unflattened method                */
   char          fileTag[sizeof(magicNumber)];
-  LONG          buffersize,            /* size of the buffer                */
+  size_t        buffersize,            /* size of the buffer                */
                 position;              /* Temp file location                */
   RexxBuffer  * buffer;                /* Buffer to unflatten               */
 
@@ -190,7 +189,7 @@ RexxMethod *SysRestoreProgramBuffer(
   char         *MethodInfo;            /* buffered flattened method         */
   char         *StartPointer;          /* start of buffered information     */
   RexxBuffer  * Buffer;                /* Buffer to unflatten               */
-  LONG          BufferSize;            /* size of the buffer                */
+  size_t        BufferSize;            /* size of the buffer                */
   RexxMethod  * Method;                /* unflattened method                */
   RexxSource  * Source;                /* REXX source object                */
 
@@ -240,13 +239,13 @@ void SysSaveProgramBuffer(
   RexxBuffer  * MethodBuffer;          /* flattened method                  */
   RexxSmartBuffer *FlatBuffer;         /* flattened smart buffer            */
   char         *BufferAddress;         /* address of flattened method data  */
-  LONG          BufferLength;          /* length of the flattened method    */
+  size_t        BufferLength;          /* length of the flattened method    */
   RexxString  * Version;               /* REXX version string               */
 
   ProtectedObject p(Method);
   FlatBuffer = Method->saveMethod();   /* flatten the method                */
                                        /* retrieve the length of the buffer */
-  BufferLength = (LONG)FlatBuffer->current;
+  BufferLength = FlatBuffer->current;
   MethodBuffer = FlatBuffer->buffer;   /* get to the actual data buffer     */
   BufferAddress = MethodBuffer->data;  /* retrieve buffer starting address  */
                                        /* get the final buffer              */
@@ -286,7 +285,7 @@ void SysSaveTranslatedProgram(
   RexxBuffer *  MethodBuffer;          /* flattened method                  */
   RexxSmartBuffer *FlatBuffer;         /* flattened smart buffer            */
   char         *BufferAddress;         /* address of flattened method data  */
-  LONG          BufferLength;          /* length of the flattened method    */
+  size_t        BufferLength;          /* length of the flattened method    */
   RexxString  * Version;               /* REXX version string               */
   RexxActivity *activity;              /* the current activity              */
 
@@ -298,7 +297,7 @@ void SysSaveTranslatedProgram(
   FlatBuffer = Method->saveMethod();   /* flatten the method                */
   ProtectedObject p2(FlatBuffer);
                                        /* retrieve the length of the buffer */
-  BufferLength = (LONG)FlatBuffer->current;
+  BufferLength = FlatBuffer->current;
   MethodBuffer = FlatBuffer->buffer;   /* get to the actual data buffer     */
   BufferAddress = MethodBuffer->data;  /* retrieve buffer starting address  */
                                        /* clear out the cntrol info         */
@@ -340,7 +339,7 @@ RexxMethod *SysRestoreTranslatedProgram(
   FILE_CONTROL  Control;               /* control information               */
   char         *StartPointer;          /* start of buffered method          */
   RexxBuffer   *Buffer;                /* Buffer to unflatten               */
-  LONG          BufferSize;            /* size of the buffer                */
+  size_t        BufferSize;            /* size of the buffer                */
   RexxMethod   *Method;                /* unflattened method                */
   RexxSource   *Source;                /* REXX source object                */
   RexxActivity *activity;              /* the current activity              */

@@ -126,7 +126,7 @@ void RexxVariable::notify()
 /* Function:  Process all variable notifications                            */
 /****************************************************************************/
 {
-  LONG           i;                    /* loop variable                     */
+  HashLink       i;                    /* loop variable                     */
   RexxActivity *activity;              /* current activity                  */
 
   if (this->dependents != OREF_NULL) { /* any dependents?                   */

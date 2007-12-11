@@ -76,7 +76,7 @@ int SetEnvironmentVariable(
 
 {
   char  *Env_Var_String = NULL;        /* Environment variable string for   */
-  ULONG size;                          /* size of the string                */
+  size_t size;                         /* size of the string                */
   char **Environment;                  /* environment pointer               */
   char  *del = NULL;                   /* ptr to old unused memory          */
   char  *np;

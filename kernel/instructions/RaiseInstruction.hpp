@@ -56,7 +56,7 @@ class RexxInstructionRaise : public RexxInstruction {
   inline void  operator delete(void *, void *) { }
 
   inline RexxInstructionRaise(RESTORETYPE restoreType) { ; };
-  RexxInstructionRaise(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, size_t, RexxQueue *, BOOL);
+  RexxInstructionRaise(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, size_t, RexxQueue *, bool);
   void execute(RexxActivation *, RexxExpressionStack *);
   void live();
   void liveGeneral();

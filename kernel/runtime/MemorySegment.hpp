@@ -285,20 +285,20 @@ class MemorySegmentSet {
           }
       }
 
-      inline BOOL isInSegmentSet(RexxObject *object) {
+      inline bool isInSegmentSet(RexxObject *object) {
           MemorySegment *segment = first();
           while (segment != NULL) {
               if (segment->isInSegment(object)) {
-                  return TRUE;
+                  return true;
               }
               segment = next(segment);
           }
-          return FALSE;
+          return false;
       }
 
 
       void dumpSegments(FILE *keyfile, FILE *dumpfile);
-      void addSegment(MemorySegment *segment, BOOL createDeadObject = 1);
+      void addSegment(MemorySegment *segment, bool createDeadObject = 1);
       void sweep();
       inline bool is(SegmentSetID id) { return owner == id; }
       void gatherStats(MemoryStats *memStats, SegmentStats *stats);

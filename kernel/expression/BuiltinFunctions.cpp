@@ -873,22 +873,16 @@ BUILTIN(ADDRESS) {
 #define DIGITS_MAX 0
 
 BUILTIN(DIGITS) {
-  LONG  tempDigits;
-
   check_args(DIGITS);                  /* check on required number of args  */
-  tempDigits = context->digits();      /* get the number of digits          */
-  return new_integer(tempDigits);      /* return as an option               */
+  return new_integer(context->digits());   /* return as an option               */
 }
 
 #define FUZZ_MIN 0
 #define FUZZ_MAX 0
 
 BUILTIN(FUZZ) {
-  LONG  tempFuzz;
-
   check_args(FUZZ);                    /* check on required number of args  */
-  tempFuzz = context->fuzz();          /* get the fuzz value                */
-  return new_integer(tempFuzz);        /* return as an integer object       */
+  return new_integer(context->fuzz()); /* return as an integer object       */
 }
 
 #define FORM_MIN 0
@@ -1159,9 +1153,8 @@ BUILTIN(DATE) {
             case 'B':                        /* 'B'asedate                        */
             {
                 /*convert the value                  */
-                int basedays = indate->longValue(9);
-                /* bad value?                        */
-                if (basedays == (int)NO_LONG || !timestamp.setBaseDate(basedays))
+                wholenumber_t basedays;
+                if (!indate->numberValue(basedays) || !timestamp.setBaseDate(basedays))
                 {
                     reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
                 }
@@ -1193,9 +1186,8 @@ BUILTIN(DATE) {
             case 'D':                        /* 'D'ay of year                     */
             {
                 /*convert the value                  */
-                int yearday = indate->longValue(9);
-                /* bad value?                        */
-                if (yearday == (int)NO_LONG || yearday < 0 || yearday > YEAR_DAYS + 1 ||
+                wholenumber_t yearday;
+                if (!indate->numberValue(yearday) || yearday < 0 || yearday > YEAR_DAYS + 1 ||
                     (yearday > YEAR_DAYS && !LeapYear(current.year)))
                 {
                     reportException(Error_Incorrect_call_format_invalid, CHAR_DATE, indate, new_string((char *)&style2, 1));
@@ -1397,22 +1389,22 @@ BUILTIN(TIME) {
 
             case 'H':                        /* 'H'ours format                    */
             {
-                int i = intime->longValue(9);      /* convert the value                 */
-                valid = i !=(int)NO_LONG && timestamp.setHours(i);
+                wholenumber_t i;
+                valid = intime->numberValue(i) && timestamp.setHours(i);
                 break;
             }
 
             case 'S':                        /* 'S'econds format                  */
             {
-                int i = intime->longValue(9);      /* convert the value                 */
-                valid = i != (int)NO_LONG && timestamp.setSeconds(i);
+                wholenumber_t i;
+                valid = intime->numberValue(i) && timestamp.setSeconds(i);
                 break;
             }
 
             case 'M':                        /* 'M'inutes format                  */
             {
-                int i = intime->longValue(9);      /* convert the value                 */
-                valid = i != (int)NO_LONG && timestamp.setMinutes(i);
+                wholenumber_t i;
+                valid = intime->numberValue(i) && timestamp.setMinutes(i);
                 break;
             }
 
@@ -1565,8 +1557,8 @@ BUILTIN(XRANGE) {
   RexxString *result;                  /* XRANGE result                     */
   char startchar;                      /* starting character                */
   char endchar;                        /* ending character                  */
-  LONG   length;                       /* length of result                  */
-  LONG   i;                            /* loop counter                      */
+  stringsize_t  length;                /* length of result                  */
+  stringsize_t   i;                    /* loop counter                      */
 
   fix_args(XRANGE);                    /* expand arguments to full value    */
   startchar = 0;                       /* set default start position        */
@@ -1821,10 +1813,10 @@ BUILTIN(MIN) {
 #define SOURCELINE_n   1
 
 BUILTIN(SOURCELINE) {
-  LONG   line_number;                  /* requested error number            */
+  size_t line_number;                  /* requested error number            */
   RexxObject  *result;                 /* function result                   */
   RexxSource  *source;                 /* current program source            */
-  LONG   size;                         /* size of source program            */
+  size_t size;                         /* size of source program            */
 
   fix_args(SOURCELINE);                /* check on required number of args  */
   source = context->getSource();       /* get current source object         */
@@ -1868,9 +1860,9 @@ RexxObject *resolve_stream(            /* resolve a stream name             */
   RexxString          *name,           /* name of the stream                */
   RexxActivation      *context,        /* current activation context        */
   RexxExpressionStack *stack,          /* current expression stack          */
-  BOOL                 input,          /* input or an output stream         */
+  bool                 input,          /* input or an output stream         */
   RexxString          **fullName,      /* qualified name of stream          */
-  BOOL                *added)          /* not found -> TRUE                 */
+  bool                *added)          /* not found -> true                 */
 /******************************************************************************/
 /* Function:  Convert a stream name into a stream object                      */
 /******************************************************************************/
@@ -1881,7 +1873,7 @@ RexxObject *resolve_stream(            /* resolve a stream name             */
   RexxString    *qualifiedName;        /* qualified file name               */
   RexxDirectory *securityArgs;         /* security check arguments          */
 
-  if (added) *added = FALSE;           /* when caller requires stream table entry then initialize */
+  if (added) *added = false;           /* when caller requires stream table entry then initialize */
   streamTable = context->getStreams(); /* get the current stream set        */
   if (fullName)                        /* fullName requested?               */
     *fullName = name;                  /* initialize to name                */
@@ -1947,7 +1939,7 @@ RexxObject *resolve_stream(            /* resolve a stream name             */
       if (added) {                     /* open the stream?   begin          */
                                        /* add to the streams table          */
         streamTable->put(stream, qualifiedName);
-        *added = TRUE;                 /* mark it as added to stream table  */
+        *added = true;                 /* mark it as added to stream table  */
       }
     }
   }
@@ -1955,7 +1947,7 @@ RexxObject *resolve_stream(            /* resolve a stream name             */
   return stream;                       /* return the stream object          */
 }
 
-BOOL check_queue(                      /* check to see if stream is to queue*/
+bool check_queue(                      /* check to see if stream is to queue*/
   RexxString *name)                    /* namve of the stream               */
 /******************************************************************************/
 /* Function:  Check to see if a stream name is a queue                        */
@@ -1963,7 +1955,7 @@ BOOL check_queue(                      /* check to see if stream is to queue*/
 {
   if (name != OREF_NULL)               /* non-default name?                 */
     return name->strICompare("QUEUE:");/* compare against the queue         */
-  else return FALSE;                   /* not the queue                     */
+  else return false;                   /* not the queue                     */
 }
 
 #define LINEIN_MIN 0
@@ -1978,7 +1970,7 @@ BUILTIN(LINEIN) {
   RexxInteger  *count;                 /* count of lines                    */
   RexxString   *name;                  /* stream name                       */
   RexxString   *result;                /* linein result                     */
-  BOOL          added;                 /* add to stream table               */
+  bool          added;                 /* add to stream table               */
 
   fix_args(LINEIN);                    /* check required arguments          */
 
@@ -1998,7 +1990,7 @@ BUILTIN(LINEIN) {
   }
   else {
                                        /* get a stream for this name        */
-    stream = resolve_stream(name, context, stack, TRUE, NULL, &added);
+    stream = resolve_stream(name, context, stack, true, NULL, &added);
     switch (argcount) {                /* process according to argcount     */
       case 0:                          /* no name                           */
       case 1:                          /* name only                         */
@@ -2027,7 +2019,7 @@ BUILTIN(CHARIN) {
   RexxInteger  *count;                 /* count of lines                    */
   RexxString   *name;                  /* stream name                       */
   RexxString   *result = OREF_NULL;    /* linein result                     */
-  BOOL          added;                 /* add to stream table               */
+  bool          added;                 /* add to stream table               */
 
   fix_args(CHARIN);                    /* check required arguments          */
                                        /* get the string name               */
@@ -2041,7 +2033,7 @@ BUILTIN(CHARIN) {
     reportException(Error_Incorrect_call_queue_no_char, OREF_CHARIN);
 
                                        /* get a stream for this name        */
-  stream = resolve_stream(name, context, stack, TRUE, NULL, &added);
+  stream = resolve_stream(name, context, stack, true, NULL, &added);
   switch (argcount) {                  /* process according to argcount     */
     case 0:                            /* no name                           */
     case 1:                            /* name only                         */
@@ -2070,7 +2062,7 @@ BUILTIN(LINEOUT) {
   RexxString   *result = OREF_NULL;    /* linein result                     */
   RexxString   *string;                /* target string                     */
   RexxString   *fullName;              /* fully qual'd stream name          */
-  BOOL          added;                 /* add to stream table               */
+  bool          added;                 /* add to stream table               */
 
   fix_args(LINEOUT);                   /* check required arguments          */
                                        /* get the string name               */
@@ -2095,7 +2087,7 @@ BUILTIN(LINEOUT) {
   }
   else {
                                        /* get a stream for this name        */
-    stream = resolve_stream(name, context, stack, FALSE, &fullName, &added);
+    stream = resolve_stream(name, context, stack, false, &fullName, &added);
     switch (argcount) {                /* process according to argcount     */
       case 0:                          /* no name                           */
       case 1:                          /* name only                         */
@@ -2125,7 +2117,7 @@ BUILTIN(CHAROUT) {
   RexxString   *result = OREF_NULL;    /* linein result                     */
   RexxString   *string;                /* target string                     */
   RexxString   *fullName;              /* fully qual'd stream name          */
-  BOOL          added;                 /* add to stream table               */
+  bool          added;                 /* add to stream table               */
 
   fix_args(CHAROUT);                   /* check required arguments          */
                                        /* get the string name               */
@@ -2138,7 +2130,7 @@ BUILTIN(CHAROUT) {
                                        /* this isn't allowed                */
     reportException(Error_Incorrect_call_queue_no_char, OREF_CHAROUT);
                                        /* get a stream for this name        */
-  stream = resolve_stream(name, context, stack, FALSE, &fullName, &added);
+  stream = resolve_stream(name, context, stack, false, &fullName, &added);
   switch (argcount) {                  /* process according to argcount     */
     case 0:                            /* no name                           */
     case 1:                            /* name only                         */
@@ -2164,7 +2156,7 @@ BUILTIN(LINES) {
   RexxString   *name;                  /* stream name                       */
   RexxString   *option;                /* option: "N" or "C"                */
   RexxInteger  *result;                /* linein result                     */
-  BOOL          added;                 /* add to stream table               */
+  bool          added;                 /* add to stream table               */
 
   fix_args(LINES);                     /* check required arguments          */
 
@@ -2179,7 +2171,7 @@ BUILTIN(LINES) {
   else
   {
                                        /* get a stream for this name        */
-    stream = resolve_stream(name, context, stack, TRUE, NULL, &added);
+    stream = resolve_stream(name, context, stack, true, NULL, &added);
 
     if (option != OREF_NULL)
     {
@@ -2218,7 +2210,7 @@ BUILTIN(LINES) {
 BUILTIN(CHARS) {
   RexxObject   *stream;                /* target stream                     */
   RexxString   *name;                  /* stream name                       */
-  BOOL          added;                 /* add to stream table               */
+  bool          added;                 /* add to stream table               */
 
   fix_args(CHARS);                     /* check required arguments          */
 
@@ -2227,7 +2219,7 @@ BUILTIN(CHARS) {
                                        /* this isn't allowed                */
     reportException(Error_Incorrect_call_queue_no_char, OREF_CHARS);
                                        /* get a stream for this name        */
-  stream = resolve_stream(name, context, stack, TRUE, NULL, &added);
+  stream = resolve_stream(name, context, stack, true, NULL, &added);
   return stream->sendMessage(OREF_CHARS);
 }
 
@@ -2251,9 +2243,9 @@ BUILTIN(STREAM) {
   RexxObject   *result;                /* function result                   */
   char          action_char;           /* reduced action character          */
   RexxString   *fullName;              /* fully qual'd stream name          */
-  BOOL          added;
-  BOOL          fOpen = FALSE;         /* open flag                         */
-  BOOL          fClose = FALSE;        /* close flag                        */
+  bool          added;
+  bool          fOpen = false;         /* open flag                         */
+  bool          fClose = false;        /* close flag                        */
 
   fix_args(STREAM);                    /* check required arguments          */
                                        /* get the string name               */
@@ -2266,8 +2258,8 @@ BUILTIN(STREAM) {
                                        /* get any command                   */
   command = optional_string(STREAM, command);
                                        /* get a stream for this name        */
-  /* we need to now, whether the stream already was in the stream table (added = FALSE) */
-//stream = resolve_stream(name, context, stack, TRUE, &added);
+  /* we need to now, whether the stream already was in the stream table (added = false) */
+//stream = resolve_stream(name, context, stack, true, &added);
 
   action_char = STREAM_STATUS;       /* this is a status attempt          */
   if (action != OREF_NULL) {           /* no action given?                  */
@@ -2287,7 +2279,7 @@ BUILTIN(STREAM) {
                                        /* raise an error                    */
         reportException(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
       }
-      stream = resolve_stream(name, context, stack, TRUE, NULL, NULL);
+      stream = resolve_stream(name, context, stack, true, NULL, NULL);
                                        /* get the stream state              */
       result = stream->sendMessage(OREF_STATE);
       break;
@@ -2297,7 +2289,7 @@ BUILTIN(STREAM) {
                                        /* raise an error                    */
         reportException(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
       }
-      stream = resolve_stream(name, context, stack, TRUE, NULL, NULL);
+      stream = resolve_stream(name, context, stack, true, NULL, NULL);
                                        /* get the stream description        */
       result = stream->sendMessage(OREF_DESCRIPTION);
       break;
@@ -2319,17 +2311,17 @@ BUILTIN(STREAM) {
         ProtectedObject p1(command_upper);
 
 
-        fOpen = fClose = FALSE;    /* this whole part was reworked and moved up here */
+        fOpen = fClose = false;    /* this whole part was reworked and moved up here */
         if (command_upper->wordPos(new_string("OPEN"), OREF_NULL)->getValue() > 0) {
-          fOpen = TRUE;
-          stream = resolve_stream(name, context, stack, TRUE, &fullName, &added);
+          fOpen = true;
+          stream = resolve_stream(name, context, stack, true, &fullName, &added);
         }
         else if (command_upper->wordPos(new_string("CLOSE"), OREF_NULL)->getValue() > 0) {
-          fClose = TRUE;
-          stream = resolve_stream(name, context, stack, TRUE, &fullName, &added);
+          fClose = true;
+          stream = resolve_stream(name, context, stack, true, &fullName, &added);
         }
         else
-          stream = resolve_stream(name, context, stack, TRUE, NULL, NULL);
+          stream = resolve_stream(name, context, stack, true, NULL, NULL);
 
         result = stream->sendMessage(OREF_COMMAND, command);
 
@@ -2490,7 +2482,7 @@ BUILTIN(CHANGESTR) {
 BUILTIN(COUNTSTR) {
   RexxString *needle;                  /* needle to change                  */
   RexxString *haystack;                /* target haystack                   */
-  LONG        count;                   /* returned count                    */
+  size_t      count;                   /* returned count                    */
 
   fix_args(COUNTSTR);                  /* check on require number of args   */
                                        /* get string for new                */

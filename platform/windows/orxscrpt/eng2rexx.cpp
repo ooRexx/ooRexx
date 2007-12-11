@@ -88,7 +88,7 @@ RexxArray* __stdcall DispParms2RexxArray(void *arguments)
   // this routine must reverse the args....
   if (dp) {
     j = dp->cArgs;
-    result = (RexxArray*) RexxArray(j);
+    result = (RexxArray*) ooRexxArray(j);
     for (int i=0; i<j; i++) {
       temp = Variant2Rexx(&dp->rgvarg[j-i-1]);
       array_put(result,temp,i+1);
@@ -97,8 +97,8 @@ RexxArray* __stdcall DispParms2RexxArray(void *arguments)
   }
   // no arguments? set in default empty string
   else {
-    result = (RexxArray*) RexxArray(1);
-    array_put(result,RexxString(""),1);
+    result = (RexxArray*) ooRexxArray(1);
+    array_put(result, ooRexxString(""),1);
   }
 
   return result;
@@ -171,7 +171,7 @@ LONG APIENTRY RexxCatchExternalFunc(LONG ExitNumber, LONG Subfunction, PEXIT pbl
 //   PRXSTRING         rxfnc_argv;       /* Pointer to argument list.  */
 //   RXSTRING          rxfnc_retc;       /* Return value.              */
   RXFNCCAL_PARM *parmblock = (RXFNCCAL_PARM*) pblock;
-  RexxObject    *result    = RexxNil;
+  RexxObject    *result    = ooRexxNil;
   char          *fncname   = (char*) parmblock->rxfnc_name;
   OrxScript     *engine    = findEngineForThread(GetCurrentThreadId());
   PRCB           pImage    = NULL;
@@ -219,7 +219,7 @@ LONG APIENTRY RexxCatchExternalFunc(LONG ExitNumber, LONG Subfunction, PEXIT pbl
       ConditionData cd;
 
       // build argument array of REXX objects...
-      RexxArray *args = (RexxArray*) RexxArray(1+parmblock->rxfnc_argc);
+      RexxArray *args = (RexxArray*) ooRexxArray(1+parmblock->rxfnc_argc);
       RexxObject *temp;
 
       // ...and invocation string
@@ -251,7 +251,7 @@ LONG APIENTRY RexxCatchExternalFunc(LONG ExitNumber, LONG Subfunction, PEXIT pbl
       FPRINTF2(logfile,"invoke string: %s\n",invString);
 #endif
       // invocation statement
-      array_put(args,RexxString(invString),1);
+      array_put(args, ooRexxString(invString),1);
 
       arguments[0] = (void*) engine; // engine that is running this code
       arguments[1] = (void*) pImage; // method to run
@@ -606,7 +606,7 @@ RexxObject* __stdcall propertyChange(RexxString* name,RexxObject* newvalue,int S
       else {
         *RetCode = 0;
         WinEnterKernel(false);
-        result = RexxString("");
+        result = ooRexxString("");
         WinLeaveKernel(false);
         }
       break;
@@ -671,12 +671,12 @@ RexxObject* __stdcall propertyChange(RexxString* name,RexxObject* newvalue,int S
 
       if (result == NULL) {
         WinEnterKernel(false);
-        result = RexxString("");
+        result = ooRexxString("");
         WinLeaveKernel(false);
       }
       break;
     case 3:
-      result = RexxNil;
+      result = ooRexxNil;
       // get the named items of the engine
       // a newvalue must not exist since this is read-only!
       if (newvalue == NULL) {
@@ -861,25 +861,19 @@ void __stdcall parseText(void *arguments)
   FPRINTF(logfile,"RexxStart()\n");
 #endif
   // run this
-  rc = RexxStart( (LONG)       0,                     // no arguments
-                  (PRXSTRING)  NULL,                  // the argument pointer
-                  (PSZ)        "Rexx/ParseText",      // name of script
-                  (PRXSTRING)  instore,               // instore parameters
-                  (PSZ)        NULL,                  // command environment name
-                  (LONG)       RXSUBROUTINE,          // invoke as COMMAND
-                  (PRXSYSEXIT) exit_list,             // exit list (catch exit only)
-                  (PSHORT)     &rexxrc,               // rexx result code
-                  (PRXSTRING)  &rexxretval);          // rexx program result
+  rc = RexxStart(0,                     // no arguments
+                 NULL,                  // the argument pointer
+                 "Rexx/ParseText",      // name of script
+                 instore,               // instore parameters
+                 NULL,                  // command environment name
+                 RXSUBROUTINE,          // invoke as COMMAND
+                 exit_list,             // exit list (catch exit only)
+                 &rexxrc,               // rexx result code
+                 &rexxretval);          // rexx program result
 #if defined(DEBUGZ)
   FPRINTF2(logfile,"done with RexxStart (RC = %d)\n",rexxrc);
 #endif
   *result = (int) rexxrc;
-
-  // during exits in REXX the exit handler will add elements to
-  // an engine-specific list...
-  //RexxWaitForTermination();   //hm... maybe this will not return until all paired rexxinitialize() rexxterminate()'s are thru (end of engine...!!)
-  RexxDidRexxTerminate();
-//  FPRINTF(logfile,"done with RexxWaitForTermination\n");
 
   // we do not need any return value...
   if (rexxretval.strptr) GlobalFree(rexxretval.strptr);
@@ -1065,8 +1059,8 @@ void __stdcall runMethod(void *arguments)
   RexxObject **pTargetResult = ((RexxObject***) arguments)[4]; // result object
   VARIANT    **vResult = ((VARIANT***) arguments)[4]; // result variant
   ConditionData *condData = ((ConditionData**) arguments)[5]; // condition info
-  bool       fEndThread = (bool) ((int*)arguments)[6];// end this thread?
-  bool       fGetVariables = (bool) ((int*)arguments)[7]; // get variables from immediate code?
+  bool       fEndThread = (((int*)arguments)[6] != 0);// end this thread?
+  bool       fGetVariables = (((int*)arguments)[7] != 0); // get variables from immediate code?
 
   RexxObject *pResult = NULL;
   RexxObject *pMethod = NULL;

@@ -297,7 +297,7 @@ RexxString *PackHex(
   if (StringLength) {                  /* if not a null string              */
     Source = String;                   /* get pointer                       */
                                        /* validate the information          */
-    Nibbles = ValidateSet(Source, StringLength, "0123456789ABCDEFabcdef", 2, TRUE);
+    Nibbles = ValidateSet(Source, StringLength, "0123456789ABCDEFabcdef", 2, true);
                                        /* get a result string               */
     Retval = raw_string((Nibbles + 1) / 2);
                                        /* initialize destination            */
@@ -551,7 +551,7 @@ RexxString *RexxString::d2c(RexxInteger *_length)
                                        /* report this                       */
     reportException(Error_Incorrect_method_d2c, this);
                                        /* format as a string value          */
-  return numberstring->d2xD2c(_length, TRUE);
+  return numberstring->d2xD2c(_length, true);
 }
 
 RexxString *RexxString::d2x(RexxInteger *_length)
@@ -567,7 +567,7 @@ RexxString *RexxString::d2x(RexxInteger *_length)
                                        /* report this                       */
     reportException(Error_Incorrect_method_d2x, this);
                                        /* format as a string value          */
-  return numberstring->d2xD2c(_length, FALSE);
+  return numberstring->d2xD2c(_length, false);
 }
 
 RexxString *RexxString::x2c()
@@ -594,12 +594,12 @@ RexxString *RexxString::x2d(RexxInteger *_length)
 /******************************************************************************/
 {
                                        /* forward to the common routine     */
-  return this->x2dC2d(_length, FALSE);
+  return this->x2dC2d(_length, false);
 }
 
 
 RexxString *RexxString::x2dC2d(RexxInteger *_length,
-                               BOOL type )
+                               bool type )
 /******************************************************************************/
 /* Function:  Common X2D/X2C processing routine                               */
 /******************************************************************************/
@@ -611,7 +611,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
   char       *Scan;                    /* scan pointer                      */
   char       *HighDigit;               /* high digit position               */
   char *     Accumulator;              /* accumulator pointer               */
-  BOOL       Negative;                 /* have a negative number            */
+  bool       Negative;                 /* have a negative number            */
   RexxString *String;                  /* converted string                  */
   char       *StringPtr;               /* string value pointer              */
   size_t     BytePosition;             /* position of high byte             */
@@ -633,28 +633,28 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
   StringPtr = this->getWritableData(); /* get a string pointer              */
   NibblePosition = 0;                  /* assume an even nibble number      */
 
-  if (type == TRUE) {                  /* dealing with character?           */
+  if (type == true) {                  /* dealing with character?           */
     if (_length == OREF_NULL) {        /* no size specified?                */
-      Negative = FALSE;                /* can't be negative                 */
+      Negative = false;                /* can't be negative                 */
       ResultSize = StringLength;       /* use entire string                 */
     }
     else {                             /* have to check for negative        */
       if (ResultSize > StringLength)   /* longer than string?               */
-        Negative = FALSE;              /* can't be negative                 */
+        Negative = false;              /* can't be negative                 */
       else {                           /* have to check sign bit            */
                                        /* step to byte position             */
         StringPtr += StringLength - ResultSize;
         StringLength = ResultSize;     /* adjust the size down              */
 
         if (*StringPtr & 0x80) {       /* first bit on?                     */
-          Negative = TRUE;             /* this is a negative number         */
+          Negative = true;             /* this is a negative number         */
                                        /* copy the string                   */
           String = (RexxString *)this->copy();
                                        /* point to the string               */
           StringPtr = String->getWritableData() + this->getLength() - ResultSize;
         }
         else                           /* still a positive number           */
-          Negative = FALSE;            /* remember for later                */
+          Negative = false;            /* remember for later                */
       }
     }
   }
@@ -666,7 +666,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
                                        /* point to the packed data          */
     StringPtr = String->getWritableData();
     if (_length == OREF_NULL) {        /* no size specified?                */
-      Negative = FALSE;                /* can't be negative                 */
+      Negative = false;                /* can't be negative                 */
       ResultSize = StringLength;       /* use entire string                 */
     }
     else {                             /* have to check for negative        */
@@ -677,7 +677,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
                                        /* Get result size                   */
       ResultSize = (BytePosition + NibblePosition);
       if (ResultSize > StringLength) { /* longer than string?               */
-        Negative = FALSE;              /* can't be negative                 */
+        Negative = false;              /* can't be negative                 */
         NibblePosition = 0;            /* leave the high nibble alone       */
       }
       else {                           /* have to check sign bit            */
@@ -690,9 +690,9 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
             *StringPtr & 0x08) ||
             (!NibblePosition &&        /* or even number of nibbles         */
             *StringPtr & 0x80))        /* and high nibble negative?         */
-          Negative = TRUE;             /* this is a negative number         */
+          Negative = true;             /* this is a negative number         */
         else                           /* still a positive number           */
-          Negative = FALSE;            /* remember for later                */
+          Negative = false;            /* remember for later                */
       }
     }
   }
@@ -743,7 +743,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
                                        /* get accumulator length            */
     DecLength = (Accumulator - HighDigit);
     if (DecLength > CurrentDigits) {   /* grown too long?                   */
-      if (type == TRUE)                /* c2d version?                      */
+      if (type == true)                /* c2d version?                      */
         reportException(Error_Incorrect_method_c2dbig, CurrentDigits);
       else                             /* this is the x2d function          */
         reportException(Error_Incorrect_method_x2dbig, CurrentDigits);
@@ -756,7 +756,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
                                        /* get accumulator length            */
     DecLength = (Accumulator - HighDigit);
     if (DecLength > CurrentDigits) {   /* grown too long?                   */
-      if (type == TRUE)                /* c2d version?                      */
+      if (type == true)                /* c2d version?                      */
         reportException(Error_Incorrect_method_c2dbig, CurrentDigits);
       else                             /* this is the x2d function          */
         reportException(Error_Incorrect_method_x2dbig, CurrentDigits);
@@ -803,7 +803,7 @@ RexxString *RexxString::b2x()
     Retval = OREF_NULLSTRING;          /* return null                       */
   else {                               /* need to do conversion             */
                                        /* validate the string               */
-    Bits = ValidateSet(this->getStringData(), this->getLength(), "01", 4, FALSE);
+    Bits = ValidateSet(this->getStringData(), this->getLength(), "01", 4, false);
                                        /* allocate space for result         */
     Retval = raw_string((Bits + 3) / 4);
                                        /* point to the data                 */
@@ -834,7 +834,7 @@ RexxString *RexxString::c2d(RexxInteger *_length)
 /******************************************************************************/
 {
                                        /* forward to the common routine     */
-  return this->x2dC2d(_length, TRUE);
+  return this->x2dC2d(_length, true);
 }
 
 RexxString *RexxString::x2b()
@@ -854,7 +854,7 @@ RexxString *RexxString::x2b()
                                        /* string                            */
     Retval = OREF_NULLSTRING;          /* return null                       */
   else {                               /* have real data to pack            */
-    Nibbles = ValidateSet(this->getStringData(), this->getLength(), "0123456789ABCDEFabcdef", 2, TRUE);
+    Nibbles = ValidateSet(this->getStringData(), this->getLength(), "0123456789ABCDEFabcdef", 2, true);
     Retval = raw_string(Nibbles * 4);  /* allocate result string            */
                                        /* point to the data                 */
     Destination = Retval->getWritableData();

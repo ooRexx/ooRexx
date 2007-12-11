@@ -71,7 +71,7 @@ RexxMemory memoryObject;
 
 RexxDirectory *RexxMemory::globalStrings = OREF_NULL;
 
-static void SysCall logMemoryCheck(FILE *outfile, const char *message, ...)
+static void logMemoryCheck(FILE *outfile, const char *message, ...)
 {
     va_list args;
     va_start(args, message);
@@ -214,11 +214,11 @@ void RexxMemory::dumpObject(RexxObject *objectRef, FILE *outfile)
 /*       a file.                                                              */
 /******************************************************************************/
 {
- ULONG *dmpPtr;
- ULONG *ObjEnd;
+ void    **dmpPtr;
+ void    **ObjEnd;
 
- ObjEnd = (ULONG *)((char *)objectRef + objectRef->getObjectSize());
- for (dmpPtr = (ULONG *)objectRef; dmpPtr <= ObjEnd ; dmpPtr += 4 ) {
+ ObjEnd = (void    **)((char *)objectRef + objectRef->getObjectSize());
+ for (dmpPtr = (void **)objectRef; dmpPtr <= ObjEnd ; dmpPtr++) {
     logMemoryCheck(outfile, "  >Parent Dump -->%p   %p   %p   %p \n", *dmpPtr, *(dmpPtr+1), *(dmpPtr+2), *(dmpPtr+3));
  }
 }
@@ -648,7 +648,7 @@ void RexxMemory::markObjects(void)
   }
                                        /* have to expand the live stack?    */
   if (this->liveStack != this->originalLiveStack) {
-    free((PVOID)this->liveStack);      /* release the old one               */
+    free((void *)this->liveStack);     /* release the old one               */
                                        /* and set back to the original      */
     this->liveStack = this->originalLiveStack;
   }
@@ -1273,7 +1273,7 @@ void RexxMemory::liveStackFull()
   newLiveStack->copyEntries(this->liveStack);
                                        /* has this already been expanded?   */
   if (this->liveStack != this->originalLiveStack)
-    free((PVOID)this->liveStack);      /* release the old one               */
+    free((void *)this->liveStack);     /* release the old one               */
   this->liveStack = newLiveStack;      /* and set the new stack             */
 }
 
@@ -1473,10 +1473,10 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
         /* If the object is in object storage*/
         if (inObjectStorage(markObject)) {
             /* DIsplay a few words of the object's storage. */
-            logMemoryCheck(outfile, " non-Object dump -->%8.8X   %8.8X   %8.8X   %8.8X \n", *(ULONG *)markObject,      *((ULONG *)markObject+1) , *((ULONG *)markObject+2) , *((ULONG *)markObject+3));
-            logMemoryCheck(outfile, " non-Object dump -->%8.8X   %8.8X   %8.8X   %8.8X \n", *((ULONG *)markObject+4) , *((ULONG *)markObject+5) , *((ULONG *)markObject+6) , *((ULONG *)markObject+7));
-            logMemoryCheck(outfile, " non-Object dump -->%8.8X   %8.8X   %8.8X   %8.8X \n", *((ULONG *)markObject+8) , *((ULONG *)markObject+9) , *((ULONG *)markObject+10), *((ULONG *)markObject+11));
-            logMemoryCheck(outfile, " non-Object dump -->%8.8X   %8.8X   %8.8X   %8.8X \n", *((ULONG *)markObject+12), *((ULONG *)markObject+13), *((ULONG *)markObject+14), *((ULONG *)markObject+15));
+            logMemoryCheck(outfile, " non-Object dump -->%8.8X   %8.8X   %8.8X   %8.8X \n", *(int32_t *)markObject,      *((int32_t *)markObject+1) , *((int32_t *)markObject+2) , *((int32_t *)markObject+3));
+            logMemoryCheck(outfile, " non-Object dump -->%8.8X   %8.8X   %8.8X   %8.8X \n", *((int32_t *)markObject+4) , *((int32_t *)markObject+5) , *((int32_t *)markObject+6) , *((int32_t *)markObject+7));
+            logMemoryCheck(outfile, " non-Object dump -->%8.8X   %8.8X   %8.8X   %8.8X \n", *((int32_t *)markObject+8) , *((int32_t *)markObject+9) , *((int32_t *)markObject+10), *((int32_t *)markObject+11));
+            logMemoryCheck(outfile, " non-Object dump -->%8.8X   %8.8X   %8.8X   %8.8X \n", *((int32_t *)markObject+12), *((int32_t *)markObject+13), *((int32_t *)markObject+14), *((int32_t *)markObject+15));
 
         }
         /* Time to traverse the livestack and get this guy's ancestry--very useful    */
@@ -1567,7 +1567,7 @@ void RexxMemory::saveImage(void)
   MemoryStats _imageStats;
                                        /* array of objects needed at front  */
                                        /*of image for faster restore.       */
-  LONG  i;                             /* loop counter                      */
+  int   i;                             /* loop counter                      */
   RexxArray *primitive_behaviours;     /* saved array of behaviours         */
   RexxArray *saveArray;                /* array of objects needed at front  */
 
@@ -1646,7 +1646,7 @@ void RexxMemory::saveImage(void)
                                        /* so point to the object in the     */
                                        /*image.                             */
                                        /* the buffer copy                   */
-    RexxObject *copyObject = (RexxObject *)(image_buffer+(ULONG)markObject->behaviour);
+    RexxObject *copyObject = (RexxObject *)(image_buffer+(uintptr_t)markObject->behaviour);
 
     copyObject->liveGeneral();         /* mark other referenced objs        */
                                        /* non-primitive behaviour?          */
@@ -1684,7 +1684,7 @@ RexxObject *RexxMemory::dump(void)
   if (dumpEnable) {
                                        /* don't allow another dump unless   */
                                        /*reset by user                      */
-    memoryObject.dumpEnable = FALSE;
+    memoryObject.dumpEnable = false;
                                        /* first generate the dump by writing*/
                                        /*  each segment to the dumpfile     */
     printf("Dumping object memory to orexdump.dmp\n");
@@ -1732,12 +1732,9 @@ RexxObject *RexxMemory::setDump(RexxObject *selection)
 /*  Returned:  Nothing                                                        */
 /******************************************************************************/
 {
-
-  if (selection != OREF_NULL) {
-    if (REQUIRED_LONG(selection, Numerics::DEFAULT_DIGITS, ARG_ONE))
-      this->dumpEnable = false;
-    else
-      this->dumpEnable = true;
+  if (selection != OREF_NULL)
+  {
+      dumpEnable = selection->truthValue(Error_Logical_value_method);
   }
   return selection;
 }
@@ -1972,11 +1969,12 @@ RexxObject *RexxMemory::checkSetOref(
 
                                        /* Is the new value a real object?   */
   }
-  else if (value && value != (RexxObject *)TheBehaviourBehaviour && value != (RexxObject *)RexxBehaviour::getPrimitiveBehaviour(T_behaviour) && !objectReferenceOK(value)) {
+  else if (value && (RexxBehaviour *)value != TheBehaviourBehaviour && (RexxBehaviour *)value != RexxBehaviour::getPrimitiveBehaviour(T_behaviour) && !objectReferenceOK(value)) 
+  {
     allOK = false;                     /* No, put out the info              */
     outFileName = SysGetTempFileName();/* Get a temporary file name for out */
     outfile = fopen(outFileName,"wb");
-    logMemoryCheck(outfile, "The Setter object at %p attempted to put a non object %p, at offset %p\n",setter, value, (ULONG)index - (ULONG)setter);
+    logMemoryCheck(outfile, "The Setter object at %p attempted to put a non object %p, at offset %p\n",setter, value, (char *)index - (char *)setter);
     logMemoryCheck(outfile, " A dump of the Setting object follows: \n");
     dumpObject(setter, outfile);
 
@@ -1985,7 +1983,7 @@ RexxObject *RexxMemory::checkSetOref(
     allOK = false;                     /* Yes, let them know                */
     outFileName = SysGetTempFileName();/* Get a temporary file name for out */
     outfile = fopen(outFileName,"wb");
-    logMemoryCheck(outfile, "The Setter object at %p has tried to store at offset, which is  outside his object range\n",setter, (ULONG)index - (ULONG)setter);
+    logMemoryCheck(outfile, "The Setter object at %p has tried to store at offset, which is  outside his object range\n",setter, (char *)index - (char *)setter);
     logMemoryCheck(outfile, " A dump of the Setting object follows: \n");
     dumpObject(setter, outfile);
   }
@@ -2029,7 +2027,7 @@ void RexxMemory::returnFlattenStack(void)
 /* Function:  Release the flatten stack                                       */
 /******************************************************************************/
 {
-   free((PVOID)this->flattenStack);    /* release the flatten stack         */
+   free((void *)this->flattenStack);   /* release the flatten stack         */
    MTXRL(this->flattenMutex);          /* and release the semaphore         */
 }
 
@@ -2202,9 +2200,6 @@ void RexxMemory::create()
 /* Function:  Initial memory setup during image build                         */
 /******************************************************************************/
 {
-
-  TheMemoryObject = &memoryObject;
-
   /* Make sure memory is cleared!      */
   memoryObject.init(false);
   RexxClass::createClass();            /* get the CLASS class created       */
@@ -2224,8 +2219,6 @@ void RexxMemory::restore()
 /* Function:  Memory management image restore functions                       */
 /******************************************************************************/
 {
-
-  TheMemoryObject = &memoryObject;
   /* Make sure memory is cleared! */
   memoryObject.init(true);
   /* Retrieve special saved objects    */

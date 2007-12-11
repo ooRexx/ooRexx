@@ -95,10 +95,6 @@
 #include "APIUtil.h"
 #include "Characters.h"
 
-extern unsigned char first_char[];       /* character type table       */
-extern unsigned char lower_case_table[]; /* lower case table for Rexx  */
-extern unsigned char upper_case_table[]; /* upper case table for Rexx  */
-
 typedef  LONG APIENTRY REXX (
          LONG ,                        /* Num of args passed to rexx */
          PRXSTRING,                    /* Array of args passed to rex*/
@@ -145,17 +141,17 @@ typedef  BOOL APIENTRY REXXWAIT4TERM (void);
 extern _declspec(dllimport) CRITICAL_SECTION nest;
 
 
-static ULONG
-  callrexx(PSZ,PMACRO);                /* call the REXXSAA interprtr */
+static int
+  callrexx(const char *,PMACRO);       /* call the REXXSAA interprtr */
 
-static ULONG
-  request(ULONG,PSZ *,PSZ);            /* check a list for a string  */
+static int
+  request(size_t, const char **, const char *);            /* check a list for a string  */
 
 static BOOL
   eraselst(PMACRO);                    /* free a list of macros      */
 
 static PMACRO
-  does_exist(PSZ,PMACRO *);            /* see if a func exists       */
+  does_exist(const char *,PMACRO *);   /* see if a func exists       */
 
 static ULONG
   file_read(HFILE,PVOID,ULONG);        /* read from an open file     */
@@ -164,13 +160,13 @@ static ULONG
   file_write(HFILE,PVOID,ULONG);       /* write to an open file      */
 
 static INT
-  saved_macro(PSZ,PMACRO);             /* see if a func exists       */
+  saved_macro(const char *, PMACRO);   /* see if a func exists       */
 
-static ULONG
-  ldmacro(ULONG,PSZ *,HFILE);          /* load macro space           */
+static int
+  ldmacro(size_t, const char **,HFILE); /* load macro space           */
 
-static ULONG
-  macrofile_open(PSZ, HFILE *);        /* open a macro space file    */
+static int
+  macrofile_open(const char *, HFILE *);  /* open a macro space file    */
 
 /*********************************************************************/
 /*****              RXSTRING Manipulation Functions              *****/
@@ -198,8 +194,8 @@ extern void UnmapComBlock(int chain);
 
 static BOOL ReceiveMacro(PMACRO element, ULONG kind);
 static void ReturnMacro(PMACRO element, BOOL withImage);
-static RXQUEUE_TALK * FillMacroComBlock(BOOL add, PCHAR name, PCHAR data, ULONG datalen, ULONG spos);
-static RXQUEUE_TALK * FillMacroComBlock_List(ULONG argc, PSZ * argv);
+static RXQUEUE_TALK * FillMacroComBlock(BOOL add, const char *name, const char *data, size_t datalen, ULONG spos);
+static RXQUEUE_TALK * FillMacroComBlock_List(size_t argc, const char ** argv);
 static BOOL CheckMacroComBlock();
 
 
@@ -234,9 +230,9 @@ extern _declspec(dllexport) APIRET APIList(ULONG kind);
 APIRET
 APIENTRY
 RexxAddMacro(
-  PSZ    n,                            /* name of macro function     */
-  PSZ    s,                            /* name of file               */
-  ULONG  pos )                         /* search order pos request   */
+  const char *n,                       /* name of macro function     */
+  const char *s,                       /* name of file               */
+  size_t pos )                         /* search order pos request   */
 {
   MACRO  p;
   ULONG   rc;
@@ -320,8 +316,7 @@ APIRET APIAddMacro(BOOL updateIfExists)
 
 APIRET
 APIENTRY
-RexxDropMacro(
-  PSZ n )                              /* name of macro to delete    */
+RexxDropMacro(const char *n)                       /* name of macro to delete    */
 {
   ULONG  rc;                           /* return code from function  */
 
@@ -430,9 +425,9 @@ APIRET APIClearMacroSpace(void)
 APIRET
 APIENTRY
 RexxSaveMacroSpace(
-  ULONG    ac,                         /* count of arguments         */
-  PSZ     *av,                         /* argument list              */
-  PSZ      fnam )                      /* file name                  */
+  size_t   ac,                         /* count of arguments         */
+  const char **av,                     /* argument list              */
+  const char * fnam )                  /* file name                  */
 {
   ULONG  i, rc = 0, found;
   MACRO tmp;
@@ -604,9 +599,9 @@ APIRET APIList(ULONG kind)
 APIRET
 APIENTRY
 RexxLoadMacroSpace(
-  ULONG    ac,                         /* argument count             */
-  PSZ     *av,                         /* list of argument strings   */
-  PSZ      fnam )                      /* file name to load functs   */
+  size_t   ac,                         /* argument count             */
+  const char **av,                     /* list of argument strings   */
+  const char * fnam )                  /* file name to load functs   */
 {
 
   ULONG  rc = 0;
@@ -646,8 +641,8 @@ RexxLoadMacroSpace(
 APIRET
 APIENTRY
 RexxQueryMacro(
-  PSZ     name,                        /* name to search for         */
-  PUSHORT pos )                        /* pointer for return of pos  */
+  const char *name,                    /* name to search for         */
+  unsigned short *pos )                /* pointer for return of pos  */
 {
   ULONG  rc;                           /* return code from call      */
 
@@ -702,8 +697,8 @@ APIRET APIQueryMacro(void)
 APIRET
 APIENTRY
 RexxReorderMacro(
-  PSZ    name,                         /* name of function to change */
-  ULONG  pos )                         /* new position for function  */
+  const char *name,                    /* name of function to change */
+  size_t pos )                         /* new position for function  */
 {
   ULONG  rc;                           /* return code from call      */
 
@@ -759,7 +754,7 @@ APIRET APIReorderMacro()
 /*********************************************************************/
 
 APIRET APIENTRY RexxExecuteMacroFunction(
-  PSZ       name,                      /* name of func to find       */
+  const char *name,                    /* name of func to find       */
   PRXSTRING p )                        /* storage for image return   */
 {
   MACRO tmp;                           /* temp macro pointer         */
@@ -822,8 +817,8 @@ APIRET APIExecuteMacroFunction(void)
 /*  Output:             return code (RXMACRO_... flag)               */
 /*                                                                   */
 /*********************************************************************/
-static ULONG callrexx(
-  PSZ    fnam,
+static int callrexx(
+  const char *fnam,
   PMACRO current )
 {
   BY_HANDLE_FILE_INFORMATION status;
@@ -902,17 +897,17 @@ static ULONG callrexx(
 /*  Output:             return code (YES or NO)                      */
 /*                                                                   */
 /*********************************************************************/
-static ULONG request(
-  ULONG    argc,                       /* count of argument strings  */
-  PSZ     *argv,                       /* list of argument strings   */
-  PSZ      name )                      /* string name to search for  */
+static int   request(
+  size_t   argc,                       /* count of argument strings  */
+  const char**argv,                    /* list of argument strings   */
+  const char *name )                   /* string name to search for  */
 {
-  ULONG  i;                            /* counter to loop thru args  */
-  ULONG  rc;                           /* flag for return value      */
+  size_t i;                            /* counter to loop thru args  */
+  int    rc;                           /* flag for return value      */
                                        /*                            */
   rc = NO;                             /* initialize return to NO    */
   for (i = 0; i < argc; i++ ) {        /* move through list of args  */
-    if (!rxstricmp(name, argv[i]))     /* if the strings match, then */
+    if (!_stricmp(name, argv[i]))      /* if the strings match, then */
       rc = YES;                        /*   set return flag to YES   */
     }                                  /* end of "for..." loop       */
   return rc;                           /* return YES or NO flag      */
@@ -966,7 +961,7 @@ static BOOL eraselst(
 /*                                                                   */
 /*********************************************************************/
 static PMACRO does_exist(
-  PSZ         name,                    /* name to search for         */
+  const char *name,                    /* name to search for         */
   PMACRO     *prev)
 {
   PMACRO work = (PMACRO)0;             /* pointer to move thru list  */
@@ -974,7 +969,7 @@ static PMACRO does_exist(
 
   for (temp=NULL,work=(PMACRO)RX.macrobase; /* start at beginning of list */
        work &&                         /*   and, while still valid   */
-         rxstricmp(work->name,name);   /*   and not the correct one, */
+         _stricmp(work->name,name);   /*   and not the correct one, */
        work=(temp=work)->next);        /*   move on to next entry    */
   if (prev) *prev=temp;                /* return previous, if wanted */
   return work;                         /* return pointer, if exists  */
@@ -996,15 +991,15 @@ static PMACRO does_exist(
 /*  Output:             YES if macro located, NO otherwise.          */
 /*                                                                   */
 /*********************************************************************/
-static INT saved_macro(
-  PSZ         name,                    /* name to search for         */
+static int saved_macro(
+  const char *name,                    /* name to search for         */
   PMACRO      chain )                  /* list to search             */
 {
   PMACRO old;
 
   for (; chain; old = chain, chain = chain->next)
   {
-      if (!rxstricmp(chain->name,name))  /* if there,                */
+      if (!_stricmp(chain->name,name))  /* if there,                */
          return (YES);                 /*   return YES               */
   }
   return (NO);                         /* not found                  */
@@ -1142,9 +1137,9 @@ static ULONG file_read(
 /*  Output:             error code - 0 if everything is OK           */
 /*                                   any RXMACRO_* error code        */
 /*********************************************************************/
-static ULONG ldmacro(
-  ULONG    ac,
-  PSZ     *av,
+static int   ldmacro(
+  size_t   ac,
+  const char **av,
   HFILE    f )
 {
   PMACRO tbase,wbase,w,t;
@@ -1265,8 +1260,8 @@ static ULONG ldmacro(
 /*  Output:             error code - 0 if everything is OK           */
 /*                                   any RXMACRO_* error code        */
 /*********************************************************************/
-static ULONG macrofile_open(
-  PSZ    fnam,
+static int macrofile_open(
+  const char *fnam,
   HFILE *fp )
 {
   ULONG  i,rc = 0;
@@ -1297,7 +1292,7 @@ static ULONG macrofile_open(
 /* functions needed to use communication port */
 
 static RXQUEUE_TALK *
-    FillMacroComBlock(BOOL add, PCHAR name, PCHAR data, ULONG datalen, ULONG spos)
+    FillMacroComBlock(BOOL add, const char *name, const char *data, size_t datalen, ULONG spos)
 {
     RXMACRO_TALK * icom;
 
@@ -1388,7 +1383,7 @@ static BOOL CheckMacroComBlock()
 /* functions needed to fill filter arguments for save into communication port */
 
 static RXQUEUE_TALK *
-    FillMacroComBlock_List(ULONG argc, PSZ * argv)
+    FillMacroComBlock_List(size_t argc, const char ** argv)
 {
     RXMACRO_TALK * icom;
     icom = LRX.comblock[API_MACRO];

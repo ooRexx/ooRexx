@@ -55,7 +55,6 @@ BOOL   APIENTRY RexxInitialize (void);
 }
 
                                          /* Global inducator */
-extern  _declspec(dllimport) BOOL RexxStartedByApplication;
 extern  _declspec(dllimport) HANDLE RexxTerminated;           /* Termination complete semaphore.   */
 
 //
@@ -89,16 +88,15 @@ void __cdecl set_pause_at_exit( void )
 //
 int __cdecl main(int argc, char *argv[])
 {
-  LONG     rexxrc = 0;                 /* return code from rexx             */
+  short    rexxrc = 0;                 /* return code from rexx             */
   INT   i;                             /* loop counter                      */
   LONG  rc;                            /* actually running program RC       */
-  PCHAR program_name;                  /* name to run                       */
-  CHAR  arg_buffer[8192];              /* starting argument buffer          */
-  RXSTRING arguments;                  /* rexxstart argument                */
-  ULONG argcount;
+  const char *program_name;            /* name to run                       */
+  char  arg_buffer[8192];              /* starting argument buffer          */
+  CONSTRXSTRING arguments;             /* rexxstart argument                */
+  size_t argcount;
   RXSTRING rxretbuf;                   // program return buffer
 
-  RexxStartedByApplication = FALSE;    /* Call NOT from internal            */
   rc = 0;                              /* set default return                */
 
    /*
@@ -142,21 +140,18 @@ int __cdecl main(int argc, char *argv[])
    /* Here we call the interpreter.  We don't really need to use     */
    /* all the casts in this call; they just help illustrate          */
    /* the data types used.                                           */
-   rc=REXXSTART((LONG)       argcount,      /* number of arguments   */
-                (PRXSTRING)  &arguments,     /* array of arguments   */
-                (PSZ)        program_name,  /* name of REXX file     */
-                (PRXSTRING)  0,             /* No INSTORE used       */
-                (PSZ)        "CMD",         /* Command env. name     */
-                (LONG)       RXCOMMAND,     /* Code for how invoked  */
+   rc=REXXSTART(argcount,      /* number of arguments   */
+                &arguments,     /* array of arguments   */
+                program_name,  /* name of REXX file     */
+                0,             /* No INSTORE used       */
+                "CMD",         /* Command env. name     */
+                RXCOMMAND,     /* Code for how invoked  */
                 NULL,
-                (PSHORT)     &rexxrc,       /* Rexx program output   */
-                (PRXSTRING)  &rxretbuf );   /* Rexx program output   */
-
-   /* wait until all activities did finish so no activity will be canceled */
-   RexxWaitForTermination();
+                &rexxrc,       /* Rexx program output   */
+                &rxretbuf );   /* Rexx program output   */
 
                         /* rexx procedure executed*/
-   if ((rc==0) && rxretbuf.strptr) GlobalFree(rxretbuf.strptr);        /* Release storage only if*/
+   if ((rc==0) && rxretbuf.strptr) RexxFreeMemory(rxretbuf.strptr);        /* Release storage only if*/
    freeArguments(NULL, &arguments);
 
   }

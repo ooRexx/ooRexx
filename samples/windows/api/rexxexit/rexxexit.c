@@ -50,136 +50,119 @@
 /*  Output:             returns 0 in all cases.                      */
 /*                                                                   */
 /*********************************************************************/
-#define INCL_REXXSAA
 #include <windows.h>
 #include <rexx.h>                           /* needed for RexxStart()     */
-#include <malloc.h>
 #include <stdio.h>                          /* needed for printf()        */
 #include <string.h>                         /* needed for strlen()        */
-
-extern "C" {
-BOOL   APIENTRY RexxInitialize (void);
-}
 
 //
 //  Prototypes
 //
 int __cdecl main(int argc, char *argv[]);  /* main entry point           */
-LONG APIENTRY MY_IOEXIT( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock);
+APIRET APIENTRY MY_IOEXIT( int ExitNumber, int Subfunction, PEXIT ParmBlock);
 
 //
 //  MAIN program
 //
 int __cdecl main(int argc, char *argv[])
 {
-  RXSYSEXIT exit_list[9];              /* Exit list array                   */
-  LONG     rexxrc = 0;                 /* return code from rexx             */
-  LONG  rc;                            /* actually running program RC       */
-  RXSTRING argument;                   /* rexxstart argument                */
-  RXSTRING rxretbuf;                   // program return buffer
+    RXSYSEXIT exit_list[9];              /* Exit list array                   */
+    short    rexxrc = 0;                 /* return code from rexx             */
+    int   rc;                            /* actually running program RC       */
+    CONSTRXSTRING argument;              /* rexxstart argument                */
+    RXSTRING rxretbuf;                   // program return buffer
 
-  rc = 0;                              /* set default return                */
+    rc = 0;                              /* set default return                */
 
-  /* just one argument is accepted by this program */
-  if ((argc < 2) || (argc > 3))
-  {
-     printf("Wrong arguments: REXXEXIT program [argument]\n");
-     exit(-1);
-  }
+    /* just one argument is accepted by this program */
+    if ((argc < 2) || (argc > 3))
+    {
+        printf("Wrong arguments: REXXEXIT program [argument]\n");
+        exit(-1);
+    }
 
-   /*
-    * Convert the input array into a single string for the Object REXX
-    * argument string. Initialize the RXSTRING variable to point to this
-    * string. Keep the string null terminated so we can print it for debug.
-    * First argument is name of the REXX program
-    * Next argument(s) are parameters to be passed
-   */
+    /*
+     * Convert the input array into a single string for the Object REXX
+     * argument string. Initialize the RXSTRING variable to point to this
+     * string. Keep the string null terminated so we can print it for debug.
+     * First argument is name of the REXX program
+     * Next argument(s) are parameters to be passed
+    */
 
-  /* By setting the strlength of the output RXSTRING to zero, we   */
-  /* force the interpreter to allocate memory and return it to us. */
-  /* We could provide a buffer for the interpreter to use instead. */
-  rxretbuf.strlength = 0L;          /* initialize return to empty*/
+    /* By setting the strlength of the output RXSTRING to zero, we   */
+    /* force the interpreter to allocate memory and return it to us. */
+    /* We could provide a buffer for the interpreter to use instead. */
+    rxretbuf.strlength = 0L;          /* initialize return to empty*/
 
-  if (argc == 3)
-  {
-     MAKERXSTRING(argument, argv[2], strlen(argv[2]));/* create input argument     */
-  }
-  else
-     MAKERXSTRING(argument, "", 0);/* create blank argument     */
+    if (argc == 3)
+    {
+        MAKERXSTRING(argument, argv[2], strlen(argv[2]));/* create input argument     */
+    }
+    else
+        MAKERXSTRING(argument, "", 0);/* create blank argument     */
 
-                                        // register IO exit
-  rc = RexxRegisterExitExe("MY_IOC", (PFN)&MY_IOEXIT, NULL);
+    // register IO exit
+    rc = RexxRegisterExitExe("MY_IOC", (REXXPFN)&MY_IOEXIT, NULL);
 
-                                       /* run this via RexxStart            */
-  exit_list[0].sysexit_name = "MY_IOC";
-  exit_list[0].sysexit_code = RXSIO;
-  exit_list[1].sysexit_code = RXENDLST;
+    /* run this via RexxStart            */
+    exit_list[0].sysexit_name = "MY_IOC";
+    exit_list[0].sysexit_code = RXSIO;
+    exit_list[1].sysexit_code = RXENDLST;
 
-  /* Here we call the interpreter.  We don't really need to use     */
-  /* all the casts in this call; they just help illustrate          */
-  /* the data types used.                                           */
-  rc=REXXSTART((LONG)       1,             /* number of arguments   */
-              (PRXSTRING)  &argument,      /* array of arguments    */
-              (PSZ)        argv[1],        /* name of REXX file     */
-              (PRXSTRING)  0,              /* No INSTORE used       */
-              (PSZ)        "CMD",          /* Command env. name     */
-              (LONG)       RXCOMMAND,      /* Code for how invoked  */
-              (PRXSYSEXIT) exit_list,      /* exits for this call   */
-              (PSHORT)     &rexxrc,        /* Rexx program output   */
-              (PRXSTRING)  &rxretbuf );    /* Rexx program output   */
+    /* Here we call the interpreter.                                  */
+    rc=REXXSTART(1,              /* number of arguments   */
+                 &argument,      /* array of arguments    */
+                 argv[1],        /* name of REXX file     */
+                 NULL,           /* No INSTORE used       */
+                 "CMD",          /* Command env. name     */
+                 RXCOMMAND,      /* Code for how invoked  */
+                 exit_list,      /* exits for this call   */
+                 &rexxrc,        /* Rexx program output   */
+                 &rxretbuf );    /* Rexx program output   */
 
-  /* wait until all activities did finish so no activity will be canceled */
-  RexxWaitForTermination();
-
-  /* free memory allocated for the return result */
-  if (rc==0)
-  {
-    if (GlobalSize(rxretbuf.strptr) > 0) GlobalFree(rxretbuf.strptr);        /* Release storage only if*/
-    else free(rxretbuf.strptr);
-  }
-  RexxDeregisterExit("MY_IOC",NULL);     // remove the exit in exe exit list
-  /* try to unload the orexx memory manager */
-  RexxShutDownAPI();
-                                             // return interpeter or
- return rc ? rc : rexxrc;                    // rexx program return cd
+    /* free memory allocated for the return result */
+    if (rc==0)
+    {
+        RexxFreeMemory(rxretbuf.strptr);
+    }
+    RexxDeregisterExit("MY_IOC",NULL);     // remove the exit in exe exit list
+    // return interpeter or
+    return rc ? rc : rexxrc;                    // rexx program return cd
 }
 
 
-LONG APIENTRY MY_IOEXIT(
-     LONG ExitNumber,
-     LONG Subfunction,
-     PEXIT parmblock)
+APIRET APIENTRY MY_IOEXIT(int ExitNumber, int Subfunction, PEXIT parmblock)
 {
-   RXSIOSAY_PARM *sparm ;
-   RXSIOTRC_PARM *tparm ;
-   RXSIOTRD_PARM *rparm ;
-   RXSIODTR_PARM *dparm ;
+    RXSIOSAY_PARM *sparm;
+    RXSIOTRC_PARM *tparm;
+    RXSIOTRD_PARM *rparm;
+    RXSIODTR_PARM *dparm;
 
-   switch (Subfunction) {
-   case RXSIOSAY:
-      sparm = ( RXSIOSAY_PARM * )parmblock ;
-      printf("%s\n",sparm->rxsio_string.strptr);
-      break;
-   case RXSIOTRC:
-      tparm = ( RXSIOTRC_PARM * )parmblock ;
-      printf("%s\n",tparm->rxsio_string.strptr);
-      break;
-   case RXSIOTRD:
-      rparm = (RXSIOTRD_PARM * )parmblock ;
-      gets(rparm->rxsiotrd_retc.strptr);
-      rparm->rxsiotrd_retc.strlength=strlen(rparm->rxsiotrd_retc.strptr);
-      break;
-   case RXSIODTR:
-      dparm = (RXSIODTR_PARM * )parmblock ;
-      gets(dparm->rxsiodtr_retc.strptr);
-      dparm->rxsiodtr_retc.strlength=strlen(dparm->rxsiodtr_retc.strptr);
-      break;
-   default:
-      break;
-   } /* endswitch */
+    switch (Subfunction)
+    {
+        case RXSIOSAY:
+            sparm = ( RXSIOSAY_PARM * )parmblock ;
+            printf("%s\n",sparm->rxsio_string.strptr);
+            break;
+        case RXSIOTRC:
+            tparm = ( RXSIOTRC_PARM * )parmblock ;
+            printf("%s\n",tparm->rxsio_string.strptr);
+            break;
+        case RXSIOTRD:
+            rparm = (RXSIOTRD_PARM * )parmblock ;
+            gets(rparm->rxsiotrd_retc.strptr);
+            rparm->rxsiotrd_retc.strlength=strlen(rparm->rxsiotrd_retc.strptr);
+            break;
+        case RXSIODTR:
+            dparm = (RXSIODTR_PARM * )parmblock ;
+            gets(dparm->rxsiodtr_retc.strptr);
+            dparm->rxsiodtr_retc.strlength=strlen(dparm->rxsiodtr_retc.strptr);
+            break;
+        default:
+            break;
+    }
 
-   return RXEXIT_HANDLED;
-
+    return RXEXIT_HANDLED;
 }
 
 

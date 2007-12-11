@@ -46,6 +46,7 @@
 
 #include "Numerics.hpp"
 
+// TODO:  redo these
 #define MAXNUM      999999999               /* maximum size of 9 digits int         */
 #define MAXPOSNUM  4294967294u              /* maximum size of a ULONG              */
 #define MAXNEGNUM  2147483647u              /* maximum size of a negative long      */
@@ -75,8 +76,6 @@
       this->length = 1;                     /* Length is 1       */     \
       this->sign = 0;                       /* Make sign Zero.   */     \
       this->exp = 0;                        /* exponent is zero. */
-
-int number_create_integer(const char *, size_t, int, int);
 
 
 #define NumberStringRound(s,d) s->roundUp(s,d)
@@ -112,9 +111,12 @@ int number_create_integer(const char *, size_t, int, int);
     void        liveGeneral();
     void        flatten(RexxEnvelope *);
 
-    long        longValue(size_t);
+    bool         numberValue(wholenumber_t &result, size_t precision);
+    bool         numberValue(wholenumber_t &result);
+    bool         unsignedNumberValue(stringsize_t &result, size_t precision);
+    bool         unsignedNumberValue(stringsize_t &result);
+    bool         doubleValue(double &result);
     inline RexxNumberString *numberString() { return this; }
-    double      doubleValue();
     RexxInteger *integerValue(size_t);
     RexxString  *makeString();
     RexxInteger *hasMethod(RexxString *);
@@ -123,8 +125,8 @@ int number_create_integer(const char *, size_t, int, int);
     bool         truthValue(int);
 
     bool        isEqual(RexxObject *);
-    long        strictComp(RexxObject *);
-    long        comp(RexxObject *);
+    int         strictComp(RexxObject *);
+    int         comp(RexxObject *);
     RexxInteger *equal(RexxObject *);
     RexxInteger *strictEqual(RexxObject *);
     RexxInteger *notEqual(RexxObject *);
@@ -139,7 +141,6 @@ int number_create_integer(const char *, size_t, int, int);
     RexxInteger *strictLessOrEqual(RexxObject *);
     RexxObject  *hashCode();
 
-    int         ULong(size_t *);
     RexxNumberString *clone();
     void        setString(RexxString *);
     void        roundUp(int);
@@ -155,7 +156,7 @@ int number_create_integer(const char *, size_t, int, int);
     bool        isInstanceOf(RexxClass *);
     RexxMethod   *instanceMethod(RexxString *);
     RexxSupplier *instanceMethods(RexxClass *);
-    inline RexxNumberString *checkNumber(size_t digits, BOOL rounding)
+    inline RexxNumberString *checkNumber(size_t digits, bool rounding)
     {
      if (this->length > digits)            /* is the length larger than digits()*/
                                            /* need to allocate a new number     */
@@ -163,7 +164,7 @@ int number_create_integer(const char *, size_t, int, int);
      return this;                          /* no adjustment required            */
     }
 
-    RexxNumberString *prepareNumber(size_t, BOOL);
+    RexxNumberString *prepareNumber(size_t, bool);
     void              adjustPrecision(char *, size_t);
     void              adjustPrecision();
     inline void       checkPrecision() { if (length > NumDigits) adjustPrecision(); }
@@ -183,6 +184,7 @@ int number_create_integer(const char *, size_t, int, int);
         /* check for any required rounding */
         checkPrecision();
     }
+    bool  createUnsignedValue(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, size_t maxValue, size_t &result);
     bool  createUnsignedInt64Value(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result);
     bool  checkIntegerDigits(stringsize_t numDigits, stringsize_t &numberLength, wholenumber_t &numberExponent, bool &carry);
     bool  int64Value(int64_t *result, stringsize_t numDigits);
@@ -207,14 +209,14 @@ int number_create_integer(const char *, size_t, int, int);
     RexxObject *isInteger();
     RexxString *d2c(RexxObject *);
     RexxString *d2x(RexxObject *);
-    RexxString *d2xD2c(RexxObject *, BOOL);
+    RexxString *d2xD2c(RexxObject *, bool);
     RexxString *concat(RexxObject *);
     RexxString *concatBlank(RexxObject *);
     RexxObject *orOp(RexxObject *);
     RexxObject *andOp(RexxObject *);
     RexxObject *xorOp(RexxObject *);
-    void        formatLong(int);
-    void        formatULong(size_t);
+    void        formatNumber(wholenumber_t);
+    void        formatUnsignedNumber(size_t);
     int         format(const char *, size_t);
     inline void        setZero() {
                    this->number[0] = '\0';               /* Make value a zero.*/

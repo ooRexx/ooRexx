@@ -1584,21 +1584,21 @@ void RexxMemory::createImage()
   kernel_public(CHAR_NUMBERSTRING     ,TheNumberStringClass, TheKernel);
   kernel_public(CHAR_NMETHOD          ,TheNativeCodeClass  , TheKernel);
 
+  // TODO:  Make the kernel directory part of the memory object, but not in the
+  // environment.
+
   kernel_public(CHAR_FUNCTIONS        ,TheFunctionsDirectory  ,TheKernel);
-  kernel_public(CHAR_NULLA            ,TheNullArray           ,TheKernel);
+  kernel_public(CHAR_NULLARRAY        ,TheNullArray           ,TheKernel);
   kernel_public(CHAR_NULLPOINTER      ,TheNullPointer         ,TheKernel);
   kernel_public(CHAR_COMMON_RETRIEVERS,TheCommonRetrievers    ,TheKernel);
   kernel_public(CHAR_ENVIRONMENT      ,TheEnvironment         ,TheKernel);
-
-  /* make the memory and environment objects public */
-  kernel_public(CHAR_MEMORY      ,TheMemoryObject   ,TheKernel);
 
                                        /* set Oryx version                  */
   kernel_public(CHAR_VERSION,version_number(),TheKernel);
                                        /* set the system name               */
   kernel_public(CHAR_NAME, SysName(), TheSystem);
                                        /* set the internal system name      */
-  kernel_public(CHAR_INTNAME, SysINTName(), TheSystem);
+  kernel_public(CHAR_INTERNALNAME, SysINTName(), TheSystem);
                                        /* and the system version info       */
   kernel_public(CHAR_VERSION,SysVersion(),TheSystem);
 

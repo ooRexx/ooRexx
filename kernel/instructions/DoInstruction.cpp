@@ -204,7 +204,7 @@ void RexxInstructionDo::terminate(
 /******************************************************************************/
 {
                                        /* perform cleanup                   */
-  context->terminateBlock(doblock->indent);
+  context->terminateBlock(doblock->getIndent());
                                        /* jump to the loop end              */
   context->setNext(this->end->nextInstruction);
 }
@@ -219,7 +219,7 @@ void RexxInstructionDo::execute(
   RexxDoBlock  *doblock = OREF_NULL;   /* active DO block                   */
   RexxObject   *result;                /* expression evaluation result      */
   RexxArray    *array;                 /* converted collection object       */
-  LONG          count;                 /* count for repetitive or FOR loops */
+  wholenumber_t count;                 /* count for repetitive or FOR loops */
   RexxObject   *object;                /* result object (for error)*/
 
   context->traceInstruction(this);     /* trace if necessary                */
@@ -244,7 +244,8 @@ void RexxInstructionDo::execute(
         if (isOfClass(Array, result))      /* already an array item?            */
                                        /* get the non-sparse version        */
           array = ((RexxArray *)result)->makeArray();
-        else {                         /* some other type of collection     */
+        else                           /* some other type of collection     */
+        {
                                        /* get the array version of this     */
           array = REQUEST_ARRAY(result);
                                        /* didn't convert ok?                */
@@ -308,12 +309,18 @@ void RexxInstructionDo::execute(
           result = callOperatorMethod(result, OPERATOR_PLUS, OREF_NULL);
           context->traceResult(result);/* trace if necessary                */
                                        /* convert the value                 */
-          count = REQUEST_LONG(result, NO_LONG);
+          if (!result->requestNumber(count, number_digits()))
+          {
+                                       /* report an exception               */
+              reportException(Error_Invalid_whole_number_repeat, object);
+          }
         }
                                        /* bad value, too small or too big?  */
-        if (count == (long)NO_LONG || count < 0)
+        if (count < 0)
+        {
                                        /* report an exception               */
-          reportException(Error_Invalid_whole_number_repeat, object);
+            reportException(Error_Invalid_whole_number_repeat, object);
+        }
         doblock->setFor(count);        /* save the new value                */
         if (doblock->testFor())        /* is this DO 0?                     */
                                        /* cause termination cleanup         */
@@ -341,12 +348,18 @@ void RexxInstructionDo::execute(
           result = callOperatorMethod(result, OPERATOR_PLUS, OREF_NULL);
           context->traceResult(result);/* trace if necessary                */
                                        /* convert the value                 */
-          count = REQUEST_LONG(result, NO_LONG);
+          if (!result->requestNumber(count, number_digits()))
+          {
+                                       /* report an exception               */
+              reportException(Error_Invalid_whole_number_repeat, object);
+          }
         }
                                        /* bad value, too small or too big?  */
-        if (count == (long)NO_LONG || count < 0)
+        if (count < 0)
+        {
                                        /* report an exception               */
-          reportException(Error_Invalid_whole_number_repeat, object);
+            reportException(Error_Invalid_whole_number_repeat, object);
+        }
         doblock->setFor(count);        /* save the new value                */
                                        /* is this DO 0?                     */
         if (doblock->testFor() || !this->whileCondition(context, stack))
@@ -366,7 +379,7 @@ void RexxInstructionDo::execute(
                                        /* do initial controlled loop setup  */
         this->controlSetup(context, stack, doblock);
                                        /* fail the initial check?           */
-        if (!this->checkControl(context, stack, doblock, FALSE))
+        if (!this->checkControl(context, stack, doblock, false))
                                        /* cause termination cleanup         */
           this->terminate(context, doblock);
         break;
@@ -376,7 +389,7 @@ void RexxInstructionDo::execute(
         this->controlSetup(context, stack, doblock);
                                        /* fail the initial check or         */
                                        /* the WHILE check?                  */
-        if (!this->checkControl(context, stack, doblock, FALSE) || !this->whileCondition(context, stack))
+        if (!this->checkControl(context, stack, doblock, false) || !this->whileCondition(context, stack))
                                        /* cause termination cleanup         */
           this->terminate(context, doblock);
         break;
@@ -422,9 +435,9 @@ void RexxInstructionDo::controlSetup(
 {
   size_t      i;                       /* loop control variable             */
   RexxObject *result;                  /* expression result                 */
-  RexxObject *_initial;                 /* initial variable value            */
+  RexxObject *_initial;                /* initial variable value            */
   RexxObject *object;                  /* original result object (for error)*/
-  LONG        count;                   /* for count                         */
+  wholenumber_t count;                 /* for count                         */
 
                                        /* evaluate the initial expression   */
   _initial = this->initial->evaluate(context, stack);
@@ -475,7 +488,7 @@ void RexxInstructionDo::controlSetup(
                                        /* we're dealing with a "normal      */
                                        /* NUMERIC DIGITS setting            */
         if (isOfClass(Integer, result) && context->digits() >= Numerics::DEFAULT_DIGITS)
-          {
+        {
                                        /* get the value directly            */
           count = ((RexxInteger *)result)->getValue();
           context->traceResult(result);/* trace if necessary                */
@@ -489,12 +502,18 @@ void RexxInstructionDo::controlSetup(
           result = callOperatorMethod(result, OPERATOR_PLUS, OREF_NULL);
           context->traceResult(result);/* trace if necessary                */
                                        /* convert the value                 */
-          count = REQUEST_LONG(result, NO_LONG);
+          if (!result->requestNumber(count, number_digits()))
+          {
+                                       /* report an exception               */
+              reportException(Error_Invalid_whole_number_for, object);
+          }
         }
                                        /* bad value, too small or too big?  */
-        if (count == (long)NO_LONG || count < 0)
+        if (count < 0)
+        {
                                        /* report an exception               */
-          reportException(Error_Invalid_whole_number_for, object);
+            reportException(Error_Invalid_whole_number_for, object);
+        }
         doblock->setFor(count);        /* save the new value                */
         break;
     }
@@ -509,7 +528,7 @@ void RexxInstructionDo::controlSetup(
   this->control->assign(context, stack, _initial);
 }
 
-BOOL RexxInstructionDo::checkOver(
+bool RexxInstructionDo::checkOver(
      RexxActivation      *context,     /* current activation context        */
      RexxExpressionStack *stack,       /* evaluation stack                  */
      RexxDoBlock         *doblock )    /* stacked DO execution block        */
@@ -520,64 +539,65 @@ BOOL RexxInstructionDo::checkOver(
   size_t      over_position;           /* position of DO_OVER iteration     */
   RexxArray  *over_array;              /* DO OVER value array               */
   RexxObject *result;                  /* process the result                */
-  BOOL        iterate;                 /* continue processing flag          */
-
-  iterate = TRUE;                      /* assume one more iteration         */
   over_position = doblock->getFor();   /* get the current position          */
                                        /* get the value array               */
   over_array = (RexxArray *)doblock->getTo();
                                        /* reached the end?                  */
   if (over_array->size() < over_position)
-    iterate = FALSE;                   /* time to get out of here           */
-  else {
-                                       /* get the next element              */
-    result = over_array->get(over_position);
-    if (result == OREF_NULL)           /* empty for some reason?            */
-      result = TheNilObject;           /* use .nil instead                  */
-                                       /* do the initial assignment         */
-    this->control->assign(context, stack, result);
-    context->traceResult(result);      /* trace if necessary                */
-    doblock->setFor(over_position + 1);/* set position for next time        */
+  {
+      return false;                    // time to get out of here.
   }
-  return iterate;                      /* return loop termination flag      */
+                                     /* get the next element              */
+  result = over_array->get(over_position);
+  if (result == OREF_NULL)           /* empty for some reason?            */
+    result = TheNilObject;           /* use .nil instead                  */
+                                     /* do the initial assignment         */
+  this->control->assign(context, stack, result);
+  context->traceResult(result);      /* trace if necessary                */
+  doblock->setFor(over_position + 1);/* set position for next time        */
+  return true;
 }
 
 
-BOOL RexxInstructionDo::checkControl(
+bool RexxInstructionDo::checkControl(
      RexxActivation      *context,     /* current activation context        */
      RexxExpressionStack *stack,       /* evaluation stack                  */
      RexxDoBlock         *doblock,     /* stacked DO execution block        */
-     BOOL                 increment )  /* increment control variable test   */
+     bool                 increment )  /* increment control variable test   */
 /******************************************************************************/
 /* Function:  Step and check the value of a control variable against the      */
 /*            terminating value                                               */
 /******************************************************************************/
 {
-  RexxObject *result;                  /* increment result                  */
-  BOOL        iterate;                 /* termination flag                  */
-
-                                       /* get the control variable value    */
-  result = this->control->getValue(context);
-  context->traceResult(result);        /* trace if necessary                */
-  if (increment) {                     /* not the first time through?       */
-                                       /* perform the addition              */
-    result = callOperatorMethod(result, OPERATOR_PLUS, doblock->getBy());
-                                       /* increment the control variable    */
-                                       /* value and assign new value        */
-    this->control->set(context, result);
-    context->traceResult(result);      /* trace if necessary                */
-  }
-  iterate = TRUE;                      /* assume continuing                 */
-  if (this->to != OREF_NULL) {         /* have a termination condition?     */
-                                       /* do the comparison                 */
-    if (callOperatorMethod(result, doblock->getCompare(), doblock->getTo()) == TheTrueObject)
-      iterate = FALSE;                 /* we're stopping if this is true    */
-  }
-  if (this->forcount != OREF_NULL) {   /* have a for count to check?        */
-    if (doblock->testFor())            /* hit the end condition?            */
-      iterate = FALSE;                 /* finished here also                */
-  }
-  return iterate;                      /* return the check value            */
+    RexxObject *result;                  /* increment result                  */
+                                         /* get the control variable value    */
+    result = this->control->getValue(context);
+    context->traceResult(result);        /* trace if necessary                */
+    if (increment)
+    {                     /* not the first time through?       */
+                          /* perform the addition              */
+        result = callOperatorMethod(result, OPERATOR_PLUS, doblock->getBy());
+        /* increment the control variable    */
+        /* value and assign new value        */
+        this->control->set(context, result);
+        context->traceResult(result);      /* trace if necessary                */
+    }
+    if (this->to != OREF_NULL)
+    {         /* have a termination condition?     */
+              /* do the comparison                 */
+        if (callOperatorMethod(result, doblock->getCompare(), doblock->getTo()) == TheTrueObject)
+        {
+            return false;                  // time to stop if this is true
+        }
+    }
+    if (this->forcount != OREF_NULL)     /* have a for count to check?        */
+    {
+        if (doblock->testFor())          /* hit the end condition?            */
+        {
+            return false;                // done looping
+        }
+    }
+    return true;                         // still looping
 }
 
 
@@ -653,21 +673,21 @@ void RexxInstructionDo::reExecute(
 
     case CONTROLLED_DO:                /* DO i=expr TO expr BY expr FOR expr*/
                                        /* fail the termination check?       */
-      if (this->checkControl(context, stack, doblock, TRUE))
+      if (this->checkControl(context, stack, doblock, true))
         return;                        /* finish quickly                    */
       break;
 
     case CONTROLLED_UNTIL:             /* DO i=expr ... UNTIL condition     */
                                        /* fail the control check or         */
                                        /* the UNTIL check?                  */
-      if (!this->untilCondition(context, stack) && this->checkControl(context, stack, doblock, TRUE))
+      if (!this->untilCondition(context, stack) && this->checkControl(context, stack, doblock, true))
         return;                        /* finish quickly                    */
       break;
 
     case CONTROLLED_WHILE:             /* DO i=expr ... WHILE condition     */
                                        /* fail the control check or         */
                                        /* the WHILE check?                  */
-      if (this->checkControl(context, stack, doblock, TRUE) && this->whileCondition(context, stack))
+      if (this->checkControl(context, stack, doblock, true) && this->whileCondition(context, stack))
         return;                        /* finish quickly                    */
       break;
   }
@@ -678,7 +698,7 @@ void RexxInstructionDo::reExecute(
   context->unindent();                 /* step back trace indentation       */
 }
 
-BOOL RexxInstructionDo::untilCondition(
+bool RexxInstructionDo::untilCondition(
      RexxActivation      *context,     /* current activation context        */
      RexxExpressionStack *stack )      /* evaluation stack                  */
 /******************************************************************************/
@@ -691,21 +711,23 @@ BOOL RexxInstructionDo::untilCondition(
   result = this->conditional->evaluate(context, stack);
   context->traceResult(result);        /* trace if necessary                */
 
-  /* most comparisons return either TRUE or FALSE directly, so we */
+  /* most comparisons return either true or false directly, so we */
   /* can optimize this check.  UNTIL conditions are more likely to */
-  /* evaluate to FALSE, so we'll check that first */
-  if (result == TheFalseObject) {
-      return FALSE;
+  /* evaluate to false, so we'll check that first */
+  if (result == TheFalseObject)
+  {
+      return false;
   }
-  else if (result == TheTrueObject) {
-      return TRUE;
+  else if (result == TheTrueObject)
+  {
+      return true;
   }
   /* This is some sort of computed boolean, so we need to do a real */
   /* validation on this */
   return result->truthValue(Error_Logical_value_until);
 }
 
-BOOL RexxInstructionDo::whileCondition(
+bool RexxInstructionDo::whileCondition(
      RexxActivation      *context,     /* current activation context        */
      RexxExpressionStack *stack )      /* evaluation stack                  */
 /******************************************************************************/
@@ -718,14 +740,16 @@ BOOL RexxInstructionDo::whileCondition(
   result = this->conditional->evaluate(context, stack);
   context->traceResult(result);        /* trace if necessary                */
 
-  /* most comparisons return either TRUE or FALSE directly, so we */
+  /* most comparisons return either true or false directly, so we */
   /* can optimize this check.  WHILE conditions are more likely to */
-  /* evaluate to TRUE, so we'll check that first */
-  if (result == TheTrueObject) {
-      return TRUE;
+  /* evaluate to true, so we'll check that first */
+  if (result == TheTrueObject)
+  {
+      return true;
   }
-  else if (result == TheFalseObject) {
-      return FALSE;
+  else if (result == TheFalseObject)
+  {
+      return false;
   }
   /* This is some sort of computed boolean, so we need to do a real */
   /* validation on this */

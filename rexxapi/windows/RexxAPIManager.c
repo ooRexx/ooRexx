@@ -106,10 +106,6 @@ char **APInamedObjects = NormalNamedObjects;
 #include "APIServiceSystem.h"
 #include "SystemVersion.h"
 
-extern UCHAR first_char[];             /* character type table       */
-extern UCHAR lower_case_table[];       /* lower case table for Rexx  */
-extern UCHAR upper_case_table[];       /* upper case table for Rexx  */
-
 #define SZUPPER_BUF       256          /* uppercase buf size         */
 #define ALREADY_INIT      1            /* queue manager status       */
 #define NO              0
@@ -546,14 +542,14 @@ ULONG RxInterProcessInit(BOOL sessionqueue)
 /*                     dll_name & dll_proc can be NULL               */
 /*                                                                   */
 /*********************************************************************/
-LONG  FillAPIComBlock(
+int   FillAPIComBlock(
   HAPIBLOCK *block,                    /* allocated block            */
-  PSZ        name,                     /* api name                   */
-  PSZ        dll_name,                 /* name of dll                */
-  PSZ        dll_proc)                 /* dll procedure name         */
+  const char *name,                    /* api name                   */
+  const char *dll_name,                /* name of dll                */
+  const char *dll_proc)                /* dll procedure name         */
 {
-  LONG    size;                          /* total allocation size      */
-  PSZ     temp;                          /* used to fill in APIBLOCK   */
+  size_t  size;                          /* total allocation size      */
+  char   *temp;                          /* used to fill in APIBLOCK   */
   PAPIBLOCK tmpPtr;                      /* temp work pointer          */
 
   size = APISIZE + SZSTR(name);        /* get minimum size           */
@@ -568,13 +564,13 @@ LONG  FillAPIComBlock(
   if (!tmpPtr) return(1);
   memset(tmpPtr, 0, APISIZE);          /* clear out the block        */
   tmpPtr->apipid=(long)GetCurrentProcessId(); /* set process id      */
-  temp = (PSZ)tmpPtr;                  /* copy the pointer           */
+  temp = (char *)tmpPtr;               /* copy the pointer           */
   temp += APISIZE;                     /* step past header           */
-  (tmpPtr)->apiname = (PSZ)(temp-(PSZ)tmpPtr);   /* point to name              */
+  (tmpPtr)->apiname = (char *)(temp-(char *)tmpPtr);   /* point to name              */
   strcpy(temp,name);                   /* copy the name into block   */
   temp += SZSTR(name);                 /* step past the name         */
   if (dll_name) {                      /* if we have a dll_name      */
-    (tmpPtr)->apidll_name = (PSZ)(temp-(PSZ)tmpPtr); /* fill in the pointer    */
+    (tmpPtr)->apidll_name = (char *)(temp-(char *)tmpPtr); /* fill in the pointer    */
     strcpy(temp,dll_name);             /* copy the dll_name too      */
     temp += SZSTR(dll_name);           /* step past the string       */
   }
@@ -582,12 +578,12 @@ LONG  FillAPIComBlock(
     (tmpPtr)->apidll_name = NULL;      /* otherwise say no dll used  */
 
   if (dll_proc) {                      /* if we have a dll_proc      */
-    (tmpPtr)->apidll_proc = (PSZ)(temp-(PSZ)tmpPtr); /* fill in the pointer    */
+    (tmpPtr)->apidll_proc = (char *)(temp-(char *)tmpPtr); /* fill in the pointer    */
     strcpy(temp,dll_proc);             /* copy the dll_proc too      */
   }
   else
     (tmpPtr)->apidll_proc = NULL;      /* otherwise say no dll used  */
-  (tmpPtr)->apisize = (ULONG)size;
+  (tmpPtr)->apisize = size;
 
   return (0);                          /* no errors, return nicely   */
 }
@@ -637,16 +633,15 @@ LONG  FillAPIComBlock(
 /*                                                                   */
 /*********************************************************************/
 
-ULONG  RxGetModAddress( PSZ       dll_name,
-                        PSZ       function_name,
-                        PULONG    error_codes,
-                        PFN *     function_address,
-                        PULONG    call_type)
+int RxGetModAddress(const char *dll_name,
+                    char *function_name,      // gets uppercased potentially, so can't be const
+                    size_t *error_codes,
+                    REXXPFN * function_address)
 {
-   ULONG    rc = 0 ;                   /* Function result.           */
+   int      rc = 0 ;                   /* Function result.           */
    HMODULE  dll_handle ;               /* DLL handle.                */
                                        /* used for uppercasing name  */
-   UCHAR     upper_dll[SZUPPER_BUF];
+   char      upper_dll[SZUPPER_BUF];
 
     // see if dll is already loaded
     if ( dll_handle = GetModuleHandle( (LPCTSTR) dll_name) ) {
@@ -944,7 +939,7 @@ BOOL WINAPI DllMain(
 /*                   NULL if the function fails                      */
 /*                                                                   */
 /*********************************************************************/
-PVOID APIENTRY RexxAllocateMemory(ULONG size)
+void * APIENTRY RexxAllocateMemory(size_t size)
 {
    PVOID pMem;
 
@@ -970,7 +965,7 @@ PVOID APIENTRY RexxAllocateMemory(ULONG size)
 /*  Return Value:    always returns 0 (ULONG)                        */
 /*                                                                   */
 /*********************************************************************/
-ULONG APIENTRY RexxFreeMemory(PVOID pMem)
+APIRET APIENTRY RexxFreeMemory(void * pMem)
 {
     GlobalFree(pMem);
 return 0;

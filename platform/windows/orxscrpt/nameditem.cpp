@@ -61,7 +61,6 @@ STDMETHODIMP OrxNamedItem::AddItem(LPCOLESTR pName, DWORD pFlags, IUnknown *pIUn
   OLECHAR  *lName;
   HRESULT   RetCode;
   char      Name[MAX_PATH];
-  IDispatchEx *DispEx;
   long   CurCount=0;
 
 
@@ -95,6 +94,7 @@ FPRINTF2(logfile,"OrxNamedItem::AddItem() Saving \"%S\"\n",pName);
 
 #if defined(DEBUGZ)
     if (Next->Unknown) {
+      IDispatchEx *DispEx;
       RetCode = Next->Unknown->QueryInterface(IID_IDispatchEx, (void **)&DispEx);
       if(SUCCEEDED(RetCode)) {
         EnumerateProperty(logfile,DispEx ,0);
@@ -337,7 +337,6 @@ char** OrxNamedItem::getNamedItems(int *num)
   int  i = 0;
   int  j = 0;
   int  size = 10;
-  int  len;
   char **result = (char**) malloc(sizeof(char*)*size);
 
   do {

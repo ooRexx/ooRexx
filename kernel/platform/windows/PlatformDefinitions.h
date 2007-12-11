@@ -60,42 +60,7 @@
 #define TOTAL_STACK_SIZE 1024*512
 #define C_STACK_SIZE 60000
 
-/******************************************************************************/
-/* REQUIRED:  The following type definitions are used throughout the REXX     */
-/* kernel code, so definitions are required for all of these.  If the system  */
-/* in questions provides definitions for these via other include              */
-/* files, any of these items can be deleted from the system specific file and */
-/* and replaced by any replacement #includes at this point.                   */
-/******************************************************************************/
- /* Windows style definitions */
- #include <windows.h>                   // required for windows apps
-
-/* include windows debugging function definition */
-#include "DebugOutput.h"
-
-#define UBYTE           unsigned char     // Not defined in windows
-#define _loadds                           //
-#define _Optlink
 #define SysCall _cdecl
-#define SysCallV __cdecl
-
-typedef          char  int8_t;
-typedef unsigned char uint8_t;
-typedef          short  int16_t;
-typedef unsigned short uint16_t;
-typedef          int    int32_t;
-typedef unsigned int   uint32_t;
-
-// NOTE:  the following are not correct, except for on a 32-system.  They are
-// defined here only temporarily.
-typedef          int    intptr_t;
-typedef unsigned int   uintptr_t;
-typedef signed __int64 int64_t;
-typedef unsigned __int64 uint64_t;
-
-#define UINT64_MAX (~((uint64_t)0))
-#define INT64_MAX  ((int64_t)(UINT64_MAX >> 1))
-#define INT64_MIN  ((int64_t)UINT64_MAX)
 
 /******************************************************************************/
 /* OPTIONAL:  Perform stack bounds checking on new message invocations.  If   */
@@ -103,13 +68,6 @@ typedef unsigned __int64 uint64_t;
 /* determine the bounds of the stack, leave this undefined.                   */
 /******************************************************************************/
 #define STACKCHECK
-
-/******************************************************************************/
-/* OPTIONAL:  Need support for non-ansi string routines strdup, strupr,       */
-/* strlwr, stricmp, and memicmp.                                              */
-/******************************************************************************/
-
-//#define NEED_NON_ANSI
 
 /******************************************************************************/
 /* OPTIONAL:  No time slicing support for REXX activation yields is available.*/
@@ -129,13 +87,6 @@ typedef unsigned __int64 uint64_t;
 #define TIMESLICE
 #define FIXEDTIMERS
 
-/******************************************************************************/
-/* OPTIONAL:  Enable the storage of activities in a directory instead of an   */
-/* array. If this option is disabled, all threadIDs will be stored in a table */
-/* (the threadTable) to get the index of the activity                         */
-/* (Important for high IDs like on Windows 95)                                */
-/******************************************************************************/
-#define HIGHTID
 /* this symbol should be also defined using HIGHTID because of                */
 /* SetThreadPriority. This API needs the threads handle, not it's ID.         */
 /* Without the ThreadTable we don't get the handle so we have to store it     */
@@ -159,7 +110,7 @@ typedef unsigned __int64 uint64_t;
 #define SysSharedSemaphoreDefn HANDLE rexx_resource_semaphore = NULL;   \
                                HANDLE rexx_wait_queue_semaphore = NULL; \
                                HANDLE rexxTimeSliceSemaphore = NULL;    \
-                               ULONG rexxTimeSliceTimerOwner;
+                               HANDLE rexxTimeSliceTimerOwner;
 
 
 /******************************************************************************/
@@ -258,7 +209,6 @@ inline void waitHandle(HANDLE s)
     } while ( MsgWaitForMultipleObjects(1, &s, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0 + 1 );
 }
 
-
 #define MTXRQ(s)      waitHandle(s);
 #define MTXRL(s)      ReleaseMutex(s) // clear a semaphore
 #ifdef TRACE_SEMAPHORES
@@ -271,17 +221,17 @@ inline void waitHandle(HANDLE s)
 #endif
                                        // no wait, return if can't get it
 #define MTXRI(s)      WaitForSingleObject(s,SEM_IMMEDIATE_RETURN)
-#define MTXNOPEN(s,n) s = OpenMutex(MUTEX_ALL_ACCESS, TRUE, n)                 // only used for shared stuff
+#define MTXNOPEN(s,n) s = OpenMutex(MUTEX_ALL_ACCESS, true, n)                 // only used for shared stuff
 #define MTXNCR(s,n)   s = CreateMutex(NULL, FALSE, n)
 
 #ifdef TRACE_SEMAPHORES
 #define EVCR(s)      if (!s) {   \
-s = CreateEvent(NULL, TRUE, TRUE, NULL); \
+s = CreateEvent(NULL, true, true, NULL); \
 printf("Created EV %x in %s line %d\n", s, __FILE__, __LINE__);} \
 else printf("EVCR handle %x not null in %s line %d\n", s, __FILE__, __LINE__)
 
 #else
-#define EVCR(s)       if (!s) s = CreateEvent(NULL, TRUE, TRUE, NULL)
+#define EVCR(s)       if (!s) s = CreateEvent(NULL, true, true, NULL)
 #endif
 
 /* create or open a named event semaphore */
@@ -334,17 +284,17 @@ extern CRITICAL_SECTION Crit_Sec;
 /******************************************************************************/
 
 #ifndef NO_SYSTIMESLICEELAPSED
-inline BOOL SysTimeSliceElapsed( void )
+inline bool SysTimeSliceElapsed( void )
 {
-  extern BOOL rexxTimeSliceElapsed;
+  extern bool rexxTimeSliceElapsed;
                                        /* see if the timer was called*/
   if (rexxTimeSliceElapsed)
   {
-     rexxTimeSliceElapsed = FALSE;
-     return 1;
+     rexxTimeSliceElapsed = false;
+     return true;
   }
   else
-     return 0;                                                                  /* 0 because no wait, only query */
+     return false;                                                              /* 0 because no wait, only query */
 }
 #endif
 
@@ -355,14 +305,14 @@ inline BOOL SysTimeSliceElapsed( void )
 void SysStartTimeSlice(void);
 
 /* Windows needs a special line write function to check stdout output */
-LONG line_write_check(const char * , LONG , FILE * );
+size_t line_write_check(const char * , size_t, FILE * );
 
 /******************************************************************************/
 /* REQUIRED:  Routines to alloc memory passed to external environments        */
 /******************************************************************************/
 
 #define SysAllocateExternalMemory(s) GlobalAlloc(0, (s))
-#define SysFreeExternalMemory(p) GlobalFree((p))
+#define SysFreeExternalMemory(p) GlobalFree((HGLOBAL)(p))
 
 
 /******************************************************************************/
@@ -396,12 +346,6 @@ LONG line_write_check(const char * , LONG , FILE * );
 /******************************************************************************/
 
 #define INIT_SEM_NAME "INIT_SEM"
-
-/******************************************************************************/
-/* OPTIONAL:  Define name of rexxsaa.h toolkit header file for                */
-/******************************************************************************/
-// Call ours REXXWIN.H
-#define SYSREXXSAA "REXX.H"
 
 /******************************************************************************/
 /* REQUIRED:  Name of the file used to store the external message repository  */
@@ -445,19 +389,6 @@ LONG line_write_check(const char * , LONG , FILE * );
 #endif
 
 /******************************************************************************/
-/* REQUIRED:  Define the REXX type for a native method function               */
-/******************************************************************************/
-
-                                       /* pointer to native method function */
-typedef char *(far REXXENTRY *PNMF)(void **);
-
-/******************************************************************************/
-/* REQUIRED:  Define the macro for pointer subtraction                        */
-/******************************************************************************/
-
-#define PTRSUB(f,s) ((char *)(f)-(char *)(s))
-
-/******************************************************************************/
 /* OPTIONAL:  Overrides for any functions defined in sysdef.h.  These         */
 /* can map the calls directly to inline code or comment them out all together.*/
 /******************************************************************************/
@@ -466,30 +397,18 @@ typedef char *(far REXXENTRY *PNMF)(void **);
 
 #define DEFRXSTRING 256                 /* Default RXSTRING return size      */
 
-#if 0
-#define SysSetThreadPriority(a, b) SetThreadPriority((HANDLE)a, b)
-#endif
-                                        // Thread yielding funcs in olthread.c
 #define SysThreadYield()
 
-#ifdef HIGHTID
-#define SysQueryThreadID() GetCurrentThreadId()
-#endif
+#define SysQueryThreadID() ((thread_id_t)GetCurrentThreadId())
 
 #ifdef THREADHANDLE
 #define SysQueryThread() GetCurrentThread()
 #endif
 
-//#define SysGetThreadStackBase() NULL
-
-//#define SysCreateThread(PTHREADFN, int, PVOID) WinCreateThread(PTHREADFN, size_t, PVOID)
-
-//DWORD WinCreateThread(PTHREADFN pThFunc, size_t StackSize, PVOID arg);
-
 int SysCreateThread (
   PTHREADFN ThreadProcedure,           /* address of thread procedure       */
   size_t    StackSize,                 /* required stack size               */
-  PVOID     Arguments );               /* thread procedure argument block   */
+  void     *Arguments );               /* thread procedure argument block   */
 
 
 #define SysValidateAddressName(OREF)   // OS2MISC: Validates address
@@ -499,12 +418,12 @@ int SysCreateThread (
 
 void SysTermination();              // No initialization / termination yet
 
-#define SysInitialize();               //
-extern BOOL HandleException;
+#define SysInitialize()
+extern bool HandleException;
 
                                        // our signal handling
-inline void SysRegisterSignals(SYSEXCEPTIONBLOCK *e) { HandleException = TRUE; }
-inline void SysDeregisterSignals(SYSEXCEPTIONBLOCK *e) { HandleException = FALSE; }
+inline void SysRegisterSignals(SYSEXCEPTIONBLOCK *e) { HandleException = true; }
+inline void SysDeregisterSignals(SYSEXCEPTIONBLOCK *e) { HandleException = false; }
 
 inline void SysRegisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
 inline void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
@@ -534,12 +453,12 @@ inline void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
  typedef BOOL __stdcall CONSOLECTRLHANDLER(DWORD);
  CONSOLECTRLHANDLER WinConsoleCtrlHandler;
 
- #define WinBeginExceptions SetConsoleCtrlHandler(&WinConsoleCtrlHandler, TRUE);\
+ #define WinBeginExceptions SetConsoleCtrlHandler(&WinConsoleCtrlHandler, true);\
                             __try {
  #define WinEndExceptions } __except ( WinExceptionFilter(GetExceptionCode( ))) {  }\
                             SetConsoleCtrlHandler(&WinConsoleCtrlHandler, FALSE);
 
- extern BOOL HandleException;
+ extern bool HandleException;
  int WinExceptionFilter( int xCode );
 
 

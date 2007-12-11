@@ -95,6 +95,11 @@ public:
     static void   setCurrentSettings(NumericSettings *s) { settings = s; }
     static NumericSettings *setDefaultSettings() { settings = &defaultSettings; return settings; }
     static NumericSettings *getDefaultSettings() { return &defaultSettings; }
+    static inline wholenumber_t abs(wholenumber_t n) { return n < 0 ? -n : n; }
+    static inline wholenumber_t minVal(wholenumber_t n1, wholenumber_t n2) { return n2 > n1 ? n1 : n2; }
+    static inline stringsize_t minVal(stringsize_t n1, stringsize_t n2) { return n2 > n1 ? n1 : n2; }
+    static inline wholenumber_t maxVal(wholenumber_t n1, wholenumber_t n2) { return n2 > n1 ? n2 : n1; }
+    static inline stringsize_t maxVal(stringsize_t n1, stringsize_t n2) { return n2 > n1 ? n2 : n1; }
 
 protected:
 

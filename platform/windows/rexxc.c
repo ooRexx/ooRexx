@@ -61,7 +61,7 @@ extern "C" {
 BOOL   APIENTRY RexxInitialize (void);
 }
 
-extern  _declspec(dllimport) BOOL ProcessSaveImage;
+extern  _declspec(dllimport) bool ProcessSaveImage;
 
 //
 //  Prototypes
@@ -102,7 +102,7 @@ int __cdecl main(int argc, char *argv[])
     if ((*(cp=*(argv+i)) == '-' || *cp == '\\'))
       switch (*++cp) {
         case 'i': case 'I':            /* image build                       */
-          ProcessSaveImage = TRUE;      /* say this is a save image          */
+          ProcessSaveImage = true;      /* say this is a save image          */
           break;
 
         default:                       /* ignore other switches             */
@@ -166,21 +166,17 @@ int __cdecl main(int argc, char *argv[])
    /* Here we call the interpreter.  We don't really need to use     */
    /* all the casts in this call; they just help illustrate          */
    /* the data types used.                                           */
-   rc=REXXSTART((LONG)       1,             /* number of arguments   */
-                (PRXSTRING)  &argument,     /* array of arguments    */
-                (PSZ)        program_name,  /* name of REXX file     */
-                (PRXSTRING)  0,             /* No INSTORE used       */
-                (PSZ)        "CMD",         /* Command env. name     */
-                (LONG)       RXCOMMAND,     /* Code for how invoked  */
-                (PRXSYSEXIT) exit_list,     /* No EXITs on this call */
-                (PSHORT)     &rexxrc,       /* Rexx program output   */
-                (PRXSTRING)  &rxretbuf );   /* Rexx program output   */
+   rc=REXXSTART(1,             /* number of arguments   */
+                &argument,     /* array of arguments    */
+                program_name,  /* name of REXX file     */
+                0,             /* No INSTORE used       */
+                "CMD",         /* Command env. name     */
+                RXCOMMAND,     /* Code for how invoked  */
+                exit_list,     /* No EXITs on this call */
+                &rexxrc,       /* Rexx program output   */
+                &rxretbuf );   /* Rexx program output   */
 
-   /* wait until all activities did finish so no activity will be canceled */
-   RexxWaitForTermination();
-
-   #undef free
-   if (rc==0) free(rxretbuf.strptr);        /* Release storage only if*/
+   if (rc==0) RexxReleaseResultMemory(rxretbuf.strptr);        /* Release storage only if*/
                         /* rexx procedure executed*/
    RexxDeregisterExit("MY_IOC",NULL);     // remove the exit in exe exit list
   }

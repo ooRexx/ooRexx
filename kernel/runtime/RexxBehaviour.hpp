@@ -78,7 +78,7 @@ void behaviour_setup (void);
   RexxObject *setScopes( RexxObjectTable *);
   RexxObject *addScope( RexxObject *);
   RexxObject *mergeScope( RexxObject *);
-  BOOL        checkScope( RexxObject *);
+  bool        checkScope( RexxObject *);
   void        subclass(RexxBehaviour *);
   RexxSupplier *getMethods(RexxObject *scope);
 
