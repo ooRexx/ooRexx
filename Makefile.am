@@ -251,6 +251,7 @@ windowsDefFiles = $(kernel_platform_windows_dir)/*.def \
 miscFiles = $(top_srcdir)/CPLv1.0.txt \
             $(top_srcdir)/CHANGES \
             $(top_srcdir)/CONTRIBUTORS \
+            $(top_srcdir)/NOTICE \
             $(top_srcdir)/oorexx.ver \
             $(top_srcdir)/unix-like-build.txt \
             $(aixExportFiles) \
