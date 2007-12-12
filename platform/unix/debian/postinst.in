@@ -80,7 +80,11 @@ if [ -d /opt/ooRexx ]; then
    ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.so.${orx_libversion} /usr/lib/librexxutil.so
    ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.la            /usr/lib/librexxutil.la
 
-   ln -sf /opt/ooRexx/man/man1/rexx.1                      /usr/share/man/man1/rexx.1
+   ln -sf /opt/ooRexx/include/rexx.h                       /usr/include/rexx.h
+   ln -sf /opt/ooRexx/include/rexxapidefs.h                /usr/include/rexxapidefs.h
+   ln -sf /opt/ooRexx/include/rexxapitypes.h               /usr/include/rexxapitypes.h
+   ln -sf /opt/ooRexx/include/rexxplatformapis.h           /usr/include/rexxplatformapis.h
+   ln -sf /opt/ooRexx/include/rexxplatformdefs.h           /usr/include/rexxplatformdefs.h
    ln -sf /opt/ooRexx/man/man1/rexxc.1                     /usr/share/man/man1/rexxc.1
    ln -sf /opt/ooRexx/man/man1/rxsubcom.1                  /usr/share/man/man1/rxsubcom.1
    ln -sf /opt/ooRexx/man/man1/rxqueue.1                   /usr/share/man/man1/rxqueue.1
