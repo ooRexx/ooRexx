@@ -100,6 +100,7 @@ if rxfuncquery('SockDropFuncs') then do
 ::method tracelog   attribute private -- trace log file stream
 ::method user       attribute private -- remote FTP host user name
 ::method version    attribute private -- version of this class
+::method thrdstatus attribute private -- finish status of a thread
 
 
 /*----------------------------------------------------------------------------*/
@@ -115,6 +116,7 @@ else flocal = .nil
 
 /* set the receive done flag to false */
 self~rdone = .false
+thrdstatus = ''
 
 /* get a socket */
 self~debugsay('Getting a socket.')
@@ -190,7 +192,12 @@ do while bytesrcvd > 0
    if flocal <> .nil & self~data~length() >= maxbuf then do
       if self~ascii = .true then self~remove_cr()
       self~debugsay('Writing' self~data~length() 'bytes to file.')
-      floc~charout(self~data)
+      retc = floc~charout(self~data)
+      if retc <> 0 then do
+         self~thrdstatus = '550'
+         bytesrcvd = 0
+         iterate
+         end
       self~data = ''
       end
    bytesrcvd = SockRecv(ndsock, 'resp', bufsize)
@@ -205,6 +212,9 @@ self~dsock = 0
 if flocal <> .nil then do
    if self~ascii = .true then self~remove_cr()
    floc~charout(self~data)
+   if retc <> 0 then do
+      self~thrdstatus = '550'
+      end
    floc~close()
    end
 
@@ -225,6 +235,7 @@ use arg flocal
 
 /* set the receive done flag to false */
 self~rdone = .false
+thrdstatus = ''
 
 /* get a socket */
 self~debugsay('Getting a socket.')
@@ -417,6 +428,7 @@ else flocal = .nil
 
 /* set the receive done flag to false */
 self~rdone = .false
+thrdstatus = ''
 
 /* get a socket */
 self~debugsay('Getting a socket.')
@@ -469,7 +481,12 @@ do while bytesrcvd > 0
    if flocal <> .nil & self~data~length() >= maxbuf then do
       if self~ascii = .true then self~remove_cr()
       self~debugsay('Writing' self~data~length() 'bytes to file.')
-      floc~charout(self~data)
+      retc = floc~charout(self~data)
+      if retc <> 0 then do
+         self~thrdstatus = '550'
+         bytesrcvd = 0
+         iterate
+         end
       self~data = ''
       end
    bytesrcvd = SockRecv(self~dsock, 'resp', bufsize)
@@ -482,7 +499,10 @@ self~dsock = 0
 if flocal <> .nil then do
    self~debugsay('Writing' length(self~data) 'bytes to file.')
    if self~ascii = .true then self~remove_cr()
-   floc~charout(self~data)
+   retc = floc~charout(self~data)
+   if retc <> 0 then do
+      self~thrdstatus = '550'
+      end
    self~debugsay('Closing file.')
    floc~close()
    end
@@ -504,6 +524,7 @@ use arg flocal
 
 /* set the send done flag to false */
 self~rdone = .false
+thrdstatus = ''
 
 /* get a socket */
 self~debugsay('Getting a socket.')
@@ -1212,6 +1233,14 @@ if tmptype <> self~ascii then do
    if self~ascii = .true then retc = self~FtpSetType('A')
    else retc = self~FtpSetType('B')
    /* we are just going to ignore any error from FtpSetType here */
+   end
+
+/* check to see if an error happened during the transfer */
+if self~thrdstatus <> '' then do
+   self~response = .array~new()
+   self~debugsay('Error: RETR command to' self~rhost 'failed. Local disk may be full.')
+   self~ftperrno = 'FTPCOMMAND'
+   return -1
    end
 
 self~response = .array~new()
