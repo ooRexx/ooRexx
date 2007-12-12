@@ -710,7 +710,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
     Scan = StringPtr + StringLength - 1;
     TempSize = StringLength;           /* copy the size                     */
     while (TempSize--) {               /* now add one to the number         */
-      ch = *Scan;                      /* get the character                 */
+      ch = (*Scan & 0xff);             /* get the character                 */
       ch++;                            /* increment                         */
       if (ch <= 0xff) {                /* no carry over?                    */
         *Scan = ch;                    /* set value back                    */
