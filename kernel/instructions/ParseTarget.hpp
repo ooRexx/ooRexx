@@ -53,7 +53,7 @@ class RexxTarget {
   inline void *operator new(size_t size, void *ptr) {return ptr;};
   inline RexxTarget() { ; }
   inline RexxTarget (RESTORETYPE restoreType) { ; };
-  void        init (RexxObject *, RexxObject **, size_t, bool, bool, RexxActivation *, RexxExpressionStack *);
+  void        init (RexxObject *, RexxObject **, size_t, size_t, bool, RexxActivation *, RexxExpressionStack *);
   void        next(RexxActivation *);
   void        moveToEnd();
   void        forward(stringsize_t);
@@ -80,6 +80,6 @@ class RexxTarget {
   stringsize_t  pattern_start;         /* start of matched pattern          */
   stringsize_t  subcurrent;            /* current location for word parse   */
   size_t  next_argument;               /* next PARSE ARG argument           */
-  int     translate;                   /* string translation flag           */
+  size_t  translate;                   /* string translation flag           */
 };
 #endif

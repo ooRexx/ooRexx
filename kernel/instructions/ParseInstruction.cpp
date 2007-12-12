@@ -150,7 +150,7 @@ void RexxInstructionParse::execute(
       break;
   }
                                        /* create the parse target           */
-  target.init(value, argList, argCount, (instructionFlags&parse_translate) != 0, multiple, context, stack);
+  target.init(value, argList, argCount, instructionFlags&parse_translate, multiple, context, stack);
 
   size = this->trigger_count;          /* get the template size             */
   for (i = 0; i < size; i++) {         /* loop through the template list    */

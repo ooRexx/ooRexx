@@ -53,7 +53,7 @@ void RexxTarget::init(
     RexxObject     *_string,            /* target string                     */
     RexxObject    **_arglist,           /* argument list                     */
     size_t          _argcount,          /* size of the argument list         */
-    bool            _translate,         /* translation flag                  */
+    size_t          _translate,         /* translation flag                  */
     bool            multiple,          /* have multiple strings             */
     RexxActivation *context,           /* execution context                 */
     RexxExpressionStack *s)            /* current expression stack          */
