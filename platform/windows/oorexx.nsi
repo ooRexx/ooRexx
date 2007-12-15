@@ -364,7 +364,11 @@ Section "${LONGNAME} Development Kit" SecDev
   ; Distribution files...
   File "${BINDIR}\rexx.lib"
   File "${BINDIR}\rexxapi.lib"
-  File "${SRCDIR}\rexxapi\windows\rexx.h"
+  File "${SRCDIR}\api\rexx.h"
+  File "${SRCDIR}\api\rexxapidefs.h"
+  File "${SRCDIR}\api\platform\windows\rexxapitypes.h"
+  File "${SRCDIR}\api\platform\windows\rexxplatformapis.h"
+  File "${SRCDIR}\api\platform\windows\rexxplatformdefs.h"
   File "${SRCDIR}\samples\windows\readme.txt"
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR\api\callrxnt
