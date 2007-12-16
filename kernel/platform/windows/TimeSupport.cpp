@@ -35,12 +35,6 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   SysGetCurrentTime                            */
-/*                                                                   */
-/*   Function:          gets the time and date from the system clock */
-/*********************************************************************/
 
 #include "RexxCore.h"
 #include "IntegerClass.hpp"
@@ -50,18 +44,8 @@
 extern SEV rexxTimeSliceSemaphore;
 extern HANDLE rexxTimeSliceTimerOwner;
 
-extern bool UseMessageLoop;  /* for VAC++ */
-
-void CALLBACK TimerProc( HWND, unsigned int, unsigned int, DWORD);
-void CALLBACK alarmTimerProc( HWND, unsigned int, unsigned int, DWORD);
-
-static HANDLE SemHandle = 0;                  /* Event-semaphore handle repository */
-static unsigned int TimerHandle = 0;          /* Timer handle                      */
-static TIMERPROC lpTimerProc;
-
 #define TIMESLICE_STACKSIZE 2048
 #define TIMESLICEMS 10
-#define ALARMSLEEP 330
 
 #ifdef TIMESLICE
 extern SEV   RexxTerminated;           /* Termination complete semaphore.   */
@@ -69,6 +53,12 @@ extern int REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid);
 extern bool rexxTimeSliceElapsed;
 #endif
 
+/*********************************************************************/
+/*                                                                   */
+/*   Subroutine Name:   SysGetCurrentTime                            */
+/*                                                                   */
+/*   Function:          gets the time and date from the system clock */
+/*********************************************************************/
 void SysGetCurrentTime(
   RexxDateTime *Date )                 /* returned data structure    */
 /*********************************************************************/
@@ -141,153 +131,141 @@ void SysStopTimeSlice( void )
 }
 
 
+/**
+ * Wait for a window timer message or for an event to be signaled.
+ *
+ * @param hev  Handle to an event object.  If this event is signaled, the
+ *             function returns.
+ */
+static void waitTimerOrEvent(HANDLE hev)
+{
+    MSG msg = {0};
+
+    /** Wait for a window timer message or for the event to be signaled. Note
+     *  that MsgWaitForMultipleObjects() will return if a *new* message is
+     *  placed in the message queue.  Once PeekMesage() is called, all messages
+     *  in the queue need to be processed before MsgWaitForMultipleObjects() is
+     *  called.
+     */
+    do
+    {
+        while ( PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
+        {
+            // Check for the timer message.
+            if ( msg.message == WM_TIMER )
+            {
+                return;
+            }
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+
+            // Check if signaled.
+            if ( WaitForSingleObject(hev, 0) == WAIT_OBJECT_0 )
+            {
+                return;
+            }
+        }
+    } while ( MsgWaitForMultipleObjects(1, &hev, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0 + 1 );
+}
+
+
 /*********************************************************************/
 /*                                                                   */
 /*   Subroutine Name:   alarm_starTimer                              */
 /*                                                                   */
-/*   Function:          starts an asynchronous, single_interval      */
-/*                      timer. When the timer pops, it will post an  */
-/*                      event semaphore.                             */
+/*   Function:          starts a timer and waits for it to expire.   */
+/*                      An event semaphore is created that can be    */
+/*                      used to cancel the timer.                    */
 /*                                                                   */
-/*   Arguments:         alarm timer - time interval before the event */
-/*                       semaphore is posted                         */
+/*   Arguments:         numdays - number of whole days until timer   */
+/*                      should expire.                               */
+/*                      alarmtime - fractional portion (less than a  */
+/*                      day) until timer should expire, expressed in */
+/*                      milliseconds.                                */
 /*********************************************************************/
 RexxMethod2(void, alarm_startTimer,
-                     wholenumber_t, numdays,
-                     wholenumber_t, alarmtime)
-									    // retrofit by IH
-
+            wholenumber_t, numdays,
+            wholenumber_t, alarmtime)
 {
-  APIRET rc;                           /* return code                       */
-  bool fState = false;                 /* Initial state of semaphore        */
-                                       /* Time-out value                    */
-  ULONG ulTimeout = INFINITE;
-  long msecInADay = 86400000;          /* number of milliseconds in a day   */
-  long timerIntervall = 60000;		   /* resolution 1 min */
-  REXXOBJECT cancelObj;                /* place object to check for cancel  */
-  long cancelVal;                      /* value of cancel                   */
-  MSG msg; 			       /* to retrieve WM_TIMER */
-  HANDLE SemHandle = 0;                /* Event-semaphore handle repository */
-  unsigned int TimerHandle = 0;        /* Timer handle                      */
-                                       /* Create an event semaphore to be   */
-                                       /* posted by the timer               */
-  SemHandle = CreateEvent(NULL, TRUE, fState, NULL);
-  if (!SemHandle) {                    /* Error received ?                  */
-                                       /* raise error                       */
-     send_exception(Error_System_service);
-     return;
-  }
-                                       /* set the state variables           */
-  ooRexxVarSet("EVENTSEMHANDLE", ooRexxInteger((long)SemHandle));
-  ooRexxVarSet("TIMERSTARTED", ooRexxTrue);
+    bool fState = false;                 /* Initial state of semaphore        */
+    unsigned int msecInADay = 86400000;  /* number of milliseconds in a day   */
+    REXXOBJECT cancelObj;                /* object to check for cancel        */
+    int cancelVal;                       /* value of cancel                   */
+    HANDLE SemHandle = 0;                /* Event-semaphore handle            */
+    unsigned int TimerHandle = 0;        /* Timer handle                      */
 
-  while (numdays > 0) {                /* is it some future day?            */
-
-                                       /* start timer to wake up after a day*/
-	TimerHandle = SetTimer(NULL, 0, msecInADay, NULL);
-    if (TimerHandle == 0) {                     /* Error received?          */
-      send_exception(Error_System_service);
-      return;
-    }
-
-	/* wait for WM_TIMER message */
-    if (UseMessageLoop)  /* without peekmessage for VAC++ */
-  	do
-       if (PeekMessage (&msg,   // message structure
-           NULL,                  // handle of window receiving the message
-          0,                     // lowest message to examine
-          0,
-          PM_REMOVE))            // highest message to examine
-        {
-          TranslateMessage(&msg);// Translates virtual key codes
-          DispatchMessage(&msg); // Dispatches message to window
-        } else Sleep(ALARMSLEEP);
-	while ((msg.message != WM_TIMER) && (WaitForSingleObject(SemHandle, 0) != WAIT_OBJECT_0));
-	else WaitForSingleObject(SemHandle, INFINITE);
-
-	EVPOST(SemHandle);
-
-    cancelObj = ooRexxVarValue("CANCELED");
-    cancelVal = REXX_INTEGER_VALUE(cancelObj);
-
-    if (cancelVal == 1) {              /* If alarm cancelled?               */
-      rc = KillTimer(NULL, TimerHandle);      /* stop timer                        */
-                                       /* Close the event semaphore         */
-      rc = CloseHandle(SemHandle);
-      if (rc == FALSE) {                   /* Error received?                   */
-                                       /* raise error                       */
-       send_exception(Error_System_service);
-       return;
-      }
-      return;
-    }
-    else {
-                                       /* Reset the event semaphore         */
-      rc = EVSET(SemHandle);
-      if (rc == FALSE) {                   /* Error received?                   */
-                                       /* raise error                       */
+    /* Create an event semaphore that can be used to cancel the alarm. */
+    SemHandle = CreateEvent(NULL, TRUE, fState, NULL);
+    if ( !SemHandle )
+    {
+        /* Couldn't create the semaphore, raise an exception. */
         send_exception(Error_System_service);
         return;
-      }
     }
-    numdays--;                         /* Decrement number of days          */
-  }
 
-                                       /* start the timer                   */
-  TimerHandle = SetTimer(NULL, 0, alarmtime, NULL);
-  if (!TimerHandle) {                       /* Error received?                   */
-                                       /* raise error                       */
-     send_exception(Error_System_service);
-     return;
-  }
+    /* Set the state variables. */
+    ooRexxVarSet("EVENTSEMHANDLE", ooRexxInteger((long)SemHandle));
+    ooRexxVarSet("TIMERSTARTED", ooRexxTrue);
 
-	/* wait for WM_TIMER message */
-  if (UseMessageLoop)  /* without peekmessage for VAC++ */
-  do
-       if (PeekMessage (&msg,   // message structure
-           NULL,                  // handle of window receiving the message
-          0,                     // lowest message to examine
-          0,
-          PM_REMOVE))            // highest message to examine
+    if ( numdays > 0 )
+    {
+        /** Alarm is for some day in the future, start a timer that wakes up
+         *  once a day.
+         */
+        TimerHandle = SetTimer(NULL, 0, msecInADay, NULL);
+        if ( TimerHandle == 0 )
         {
-          TranslateMessage(&msg);// Translates virtual key codes
-          DispatchMessage(&msg); // Dispatches message to window
-        } else Sleep(ALARMSLEEP);
-  while ((msg.message != WM_TIMER) && (WaitForSingleObject(SemHandle, 0) != WAIT_OBJECT_0));
-  else WaitForSingleObject(SemHandle, INFINITE);
+            /* Couldn't create a timer, raise an exception. */
+            CloseHandle(SemHandle);
+            send_exception(Error_System_service);
+            return;
+        }
 
-  EVPOST(SemHandle);
+        while ( numdays > 0 )
+        {
+            /* Wait for the WM_TIMER message or for the alarm to be canceled. */
+            waitTimerOrEvent(SemHandle);
 
-#if 0
-                                       /* wait for semaphore to be posted   */
-  rc = WaitForSingleObject(SemHandle, ulTimeout);
-  if (rc !=  WAIT_OBJECT_0)
-  {                                     /* raise error                       */
-     send_exception(Error_System_service);
-     return;
-  }
-#endif
-                                       /* We don't care about error here    */
-                                       /* Since the timer may have          */
-                                       /* already popped.                   */
-  rc = KillTimer(NULL, TimerHandle);          /* stop timer                        */
-  if (rc == FALSE) {                       /* Error received?                   */
-                                       /* raise error                       */
-     send_exception(Error_System_service);
-     return;
-  }
-                                       /* Close the event semaphore         */
-  rc = CloseHandle(SemHandle);
-  if (rc == FALSE) {                       /* Error received?                   */
-                                       /* raise error                       */
-     send_exception(Error_System_service);
-     return;
-  }
-  return;
+            /* Check if the alarm is canceled. */
+            cancelObj = ooRexxVarValue("CANCELED");
+            cancelVal = REXX_INTEGER_VALUE(cancelObj);
+            if ( cancelVal == 1 )
+            {
+                /* Alarm is canceled, delete timer, close semaphore, return. */
+                KillTimer(NULL, TimerHandle);
+                CloseHandle(SemHandle);
+                return;
+            }
+            numdays--;
+        }
+        /* Done with the daily timer, delete it. */
+        KillTimer(NULL, TimerHandle);
+    }
+
+    if ( alarmtime > 0 )
+    {
+        /* Start a timer for the fractional portion of the alarm. */
+        TimerHandle = SetTimer(NULL, 0, alarmtime, NULL);
+        if ( !TimerHandle )
+        {
+            /* Couldn't create a timer, raise an exception. */
+            CloseHandle(SemHandle);
+            send_exception(Error_System_service);
+            return;
+        }
+
+        /* Wait for the WM_TIMER message or for the alarm to be canceled. */
+        waitTimerOrEvent(SemHandle);
+
+        /** Total alarm time has expired, or the alarm was canceled.  We don't
+         *  care which, just clean up and return.
+         */
+        KillTimer(NULL, TimerHandle);
+    }
+
+    CloseHandle(SemHandle);
+    return;
 }
-
-
-
 
 
 /*********************************************************************/
@@ -296,48 +274,18 @@ RexxMethod2(void, alarm_startTimer,
 /*                                                                   */
 /*   Function:          stops an asynchronous timer.                 */
 /*                                                                   */
-/*   Arguments:         timer - timer handle                         */
-/*                        shared between start & stop timer          */
+/*   Arguments:         eventSemHandle - handle to event semaphore   */
+/*                      used to signal the timer should be canceled. */
 /*********************************************************************/
-
-
 RexxMethod1(void, alarm_stopTimer,
-               size_t, eventSemHandle)
+            size_t, eventSemHandle)
 {
-  APIRET rc;                           /* return code                       */
-  HANDLE    hev = (HANDLE)eventSemHandle;    /* event semaphore handle            */
-
-#if 0
-                                       /* Open the event semaphore          */
-  hev = OpenEvent(EVENT_ALL_ACCESS, TRUE, NULL);
-  if (hev == 0) {                       /* Error received?                   */
-                                       /* raise error                       */
-     send_exception(Error_System_service);
-     return;
-  }
-#endif
-                                       /* Post the event semaphore          */
-  rc = EVPOST(hev);
-  if (rc == FALSE) {                       /* Error received?                   */
-                                       /* raise error                       */
-     send_exception(Error_System_service);
-     return;
-  }
-
-#if 0
-                                       /* Close the event semaphore         */
-  rc = CloseHandle(hev);
-  if (rc == FALSE) {                       /* Error received?                   */
-                                       /* raise error                       */
-     send_exception(Error_System_service);
-     return;
-  }
-
-  rc = KillTimer(NULL, TimerHandle);
-#endif
-
-return;
+    /* Post the event semaphore to signal the alarm should be canceled. */
+    if ( ! EVPOST((HANDLE)eventSemHandle) )
+    {
+        /* Raise an error if the semaphore could not be posted. */
+        send_exception(Error_System_service);
+    }
+    return;
 }
-
-
 
