@@ -90,26 +90,18 @@ void SysGetCurrentTime(
 
 /*********************************************************************/
 /*                                                                   */
-/*   Subroutine Name:   SysTimeSliceElapsed                          */
+/*   Subroutine Name:   TimeSliceControl                             */
 /*                                                                   */
-/*     Used to see if iClauseCounter == CLAUSESPERYIELD              */
-/*     This is used in windows as the duration of a time slice       */
+/*   The thread function for the time slice timer                    */
 /*                                                                   */
 /*********************************************************************/
 
 DWORD WINAPI TimeSliceControl(void * args)
 {
 #ifdef TIMESLICE
-   MSG msg;
    do
    {
       Sleep(TIMESLICEMS);
-   /* instead of SysRelinquish -> performance */
-      if ((UseMessageLoop) && (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE)))
-      {
-         TranslateMessage(&msg);// Translates virtual key codes
-         DispatchMessage(&msg); // Dispatches message to window
-      }
       rexxTimeSliceElapsed = true;
    } while (RexxTerminated && (WaitForSingleObject(RexxTerminated, 0) != WAIT_OBJECT_0));
    rexxTimeSliceTimerOwner = 0;
@@ -120,14 +112,14 @@ DWORD WINAPI TimeSliceControl(void * args)
 
 void SysStartTimeSlice( void )
 /******************************************************************************/
-/* Function:  Make sure we ahve a Timer running and reset TimeSlice Sem       */
+/* Function:  Make sure we have a Timer running and reset TimeSlice Sem       */
 /******************************************************************************/
 {
 #ifdef TIMESLICE
    ULONG thread;
    if (rexxTimeSliceTimerOwner == 0) {           /* Is there a timer?         */
 
-	 /* create a thread with low priority to check the message queue for WM_TIMER */
+     /* create a time slice timer thread */
 
      rexxTimeSliceTimerOwner = CreateThread(NULL, TIMESLICE_STACKSIZE, TimeSliceControl, NULL, 0, &thread);
      SetThreadPriority(rexxTimeSliceTimerOwner,THREAD_PRIORITY_NORMAL+1);  /* set a higher priority */
@@ -139,7 +131,7 @@ void SysStartTimeSlice( void )
 
 void SysStopTimeSlice( void )
 /******************************************************************************/
-/* Function:  Stop the thread that examines the message queue for WM_TIMER    */
+/* Function:  Stop the time slice timer thread                                */
 /******************************************************************************/
 {
 #ifdef TIMESLICE
