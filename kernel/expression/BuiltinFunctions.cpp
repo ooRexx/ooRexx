@@ -1825,7 +1825,7 @@ BUILTIN(SOURCELINE) {
                                        /* get the line number               */
     line_number = required_integer(SOURCELINE, n)->getValue();
                                        /* must be a positive integer        */
-    positive_integer(line_number, SOURCELINE, IntegerOne);
+    positive_integer((ssize_t)line_number, SOURCELINE, IntegerOne);
     if (line_number > size)            /* larger than program source?       */
                                        /* this is an error too?             */
       reportException(Error_Incorrect_call_sourceline, line_number, size);
