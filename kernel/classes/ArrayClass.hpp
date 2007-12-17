@@ -178,6 +178,9 @@ typedef struct copyElelmentParm {
    RexxObject *        indexToArray(size_t idx);
    RexxObject *        convertIndex(size_t idx);
 
+   // singleton class instance;
+   static RexxClass *classInstance;
+   static RexxArray *nullArray;
 
  protected:
 

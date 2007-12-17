@@ -42,7 +42,6 @@
 #include <stdio.h>                          /* Get printf, FILE type, etc.    */
 #include <string.h>                         /* Get strcpy, strcat, etc.       */
 #include <stdlib.h>                         /* Get system, max_path etc...    */
-#define INCL_REXXSAA
 #include "rexx.h"
 #include "RexxCore.h"
 #include "RexxAPIManager.h"
@@ -52,10 +51,6 @@
 /* definition of RexxinitExports */
 
 CRITICAL_SECTION waitProtect = { 0 } ;
-
-#ifdef JAPANESE
-int sharedOpen = 0;
-#endif
 
 HINSTANCE horyxkDll;
 HANDLE apiProtect;

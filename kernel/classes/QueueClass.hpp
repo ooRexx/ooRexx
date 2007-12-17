@@ -79,5 +79,7 @@ class RexxQueue : public RexxList {
  inline void push(RexxObject *obj) { this->addFirst(obj);};
  inline void queue(RexxObject *obj) { this->addLast(obj);};
 
+ static RexxClass *classInstance;
+
 };
 #endif

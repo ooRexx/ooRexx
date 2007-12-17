@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,31 +35,100 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/* REXX Kernel                                             UseInstruction.hpp */
-/*                                                                            */
-/* Primitive USE instruction Class Definitions                                */
-/*                                                                            */
-/******************************************************************************/
-#ifndef Included_RexxInstructionUse
-#define Included_RexxInstructionUse
+/*****************************************************************************/
+/* REXX Windows Support                                                      */
+/*                                                                           */
+/* Main interpreter control.  This is the preferred location for all         */
+/* platform independent global variables.                                    */
+/* The interpreter does not instantiate an instance of this                  */
+/* class, so most variables and methods should be static.                    */
+/*                                                                           */
+/*                                                                           */
+/*****************************************************************************/
 
-#include "RexxInstruction.hpp"
+#ifndef RexxInterpreter_Included
+#define RexxInterpreter_Included
 
-class RexxInstructionUse : public RexxInstruction {
- public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void  operator delete(void *, void *) { }
-  inline void  operator delete(void *) { }
+#include "RexxCore.h"
 
-  RexxInstructionUse(size_t, RexxQueue *);
-  inline RexxInstructionUse(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
-  void flatten(RexxEnvelope *);
-  void execute(RexxActivation *, RexxExpressionStack *);
+class Interpreter
+{
+public:
+    static inline void getResourceLock() { MTXRQ(resourceLock); }
+    static inline void releaseResourceLock() { MTXRL(resourceLock); }
+    static inline void createLocks()
+    {
+        MTXCROPEN(resourceLock, "OBJREXXRESSEM");
+        // this needs to be created and set
+        EVCR(terminationSem);
+        EVSET(terminationSem);
+    }
 
-  size_t variableCount;                // count of variables for USE
-  RexxVariableBase *variables[1];      /* List of variables for USE         */
+    static inline void closeLocks()
+    {
+        MTXCL(resourceLock);
+        EVCLOSE(terminationSem);
+        terminationSem = 0;
+    }
+
+    static inline void signalTermination()
+    {
+        EVPOST(terminationSem);              /* let anyone who cares know we're done*/
+    }
+
+    static void terminate();
+    static bool isTerminated();
+
+
+protected:
+    static SMTX   resourceLock;      // use to lock resources accessed outside of kernel global lock
+    static SEV    terminationSem;    // used to signal that everything has shutdown
 };
+
+
+/**
+ * Block control for access to the resource lock.
+ */
+class ResourceSection
+{
+public:
+    inline ResourceSection()
+    {
+        Interpreter::getResourceLock();
+        terminated = false;
+    }
+
+    inline ~ResourceSection()
+    {
+        if (!terminated)
+        {
+            Interpreter::releaseResourceLock();
+        }
+    }
+
+    inline void release()
+    {
+        if (!terminated)
+        {
+            Interpreter::releaseResourceLock();
+            terminated = true;
+        }
+    }
+
+
+    inline void reacquire()
+    {
+        if (terminated)
+        {
+            Interpreter::getResourceLock();
+            terminated = false;
+        }
+    }
+
+private:
+
+    bool terminated;       // we can release these as needed
+};
+
+
 #endif

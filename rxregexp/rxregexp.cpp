@@ -46,10 +46,7 @@
 
 #include "RexxCore.h"
 
-#define INCL_REXXSAA
 #include "rexx.h"
-// #include "ObjectClass.hpp"
-// #include "StringClass.hpp"
 #include "RexxNativeAPI.h"                      // REXX native interface
 
 RexxMethod3(REXXOBJECT,                // Return type

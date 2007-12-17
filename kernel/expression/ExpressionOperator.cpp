@@ -99,38 +99,6 @@ RexxExpressionOperator::RexxExpressionOperator(
   OrefSet(this, this->right_term, right);
 }
 
-RexxObject *RexxExpressionOperator::evaluate(
-    RexxActivation      *context,      /* current activation context        */
-    RexxExpressionStack *stack )       /* evaluation stack                  */
-/******************************************************************************/
-/* Function:  Execute a REXX operator                                         */
-/******************************************************************************/
-{
-  RexxObject *result;                  /* message expression result         */
-  RexxObject *left;                    /* left term result                  */
-  RexxObject *right;                   /* right term result                 */
-
-                                       /* evaluate the target               */
-  left = this->left_term->evaluate(context, stack);
-  if (this->right_term != OREF_NULL) { /* not a prefix operator?            */
-                                       /* evaluate the right term           */
-    right = this->right_term->evaluate(context, stack);
-                                       /* evaluate the message              */
-    result = callOperatorMethod(left, this->oper, right);
-                                       /* replace top two stack elements    */
-    stack->operatorResult(result);     /* with this one                     */
-                                       /* trace if necessary                */
-    context->traceOperator(operatorName(), result);
-  }
-  else {                               /* prefix operator                   */
-                                       /* process this directly             */
-    result = callOperatorMethod(left, this->oper, OREF_NULL);
-    stack->prefixResult(result);       /* replace the top element           */
-                                       /* trace if necessary                */
-    context->tracePrefix(operatorName(), result);
-  }
-  return result;                       /* return the result                 */
-}
 
 RexxObject *RexxBinaryOperator::evaluate(
     RexxActivation      *context,      /* current activation context        */
@@ -211,19 +179,6 @@ void RexxExpressionOperator::flatten(RexxEnvelope *envelope)
    cleanUpFlatten
 }
 
-void *RexxExpressionOperator::operator new(size_t size)
-/******************************************************************************/
-/* Function:  Create a new translator object                                  */
-/******************************************************************************/
-{
-  RexxObject *newObject;               /* newly created object              */
-
-                                       /* Get new object                    */
-  newObject = new_object(sizeof(RexxExpressionOperator));
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheOperatorBehaviour);
-  return newObject;
-}
 
 void *RexxUnaryOperator::operator new(size_t size)
 /******************************************************************************/

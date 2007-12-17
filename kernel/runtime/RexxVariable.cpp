@@ -153,7 +153,7 @@ RexxVariable *RexxVariable::newInstance(
   RexxVariable *newObj;                /* created variable object           */
 
                                        /* Get new object                    */
-  newObj = (RexxVariable *)new_object(sizeof(RexxVariable), T_variable);
+  newObj = (RexxVariable *)new_object(sizeof(RexxVariable), T_Variable);
   newObj->variableValue = OREF_NULL;   /* clear out the hash value          */
   newObj->creator = OREF_NULL;         /* clear out creator field           */
   newObj->variable_name = name;        /* fill in the name                  */

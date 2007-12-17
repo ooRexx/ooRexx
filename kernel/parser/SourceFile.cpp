@@ -52,7 +52,7 @@
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"
 #include "MethodClass.hpp"
-#include "RexxNativeMethod.hpp"
+#include "RexxNativeCode.hpp"
 #include "RexxCode.hpp"
 #include "RexxVariableDictionary.hpp"
 #include "RexxSmartBuffer.hpp"
@@ -78,17 +78,9 @@
 #include "CallInstruction.hpp"
 #include "StreamNative.h"
 #include "ProtectedObject.hpp"
+#include "LibraryManager.hpp"
 
 #define HOLDSIZE         60            /* room for 60 temporaries           */
-
-/* globals for block count based yielding support  */
-#ifdef  NOTIMER
-extern unsigned int iTransClauseCounter; /* defined in WinYield.c           */
-                                         /* cnt of blocks translated        */
-#define CLAUSESPERYIELD 100              /* yield every n blocks            */
-#endif
-
-extern "C" internalMethodEntry internalMethodTable[];
 
 typedef struct _LINE_DESCRIPTOR {
   size_t position;                     /* position within the buffer        */
@@ -274,9 +266,9 @@ void RexxSource::needVariable(
   if (!token->isVariable()) {          /* not a variable token?             */
                                        /* begin with a dot?                 */
     if (token->value->getChar(0) == '.')
-      report_error_token(Error_Invalid_variable_period, token);
+      syntaxError(Error_Invalid_variable_period, token);
     else
-      report_error_token(Error_Invalid_variable_number, token);
+      syntaxError(Error_Invalid_variable_number, token);
   }
 }
 
@@ -288,7 +280,7 @@ void RexxSource::needVariableOrDotSymbol(
 {
                                        /* not a variable token or dot symbol*/
   if (!token->isVariable() && (token->subclass != SYMBOL_DOTSYMBOL)) {
-      report_error_token(Error_Invalid_variable_number, token);
+      syntaxError(Error_Invalid_variable_number, token);
   }
 }
 
@@ -972,7 +964,7 @@ void RexxSource::checkDirective()
                                        /* not a directive start?            */
     if (token->classId != TOKEN_DCOLON)
                                        /* this is an error                  */
-      report_error(Error_Translation_bad_directive);
+      syntaxError(Error_Translation_bad_directive);
     firstToken();                      /* reset to the first token          */
     this->reclaimClause();             /* give back to the source object    */
   }
@@ -1358,7 +1350,7 @@ RexxMethod *RexxSource::translate(
     if (this->flags&_interpret) {      /* is this an interpret?             */
       this->nextClause();              /* get the directive clause          */
                                        /* raise an error                    */
-      report_error(Error_Translation_directive_interpret);
+      syntaxError(Error_Translation_directive_interpret);
     }
                                        /* create a directory for ..methods  */
     OrefSet(this, this->methods, new_directory());
@@ -1468,7 +1460,7 @@ void RexxSource::resolveDependencies()
       }
       if (next_install == OREF_NULL)   /* nothing located?                  */
                                        /* raise an error                    */
-        report_error1(Error_Execution_cyclic, this->programName);
+        syntaxError(Error_Execution_cyclic, this->programName);
                                        /* get the class name                */
       class_name = (RexxString *)(current_class->get(CLASS_PUBLIC_NAME));
       for (j = 1; j <= size; j++) {    /* go remove the dependencies        */
@@ -1568,7 +1560,7 @@ void RexxSource::classDirective()
     if (!token->isSymbolOrLiteral())
     {
         /* report an error                   */
-        report_error(Error_Symbol_or_string_class);
+        syntaxError(Error_Symbol_or_string_class);
     }
     RexxString *name = token->value;             /* get the routine name              */
                                      /* get the exposed name version      */
@@ -1577,7 +1569,7 @@ void RexxSource::classDirective()
     if (this->class_dependencies->entry(public_name) != OREF_NULL)
     {
         /* have an error here                */
-        report_error(Error_Translation_duplicate_class);
+        syntaxError(Error_Translation_duplicate_class);
     }
     /* create a dependencies list        */
     this->class_dependencies->put(new_directory(), public_name);
@@ -1608,7 +1600,7 @@ void RexxSource::classDirective()
                                          /* not a symbol token?               */
         else if (!token->isSymbol())
             /* report an error                   */
-            report_error_token(Error_Invalid_subkeyword_class, token);
+            syntaxError(Error_Invalid_subkeyword_class, token);
         else
         {                         /* have some sort of option keyword  */
                                   /* get the keyword type              */
@@ -1619,12 +1611,12 @@ void RexxSource::classDirective()
                 case SUBDIRECTIVE_METACLASS:
                     /* already had a METACLASS?          */
                     if (metaclass != OREF_NULL)
-                        report_error_token(Error_Invalid_subkeyword_class, token);
+                        syntaxError(Error_Invalid_subkeyword_class, token);
                     token = nextReal();      /* get the next token                */
                                              /* not a symbol or a string          */
                     if (!token->isSymbolOrLiteral())
                         /* report an error                   */
-                        report_error_token(Error_Symbol_or_string_metaclass, token);
+                        syntaxError(Error_Symbol_or_string_metaclass, token);
                     metaclass = token->value;/* external name is token value      */
                                              /* tag the active class              */
                     this->active_class->put(metaclass, CLASS_METACLASS);
@@ -1635,7 +1627,7 @@ void RexxSource::classDirective()
                     if (Public != DEFAULT_ACCESS_SCOPE)  /* already had one of these?         */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_class, token);
+                        syntaxError(Error_Invalid_subkeyword_class, token);
                     }
                     Public = PUBLIC_SCOPE;   /* turn on the seen flag             */
                                              /* just set this as a public object  */
@@ -1646,7 +1638,7 @@ void RexxSource::classDirective()
                     if (Public != DEFAULT_ACCESS_SCOPE)  /* already had one of these?         */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_class, token);
+                        syntaxError(Error_Invalid_subkeyword_class, token);
                     }
                     Public = PRIVATE_SCOPE;  /* turn on the seen flag             */
                     break;
@@ -1654,13 +1646,13 @@ void RexxSource::classDirective()
                 case SUBDIRECTIVE_SUBCLASS:
                     if (subclass)            /* already had one of these?         */
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_class, token);
+                        syntaxError(Error_Invalid_subkeyword_class, token);
                     subclass = true;         /* turn on the seen flag             */
                     token = nextReal();      /* get the next token                */
                                              /* not a symbol or a string          */
                     if (!token->isSymbolOrLiteral())
                         /* report an error                   */
-                        report_error(Error_Symbol_or_string_subclass);
+                        syntaxError(Error_Symbol_or_string_subclass);
                     /* set the subclass information      */
                     this->active_class->put(token->value, CLASS_SUBCLASS_NAME);
                     break;
@@ -1668,13 +1660,13 @@ void RexxSource::classDirective()
                 case SUBDIRECTIVE_MIXINCLASS:
                     if (subclass)            /* already had one of these?         */
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_class, token);
+                        syntaxError(Error_Invalid_subkeyword_class, token);
                     subclass = true;         /* turn on the seen flag             */
                     token = nextReal();      /* get the next token                */
                                              /* not a symbol or a string          */
                     if (!token->isSymbolOrLiteral())
                         /* report an error                   */
-                        report_error(Error_Symbol_or_string_mixinclass);
+                        syntaxError(Error_Symbol_or_string_mixinclass);
                     /* set the subclass information      */
                     this->active_class->put(token->value, CLASS_SUBCLASS_NAME);
                     /* this a mixin?                     */
@@ -1688,7 +1680,7 @@ void RexxSource::classDirective()
                                              /* nothing after the keyword?        */
                     if (token->isEndOfClause())
                         /* report an error                   */
-                        report_error_token(Error_Symbol_or_string_inherit, token);
+                        syntaxError(Error_Symbol_or_string_inherit, token);
                     /* add an inherits list              */
                     this->active_class->put(new_list(), CLASS_INHERIT);
                     while (!token->isEndOfClause())
@@ -1696,7 +1688,7 @@ void RexxSource::classDirective()
                         /* not a symbol or a string          */
                         if (!token->isSymbolOrLiteral())
                             /* report an error                   */
-                            report_error_token(Error_Symbol_or_string_inherit, token);
+                            syntaxError(Error_Symbol_or_string_inherit, token);
                         /* add to the inherit list           */
                         ((RexxList *)(this->active_class->get(CLASS_INHERIT)))->addLast(token->value);
                         token = nextReal();    /* step to the next token            */
@@ -1706,7 +1698,7 @@ void RexxSource::classDirective()
 
                 default:                   /* invalid keyword                   */
                     /* this is an error                  */
-                    report_error_token(Error_Invalid_subkeyword_class, token);
+                    syntaxError(Error_Invalid_subkeyword_class, token);
                     break;
             }
         }
@@ -1733,7 +1725,7 @@ void RexxSource::methodDirective()
     if (!token->isSymbolOrLiteral())
     {
         /* report an error                   */
-        report_error_token(Error_Symbol_or_string_method, token);
+        syntaxError(Error_Symbol_or_string_method, token);
     }
     RexxString *name = token->value; /* get the string name               */
                                      /* and the name form also            */
@@ -1750,7 +1742,7 @@ void RexxSource::methodDirective()
         else if (!token->isSymbol())
         {
             /* report an error                   */
-            report_error_token(Error_Invalid_subkeyword_method, token);
+            syntaxError(Error_Invalid_subkeyword_method, token);
         }
         else
         {                         /* have some sort of option keyword  */
@@ -1762,7 +1754,7 @@ void RexxSource::methodDirective()
                     if (Class)               /* had one of these already?         */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     Class = true;            /* flag this for later processing    */
                     break;
@@ -1772,20 +1764,20 @@ void RexxSource::methodDirective()
                     if (externalname != OREF_NULL || abstractMethod || Attribute)
                     {
                         /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     if (Attribute)           /* ATTRIBUTE already specified ?     */
                                              /* EXTERNAL and ATTRIBUTE are        */
                                              /* mutually exclusive                */
                     {
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     token = nextReal();      /* get the next token                */
                                              /* not a string?                     */
                     if (!token->isSymbolOrLiteral())
                     {
                         /* report an error                   */
-                        report_error_token(Error_Symbol_or_string_requires, token);
+                        syntaxError(Error_Symbol_or_string_requires, token);
                     }
                     externalname = token->value;
                     break;
@@ -1794,7 +1786,7 @@ void RexxSource::methodDirective()
                     if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     Private = PRIVATE_SCOPE;           /* flag for later processing         */
                     break;
@@ -1803,7 +1795,7 @@ void RexxSource::methodDirective()
                     if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     Private = PUBLIC_SCOPE;        /* flag for later processing         */
                     break;
@@ -1812,7 +1804,7 @@ void RexxSource::methodDirective()
                     if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     Protected = PROTECTED_METHOD;        /* flag for later processing         */
                     break;
@@ -1821,7 +1813,7 @@ void RexxSource::methodDirective()
                     if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     Protected = UNPROTECTED_METHOD;      /* flag for later processing         */
                     break;
@@ -1831,7 +1823,7 @@ void RexxSource::methodDirective()
                     if (guard != DEFAULT_GUARD)
                     {
                         /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     guard = UNGUARDED_METHOD;/* flag for later processing         */
                     break;
@@ -1841,7 +1833,7 @@ void RexxSource::methodDirective()
                     if (guard != DEFAULT_GUARD)
                     {
                         /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     guard = GUARDED_METHOD;  /* flag for later processing         */
                     break;
@@ -1851,14 +1843,14 @@ void RexxSource::methodDirective()
                     if (Attribute)           /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     /* EXTERNAL already specified ?      */
                     if (externalname != OREF_NULL || abstractMethod)
                     {
                         /* EXTERNAL and ATTRIBUTE are        */
                         /* mutually exclusive                */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     Attribute = true;        /* flag for later processing         */
                     break;
@@ -1868,12 +1860,12 @@ void RexxSource::methodDirective()
 
                     if (abstractMethod || externalname != OREF_NULL)
                     {
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     // not compatible with ATTRIBUTE or EXTERNAL
                     if (externalname != OREF_NULL || Attribute)
                     {
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     abstractMethod = true;   /* flag for later processing         */
                     break;
@@ -1881,7 +1873,7 @@ void RexxSource::methodDirective()
 
                 default:                   /* invalid keyword                   */
                     /* this is an error                  */
-                    report_error_token(Error_Invalid_subkeyword_method, token);
+                    syntaxError(Error_Invalid_subkeyword_method, token);
                     break;
             }
         }
@@ -1894,7 +1886,7 @@ void RexxSource::methodDirective()
         if (Class)                   /* supposed to be a class method?    */
         {
                                      /* this is an error                  */
-            report_error(Error_Translation_missing_class);
+            syntaxError(Error_Translation_missing_class);
         }
         methodsDir = this->methods;  /* adding to the global set          */
     }
@@ -1915,7 +1907,7 @@ void RexxSource::methodDirective()
     if (methodsDir->entry(internalname) != OREF_NULL)
     {
         /* this is an error                  */
-        report_error(Error_Translation_duplicate_method);
+        syntaxError(Error_Translation_duplicate_method);
     }
 
     RexxMethod *_method = OREF_NULL;
@@ -1934,7 +1926,7 @@ void RexxSource::methodDirective()
         if (methodsDir->entry(internalname) != OREF_NULL)
         {
             /* this is an error                  */
-            report_error(Error_Translation_duplicate_method);
+            syntaxError(Error_Translation_duplicate_method);
         }
         createAttributeSetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
             Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
@@ -1963,13 +1955,13 @@ void RexxSource::methodDirective()
             if (_words->size() != 3)     /* wrong number of tokens?           */
             {
                                          /* this is an error                  */
-                report_error1(Error_Translation_bad_external, externalname);
+                syntaxError(Error_Translation_bad_external, externalname);
             }
 
             /* go check the next clause to make  */
             this->checkDirective();      /* sure no code follows              */
                                          /* create a new native method        */
-            RexxNativeCode *nmethod = new_nmethod((RexxString *)(_words->get(3)), (RexxString *)(_words->get(2)));
+            RexxNativeCode *nmethod = new_native_code((RexxString *)(_words->get(3)), (RexxString *)(_words->get(2)));
             /* turn into a real method object    */
             _method = new_method(0, (PCPPM)NULL, 0, (RexxObject *)nmethod);
         }
@@ -1979,37 +1971,29 @@ void RexxSource::methodDirective()
             if (_words->size() != 2)     /* wrong number of tokens?           */
             {
                                          /* this is an error                  */
-                report_error1(Error_Translation_bad_external, externalname);
+                syntaxError(Error_Translation_bad_external, externalname);
             }
 
             /* go check the next clause to make  */
             this->checkDirective();      /* sure no code follows              */
                                          /* point to the entry name           */
-            const char *entryName = ((RexxString *)(_words->get(2)))->getStringData();
-            /* loop through the internal table   */
-            size_t index = 0;
-            for (; internalMethodTable[index].entryName != NULL; index++)
+            RexxString *entryName = (RexxString *)_words->get(2);
+            // locate this in the internal table
+            size_t index = LibraryManager::resolveInternalMethod(entryName);
+            if (index == SIZE_MAX)
             {
-                if (strcmp(entryName, internalMethodTable[index].entryName) == 0)
-                {
-                    break;                   /* get out                           */
-                }
-            }
-            /* name not found?                   */
-            if (internalMethodTable[index].entryName == NULL)
-            {
-                /* this is an error                  */
-                report_error1(Error_Translation_bad_external, externalname);
+                // this is an error
+                syntaxError(Error_Translation_bad_external, externalname);
             }
             /* create a new native method        */
-            RexxNativeCode *nmethod = new RexxNativeCode(OREF_NULL, OREF_NULL, NULL, index);
+            RexxNativeCode *nmethod = new RexxNativeCode(NULL, index);
             /* turn into a real method object    */
             _method = new_method(0, (PCPPM)NULL, 0, (RexxObject *)nmethod);
         }
         else
         {
             /* unknown external type             */
-            report_error1(Error_Translation_bad_external, externalname);
+            syntaxError(Error_Translation_bad_external, externalname);
         }
     }
     if (Private == PRIVATE_SCOPE)                   /* is this a private method?         */
@@ -2051,7 +2035,7 @@ void RexxSource::attributeDirective()
     if (!token->isSymbolOrLiteral())
     {
         /* report an error                   */
-        report_error_token(Error_Symbol_or_string_method, token);
+        syntaxError(Error_Symbol_or_string_method, token);
     }
     RexxString *name = token->value; /* get the string name               */
                                      /* and the name form also            */
@@ -2068,7 +2052,7 @@ void RexxSource::attributeDirective()
         else if (!token->isSymbol())
         {
             /* report an error                   */
-            report_error_token(Error_Invalid_subkeyword_method, token);
+            syntaxError(Error_Invalid_subkeyword_method, token);
         }
         else
         {                         /* have some sort of option keyword  */
@@ -2079,7 +2063,7 @@ void RexxSource::attributeDirective()
                     // only one of GET/SET allowed
                     if (style != ATTRIBUTE_BOTH)
                     {
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     style = ATTRIBUTE_GET;
                     break;
@@ -2088,7 +2072,7 @@ void RexxSource::attributeDirective()
                     // only one of GET/SET allowed
                     if (style != ATTRIBUTE_BOTH)
                     {
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     style = ATTRIBUTE_SET;
                     break;
@@ -2099,7 +2083,7 @@ void RexxSource::attributeDirective()
                     if (Class)               /* had one of these already?         */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     Class = true;            /* flag this for later processing    */
                     break;
@@ -2107,7 +2091,7 @@ void RexxSource::attributeDirective()
                     if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     Private = PRIVATE_SCOPE;           /* flag for later processing         */
                     break;
@@ -2116,7 +2100,7 @@ void RexxSource::attributeDirective()
                     if (Private != DEFAULT_ACCESS_SCOPE)   /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     Private = PUBLIC_SCOPE;        /* flag for later processing         */
                     break;
@@ -2125,7 +2109,7 @@ void RexxSource::attributeDirective()
                     if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     Protected = PROTECTED_METHOD;        /* flag for later processing         */
                     break;
@@ -2133,7 +2117,7 @@ void RexxSource::attributeDirective()
                     if (Protected != DEFAULT_PROTECTION)           /* already seen one of these?        */
                     {
                                              /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     Protected = UNPROTECTED_METHOD;      /* flag for later processing         */
                     break;
@@ -2143,7 +2127,7 @@ void RexxSource::attributeDirective()
                     if (guard != DEFAULT_GUARD)
                     {
                         /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     guard = UNGUARDED_METHOD;/* flag for later processing         */
                     break;
@@ -2153,7 +2137,7 @@ void RexxSource::attributeDirective()
                     if (guard != DEFAULT_GUARD)
                     {
                         /* duplicates are invalid            */
-                        report_error_token(Error_Invalid_subkeyword_method, token);
+                        syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     guard = GUARDED_METHOD;  /* flag for later processing         */
                     break;
@@ -2162,7 +2146,7 @@ void RexxSource::attributeDirective()
 
                 default:                   /* invalid keyword                   */
                     /* this is an error                  */
-                    report_error_token(Error_Invalid_subkeyword_method, token);
+                    syntaxError(Error_Invalid_subkeyword_method, token);
                     break;
             }
         }
@@ -2175,7 +2159,7 @@ void RexxSource::attributeDirective()
         if (Class)                   /* supposed to be a class method?    */
         {
                                      /* this is an error                  */
-            report_error(Error_Translation_missing_class);
+            syntaxError(Error_Translation_missing_class);
         }
         methodsDir = this->methods;  /* adding to the global set          */
     }
@@ -2207,7 +2191,7 @@ void RexxSource::attributeDirective()
             if (methodsDir->entry(internalname) != OREF_NULL)
             {
                 /* this is an error                  */
-                report_error(Error_Translation_duplicate_attribute);
+                syntaxError(Error_Translation_duplicate_attribute);
             }
             // create the method pair and quit.
             createAttributeGetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
@@ -2218,7 +2202,7 @@ void RexxSource::attributeDirective()
             if (methodsDir->entry(internalname) != OREF_NULL)
             {
                 /* this is an error                  */
-                report_error(Error_Translation_duplicate_attribute);
+                syntaxError(Error_Translation_duplicate_attribute);
             }
             createAttributeSetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
                 Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
@@ -2232,7 +2216,7 @@ void RexxSource::attributeDirective()
             if (methodsDir->entry(internalname) != OREF_NULL)
             {
                 /* this is an error                  */
-                report_error(Error_Translation_duplicate_attribute);
+                syntaxError(Error_Translation_duplicate_attribute);
             }
 
             if (hasBody())
@@ -2256,7 +2240,7 @@ void RexxSource::attributeDirective()
             if (methodsDir->entry(internalname) != OREF_NULL)
             {
                 /* this is an error                  */
-                report_error(Error_Translation_duplicate_attribute);
+                syntaxError(Error_Translation_duplicate_attribute);
             }
             if (hasBody())        // just the getter method
             {
@@ -2402,12 +2386,12 @@ void RexxSource::routineDirective()
                                      /* not a symbol or a string          */
     if (!token->isSymbolOrLiteral())
                                      /* report an error                   */
-      report_error_token(Error_Symbol_or_string_routine, token);
+      syntaxError(Error_Symbol_or_string_routine, token);
     RexxString *name = token->value; /* get the routine name              */
                                      /* does this already exist?          */
     if (this->routines->entry(name) != OREF_NULL)
                                      /* have an error here                */
-      report_error(Error_Translation_duplicate_routine);
+      syntaxError(Error_Translation_duplicate_routine);
     this->flags |= _install;         /* have information to install       */
     RexxString *externalname = OREF_NULL;        /* no external name yet              */
     int Public = DEFAULT_ACCESS_SCOPE;      /* not a public routine yet          */
@@ -2419,7 +2403,7 @@ void RexxSource::routineDirective()
                                      /* not a symbol token?               */
       else if (!token->isSymbol())
                                      /* report an error                   */
-        report_error_token(Error_Invalid_subkeyword_routine, token);
+        syntaxError(Error_Invalid_subkeyword_routine, token);
                                      /* process each sub keyword          */
       switch (this->subDirective(token)) {
 #if 0
@@ -2428,13 +2412,13 @@ void RexxSource::routineDirective()
                                      /* already had an external?          */
           if (externalname != OREF_NULL)
                                      /* duplicates are invalid            */
-            report_error_token(Error_Invalid_subkeyword_class, token);
+            syntaxError(Error_Invalid_subkeyword_class, token);
           token = nextReal();        /* get the next token                */
                                    /* not a string?                     */
           if (!token->isSymbolOrLiteral())
           {
               /* report an error                   */
-              report_error_token(Error_Symbol_or_string_requires, token);
+              syntaxError(Error_Symbol_or_string_requires, token);
           }
                                /* external name is token value      */
           externalname = token->value;
@@ -2445,7 +2429,7 @@ void RexxSource::routineDirective()
           if (Public != DEFAULT_ACCESS_SCOPE)   /* already had one of these?         */
           {
                                      /* duplicates are invalid            */
-              report_error_token(Error_Invalid_subkeyword_routine, token);
+              syntaxError(Error_Invalid_subkeyword_routine, token);
 
           }
           Public = PUBLIC_SCOPE;     /* turn on the seen flag             */
@@ -2455,7 +2439,7 @@ void RexxSource::routineDirective()
           if (Public != DEFAULT_ACCESS_SCOPE)   /* already had one of these?         */
           {
                                      /* duplicates are invalid            */
-              report_error_token(Error_Invalid_subkeyword_routine, token);
+              syntaxError(Error_Invalid_subkeyword_routine, token);
 
           }
           Public = PRIVATE_SCOPE;    /* turn on the seen flag             */
@@ -2463,7 +2447,7 @@ void RexxSource::routineDirective()
 
         default:                     /* invalid keyword                   */
                                      /* this is an error                  */
-          report_error_token(Error_Invalid_subkeyword_routine, token);
+          syntaxError(Error_Invalid_subkeyword_routine, token);
           break;
       }
     }
@@ -2497,7 +2481,7 @@ void RexxSource::routineDirective()
                 else  // wrong number of tokens
                 {
                                              /* this is an error                  */
-                    report_error(Error_Translation_bad_external, externalname);
+                    syntaxError(Error_Translation_bad_external, externalname);
                 }
 
                 /* go check the next clause to make  */
@@ -2512,7 +2496,7 @@ void RexxSource::routineDirective()
             }
             else
                 /* unknown external type             */
-                report_error(Error_Translation_bad_external, externalname);
+                syntaxError(Error_Translation_bad_external, externalname);
 #endif
         }
         else
@@ -2541,14 +2525,14 @@ void RexxSource::requiresDirective()
     if (!(this->flags&requires_allowed))
     {
         /* this is an error                  */
-        report_error(Error_Translation_requires);
+        syntaxError(Error_Translation_requires);
     }
     RexxToken *token = nextReal();   /* get the next token                */
                                      /* not a symbol or a string          */
     if (!token->isSymbolOrLiteral())
     {
         /* report an error                   */
-        report_error_token(Error_Symbol_or_string_requires, token);
+        syntaxError(Error_Symbol_or_string_requires, token);
     }
     this->flags |= _install;         /* have information to install       */
     RexxString *name = token->value; /* get the requires name             */
@@ -2557,7 +2541,7 @@ void RexxSource::requiresDirective()
     if (!token->isEndOfClause()) /* something appear after this?      */
     {
                                      /* this is a syntax error            */
-        report_error_token(Error_Invalid_subkeyword_requires, token);
+        syntaxError(Error_Invalid_subkeyword_requires, token);
     }
     /* add this name to the table        */
     ((RexxList *)(this->requires))->addLast(internalname);
@@ -2579,11 +2563,11 @@ void RexxSource::directive()
     token = nextReal();                  /* skip the leading ::               */
     if (token->classId != TOKEN_DCOLON)  /* reached the end of a block?       */
                                          /* have an error here                */
-        report_error(Error_Translation_bad_directive);
+        syntaxError(Error_Translation_bad_directive);
     token = nextReal();                  /* get the keyword token             */
     if (!token->isSymbol())  /* not a symbol?                     */
                                          /* have an error here                */
-        report_error(Error_Symbol_expected_directive);
+        syntaxError(Error_Symbol_expected_directive);
 
     switch (this->keyDirective(token))
     { /* match against the directive list  */
@@ -2609,7 +2593,7 @@ void RexxSource::directive()
             break;
 
         default:                           /* unknown directive                 */
-            report_error(Error_Translation_bad_directive);
+            syntaxError(Error_Translation_bad_directive);
             break;
     }
 }
@@ -2736,7 +2720,7 @@ RexxMethod *RexxSource::translateBlock(
                                        /* any unclosed composite clauses?   */
       if (this->topDo()->getType() != KEYWORD_FIRST)
                                        /* report the block error            */
-        report_error_block(this->topDo());
+        blockSyntaxError(this->topDo());
       this->popDo();                   /* remove the top one                */
       break;                           /* done parsing this section         */
     }
@@ -2760,7 +2744,7 @@ RexxMethod *RexxSource::translateBlock(
                                        /* SELECT instruction?               */
     if (this->topDo()->getType() == KEYWORD_SELECT &&
         (type != KEYWORD_WHEN && type != KEYWORD_OTHERWISE && type != KEYWORD_END ))
-      report_error_line(Error_When_expected_whenotherwise, this->topDo());
+      syntaxError(Error_When_expected_whenotherwise, this->topDo());
 
     switch (type) {                    /* post process the instructions     */
 
@@ -2768,7 +2752,7 @@ RexxMethod *RexxSource::translateBlock(
         second = this->topDo();        /* get the top of the queue          */
                                        /* not working on a SELECT?          */
         if (second->getType() != KEYWORD_SELECT)
-          report_error(Error_Unexpected_when_when);
+          syntaxError(Error_Unexpected_when_when);
                                        /* add this to the select list       */
         ((RexxInstructionSelect *)second)->addWhen((RexxInstructionIf *)_instruction);
                                        /* just fall into IF logic           */
@@ -2780,12 +2764,12 @@ RexxMethod *RexxSource::translateBlock(
           this->nextClause();          /* get the next physical clause      */
           if (this->flags&no_clause)   /* get an end-of-file?               */
                                        /* raise an error                    */
-            report_error_line(Error_Then_expected_if, _instruction);
+            syntaxError(Error_Then_expected_if, _instruction);
           token = nextReal();          /* get the first token               */
                                        /* not a THEN keyword?               */
           if (!token->isSymbol() || this->keyword(token) != KEYWORD_THEN)
                                        /* have an error                     */
-            report_error_line(Error_Then_expected_if, _instruction);
+            syntaxError(Error_Then_expected_if, _instruction);
                                        /* create a new then clause          */
           second = this->thenNew(token, (RexxInstructionIf *)_instruction);
           token = nextReal();          /* get token after THEN keyword      */
@@ -2794,7 +2778,7 @@ RexxMethod *RexxSource::translateBlock(
             this->nextClause();        /* get the next physical clause      */
             if (this->flags&no_clause) /* get an end-of-file?               */
                                        /* raise an error                    */
-              report_error_line(Error_Incomplete_do_then, _instruction);
+              syntaxError(Error_Incomplete_do_then, _instruction);
           }
           else {
             previousToken();           /* step back a token                 */
@@ -2810,7 +2794,7 @@ RexxMethod *RexxSource::translateBlock(
             this->nextClause();        /* get the next physical clause      */
             if (this->flags&no_clause) /* get an end-of-file?               */
                                        /* raise an error                    */
-              report_error_line(Error_Incomplete_do_then, _instruction);
+              syntaxError(Error_Incomplete_do_then, _instruction);
           }
           else {
             previousToken();           /* step back a token                 */
@@ -2825,7 +2809,7 @@ RexxMethod *RexxSource::translateBlock(
         second = this->topDo();        /* get the top block                 */
         if (this->topDo()->getType() != KEYWORD_ENDTHEN)
                                        /* have an error                     */
-          report_error(Error_Unexpected_then_else);
+          syntaxError(Error_Unexpected_then_else);
         this->addClause(_instruction); /* add to instruction heap           */
         second = this->popDo();        /* pop the ENDTHEN item              */
         this->pushDo(_instruction);     /* add to the control list           */
@@ -2838,7 +2822,7 @@ RexxMethod *RexxSource::translateBlock(
           this->nextClause();          /* get the next physical clause      */
           if (this->flags&no_clause)   /* get an end-of-file?               */
                                        /* raise an error                    */
-            report_error_line(Error_Incomplete_do_else, _instruction);
+            syntaxError(Error_Incomplete_do_else, _instruction);
         }
         else {                         /* ELSE instruction form             */
           previousToken();             /* step back a token                 */
@@ -2851,7 +2835,7 @@ RexxMethod *RexxSource::translateBlock(
         second = this->topDo();        /* get the top of the queue          */
                                        /* not working on a SELECT?          */
         if (second->getType() != KEYWORD_SELECT)
-          report_error(Error_Unexpected_when_otherwise);
+          syntaxError(Error_Unexpected_when_otherwise);
                                        /* hook up the OTHERWISE instruction */
         ((RexxInstructionSelect *)second)->setOtherwise((RexxInstructionOtherWise *)_instruction);
         this->pushDo(_instruction);     /* add this to the control queue     */
@@ -2875,13 +2859,13 @@ RexxMethod *RexxSource::translateBlock(
             type != KEYWORD_DO) {
           if (type == KEYWORD_ELSE)    /* on an else?                       */
                                        /* give the specific error           */
-            report_error(Error_Unexpected_end_else);
+            syntaxError(Error_Unexpected_end_else);
           else if (type == KEYWORD_IFTHEN || type == KEYWORD_WHENTHEN)
                                        /* this is a different error         */
-            report_error(Error_Unexpected_end_then);
+            syntaxError(Error_Unexpected_end_then);
           else
                                        /* have a misplaced END              */
-            report_error(Error_Unexpected_end_nodo);
+            syntaxError(Error_Unexpected_end_nodo);
         }
         if (type == KEYWORD_OTHERWISE) /* OTHERWISE part of a SELECT?       */
           second = this->popDo();      /* need to pop one more item off     */
@@ -2907,10 +2891,6 @@ RexxMethod *RexxSource::translateBlock(
         break;
     }
     this->nextClause();                /* get the next physical clause      */
-#ifdef NOTIMER
-    if (!(iTransClauseCounter++ % CLAUSESPERYIELD))
-      ActivityManager::currentActivity->relinquish();   /* yield to other system processes   */
-#endif
   }
                                        /* now go resolve any label targets  */
   _instruction = (RexxInstruction *)(this->calls->removeFirst());
@@ -2970,7 +2950,7 @@ RexxInstruction *RexxSource::instruction()
         {
             if (this->flags&_interpret)      /* is this an interpret?             */
                                              /* this is an error                  */
-                report_error_token(Error_Unexpected_label_interpret, _first);
+                syntaxError(Error_Unexpected_label_interpret, _first);
             firstToken();                    /* reset to the beginning            */
             _instruction = this->labelNew(); /* create a label instruction        */
             second = nextToken();            /* get the next token                */
@@ -2990,7 +2970,7 @@ RexxInstruction *RexxSource::instruction()
             // "symbol == expr" is considered an error
             if (second->subclass == OPERATOR_STRICT_EQUAL)
             {
-                report_error_token(Error_Invalid_expression_general, second);
+                syntaxError(Error_Invalid_expression_general, second);
             }
             // true assignment instruction?
             if (second->subclass == OPERATOR_EQUAL)
@@ -3029,7 +3009,7 @@ RexxInstruction *RexxSource::instruction()
             else if (second->subclass == OPERATOR_STRICT_EQUAL)
             {
                 // messageterm == something is an invalid assignment
-                report_error_token(Error_Invalid_expression_general, second);
+                syntaxError(Error_Invalid_expression_general, second);
             }
             // messageterm = something is a pseudo assignment
             else if (second->subclass == OPERATOR_EQUAL)
@@ -3039,7 +3019,7 @@ RexxInstruction *RexxSource::instruction()
                 subexpression = this->subExpression(TERM_EOC);
                 if (subexpression == OREF_NULL)
                 {
-                    report_error_token(Error_Invalid_expression_general, second);
+                    syntaxError(Error_Invalid_expression_general, second);
                 }
                 // this is a message assignment
                 _instruction = this->messageAssignmentNew((RexxExpressionMessage *)term, subexpression);
@@ -3054,7 +3034,7 @@ RexxInstruction *RexxSource::instruction()
                 subexpression = this->subExpression(TERM_EOC);
                 if (subexpression == OREF_NULL)
                 {
-                    report_error_token(Error_Invalid_expression_general, second);
+                    syntaxError(Error_Invalid_expression_general, second);
                 }
                 // this is a message assignment
                 _instruction = this->messageAssignmentOpNew((RexxExpressionMessage *)term, second, subexpression);
@@ -3148,7 +3128,7 @@ RexxInstruction *RexxSource::instruction()
                 case KEYWORD_REPLY:        /* REPLY instruction                 */
                     /* interpreted?                      */
                     if (this->flags&_interpret)
-                        report_error(Error_Translation_reply_interpret);
+                        syntaxError(Error_Translation_reply_interpret);
                     /* add the instruction to the parse  */
                     _instruction = this->replyNew();
                     break;
@@ -3176,7 +3156,7 @@ RexxInstruction *RexxSource::instruction()
                 case KEYWORD_EXPOSE:       /* EXPOSE instruction                */
                     /* interpreted?                      */
                     if (this->flags&_interpret)
-                        report_error(Error_Translation_expose_interpret);
+                        syntaxError(Error_Translation_expose_interpret);
                     /* add the instruction to the parse  */
                     _instruction = this->exposeNew();
                     break;
@@ -3184,7 +3164,7 @@ RexxInstruction *RexxSource::instruction()
                 case KEYWORD_FORWARD:      /* FORWARD instruction               */
                     /* interpreted?                      */
                     if (this->flags&_interpret)
-                        report_error(Error_Translation_forward_interpret);
+                        syntaxError(Error_Translation_forward_interpret);
                     /* add the instruction to the parse  */
                     _instruction = this->forwardNew();
                     break;
@@ -3197,7 +3177,7 @@ RexxInstruction *RexxSource::instruction()
                 case KEYWORD_GUARD:        /* GUARD instruction                 */
                     /* interpreted?                      */
                     if (this->flags&_interpret)
-                        report_error(Error_Translation_guard_interpret);
+                        syntaxError(Error_Translation_guard_interpret);
                     /* add the instruction to the parse  */
                     _instruction = this->guardNew();
                     break;
@@ -3205,7 +3185,7 @@ RexxInstruction *RexxSource::instruction()
                 case KEYWORD_USE:          /* USE instruction                   */
                     /* interpreted?                      */
                     if (this->flags&_interpret)
-                        report_error(Error_Translation_use_interpret);
+                        syntaxError(Error_Translation_use_interpret);
                     /* add the instruction to the parse  */
                     _instruction = this->useNew();
                     break;
@@ -3262,7 +3242,7 @@ RexxInstruction *RexxSource::instruction()
 
                 case KEYWORD_THEN:         /* unexpected THEN                   */
                     /* raise an error                    */
-                    report_error(Error_Unexpected_then_then);
+                    syntaxError(Error_Unexpected_then_then);
                     break;
 
             }
@@ -3573,7 +3553,7 @@ RexxVariableBase *RexxSource::getRetriever(
 
     default:                           /* all other invalid cases           */
                                        /* have an invalid attribute         */
-      report_error1(Error_Translation_invalid_attribute, name);
+      syntaxError(Error_Translation_invalid_attribute, name);
   }
   return retriever;                    /* return created retriever          */
 }
@@ -3680,7 +3660,7 @@ RexxObject *RexxSource::constantExpression()
                                        /* not a left paren here?            */
   else if (token->classId != TOKEN_LEFT)
                                        /* this is an invalid expression     */
-    report_error_token(Error_Invalid_expression_general, token);
+    syntaxError(Error_Invalid_expression_general, token);
   else {
                                        /* get the subexpression             */
     _expression = this->subExpression(TERM_EOC | TERM_RIGHT);
@@ -3688,7 +3668,7 @@ RexxObject *RexxSource::constantExpression()
                                        /* not terminated by a right paren?  */
     if (second->classId != TOKEN_RIGHT)
                                        /* this is an error                  */
-      report_error_position(Error_Unmatched_parenthesis_paren, token);
+      syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
   }
   this->holdObject(_expression);        /* protect the expression            */
   return _expression;                   /* and return it                     */
@@ -3720,7 +3700,7 @@ RexxObject *RexxSource::constantLogicalExpression()
                                        /* not a left paren here?            */
   else if (token->classId != TOKEN_LEFT)
                                        /* this is an invalid expression     */
-    report_error_token(Error_Invalid_expression_general, token);
+    syntaxError(Error_Invalid_expression_general, token);
   else {
                                        /* get the subexpression             */
     _expression = this->parseLogical(token, TERM_EOC | TERM_RIGHT);
@@ -3728,7 +3708,7 @@ RexxObject *RexxSource::constantLogicalExpression()
                                        /* not terminated by a right paren?  */
     if (second->classId != TOKEN_RIGHT)
                                        /* this is an error                  */
-      report_error_position(Error_Unmatched_parenthesis_paren, token);
+      syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
   }
   this->holdObject(_expression);        /* protect the expression            */
   return _expression;                   /* and return it                     */
@@ -3748,7 +3728,7 @@ RexxObject *RexxSource::parenExpression(RexxToken *start)
                                      /* not terminated by a right paren?  */
   if (second->classId != TOKEN_RIGHT)
   {
-      report_error_position(Error_Unmatched_parenthesis_paren, start);
+      syntaxErrorAt(Error_Unmatched_parenthesis_paren, start);
   }
                                      /* this is an error                  */
   this->holdObject(_expression);        /* protect the expression            */
@@ -3801,7 +3781,7 @@ RexxObject *RexxSource::subExpression(
         left = this->popTerm();        /* get the left term from the stack  */
         if (left == OREF_NULL)         /* not there?                        */
                                        /* this is an invalid expression     */
-          report_error_token(Error_Invalid_expression_general, token);
+          syntaxError(Error_Invalid_expression_general, token);
                                        /* process a message term            */
         subexpression = this->message(left, token->classId == TOKEN_DTILDE, terminators);
         this->pushTerm(subexpression); /* push this back on the term stack  */
@@ -3811,7 +3791,7 @@ RexxObject *RexxSource::subExpression(
         left = this->popTerm();        /* get the left term from the stack  */
         if (left == OREF_NULL)         /* not there?                        */
                                        /* this is an invalid expression     */
-          report_error_token(Error_Invalid_expression_general, token);
+          syntaxError(Error_Invalid_expression_general, token);
                                        /* process a message term            */
         subexpression = this->collectionMessage(token, left, terminators);
         this->pushTerm(subexpression); /* push this back on the term stack  */
@@ -3841,7 +3821,7 @@ RexxObject *RexxSource::subExpression(
                                        /* actually a prefix only one?       */
         if (token->subclass == OPERATOR_BACKSLASH)
                                        /* this is an invalid expression     */
-            report_error_token(Error_Invalid_expression_general, token);
+            syntaxError(Error_Invalid_expression_general, token);
         for (;;) {                     /* handle operator precedence        */
           second = this->topOperator();/* get the top term                  */
                                        /* hit the fence term?               */
@@ -3855,7 +3835,7 @@ RexxObject *RexxSource::subExpression(
                                        /* not enough terms?                 */
           if (right == OREF_NULL || left == OREF_NULL)
                                        /* this is an invalid expression     */
-            report_error_token(Error_Invalid_expression_general, token);
+            syntaxError(Error_Invalid_expression_general, token);
                                        /* create a new operation            */
           RexxToken *op = popOperator();
           subexpression = (RexxObject *)new RexxBinaryOperator(op->subclass, left, right);
@@ -3867,34 +3847,34 @@ RexxObject *RexxSource::subExpression(
                                        /* end of the expression?            */
         if (right == OREF_NULL && token->subclass != OPERATOR_BLANK)
                                        /* have a bad expression             */
-          report_error_token(Error_Invalid_expression_general, token);
+          syntaxError(Error_Invalid_expression_general, token);
         this->pushTerm(right);         /* add the term to the term stack    */
         break;
 
       case TOKEN_ASSIGNMENT:
       // special assignment token in a bad context.  We report this as an error.
                                        /* this is an invalid expression     */
-        report_error_token(Error_Invalid_expression_general, token);
+        syntaxError(Error_Invalid_expression_general, token);
         break;
 
       case TOKEN_COMMA:                /* found a comma in the expression   */
                                        /* should have been trapped as an    */
                                        /* expression terminator, so this is */
                                        /* not a valid expression            */
-        report_error(Error_Unexpected_comma_comma);
+        syntaxError(Error_Unexpected_comma_comma);
         break;
 
       case TOKEN_RIGHT:                /* found a paren in the expression   */
-        report_error(Error_Unexpected_comma_paren);
+        syntaxError(Error_Unexpected_comma_paren);
         break;
 
       case TOKEN_SQRIGHT:              /* found a bracket in the expression */
-        report_error(Error_Unexpected_comma_bracket);
+        syntaxError(Error_Unexpected_comma_bracket);
         break;
 
       default:                         /* something unexpected              */
                                        /* not a valid expression            */
-        report_error_token(Error_Invalid_expression_general, token);
+        syntaxError(Error_Invalid_expression_general, token);
         break;
     }
     token = nextToken();               /* get the next token                */
@@ -3907,7 +3887,7 @@ RexxObject *RexxSource::subExpression(
                                        /* missing any terms?                */
     if (left == OREF_NULL || right == OREF_NULL)
                                        /* this is an invalid expression     */
-      report_error_token(Error_Invalid_expression_general, token);
+      syntaxError(Error_Invalid_expression_general, token);
                                        /* create a new operation            */
     subexpression = (RexxObject *)new RexxBinaryOperator(token->subclass, left, right);
     this->pushTerm(subexpression);     /* push this back on the term stack  */
@@ -3970,11 +3950,11 @@ size_t RexxSource::argList(
                                        /* not closed with expected ')'?     */
   if (terminators & TERM_RIGHT && token->classId != TOKEN_RIGHT)
                                        /* raise an error                    */
-    report_error_position(Error_Unmatched_parenthesis_paren, _first);
+    syntaxErrorAt(Error_Unmatched_parenthesis_paren, _first);
                                        /* not closed with expected ']'?     */
   if (terminators&TERM_SQRIGHT && token->classId != TOKEN_SQRIGHT)
                                        /* have an unmatched bracket         */
-    report_error_position(Error_Unmatched_parenthesis_square, _first);
+    syntaxErrorAt(Error_Unmatched_parenthesis_square, _first);
   this->popNTerms(total);              /* pop all items off the term stack  */
   while (total > realcount) {          /* pop off any trailing omitteds     */
     arglist->pop();                    /* just pop off the dummy            */
@@ -4041,7 +4021,7 @@ RexxToken  *RexxSource::getToken(
                                        /* this a terminator token?          */
   if (this->terminator(terminators, token)) {
     if (errorcode != 0)                /* want an error raised?             */
-      report_error(errorcode);         /* report this                       */
+      syntaxError(errorcode);         /* report this                       */
     return OREF_NULL;                  /* just return a null                */
   }
   return token;                        /* return the token                  */
@@ -4075,7 +4055,7 @@ RexxObject *RexxSource::message(
     messagename = token->value;        /* get the message name              */
   else
                                        /* error!                            */
-    report_error(Error_Symbol_or_string_tilde);
+    syntaxError(Error_Symbol_or_string_tilde);
                                        /* get the next token                */
   token = this->getToken(terminators, 0);
   if (token != OREF_NULL) {            /* not reached the clause end?       */
@@ -4086,7 +4066,7 @@ RexxObject *RexxSource::message(
                                        /* not a variable symbol?            */
       if (!token->isVariable() && token->subclass != SYMBOL_DOTSYMBOL)
                                        /* have an error                     */
-        report_error(Error_Symbol_expected_colon);
+        syntaxError(Error_Symbol_expected_colon);
       super = this->addText(token);    /* get the variable retriever        */
                                        /* get the next token                */
       token = this->getToken(terminators, 0);
@@ -4215,14 +4195,14 @@ RexxObject *RexxSource::messageSubterm(
         term = this->messageSubterm(terminators);
         if (term == OREF_NULL)         /* nothing found?                    */
                                        /* this is an error                  */
-          report_error_token(Error_Invalid_expression_prefix, token);
+          syntaxError(Error_Invalid_expression_prefix, token);
                                        /* create the new operator term      */
         term = (RexxObject *)new RexxUnaryOperator(token->subclass, term);
         break;
 
       default:                         /* other operators not allowed here  */
                                        /* this is an error                  */
-        report_error_token(Error_Invalid_expression_general, token);
+        syntaxError(Error_Invalid_expression_general, token);
     }
   }
 
@@ -4273,12 +4253,12 @@ RexxObject *RexxSource::subTerm(
       term = this->subExpression(((terminators | TERM_RIGHT) & ~TERM_SQRIGHT));
       if (term == OREF_NULL)           /* nothing found?                    */
                                        /* this is an error                  */
-        report_error_token(Error_Invalid_expression_general, token);
+        syntaxError(Error_Invalid_expression_general, token);
       second = nextToken();            /* get the terminator token          */
                                        /* not terminated by a right paren?  */
       if (second->classId != TOKEN_RIGHT)
                                        /* this is an error                  */
-        report_error_position(Error_Unmatched_parenthesis_paren, token);
+        syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
       break;
 
     case  TOKEN_SYMBOL:                /* Symbol in the expression          */
@@ -4296,17 +4276,17 @@ RexxObject *RexxSource::subTerm(
 
     case  TOKEN_RIGHT:                 /* have a right parentheses          */
                                        /* this is an error here             */
-      report_error(Error_Unexpected_comma_paren);
+      syntaxError(Error_Unexpected_comma_paren);
       break;
 
     case  TOKEN_COMMA:                 /* have a comma                      */
                                        /* this is an error here             */
-      report_error(Error_Unexpected_comma_comma);
+      syntaxError(Error_Unexpected_comma_comma);
       break;
 
     case  TOKEN_SQRIGHT:               /* have a right square bracket       */
                                        /* this is an error here             */
-      report_error(Error_Unexpected_comma_bracket);
+      syntaxError(Error_Unexpected_comma_bracket);
       break;
 
     case  TOKEN_OPERATOR:              /* operator token                    */
@@ -4320,13 +4300,13 @@ RexxObject *RexxSource::subTerm(
 
         default:                       /* other operators not allowed here  */
                                        /* this is an error                  */
-          report_error_token(Error_Invalid_expression_general, token);
+          syntaxError(Error_Invalid_expression_general, token);
       }
       break;
 
     default:                           /* unknown thing in expression       */
                                        /* this is an error                  */
-      report_error_token(Error_Invalid_expression_general, token);
+      syntaxError(Error_Invalid_expression_general, token);
   }
   return term;                         /* return this term                  */
 }
@@ -4384,11 +4364,11 @@ void RexxSource::isExposeValid()
 {
   if (this->flags&_interpret)          /* is this an interpret?             */
                                        /* give the interpret error          */
-    report_error(Error_Translation_expose_interpret);
+    syntaxError(Error_Translation_expose_interpret);
                                        /* not the first instruction?        */
   if (this->last->getType() != KEYWORD_FIRST)
                                        /* general placement error           */
-    report_error(Error_Translation_expose);
+    syntaxError(Error_Translation_expose);
 }
 
 RexxArray  *RexxSource::words(
@@ -4603,25 +4583,25 @@ void RexxSource::blockError(
   switch (_instruction->getType()) {   /* issue proper message type         */
     case KEYWORD_DO:                   /* incomplete DO                     */
                                        /* raise an error                    */
-      report_error_line(Error_Incomplete_do_do, _instruction);
+      syntaxError(Error_Incomplete_do_do, _instruction);
       break;
 
     case KEYWORD_SELECT:               /* incomplete SELECT                 */
-      report_error_line(Error_Incomplete_do_select, _instruction);
+      syntaxError(Error_Incomplete_do_select, _instruction);
       break;
 
     case KEYWORD_OTHERWISE:            /* incomplete SELECT                 */
-      report_error_line(Error_Incomplete_do_otherwise, _instruction);
+      syntaxError(Error_Incomplete_do_otherwise, _instruction);
       break;
 
     case KEYWORD_IF:                   /* incomplete IF                     */
     case KEYWORD_IFTHEN:               /* incomplete IF                     */
     case KEYWORD_WHENTHEN:             /* incomplete IF                     */
-      report_error_line(Error_Incomplete_do_then, _instruction);
+      syntaxError(Error_Incomplete_do_then, _instruction);
       break;
 
     case KEYWORD_ELSE:                 /* incomplete ELSE                   */
-      report_error_line(Error_Incomplete_do_else, _instruction);
+      syntaxError(Error_Incomplete_do_else, _instruction);
       break;
   }
 }
@@ -4776,7 +4756,7 @@ void RexxSource::parseTraceSetting(
           /* call report_error1 instead of report_exception1 to  */
           /* include line number and source information          */
           if (this->clause)           /* call different error routines      */
-            report_error1(Error_Invalid_trace_trace, value->extract(_position, 1));
+            syntaxError(Error_Invalid_trace_trace, value->extract(_position, 1));
           else
             reportException(Error_Invalid_trace_trace, value->extract(_position, 1));
           break;
@@ -4805,10 +4785,10 @@ size_t RexxSource::processVariableList(
                                        /* non-variable symbol?              */
       if (token->subclass == SYMBOL_CONSTANT)
                                        /* report the error                  */
-        report_error_token(Error_Invalid_variable_number, token);
+        syntaxError(Error_Invalid_variable_number, token);
       else if (token->subclass == SYMBOL_DUMMY)
                                        /* report the error                  */
-        report_error_token(Error_Invalid_variable_period, token);
+        syntaxError(Error_Invalid_variable_period, token);
       retriever = this->addText(token);/* get a retriever for this          */
       this->subTerms->push(retriever); /* add to the variable list          */
       if (type == KEYWORD_EXPOSE)      /* this an expose operation?         */
@@ -4822,14 +4802,14 @@ size_t RexxSource::processVariableList(
                                        /* not a symbol?                     */
       if (!token->isSymbol())
                                        /* must be a symbol here             */
-        report_error(Error_Symbol_expected_varref);
+        syntaxError(Error_Symbol_expected_varref);
                                        /* non-variable symbol?              */
       if (token->subclass == SYMBOL_CONSTANT)
                                        /* report the error                  */
-        report_error_token(Error_Invalid_variable_number, token);
+        syntaxError(Error_Invalid_variable_number, token);
       else if (token->subclass == SYMBOL_DUMMY)
                                        /* report the error                  */
-        report_error_token(Error_Invalid_variable_period, token);
+        syntaxError(Error_Invalid_variable_period, token);
 
       retriever = this->addText(token);/* get a retriever for this          */
                                        /* make this an indirect reference   */
@@ -4840,28 +4820,28 @@ size_t RexxSource::processVariableList(
       token = nextReal();              /* get the next token                */
       if (token->isEndOfClause()) /* nothing following?                */
                                        /* report the missing paren          */
-        report_error(Error_Variable_reference_missing);
+        syntaxError(Error_Variable_reference_missing);
                                        /* must be a right paren here        */
       else if (token->classId != TOKEN_RIGHT)
                                        /* this is an error                  */
-        report_error_token(Error_Variable_reference_extra, token);
+        syntaxError(Error_Variable_reference_extra, token);
     }
                                        /* something bad....                 */
     else {                             /* this is invalid                   */
       if (type == KEYWORD_DROP)        /* DROP form?                        */
                                        /* give appropriate message          */
-        report_error(Error_Symbol_expected_drop);
+        syntaxError(Error_Symbol_expected_drop);
       else                             /* else give message for EXPOSEs     */
-        report_error(Error_Symbol_expected_expose);
+        syntaxError(Error_Symbol_expected_expose);
     }
     token = nextReal();                /* get the next variable             */
   }
   if (list_count == 0) {               /* no variables?                     */
     if (type == KEYWORD_DROP)          /* DROP form?                        */
                                        /* give appropriate message          */
-      report_error(Error_Symbol_expected_drop);
+      syntaxError(Error_Symbol_expected_drop);
     else                               /* else give message for EXPOSEs     */
-      report_error(Error_Symbol_expected_expose);
+      syntaxError(Error_Symbol_expected_expose);
   }
   return list_count;                   /* return the count                  */
 }
@@ -4894,11 +4874,11 @@ RexxObject *RexxSource::parseConditional(
          _condition = this->parseLogical(OREF_NULL, TERM_COND);
          if (_condition == OREF_NULL) /* nothing really there?             */
                                        /* another invalid DO                */
-           report_error(Error_Invalid_expression_while);
+           syntaxError(Error_Invalid_expression_while);
          token = nextToken();          /* get the terminator token          */
                                        /* must be end of instruction        */
          if (!token->isEndOfClause())
-           report_error(Error_Invalid_do_whileuntil);
+           syntaxError(Error_Invalid_do_whileuntil);
          _keyword = SUBKEY_WHILE;       /* this is the WHILE form            */
          break;
 
@@ -4909,17 +4889,17 @@ RexxObject *RexxSource::parseConditional(
 
          if (_condition == OREF_NULL)   /* nothing really there?             */
                                        /* another invalid DO                */
-           report_error(Error_Invalid_expression_until);
+           syntaxError(Error_Invalid_expression_until);
          token = nextToken();          /* get the terminator token          */
                                        /* must be end of instruction        */
          if (!token->isEndOfClause())
-           report_error(Error_Invalid_do_whileuntil);
+           syntaxError(Error_Invalid_do_whileuntil);
          _keyword = SUBKEY_UNTIL;       /* this is the UNTIL form            */
          break;
 
        default:                        /* nothing else is valid here!       */
                                        /* raise an error                    */
-         report_error_token(error_message, token);
+         syntaxError(error_message, token);
          break;
        }
     }

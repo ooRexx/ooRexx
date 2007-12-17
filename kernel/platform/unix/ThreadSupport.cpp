@@ -73,9 +73,6 @@
 
 #define THREAD_PRIORITY 100
 
-extern int thread_counter;
-
-
 void keyDestructor(void *)
 {
   return;
@@ -91,20 +88,6 @@ void SysThreadingInit(void)
 void SysThreadInit(void)
 /* This must be done once per thread                                  */
 {
-   if (thread_counter == 0)
-   {
-       thread_counter++;
-    /* we must be sure that the initialize_sem mutex, which controls the program flow is '0'.*/
-    /* If not, we have the unusal but possible situation, that RexxWaitForTermination has    */
-    /* started running, has reset threadcounter to zero, but has not finished its work com   */
-    /* pletely. This is dangerous, as the newly created mutexes for the next thread could be */
-    /* killed immediately by a still running RexxWaitForTermination.                         */
-       while (initialize_sem)
-       {
-         SysThreadYield();
-       }
-      MTXCR(initialize_sem);
-   }
 }
 
 

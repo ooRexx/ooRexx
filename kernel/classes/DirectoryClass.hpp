@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  DirectoryClass.hpp  */
+/* REXX Kernel                                            DirectoryClass.hpp  */
 /*                                                                            */
 /* Primitive Directory Class Definitions                                      */
 /*                                                                            */
@@ -90,6 +90,8 @@ class RexxDirectory : public RexxHashTableCollection {
   RexxMethod *unknown_method;          /* unknown method entry              */
 
   static RexxDirectory *newInstance();
+  // singleton class instance;
+  static RexxClass *classInstance;
 };
 
 

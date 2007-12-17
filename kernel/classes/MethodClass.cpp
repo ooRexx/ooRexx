@@ -48,7 +48,7 @@
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "RexxCode.hpp"
-#include "RexxNativeMethod.hpp"
+#include "RexxNativeCode.hpp"
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"
 #include "RexxNativeActivation.hpp"
@@ -57,6 +57,10 @@
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
 #include <ctype.h>
+
+
+// singleton class instance
+RexxMethodClass *RexxMethod::classInstance = OREF_NULL;
 
 RexxMethod::RexxMethod(
     size_t method,                     /* method table index                */
@@ -642,27 +646,6 @@ RexxMethod *RexxMethodClass::newRexxBuffer(
   return newMethod;
 }
 
-RexxMethod *RexxMethodClass::newNative(
-       RexxString *procedure,          /* procedure to load                 */
-       RexxString *libName,            /* library to load from              */
-       RexxClass  *scope)              /* variable scope information        */
-/******************************************************************************/
-/* Function:  Create a new native method with the given procedure, library    */
-/*            and scope                                                       */
-/******************************************************************************/
-{
-  RexxMethod *newMethod;               /* newly created method              */
-  RexxNativeCode *newCode;             /* associated REXX code object       */
-
-                                       /* create a new code object          */
-  newCode = new RexxNativeCode (procedure, libName, NULL, 0);
-                                       /* get a new method object           */
-  newMethod = new_method(0, (PCPPM)NULL, 0, (RexxInternalObject *)newCode);
-  if (scope != OREF_NULL)              /* given a scope too?                */
-    newMethod->setScope(scope);        /* set the associated scope          */
-  return newMethod;
-}
-
 
 RexxMethod *RexxMethodClass::newEntry(PNMF entry)
                         /* routine entry point               */
@@ -674,9 +657,9 @@ RexxMethod *RexxMethodClass::newEntry(PNMF entry)
   RexxNativeCode *newCode;             /* associated REXX code object       */
 
                                        /* create a new code object          */
-  newCode = new RexxNativeCode (OREF_NULL, OREF_NULL, entry, 0);
+  newCode = new RexxNativeCode(entry);
                                        /* get a new method object           */
-  newMethod =new_method(0, (PCPPM)NULL, 0, (RexxInternalObject *)newCode);
+  newMethod = new_method(0, (PCPPM)NULL, 0, (RexxInternalObject *)newCode);
   return newMethod;
 }
 

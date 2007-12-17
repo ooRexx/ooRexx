@@ -79,7 +79,6 @@
 /*                                                                   */
 /*********************************************************************/
 
-#define  INCL_REXXSAA                  /* Include all REXX APIs      */
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>

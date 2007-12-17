@@ -101,7 +101,7 @@ RexxInternalStack *RexxInternalStack::newInstance(
   RexxInternalStack* newObj;          /* newly create stack                */
 
                                        /* Get new object                    */
-  newObj = (RexxInternalStack *)new_object(sizeof(RexxInternalStack) + (stackSize * sizeof(RexxObject *)), T_intstack);
+  newObj = (RexxInternalStack *)new_object(sizeof(RexxInternalStack) + (stackSize * sizeof(RexxObject *)), T_InternalStack);
   newObj->size = stackSize;            /* set the size                      */
   newObj->top  = newObj->stack;        /* set the top element               */
                                        /* set marker for "end of object" to */

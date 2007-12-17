@@ -42,8 +42,6 @@
 #include <mmsystem.h>
 #include <shlwapi.h>
 #include <commctrl.h>
-#define INCL_REXXSAA
-#define INCL_RXMACRO
 #include <rexx.h>
 #include <stdio.h>
 #include <dlgs.h>

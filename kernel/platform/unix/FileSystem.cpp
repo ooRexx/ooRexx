@@ -498,34 +498,28 @@ RexxBuffer *SysReadProgram(
 {
   FILE    *handle;                     /* open file access handle           */
   size_t   buffersize;                 /* size of read buffer               */
-  RexxBuffer * buffer;                 /* buffer object to read file into   */
-  RexxActivity*activity;               /* the current activity              */
+  {
+      handle = fopen(file_name, "rb");     /* open as a binary file             */
+      if (handle == NULL){                 /* open error?                       */
+        return OREF_NULL;                  /* return nothing                    */
+      }
 
-  activity = ActivityManager::currentActivity;          /* save the activity                 */
-  activity->releaseAccess();           /* release the kernel access         */
+      if (fileno(handle) == (FOPEN_MAX - 2)){      /* open error?                       */
+        return OREF_NULL;                  /* return nothing                    */
+      }
 
-  handle = fopen(file_name, "rb");     /* open as a binary file             */
-  if (handle == NULL){                 /* open error?                       */
-    activity->requestAccess();         /* get the access back               */
-    return OREF_NULL;                  /* return nothing                    */
+      fseek(handle, 0, SEEK_END);          /* seek to the file end              */
+      buffersize = ftell(handle);          /* get the file size                 */
+      fseek(handle, 0, SEEK_SET);          /* seek back to the file beginning   */
   }
-
-  if (fileno(handle) == (FOPEN_MAX - 2)){      /* open error?                       */
-    activity->requestAccess();         /* get the access back               */
-    return OREF_NULL;                  /* return nothing                    */
-  }
-
-  fseek(handle, 0, SEEK_END);          /* seek to the file end              */
-  activity->requestAccess();           /* get the access back               */
-  buffersize = ftell(handle);          /* get the file size                 */
-  fseek(handle, 0, SEEK_SET);          /* seek back to the file beginning   */
-  buffer = new_buffer(buffersize);     /* get a buffer object               */
+  RexxBuffer *buffer = new_buffer(buffersize);     /* get a buffer object               */
   ProtectedObject p(buffer);
-  activity->releaseAccess();           /* release the kernel access         */
-                                       /* read the entire file in one shot  */
-  fread(buffer->data, 1, buffersize, handle);
-  fclose(handle);                      /* close the file                    */
-  activity->requestAccess();           /* get the access back               */
+  {
+      UnsafeBlock releaser;
+
+      fread(buffer->data, 1, buffersize, handle);
+      fclose(handle);                      /* close the file                    */
+  }
   return buffer;                       /* return the program buffer         */
 }
 

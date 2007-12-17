@@ -65,8 +65,7 @@
 #include "APIServiceTables.h"
 #include "SubcommandAPI.h"
 #include "RexxAPIManager.h"
-
-#define DEFAULT_PRECISION  9
+#include "Interpreter.hpp"
 
 #include <fcntl.h>
 #include <io.h>
@@ -76,9 +75,6 @@ APIRET REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid);
 #endif /*timeslice*/
 
 
-extern CRITICAL_SECTION Crit_Sec = {0};      /* also used by OKACTIVI and OKMEMORY */
-
-extern SEV   RexxTerminated;           /* Termination complete semaphore.   */
 extern bool UseMessageLoop;  /* speciality for VAC++ */
 
 const char * SysFileExtension(const char *);
@@ -173,7 +169,7 @@ extern "C" {
 void SearchPrecision(
   size_t   *precision)                 /* required precision         */
 {
-    *precision = DEFAULT_PRECISION;      /* set default digit count    */
+    *precision = Numerics::DEFAULT_DIGITS;   /* set default digit count    */
 
 /* give me the numeric digits settings of the current actitity       */
 
@@ -502,12 +498,6 @@ int APIENTRY RexxStart(
   ActivityManager::returnActivity();
   RexxTerminate();                     /* perform needed termination        */
 
-//  if (orexx_active_sem)
-//  {
-//     WaitForSingleObject(orexx_active_sem, INFINITE); /* decrease semaphore count */  /* @HOL003M  changed 0 to INFINITE */
-//     CloseHandle( orexx_active_sem);
-//  }
-
   WinEndExceptions                     /* End of Exception handling         */
 
   return -rc;                          /* return the error code (negated)   */
@@ -574,54 +564,14 @@ void CreateRexxCondData(
 
 void APIENTRY RexxWaitForTermination(void)
 {
-   EnterCriticalSection(&waitProtect);
-   if (!RexxTerminated) {
-     LeaveCriticalSection(&waitProtect);
-     return;
-   }
-   EVWAIT(RexxTerminated);
-   EVCLOSE(RexxTerminated);
-   RexxTerminated = NULL;
-
-   MTXCL(memoryObject.flattenMutex);
-   MTXCL(memoryObject.unflattenMutex);
-   MTXCL(memoryObject.envelopeMutex);
-   // clear out semaphores!
-   memoryObject.flattenMutex =
-   memoryObject.unflattenMutex =
-   memoryObject.envelopeMutex = 0;
-   LeaveCriticalSection(&waitProtect);
+    // the Interpreter class does the heavy lifting here
+    Interpreter::terminate();
 }
 
 
 APIRET APIENTRY RexxDidRexxTerminate(void)
 {
-   BOOL rc = true;
-   EnterCriticalSection(&waitProtect);
-   if (!RexxTerminated) {
-     LeaveCriticalSection(&waitProtect);
-     return rc;
-   }
-
-   if (WaitForSingleObject(RexxTerminated, 0) == WAIT_OBJECT_0)
-   {
-       EVCLOSE(RexxTerminated);  /* Close semaphore if it is posted */
-       RexxTerminated = NULL;
-
-       /* commentary: see RexxWaitForTermination */
-       MTXCL(memoryObject.flattenMutex);
-       MTXCL(memoryObject.unflattenMutex);
-       MTXCL(memoryObject.envelopeMutex);
-       // clear out semaphores!
-       memoryObject.flattenMutex =
-       memoryObject.unflattenMutex =
-       memoryObject.envelopeMutex = 0;
-
-       //return true;
-   }
-   else rc = false;
-   LeaveCriticalSection(&waitProtect);
-   return rc;
+   return Interpreter::isTerminated();
 }
 
 
@@ -1043,13 +993,12 @@ void translateSource(
   RexxMethod * method;                 /* created method                    */
   char         name[CCHMAXPATH + 2];   /* temporary name buffer             */
   bool            fileFound;
-  RexxActivity*activity;               /* the current activity              */
 
-  activity = ActivityManager::currentActivity;          /* save the current activity         */
-  activity->releaseAccess();           /* release the kernel access         */
-                                       /* go resolve the name               */
-  fileFound = SearchFileName(inputName->getStringData(), name);
-  activity->requestAccess();           /* get the semaphore back            */
+  {
+      UnsafeBlock releaser;
+                                           /* go resolve the name               */
+      fileFound = SearchFileName(inputName->getStringData(), name);
+  }
 
   if (!fileFound)
                                        /* got an error here                 */

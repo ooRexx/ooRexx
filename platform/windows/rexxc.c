@@ -50,7 +50,6 @@
 /*  Output:             returns 0 in all cases.                      */
 /*                                                                   */
 /*********************************************************************/
-#define INCL_REXXSAA
 #include <windows.h>
 #include <rexx.h>                           /* needed for RexxStart()     */
 #include <malloc.h>
@@ -125,7 +124,6 @@ int __cdecl main(int argc, char *argv[])
   if (ProcessSaveImage) {              /* save an image?                    */
                                        /* This is a Saveimage ...           */
     RexxInitialize();                  /* do normal REXX init               */
-    /* RexxTerminate();                   now immediately terminate         */
   }
   else if (program_name == NULL) {
                                        /* give a simple error message       */

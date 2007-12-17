@@ -54,14 +54,11 @@
 #include "MethodClass.hpp"
 #include "RexxNativeAPI.h"
 #include "StackClass.hpp"
+#include "Interpreter.hpp"
 
 extern bool  ProcessDoneInit;          /* initialization is done            */
 extern bool  ProcessDoneTerm;          /* termination is done               */
 extern bool  ProcessFirstThread;       /* first (and primary thread)        */
-
-extern SEV   RexxTerminated;           /* Termination complete semaphore.   */
-extern RexxInteger *ProcessName;
-
 
 void kernelShutdown (void)
 /******************************************************************************/
@@ -69,8 +66,8 @@ void kernelShutdown (void)
 /******************************************************************************/
 {
   SysTermination();                    /* cleanup                           */
-  EVPOST(RexxTerminated);              /* let anyone who cares know we're done*/
-//  memoryObject.dumpMemoryProfile();    /* optionally dump memory stats      */
+
+  Interpreter::signalTermination();    /* let anyone who cares know we're done*/
   if (!ProcessDoneTerm) {              /* if first time through             */
     ProcessDoneTerm = true;            /* don't allow a "reterm"            */
     ProcessDoneInit = false;           /* no longer initialized.            */
@@ -83,7 +80,7 @@ void kernelShutdown (void)
 extern bool ProcessSaveImage;
 
 
-int REXXENTRY RexxTerminate (void)
+int REXXENTRY RexxTerminate()
 /******************************************************************************/
 /* Function:  Terminate the REXX interpreter...will only terminate if the     */
 /*            call nesting level has reached zero.                            */
@@ -105,22 +102,17 @@ bool REXXENTRY RexxInitialize (void)
   setbuf(stderr,NULL);
 
   SysThreadInit();                     /* do thread initialization          */
-  SysEnterCriticalSection();
-
   result = ProcessFirstThread;         /* check on the first thread         */
 
   // perform activity manager startup for another instance
   ActivityManager::createInterpreter();
-  SysExitCriticalSection();
   if (ProcessFirstThread) {            /* if the first time                 */
     ProcessFirstThread = false;        /* this is the first thread          */
-    MTXCROPEN(resource_semaphore, "OBJREXXRESSEM");         /* create or open the other          */
+    Interpreter::createLocks();
     ActivityManager::createKernelLock();
 #ifdef FIXEDTIMERS
     EVCROPEN(rexxTimeSliceSemaphore, "OBJREXXTSSEM");      // originally EVOPEN
 #endif
-    EVCR(RexxTerminated);              /* Create the terminated semaphore   */
-    EVSET(RexxTerminated);             /* make sure Semaphore is UnPosted   */
     ProcessDoneInit = false;           /* allow for restart :               */
     ProcessDoneTerm = false;           /* allow for restart :               */
     memoryObject.accessPools();        /* Gain access to memory Pools       */

@@ -50,12 +50,6 @@ bool  ProcessFirstThread = true;       /* this is the first thread          */
 bool  ProcessSaveImage = false;        /* saving the image                  */
                                        /* Next line added be THU            */
 bool  RexxStartedByApplication = true; /* is REXX started by system or appl */
-// TODO Why is this conditional comp here?
-#ifdef WIN32
-extern SEV RexxTerminated = NULL;      /* Semaphore to be posted at shutdown*/
-#else
-SEV   RexxTerminated;                  /* Semaphore to be posted at shutdown*/
-#endif
-bool rexxTimeSliceElapsed = false;     /* the time slice interlock flag     */
+bool  rexxTimeSliceElapsed = false;     /* the time slice interlock flag     */
                                        /* Most currently accessed pool      */
 

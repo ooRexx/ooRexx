@@ -46,7 +46,7 @@
 #include "ArrayClass.hpp"
 #include "DirectoryClass.hpp"
 #include "MethodClass.hpp"
-#include "RexxNativeMethod.hpp"
+#include "RexxNativeCode.hpp"
 #include "RexxActivation.hpp"
 #include "RexxNativeActivation.hpp"
 #include "RexxBuffer.hpp"
@@ -982,32 +982,23 @@ void * RexxNativeActivation::operator new(size_t size,
   return (RexxObject *)newObject;      /* return the new object             */
 }
 
-#define this ((RexxNativeActivation *)self)
-
 REXXOBJECT REXXENTRY REXX_MSGNAME()
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  RexxNativeActivation *self;          /* current native activation         */
-
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-  return_object(this->getMessageName()); /* just forward and return           */
+    NativeContextBlock context;
+    return context.protect(context.self->getMessageName());
 }
+
 
 REXXOBJECT REXXENTRY REXX_RECEIVER()
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  RexxNativeActivation * self;         /* current native activation         */
-
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-  return_object(this->getReceiver());  /* just forward and return           */
+    NativeContextBlock context;
+    return context.protect(context.self->getReceiver());
 }
 
 int REXXENTRY REXX_INTEGER(REXXOBJECT object)
@@ -1015,12 +1006,12 @@ int REXXENTRY REXX_INTEGER(REXXOBJECT object)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  wholenumber_t result = 0;            /* returned result                   */
-
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  ((RexxObject *)object)->numberValue(result, ((RexxNativeActivation *)ActivityManager::currentActivity->current())->digits());
-  return_value(result);                /* return converted value            */
+    wholenumber_t result = 0;
+
+    ((RexxObject *)object)->numberValue(result, ((RexxNativeActivation *)ActivityManager::currentActivity->current())->digits());
+    return result;                       /* return converted value            */
 }
 
 size_t REXXENTRY REXX_UNSIGNED_INTEGER(REXXOBJECT object)
@@ -1028,12 +1019,12 @@ size_t REXXENTRY REXX_UNSIGNED_INTEGER(REXXOBJECT object)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  stringsize_t result = 0;             /* returned result                   */
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
+    stringsize_t result = 0;           /* returned result                   */
 
                                        /* First convert to numberstring     */
-  ((RexxObject *)object)->unsignedNumberValue(result);
-  return_value(result);                /* return converted value            */
+    ((RexxObject *)object)->unsignedNumberValue(result);
+    return result;                     /* return converted value            */
 }
 
 bool REXXENTRY REXX_ISINTEGER(REXXOBJECT object)
@@ -1041,15 +1032,9 @@ bool REXXENTRY REXX_ISINTEGER(REXXOBJECT object)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  bool result;                         /* returned result                   */
-  RexxNativeActivation * self;         /* current native activation         */
-
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
+    NativeContextBlock context;
                                        /* just forward and return           */
-  result = this->isInteger((RexxObject *)object);
-  return_value(result);                /* return converted value            */
+    return context.self->isInteger((RexxObject *)object);
 }
 
 bool REXXENTRY REXX_ISSTRING(REXXOBJECT object)
@@ -1057,13 +1042,8 @@ bool REXXENTRY REXX_ISSTRING(REXXOBJECT object)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  bool   result;                       /* returned result                   */
-
-  native_entry;                        /* synchronize access                */
-                                       /* check that this has correct       */
-                                       /* instance behavior                 */
-  result = ((RexxObject *)object)->getObjectType() == TheStringBehaviour;
-  return_value(result);                /* return indicator                  */
+    NativeContextBlock context;
+    return ((RexxObject *)object)->getObjectType() == TheStringBehaviour;
 }
 
 CSTRING REXXENTRY REXX_STRING(REXXOBJECT object)
@@ -1071,15 +1051,8 @@ CSTRING REXXENTRY REXX_STRING(REXXOBJECT object)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  const char *result;                  /* returned result                   */
-  RexxNativeActivation * self;         /* current native activation         */
-
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-                                       /* just forward and return           */
-  result = this->cstring((RexxObject *)object);
-  return_value(result);                /* return converted value            */
+    NativeContextBlock context;
+    return context.self->cstring((RexxObject *)object);
 }
 
 
@@ -1088,15 +1061,8 @@ double REXXENTRY REXX_DOUBLE(REXXOBJECT object)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  double  result = 0.0;                /* returned result                   */
-  RexxNativeActivation * self;         /* current native activation         */
-
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-                                       /* just forward and return           */
-  result = this->getDoubleValue((RexxObject *)object);
-  return_value(result);                /* return converted value            */
+    NativeContextBlock context;
+    return context.self->getDoubleValue((RexxObject *)object);
 }
 
 bool REXXENTRY REXX_ISDOUBLE(REXXOBJECT object)
@@ -1104,15 +1070,9 @@ bool REXXENTRY REXX_ISDOUBLE(REXXOBJECT object)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  bool    result;                      /* returned result                   */
-  RexxNativeActivation * self;         /* current native activation         */
-
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
+    NativeContextBlock context;
                                        /* just forward and return           */
-  result = this->isDouble((RexxObject *)object);
-  return_value(result);                /* return converted value            */
+    return context.self->isDouble((RexxObject *)object);
 }
 
 REXXOBJECT REXXENTRY REXX_SEND(REXXOBJECT receiver, CSTRING msgname, REXXOBJECT arguments)
@@ -1120,8 +1080,8 @@ REXXOBJECT REXXENTRY REXX_SEND(REXXOBJECT receiver, CSTRING msgname, REXXOBJECT 
 /* Function:  Issue a full scale send_message from native code                */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
-  return_object((RexxObject *)receiver->sendMessage((RexxString *)new_string(msgname), (RexxArray *)arguments));
+    NativeContextBlock context;
+    return context.protect((RexxObject *)receiver->sendMessage((RexxString *)new_string(msgname), (RexxArray *)arguments));
 }
 
 REXXOBJECT REXXENTRY REXX_SUPER(CSTRING msgname, REXXOBJECT arguments)
@@ -1129,21 +1089,19 @@ REXXOBJECT REXXENTRY REXX_SUPER(CSTRING msgname, REXXOBJECT arguments)
 /* Function:  Forward a message to a super class from native code             */
 /******************************************************************************/
 {
-  size_t          count;               /* count of arguments                */
-  RexxObject     *argarray[10];        /* C array of arguments              */
-  RexxArray      *args = (RexxArray *)arguments;
-  size_t          i;                   /* loop counter                      */
-  RexxNativeActivation * self;         /* current native activation         */
+    NativeContextBlock context;
+    RexxObject     *argarray[10];        /* C array of arguments              */
+    RexxArray      *args = (RexxArray *)arguments;
+    size_t          i;                   /* loop counter                      */
 
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-  count = args->size();                /* get the argument count            */
-  for (i = 1; i <= count; i++)         /* loop through the array            */
-                                       /* copying each OREF                 */
-    argarray[i-1] = args->get(i);
+    size_t count = args->size();         /* get the argument count            */
+    for (i = 1; i <= count; i++)         /* loop through the array            */
+    {
+                                         /* copying each OREF                 */
+        argarray[i-1] = args->get(i);
+    }
                                        /* now send the message              */
-  return_object(this->getReceiver()->messageSend((RexxString *)new_string(msgname), count, argarray, this->getReceiver()->superScope(this->getMethod()->getScope())));
+    return context.protect(context.self->getReceiver()->messageSend((RexxString *)new_string(msgname), count, argarray, context.self->getReceiver()->superScope(context.self->getMethod()->getScope())));
 }
 
 REXXOBJECT REXXENTRY REXX_SETVAR(CSTRING name, REXXOBJECT value)
@@ -1151,19 +1109,12 @@ REXXOBJECT REXXENTRY REXX_SETVAR(CSTRING name, REXXOBJECT value)
 /* Function:  Set the value of an object variable                             */
 /******************************************************************************/
 {
-  RexxNativeActivation   * self;       /* current native activation         */
-  RexxVariableDictionary * dictionary; /* target dictionary                 */
-                                       /* variable name                     */
-  RexxString             * variableName;
-
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-  dictionary = self->methodVariables();/* get the method variables          */
-  variableName = new_string(name);    /* get a string version of this      */
+    NativeContextBlock context;
+    RexxVariableDictionary *dictionary = context.self->methodVariables();/* get the method variables          */
+    RexxString *variableName = new_string(name);    /* get a string version of this      */
                                        /* do the assignment                 */
-  dictionary->set(variableName, (RexxObject *)value);
-  return_object(OREF_NULL);              /* return nothing                    */
+    dictionary->set(variableName, (RexxObject *)value);
+    return OREF_NULL;
 }
 
 /*******************************************************1***/
@@ -1172,22 +1123,16 @@ REXXOBJECT REXXENTRY REXX_SETVAR(CSTRING name, REXXOBJECT value)
 /**********************************************************/
 REXXOBJECT REXXENTRY REXX_GETFUNCTIONNAMES(char *** names, int * num)
 {
-  RexxNativeActivation   * self;       /* current native activation         */
-
-  RexxActivity           * activity;
-  RexxActivation         * activation;
+    NativeContextBlock context;
   RexxArray              * funcArray;
   RexxString             * name;
   int                      i;
   int                      j;
 
-  native_entry;                        /* synchronize access                */
                                        /* pick up current activation        */
 
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-  activity = self->getActivity();      /* find the current activity         */
                                        /* get the current activation        */
-  activation = self->getCurrentActivation();
+  RexxActivation *activation = context.self->getCurrentActivation();
 
   *num = 0;
   RexxDirectory *routines = activation->getPublicRoutines();
@@ -1206,7 +1151,7 @@ REXXOBJECT REXXENTRY REXX_GETFUNCTIONNAMES(char *** names, int * num)
     }
   }
 
-  return_object(OREF_NULL);              /* return nothing                    */
+  return OREF_NULL;              /* return nothing                    */
 }
 
 REXXOBJECT REXXENTRY REXX_GETVAR(CSTRING name)
@@ -1214,27 +1159,13 @@ REXXOBJECT REXXENTRY REXX_GETVAR(CSTRING name)
 /* Function:  Retrieve the value of an object variable                        */
 /******************************************************************************/
 {
-  RexxNativeActivation   * self;       /* current native activation         */
-  RexxVariableDictionary * dictionary; /* target dictionary                 */
-                                       /* variable name                     */
-  RexxString             * variableName;
-  RexxObject             * value;      /* returned variable value           */
+    NativeContextBlock context;
 
-
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-  dictionary = self->methodVariables();/* get the method variables          */
-  variableName = new_string(name);    /* get a string version of this      */
+    RexxVariableDictionary *dictionary = context.self->methodVariables();/* get the method variables          */
+    RexxString *variableName = new_string(name);    /* get a string version of this      */
                                        /* go get the variable               */
-  value = dictionary->realValue(variableName);
-  if (value == OREF_NULL)              /* uninitialized?                    */
-    value = (RexxObject *)variableName;/* just return the name              */
-  native_release(OREF_NULL);           /* release the kernel access         */
-                                       /* now return WITHOUT saving the     */
-                                       /* variable's value.  This is already*/
-                                       /* protected by the object's variable*/
-  return value;                        /* pool                              */
+    // NB:  We don't call protect because this object is already anchored in the variable pool.
+    return dictionary->realValue(variableName);
 }
 
 void REXXENTRY REXX_EXCEPT(int errorcode, REXXOBJECT value)
@@ -1242,11 +1173,15 @@ void REXXENTRY REXX_EXCEPT(int errorcode, REXXOBJECT value)
 /* Function:  Raise an exception on behalf of native code                     */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
-  if (value == OREF_NULL)              /* just a NULL value?                */
-    reportException(errorcode);        /* no substitution parameters        */
-  else                                 /* use the substitution form         */
-    reportException(errorcode, (RexxArray *)value);
+    NativeContextBlock context;
+    if (value == OREF_NULL)              /* just a NULL value?                */
+    {
+        reportException(errorcode);        /* no substitution parameters        */
+    }
+    else                                 /* use the substitution form         */
+    {
+        reportException(errorcode, (RexxArray *)value);
+    }
 }
 
 
@@ -1255,13 +1190,9 @@ void REXXENTRY REXX_RAISE(CSTRING condition, REXXOBJECT description, REXXOBJECT 
 /* Function:  Raise a condition on behalf of native code                      */
 /******************************************************************************/
 {
-  RexxNativeActivation * self;         /* current native activation         */
-
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
+    NativeContextBlock context;
                                        /* go raise the condition            */
-  this->raiseCondition(new_string(condition), (RexxString *)description, (RexxObject *)additional, (RexxObject *)result);
+    context.self->raiseCondition(new_string(condition), (RexxString *)description, (RexxObject *)additional, (RexxObject *)result);
 }
 
 
@@ -1270,9 +1201,9 @@ REXXOBJECT REXXENTRY REXX_CONDITION(REXXOBJECT condition, REXXOBJECT description
 /* Function:  Raise a condition on behalf of native code                      */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* pass on and raise the condition   */
-  return_object((ActivityManager::currentActivity->raiseCondition((RexxString *)condition, OREF_NULL, (RexxString *)description, (RexxObject *)additional, OREF_NULL, OREF_NULL)) ? TheTrueObject : TheFalseObject);
+    return (context.activity->raiseCondition((RexxString *)condition, OREF_NULL, (RexxString *)description, (RexxObject *)additional, OREF_NULL, OREF_NULL)) ? TheTrueObject : TheFalseObject;
 }
 
 
@@ -1282,20 +1213,19 @@ int REXXENTRY REXX_VARIABLEPOOL(void *pshvblock)
 /*             method, otherwise return RXSHV_NOAVL.                          */
 /******************************************************************************/
 {
-  int      result;                     /* variable pool result              */
-  RexxNativeActivation * self;         /* current native activation         */
-
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
+    NativeContextBlock context;
                                        /* if access is enabled              */
-  if (this->getVpavailable())
+    if (context.self->getVpavailable())
+    {
                                        /* go process the requests           */
-    result = SysVariablePool(self, pshvblock, true);
-  else                                 /* Else VP is disabled so...         */
+        return SysVariablePool(context.self, pshvblock, true);
+
+    }
+    else
+    {
                                        /* call VP only allowing shv_exit    */
-    result = SysVariablePool(self, pshvblock, false);
-  return_value(result);                /* return this                       */
+        return SysVariablePool(context.self, pshvblock, false);
+    }
 }
 
 
@@ -1304,13 +1234,10 @@ void REXXENTRY REXX_PUSH_ENVIRONMENT(REXXOBJECT environment)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  RexxActivation *activation;          /* top level real activation         */
-
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* pick up current activation        */
-  activation = (RexxActivation *)ActivityManager::currentActivity->getCurrentActivation();
-  activation->pushEnvironment((RexxObject *)environment);
-  return_void;                         /* no return value                   */
+    RexxActivation *activation = (RexxActivation *)context.activity->getCurrentActivation();
+    activation->pushEnvironment((RexxObject *)environment);
 }
 
 
@@ -1319,12 +1246,10 @@ REXXOBJECT REXXENTRY REXX_POP_ENVIRONMENT()
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  RexxActivation *activation;          /* top level real activation         */
-
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* pick up current activation        */
-  activation = (RexxActivation *)ActivityManager::currentActivity->getCurrentActivation();
-  return_object(activation->popEnvironment());
+    RexxActivation *activation = (RexxActivation *)context.activity->getCurrentActivation();
+    return context.protect(activation->popEnvironment());
 }
 
 
@@ -1384,25 +1309,20 @@ int REXXENTRY REXX_STEMSORT(CSTRING stemname, int order, int type, size_t start,
 /*             this returns zero, otherwise an appropriate error value.       */
 /******************************************************************************/
 {
+    NativeContextBlock context;
   size_t  position;                    /* scan position within compound name */
   size_t  length;                      /* length of tail section            */
-  int result;
 
-  RexxNativeActivation * self;         /* current native activation         */
-
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
                                        /* if access is enabled              */
-  if (!self->getVpavailable()) {       /* access must be enabled for this to work */
-      return_value(false);
+  if (!context.self->getVpavailable()) {       /* access must be enabled for this to work */
+      return false;
   }
 
   // NB:  The braces here are to ensure the ProtectedObjects get released before the
   // currentActivity gets zeroed out.
   {
       /* get the REXX activation */
-      RexxActivation *activation = self->getCurrentActivation();
+      RexxActivation *activation = context.self->getCurrentActivation();
 
       /* get the stem name as a string */
       RexxString *variable = new_string(stemname);
@@ -1417,7 +1337,6 @@ int REXXENTRY REXX_STEMSORT(CSTRING stemname, int order, int type, size_t start,
           return false;
       }
 
-    //RexxString *tail = (RexxString *) new_string(OREF_NULL);
       RexxString *tail = OREF_NULLSTRING ;
       ProtectedObject p2(tail);
 
@@ -1437,10 +1356,8 @@ int REXXENTRY REXX_STEMSORT(CSTRING stemname, int order, int type, size_t start,
         tail = tail->upper();
       }
 
-      result = retriever->sort(activation, tail, order, type, start, end, firstcol, lastcol);
+      return retriever->sort(activation, tail, order, type, start, end, firstcol, lastcol);
   }
-
-  return_value(result);
 }
 
 void REXXENTRY REXX_GUARD_ON()
@@ -1448,13 +1365,8 @@ void REXXENTRY REXX_GUARD_ON()
 /* Function:  External interface to implement method guarding                 */
 /******************************************************************************/
 {
-    RexxNativeActivation   * self;       /* current native activation         */
-
-    native_entry;                        /* synchronize access                */
-                                         /* pick up current activation        */
-    self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-    self->guardOn();                     /* turn on the guard                 */
-    native_release(OREF_NULL);           /* release the kernel access         */
+    NativeContextBlock context;
+    context.self->guardOn();             /* turn on the guard                 */
 }
 
 void REXXENTRY REXX_GUARD_OFF()
@@ -1462,11 +1374,6 @@ void REXXENTRY REXX_GUARD_OFF()
 /* Function:  External interface to implement method guarding                 */
 /******************************************************************************/
 {
-    RexxNativeActivation   * self;       /* current native activation         */
-
-    native_entry;                        /* synchronize access                */
-                                         /* pick up current activation        */
-    self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-    self->guardOff();                    /* turn off the guard                 */
-    native_release(OREF_NULL);           /* release the kernel access         */
+    NativeContextBlock context;
+    context.self->guardOff();            /* turn off the guard                 */
 }

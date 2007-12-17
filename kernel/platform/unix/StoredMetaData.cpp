@@ -342,23 +342,21 @@ RexxMethod *SysRestoreTranslatedProgram(
   size_t        BufferSize;            /* size of the buffer                */
   RexxMethod   *Method;                /* unflattened method                */
   RexxSource   *Source;                /* REXX source object                */
-  RexxActivity *activity;              /* the current activity              */
                                        /* temporary read buffer             */
   char          fileTag[sizeof(compiledHeader)];
 
+  {
+      UnsafeBlock releaser;
+                                          /* read the first file part          */
+     fread(fileTag, 1, sizeof(compiledHeader), Handle);
+                                          /* not a compiled file?              */
+     if (strcmp(fileTag, compiledHeader) != 0) {
+       return OREF_NULL;                  /* not a saved program               */
+     }
+                                          /* now read the control info         */
+     fread((char *)&Control, 1, sizeof(Control), Handle);
 
-  activity = ActivityManager::currentActivity;          /* save the activity                 */
-  activity->releaseAccess();           /* release the access                */
-                                       /* read the first file part          */
-  fread(fileTag, 1, sizeof(compiledHeader), Handle);
-                                       /* not a compiled file?              */
-  if (strcmp(fileTag, compiledHeader) != 0) {
-    activity->requestAccess();         /* get the lock back                 */
-    return OREF_NULL;                  /* not a saved program               */
   }
-                                       /* now read the control info         */
-  fread((char *)&Control, 1, sizeof(Control), Handle);
-  activity->requestAccess();           /* get the lock back                 */
                                        /* check the control info            */
   if ((Control.MetaVersion != METAVERSION) || (Control.Magic != MAGIC)) {
                                        /* got an error here                 */
@@ -370,11 +368,13 @@ RexxMethod *SysRestoreTranslatedProgram(
   ProtectedObject p1(Buffer);
                                        /* position relative to the end      */
   StartPointer = ((char *)Buffer + Buffer->getObjectSize()) - BufferSize;
-  activity->releaseAccess();           /* release the access                */
-                                       /* read the flattened method         */
-  fread(StartPointer, 1, BufferSize, Handle);
-  fclose(Handle);                      /* close the file                    */
-  activity->requestAccess();           /* get the lock back                 */
+  {
+      UnsafeBlock releaser;
+
+                                           /* read the flattened method         */
+      fread(StartPointer, 1, BufferSize, Handle);
+      fclose(Handle);                      /* close the file                    */
+  }
                                        /* "puff" this out usable form       */
   Method = TheMethodClass->restore(Buffer, StartPointer);
   ProtectedObject p2(Method);

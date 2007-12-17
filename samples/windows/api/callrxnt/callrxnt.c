@@ -95,7 +95,6 @@ int main()
     printf("Original String:         '%s'\n", arg.strptr);
     printf("Backwards String:        '%s'\n", rexxretval.strptr);
 
-    /* wait for RexxTerminate to be posted and closed */
     RexxFreeMemory(rexxretval.strptr);      /* Release storage       */
                                             /* given to us by REXX.  */
     system("PAUSE");

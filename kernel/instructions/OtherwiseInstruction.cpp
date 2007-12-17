@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              OtherwiseInstruction.c    */
+/* REXX Translator                                  OtherwiseInstruction.c    */
 /*                                                                            */
 /* Primitive Otherwise Parse Class                                            */
 /*                                                                            */

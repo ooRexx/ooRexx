@@ -55,7 +55,7 @@ public:
     inline void  operator delete(void *) { }
     inline void  operator delete(void *, void *) { }
 
-    RexxInstructionSelect();
+    RexxInstructionSelect(RexxString *);
     inline RexxInstructionSelect(RESTORETYPE restoreType) { ; };
     void live();
     void liveGeneral();
@@ -71,27 +71,10 @@ public:
     void setOtherwise(RexxInstructionOtherWise *);
     void addWhen(RexxInstructionIf *);
 
+protected:
     RexxQueue                *when_list; /* list of WHEN end targets          */
     RexxInstructionEnd       *end;       /* END matching the SELECT           */
     RexxInstructionOtherWise *otherwise; /* OTHERWISE matching the SELECT     */
-};
-
-
-class RexxInstructionLabeledSelect : public RexxInstructionSelect
-{
-public:
-    inline void *operator new(size_t size, void *ptr) {return ptr;}
-    inline void  operator delete(void *) { }
-    inline void  operator delete(void *, void *) { }
-
-    RexxInstructionLabeledSelect(RexxString *);
-    inline RexxInstructionLabeledSelect(RESTORETYPE restoreType) : RexxInstructionSelect(restoreType) { ; };
-    void live();
-    void liveGeneral();
-    void flatten(RexxEnvelope*);
-    virtual RexxString *getLabel();
-    bool isLabel(RexxString *name);
-
     RexxString * label;      // the select label
 };
 #endif

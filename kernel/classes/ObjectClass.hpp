@@ -166,6 +166,27 @@ protected:
      virtual void      baseVirtual() {;}
   };
 
+class RexxObject;
+
+/******************************************************************************/
+/* Method pointer special types                                               */
+/******************************************************************************/
+
+ typedef RexxObject *  (RexxObject::*PCPPM0)();
+ typedef RexxObject *  (RexxObject::*PCPPM1)(RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPM2)(RexxObject *, RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPM3)(RexxObject *, RexxObject *, RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPM4)(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPM5)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPM6)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPM7)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+ typedef RexxObject *  (RexxObject::*PCPPMA1)(RexxArray *);
+ typedef RexxObject *  (RexxObject::*PCPPMC1)(RexxObject **, size_t);
+
+                                       /* pointer to method function        */
+ typedef RexxObject *  (RexxObject::*PCPPM)();
+ #define CPPM(n) ((PCPPM)&n)
+
 
 #define OREFSHIFT 3
                                        /* generate hash value from OREF     */
@@ -494,27 +515,12 @@ class RexxObject : public RexxInternalObject {
    koper  (operator_not)
 
    RexxVariableDictionary *objectVariables;   /* set of object variables           */
+   static PCPPM operatorMethods[];
+
+   static RexxClass *classInstance;
 };
 
 
-/******************************************************************************/
-/* Method pointer special types                                               */
-/******************************************************************************/
-
- typedef RexxObject *  (RexxObject::*PCPPM0)();
- typedef RexxObject *  (RexxObject::*PCPPM1)(RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM2)(RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM3)(RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM4)(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM5)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM6)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPM7)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
- typedef RexxObject *  (RexxObject::*PCPPMA1)(RexxArray *);
- typedef RexxObject *  (RexxObject::*PCPPMC1)(RexxObject **, size_t);
-
-                                       /* pointer to method function        */
- typedef RexxObject *  (RexxObject::*PCPPM)();
- #define CPPM(n) ((PCPPM)&n)
 
 
 class RexxNilObject : public RexxObject {
@@ -528,6 +534,8 @@ public:
     virtual ~RexxNilObject() {;};
 
     virtual HashCode getHashValue();
+
+    static RexxObject *nilObject;
 
 protected:
     // we want .NIL to have a static hash value after the image restore, so

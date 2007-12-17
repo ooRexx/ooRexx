@@ -211,12 +211,9 @@ RexxMethod1(int, rexx_delete_queue,
 RexxMethod1(REXXOBJECT, function_queueExit,
   STRING, queue_name)                  /* the requested name                */
 {
-  RexxActivation *activation;          /* top level real activation         */
-
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  activation = (RexxActivation *)ActivityManager::currentActivity->getCurrentActivation();
+    NativeContextBlock context;
                                        /* call the exit                     */
-  ActivityManager::currentActivity->sysExitMsqNam(activation, (RexxString **)&queue_name);
-  return_object(queue_name);             /* and just return the exit result   */
+    RexxActivation *activation = (RexxActivation *)ActivityManager::currentActivity->getCurrentActivation();
+    context.activity->sysExitMsqNam(activation, (RexxString **)&queue_name);
+    return context.protect(queue_name);    /* and just return the exit result   */
 }

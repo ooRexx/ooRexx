@@ -233,7 +233,7 @@ void RexxSource::comment()
                                        /* record current position in clause */
         this->clause->setEnd(this->line_count, this->line_offset);
                                        /* error, must report                */
-        report_error1(Error_Unmatched_quote_comment, new_integer(startline));
+        syntaxError(Error_Unmatched_quote_comment, new_integer(startline));
       }
       continue;                        /* go loop around                    */
     }
@@ -339,7 +339,7 @@ unsigned int RexxSource::locateToken(
                                        /* more lines in file?               */
          if (this->line_number < this->line_count) {
 //                                     /* this is an error                  */
-//         report_error(Error_Unexpected_comma_comma);
+//         syntaxError(Error_Unexpected_comma_comma);
 //       else {
            this->nextLine();           /* step to the next line             */
            if (blanks) {               /* blanks allowed?                   */
@@ -429,9 +429,9 @@ RexxString *RexxSource::packLiteral(
        m = i+1;                        /* place holder for new_integer invocation */
        if (type == LITERAL_HEX)        /* hex string?                       */
                                        /* report correct error              */
-         report_error1(Error_Invalid_hex_hexblank, new_integer(m));
+         syntaxError(Error_Invalid_hex_hexblank, new_integer(m));
        else                            /* need the binary message           */
-         report_error1(Error_Invalid_hex_binblank, new_integer(m));
+         syntaxError(Error_Invalid_hex_binblank, new_integer(m));
      }
      count = 0;                        /* this starts a new group           */
      real_length--;                    /* this shortens the value           */
@@ -453,9 +453,9 @@ RexxString *RexxSource::packLiteral(
     m = i-1;                           /* place holder for new_integer invocation */
     if (type == LITERAL_HEX)           /* hex string?                       */
                                        /* report correct error              */
-      report_error1(Error_Invalid_hex_hexblank, new_integer(m));
+      syntaxError(Error_Invalid_hex_hexblank, new_integer(m));
     else                               /* need the binary message           */
-      report_error1(Error_Invalid_hex_binblank, new_integer(m));
+      syntaxError(Error_Invalid_hex_binblank, new_integer(m));
   }
 
   /* second scan is to create the string value determined by the            */
@@ -497,7 +497,7 @@ RexxString *RexxSource::packLiteral(
         else {
           error_output[0] = nibble;    /* copy the error character          */
                                        /* report the invalid character      */
-          report_error1(Error_Invalid_hex_invhex, new_string(&error_output[0]));
+          syntaxError(Error_Invalid_hex_invhex, new_string(&error_output[0]));
         }
         byte <<= 4;                    /* shift the last nibble over        */
         byte += nibble;                /* add in the next nibble            */
@@ -533,7 +533,7 @@ RexxString *RexxSource::packLiteral(
         else if (nibble != '0') {      /* not a '0' either?                 */
           error_output[0] = nibble;    /* copy the error character          */
                                        /* report the invalid character      */
-          report_error1(Error_Invalid_hex_invbin, new_string(&error_output[0]));
+          syntaxError(Error_Invalid_hex_invbin, new_string(&error_output[0]));
         }
       }
       oddhex = 0;                      /* use 8 bits for the remaining group*/
@@ -757,7 +757,7 @@ RexxToken *RexxSource::sourceNextToken(
         this->clause->setEnd(this->line_number, this->line_offset);
         if (length > (size_t)MAX_SYMBOL_LENGTH)/* result too long?                  */
                                        /* report the error                  */
-          report_error1(Error_Name_too_long_name, value);
+          syntaxError(Error_Name_too_long_name, value);
         inch = this->current[start];   /* get the first character           */
         if (length == 1 && inch == '.')/* have a solo period?               */
           subclass = SYMBOL_DUMMY;     /* this is the place holder          */
@@ -812,10 +812,10 @@ RexxToken *RexxSource::sourceNextToken(
             this->clause->setEnd(this->line_number, this->line_offset);
             if (literal_delimiter == '\'')
                                      /* raise the appropriate error       */
-              report_error(Error_Unmatched_quote_single);
+              syntaxError(Error_Unmatched_quote_single);
             else
                                      /* must be a double quote            */
-              report_error(Error_Unmatched_quote_double);
+              syntaxError(Error_Unmatched_quote_double);
           }
           inch = GETCHAR();          /* get the next character            */
                                      /* is this the delimiter?            */
@@ -1144,7 +1144,7 @@ RexxToken *RexxSource::sourceNextToken(
            sprintf(badchar, "%c", inch);
            sprintf(hexbadchar, "%2.2X", inch);
                                        /* report the error                  */
-           report_error2(Error_Invalid_character_char, new_string(badchar), new_string(hexbadchar));
+           syntaxError(Error_Invalid_character_char, new_string(badchar), new_string(hexbadchar));
            break;
        }
       }

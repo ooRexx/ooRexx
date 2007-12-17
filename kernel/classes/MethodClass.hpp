@@ -45,7 +45,9 @@
 #define Included_RexxMethod
 
 #include "RexxCode.hpp"
-#include "RexxNativeMethod.hpp"
+#include "RexxNativeCode.hpp"
+
+class RexxMethodClass;
 
  class RexxMethod : public RexxObject {
   public:
@@ -111,6 +113,8 @@
    inline RexxDirectory *getLocalRoutines() { return getSource()->getLocalRoutines(); }
    inline RexxDirectory *getPublicRoutines() { return getSource()->getPublicRoutines(); }
 
+   static RexxMethodClass *classInstance;
+
  protected:
    enum
    {
@@ -147,7 +151,6 @@ class RexxMethodClass : public RexxClass {
   RexxMethod  *newRexxCode(RexxString *, RexxObject *, RexxObject *, RexxObject *a = OREF_NULL);
   RexxMethod  *newRexx(RexxObject **, size_t);
   RexxMethod  *newRexxBuffer(RexxString *, RexxBuffer *, RexxClass  *);
-  RexxMethod  *newNative(RexxString *, RexxString *, RexxClass  *);
   RexxMethod  *newEntry(PNMF);
   RexxMethod  *restore(RexxBuffer *, char *);
   RexxMethod  *newFile(RexxString *);

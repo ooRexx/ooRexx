@@ -201,10 +201,11 @@ RexxObject * SysCommand(
   /****************************************************************************/
   if (rc == RXSUBCOM_NOTREG) {
     if ((stricmp((char *)current_address,SYSENV))==0) {
-      activity->releaseAccess();   ;   /* unlock the kernel                   */
-                                       /* issue the command                   */
-      rc = sys_command(command->getStringData(), error_failure);
-      activity->requestAccess();       /* reacquire the kernel lock           */
+        {
+            UnsafeBlock releaser;
+                                             /* issue the command                   */
+            rc = sys_command(command->getStringData(), error_failure);
+        }
       result = new_integer(rc);        /* get the command return code         */
 
      if (rc != 0)                      /* command error?                      */

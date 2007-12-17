@@ -256,24 +256,11 @@ else printf("EVCR handle %x not null in %s line %d\n", s, __FILE__, __LINE__)
 #define EVEXIST(s)    ((s != INVALID_HANDLE_VALUE) && (s != NULL))
 
 /******************************************************************************/
-/* REQUIRED:  Definitions for entering and exiting code sections that         */
-/* manipulate globally defined resources.                                     */
-/******************************************************************************/
-
-#define SysEnterResourceSection() MTXRQ(resource_semaphore);
-#define SysExitResourceSection() MTXRL(resource_semaphore);
-
-/******************************************************************************/
 /* REQUIRED:  Definitions for entering and exiting critical code sections.    */
 /* These can be defined out to nothing if these have no meaning.              */
 /******************************************************************************/
 
-extern CRITICAL_SECTION Crit_Sec;
-
-/* don't initialize Crit_Sec twice */
-#define SysThreadInit() if (!Crit_Sec.DebugInfo) InitializeCriticalSection(&Crit_Sec)
-#define SysEnterCriticalSection() EnterCriticalSection(&Crit_Sec)
-#define SysExitCriticalSection()  LeaveCriticalSection(&Crit_Sec)
+#define SysThreadInit()
 
 #define SEM_IMMEDIATE_RETURN 0L
 #define SEM_INDEFINITE_WAIT  INFINITE

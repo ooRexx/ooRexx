@@ -75,16 +75,13 @@
 # include "config.h"
 #endif
 
-#define INCL_RXSUBCOM
-
 #include "RexxCore.h"
+#include "ActivityManager.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include "RexxAPIManager.h"
 #include "APIUtilities.h"
 #include "SystemSemaphores.h"
-
-#include "RexxActivation.hpp"
 
 #include "SharedMemorySupport.h"                  /* system shared memory       */
 #include <string.h>                    /* to have the memset() func  */
@@ -121,7 +118,6 @@
 int  iSemShmMode = 384;              /* Set MODE 600 for sem and shm         */
 char achRexxHomeDir[ CCHMAXPATH+2 ]; /* Save home dir at startup             */
 
-extern SEV  RexxTerminated;          /* Termination complete semaphore.      */
 REXXAPIDATA  *apidata = NULL;
 
 /* Save the caller for signal blocking to filter pairs for unblocking */
@@ -175,7 +171,7 @@ int RxAPIStartUp(int chain)
     int         ShmemId = 0;
     int         semrc, value;
     size_t      current;                   /* session queue              */
-    key_t       ipckey = 0; 
+    key_t       ipckey = 0;
     shmid_ds    buf;                       /* buf to hold memory info    */
     int         used;                      /* semaphore used flag        */
     int         lRC;
@@ -555,8 +551,8 @@ int   RxAllocMem(
     size_t next, base, newbase, session_base, newsession_base, first, last, inext, temptop, tempapidatasize;
     PQUEUEHEADER queueheader;
     PQUEUEITEM item;
-    size_t addsize;        
-    char *tempptr;         
+    size_t addsize;
+    char *tempptr;
 
 
     if (flag == MACROMEM)
@@ -1764,7 +1760,7 @@ void detachall(int chain)
 /*                                                                   */
 /*********************************************************************/
 
-void  RxExitClear(int sig) 
+void  RxExitClear(int sig)
 {
     int used;
     if (iCallSigSet == 0 )              /* If siganls nor set          */
@@ -1942,7 +1938,7 @@ void  RxExitClear(int sig)
 /*                                                                   */
 /*********************************************************************/
 
-void  RxExitClearNormal() 
+void  RxExitClearNormal()
 {
   int    ulRC;
   int used;
@@ -2005,8 +2001,6 @@ void  RxExitClearNormal()
         removesem(apidata->rexxutilsems);  /* remove the semaphore set   */
         apidata->rexxutilsems = 0;         /* delete the old ID          */
         unlocksem(apidata->rexxapisemaphore, 0 );
-        if(RexxTerminated)
-          EVPOST(RexxTerminated);
         if (iCallSigSet == 6 )     /* If MICMIC lin22                      */
         {
 #if defined( HAVE_SIGPROCMASK )
@@ -2023,8 +2017,6 @@ void  RxExitClearNormal()
       }
     }
     unlocksem(apidata->rexxapisemaphore, 0 );
-    if(RexxTerminated)
-      EVPOST(RexxTerminated);
   }
    if (iCallSigSet == 6 )        /* If MICMIC lin22                        */
    {

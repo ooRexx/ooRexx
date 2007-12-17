@@ -239,12 +239,11 @@ RexxObject * SysCommand(
 
       shell_cmd = command->getStringData();
 
-      activity->releaseAccess();                       /* unlock the kernel */
+      {
+          UnsafeBlock releaser;
 
-      rc = sys_command(shell_cmd, local_env_type);     /* issue the command */
-
-      activity->requestAccess();               /* reacquire the kernel lock */
-
+          rc = sys_command(shell_cmd, local_env_type);     /* issue the command */
+      }
       result = new_integer(rc);              /* get the command return code */
 
       if (rc == UNKNOWN_COMMAND) {            /* is this unknown command?    */

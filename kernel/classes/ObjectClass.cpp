@@ -59,6 +59,13 @@
 #include "SourceFile.hpp"
 #include "ProtectedObject.hpp"
 
+
+
+// singleton class instance
+RexxClass *RexxObject::classInstance = OREF_NULL;
+RexxObject *RexxNilObject::nilObject = OREF_NULL;
+
+
 // TODO:  Make this activity based.
 static RexxString *msgname_save;       /* last issued message               */
 static RexxMethod *method_save;        /* last issued method object         */
@@ -2210,11 +2217,49 @@ void *RexxNilObject::operator new(size_t size)
     // some of the methods during setup but before the image save, we'll update the
     // behaviour type information so that it will restore with the correct virtual
     // function table pointer.
-    RexxObject *newObj = new_object(size, T_object);
+    RexxObject *newObj = new_object(size, T_Object);
     // we need to switch the virtual method table pointer new.
-    newObj->setVirtualFunctions(RexxMemory::VFTArray[T_nil_object]);
+    newObj->setVirtualFunctions(RexxMemory::virtualFunctionTable[T_NilObject]);
     return newObj;
 }
+
+
+PCPPM RexxObject::operatorMethods[] =
+{
+   NULL,
+   (PCPPM)&RexxObject::operator_plus,
+   (PCPPM)&RexxObject::operator_minus,
+   (PCPPM)&RexxObject::operator_multiply,
+   (PCPPM)&RexxObject::operator_divide,
+   (PCPPM)&RexxObject::operator_integerDivide,
+   (PCPPM)&RexxObject::operator_remainder,
+   (PCPPM)&RexxObject::operator_power,
+   (PCPPM)&RexxObject::operator_abuttal,
+   (PCPPM)&RexxObject::operator_concat,
+   (PCPPM)&RexxObject::operator_concatBlank,
+   (PCPPM)&RexxObject::operator_equal,
+   (PCPPM)&RexxObject::operator_notEqual,
+   (PCPPM)&RexxObject::operator_isGreaterThan,
+   (PCPPM)&RexxObject::operator_isBackslashGreaterThan,
+   (PCPPM)&RexxObject::operator_isLessThan,
+   (PCPPM)&RexxObject::operator_isBackslashLessThan,
+   (PCPPM)&RexxObject::operator_isGreaterOrEqual,
+   (PCPPM)&RexxObject::operator_isLessOrEqual,
+   (PCPPM)&RexxObject::operator_strictEqual,
+   (PCPPM)&RexxObject::operator_strictNotEqual,
+   (PCPPM)&RexxObject::operator_strictGreaterThan,
+   (PCPPM)&RexxObject::operator_strictBackslashGreaterThan,
+   (PCPPM)&RexxObject::operator_strictLessThan,
+   (PCPPM)&RexxObject::operator_strictBackslashLessThan,
+   (PCPPM)&RexxObject::operator_strictGreaterOrEqual,
+   (PCPPM)&RexxObject::operator_strictLessOrEqual,
+   (PCPPM)&RexxObject::operator_lessThanGreaterThan,
+   (PCPPM)&RexxObject::operator_greaterThanLessThan,
+   (PCPPM)&RexxObject::operator_and,
+   (PCPPM)&RexxObject::operator_or,
+   (PCPPM)&RexxObject::operator_xor,
+   (PCPPM)&RexxObject::operator_not,
+};
 
 
 #include "RexxNativeAPI.h"
@@ -2224,7 +2269,7 @@ REXXOBJECT REXXENTRY REXX_OBJECT_NEW(REXXOBJECT self)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access              */
+    NativeContextBlock context;
                                        /* just forward and return         */
-  return_object(new ((RexxClass *)self) RexxObject);
+    return context.protect(new ((RexxClass *)self) RexxObject);
 }

@@ -125,6 +125,8 @@
 
 
    static void createClass();
+   // singleton class instance;
+   static RexxClass *classInstance;
 
  protected:
      enum

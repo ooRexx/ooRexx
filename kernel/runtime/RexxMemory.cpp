@@ -50,12 +50,22 @@
 #include "MutableBufferClass.hpp"
 #include "DirectoryClass.hpp"
 #include "RexxActivity.hpp"
-#include "RexxNativeMethod.hpp"
 #include "IntegerClass.hpp"
 #include "ArrayClass.hpp"
 #include "TableClass.hpp"
 #include "RexxActivation.hpp"
 #include "ActivityManager.hpp"
+#include "LibraryManager.hpp"
+#include "MessageClass.hpp"
+#include "MethodClass.hpp"
+#include "RelationClass.hpp"
+#include "SupplierClass.hpp"
+
+// restore a class from its
+// associated primitive behaviour
+// (already restored by memory_init)
+#define RESTORE_CLASS(name, className) The##name##Class = (className *)RexxBehaviour::getPrimitiveBehaviour(T_##name)->restoreClass();
+
 
 bool SysAccessPool(MemorySegmentPool **pool);
 /* NOTE:  There is just a single memory object in global storage.  We'll define      */
@@ -70,6 +80,13 @@ RexxMemory memoryObject;
 #define MaxImageSize 1200000         /* maximum startup image size */
 
 RexxDirectory *RexxMemory::globalStrings = OREF_NULL;
+RexxDirectory *RexxMemory::environment = OREF_NULL;       // global environment
+RexxDirectory *RexxMemory::publicRoutines = OREF_NULL;    // statically defined public routines
+RexxDirectory *RexxMemory::staticRequires = OREF_NULL;    // statically defined requires
+RexxDirectory *RexxMemory::functionsDir = OREF_NULL;      // statically defined requires
+RexxDirectory *RexxMemory::commonRetrievers = OREF_NULL;
+RexxDirectory *RexxMemory::kernel = OREF_NULL;
+RexxDirectory *RexxMemory::system = OREF_NULL;
 
 static void logMemoryCheck(FILE *outfile, const char *message, ...)
 {
@@ -149,7 +166,7 @@ void RexxMemory::init(bool _restoringImage)
   globalStrings = OREF_NULL;
 
   // get our table of virtual functions setup first thing.
-  buildVFTArray();
+  buildVirtualFunctionTable();
 
                                        /* NOTE: we don't set livestack      */
                                        /*via the  OrefSet macro, since we   */
@@ -255,7 +272,7 @@ bool RexxMemory::inObjectStorage(RexxObject *object)
 /******************************************************************************/
 {
   /* check for a few valid locations in 'C' storage                     */
-  if ((object >= (RexxObject *)RexxBehaviour::getPrimitiveBehaviour(0) && object <= (RexxObject *)RexxBehaviour::getPrimitiveBehaviour(highest_T)) ||
+  if ((object >= (RexxObject *)RexxBehaviour::getPrimitiveBehaviour(0) && object <= (RexxObject *)RexxBehaviour::getPrimitiveBehaviour(T_Last_Class_Type)) ||
       (object == (RexxObject *)this)) {
     return true;
   }
@@ -282,7 +299,7 @@ bool RexxMemory::objectReferenceOK(RexxObject *o)
     /* possibly be testing this before TheBehaviourBehaviour is */
     /* set up, so we have two additional means of verifying the */
     /* behaviour object. */
-    return type->isObjectType(T_behaviour) || type == RexxBehaviour::getPrimitiveBehaviour(T_behaviour);
+    return type->isObjectType(T_Behaviour) || type == RexxBehaviour::getPrimitiveBehaviour(T_Behaviour);
 }
 
 
@@ -772,22 +789,24 @@ void RexxMemory::restoreImage()
 
                                      /* Retrieve the behaviour obj        */
                                      /* or a copy?                        */
-    if (((RexxObject *)objectPointer)->isNonPrimitive()) {
+    if (((RexxObject *)objectPointer)->isNonPrimitive())
+    {
                                      /* Working with a copy, don't use    */
                                      /* PBEHAV version.                   */
                                      /* Make sure static behaviour inf    */
                                      /* is resolved before using the      */
                                      /* Behaviour.                        */
-      imageBehav = (RexxBehaviour *)(relocation + (long)((RexxObject *)objectPointer)->behaviour);
+      imageBehav = (RexxBehaviour *)(relocation + (uintptr_t)((RexxObject *)objectPointer)->behaviour);
                                      /* give this object it behaviour.    */
       ((RexxObject *)objectPointer)->behaviour = (RexxBehaviour *)imageBehav;
-      primitiveTypeNum = (long)imageBehav->getClassType();
+      primitiveTypeNum = imageBehav->getClassType();
     }
-    else {
-                                     /* originally a primitive;  the      */
-                                     /* type number is the behaviour      */
-      primitiveTypeNum = (long)((RexxObject *)objectPointer)->behaviour;
-      ((RexxObject *)objectPointer)->behaviour = RexxBehaviour::getPrimitiveBehaviour(primitiveTypeNum);
+    else
+    {
+        // the original behaviour pointer has been encoded as a type number and class
+        // category to allow us to convert back to the appropriate type.
+        ((RexxObject *)objectPointer)->behaviour = RexxBehaviour::restoreSavedPrimitiveBehaviour(((RexxObject *)objectPointer)->behaviour);
+        primitiveTypeNum = ((RexxObject *)objectPointer)->behaviour->getClassType();
     }
     /* This will be an OldSpace object.  We delay setting this */
     /* until now, because the oldspace bit is overloaded with the */
@@ -797,7 +816,7 @@ void RexxMemory::restoreImage()
     ((RexxObject *)objectPointer)->setOldSpace();
                                      /* Force fix-up of                   */
                                      /*VirtualFunctionTable,              */
-    ((RexxObject *)objectPointer)->setVirtualFunctions(VFTArray[primitiveTypeNum]);
+    ((RexxObject *)objectPointer)->setVirtualFunctions(virtualFunctionTable[primitiveTypeNum]);
 
                                      /* Do this object have any           */
                                      /*references?                        */
@@ -816,7 +835,7 @@ void RexxMemory::restoreImage()
                                      /* get the primitive behaviours      */
   primitiveBehaviours = (RexxArray *)saveArray->get(saveArray_PBEHAV);
                                      /* restore all of the saved primitive*/
-  for (i = 0; i <= highest_exposed_T; i++)
+  for (i = 0; i <= T_Last_Exported_Class; i++)
   {
                                      /* behaviours into this array        */
       RexxBehaviour::primitiveBehaviours[i].restore((RexxBehaviour *)primitiveBehaviours->get(i + 1));
@@ -831,13 +850,13 @@ void RexxMemory::restoreImage()
   TheNullArray   = (RexxArray *)saveArray->get(saveArray_NULLA);
   TheNullPointer   = (RexxInteger *)saveArray->get(saveArray_NULLPOINTER);
   TheClassClass  = (RexxClass *)saveArray->get(saveArray_CLASS);
-  TheNativeCodeClass  = (RexxNativeCodeClass *)saveArray->get(saveArray_NMETHOD);
   TheCommonRetrievers = (RexxDirectory *)saveArray->get(saveArray_COMMON_RETRIEVERS);
   TheStaticRequires   = (RexxDirectory *)saveArray->get(saveArray_STATIC_REQ);
   ThePublicRoutines   = (RexxDirectory *)saveArray->get(saveArray_PUBLIC_RTN);
 
   /* restore the global strings        */
   memoryObject.restoreStrings((RexxArray *)saveArray->get(saveArray_NAME_STRINGS));
+  LibraryManager::restore((RexxDirectory *)saveArray->get(saveArray_LIBRARIES));
 }
 
 
@@ -864,6 +883,7 @@ void RexxMemory::live(void)
   cleanUpMemoryMark
   // now call the various subsystem managers to mark their references
   ActivityManager::live();
+  LibraryManager::live();
 }
 
 void       RexxMemory::liveGeneral(void)
@@ -885,6 +905,7 @@ void       RexxMemory::liveGeneral(void)
   cleanUpMemoryMarkGeneral
   // now call the various subsystem managers to mark their references
   ActivityManager::liveGeneral();
+  LibraryManager::liveGeneral();
 }
 
 void        RexxMemory::flatten(RexxEnvelope *env)
@@ -937,8 +958,6 @@ void RexxMemory::collect()
 /* objects, followed by sweep of each of the segment sets.                    */
 /******************************************************************************/
 {
-  SysEnterCriticalSection();
-
   collections++;
   verboseMessage("Begin collecting memory, cycle #%d after %d allocations.\n", collections, allocations);
   allocations = 0;
@@ -963,8 +982,6 @@ void RexxMemory::collect()
 
   verboseMessage("End collecting memory\n");
   verboseMessage("Object save table contains %d objects\n", this->saveTable->items());
-
-  SysExitCriticalSection();
 }
 
 RexxObject *RexxMemory::oldObject(size_t requestLength)
@@ -987,7 +1004,7 @@ RexxObject *RexxMemory::oldObject(size_t requestLength)
   /* those are a separate category of object. */
   if (newObj != OREF_NULL) {
       // initialize the hash table object
-      newObj->initializeNewObject(requestLength, markWord, VFTArray[T_object], TheObjectBehaviour);
+      newObj->initializeNewObject(requestLength, markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
   }
 
   /* return the newly allocated object to our caller */
@@ -1044,7 +1061,7 @@ RexxObject *RexxMemory::newObject(size_t requestLength, size_t type)
       }
   }
 
-  newObj->initializeNewObject(markWord, VFTArray[type], RexxBehaviour::getPrimitiveBehaviour(type));
+  newObj->initializeNewObject(markWord, virtualFunctionTable[type], RexxBehaviour::getPrimitiveBehaviour(type));
 
   if (this->saveStack != OREF_NULL) {
                                        /* saveobj doesn't get turned on     */
@@ -1115,7 +1132,7 @@ RexxArray  *RexxMemory::newObjects(
     }
   }
 
-  largeObject->initializeNewObject(markWord, VFTArray[T_object], TheObjectBehaviour);
+  largeObject->initializeNewObject(markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
 
   if (this->saveStack != OREF_NULL) {
                                        /* saveobj doesn't get turned on     */
@@ -1153,7 +1170,7 @@ RexxArray  *RexxMemory::newObjects(
   /* Otherwise OrefOK (CHECKOREFS) will fail */
 
   // initialize the hash table object
-  largeObject->initializeNewObject(objSize, markWord, VFTArray[objectType], RexxBehaviour::getPrimitiveBehaviour(objectType));
+  largeObject->initializeNewObject(objSize, markWord, virtualFunctionTable[objectType], RexxBehaviour::getPrimitiveBehaviour(objectType));
 
   for (i=1 ;i < count ; i++ ) {
     /* IH: Loop one time less than before because first object is initialized
@@ -1331,7 +1348,7 @@ RexxObject *RexxMemory::temporaryObject(size_t requestLength)
                                        /* setup the new object header for   */
                                        /*use                                */
   // initialize the hash table object
-  newObj->initializeNewObject(allocationLength, markWord, VFTArray[T_object], TheObjectBehaviour);
+  newObj->initializeNewObject(allocationLength, markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
   return newObj;                       /* and return it                     */
 }
 
@@ -1431,8 +1448,8 @@ void RexxMemory::saveImageMark(RexxObject *markObject, RexxObject **pMarkObject)
             /* clear this out, as this is overloaded with the oldspace */
             /* flag. */
             bufferReference->setPrimitive();
-            /* replace behaviour with typenumber */
-            bufferReference->behaviour = (RexxBehaviour  *)behaviour->getClassType();
+            // replace behaviour with normalized type number
+            bufferReference->behaviour = behaviour->getSavedPrimitiveBehaviour();
         }
 
         /* we are saving image at this point, no need to keep track of */
@@ -1514,7 +1531,6 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
                                         /* Make sure we exit the GC critical */
                                         /*  otherwise the cleanup from logic */
                                         /*  error will hang !!!              */
-        SysExitCriticalSection();
         /* we would have crashed soon anyway!*/
         logic_error("Bad Object found during GC !\n");
     }
@@ -1601,7 +1617,7 @@ void RexxMemory::saveImage(void)
   saveArray->put((RexxObject *)TheNullArray,     saveArray_NULLA);
   saveArray->put((RexxObject *)TheNullPointer,   saveArray_NULLPOINTER);
   saveArray->put((RexxObject *)TheClassClass,    saveArray_CLASS);
-  saveArray->put((RexxObject *)TheNativeCodeClass, saveArray_NMETHOD);
+  saveArray->put((RexxObject *)LibraryManager::getLibraries(), saveArray_LIBRARIES);
   saveArray->put((RexxObject *)TheSystem,       saveArray_SYSTEM);
   saveArray->put((RexxObject *)TheFunctionsDirectory,  saveArray_FUNCTIONS);
   saveArray->put((RexxObject *)TheCommonRetrievers,    saveArray_COMMON_RETRIEVERS);
@@ -1610,11 +1626,13 @@ void RexxMemory::saveImage(void)
   saveArray->put((RexxObject *)ThePublicRoutines,       saveArray_PUBLIC_RTN);
 
                                        /* create the behaviour array        */
-  primitive_behaviours= (RexxArray *)new_array(highest_exposed_T+1);
+  primitive_behaviours= (RexxArray *)new_array(T_Last_Exported_Class + 1);
                                        /* copy all of the primitive         */
-  for (i = 0; i <= highest_exposed_T; i++)
+  for (i = 0; i <= T_Last_Exported_Class; i++)
+  {
                                        /* behaviours into this array        */
-    primitive_behaviours->put((RexxObject *)RexxBehaviour::getPrimitiveBehaviour(i), i + 1);
+      primitive_behaviours->put((RexxObject *)RexxBehaviour::getPrimitiveBehaviour(i), i + 1);
+  }
                                        /* add to the save array             */
   saveArray->put(primitive_behaviours, saveArray_PBEHAV);
 
@@ -1712,8 +1730,9 @@ RexxObject *RexxMemory::dump(void)
       currentPool = currentPool->nextPool();
     }
 
-    for (i = 0; i <= highest_T; i++) {
-      fprintf(keyfile, "Behaviour type %d = %p\n", i, RexxBehaviour::getPrimitiveBehaviour(i));
+    for (i = 0; i <= T_Last_Exported_Class; i++)
+    {
+        fprintf(keyfile, "Behaviour type %d = %p\n", i, RexxBehaviour::getPrimitiveBehaviour(i));
     }
 
                                        /* now close actual dump and key file*/
@@ -1832,14 +1851,11 @@ void RexxMemory::setObjectOffset(size_t offset)
    /* have a value, starting unflatten.  See if we can get MUTEX */
    /* immed */
    if (MTXRI(this->unflattenMutex)) {
-    /* Nope, have to wait for it. Get current activity. */
-    RexxActivity * currentActivity = ActivityManager::currentActivity;
-    /* release kernel access. */
-    currentActivity->releaseAccess();
-    /* wait for current unflatten to end */
-    MTXRQ(this->unflattenMutex);
-    /* get kernel access back. */
-    currentActivity->requestAccess();
+    {
+        UnsafeBlock releaser;
+        /* wait for current unflatten to end */
+        MTXRQ(this->unflattenMutex);
+    }
    }
   }
   else {
@@ -1867,13 +1883,11 @@ void      RexxMemory::setEnvelope(RexxEnvelope *_envelope)
                                        /* See if we can get MUTEX immed     */
    if (MTXRI(this->envelopeMutex)) {
                                        /* Nope, have to wait for it.        */
-                                       /* Get current activity.             */
-    RexxActivity *currentActivity = ActivityManager::currentActivity;
                                        /* release kernel access.            */
-    currentActivity->releaseAccess();
-    MTXRQ(this->envelopeMutex);        /* wait for current unflat to end    */
-                                       /* get kernel access back.           */
-    currentActivity->requestAccess();
+    {
+        UnsafeBlock releaser;
+        MTXRQ(this->envelopeMutex);        /* wait for current unflat to end    */
+    }
    }
   }
   else {
@@ -1969,7 +1983,7 @@ RexxObject *RexxMemory::checkSetOref(
 
                                        /* Is the new value a real object?   */
   }
-  else if (value && (RexxBehaviour *)value != TheBehaviourBehaviour && (RexxBehaviour *)value != RexxBehaviour::getPrimitiveBehaviour(T_behaviour) && !objectReferenceOK(value)) 
+  else if (value && (RexxBehaviour *)value != TheBehaviourBehaviour && (RexxBehaviour *)value != RexxBehaviour::getPrimitiveBehaviour(T_Behaviour) && !objectReferenceOK(value))
   {
     allOK = false;                     /* No, put out the info              */
     outFileName = SysGetTempFileName();/* Get a temporary file name for out */
@@ -2009,13 +2023,11 @@ RexxStack *RexxMemory::getFlattenStack(void)
 {
    if (MTXRI(this->flattenMutex)) {
                                        /* Nope, have to wait for it.        */
-                                       /* Get current activity.             */
-    RexxActivity *currentActivity = ActivityManager::currentActivity;
                                        /* release kernel access.            */
-    currentActivity->releaseAccess();
-    MTXRQ(this->flattenMutex);         /* wait for current flattento end    */
-                                       /* get kernel access back.           */
-    currentActivity->requestAccess();
+    {
+        UnsafeBlock releaser;
+        MTXRQ(this->flattenMutex);         /* wait for current flattento end    */
+    }
   }
                                        /* create a temporary stack          */
   this->flattenStack = new (LiveStackSize, true) RexxStack (LiveStackSize);
@@ -2159,9 +2171,26 @@ void RexxMemory::createLocks()
                                        /* Create/Open Shared MUTEX      */
                                        /* Semophores used to serialize  */
                                        /* the flatten/unflatten process */
-  MTXCR(memoryObject.flattenMutex);
-  MTXCR(memoryObject.unflattenMutex);
-  MTXCR(memoryObject.envelopeMutex);
+  MTXCR(flattenMutex);
+  MTXCR(unflattenMutex);
+  MTXCR(envelopeMutex);
+}
+
+void RexxMemory::closeLocks()
+/******************************************************************************/
+/* Function:  Do the initial lock creation for memory setup.                  */
+/******************************************************************************/
+{
+                                       /* Create/Open Shared MUTEX      */
+                                       /* Semophores used to serialize  */
+                                       /* the flatten/unflatten process */
+  MTXCR(flattenMutex);
+  MTXCR(unflattenMutex);
+  MTXCR(envelopeMutex);
+  flattenMutex = 0;
+  unflattenMutex = 0;
+  envelopeMutex = 0;
+
 }
 
 
@@ -2204,6 +2233,8 @@ void RexxMemory::create()
   memoryObject.init(false);
   RexxClass::createClass();            /* get the CLASS class created       */
   RexxInteger::createClass();
+  // initializer for native libraries
+  LibraryManager::init();
   /* Now get our savestack and         */
   /*savetable                          */
   memoryObject.setUpMemoryTables(OREF_NULL);
@@ -2225,26 +2256,23 @@ void RexxMemory::restore()
   /* OREF_ENV and primitive behaviours */
   /* are already restored              */
                                        /* start restoring class OREF_s      */
-  RESTORE_CLASS(Object, object, RexxClass);
-  RESTORE_CLASS(Class, class, RexxClass);
+  RESTORE_CLASS(Object, RexxClass);
+  RESTORE_CLASS(Class, RexxClass);
                                        /* (CLASS is already restored)       */
-  RESTORE_CLASS(String, string, RexxStringClass);
-  RESTORE_CLASS(Array, array, RexxClass);
-  RESTORE_CLASS(Directory, directory, RexxClass);
-  RESTORE_CLASS(Integer, integer, RexxIntegerClass);
-  RESTORE_CLASS(List, list, RexxListClass);
-  RESTORE_CLASS(Message, message, RexxClass);
-  RESTORE_CLASS(Method, method, RexxMethodClass);
-  RESTORE_CLASS(NumberString, numberstring, RexxNumberStringClass);
-  RESTORE_CLASS(Queue, queue, RexxClass);
-  RESTORE_CLASS(Stem, stem, RexxClass);
-  RESTORE_CLASS(Supplier, supplier, RexxClass);
-  RESTORE_CLASS(Table, table, RexxClass);
-  RESTORE_CLASS(Relation, relation, RexxClass);
-  RESTORE_CLASS(MutableBuffer, mutablebuffer, RexxMutableBufferClass);
-                                       /* fix up special save class         */
-                                       /* behaviours                        */
-  TheNativeCodeClass->setBehaviour(TheNativeCodeClassBehaviour);
+  RESTORE_CLASS(String, RexxStringClass);
+  RESTORE_CLASS(Array, RexxClass);
+  RESTORE_CLASS(Directory, RexxClass);
+  RESTORE_CLASS(Integer, RexxIntegerClass);
+  RESTORE_CLASS(List, RexxListClass);
+  RESTORE_CLASS(Message, RexxClass);
+  RESTORE_CLASS(Method, RexxMethodClass);
+  RESTORE_CLASS(NumberString, RexxNumberStringClass);
+  RESTORE_CLASS(Queue, RexxClass);
+  RESTORE_CLASS(Stem, RexxClass);
+  RESTORE_CLASS(Supplier, RexxClass);
+  RESTORE_CLASS(Table, RexxClass);
+  RESTORE_CLASS(Relation, RexxClass);
+  RESTORE_CLASS(MutableBuffer, RexxMutableBufferClass);
 
   memoryObject.setOldSpace();          /* Mark Memory Object as OldSpace    */
   /* initialize the tables used for garbage collection. */
@@ -2262,10 +2290,11 @@ void RexxMemory::restore()
   IntegerNine   = new_integer(9);
   IntegerMinusOne = new_integer(-1);
 
+  // the activity manager will create the local server, which will use the
+  // stream classes.  We need to get the external libraries reloaded before
+  // that happens.
+  LibraryManager::reload();
   ActivityManager::init();             /* do activity restores              */
-//  ActivityManager::getActivity();      // get an activity for any error reporting
-
-  RexxNativeCode::restoreClass();      /* fix up native methods             */
   memoryObject.enableOrefChecks();     /* enable setCheckOrefs...           */
                                        /* Create/Open Shared MUTEX          */
                                        /* Semophores used to serialize      */

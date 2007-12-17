@@ -57,7 +57,6 @@ extern "C" void activity_thread (RexxActivity *objp);
 
 
 unsigned int iClauseCounter=0;         // count of clauses
-unsigned int iTransClauseCounter=0;    // count of clauses in translator
 
 extern "C" _declspec(dllimport) HANDLE ExceptionQueueSem;
 extern ULONG ExceptionHostProcessId;

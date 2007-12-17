@@ -70,6 +70,7 @@
 #include "APIDefinitions.h"
 #include "SubcommandAPI.h"
 #include "APIUtilities.h"
+#include "Interpreter.hpp"
        /* support macros                    */
 
 
@@ -86,12 +87,8 @@
 bool rexxutil_call = false;
 RexxMutex rexxutil_call_sem;
 
-
-SMTX initialize_sem = 0;
-extern SEV   RexxTerminated;               /* Termination complete semaphore.     */
-bool         bProcessExitInitFlag = false;
+bool bProcessExitInitFlag = false;
 int  SecureFlag = 0;
-int  thread_counter = 0;
 
 
 APIRET APIENTRY RexxExecuteMacroFunction (const char *, PRXSTRING );
@@ -690,59 +687,14 @@ void APIENTRY RexxWaitForTermination(void)
    {
      SysThreadYield();
    }
-
-   SysEnterCriticalSection();
-   if (!RexxTerminated) {
-     SysExitCriticalSection();
-     return;
-   }
-   SysExitCriticalSection();
-
-/* For now control can be captured by other REXX-threads. The RexxTerminated       */
-/* Event-semaphore is set by kernelshutdown that resides within a critical section */
-
-   EVWAIT(RexxTerminated);
-   SysEnterCriticalSection();
-   EVCLOSE(RexxTerminated);
-   RexxTerminated = NULL;
-   SecureFlag = 0;
-   thread_counter = 0;
-   MTXCL(resource_semaphore);
-   ActivityManager::closeKernelLock();
-   MTXCL(memoryObject.flattenMutex);
-   MTXCL(memoryObject.unflattenMutex);
-   MTXCL(memoryObject.envelopeMutex);
-   memoryObject.flattenMutex = 0;
-   memoryObject.unflattenMutex = 0;
-   memoryObject.envelopeMutex = 0;
-
-   SysExitCriticalSection();
-   MTXCL(initialize_sem);
-   initialize_sem = 0;                                      /*important s. SysThreadInit info */
+   // do termination stuff
+   Interpreter::terminate();
 }
 
 
 APIRET APIENTRY RexxDidRexxTerminate(void)
 {
-   if (!RexxTerminated) return true;
-
-   if (RexxTerminated->posted())
-   {
-       EVCLOSE(RexxTerminated);  /* Close semaphore if it is posted */
-       RexxTerminated = NULL;
-
-       MTXCL(initialize_sem);
-       MTXCL(resource_semaphore);
-       ActivityManager::closeKernelLock();
-       MTXCL(memoryObject.flattenMutex);
-       MTXCL(memoryObject.unflattenMutex);
-       MTXCL(memoryObject.envelopeMutex);
-       memoryObject.flattenMutex = 0;
-       memoryObject.unflattenMutex = 0;
-       memoryObject.envelopeMutex = 0;
-       return true;
-   }
-   else return false;
+    return Interpreter::isTerminated();
 }
 
 /*********************************************************************/

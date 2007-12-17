@@ -51,6 +51,10 @@
 #include "RexxBuiltinFunctions.h"                          /* Gneral purpose BIF Header file       */
 #include "ProtectedObject.hpp"
 
+
+// singleton class instance
+RexxClass *RexxMutableBuffer::classInstance = OREF_NULL;
+
 #define DEFAULT_BUFFER_LENGTH 256
 
 RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t argc)
@@ -94,7 +98,7 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
                                         /* set the behaviour from the class  */
   newBuffer->setBehaviour(this->getInstanceBehaviour());
                                         /* set the virtual function table    */
-  newBuffer->setVirtualFunctions(RexxMemory::VFTArray[T_mutablebuffer]);
+  newBuffer->setVirtualFunctions(RexxMemory::virtualFunctionTable[T_MutableBuffer]);
                                         /* clear the front part              */
   newBuffer->clearObject(sizeof(RexxMutableBuffer));
   newBuffer->bufferLength = bufferLength;/* save the length of the buffer    */

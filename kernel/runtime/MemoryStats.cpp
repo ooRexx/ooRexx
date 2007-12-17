@@ -95,7 +95,8 @@ void MemoryStats::printSavedImageStats()
   printf("    ObjectTypeNum         Total Objects       TotalBytes\n");
   printf("    =============         ==============      ==========\n");
 
-  for (i = 0; i <= highest_T; i++) {
+  for (i = 0; i <= T_Last_Class_Type; i++)
+  {
       objectStats[i].printStats(i);
   }
 }
@@ -112,7 +113,8 @@ void MemoryStats::printMemoryStats()
   printf("    =============         ==============      ==========\n");
   int i;
 
-  for (i = 0; i <= highest_T; i++) {
+  for (i = 0; i <= T_Last_Class_Type; i++)
+  {
       objectStats[i].printStats(i);
   }
 
@@ -154,7 +156,8 @@ void MemoryStats::clear()
     normalStats.clear();
     largeStats.clear();
 
-    for (i = 0; i <= highest_T; i++) {
+    for (i = 0; i <= T_Last_Class_Type; i++)
+    {
         objectStats[i].clear();
     }
 }

@@ -54,6 +54,9 @@
 #include "RexxBuiltinFunctions.h"                          /* Gneral purpose BIF Header file       */
 #include "ProtectedObject.hpp"
 
+// singleton class instance
+RexxClass *RexxString::classInstance = OREF_NULL;
+
 HashCode RexxString::hash()
 /******************************************************************************/
 /* Function:  retrieve the hash value of a string object                      */
@@ -1701,7 +1704,7 @@ RexxString *RexxString::newString(const char *string, size_t length)
                                        /* set the behaviour from the class*/
   newObj->setBehaviour(TheStringBehaviour);
                                        /* set the virtual function table    */
-  newObj->setVirtualFunctions(RexxMemory::VFTArray[T_string]);
+  newObj->setVirtualFunctions(RexxMemory::virtualFunctionTable[T_String]);
                                        /* clear the front part              */
   newObj->clearObject(sizeof(RexxString));
   newObj->setLength(length);           /* save the length                   */
@@ -1737,7 +1740,7 @@ RexxString *RexxString::rawString(size_t length)
                                        /* set the behaviour from the class*/
   newObj->setBehaviour(TheStringBehaviour);
                                        /* set the virtual function table    */
-  newObj->setVirtualFunctions(RexxMemory::VFTArray[T_string]);
+  newObj->setVirtualFunctions(RexxMemory::virtualFunctionTable[T_String]);
                                        /* clear the front part              */
   newObj->clearObject(sizeof(RexxString));
   newObj->setLength(length);           /* save the length                   */
@@ -1780,7 +1783,7 @@ RexxString *RexxString::newUpperString(const char * string, stringsize_t length)
     /* set the behaviour from the class*/
     newObj->setBehaviour(TheStringBehaviour);
     /* set the virtual function table    */
-    newObj->setVirtualFunctions(RexxMemory::VFTArray[T_string]);
+    newObj->setVirtualFunctions(RexxMemory::virtualFunctionTable[T_String]);
     /* clear the front part              */
     newObj->clearObject(sizeof(RexxString));
     newObj->length = length;             /* save the length                   */
@@ -1859,6 +1862,47 @@ RexxString *RexxString::newRexx(RexxObject **init_args, size_t argCount)
   return string;                       /* return the new string             */
 }
 
+
+PCPPM RexxString::operatorMethods[] =
+{
+   NULL,                               /* first entry not used              */
+   (PCPPM)&RexxString::plus,
+   (PCPPM)&RexxString::minus,
+   (PCPPM)&RexxString::multiply,
+   (PCPPM)&RexxString::divide,
+   (PCPPM)&RexxString::integerDivide,
+   (PCPPM)&RexxString::remainder,
+   (PCPPM)&RexxString::power,
+   (PCPPM)&RexxString::concatRexx,
+   (PCPPM)&RexxString::concatRexx,
+   (PCPPM)&RexxString::concatBlank,
+   (PCPPM)&RexxString::equal,
+   (PCPPM)&RexxString::notEqual,
+   (PCPPM)&RexxString::isGreaterThan,
+   (PCPPM)&RexxString::isLessOrEqual,
+   (PCPPM)&RexxString::isLessThan,
+   (PCPPM)&RexxString::isGreaterOrEqual,
+                              /* Duplicate entry neccessary        */
+   (PCPPM)&RexxString::isGreaterOrEqual,
+   (PCPPM)&RexxString::isLessOrEqual,
+   (PCPPM)&RexxString::strictEqual,
+   (PCPPM)&RexxString::strictNotEqual,
+   (PCPPM)&RexxString::strictGreaterThan,
+   (PCPPM)&RexxString::strictLessOrEqual,
+   (PCPPM)&RexxString::strictLessThan,
+   (PCPPM)&RexxString::strictGreaterOrEqual,
+                              /* Duplicate entry neccessary        */
+   (PCPPM)&RexxString::strictGreaterOrEqual,
+   (PCPPM)&RexxString::strictLessOrEqual,
+   (PCPPM)&RexxString::notEqual,
+   (PCPPM)&RexxString::notEqual, /* Duplicate entry neccessary        */
+   (PCPPM)&RexxString::andOp,
+   (PCPPM)&RexxString::orOp,
+   (PCPPM)&RexxString::xorOp,
+   (PCPPM)&RexxString::operatorNot,
+};
+
+
 #include "RexxNativeAPI.h"
 
 #define this ((RexxString *)self)
@@ -1893,9 +1937,9 @@ REXXOBJECT REXXENTRY REXX_STRING_NEWD(double number)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  return_object(new_string(number));
+    return context.protect(new_string(number));
 }
 
 REXXOBJECT REXXENTRY REXX_STRING_NEW_UPPER(CSTRING string)
@@ -1903,9 +1947,9 @@ REXXOBJECT REXXENTRY REXX_STRING_NEW_UPPER(CSTRING string)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  return_object(((RexxString *)new_string(string))->upper());
+    return context.protect(((RexxString *)new_string(string))->upper());
 }
 
 REXXOBJECT REXXENTRY REXX_STRING_NEW(CSTRING string, size_t length)
@@ -1913,9 +1957,9 @@ REXXOBJECT REXXENTRY REXX_STRING_NEW(CSTRING string, size_t length)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  return_object(new_string(string, length));
+    return context.protect(new_string(string, length));
 }
 
 size_t REXXENTRY REXX_STRING_GET(REXXOBJECT self, size_t start, char * buffer, size_t bufl)

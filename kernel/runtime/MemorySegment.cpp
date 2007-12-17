@@ -461,8 +461,6 @@ void MemorySegmentSet::addSegment(MemorySegment *segment, bool createDeadObject)
 /* Function:  Add a segment to the segment pool.                              */
 /******************************************************************************/
 {
-                                       /* can't be interupted for this      */
-  SysEnterCriticalSection();
   /* we want to keep these segments ordered by address so we can */
   /* potentially combine them later. */
   MemorySegment *insertPosition = anchor.next;
@@ -499,7 +497,6 @@ void MemorySegmentSet::addSegment(MemorySegment *segment, bool createDeadObject)
         addDeadObject(ptr);
       }
   }
-  SysExitCriticalSection();
 }
 
 

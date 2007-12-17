@@ -105,7 +105,7 @@ void * RexxInstruction::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  return new_object(size, T_parse_instruction); /* Get new object                    */
+  return new_object(size, T_Instruction); /* Get new object                    */
 }
 
 void RexxInstructionExpression::live(void)

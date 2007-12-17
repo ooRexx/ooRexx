@@ -68,6 +68,7 @@ class RexxTable : public RexxHashTableCollection {
 
    RexxObject *newRexx(RexxObject **, size_t);
    static RexxTable  *newInstance();
+   static RexxClass *classInstance;
 
 };
 

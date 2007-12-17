@@ -37,7 +37,6 @@
 /*----------------------------------------------------------------------------*/
 
 #include <windows.h>
-#define INCL_REXXSAA YES
 #include "rexx.h"
 #include "APIUtil.h"
 #include <stdio.h>

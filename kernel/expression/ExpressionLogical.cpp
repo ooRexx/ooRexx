@@ -72,7 +72,7 @@ RexxExpressionLogical::RexxExpressionLogical(RexxSource *source, size_t count, R
         RexxObject *condition = list->pop();
         if (condition == OREF_NULL)
         {
-            source->report_error(Error_Invalid_expression_logical_list);
+            source->syntaxError(Error_Invalid_expression_logical_list);
         }
         OrefSet(this, this->expressions[--count], condition);
     }

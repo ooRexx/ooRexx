@@ -52,7 +52,6 @@
 #include "RexxCore.h"
 #include "events.h"
 
-#define INCL_REXXSAA
 #include "rexx.h"
 #include "RexxNativeAPI.h"                        // REXX native interface
 

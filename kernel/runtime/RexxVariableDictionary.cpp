@@ -425,7 +425,7 @@ RexxVariableDictionary *RexxVariableDictionary::newInstance(
                                        /* some special optimization of the  */
                                        /* look ups                          */
                                        /* get a new object and hash         */
-  return (RexxVariableDictionary *)new_hashCollection(looksize * 2, sizeof(RexxVariableDictionary), T_vdict);
+  return (RexxVariableDictionary *)new_hashCollection(looksize * 2, sizeof(RexxVariableDictionary), T_VariableDictionary);
 }
 
 
@@ -449,7 +449,7 @@ RexxVariableDictionary *RexxVariableDictionary::newInstance(
                                        /* some special optimization of the  */
                                        /* look ups                          */
                                        /* get a new object and hash         */
-  newObj = (RexxVariableDictionary *)new_hashCollection(hashTabSize, sizeof(RexxVariableDictionary), T_vdict);
+  newObj = (RexxVariableDictionary *)new_hashCollection(hashTabSize, sizeof(RexxVariableDictionary), T_VariableDictionary);
   newObj->scope = scope;               /* fill in the scope */
   return newObj;                       /* return the new vdict              */
 }

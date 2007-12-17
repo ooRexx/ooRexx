@@ -61,6 +61,7 @@
 #define NOT_ACTIVE            ((size_t)-2) /* free element marker               */
 
  class RexxList : public RexxObject {
+     friend class RexxListTable;
   public:
    void * operator new(size_t);
    inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
@@ -122,6 +123,10 @@
    void          addFirst(RexxObject *value);
    inline size_t getSize() {return this->count;}
    RexxObject   *append(RexxObject *);
+
+   static RexxClass *classInstance;
+
+ protected:
 
    RexxListTable *table;                 /* list table  item                  */
    size_t first;                         /* first real element index          */

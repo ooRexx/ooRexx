@@ -132,7 +132,7 @@ void *RexxListTable::operator new(size_t size, size_t initialSize, size_t compan
   bytes = newList->getObjectSize() - companionSize;
 
   // initialize the hash table object
-  ((RexxObject *)newTable)->initializeNewObject(bytes, memoryObject.markWord, RexxMemory::VFTArray[T_listtable], TheListTableBehaviour);
+  ((RexxObject *)newTable)->initializeNewObject(bytes, memoryObject.markWord, RexxMemory::virtualFunctionTable[T_ListTable], TheListTableBehaviour);
                                        /* reduce the companion size         */
   newList->setObjectSize(companionSize);
   newTable->size = initialSize;        /* fill in the initial size          */

@@ -183,9 +183,6 @@
 
 /* Include files */
 
-#define  INCL_REXXSAA
-#define  INCL_RXMACRO
-
 #include <rexx.h>
 #include <memory.h>
 #include <fcntl.h>

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  MessageClass.c       */
+/* REXX Kernel                                           MessageClass.c       */
 /*                                                                            */
 /* Primitive Message Class                                                    */
 /*                                                                            */
@@ -51,6 +51,9 @@
 #include "RexxActivation.hpp"
 #include "RexxNativeActivation.hpp"
 #include "MessageClass.hpp"
+
+// singleton class instance
+RexxClass *RexxMessage::classInstance = OREF_NULL;
 
                                        /* message_nstart, found in oknmsg.c */
 extern "C" {
@@ -343,7 +346,7 @@ void RexxMessage::sendNotification(void)
   ActivityManager::currentActivity->current()->setObjNotify(OREF_NULL);
                                        /* others waiting for a result?      */
   if (this->waitingActivities != OREF_NULL) {
-    i = this->waitingActivities->count;/* get the waiting count             */
+    i = this->waitingActivities->getSize();/* get the waiting count             */
     while (i--) {                      /* while we have items               */
                                        /* get the first item                */
       waitingActivity = (RexxActivity *)this->waitingActivities->removeFirst();

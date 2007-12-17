@@ -162,7 +162,6 @@ typedef unsigned short int LENSTRING;  /* # of chars in a data block */
 #include "ctype.h"
 #include "process.h"
 
-#define  INCL_RXSYSEXIT                /* Include Subcommand interfac*/
 #include "rexx.h"
 #include "stdlib.h"
 #include "string.h"

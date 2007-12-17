@@ -92,7 +92,6 @@ void RxExitClearNormal();
 extern bool bProcessExitInitFlag;
 
 unsigned int iClauseCounter=0;         // count of clauses
-unsigned int iTransClauseCounter=0;    // count of clauses in translator
 #define LOADED_OBJECTS 100
 
 #define CCHMAXPATH PATH_MAX+1

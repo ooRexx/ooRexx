@@ -93,7 +93,7 @@ OTIOBJ8=$(OR_OUTDIR)\QueueInstruction.$(OBJ) $(OR_OUTDIR)\RaiseInstruction.$(OBJ
 OTIOBJ9=$(OR_OUTDIR)\ReplyInstruction.$(OBJ) $(OR_OUTDIR)\ReturnInstruction.$(OBJ)   $(OR_OUTDIR)\SayInstruction.$(OBJ) \
         $(OR_OUTDIR)\SelectInstruction.$(OBJ)
 OTIOBJ10=$(OR_OUTDIR)\SignalInstruction.$(OBJ) $(OR_OUTDIR)\ThenInstruction.$(OBJ) $(OR_OUTDIR)\TraceInstruction.$(OBJ) \
-         $(OR_OUTDIR)\UseInstruction.$(OBJ) $(OR_OUTDIR)\UseStrictInstruction.$(OBJ)
+         $(OR_OUTDIR)\UseStrictInstruction.$(OBJ)
 OTEOBJ1=$(OR_OUTDIR)\ExpressionCompoundVariable.$(OBJ)  $(OR_OUTDIR)\ExpressionDotVariable.$(OBJ)  $(OR_OUTDIR)\ExpressionFunction.$(OBJ) \
         $(OR_OUTDIR)\ExpressionMessage.$(OBJ) $(OR_OUTDIR)\ExpressionLogical.$(OBJ)
 OTEOBJ2=$(OR_OUTDIR)\ExpressionStem.$(OBJ)  $(OR_OUTDIR)\ExpressionVariable.$(OBJ)   $(OR_OUTDIR)\IndirectVariableReference.$(OBJ) \
@@ -107,7 +107,7 @@ OTPOBJS=$(OTSOBJ1)  $(OTSOBJ2) $(OTIOBJ1) $(OTIOBJ2) $(OTIOBJ3) \
 # Following all part of rexx
 OKCOBJ1=$(OR_OUTDIR)\Version.$(OBJ)
 OKCOBJ2= $(OR_OUTDIR)\RexxStartup.$(OBJ)  $(OR_OUTDIR)\Utilities.$(OBJ)
-OKAOBJS= $(OR_OUTDIR)\GlobalData.$(OBJ)  $(OR_OUTDIR)\Initialization.$(OBJ) $(OR_OUTDIR)\GlobalNames.$(OBJ)
+OKAOBJS= $(OR_OUTDIR)\GlobalData.$(OBJ)  $(OR_OUTDIR)\GlobalNames.$(OBJ)
 OKLOBJS=$(OR_OUTDIR)\Setup.$(OBJ) $(OR_OUTDIR)\InstructionParser.$(OBJ) \
         $(OR_OUTDIR)\Scanner.$(OBJ)
 OKCOBJS=$(OKCOBJ1) $(OKCOBJ2) $(OKLOBJS)
@@ -121,12 +121,14 @@ OKPOBJ3=$(OR_OUTDIR)\ListClass.$(OBJ)   $(OR_OUTDIR)\RexxMemory.$(OBJ) $(OR_OUTD
         $(OR_OUTDIR)\StemClass.$(OBJ)   $(OR_OUTDIR)\ObjectClass.$(OBJ) $(OR_OUTDIR)\RexxCompoundTail.$(OBJ) \
         $(OR_OUTDIR)\RexxCompoundElement.$(OBJ) $(OR_OUTDIR)\RexxCompoundTable.$(OBJ)
 OKPOBJ4=$(OR_OUTDIR)\QueueClass.$(OBJ)  $(OR_OUTDIR)\SupplierClass.$(OBJ)  \
-        $(OR_OUTDIR)\RelationClass.$(OBJ)  $(OR_OUTDIR)\TableClass.$(OBJ)
+        $(OR_OUTDIR)\RelationClass.$(OBJ)  $(OR_OUTDIR)\TableClass.$(OBJ) \
+	$(OR_OUTDIR)\PrimitiveBehaviours.$(OBJ) $(OR_OUTDIR)\VirtualFunctionTable.$(OBJ)
 OKPOBJ5=$(OR_OUTDIR)\IntegerClass.$(OBJ)    $(OR_OUTDIR)\NumberStringClass.$(OBJ)
 OKIOBJ1=$(OR_OUTDIR)\RexxActivation.$(OBJ) $(OR_OUTDIR)\RexxActivity.$(OBJ) $(OR_OUTDIR)\KeywordConstants.$(OBJ)  \
-        $(OR_OUTDIR)\RexxBehaviour.$(OBJ)  $(OR_OUTDIR)\RexxBuffer.$(OBJ) $(OR_OUTDIR)\ActivityManager.$(OBJ)
-OKIOBJ2=$(OR_OUTDIR)\RexxHashTable.$(OBJ)   $(OR_OUTDIR)\RexxCode.$(OBJ)  \
-        $(OR_OUTDIR)\RexxListTable.$(OBJ) $(OR_OUTDIR)\RexxNativeActivation.$(OBJ) $(OR_OUTDIR)\RexxNativeMethod.$(OBJ)
+        $(OR_OUTDIR)\RexxBehaviour.$(OBJ)  $(OR_OUTDIR)\RexxBuffer.$(OBJ) $(OR_OUTDIR)\ActivityManager.$(OBJ) \
+	$(OR_OUTDIR)\Interpreter.$(OBJ)
+OKIOBJ2=$(OR_OUTDIR)\RexxHashTable.$(OBJ)   $(OR_OUTDIR)\RexxCode.$(OBJ) $(OR_OUTDIR)\LibraryManager.$(OBJ) \
+        $(OR_OUTDIR)\RexxListTable.$(OBJ) $(OR_OUTDIR)\RexxNativeActivation.$(OBJ) $(OR_OUTDIR)\RexxNativeCode.$(OBJ)
 OKIOBJ3=$(OR_OUTDIR)\RexxCollection.$(OBJ)   $(OR_OUTDIR)\RexxSmartBuffer.$(OBJ) $(OR_OUTDIR)\StackClass.$(OBJ)  \
         $(OR_OUTDIR)\RexxVariable.$(OBJ)    $(OR_OUTDIR)\RexxVariableDictionary.$(OBJ) $(OR_OUTDIR)\RexxDateTime.$(OBJ) \
 	$(OR_OUTDIR)\Numerics.$(OBJ)
@@ -185,7 +187,8 @@ ORXFILES=$(OR_OUTDIR)\CoreClasses.orx  $(OR_OUTDIR)\StreamClasses.orx \
 	 $(OR_OUTDIR)\PlatformObjects.orx $(OR_OUTDIR)\orexxole.cls
 
 #define critical header files for forcing recomp
-ORXHEADERS=$(KMESSAGES)\RexxErrorCodes.h $(KMESSAGES)\RexxMessageNumbers.h $(KMESSAGES)\RexxMessageTable.h $(KCORE)\RexxCore.h
+ORXHEADERS=$(KMESSAGES)\RexxErrorCodes.h $(KMESSAGES)\RexxMessageNumbers.h $(KMESSAGES)\RexxMessageTable.h $(KCORE)\RexxCore.h \
+    $(KCORE)\PrimitiveBehaviourNames.h $(KCORE)\ClassTypeCodes.h
 
 
 #
@@ -285,6 +288,26 @@ $(KMESSAGES)\RexxMessageTable.h: $(KMESSAGES)\RexxMessageTable.xsl $(KMESSAGES)\
     @ECHO .
     @ECHO Generating $(@)
     xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\RexxMessageTable.xsl
+
+$(KCORE)\PrimitiveBehaviourNames.h: $(KCORE)\PrimitiveBehaviourNames.xsl $(KCORE)\PrimitiveClasses.xml
+    @ECHO .
+    @ECHO Generating $(@)
+    xalan -o $(@) $(KCORE)\PrimitiveClasses.xml $(KCORE)\PrimitiveBehaviourNames.xsl
+
+$(KCORE)\PrimitiveBehaviours.cpp: $(KCORE)\PrimitiveBehaviours.xsl $(KCORE)\PrimitiveClasses.xml
+    @ECHO .
+    @ECHO Generating $(@)
+    xalan -o $(@) $(KCORE)\PrimitiveClasses.xml $(KCORE)\PrimitiveBehaviours.xsl
+
+$(KCORE)\VirtualFunctionTable.cpp: $(KCORE)\VirtualFunctionTable.xsl $(KCORE)\PrimitiveClasses.xml
+    @ECHO .
+    @ECHO Generating $(@)
+    xalan -o $(@) $(KCORE)\PrimitiveClasses.xml $(KCORE)\VirtualFunctionTable.xsl
+
+$(KCORE)\ClassTypeCodes.h: $(KCORE)\ClassTypeCodes.xsl $(KCORE)\PrimitiveClasses.xml
+    @ECHO .
+    @ECHO Generating $(@)
+    xalan -o $(@) $(KCORE)\PrimitiveClasses.xml $(KCORE)\ClassTypeCodes.xsl
 
 $(OR_OUTDIR)\winmsgtb.res: $(KWINDOWS)\winmsgtb.rc $(KMESSAGES)\DocErrorMessages.sgml
     @ECHO .

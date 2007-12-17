@@ -41,12 +41,10 @@
 /* translate a program and save to an output file                             */
 /*                                                                            */
 /******************************************************************************/
-#define INCL_BASE                      /* Include OS/2 definitions          */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "windows.h"
-#define INCL_RXSYSEXIT
 #include "rexx.h"
 #include "PlatformDefinitions.h"
 #include "RexxErrorCodes.h"

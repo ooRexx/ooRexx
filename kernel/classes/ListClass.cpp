@@ -49,6 +49,9 @@
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 
+// singleton class instance
+RexxClass *RexxList::classInstance = OREF_NULL;
+
 void RexxList::init(void)
 /******************************************************************************/
 /* Function:  Initial set up of a list object instance                        */

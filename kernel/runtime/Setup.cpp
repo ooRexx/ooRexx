@@ -66,7 +66,7 @@
 #include "MessageClass.hpp"
 #include "StemClass.hpp"
 #include "RexxMisc.hpp"
-#include "RexxNativeMethod.hpp"
+#include "RexxNativeCode.hpp"
 #include "RexxActivity.hpp"
 #include "ActivityManager.hpp"
 #include "RexxNativeActivation.hpp"
@@ -535,6 +535,7 @@ NULL                                   /* final terminating method          */
 };
 
 
+
 size_t RexxMemory::resolveExportedMethod(
     PCPPM   targetMethod )             /* method needed to resolve          */
 /******************************************************************************/
@@ -709,7 +710,6 @@ void RexxMemory::createImage()
 
                                        /* RexxMethod                        */
   CLASS_CREATE(Method, "Method", RexxMethodClass);
-  RexxNativeCode::createClass();       /* RexxNativeCode                    */
   CLASS_CREATE(Queue, "Queue", RexxClass);      /* RexxQueue                         */
   TheNullPointer = new_pointer(NULL);  /* a NULL pointer object             */
   CLASS_CREATE(List, "List", RexxListClass);   /* RexxList                          */
@@ -1582,7 +1582,6 @@ void RexxMemory::createImage()
   /* set up the kernel directory (MEMORY done elsewhere) */
   kernel_public(CHAR_INTEGER          ,TheIntegerClass     , TheKernel);
   kernel_public(CHAR_NUMBERSTRING     ,TheNumberStringClass, TheKernel);
-  kernel_public(CHAR_NMETHOD          ,TheNativeCodeClass  , TheKernel);
 
   // TODO:  Make the kernel directory part of the memory object, but not in the
   // environment.
@@ -1648,9 +1647,9 @@ void RexxMemory::createImage()
   TheNilObject->defMethod(getGlobalName(CHAR_OBJECTNAMEEQUALS), (RexxMethod *)TheNilObject);
 
   // ok, .NIL has been constructed.  As a last step before saving the image, we need to change
-  // the type identifier in the so that this will get the correct virtual function table
+  // the type identifier in the behaviour so that this will get the correct virtual function table
   // restored when the image reloads.
-  TheNilObject->behaviour->setClassType(T_nil_object);
+  TheNilObject->behaviour->setClassType(T_NilObject);
 
   RexxClass *ordered = (RexxClass *)TheEnvironment->get(getGlobalName(CHAR_ORDEREDCOLLECTION));
 

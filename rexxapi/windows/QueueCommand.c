@@ -48,7 +48,6 @@
 /*                                                                   */
 /*********************************************************************/
 
-#define INCL_RXQUEUE           /* needed for RxQueue...() calls      */
 #include <stdio.h>             /* needed for screen output           */
 #include <conio.h>             /* needed for input                   */
 #include <stdlib.h>            /* needed for miscellaneous functions */

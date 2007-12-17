@@ -116,7 +116,6 @@ RexxValidObject                @104
 ; Windows Specific
 ;
 ProcessSaveImage             @106
-RexxTerminated               @107
 RexxWaitForTermination         @108
 RexxDidRexxTerminate           @109
 RexxSetProcessMessages        @110

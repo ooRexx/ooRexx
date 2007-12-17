@@ -48,6 +48,9 @@
 #include "SupplierClass.hpp"
 #include "ActivityManager.hpp"
 
+// singleton class instance
+RexxClass *RexxSupplier::classInstance = OREF_NULL;
+
 
 RexxSupplier::RexxSupplier(
   RexxArray  *_values,                 /* array of values                   */
@@ -182,7 +185,7 @@ void *RexxSupplier::operator new(size_t size)
 /****************************************************************************/
 {
                                        /* Get new object                    */
-    return new_object(size, T_supplier);
+    return new_object(size, T_Supplier);
 }
 
 

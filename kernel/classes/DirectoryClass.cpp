@@ -50,6 +50,9 @@
 #include "RexxActivation.hpp"
 #include "ProtectedObject.hpp"
 
+// singleton class instance
+RexxClass *RexxDirectory::classInstance = OREF_NULL;
+
 void RexxDirectory::live()
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
@@ -750,6 +753,6 @@ RexxDirectory *RexxDirectory::newInstance()
 /******************************************************************************/
 {
                                        /* get a new object and hash         */
-  return (RexxDirectory *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxDirectory), T_directory);
+  return (RexxDirectory *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxDirectory), T_Directory);
 }
 

@@ -42,7 +42,6 @@
 /*                                                                            */
 
 #include <windows.h>
-#define INCL_REXXSAA
 #include <rexx.h>
 #include <stdio.h>
 #include <dlgs.h>

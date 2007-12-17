@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxBehaviour.c     */
+/* REXX Kernel                                            RexxBehaviour.c     */
 /*                                                                            */
 /* Primitive Behaviour Class                                                  */
 /*                                                                            */
@@ -50,7 +50,6 @@
 #include "SupplierClass.hpp"
 #include "ProtectedObject.hpp"
 
-extern PCPPM objectOperatorMethods[];
 
 RexxBehaviour::RexxBehaviour(
     size_t          newTypenum,        /* class type number                 */
@@ -59,15 +58,30 @@ RexxBehaviour::RexxBehaviour(
 /* Function:  Construct C++ methods in OKGDATA.C                              */
 /******************************************************************************/
 {
-  this->behaviour = getPrimitiveBehaviour(T_behaviour);
-  this->header.setObjectSize(sizeof(RexxBehaviour));
-  this->setClassType(newTypenum);
-  this->behaviourFlags = 0;
-  this->scopes = OREF_NULL;
-  this->methodDictionary = OREF_NULL;
-  this->operatorMethods = operator_methods;
-  this->owningClass = OREF_NULL;
-  this->instanceMethodDictionary = OREF_NULL;
+    this->behaviour = getPrimitiveBehaviour(T_Behaviour);
+    this->header.setObjectSize(sizeof(RexxBehaviour));
+    this->setClassType(newTypenum);
+    this->behaviourFlags = 0;
+    this->scopes = OREF_NULL;
+    this->methodDictionary = OREF_NULL;
+    this->operatorMethods = operator_methods;
+    this->owningClass = OREF_NULL;
+    this->instanceMethodDictionary = OREF_NULL;
+
+    // if this is an internal class, normalize this so we can
+    // restore this to the correct value if we add additional internal classes.
+    if (newTypenum > T_Last_Exported_Class && newTypenum < T_First_Transient_Class)
+    {
+
+        behaviourFlags |=  INTERNAL_CLASS;
+    }
+    else if (newTypenum >= T_First_Transient_Class)
+    {
+
+        behaviourFlags |=  TRANSIENT_CLASS;
+    }
+
+
 }
 
 void RexxBehaviour::live()
@@ -175,7 +189,7 @@ RexxObject *RexxBehaviour::copy()
                                        /* copy those also                   */
     OrefSet(newBehaviour, newBehaviour->instanceMethodDictionary, (RexxTable *)this->instanceMethodDictionary->copy());
                                        /* use default operator methods set  */
-  newBehaviour->operatorMethods = (PCPPM *)objectOperatorMethods;
+  newBehaviour->operatorMethods = RexxObject::operatorMethods;
                                        /* all copied behaviours are         */
                                        /* non-primitive ones                */
   newBehaviour->setNonPrimitive();
@@ -370,7 +384,7 @@ void RexxBehaviour::restore(
 /******************************************************************************/
 {
                                        /* set the behaviour behaviour       */
-  this->setBehaviour(getPrimitiveBehaviour(T_behaviour));
+  this->setBehaviour(getPrimitiveBehaviour(T_Behaviour));
                                        /* set proper size                   */
   this->setObjectSize(roundObjectBoundary(sizeof(RexxBehaviour)));
   this->setOldSpace();

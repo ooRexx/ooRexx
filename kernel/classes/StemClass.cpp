@@ -65,6 +65,9 @@
 static   size_t sortStartCol = 0;
 static   size_t sortCompLength = 0;
 
+// singleton class instance
+RexxClass *RexxStem::classInstance = OREF_NULL;
+
 
 RexxStem::RexxStem(
     RexxString *name)                  /* the variable name                 */

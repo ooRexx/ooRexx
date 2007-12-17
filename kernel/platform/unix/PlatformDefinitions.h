@@ -123,13 +123,10 @@
 #define HMTX SMTX
 #define SEV  RexxSemaphore *
                              // semaphore definitions and init
-//#ifdef AIX
-extern SMTX initialize_sem;
 extern int SecureFlag;
-//#endif
 
 
-#define SysSharedSemaphoreDefn SMTX  rexx_resource_semaphore = 0;   \
+#define SysSharedSemaphoreDefn  \
                                SMTX  rexx_wait_queue_semaphore = 0; \
                                SEV   rexxTimeSliceSemaphore = 0;    \
                                size_t rexxTimeSliceTimerOwner;
@@ -183,33 +180,6 @@ typedef void *(* PTHREADFN)(void *);    /* define a thread function          */
 //#define EVCLEAR(s)    s->reset()     // commented out by weigold
 #define EVCLEAR(s)    s=0              // and inserted new line
 #define EVEXIST(s)
-
-/******************************************************************************/
-/* REQUIRED:  Definitions for entering and exiting code sections that         */
-/* manipulate globally defined resources.                                     */
-/******************************************************************************/
-
-
-#if defined(AIX) || defined(LINUX)
-#define SysEnterResourceSection() MTXRQ(resource_semaphore);
-#define SysExitResourceSection() MTXRL(resource_semaphore);
-#else
-#define SysEnterResourceSection() {\
-    MTXRQ(resource_semaphore); \
-    SysEnterCriticalSection(); }
-
-#define SysExitResourceSection() {\
-    SysExitCriticalSection(); \
-    MTXRL(resource_semaphore); }
-#endif
-
-/******************************************************************************/
-/* REQUIRED:  Definitions for entering and exiting critical code sections.    */
-/* These can be defined out to nothing if these have no meaning.              */
-/******************************************************************************/
-
-#define SysEnterCriticalSection() MTXRQ(initialize_sem);
-#define SysExitCriticalSection()  MTXRL(initialize_sem);
 
 /******************************************************************************/
 /* REQUIRED:  Define a routine to determine if an activation needs to yield.  */

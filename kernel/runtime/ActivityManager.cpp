@@ -41,6 +41,7 @@
 #include "RexxActivation.hpp"
 #include "DirectoryClass.hpp"
 #include "ActivityManager.hpp"
+#include "Interpreter.hpp"
 
 // The currently active activity.
 RexxActivity *ActivityManager::currentActivity = OREF_NULL;
@@ -155,7 +156,8 @@ void ActivityManager::addWaitingActivity(
 /* Function:  Add an activity to the round robin wait queue                   */
 /******************************************************************************/
 {
-    SysEnterResourceSection();           /* now in a critical section         */
+    ResourceSection lock;                // need the control block locks
+
                                          /* NOTE:  The following assignments  */
                                          /* do not use OrefSet intentionally. */
                                          /* because we do have yet have kernel*/
@@ -170,7 +172,7 @@ void ActivityManager::addWaitingActivity(
         firstWaitingActivity = waitingAct;
         /* and the tail                      */
         lastWaitingActivity = waitingAct;
-        SysExitResourceSection();          /* end of the critical section       */
+        lock.release();                  // release the lock now
     }
     else
     {                                    /* move to the end of the line       */
@@ -179,7 +181,7 @@ void ActivityManager::addWaitingActivity(
         /* this is the new last one          */
         lastWaitingActivity = waitingAct;
         waitingAct->clearWait();           /* clear the run semaphore           */
-        SysExitResourceSection();          /* end of the critical section       */
+        lock.release();                  // release the lock now
         if (release)                       /* current semaphore owner?          */
         {
             unlockKernel();
@@ -188,7 +190,7 @@ void ActivityManager::addWaitingActivity(
         waitingAct->waitKernel();          /* and wait for permission           */
     }
     lockKernel();                        // get the kernel lock now
-    SysEnterResourceSection();           /* now remove the waiting one        */
+    lock.reacquire();                    // get the resource lock back
                                          /* NOTE:  The following assignments  */
                                          /* do not use OrefSet intentionally. */
                                          /* because we do have yet have kernel*/
@@ -226,9 +228,6 @@ void ActivityManager::addWaitingActivity(
     currentActivity = waitingAct;        /* set new current activity          */
     /* and new active settings           */
     Numerics::setCurrentSettings(waitingAct->getNumericSettings());
-    SysExitResourceSection();            /* end of the critical section       */
-                                         /* have more pools been added since  */
-                                         /* we left the kernel ?              */
 }
 
 
@@ -248,14 +247,13 @@ void ActivityManager::createInterpreter()
  */
 void ActivityManager::terminateInterpreter()
 {
-    SysEnterCriticalSection();
+    ResourceSection lock;
     interpreterInstances--;              /* reduce the active count           */
     if (interpreterInstances == 0)       /* down to nothing?                  */
     {
                                          /* force termination                 */
         shutdown();
     }
-    SysExitCriticalSection();
 }
 
 
@@ -351,7 +349,7 @@ RexxActivity *ActivityManager::newActivity(int priority)
 /* Function:  Create or reuse an activity object                              */
 /******************************************************************************/
 {
-  SysEnterResourceSection();           /* now in a critical section         */
+  ResourceSection lock;                // lock the control information
 
   RexxActivity *activity = OREF_NULL;  /* no activity yet                   */
   if (priority != NO_THREAD)           /* can we reuse one?                 */
@@ -362,10 +360,10 @@ RexxActivity *ActivityManager::newActivity(int priority)
 
   if (activity == OREF_NULL)
   {
-    SysExitResourceSection();          /* end of the critical section       */
+    lock.release();                    // release lock while creating new activity
                                        /* Create a new activity object      */
     activity = new RexxActivity(false, priority);
-    SysEnterResourceSection();         /* now in a critical section         */
+    lock.reacquire();                  // need this back again
                                        /* Add this activity to the table of */
                                        /* in use activities and the global  */
                                        /* table                             */
@@ -380,7 +378,6 @@ RexxActivity *ActivityManager::newActivity(int priority)
     // this one is in use now
     activeActivities->append((RexxObject *)activity);
   }
-  SysExitResourceSection();            /* end of the critical section       */
   return activity;                     /* return the activity               */
 }
 
@@ -508,21 +505,15 @@ bool ActivityManager::haltActivity(
 /* Function:   Flip on a bit in a target activities top activation            */
 /******************************************************************************/
 {
-    bool result = false;                 /* return value                      */
-
-    /* no need for critical section, since access here is read-only */
-    MTXRQ(resource_semaphore);           /* lock activity changes             */
-
+    ResourceSection lock;
     // locate the activity associated with this thread_id.  If not found, return
     // a failure.
     RexxActivity *activity = findActivity(thread_id);
     if (activity != OREF_NULL)
     {
-        result = activity->halt(description);
+        return activity->halt(description);
     }
-
-    MTXRL(resource_semaphore);           /* unlock the resources              */
-    return result;                       /* return the result                 */
+    return false;                        // this was a failure
 }
 
 bool ActivityManager::yieldActivity(
@@ -532,21 +523,16 @@ bool ActivityManager::yieldActivity(
 /*             called from rexxsetyield                                     */
 /****************************************************************************/
 {
-    bool result = false;                 /* return value                      */
-
-    /* no need for critical section, since access here is read-only */
-    MTXRQ(resource_semaphore);           /* lock activity changes             */
-
+    ResourceSection lock;
     // locate the activity associated with this thread_id.  If not found, return
     // a failure.
     RexxActivity *activity = findActivity(thread_id);
     if (activity != OREF_NULL)
     {
         activity->yield();
-        result = true;                   /* this actually worked              */
+        return true;                     /* this actually worked              */
     }
-    MTXRL(resource_semaphore);           /* unlock the resources              */
-    return result;                       /* return the result                 */
+    return false;                        // this was a failure
 }
 
 
@@ -557,20 +543,15 @@ bool ActivityManager::setActivityTrace(
 /* Function:   Flip on a bit in a target activities top activation            */
 /******************************************************************************/
 {
-    bool result = false;                 /* return value                      */
-
-    /* no need for critical section, since access here is read-only */
-    MTXRQ(resource_semaphore);           /* lock activity changes             */
-
+    ResourceSection lock;
     // locate the activity associated with this thread_id.  If not found, return
     // a failure.
     RexxActivity *activity = findActivity(thread_id);
     if (activity != OREF_NULL)
     {
-        result = activity->setTrace(on_or_off);
+        return activity->setTrace(on_or_off);
     }
-    MTXRL(resource_semaphore);           /* unlock the resources              */
-    return result;                       /* return the result                 */
+    return false;                        // this was a failure
 }
 
 
@@ -579,16 +560,13 @@ void ActivityManager::yieldCurrentActivity()
 /* Function:   Signal an activation to yield control                          */
 /******************************************************************************/
 {
-  /* no need for critical section, since access here is read-only */
-  MTXRQ(resource_semaphore);           /* lock activity changes             */
-  /* something working?                */
+    ResourceSection lock;
 
-  RexxActivity *activity = ActivityManager::currentActivity;
-  if (activity != OREF_NULL)
-  {
-      activity->yield();
-  }
-  MTXRL(resource_semaphore);           /* unlock the resources              */
+    RexxActivity *activity = ActivityManager::currentActivity;
+    if (activity != OREF_NULL)
+    {
+        activity->yield();
+    }
 }
 
 
@@ -714,16 +692,16 @@ void ActivityManager::returnActivity(RexxActivity *activityObject)
         }
 
         // START OF CRITICAL SECTION
-        SysEnterResourceSection();
-        // remove this from the active list
-        activeActivities->removeItem((RexxObject *)activityObject);
-        // and also remove from the global list
-        allActivities->removeItem((RexxObject *)activityObject);
-        // cleanup any system resources this activity might own
-        activityObject->terminateActivity();
-
+        {
+            ResourceSection lock;
+            // remove this from the active list
+            activeActivities->removeItem((RexxObject *)activityObject);
+            // and also remove from the global list
+            allActivities->removeItem((RexxObject *)activityObject);
+            // cleanup any system resources this activity might own
+            activityObject->terminateActivity();
+        }
         // END OF CRITICAL SECTION
-        SysExitResourceSection();
                                          /* Are we terminating?               */
         if (processTerminating)
         {
@@ -759,16 +737,17 @@ void ActivityManager::activityEnded(RexxActivity *activityObject)
     }
 
     // START OF CRITICAL SECTION
-    SysEnterResourceSection();
-    // remove this from the active list
-    activeActivities->removeItem((RexxObject *)activityObject);
-    // and also remove from the global list
-    allActivities->removeItem((RexxObject *)activityObject);
-    // cleanup any system resources this activity might own
-    activityObject->terminateActivity();
+    {
+        ResourceSection lock;       // this is a critical section
+        // remove this from the active list
+        activeActivities->removeItem((RexxObject *)activityObject);
+        // and also remove from the global list
+        allActivities->removeItem((RexxObject *)activityObject);
+        // cleanup any system resources this activity might own
+        activityObject->terminateActivity();
+    }
 
     // END OF CRITICAL SECTION
-    SysExitResourceSection();
                                      /* Are we terminating?               */
     if (processTerminating)
     {
@@ -811,7 +790,8 @@ RexxActivity *ActivityManager::getActivity()
                                        /* Activity already existed for this */
                                        /* get kernel semophore in activity  */
         activityObject->requestAccess();
-        SysEnterResourceSection();     /* now in a critical section         */
+
+        ResourceSection lock;          // lock the resources from this point
 
         // this might be a recursive reentry on the same thread...if not, we
         // need to reactivate this thread.
@@ -820,7 +800,6 @@ RexxActivity *ActivityManager::getActivity()
             // add this to the active list
             activeActivities->append((RexxObject *)activityObject);
         }
-        SysExitResourceSection();
     }
     activityObject->activate();        // let the activity know it's in use, potentially nested
     return activityObject;             // Return the activity for thread

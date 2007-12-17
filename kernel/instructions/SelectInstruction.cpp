@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              SelectInstruction.c      */
+/* REXX Translator                                   SelectInstruction.c      */
 /*                                                                            */
 /* Primitive Select Parse Class                                               */
 /*                                                                            */
@@ -54,21 +54,13 @@
 #include "DoBlock.hpp"
 
 
-RexxInstructionSelect::RexxInstructionSelect()
+RexxInstructionSelect::RexxInstructionSelect(RexxString *name)
 /******************************************************************************/
 /* Function:  Initialize a SELECT instruction object                          */
 /******************************************************************************/
 {
                                        /* create a list of WHEN targets     */
-  OrefSet(this, this->when_list, new_queue());
-}
-
-
-RexxInstructionLabeledSelect::RexxInstructionLabeledSelect(RexxString *name) : RexxInstructionSelect()
-/******************************************************************************/
-/* Function:  Initialize a SELECT instruction object                          */
-/******************************************************************************/
-{
+    OrefSet(this, this->when_list, new_queue());
     // set the label name
     OrefSet(this, this->label, name);
 }
@@ -84,6 +76,7 @@ void RexxInstructionSelect::live()
   memory_mark(this->when_list);
   memory_mark(this->end);
   memory_mark(this->otherwise);
+  memory_mark(this->label);
   cleanUpMemoryMark
 }
 
@@ -98,6 +91,7 @@ void RexxInstructionSelect::liveGeneral()
   memory_mark_general(this->when_list);
   memory_mark_general(this->end);
   memory_mark_general(this->otherwise);
+  memory_mark_general(this->label);
   cleanUpMemoryMarkGeneral
 }
 
@@ -112,82 +106,21 @@ void RexxInstructionSelect::flatten(RexxEnvelope *envelope)
   flatten_reference(newThis->when_list, envelope);
   flatten_reference(newThis->end, envelope);
   flatten_reference(newThis->otherwise, envelope);
+  flatten_reference(newThis->label, envelope);
 
   cleanUpFlatten
 }
 
 
-void RexxInstructionLabeledSelect::live()
-/******************************************************************************/
-/* Function:  Normal garbage collection live marking                          */
-/******************************************************************************/
-{
-    RexxInstructionSelect::live();
-    setUpMemoryMark
-    memory_mark(this->label);
-    cleanUpMemoryMark
-}
-
-void RexxInstructionLabeledSelect::liveGeneral()
-/******************************************************************************/
-/* Function:  Generalized object marking                                      */
-/******************************************************************************/
-{
-    RexxInstructionSelect::liveGeneral();
-    setUpMemoryMarkGeneral
-    memory_mark_general(label);
-    cleanUpMemoryMarkGeneral
-}
-
-void RexxInstructionLabeledSelect::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-    setUpFlatten(RexxInstructionLabeledSelect)
-
-    flatten_reference(newThis->nextInstruction, envelope);
-    flatten_reference(newThis->when_list, envelope);
-    flatten_reference(newThis->end, envelope);
-    flatten_reference(newThis->otherwise, envelope);
-    flatten_reference(newThis->label, envelope);
-
-    cleanUpFlatten
-}
-
 
 /**
- * No label on base select class.
+ * Return the associated label.
  *
- * @return Always returns OREF_NULL.
+ * @return The select label (which might be OREF_NULL)
  */
 RexxString *RexxInstructionSelect::getLabel()
 {
-    return OREF_NULL;
-}
-
-
-/**
- * No label on labeled select class.
- *
- * @return Always returns OREF_NULL.
- */
-RexxString *RexxInstructionLabeledSelect::getLabel()
-{
     return label;
-}
-
-
-/**
- * Check for a label match on a block instruction.
- *
- * @param name   The target block name.
- *
- * @return True if this is a name match, false otherwise.
- */
-bool RexxInstructionSelect::isLabel(RexxString *name)
-{
-    return false;
 }
 
 
@@ -209,7 +142,7 @@ bool RexxInstructionSelect::isLoop()
  *
  * @return True if this is a name match, false otherwise.
  */
-bool RexxInstructionLabeledSelect::isLabel(RexxString *name)
+bool RexxInstructionSelect::isLabel(RexxString *name)
 {
     return label == name;
 }

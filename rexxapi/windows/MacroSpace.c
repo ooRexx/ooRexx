@@ -76,9 +76,6 @@
 /* long as the repository process continues running.                 */
 /*                                                                   */
 /*********************************************************************/
-#define INCL_RXMACRO                   /* API prototypes & flags     */
-#define INCL_RXSUBCOM
-
 #include "rexx.h"                      /* RXSTRING & REXXSAA() & APIs*/
 #include "io.h"
 #include "fcntl.h"
@@ -830,7 +827,6 @@ static int callrexx(
   REXX      *addr;
   SHORT      retval;
   HINSTANCE  hDll;
-  REXXWAIT4TERM *addr2;
 
   f=CreateFile(fnam,GENERIC_READ, FILE_SHARE_READ, NULL,
        OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
@@ -867,11 +863,6 @@ static int callrexx(
       rc = RXMACRO_FILE_ERROR;         /* file error - REXXSAA prblm */
     else if (i)                        /*                            */
       rc = RXMACRO_NO_STORAGE;         /*                            */
-
-    /* Call RexxDidRexxTerminate to get RexxTerminated semaphore closed */
-    if (!(addr2 = (REXXWAIT4TERM*)GetProcAddress(hDll,"RexxDidRexxTerminate")))
-      rc = RXMACRO_FILE_ERROR;
-    else (*addr2)();
 
     FreeLibrary(hDll);
   }

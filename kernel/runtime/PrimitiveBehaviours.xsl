@@ -1,4 +1,8 @@
-/*----------------------------------------------------------------------------*/
+<?xml version="1.0"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:output method="text"/>
+<xsl:template match="Classes">
+<xsl:text>/*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
 /* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
@@ -6,7 +10,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,67 +40,59 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                         RexxNativeMethod.hpp   */
+/* REXX Kernel                                                                */
 /*                                                                            */
-/* Primitive Native Code Class Definitions                                    */
+/* Build the table of virtual functions assigned to Rexx class instances      */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxNativeCode
-#define Included_RexxNativeCode
-                                       /* pointer to native method function */
-typedef char *(REXXENTRY *PNMF)(void **);
 
-typedef struct internalmethodentry {   /* internal method table entry       */
-  const char *entryName;               /* internal entry point name         */
-  PNMF   entryPoint;                   /* method entry point                */
-} internalMethodEntry;
+/* -------------------------------------------------------------------------- */
+/* --            ==================================================        -- */
+/* --            DO NOT CHANGE THIS FILE, ALL CHANGES WILL BE LOST!        -- */
+/* --            ==================================================        -- */
+/* -------------------------------------------------------------------------- */
 
-class RexxNativeCode : public RexxInternalObject {
-  public:
-   inline void *operator new(size_t size, void *ptr) { return ptr; }
-   void        *operator new(size_t size);
-   inline void  operator delete(void *) { ; }
-   inline void  operator delete(void *, void *) { ; }
+#include "RexxCore.h"
+#include "RexxBehaviour.hpp"
+#include "StringClass.hpp"
+#include "IntegerClass.hpp"
+#include "NumberStringClass.hpp"
 
-   inline RexxNativeCode(RESTORETYPE restoreType) { ; };
-   RexxNativeCode(RexxString *, RexxString *, PNMF, size_t);
-   void        reinit(RexxInteger *);
-   void        live();
-   void        liveGeneral();
-   void        flatten(RexxEnvelope *envelope);
-   RexxObject *unflatten(RexxEnvelope *envelope);
+// the table of primitive behaviours
+RexxBehaviour RexxBehaviour::primitiveBehaviours[T_Last_Primitive_Class + 1] =
+{</xsl:text>
+   <xsl:for-each select="Exported/Class">
+       <xsl:if test="@operators">
+           <xsl:text>
+    RexxBehaviour(T_</xsl:text><xsl:value-of select="@id"/><xsl:text>, (PCPPM *)</xsl:text><xsl:value-of select="@class"/><xsl:text>::operatorMethods),</xsl:text>
+       </xsl:if>
+       <xsl:if test="not(@operators)">
+           <xsl:text>
+    RexxBehaviour(T_</xsl:text><xsl:value-of select="@id"/><xsl:text>, (PCPPM *)RexxObject::operatorMethods),</xsl:text>
+       </xsl:if>
+       <xsl:text>
+    RexxBehaviour(T_</xsl:text><xsl:value-of select="@id"/><xsl:text>Class, (PCPPM *)RexxObject::operatorMethods),</xsl:text>
+   </xsl:for-each>
 
-   inline PNMF        getEntry() { return this->entry; };
-   inline void        setEntry(PNMF v) { this->entry = v; };
-   static void        createClass();
-   static void        restoreClass();
+   <xsl:for-each select="Internal/Class">
+       <xsl:text>
+    RexxBehaviour(T_</xsl:text><xsl:value-of select="@id"/><xsl:text>, (PCPPM *)RexxObject::operatorMethods),</xsl:text>
+   </xsl:for-each>
 
-protected:
-   RexxString *library;               // the library name
-   RexxString *procedure;             /* External Procedur name            */
-   PNMF        entry;                 /* method entry point.               */
-   size_t      index;                 /* internal native method            */
+   <xsl:for-each select="Transient/Class">
+       <xsl:text>
+    RexxBehaviour(T_</xsl:text><xsl:value-of select="@id"/><xsl:text>, (PCPPM *)RexxObject::operatorMethods),</xsl:text>
+   </xsl:for-each>
+
+<xsl:text>
 };
 
-class RexxNativeCodeClass : public RexxClass {
-  public:
-   inline RexxNativeCodeClass(RESTORETYPE restoreType) { ; };
-   RexxNativeCodeClass();
 
-   void       *operator new(size_t size, void *ptr) { return ptr; };
-   void       *operator new(size_t size, size_t size1, const char *className, RexxBehaviour *classBehave, RexxBehaviour *instance) { return new (size, className, classBehave, instance) RexxClass; }
-   RexxNativeCode *newClass(RexxString *, RexxString *);
-
-   void        restore();
-   void        live();
-   void        liveGeneral();
-   void        reload(RexxDirectory *);
-   RexxDirectory  * load(RexxString *);
-   RexxNativeCode * newInternal(size_t);
-   inline RexxDirectory  * getLibraries() { return this->libraries; };
-
-protected:
-
-   RexxDirectory *libraries;           /* directory of loaded libraries     */
-};
-#endif
+/* --            ==================================================        -- */
+/* --            DO NOT CHANGE THIS FILE, ALL CHANGES WILL BE LOST!        -- */
+/* --            ==================================================        -- */
+/* -------------------------------------------------------------------------- */
+</xsl:text>
+</xsl:template>
+<xsl:template match="CopyRight"></xsl:template>
+</xsl:stylesheet>

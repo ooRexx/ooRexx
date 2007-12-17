@@ -235,14 +235,14 @@ class RexxSource : public RexxInternalObject {
   inline void        trimClause() { clause->trim(); }
   inline size_t      markPosition() { return clause->mark(); }
   inline void        resetPosition(size_t p) { clause->reset(p); }
-  inline void        report_error_line(int errorcode, RexxInstruction *i) { this->errorLine(errorcode, i); }
-  inline void        report_error_block(RexxInstruction *i) { this->blockError(i); }
-  inline void        report_error_position(int errorcode, RexxToken *token) { this->errorPosition(errorcode, token); }
-  inline void        report_error1(int errorcode, RexxObject *a1) { this->error(errorcode, a1); }
-  inline void        report_error2(int errorcode, RexxObject *a1, RexxObject *a2) { this->error(errorcode, a1, a2); }
-  inline void        report_error3(int errorcode, RexxObject *a1, RexxObject *a2, RexxObject *a3) { this->error(errorcode, a1, a2, a3); }
-  inline void        report_error_token(int errorcode, RexxToken *token) { this->errorToken(errorcode, token); }
-  inline void        report_error(int errorcode) { this->error(errorcode); }
+  inline void        syntaxError(int errorcode, RexxInstruction *i) { this->errorLine(errorcode, i); }
+  inline void        blockSyntaxError(RexxInstruction *i) { this->blockError(i); }
+  inline void        syntaxErrorAt(int errorcode, RexxToken *token) { this->errorPosition(errorcode, token); }
+  inline void        syntaxError(int errorcode, RexxObject *a1) { this->error(errorcode, a1); }
+  inline void        syntaxError(int errorcode, RexxObject *a1, RexxObject *a2) { this->error(errorcode, a1, a2); }
+  inline void        syntaxError(int errorcode, RexxObject *a1, RexxObject *a2, RexxObject *a3) { this->error(errorcode, a1, a2, a3); }
+  inline void        syntaxError(int errorcode, RexxToken *token) { this->errorToken(errorcode, token); }
+  inline void        syntaxError(int errorcode) { this->error(errorcode); }
 
   RexxInstruction *addressNew();
   RexxInstruction *assignmentNew(RexxToken *);

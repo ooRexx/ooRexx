@@ -42,7 +42,6 @@
 /*  Calling REXX without creating any console                        */
 /*********************************************************************/
 
-#define INCL_REXXSAA
 #include <windows.h>
 #include <rexx.h>                           /* needed for RexxStart()     */
 #include <malloc.h>
@@ -53,8 +52,6 @@
 extern "C" {
 BOOL   APIENTRY RexxInitialize (void);
 }
-
-extern  _declspec(dllimport) HANDLE RexxTerminated;           /* Termination complete semaphore.   */
 
 #include "ArgumentParser.h"  /* defines getArguments and freeArguments */
 

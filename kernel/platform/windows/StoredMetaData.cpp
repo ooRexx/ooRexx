@@ -138,7 +138,7 @@ RexxMethod *SysRestoreProgram(
   size_t        BufferSize;            /* size of the buffer                */
   size_t        BytesRead;             /* actual bytes read                 */
   RexxSource  * Source;                /* REXX source object                */
-  RexxActivity *activity;              /* the current activity              */
+  bool          badMeta = false;
   void         *MethodInfo;
                                        /* temporary read buffer             */
   char          fileTag[sizeof(compiledHeader)];
@@ -161,47 +161,48 @@ RexxMethod *SysRestoreProgram(
   if (Handle == NULL)                  /* get an open error?                */
     return OREF_NULL;                  /* no restored image                 */
 
-  activity = ActivityManager::currentActivity;          /* save the activity                 */
-  activity->releaseAccess();           /* release the access                */
-                                       /* read the first file part          */
-  if (fseek(Handle, 0-sizeof(compiledHeader), SEEK_END) == 0)
-     BytesRead = fread(fileTag, 1 ,sizeof(compiledHeader), Handle);
-                                       /* not a compiled file?              */
-  if ((BytesRead != sizeof(compiledHeader)) || (strcmp(fileTag, compiledHeader) != 0)) {
-    fclose(Handle);                    /* close the file                    */
-    activity->requestAccess();         /* get the lock back                 */
-    return OREF_NULL;                  /* not a saved program               */
-  }
-                                       /* now read the control info         */
-  if (fseek(Handle, 0-sizeof(compiledHeader)-sizeof(Control), SEEK_END) == 0)
-     BytesRead = fread((char *)&Control, 1, sizeof(Control), Handle);
+  {
+                                           /* read the first file part          */
+      if (fseek(Handle, 0-sizeof(compiledHeader), SEEK_END) == 0)
+         BytesRead = fread(fileTag, 1 ,sizeof(compiledHeader), Handle);
+                                           /* not a compiled file?              */
+      if ((BytesRead != sizeof(compiledHeader)) || (strcmp(fileTag, compiledHeader) != 0)) {
+        fclose(Handle);                    /* close the file                    */
+        return OREF_NULL;                  /* not a saved program               */
+      }
+                                           /* now read the control info         */
+      if (fseek(Handle, 0-sizeof(compiledHeader)-sizeof(Control), SEEK_END) == 0)
+         BytesRead = fread((char *)&Control, 1, sizeof(Control), Handle);
 
-                                       /* check the control info            */
-  if ((BytesRead != sizeof(Control)) || (Control.MetaVersion != METAVERSION) || (Control.Magic != MAGIC)) {
-    fclose(Handle);                    /* close the file                    */
-                                       /* got an error here                 */
-    activity->requestAccess();           /* get the lock back                 */
-    reportException(Error_Program_unreadable_version, FileName);
+                                           /* check the control info            */
+      if ((BytesRead != sizeof(Control)) || (Control.MetaVersion != METAVERSION) || (Control.Magic != MAGIC)) {
+        fclose(Handle);                    /* close the file                    */
+        badMeta = true;
+                                           /* got an error here                 */
+      }
+      else
+      {
+                                               /* read the file size                */
+          BufferSize = Control.ImageSize;      /* get the method info size          */
+          if (fseek(Handle, 0-sizeof(compiledHeader)-sizeof(Control)-BufferSize, SEEK_END) != 0) {
+            fclose(Handle);                    /* close the file                    */
+            return OREF_NULL;                  /* not a saved program               */
+          }
+          MethodInfo = GlobalAlloc(GMEM_FIXED, BufferSize);  /* allocate a temp buffer */
+          if (!MethodInfo) {
+            fclose(Handle);                    /* close the file                    */
+            return OREF_NULL;                  /* not a saved program               */
+          }
+          /* read the tokenized program */
+          BytesRead = fread(MethodInfo, 1, BufferSize, Handle);
+          fclose(Handle);                      /* close the file                    */
+      }
   }
-                                       /* read the file size                */
-  BufferSize = Control.ImageSize;      /* get the method info size          */
-  if (fseek(Handle, 0-sizeof(compiledHeader)-sizeof(Control)-BufferSize, SEEK_END) != 0) {
-    activity->requestAccess();         /* get the lock back                 */
-    fclose(Handle);                    /* close the file                    */
-    return OREF_NULL;                  /* not a saved program               */
+  if (badMeta)
+  {
+      reportException(Error_Program_unreadable_version, FileName);
   }
 
-  MethodInfo = GlobalAlloc(GMEM_FIXED, BufferSize);  /* allocate a temp buffer */
-  if (!MethodInfo) {
-    activity->requestAccess();         /* get the lock back                 */
-    fclose(Handle);                    /* close the file                    */
-    return OREF_NULL;                  /* not a saved program               */
-  }
-  /* read the tokenized program */
-  BytesRead = fread(MethodInfo, 1, BufferSize, Handle);
-  fclose(Handle);                      /* close the file                    */
-
-  activity->requestAccess();           /* get the lock back                 */
   Buffer = new_buffer(BufferSize);     /* get a new buffer                  */
   ProtectedObject p(Buffer);
                                        /* position relative to the end      */
@@ -281,18 +282,19 @@ void SysSaveProgram(
   Control.Magic = MAGIC;               /* magic signature number            */
   Control.ImageSize = BufferLength;    /* add the buffer length             */
 
-  activity->releaseAccess();           /* release the access                */
-                                       /* write out the REXX signature      */
-  BytesRead = putc(0x1a, Handle);   /* Ctrl Z */
-  fwrite(BufferAddress, 1, BufferLength, Handle);
+  {
+      UnsafeBlock releaser;
+                                           /* write out the REXX signature      */
+      BytesRead = putc(0x1a, Handle);   /* Ctrl Z */
+      fwrite(BufferAddress, 1, BufferLength, Handle);
 
-  fwrite(&Control, 1, sizeof(Control), Handle);
+      fwrite(&Control, 1, sizeof(Control), Handle);
 
-  fwrite(compiledHeader, 1, sizeof(compiledHeader), Handle);
-                                       /* now the control info              */
-                                       /* and finally the flattened method  */
-  fclose(Handle);                      /* done saving                       */
-  activity->requestAccess();           /* and reaquire the kernel lock      */
+      fwrite(compiledHeader, 1, sizeof(compiledHeader), Handle);
+                                           /* now the control info              */
+                                           /* and finally the flattened method  */
+      fclose(Handle);                      /* done saving                       */
+  }
 }
 
 
@@ -457,17 +459,16 @@ void SysSaveTranslatedProgram(
   Control.MetaVersion = METAVERSION;   /* current meta version              */
   Control.Magic = MAGIC;               /* magic signature number            */
   Control.ImageSize = BufferLength;    /* add the buffer length             */
+  {
+      UnsafeBlock;
 
-  activity = ActivityManager::currentActivity;          /* save the activity                 */
-  activity->releaseAccess();           /* release the access                */
-                                       /* write out the REXX signature      */
-  fwrite(compiledHeader, 1, sizeof(compiledHeader), Handle);
-                                       /* now the control info              */
-  fwrite(&Control, 1, sizeof(Control), Handle);
-                                       /* and finally the flattened method  */
-  fwrite(BufferAddress, 1, BufferLength, Handle);
-  fclose(Handle);                      /* done saving                       */
-  activity->requestAccess();           /* and reaquire the kernel lock      */
+      fwrite(compiledHeader, 1, sizeof(compiledHeader), Handle);
+                                           /* now the control info              */
+      fwrite(&Control, 1, sizeof(Control), Handle);
+                                           /* and finally the flattened method  */
+      fwrite(BufferAddress, 1, BufferLength, Handle);
+      fclose(Handle);                      /* done saving                       */
+  }
 }
 /*********************************************************************/
 /*                                                                   */
@@ -489,24 +490,21 @@ RexxMethod *SysRestoreTranslatedProgram(
   size_t        BytesRead;             /* actual bytes read                 */
   RexxMethod   *Method;                /* unflattened method                */
   RexxSource   *Source;                /* REXX source object                */
-  RexxActivity *activity;              /* the current activity              */
                                        /* temporary read buffer             */
   char          fileTag[sizeof(compiledHeader)];
 
-  activity = ActivityManager::currentActivity;          /* save the activity                 */
-  activity->releaseAccess();           /* release the access                */
-
-                                       /* read the first file part          */
-  BytesRead = fread(fileTag, 1, sizeof(compiledHeader), Handle);
-                                       /* not a compiled file?              */
-  if (strcmp(fileTag, compiledHeader) != 0) {
-    activity->requestAccess();         /* get the lock back                 */
-    fclose(Handle);                    /* close the file                    */
-    return OREF_NULL;                  /* not a saved program               */
+  {
+      UnsafeBlock releaser;
+                                           /* read the first file part          */
+      BytesRead = fread(fileTag, 1, sizeof(compiledHeader), Handle);
+                                           /* not a compiled file?              */
+      if (strcmp(fileTag, compiledHeader) != 0) {
+        fclose(Handle);                    /* close the file                    */
+        return OREF_NULL;                  /* not a saved program               */
+      }
+                                           /* now read the control info         */
+      BytesRead = fread((char *)&Control, 1, sizeof(Control), Handle);
   }
-                                       /* now read the control info         */
-  BytesRead = fread((char *)&Control, 1, sizeof(Control), Handle);
-  activity->requestAccess();           /* get the lock back                 */
                                        /* check the control info            */
   if ((Control.MetaVersion != METAVERSION) || (Control.Magic != MAGIC)) {
     fclose(Handle);                    /* close the file                    */
@@ -519,11 +517,12 @@ RexxMethod *SysRestoreTranslatedProgram(
   ProtectedObject p1(Buffer);
                                        /* position relative to the end      */
   StartPointer = ((char *)Buffer + Buffer->getObjectSize()) - BufferSize;
-  activity->releaseAccess();           /* release the access                */
-                                       /* read the flattened method         */
-  BytesRead = fread(StartPointer, 1, BufferSize, Handle);
-  fclose(Handle);                      /* close the file                    */
-  activity->requestAccess();           /* get the lock back                 */
+  {
+      UnsafeBlock releaser;
+                                           /* read the flattened method         */
+      BytesRead = fread(StartPointer, 1, BufferSize, Handle);
+      fclose(Handle);                      /* close the file                    */
+  }
                                        /* "puff" this out usable form       */
   Method = TheMethodClass->restore(Buffer, StartPointer);
   ProtectedObject p2(Method);

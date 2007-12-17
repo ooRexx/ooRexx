@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  SupplierClass.hpp    */
+/* REXX Kernel                                           SupplierClass.hpp    */
 /*                                                                            */
 /* Primitive Supplier Class Definition                                        */
 /*                                                                            */
@@ -62,6 +62,10 @@
    RexxObject  *index();
    RexxObject  *initRexx(RexxArray *values, RexxArray *indexes);
 
+
+   static RexxClass *classInstance;
+
+ protected:
    RexxArray  *values;                 /* array of values                   */
    RexxArray  *indexes;                /* array of indexes                  */
    size_t position;                    /* current array position            */

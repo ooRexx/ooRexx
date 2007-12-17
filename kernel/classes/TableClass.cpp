@@ -48,6 +48,9 @@
 #include "ActivityManager.hpp"
 #include "RexxNativeAPI.h"
 
+// singleton class instance
+RexxClass *RexxTable::classInstance = OREF_NULL;
+
 RexxObject *RexxTable::addOffset(
   size_t      _value,                   /* object to add                     */
   RexxObject *_index)                   /* added index                       */
@@ -195,7 +198,7 @@ RexxTable *RexxTable::newInstance()
 /* Function:  Create an instance of a table                                   */
 /******************************************************************************/
 {
-  return (RexxTable *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxTable), T_table);
+  return (RexxTable *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxTable), T_Table);
 }
 
 RexxObjectTable *RexxObjectTable::newInstance(size_t size)
@@ -204,7 +207,7 @@ RexxObjectTable *RexxObjectTable::newInstance(size_t size)
 /******************************************************************************/
 {
                                        /* get a new object                  */
-  return (RexxObjectTable *)new_hashCollection(size, sizeof(RexxObjectTable), T_table);
+  return (RexxObjectTable *)new_hashCollection(size, sizeof(RexxObjectTable), T_Table);
 }
 
 RexxObject *RexxObjectTable::put(
@@ -253,9 +256,9 @@ REXXOBJECT REXXENTRY REXX_TABLE_ADD(REXXOBJECT self, REXXOBJECT object, REXXOBJE
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  return_object(this->add((RexxObject *)object, (RexxObject *)index));
+    return context.protect(this->add((RexxObject *)object, (RexxObject *)index));
 }
 
 REXXOBJECT REXXENTRY REXX_TABLE_REMOVE(REXXOBJECT self, REXXOBJECT index)
@@ -263,9 +266,9 @@ REXXOBJECT REXXENTRY REXX_TABLE_REMOVE(REXXOBJECT self, REXXOBJECT index)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  return_object(this->remove((RexxObject *)index));
+    return context.protect(this->remove((RexxObject *)index));
 }
 
 REXXOBJECT REXXENTRY REXX_TABLE_GET(REXXOBJECT self, REXXOBJECT index)
@@ -273,8 +276,8 @@ REXXOBJECT REXXENTRY REXX_TABLE_GET(REXXOBJECT self, REXXOBJECT index)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  return_object(this->get((RexxObject *)index));
+    return context.protect(this->get((RexxObject *)index));
 }
 

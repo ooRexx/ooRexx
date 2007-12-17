@@ -78,6 +78,12 @@
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 
+
+// singleton class instance
+RexxClass *RexxArray::classInstance = OREF_NULL;
+RexxArray *RexxArray::nullArray = OREF_NULL;
+
+
 void RexxArray::init(size_t _size, size_t maxSize)
 /******************************************************************************/
 /* Function:  Initialize an array                                             */
@@ -2487,13 +2493,8 @@ bool REXXENTRY REXX_ARRAY_HASINDEX(REXXOBJECT self, size_t index)
 /* Function:  External interface to the object method                         */
 /******************************************************************************/
 {
-  bool      result;                    /* method result                     */
-
-  native_entry;                        /* synchronize access                */
-                                       /* just forward and return           */
-                                       /* forward the method                */
-  result = this->hasIndexNative(index);
-  return_value(result);                /* return this                       */
+    NativeContextBlock context;
+    return this->hasIndexNative(index);
 }
 
 
@@ -2514,9 +2515,9 @@ REXXOBJECT REXXENTRY REXX_ARRAY_AT(REXXOBJECT self, size_t pos)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  return_object(this->get(pos));
+    return context.protect(this->get(pos));
 }
 
 
@@ -2525,9 +2526,8 @@ void REXXENTRY REXX_ARRAY_PUT(REXXOBJECT self, REXXOBJECT object, size_t pos)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
-  this->put((RexxObject *)object, pos);/* just forward and return           */
-  return_void;                         /* and return nothing                */
+    NativeContextBlock context;
+    this->put((RexxObject *)object, pos);
 }
 
 
@@ -2536,9 +2536,9 @@ REXXOBJECT REXXENTRY REXX_ARRAY_NEW(size_t size)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  return_object(new_array(size));
+    return context.protect(new_array(size));
 }
 
 REXXOBJECT REXXENTRY REXX_ARRAY_NEW1(REXXOBJECT object1)
@@ -2546,9 +2546,9 @@ REXXOBJECT REXXENTRY REXX_ARRAY_NEW1(REXXOBJECT object1)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  return_object(new_array((RexxObject *)object1));
+    return context.protect(new_array((RexxObject *)object1));
 }
 
 REXXOBJECT REXXENTRY REXX_ARRAY_NEW2(REXXOBJECT object1, REXXOBJECT object2)
@@ -2556,7 +2556,7 @@ REXXOBJECT REXXENTRY REXX_ARRAY_NEW2(REXXOBJECT object1, REXXOBJECT object2)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  return_object(new_array((RexxObject *)object1, (RexxObject *)object2));
+    return context.protect(new_array((RexxObject *)object1, (RexxObject *)object2));
 }

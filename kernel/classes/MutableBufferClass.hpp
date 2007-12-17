@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                           MutableBufferClass.hpp  */
+/* REXX Kernel                                        MutableBufferClass.hpp  */
 /*                                                                            */
 /* Primitive MutableBuffer Class Definition                                   */
 /*                                                                            */
@@ -57,6 +57,7 @@ class RexxMutableBufferClass : public RexxClass {
 };
 
  class RexxMutableBuffer : public RexxObject {
+     friend class RexxMutableBufferClass;
   public:
    inline void       *operator new(size_t size, void *ptr){return ptr;};
    inline             RexxMutableBuffer() {;} ;
@@ -85,6 +86,10 @@ class RexxMutableBufferClass : public RexxClass {
    RexxInteger       *getBufferSize() { return new_integer(bufferLength); }
    RexxObject        *setBufferSize(RexxInteger*);
    void               uninitMB();
+
+   static RexxClass *classInstance;
+
+ protected:
 
    size_t             bufferLength;    /* buffer length                   */
    size_t             defaultSize;     /* default size when emptied       */

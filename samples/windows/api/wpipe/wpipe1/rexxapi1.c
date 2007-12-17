@@ -42,8 +42,6 @@
 
 #include <windows.h>
 
-#define  INCL_REXXSAA
-#define  INCL_DOSMEMMGR
 #include <rexx.h>
 
 /*********************************************************************/

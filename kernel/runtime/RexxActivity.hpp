@@ -92,8 +92,6 @@ typedef enum
     UnhandledCondition                 // we had an unhandled condition.
 } ActivityException;
 
-#define resource_semaphore     rexx_resource_semaphore
-
                                        /* system exit definitions           */
                                        /* (these must match the externally  */
                                        /* defined constants in REXXSAA.H)   */
@@ -111,8 +109,6 @@ typedef enum
 #define RXEXF   12                     /* external function call replacer   */
 #define LAST_EXIT 12                   /* top bound of the exits            */
 
-
-extern SMTX rexx_resource_semaphore;   /* global kernel semaphore           */
 
 extern SEV    rexxTimeSliceSemaphore;
 

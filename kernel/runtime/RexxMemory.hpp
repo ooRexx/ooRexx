@@ -152,7 +152,7 @@ class RexxMemory : public RexxObject {
   MemorySegment *newSegment(size_t requestLength, size_t minLength);
   MemorySegment *newLargeSegment(size_t requestLength, size_t minLength);
   RexxObject *oldObject(size_t size);
-  inline RexxObject *newObject(size_t size) { return newObject(size, T_object); }
+  inline RexxObject *newObject(size_t size) { return newObject(size, T_Object); }
   RexxObject *newObject(size_t size, size_t type);
   RexxObject *temporaryObject(size_t size);
   RexxArray  *newObjects(size_t size, size_t count, size_t objectType);
@@ -240,13 +240,14 @@ class RexxMemory : public RexxObject {
   void        checkAllocs();
   RexxObject *dumpImageStats();
   void        createLocks();
+  void        closeLocks();
   void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
   void        setUpMemoryTables(RexxObjectTable *old2newTable);
   void        forceUninits();
   inline RexxDirectory *getGlobalStrings() { return globalStrings; }
 
   static void restore();
-  static void buildVFTArray();
+  static void buildVirtualFunctionTable();
   static void create();
   static void createImage();
   static RexxString *getGlobalName(const char *value);
@@ -254,7 +255,7 @@ class RexxMemory : public RexxObject {
   static RexxArray *saveStrings();
   static void restoreStrings(RexxArray *stringArray);
 
-  static void *VFTArray[];             /* table of virtual functions        */
+  static void *virtualFunctionTable[];             /* table of virtual functions        */
   static PCPPM exportedMethods[];      /* start of exported methods table   */
 
   uint16_t markWord;                   /* current marking counter           */
@@ -263,7 +264,44 @@ class RexxMemory : public RexxObject {
   SMTX envelopeMutex;
   RexxVariable *variableCache;         /* our cache of variable objects     */
 
+  static RexxDirectory *environment;      // global environment
+  static RexxDirectory *publicRoutines;   // statically defined public routines
+  static RexxDirectory *staticRequires;   // statically defined requires
+  static RexxDirectory *functionsDir;     // statically defined requires
+  static RexxDirectory *commonRetrievers; // statically defined requires
+  static RexxDirectory *kernel;           // the kernel directory
+  static RexxDirectory *system;           // the system directory
+
 private:
+
+/******************************************************************************/
+/* Define location of objects saved in SaveArray during Saveimage processing  */
+/*  and used during restart processing.                                       */
+/* Currently only used in OKMEMORY.C                                          */
+/******************************************************************************/
+enum
+{
+    saveArray_ENV = 1,
+    saveArray_KERNEL,
+    saveArray_NAME_STRINGS,
+    saveArray_TRUE,
+    saveArray_FALSE,
+    saveArray_NIL,
+    saveArray_GLOBAL_STRINGS,
+    saveArray_CLASS,
+    saveArray_PBEHAV,
+    saveArray_LIBRARIES,
+    saveArray_NULLA,
+    saveArray_NULLPOINTER,
+    saveArray_SYSTEM,
+    saveArray_FUNCTIONS,
+    saveArray_COMMON_RETRIEVERS,
+    saveArray_STATIC_REQ,
+    saveArray_PUBLIC_RTN,
+    saveArray_highest = saveArray_PUBLIC_RTN
+};
+
+
   inline void checkLiveStack() { if (!liveStack->checkRoom()) liveStackFull(); }
   inline void pushLiveStack(RexxObject *obj) { checkLiveStack(); liveStack->fastPush(obj); }
   inline RexxObject * popLiveStack() { return (RexxObject *)liveStack->fastPop(); }
@@ -386,5 +424,10 @@ inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memo
 
 /* Following macros are for Flattening and unflattening of objects  */
 #define flatten_reference(oref,envel)  if (oref) envel->flattenReference((void *)&newThis, newSelf, (void *)&(oref))
+
+// declare a class creation routine
+// for classes with their own
+// explicit class objects
+#define CLASS_CREATE(name, id, className) The##name##Class = (className *)new (sizeof(className), id, The##name##ClassBehaviour, The##name##Behaviour) RexxClass;
 
 #endif

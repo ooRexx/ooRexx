@@ -58,6 +58,10 @@
 #include "ProtectedObject.hpp"
 
 
+// singleton class instance
+RexxClass *RexxClass::classInstance = OREF_NULL;
+
+
 void RexxClass::live()
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */

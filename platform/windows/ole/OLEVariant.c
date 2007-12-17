@@ -57,7 +57,6 @@
 
 #include "RexxCore.h"
 
-#define INCL_REXXSAA
 #include "rexx.h"
 #include "RexxNativeAPI.h"
 

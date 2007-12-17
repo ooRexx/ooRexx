@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RelationClass.hpp   */
+/* REXX Kernel                                            RelationClass.hpp   */
 /*                                                                            */
 /* Primitive Relation Class Definitions                                       */
 /*                                                                            */
@@ -65,6 +65,7 @@ class RexxRelation : public RexxTable {
    RexxObject   *newRexx(RexxObject **, size_t);
 
    static RexxRelation *newInstance();
+   static RexxClass *classInstance;
 };
 
 inline RexxRelation *new_relation() { return RexxRelation::newInstance(); }

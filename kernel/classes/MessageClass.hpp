@@ -90,6 +90,8 @@
    inline void          setStartPending()   { this->dataFlags |= flagStartPending;   };
    inline void          setMsgSent()        { this->dataFlags |= flagMsgSent;        };
 
+   static RexxClass *classInstance;
+
  protected:
 
    RexxObject    *receiver;            /* Real receiver of message.         */

@@ -50,7 +50,7 @@
                                        /* a translated method in EA's         */
 
 #define BEHAVIOUR_NON_PRIMITIVE 0x80000000
-#define ObjectHasNonPrimitiveBehaviour(o) (((long)(((RexxObject *)o)->behaviour)) & BEHAVIOUR_NON_PRIMITIVE)
+#define ObjectHasNonPrimitiveBehaviour(o) (((uintptr_t)(((RexxObject *)o)->behaviour)) & BEHAVIOUR_NON_PRIMITIVE)
 
 class RexxSmartBuffer;
 

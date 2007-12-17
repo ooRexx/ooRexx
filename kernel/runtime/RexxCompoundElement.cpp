@@ -106,7 +106,7 @@ RexxCompoundElement *RexxCompoundElement::newInstance(
   RexxCompoundElement *newObj;
 
                                        /* Get new object                    */
-  newObj = (RexxCompoundElement *)new_object(sizeof(RexxCompoundElement), T_compound_element);
+  newObj = (RexxCompoundElement *)new_object(sizeof(RexxCompoundElement), T_CompoundElement);
   newObj->clearObject();               /* clear everything out              */
   newObj->variable_name = name;        /* fill in the name                  */
 

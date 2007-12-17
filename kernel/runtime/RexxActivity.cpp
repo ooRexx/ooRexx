@@ -72,8 +72,6 @@
 
 const size_t ACT_STACK_SIZE = 10;
 
-extern SMTX rexx_resource_semaphore;   /* global kernel semaphore           */
-
 extern "C" void activity_thread (RexxActivity *objp);
 
 void activity_thread (

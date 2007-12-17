@@ -49,7 +49,6 @@
 /*   memupper                uppercase a memory location             */
 /*                                                                   */
 /*********************************************************************/
-#define INCL_RXSUBCOM
 #include "rexx.h"
 #include "Characters.h"
 #include "CodePageTables.h"

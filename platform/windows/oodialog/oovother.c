@@ -41,7 +41,6 @@
 
 #include <windows.h>
 #include <mmsystem.h>
-#define INCL_REXXSAA
 #include <rexx.h>
 #include <stdio.h>
 #include <dlgs.h>

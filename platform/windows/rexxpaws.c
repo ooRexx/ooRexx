@@ -43,7 +43,6 @@
 /*********************************************************************/
 
 
-#define INCL_REXXSAA
 #include <windows.h>
 #include <rexx.h>                           /* needed for RexxStart()     */
 #include <malloc.h>
@@ -53,9 +52,6 @@
 extern "C" {
 BOOL   APIENTRY RexxInitialize (void);
 }
-
-                                         /* Global inducator */
-extern  _declspec(dllimport) HANDLE RexxTerminated;           /* Termination complete semaphore.   */
 
 //
 //  Prototypes

@@ -59,7 +59,6 @@
 /*
 \*********************************************************************/
 
-#define INCL_REXXSAA
 #include <rexx.h>                      /* needed for RexxStart()     */
 #include <stdio.h>                     /* needed for printf()        */
 #include <string.h>                    /* needed for strlen()        */

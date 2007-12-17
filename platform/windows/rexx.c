@@ -64,7 +64,6 @@ BOOL   APIENTRY RexxInitialize (void);
 
                                          /* Global inducator */
 extern  _declspec(dllimport) bool ProcessSaveImage;
-extern  _declspec(dllimport) HANDLE RexxTerminated;           /* Termination complete semaphore.   */
 
 //
 //  Prototypes
@@ -162,7 +161,6 @@ int __cdecl main(int argc, char *argv[])
   if (ProcessSaveImage) {              /* save an image?                    */
                                        /* This is a Saveimage ...           */
     RexxInitialize();                  /* do normal REXX init               */
-    /* RexxTerminate();                   now immediately terminate         */
   }
   else if (program_name == NULL) {
                                        /* give a simple error message       */

@@ -242,5 +242,53 @@ inline void reportHalt(RexxString *description)
 
 inline RexxActivity *new_activity()  { return ActivityManager::newActivity(MEDIUM_PRIORITY); }
 
+
+/**
+ * A class that can be used to release kernel exclusive access inside
+ * a block and have the kernel access automatically reobtained
+ * once the UnsafeBlock object goes out of scope.
+ */
+class UnsafeBlock
+{
+public:
+    UnsafeBlock()
+    {
+        activity = ActivityManager::currentActivity;
+        activity->releaseAccess();
+    }
+
+    ~UnsafeBlock()
+    {
+        activity->requestAccess();
+    }
+protected:
+    RexxActivity *activity;
+};
+
+
+
+class NativeContextBlock
+{
+public:
+    inline NativeContextBlock()
+    {
+        activity = ActivityManager::getActivity();
+        self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
+    }
+    inline ~NativeContextBlock()
+    {
+        // release the kernel lock
+        activity->releaseAccess();
+    }
+
+    inline RexxObject *protect(RexxObject *o)
+    {
+        return activity->nativeRelease(o);
+    }
+
+    RexxNativeActivation *self;
+    RexxActivity         *activity;
+};
+
 #endif
 

@@ -68,8 +68,6 @@
 /* long as the repository process continues running.                 */
 /*                                                                   */
 /*********************************************************************/
-#define INCL_RXQUEUE
-#define INCL_RXSUBCOM
 #include <rexx.h>
 #include <stdlib.h>
 #include <stdio.h>

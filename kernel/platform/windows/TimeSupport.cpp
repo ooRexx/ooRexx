@@ -40,6 +40,7 @@
 #include "IntegerClass.hpp"
 #include "RexxNativeAPI.h"
 #include "RexxDateTime.hpp"
+#include "Interpreter.hpp"
 
 extern SEV rexxTimeSliceSemaphore;
 extern HANDLE rexxTimeSliceTimerOwner;
@@ -48,7 +49,6 @@ extern HANDLE rexxTimeSliceTimerOwner;
 #define TIMESLICEMS 10
 
 #ifdef TIMESLICE
-extern SEV   RexxTerminated;           /* Termination complete semaphore.   */
 extern int REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid);
 extern bool rexxTimeSliceElapsed;
 #endif
@@ -93,7 +93,7 @@ DWORD WINAPI TimeSliceControl(void * args)
    {
       Sleep(TIMESLICEMS);
       rexxTimeSliceElapsed = true;
-   } while (RexxTerminated && (WaitForSingleObject(RexxTerminated, 0) != WAIT_OBJECT_0));
+   } while (!Interpreter::isTerminated());
    rexxTimeSliceTimerOwner = 0;
 #endif
    return 0;

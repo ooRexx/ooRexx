@@ -224,6 +224,10 @@
                    this->sign = 0;                       /* Make sign Zero.   */
                    this->exp = 0;                        /* exponent is zero. */
                 }
+
+    static PCPPM operatorMethods[];
+    static RexxClass *classInstance;
+
     char  number[4];
  };
 

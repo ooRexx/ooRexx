@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  StemClass.hpp    */
+/* REXX Kernel                                               StemClass.hpp    */
 /*                                                                            */
 /* Primitive Stem Class Definitions                                           */
 /*                                                                            */
@@ -123,6 +123,8 @@ class RexxSupplier;
   inline RexxCompoundElement *first() { return tails.first(); }
   inline RexxString *createCompoundName(RexxCompoundTail *tailPart) { return tailPart->createCompoundName(stemName); }
   inline void init() { tails.init(this); }
+
+  static RexxClass *classInstance;
 
  protected:
 

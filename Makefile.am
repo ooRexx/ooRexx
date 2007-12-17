@@ -102,6 +102,8 @@ COMMON_CPPFLAGS = -DORX_VER=$(ORX_MAJOR) -DORX_REL=$(ORX_MINOR) -DORX_MOD=$(ORX_
 
 messageXML = $(messages_dir)/rexxmsg.xml
 
+classesXML = $(runtime_dir)/PrimitiveClasses.xml
+
 #
 # header files for source distribution
 #
@@ -175,7 +177,6 @@ instructionsHeaders = $(instructions_dir)/AddressInstruction.hpp \
                       $(instructions_dir)/SignalInstruction.hpp \
                       $(instructions_dir)/ThenInstruction.hpp \
                       $(instructions_dir)/TraceInstruction.hpp \
-                      $(instructions_dir)/UseInstruction.hpp \
                       $(instructions_dir)/UseStrictInstruction.hpp
 parserHeaders = $(parser_dir)/Clause.hpp \
                 $(parser_dir)/SourceFile.hpp \
@@ -189,16 +190,19 @@ platformHeaders = $(kernel_platform_unix_dir)/APIDefinitions.h \
                   $(kernel_platform_unix_dir)/ThreadSupport.hpp
 platformcommonHeaders =
 runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
+                 $(runtime_dir)/ClassTypeCodes.h \
                  $(runtime_dir)/GlobalNames.h \
                  $(runtime_dir)/MemorySegment.hpp \
                  $(runtime_dir)/MemoryStats.hpp \
                  $(runtime_dir)/NativeMethods.h \
                  $(runtime_dir)/Numerics.hpp \
-                 $(runtime_dir)/PrimitiveClasses.h \
+                 $(runtime_dir)/PrimitiveBehaviourNames.h \
                  $(runtime_dir)/RexxActivation.hpp \
                  $(runtime_dir)/RexxActivationStack.hpp \
                  $(runtime_dir)/RexxActivity.hpp \
                  $(runtime_dir)/ActivityManager.hpp \
+                 $(runtime_dir)/LibraryManager.hpp \
+                 $(runtime_dir)/Interpreter.hpp \
                  $(runtime_dir)/ProtectedObject.hpp \
                  $(runtime_dir)/RexxBehaviour.hpp \
                  $(runtime_dir)/RexxBuffer.hpp \
@@ -220,7 +224,7 @@ runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/RexxMisc.hpp \
                  $(runtime_dir)/RexxNativeAPI.h \
                  $(runtime_dir)/RexxNativeActivation.hpp \
-                 $(runtime_dir)/RexxNativeMethod.hpp \
+                 $(runtime_dir)/RexxNativeCode.hpp \
                  $(runtime_dir)/RexxSmartBuffer.hpp \
                  $(runtime_dir)/RexxVariable.hpp \
                  $(runtime_dir)/RexxVariableDictionary.hpp
@@ -423,7 +427,6 @@ instructions_sources  = $(instructions_dir)/AddressInstruction.cpp \
                         $(instructions_dir)/SignalInstruction.cpp \
                         $(instructions_dir)/ThenInstruction.cpp \
                         $(instructions_dir)/TraceInstruction.cpp \
-                        $(instructions_dir)/UseInstruction.cpp \
                         $(instructions_dir)/UseStrictInstruction.cpp
 parser_sources = $(parser_dir)/Clause.cpp \
                  $(parser_dir)/KeywordConstants.cpp \
@@ -452,15 +455,17 @@ platform_sources = $(kernel_platform_unix_dir)/ErrorMessages.cpp \
 runtime_sources  = $(runtime_dir)/DeadObject.cpp \
                    $(runtime_dir)/GlobalData.cpp \
                    $(runtime_dir)/GlobalNames.cpp \
-                   $(runtime_dir)/Initialization.cpp \
                    $(runtime_dir)/MemorySegment.cpp \
                    $(runtime_dir)/MemoryStats.cpp \
                    $(runtime_dir)/NativeRoot.cpp \
                    $(runtime_dir)/Numerics.cpp \
+                   $(runtime_dir)/PrimitiveBehaviours.cpp \
                    $(runtime_dir)/RexxActivation.cpp \
                    $(runtime_dir)/RexxActivationStack.cpp \
                    $(runtime_dir)/RexxActivity.cpp \
                    $(runtime_dir)/ActivityManager.cpp \
+                   $(runtime_dir)/LibraryManager.cpp \
+                   $(runtime_dir)/Interpreter.cpp \
                    $(runtime_dir)/RexxBehaviour.cpp \
                    $(runtime_dir)/RexxBuffer.cpp \
                    $(runtime_dir)/RexxCode.cpp \
@@ -477,14 +482,15 @@ runtime_sources  = $(runtime_dir)/DeadObject.cpp \
                    $(runtime_dir)/RexxMemory.cpp \
                    $(runtime_dir)/RexxMisc.cpp \
                    $(runtime_dir)/RexxNativeActivation.cpp \
-                   $(runtime_dir)/RexxNativeMethod.cpp \
+                   $(runtime_dir)/RexxNativeCode.cpp \
                    $(runtime_dir)/RexxSmartBuffer.cpp \
                    $(runtime_dir)/RexxStartup.cpp \
                    $(runtime_dir)/RexxVariable.cpp \
                    $(runtime_dir)/RexxVariableDictionary.cpp \
                    $(runtime_dir)/Setup.cpp \
                    $(runtime_dir)/Utilities.cpp \
-                   $(runtime_dir)/Version.cpp
+                   $(runtime_dir)/Version.cpp \
+                   $(runtime_dir)/VirtualFunctionTable.cpp
 streamlibrary_sources = $(streamlibrary_dir)/StreamCommandParser.cpp \
                         $(streamlibrary_dir)/StreamNative.cpp
 lib_sources = $(lib_dir)/LocalProcessData.cpp
@@ -614,7 +620,7 @@ rxdelipc_SOURCES =  $(rexxapi_unix_dir)/APIManagerShutdown.cpp
 #
 rxdelipc_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                      -I$(api_dir) \
-                     -I$(platform_api_dir)  
+                     -I$(platform_api_dir)
 #
 # Extra libraries for rxdelipc
 #
@@ -729,6 +735,18 @@ $(messages_dir)/RexxMessageTable.h: $(messages_dir)/RexxMessageTable.xsl $(messa
 
 $(messages_dir)/gencat.inp: $(kernel_platform_unix_dir)/UnixGencat.xsl $(messageXML)
 	sh ./xsl.sh $(@) $(messageXML) $(kernel_platform_unix_dir)/UnixGencat.xsl
+
+$(runtime_dir)/ClassTypeCodes.h: $(runtime_dir)/ClassTypeCodes.xsl $(classesXML)
+	sh ./xsl.sh $(@) $(classesXML) $(runtime_dir)/ClassTypeCodes.xsl
+
+$(runtime_dir)/PrimitiveBehaviourNames.h: $(runtime_dir)/PrimitiveBehaviourNames.xsl $(classesXML)
+	sh ./xsl.sh $(@) $(classesXML) $(runtime_dir)/PrimitiveBehaviourNames.xsl
+
+$(runtime_dir)/PrimitiveBehaviours.cpp: $(runtime_dir)/PrimitiveBehaviours.xsl $(classesXML)
+	sh ./xsl.sh $(@) $(classesXML) $(runtime_dir)/PrimitiveBehaviours.xsl
+
+$(runtime_dir)/VirtualFunctionTables.cpp: $(runtime_dir)/VirtualFunctionTable.xsl $(classesXML)
+	sh ./xsl.sh $(@) $(classesXML) $(runtime_dir)/VirtualFunctionTable.xsl
 
 rexx.img: rexx librexxutil.la $(core_classes) $(core_platform_classes)
 	cp $(rexxclasses_dir)/*.orx .

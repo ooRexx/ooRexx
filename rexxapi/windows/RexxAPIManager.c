@@ -91,7 +91,6 @@ char *GlobalNamedObjects[] = {
 
 char **APInamedObjects = NormalNamedObjects;
 
-#define INCL_RXSUBCOM
 #include "rexx.h"
 #include "process.h"
 #include "malloc.h"

@@ -54,6 +54,12 @@
 #include "RexxBuiltinFunctions.h"                     /* Gneral purpose BIF Header file    */
 #include "Numerics.hpp"
 
+
+
+// singleton class instance
+RexxClass *RexxNumberString::classInstance = OREF_NULL;
+
+
 /* MHES 20050108 deprecated */
 #define string_forwarder(method)\
 RexxObject *RexxNumberString::##method(RexxObject *operand)\
@@ -2628,7 +2634,7 @@ void  *RexxNumberString::operator new(size_t size, size_t length)
 {
   RexxNumberString *newNumber;
 
-  newNumber = (RexxNumberString *)new_object(size + length, T_numberstring);
+  newNumber = (RexxNumberString *)new_object(size + length, T_NumberString);
                                        /* initialize the new object         */
   newNumber->setHasNoReferences();     /* Let GC know no to bother with LIVE*/
   return newNumber;                    /* return the new numberstring       */
@@ -2750,3 +2756,44 @@ RexxNumberString *RexxNumberStringClass::newInstance(int64_t integer)
     newNumber->formatInt64(integer);  /* format the integer                */
     return newNumber;
 }
+
+                                       /* numberstring operator methods     */
+PCPPM RexxNumberString::operatorMethods[] =
+{
+   NULL,                               /* first entry not used              */
+   (PCPPM)&RexxNumberString::plus,
+   (PCPPM)&RexxNumberString::minus,
+   (PCPPM)&RexxNumberString::multiply,
+   (PCPPM)&RexxNumberString::divide,
+   (PCPPM)&RexxNumberString::integerDivide,
+   (PCPPM)&RexxNumberString::remainder,
+   (PCPPM)&RexxNumberString::power,
+   (PCPPM)&RexxNumberString::concat,
+   (PCPPM)&RexxNumberString::concat, /* Duplicate entry neccessary        */
+   (PCPPM)&RexxNumberString::concatBlank,
+   (PCPPM)&RexxNumberString::equal,
+   (PCPPM)&RexxNumberString::notEqual,
+   (PCPPM)&RexxNumberString::isGreaterThan,
+   (PCPPM)&RexxNumberString::isLessOrEqual,
+   (PCPPM)&RexxNumberString::isLessThan,
+   (PCPPM)&RexxNumberString::isGreaterOrEqual,
+                           /* Duplicate entry neccessary        */
+   (PCPPM)&RexxNumberString::isGreaterOrEqual,
+   (PCPPM)&RexxNumberString::isLessOrEqual,
+   (PCPPM)&RexxNumberString::strictEqual,
+   (PCPPM)&RexxNumberString::strictNotEqual,
+   (PCPPM)&RexxNumberString::strictGreaterThan,
+   (PCPPM)&RexxNumberString::strictLessOrEqual,
+   (PCPPM)&RexxNumberString::strictLessThan,
+   (PCPPM)&RexxNumberString::strictGreaterOrEqual,
+                           /* Duplicate entry neccessary        */
+   (PCPPM)&RexxNumberString::strictGreaterOrEqual,
+   (PCPPM)&RexxNumberString::strictLessOrEqual,
+   (PCPPM)&RexxNumberString::notEqual,
+                           /* Duplicate entry neccessary        */
+   (PCPPM)&RexxNumberString::notEqual,
+   (PCPPM)&RexxNumberString::andOp,
+   (PCPPM)&RexxNumberString::orOp,
+   (PCPPM)&RexxNumberString::xorOp,
+   (PCPPM)&RexxNumberString::operatorNot,
+};

@@ -52,8 +52,6 @@
 # include "config.h"
 #endif
 
-#define INCL_RXQUEUE           /* needed for RxQueue...() calls      */
-
 #if defined( HAVE_FEATURES_H )
 # include <features.h>
 #endif
@@ -190,7 +188,7 @@ int main(
     }
   }
   else {
-    RXSTRING pulldata; 
+    RXSTRING pulldata;
 
     MAKERXSTRING(pulldata,NULL,0);    /* make an empty RXSTRING     */
     rc = RexxPullQueue(quename, &pulldata, &dt, RXQUEUE_NOWAIT);

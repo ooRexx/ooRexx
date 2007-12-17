@@ -42,7 +42,6 @@
 /*                                                                            */
 /******************************************************************************/
 
-#define  INCL_DOSMISC
 #define  INCL_REXX_STREAM
 #include "RexxCore.h"
 #include "StringClass.hpp"
@@ -168,32 +167,31 @@ RexxString * LocateProgram(
 
   // retrofit by IH
   bool         Found;                  /* found the file                    */
-  RexxActivity*activity;               /* the current activity              */
 
-  activity = ActivityManager::currentActivity;          /* save the activity                 */
-  activity->releaseAccess();           /* release the kernel access         */
+  {
+      UnsafeBlock releaser;
 
-  Name = InName->getStringData();      /* point to the string data          */
-  Found = false;                       /* no name found yet                 */
-  Extension = SysFileExtension(Name);  /* locate the file extension start   */
+      Name = InName->getStringData();      /* point to the string data          */
+      Found = false;                       /* no name found yet                 */
+      Extension = SysFileExtension(Name);  /* locate the file extension start   */
 
-  if (!Extension) {                    /* have an extension?                */
-                       /* get space left for an extension   */
-    ExtensionSpace = sizeof(TempName) - strlen(Name);
-                       /* loop through the extensions list  */
-    for (i = 0; !Found && i < ExtensionCount; i++) {
-                       /* copy over the name                */
-      strncpy(TempName, Name, sizeof(TempName));
-                       /* copy over the extension           */
-      strncat(TempName, Extensions[i], ExtensionSpace);
-                       /* check this version of the name    */
-      Found = SearchFileName(TempName, FullName);
-    }
+      if (!Extension) {                    /* have an extension?                */
+                           /* get space left for an extension   */
+        ExtensionSpace = sizeof(TempName) - strlen(Name);
+                           /* loop through the extensions list  */
+        for (i = 0; !Found && i < ExtensionCount; i++) {
+                           /* copy over the name                */
+          strncpy(TempName, Name, sizeof(TempName));
+                           /* copy over the extension           */
+          strncat(TempName, Extensions[i], ExtensionSpace);
+                           /* check this version of the name    */
+          Found = SearchFileName(TempName, FullName);
+        }
+      }
+      if (!Found)                          /* not found?  try without extensions*/
+                           /* check on the "raw" name last      */
+        Found = SearchFileName(Name, FullName);
   }
-  if (!Found)                          /* not found?  try without extensions*/
-                       /* check on the "raw" name last      */
-    Found = SearchFileName(Name, FullName);
-  activity->requestAccess();           /* get the semaphore back            */
   if (Found)                           /* got one?                          */
                        /* get as a string object            */
     Result = new_string(FullName);
@@ -344,35 +342,34 @@ RexxBuffer *SysReadProgram(
   HANDLE        fileHandle;             /* open file access handle           */
   size_t   buffersize;                 /* size of read buffer               */
   RexxBuffer * buffer;                 /* buffer object to read file into   */
-  RexxActivity*activity;               /* the current activity              */
   BY_HANDLE_FILE_INFORMATION   status; /* file status information           */
   DWORD        bytesRead;              /* number of bytes read              */
 
-  activity = ActivityManager::currentActivity;          /* save the activity                 */
-  activity->releaseAccess();           /* release the kernel access         */
-                       /* try to open the file              */
-  fileHandle = CreateFile(file_name, GENERIC_READ, FILE_SHARE_READ,
-                          NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, NULL);
-  if (fileHandle == INVALID_HANDLE_VALUE)
   {
-    activity->requestAccess();         /* get the access back               */
-    return OREF_NULL;                  /* return nothing                    */
+      UnsafeBlock releaser;
+                           /* try to open the file              */
+      fileHandle = CreateFile(file_name, GENERIC_READ, FILE_SHARE_READ,
+                              NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, NULL);
+      if (fileHandle == INVALID_HANDLE_VALUE)
+      {
+        return OREF_NULL;                  /* return nothing                    */
+      }
+                           /* retrieve the file size            */
+      GetFileInformationByHandle(fileHandle, &status);
   }
-                       /* retrieve the file size            */
-  GetFileInformationByHandle(fileHandle, &status);
-  activity->requestAccess();           /* get the access back               */
   buffersize = status.nFileSizeLow;    /* get the file size                 */
   buffer = new_buffer(buffersize);     /* get a buffer object               */
   ProtectedObject p(buffer);
-  activity->releaseAccess();           /* release the kernel access         */
-                       /* read in a buffer of data   */
-  if (ReadFile(fileHandle, buffer->data, buffersize, &bytesRead, NULL) == 0) {
-    activity->requestAccess();         /* get the access back               */
-    return OREF_NULL;                  /* return nothing                    */
+  {
+      UnsafeBlock releaser;
+
+                           /* read in a buffer of data   */
+      if (ReadFile(fileHandle, buffer->data, buffersize, &bytesRead, NULL) == 0) {
+        return OREF_NULL;                  /* return nothing                    */
+      }
+      CloseHandle(fileHandle);                /* close the file now         */
+      return buffer;                       /* return the program buffer         */
   }
-  CloseHandle(fileHandle);                /* close the file now         */
-  activity->requestAccess();           /* get the access back               */
-  return buffer;                       /* return the program buffer         */
 }
 
 void SysQualifyStreamName(

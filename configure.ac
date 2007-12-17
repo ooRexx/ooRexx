@@ -65,7 +65,7 @@ AC_PROG_LIBTOOL
 GENERIC_OS="-DLINUX"
 GENERIC_OPSYS="-DOPSYS_LINUX"
 GENERIC_DEFINES="-DNOOPT -DPTHREAD_KERNEL \
-                 -DSHARED -D_POSIX_THREAD -D_REENTRANT -DHIGHTID  \
+                 -D_POSIX_THREAD -D_REENTRANT  \
                  -D_GNU_SOURCE"
 
 dnl Now we throw in a bunch of warnings.  C and C++ need

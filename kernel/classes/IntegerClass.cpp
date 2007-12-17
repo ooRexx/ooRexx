@@ -54,6 +54,25 @@
 #include "Numerics.hpp"
 
 
+
+// singleton class instance
+RexxIntegerClass *RexxInteger::classInstance = OREF_NULL;
+
+RexxInteger *RexxInteger::falseObject = OREF_NULL;
+RexxInteger *RexxInteger::trueObject = OREF_NULL;
+RexxInteger *RexxInteger::nullPointer = OREF_NULL;
+
+RexxInteger *RexxInteger::integerZero = OREF_NULL;
+RexxInteger *RexxInteger::integerOne = OREF_NULL;
+RexxInteger *RexxInteger::integerTwo = OREF_NULL;
+RexxInteger *RexxInteger::integerThree = OREF_NULL;
+RexxInteger *RexxInteger::integerFour = OREF_NULL;
+RexxInteger *RexxInteger::integerFive = OREF_NULL;
+RexxInteger *RexxInteger::integerSix = OREF_NULL;
+RexxInteger *RexxInteger::integerSeven = OREF_NULL;
+RexxInteger *RexxInteger::integerEight = OREF_NULL;
+RexxInteger *RexxInteger::integerNine = OREF_NULL;
+RexxInteger *RexxInteger::integerMinusOne = OREF_NULL;
                                        /* define an operator forwarding     */
                                        /* method                            */
 
@@ -1093,12 +1112,53 @@ void RexxInteger::createClass()
                                        /*  and needs to override the NEW    */
                                        /*  method to provide caching        */
                                        /*  support for integers.            */
-  SUBCLASS_CREATE(Integer, "String", RexxIntegerClass);
+  CLASS_CREATE(Integer, "String", RexxIntegerClass);
                                        /*  initialize our static array of   */
                                        /*  cached integers                  */
   new (TheIntegerClass) RexxIntegerClass();
 
 }
+
+
+PCPPM RexxInteger::operatorMethods[] =
+{
+   NULL,
+   (PCPPM)&RexxInteger::plus,
+   (PCPPM)&RexxInteger::minus,
+   (PCPPM)&RexxInteger::multiply,
+   (PCPPM)&RexxInteger::divide,
+   (PCPPM)&RexxInteger::integerDivide,
+   (PCPPM)&RexxInteger::remainder,
+   (PCPPM)&RexxInteger::power,
+   (PCPPM)&RexxInteger::concat,
+   (PCPPM)&RexxInteger::concat, /* Duplicate entry neccessary        */
+   (PCPPM)&RexxInteger::concatBlank,
+   (PCPPM)&RexxInteger::equal,
+   (PCPPM)&RexxInteger::notEqual,
+   (PCPPM)&RexxInteger::isGreaterThan,
+   (PCPPM)&RexxInteger::isLessOrEqual,
+   (PCPPM)&RexxInteger::isLessThan,
+   (PCPPM)&RexxInteger::isGreaterOrEqual,
+                              /* Duplicate entry neccessary        */
+   (PCPPM)&RexxInteger::isGreaterOrEqual,
+   (PCPPM)&RexxInteger::isLessOrEqual,
+   (PCPPM)&RexxInteger::strictEqual,
+   (PCPPM)&RexxInteger::strictNotEqual,
+   (PCPPM)&RexxInteger::strictGreaterThan,
+   (PCPPM)&RexxInteger::strictLessOrEqual,
+   (PCPPM)&RexxInteger::strictLessThan,
+   (PCPPM)&RexxInteger::strictGreaterOrEqual,
+                              /* Duplicate entry neccessary        */
+   (PCPPM)&RexxInteger::strictGreaterOrEqual,
+   (PCPPM)&RexxInteger::strictLessOrEqual,
+   (PCPPM)&RexxInteger::notEqual,
+   (PCPPM)&RexxInteger::notEqual,
+   (PCPPM)&RexxInteger::andOp,
+   (PCPPM)&RexxInteger::orOp,
+   (PCPPM)&RexxInteger::xorOp,
+   (PCPPM)&RexxInteger::operatorNot,
+};
+
 
 #include "RexxNativeAPI.h"
 #undef RexxInteger
@@ -1120,7 +1180,7 @@ REXXOBJECT REXXENTRY REXX_INTEGER_NEW(int value)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  return_object(new_integer(value));
+    return context.protect(new_integer(value));
 }

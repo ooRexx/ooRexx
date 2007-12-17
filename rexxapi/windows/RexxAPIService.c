@@ -36,8 +36,6 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-#define INCL_RXQUEUE
-#define INCL_RXSUBCOM
 #include "rexx.h"
 #include "orxgui.h"
 #include "string.h"

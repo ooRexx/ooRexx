@@ -91,7 +91,7 @@ RexxHashTable *RexxHashTable::newInstance(
 
   bytes = sizeof(RexxHashTable) + (sizeof(TABENTRY) * (entries - 1));
                                        /* Get new object                    */
-  newHash = (RexxHashTable *)new_object(bytes, T_hashtab);
+  newHash = (RexxHashTable *)new_object(bytes, T_HashTable);
   newHash->clearObject();              /* clear things out                  */
   newHash->size = bucketSize;          /* record the size                   */
   newHash->free = entries - 1;         /* and the first free slot           */
@@ -139,7 +139,7 @@ RexxTable *RexxHashTable::newInstance(
   bytes = newObj->getObjectSize() - companionSize;
 
   // initialize the hash table object
-  ((RexxObject *)newHash)->initializeNewObject(bytes, memoryObject.markWord, RexxMemory::VFTArray[T_hashtab], TheHashTableBehaviour);
+  ((RexxObject *)newHash)->initializeNewObject(bytes, memoryObject.markWord, RexxMemory::virtualFunctionTable[T_HashTable], TheHashTableBehaviour);
                                        /* reduce the companion size         */
   newObj->setObjectSize(companionSize);
   newHash->size = bucketSize;          /* record the size                   */

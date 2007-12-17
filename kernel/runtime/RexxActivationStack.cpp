@@ -161,7 +161,7 @@ RexxActivationFrameBuffer *RexxActivationFrameBuffer::newInstance(
                                        /* Give new object its behaviour     */
   newObj->setBehaviour(TheActivationFrameBufferBehaviour);
                                        /* set the virtual function table    */
-  newObj->setVirtualFunctions(RexxMemory::VFTArray[T_activation_frame_buffer]);
+  newObj->setVirtualFunctions(RexxMemory::virtualFunctionTable[T_ActivationFrameBuffer]);
   newObj->size = entries;              /* set the size                      */
   newObj->next = 0;                    /* set the top element               */
   newObj->previous = OREF_NULL;        /* no previous element yet           */

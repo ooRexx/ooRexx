@@ -58,7 +58,7 @@ RexxClause::RexxClause()
 {
   this->clearObject();                 /* initialize the object             */
                                        /* an array for the tokens           */
-  OrefSet(this, this->tokens, new_arrayOfObject(sizeof(RexxToken), INITIAL_SIZE, T_token));
+  OrefSet(this, this->tokens, new_arrayOfObject(sizeof(RexxToken), INITIAL_SIZE, T_Token));
   this->first = 1;                     /* first token is the start          */
   this->current = 1;                   /* no current token                  */
   this->size = INITIAL_SIZE;           /* set the token cache size          */
@@ -161,7 +161,7 @@ RexxToken *RexxClause::newToken(
   if (this->free > this->size) {       /* need to extend our cache?         */
                                        /* allocate a larger array  */
                                        /* first a bulk array of tokens      */
-    RexxArray *newTokens = new_arrayOfObject(sizeof(RexxToken), EXTEND_SIZE, T_token);
+    RexxArray *newTokens = new_arrayOfObject(sizeof(RexxToken), EXTEND_SIZE, T_Token);
     ProtectedObject p(newTokens);
     RexxArray *newarray = (RexxArray *)this->tokens->join(newTokens);
     this->size += EXTEND_SIZE;         /* bump the cache size               */

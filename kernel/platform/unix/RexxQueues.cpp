@@ -46,11 +46,6 @@
 #include <string.h>                    /* Get strcpy, strcat, etc.          */
 #include <stdlib.h>
 
-#define INCL_RXSUBCOM                  /* Include subcom declares           */
-#define INCL_RXFUNC                    /* and external function...          */
-#define INCL_RXSYSEXIT                 /* and system exits                  */
-#define INCL_RXQUEUE                   /* enable RxQueue_x() ability        */
-
 #include "RexxCore.h"                  /* global REXX declarations          */
 
 #include "StringClass.hpp"
@@ -58,7 +53,6 @@
 #include "StreamNative.h"
 #include "ActivityManager.hpp"
 
-//#include "rexxsaa.h"                 /* Include REXX header               */
 #include "SubcommandAPI.h"                 /* Get private REXX API's        */
 
 /****************************************************************************/
@@ -217,16 +211,14 @@ RexxMethod1(int, rexx_delete_queue,
 RexxMethod1(REXXOBJECT, function_queueExit,
   STRING, queue_name)                  /* the requested name                */
 {
-  RexxActivation *activation;          /* top level real activation         */
   RexxString *qname = (RexxString *)queue_name;
 
 
-  native_entry;                        /* synchronize access                */
-                                       /* pick up current activation        */
-  activation = (RexxActivation *)ActivityManager::currentActivity->getCurrentActivation();
+  NativeContextBlock context;
+  RexxActivation *activation = (RexxActivation *)ActivityManager::currentActivity->getCurrentActivation();
                                        /* call the exit                     */
-  ActivityManager::currentActivity->sysExitMsqNam(activation, &qname);
-  return_object(qname);                  /* and just return the exit result   */
+  context.activity->sysExitMsqNam(activation, &qname);
+  return context.protect(qname);       /* and just return the exit result   */
 }
 
 

@@ -43,8 +43,6 @@
 /*                     Interface.                                    */
 /*                                                                   */
 /*********************************************************************/
-#define INCL_RXSUBCOM
-#define INCL_RXSYSEXIT
 #include <string.h>                    /* Include string functions   */
 #include <stdio.h>
 #include "rexx.h"                      /* for REXX functionality     */

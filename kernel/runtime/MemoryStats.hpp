@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                              RexxMemorystats.hpp */
+/* REXX Kernel                                            RexxMemorystats.hpp */
 /*                                                                            */
 /* Primitive DeadObject class definitions                                     */
 /*                                                                            */
@@ -44,6 +44,8 @@
 
 #ifndef Included_MemoryStats
 #define Included_MemoryStats
+
+#include "ClassTypeCodes.h"
 
 class MemoryStats;
 /* a class for collecting object statistics */
@@ -106,7 +108,7 @@ class MemoryStats {
     SegmentStats normalStats;
     SegmentStats largeStats;
 
-    ObjectStats objectStats[highest_T + 1];
+    ObjectStats objectStats[T_Last_Class_Type + 1];
 };
 
 #endif

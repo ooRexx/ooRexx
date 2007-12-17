@@ -122,9 +122,9 @@ REXXOBJECT REXXENTRY REXX_BUFFER_EXTEND(REXXOBJECT self, size_t length)
 /* Function:  Extend the length of a buffer                                   */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* return new expanded buffer        */
-  return_object((RexxObject *)this->expand(length));
+    return context.protect((RexxObject *)this->expand(length));
 }
 
 #undef RexxBuffer
@@ -134,7 +134,7 @@ REXXOBJECT REXXENTRY REXX_BUFFER_NEW(size_t length)
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
-  native_entry;                        /* synchronize access                */
+    NativeContextBlock context;
                                        /* just forward and return           */
-  return_object((RexxObject *)new (length) RexxBuffer());
+    return context.protect((RexxObject *)new (length) RexxBuffer());
 }

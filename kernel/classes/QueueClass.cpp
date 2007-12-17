@@ -48,6 +48,9 @@
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 
+// singleton class instance
+RexxClass *RexxQueue::classInstance = OREF_NULL;
+
 RexxObject *RexxQueue::pullRexx()
 /******************************************************************************/
 /* Function:  Pull an item off of the stack, returning .nil if no items       */
