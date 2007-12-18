@@ -1334,7 +1334,7 @@ BUILTIN(TIME) {
         // null strings not allowed as an option character
         if (option->getLength() == 0)
         {
-            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerOne, "CEHLMNRS", option);
+            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerOne, "CEFHLMNRST", option);
         }
         // we only use the first character
         style = toupper(option->getChar(0));
@@ -1354,7 +1354,7 @@ BUILTIN(TIME) {
         // again, must be at least one character, of which we only use the first
         if (option2->getLength() == 0)
         {
-            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CHLMNS", option2);
+            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CFHLMNST", option2);
         }
         style2 = toupper(option2->getChar(0));
     }

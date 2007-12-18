@@ -2247,10 +2247,22 @@ RexxDateTime RexxActivation::getTime()
                                        /* not a valid time stamp?           */
   if (!this->settings.timestamp.valid)
   {
+      // IMPORTANT:  If a time call resets the elapsed time clock, we don't
+      // clear the value out.  The time needs to stay valid until the clause is
+      // complete.  The time stamp value that needs to be used for the next
+      // elapsed time call is the timstamp that was valid at the point of the
+      // last call, which is our current old invalid one.  So, we need to grab
+      // that value and set the elapsed time start point, then clear the flag
+      // so that it will remain current.
+      if (isElapsedTimerReset())
+      {
+          this->settings.elapsed_time = settings.timestamp.getBaseTime();
+          setElapsedTimerValid();
+      }
                                        /* get a fresh time stamp            */
-    SysGetCurrentTime(&this->settings.timestamp);
+      SysGetCurrentTime(&this->settings.timestamp);
                                        /* got a new one                     */
-    this->settings.timestamp.valid = true;
+      this->settings.timestamp.valid = true;
   }
                                        /* return the current time           */
   return this->settings.timestamp;
@@ -2273,6 +2285,7 @@ int64_t RexxActivation::getElapsed()
   return settings.elapsed_time;
 }
 
+
 void RexxActivation::resetElapsed()     /* reset activation elapsed time     */
 /******************************************************************************/
 /* Function:  Retrieve the current elapsed time counter start time, starting  */
@@ -2280,9 +2293,11 @@ void RexxActivation::resetElapsed()     /* reset activation elapsed time     */
 /*            call                                                            */
 /******************************************************************************/
 {
-                                       /* turn on the reset flag            */
-  this->settings.elapsed_time = settings.timestamp.getBaseTime();
+    // Just invalidate the flat so that we'll refresh this the next time we
+    // obtain a new timestamp value.
+    setElapsedTimerInvalid();
 }
+
 
 #define DEFAULT_MIN 0                  /* default random minimum value      */
 #define DEFAULT_MAX 999                /* default random maximum value      */

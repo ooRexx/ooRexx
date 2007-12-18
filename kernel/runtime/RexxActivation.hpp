@@ -85,6 +85,8 @@ class RexxInstructionCallBase;
 #define return_status_set   0x08000000 /* had our first host command        */
 #define transfer_failed     0x10000000 /* transfer of variable lock failure */
 
+#define elapsed_reset       0x20000000 // The elapsed time stamp was reset via time('r')
+
 /* execution_state values */
 #define ACTIVE    0
 #define REPLIED   1
@@ -377,6 +379,11 @@ RexxObject * activation_find  (void);
    inline bool              isExternalTraceOn() { return (this->settings.flags&trace_on) != 0; }
    inline void              setExternalTraceOn() { this->settings.flags |= trace_on; }
    inline void              setExternalTraceOff() { this->settings.flags &= ~trace_on; }
+
+   inline bool              isElapsedTimerReset() { return (this->settings.flags&elapsed_reset) != 0; }
+   inline void              setElapsedTimerInvalid() { this->settings.flags |= elapsed_reset; }
+   inline void              setElapsedTimerValid() { this->settings.flags &= ~elapsed_reset; }
+
 
    inline RexxObject     ** getMethodArgumentList() {return this->arglist;};
    inline size_t            getMethodArgumentCount() { return argcount; }
