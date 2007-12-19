@@ -269,8 +269,8 @@ void RexxExpressionMessage::assign(
         // send with an override
         result = stack->send(this->messageName, _super, argcount + 1);
     }
-    // remove all arguments
-    stack->popn(argcount + 1);
+    // remove all arguments (arguments + target + assignment value)
+    stack->popn(argcount + 2);
 }
 
 
