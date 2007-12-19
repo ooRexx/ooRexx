@@ -1551,9 +1551,9 @@ void RexxActivity::releaseAccess()
 /* Function:  Release exclusive access to the kernel                          */
 /******************************************************************************/
 {
-    ActivityManager::unlockKernel();
     // reset the numeric settings
     Numerics::setDefaultSettings();
+    ActivityManager::unlockKernel();
 }
 
 void RexxActivity::requestAccess()

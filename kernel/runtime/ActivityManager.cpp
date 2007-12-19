@@ -177,7 +177,7 @@ void ActivityManager::addWaitingActivity(
         /* this is the new last one          */
         lastWaitingActivity = waitingAct;
         waitingAct->clearWait();           /* clear the run semaphore           */
-        lock.release();                  // release the lock now
+        lock.release();                    // release the lock now
         if (release)                       /* current semaphore owner?          */
         {
             unlockKernel();
@@ -798,6 +798,9 @@ RexxActivity *ActivityManager::getActivity()
         }
     }
     activityObject->activate();        // let the activity know it's in use, potentially nested
+    // belt-and-braces.  Make sure the current activity is explicitly set to
+    // this activity before leaving.
+    currentActivity = activityObject;
     return activityObject;             // Return the activity for thread
 }
 
