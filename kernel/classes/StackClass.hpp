@@ -56,8 +56,8 @@
    RexxStack(size_t size);
 
    void        init(size_t);
-   void        live();
-   void        liveGeneral();
+   void        live(size_t);
+   void        liveGeneral(int reason);
    void        flatten(RexxEnvelope *);
    RexxObject *get(size_t pos);
    inline RexxObject *push(RexxObject *obj)
@@ -88,7 +88,7 @@
    inline void operator delete(void *, size_t) { }
 
    RexxSaveStack(size_t, size_t);
-   void        live();
+   void        live(size_t);
    void        init(size_t, size_t);
    void        extend(size_t);
    void        remove(RexxObject *, bool search = false);

@@ -66,33 +66,29 @@ RexxInstructionSelect::RexxInstructionSelect(RexxString *name)
 }
 
 
-void RexxInstructionSelect::live()
+void RexxInstructionSelect::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->when_list);
   memory_mark(this->end);
   memory_mark(this->otherwise);
   memory_mark(this->label);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionSelect::liveGeneral()
+void RexxInstructionSelect::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->when_list);
   memory_mark_general(this->end);
   memory_mark_general(this->otherwise);
   memory_mark_general(this->label);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionSelect::flatten(RexxEnvelope *envelope)

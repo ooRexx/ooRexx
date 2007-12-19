@@ -47,32 +47,31 @@
 #include "ExpressionStack.hpp"
 #include "ActivityManager.hpp"
 
-void RexxExpressionStack::live()
+void RexxExpressionStack::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
    RexxObject **entry;                 /* marked stack entry                */
 
-  setUpMemoryMark
                                        /* loop through the stack entries    */
    for (entry = this->stack; entry <= this->top; entry++)
-     memory_mark(*entry);              /* marking each one                  */
-  cleanUpMemoryMark
+   {
+       memory_mark(*entry);              /* marking each one                  */
+   }
 }
 
-void RexxExpressionStack::liveGeneral()
+void RexxExpressionStack::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
    RexxObject **entry;                 /* marked stack entry                */
 
-   setUpMemoryMarkGeneral
-                                       /* loop through the stack entries    */
    for (entry = this->stack; entry <= this->top; entry++)
-     memory_mark_general(*entry);      /* marking each one                  */
-   cleanUpMemoryMarkGeneral
+   {
+       memory_mark_general(*entry);      /* marking each one                  */
+   }
 }
 
 void RexxExpressionStack::flatten(RexxEnvelope * envelope)

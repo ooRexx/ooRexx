@@ -59,8 +59,8 @@ class RexxInteger : public RexxObject {
   inline RexxInteger(wholenumber_t intValue) { this->value = intValue; };
   inline void *operator new(size_t size, void *ptr) {return ptr;};
   void *operator new(size_t);
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope*);
   virtual HashCode getHashValue();
 
@@ -189,8 +189,8 @@ class RexxIntegerClass : public RexxClass {
                                        return this->integercache[value - INTEGERCACHELOW];
                                      else
                                        return new RexxInteger (value); };
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
                                      /* array of fast aloocation integers 0-99      */
   RexxInteger *integercache[INTEGERCACHESIZE - INTEGERCACHELOW];
 };

@@ -48,8 +48,8 @@
 
  class RexxHashTableCollection : public RexxObject {
    public:
-    void         live();
-    void         liveGeneral();
+    void         live(size_t);
+    void         liveGeneral(int reason);
     void         flatten(RexxEnvelope *);
     RexxObject * unflatten(RexxEnvelope *);
     RexxObject * makeProxy(RexxEnvelope *);
@@ -75,12 +75,12 @@
     RexxObject   *isEmpty();
     RexxObject   *removeItem(RexxObject *value);
 
-    inline long          items() { return this->contents->totalEntries(); };
-    inline long          first() { return this->contents->first(); };
-    inline long          next(long pos) { return this->contents->next(pos);};
-    inline RexxObject   *value(long pos) {return this->contents->value(pos); };
-    inline RexxObject   *index(long pos) {return this->contents->index(pos); };
-    inline bool          available(long pos) {return this->contents->available(pos); };
+    inline HashLink      items() { return this->contents->totalEntries(); };
+    inline HashLink      first() { return this->contents->first(); };
+    inline HashLink      next(HashLink pos) { return this->contents->next(pos);};
+    inline RexxObject   *value(HashLink pos) {return this->contents->value(pos); };
+    inline RexxObject   *index(HashLink pos) {return this->contents->index(pos); };
+    inline bool          available(HashLink pos) {return this->contents->available(pos); };
     inline RexxObject   *remove(RexxObject *key) {return this->contents->remove(key); };
     inline RexxObject   *get(RexxObject *key) {return this->contents->get(key); };
 

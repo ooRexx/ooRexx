@@ -76,28 +76,24 @@ RexxSupplier::RexxSupplier()
 }
 
 
-void RexxSupplier::live()
+void RexxSupplier::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->values);
   memory_mark(this->indexes);
   memory_mark(this->objectVariables);
-  cleanUpMemoryMark
 }
 
-void RexxSupplier::liveGeneral()
+void RexxSupplier::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->values);
   memory_mark_general(this->indexes);
   memory_mark_general(this->objectVariables);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxSupplier::flatten(RexxEnvelope *envelope)

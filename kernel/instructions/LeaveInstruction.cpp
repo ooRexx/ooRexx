@@ -59,27 +59,23 @@ RexxInstructionLeave::RexxInstructionLeave(
   this->setType(type);                 /* and set the correct type          */
 }
 
-void RexxInstructionLeave::live()
+void RexxInstructionLeave::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->name);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionLeave::liveGeneral()
+void RexxInstructionLeave::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->name);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionLeave::flatten (RexxEnvelope *envelope)

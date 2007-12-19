@@ -95,24 +95,20 @@ void LibraryManager::restore(RexxDirectory *savedLibraries)
 /**
  * Normal garbage collection marking
  */
-void LibraryManager::live()
+void LibraryManager::live(size_t liveMark)
 {
-    setUpMemoryMark
     memory_mark(libraries);
-    cleanUpMemoryMark
 }
 
 
 /**
  * The generalized object marking method.
  */
-void LibraryManager::liveGeneral()
+void LibraryManager::liveGeneral(int reason)
 {
     if (!memoryObject.savingImage())
     {
-        setUpMemoryMarkGeneral
         memory_mark_general(libraries);
-        cleanUpMemoryMarkGeneral
     }
 }
 

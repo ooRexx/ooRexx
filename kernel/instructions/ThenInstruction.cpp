@@ -91,27 +91,23 @@ void  RexxInstructionThen::setElse(
   ((RexxInstructionElse *)else_clause)->setParent((RexxInstructionEndIf *)this->parent);
 }
 
-void RexxInstructionThen::live()
+void RexxInstructionThen::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->parent);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionThen::liveGeneral()
+void RexxInstructionThen::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->parent);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionThen::flatten(RexxEnvelope *envelope)

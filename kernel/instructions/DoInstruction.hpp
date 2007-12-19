@@ -82,8 +82,8 @@ class RexxInstructionDo : public RexxBlockInstruction
   bool    isLoop();
   void terminate(RexxActivation *, RexxDoBlock *);
 
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
   void execute(RexxActivation *, RexxExpressionStack *);
   void controlSetup(RexxActivation *, RexxExpressionStack *, RexxDoBlock *);

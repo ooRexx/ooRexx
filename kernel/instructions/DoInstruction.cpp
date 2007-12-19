@@ -139,12 +139,11 @@ bool RexxInstructionDo::isLoop()
 }
 
 
-void RexxInstructionDo::live()
+void RexxInstructionDo::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->initial);
   memory_mark(this->to);
@@ -154,15 +153,13 @@ void RexxInstructionDo::live()
   memory_mark(this->label);
   memory_mark(this->conditional);
   memory_mark(this->end);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionDo::liveGeneral()
+void RexxInstructionDo::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->initial);
@@ -173,7 +170,6 @@ void RexxInstructionDo::liveGeneral()
   memory_mark_general(this->label);
   memory_mark_general(this->conditional);
   memory_mark_general(this->end);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionDo::flatten(RexxEnvelope *envelope)

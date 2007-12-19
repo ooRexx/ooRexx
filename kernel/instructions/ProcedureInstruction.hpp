@@ -54,8 +54,8 @@ class RexxInstructionProcedure : public RexxInstruction {
 
   RexxInstructionProcedure(size_t, RexxQueue *);
   inline RexxInstructionProcedure(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope*);
   void execute(RexxActivation *, RexxExpressionStack *);
 

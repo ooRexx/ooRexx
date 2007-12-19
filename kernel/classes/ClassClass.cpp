@@ -62,12 +62,11 @@
 RexxClass *RexxClass::classInstance = OREF_NULL;
 
 
-void RexxClass::live()
+void RexxClass::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->objectVariables);
   memory_mark(this->id);
   memory_mark(this->classMethodDictionary);
@@ -79,15 +78,13 @@ void RexxClass::live()
   memory_mark(this->metaClassScopes);
   memory_mark(this->classSuperClasses);
   memory_mark(this->instanceSuperClasses);
-  cleanUpMemoryMark
 }
 
-void RexxClass::liveGeneral()
+void RexxClass::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->objectVariables);
   memory_mark_general(this->id);
   memory_mark_general(this->classMethodDictionary);
@@ -99,7 +96,6 @@ void RexxClass::liveGeneral()
   memory_mark_general(this->metaClassScopes);
   memory_mark_general(this->classSuperClasses);
   memory_mark_general(this->instanceSuperClasses);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxClass::flatten(RexxEnvelope *envelope)

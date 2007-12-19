@@ -64,8 +64,8 @@ class RexxSupplier;
    inline void *operator new(size_t size, void *ptr) {return ptr;};
    RexxStem(RexxString *);
   inline RexxStem(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope*);
   RexxObject * copy();
 

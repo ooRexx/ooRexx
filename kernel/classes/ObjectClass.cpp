@@ -87,24 +87,20 @@ RexxMethod *last_method  (void)
   return method_save;
 }
 
-void RexxObject::live()
+void RexxObject::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->objectVariables);
-  cleanUpMemoryMark
 }
 
-void RexxObject::liveGeneral()
+void RexxObject::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->objectVariables);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxObject::flatten(RexxEnvelope *envelope)

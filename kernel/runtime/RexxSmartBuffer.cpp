@@ -58,23 +58,19 @@ RexxSmartBuffer::RexxSmartBuffer(size_t startSize)
   OrefSet(this, this->buffer, (RexxBuffer *)new_buffer(startSize));
 }
 
-void RexxSmartBuffer::live()
+void RexxSmartBuffer::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->buffer);
-  cleanUpMemoryMark
 }
-void RexxSmartBuffer::liveGeneral()
+void RexxSmartBuffer::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->buffer);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxSmartBuffer::flatten(RexxEnvelope *envelope)

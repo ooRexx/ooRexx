@@ -173,8 +173,8 @@ public:
    RexxObject *display(RexxDirectory *);
    RexxObject *displayDebug(RexxDirectory *);
    RexxString *messageSubstitution(RexxString *, RexxArray *);
-   void        live();
-   void        liveGeneral();
+   void        live(size_t);
+   void        liveGeneral(int reason);
    void        flatten(RexxEnvelope *);
    void        run();
    void        push(RexxActivationBase *);

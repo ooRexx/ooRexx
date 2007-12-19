@@ -62,8 +62,8 @@ class RexxInstruction : public RexxInternalObject {
   inline RexxInstruction(RESTORETYPE restoreType) { ; };
   inline RexxInstruction() { ; }
 
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
   inline const SourceLocation &getLocation() { return instructionLocation; }
   inline void  setLocation(SourceLocation &l) { instructionLocation = l; }
@@ -114,8 +114,8 @@ class RexxInstructionExpression : public RexxInstruction {
   RexxInstructionExpression() { ; };
   RexxInstructionExpression(RESTORETYPE restoreType) { ; };
 
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
 
   RexxObject *expression;              /* expression to evaluate            */

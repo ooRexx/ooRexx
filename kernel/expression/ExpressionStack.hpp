@@ -53,8 +53,8 @@ class RexxExpressionStack {
   inline void *operator new(size_t size, void *ptr) { return ptr;};
   RexxExpressionStack(RexxObject **frames, size_t items) { stack = frames; size = items; top = stack; }
   RexxExpressionStack() { stack = OREF_NULL; size = 0; top = stack; }
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
   void         expandArgs(int, int, int, char *);
   RexxString * requiredStringArg(int);

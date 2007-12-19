@@ -69,8 +69,8 @@ class RexxTrigger : public RexxInternalObject {
   stringsize_t integerTrigger(RexxObject *);
   RexxString *stringTrigger(RexxObject *);
   void        parse(RexxActivation *, RexxExpressionStack *, RexxTarget *);
-  void        live();
-  void        liveGeneral();
+  void        live(size_t);
+  void        liveGeneral(int reason);
   void        flatten(RexxEnvelope *);
   inline int  getType()     { return this->triggerType; }
   inline void setType(int v) { this->triggerType = v; }

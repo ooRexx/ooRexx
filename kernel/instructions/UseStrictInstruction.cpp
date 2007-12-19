@@ -83,19 +83,17 @@ RexxInstructionUseStrict::RexxInstructionUseStrict(size_t count, bool strict, bo
 /**
  * The runtime, non-debug live marking routine.
  */
-void RexxInstructionUseStrict::live()
+void RexxInstructionUseStrict::live(size_t liveMark)
 {
   size_t i;                            /* loop counter                      */
   size_t count;                        /* argument count                    */
 
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   for (i = 0, count = variableCount; i < count; i++)
   {
       memory_mark(this->variables[i].variable);
       memory_mark(this->variables[i].defaultValue);
   }
-  cleanUpMemoryMark
 }
 
 
@@ -103,12 +101,11 @@ void RexxInstructionUseStrict::live()
  * The generalized live marking routine used for non-performance
  * critical marking operations.
  */
-void RexxInstructionUseStrict::liveGeneral()
+void RexxInstructionUseStrict::liveGeneral(int reason)
 {
   size_t i;                            /* loop counter                      */
   size_t count;                        /* argument count                    */
 
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   for (i = 0, count = variableCount; i < count; i++)
@@ -116,7 +113,6 @@ void RexxInstructionUseStrict::liveGeneral()
       memory_mark_general(this->variables[i].variable);
       memory_mark_general(this->variables[i].defaultValue);
   }
-  cleanUpMemoryMarkGeneral
 }
 
 

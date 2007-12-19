@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxListTable.c    */
+/* REXX Kernel                                             RexxListTable.cpp  */
 /*                                                                            */
 /* Primitive List Table Class                                                 */
 /*                                                                            */
@@ -44,33 +44,33 @@
 #include "RexxCore.h"
 #include "ListClass.hpp"
 
-void RexxListTable::live(void)
+void RexxListTable::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
   size_t     index;                    /* working index                     */
-  setUpMemoryMark
                                        /* loop through our table            */
   for (index = 0; index < this->size; index++)
+  {
                                        /* mark an element                   */
-    memory_mark(this->elements[index].value);
-  cleanUpMemoryMark
+      memory_mark(this->elements[index].value);
+  }
 }
 
-void RexxListTable::liveGeneral(void)
+void RexxListTable::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
   size_t     index;                    /* working index                     */
 
-  setUpMemoryMarkGeneral
                                        /* loop through our table            */
   for (index = 0; index < this->size; index++)
+  {
                                        /* mark an element                   */
-    memory_mark_general(this->elements[index].value);
-  cleanUpMemoryMarkGeneral
+      memory_mark_general(this->elements[index].value);
+  }
 }
 
 void   RexxListTable::flatten(RexxEnvelope *envelope)
@@ -83,7 +83,9 @@ void   RexxListTable::flatten(RexxEnvelope *envelope)
  size_t i;
 
    for (i = this->size - 1; i >= 0 ; i--)
-     flatten_reference(newThis->elements[i].value, envelope);
+   {
+       flatten_reference(newThis->elements[i].value, envelope);
+   }
 
  cleanUpFlatten
 }

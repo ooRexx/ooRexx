@@ -48,26 +48,22 @@
 #include "ArrayClass.hpp"
 #include "DirectoryClass.hpp"
 
-void RexxHashTableCollection::live(void)
+void RexxHashTableCollection::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->contents);
   memory_mark(this->objectVariables);
-  cleanUpMemoryMark
 }
 
-void RexxHashTableCollection::liveGeneral(void)
+void RexxHashTableCollection::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->contents);
   memory_mark_general(this->objectVariables);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxHashTableCollection::flatten(RexxEnvelope *envelope)

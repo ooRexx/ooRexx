@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
-/* REXX Kernel                                                  RexxCompoundElement.c    */
+/* REXX Kernel                                     RexxCompoundElement.cpp  */
 /*                                                                          */
 /* Primitive Compound Variable Element Class                                */
 /*                                                                          */
@@ -45,12 +45,11 @@
 #include "RexxCompoundElement.hpp"
 #include "RexxActivity.hpp"
 
-void RexxCompoundElement::live()
+void RexxCompoundElement::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->variableValue);
   memory_mark(this->variable_name);
   memory_mark(this->dependents);
@@ -58,15 +57,13 @@ void RexxCompoundElement::live()
   memory_mark(this->left);
   memory_mark(this->right);
   memory_mark(this->real_element);
-  cleanUpMemoryMark
 }
 
-void RexxCompoundElement::liveGeneral()
+void RexxCompoundElement::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->variableValue);
   memory_mark_general(this->variable_name);
   memory_mark_general(this->dependents);
@@ -74,7 +71,6 @@ void RexxCompoundElement::liveGeneral()
   memory_mark_general(this->left);
   memory_mark_general(this->right);
   memory_mark_general(this->real_element);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxCompoundElement::flatten(RexxEnvelope *envelope)

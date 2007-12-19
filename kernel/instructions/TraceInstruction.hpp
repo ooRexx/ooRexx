@@ -63,8 +63,8 @@ class RexxInstructionTrace : public RexxInstruction {
 
   RexxInstructionTrace(RexxObject *, unsigned short, size_t, int);
   inline RexxInstructionTrace(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope*);
   void execute(RexxActivation *, RexxExpressionStack *);
 

@@ -1027,14 +1027,13 @@ RexxObject *RexxActivity::displayDebug(RexxDirectory *exobj)
   return TheNilObject;                 /* just return .nil                  */
 }
 
-void RexxActivity::live()
+void RexxActivity::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
   size_t  i;                           /* loop counter                      */
 
-  setUpMemoryMark
   memory_mark(this->activations);
   memory_mark(this->topActivation);
   memory_mark(this->getCurrentActivation());
@@ -1046,10 +1045,12 @@ void RexxActivity::live()
   memory_mark(this->nestedInfo.currentExit);
   memory_mark(this->nestedInfo.shvexitvalue);
   for (i = 0; i < LAST_EXIT; i++)
-    memory_mark(this->nestedInfo.sysexits[i]);
+  {
+      memory_mark(this->nestedInfo.sysexits[i]);
+  }
 
   /* have the frame stack do its own marking. */
-  frameStack.live();
+  frameStack.live(liveMark);
   // mark any protected objects we've been watching over
 
   ProtectedObject *p = protectedObjects;
@@ -1058,17 +1059,14 @@ void RexxActivity::live()
       memory_mark(p->protectedObject);
       p = p->next;
   }
-
-  cleanUpMemoryMark
 }
-void RexxActivity::liveGeneral()
+void RexxActivity::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
   size_t  i;                           /* loop counter                      */
 
-  setUpMemoryMarkGeneral
   memory_mark_general(this->activations);
   memory_mark_general(this->topActivation);
   memory_mark_general(this->currentActivation);
@@ -1081,10 +1079,12 @@ void RexxActivity::liveGeneral()
   memory_mark_general(this->nestedInfo.shvexitvalue);
 
   for (i = 0; i < LAST_EXIT; i++)
-    memory_mark_general(this->nestedInfo.sysexits[i]);
+  {
+      memory_mark_general(this->nestedInfo.sysexits[i]);
+  }
 
   /* have the frame stack do its own marking. */
-  frameStack.liveGeneral();
+  frameStack.liveGeneral(reason);
 
   ProtectedObject *p = protectedObjects;
   while (p != NULL)
@@ -1092,8 +1092,6 @@ void RexxActivity::liveGeneral()
       memory_mark_general(p->protectedObject);
       p = p->next;
   }
-
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxActivity::flatten(RexxEnvelope* envelope)

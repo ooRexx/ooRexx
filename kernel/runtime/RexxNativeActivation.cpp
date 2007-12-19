@@ -83,12 +83,11 @@ static size_t tsize[] = {
     sizeof(void *)             /* BUFFER */
 };
 
-void RexxNativeActivation::live()
+void RexxNativeActivation::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->argArray);
   memory_mark(this->receiver);
   memory_mark(this->method);
@@ -108,18 +107,17 @@ void RexxNativeActivation::live()
   /* are created.  Since in some places, this argument list comes */
   /* from the C stack, we need to handle the marker ourselves. */
   size_t i;
-  for (i = 0; i < argcount; i++) {
+  for (i = 0; i < argcount; i++)
+  {
       memory_mark(arglist[i]);
   }
-  cleanUpMemoryMark
 }
 
-void RexxNativeActivation::liveGeneral()
+void RexxNativeActivation::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->argArray);
   memory_mark_general(this->receiver);
   memory_mark_general(this->method);
@@ -139,10 +137,10 @@ void RexxNativeActivation::liveGeneral()
   /* are created.  Since in some places, this argument list comes */
   /* from the C stack, we need to handle the marker ourselves. */
   size_t i;
-  for (i = 0; i < argcount; i++) {
+  for (i = 0; i < argcount; i++)
+  {
       memory_mark_general(arglist[i]);
   }
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxNativeActivation::flatten(RexxEnvelope *envelope)

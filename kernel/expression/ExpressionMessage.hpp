@@ -53,8 +53,8 @@ class RexxExpressionMessage : public RexxVariableBase {
 
   RexxExpressionMessage(RexxObject *, RexxString *, RexxObject *, size_t, RexxQueue *, bool);
   inline RexxExpressionMessage(RESTORETYPE restoreType) { ; };
-  void        live();
-  void        liveGeneral();
+  void        live(size_t);
+  void        liveGeneral(int reason);
   void        flatten(RexxEnvelope *);
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
   void assign(RexxActivation *, RexxExpressionStack *, RexxObject *);

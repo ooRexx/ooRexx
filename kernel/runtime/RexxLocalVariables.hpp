@@ -64,8 +64,8 @@ class RexxLocalVariables {
   RexxLocalVariables(RexxObject **frames, size_t items) { locals = (RexxVariable **)frames; size = items; }
   RexxLocalVariables() { locals = OREF_NULL; size = 0; }
 
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void migrate(RexxActivity *);
 
   /* NOTE:  we add one because the size is actually the index */

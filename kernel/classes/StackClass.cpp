@@ -68,30 +68,30 @@ void RexxStack::init(
   this->top = 0;                       /* and we're set at the top          */
 }
 
-void RexxStack::live()
+void RexxStack::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
   RexxObject **rp;
 
-  setUpMemoryMark
   for (rp = this->stack; rp < this->stack+this->stackSize(); rp++)
-    memory_mark(*rp);
-  cleanUpMemoryMark
+  {
+      memory_mark(*rp);
+  }
 }
 
-void RexxStack::liveGeneral()
+void RexxStack::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
   RexxObject **rp;
 
-  setUpMemoryMarkGeneral
   for (rp = this->stack; rp < this->stack+this->stackSize(); rp++)
-    memory_mark_general(*rp);
-  cleanUpMemoryMarkGeneral
+  {
+      memory_mark_general(*rp);
+  }
 }
 
 
@@ -252,25 +252,26 @@ void RexxSaveStack::remove(
 
 #define SAVE_THRESHOLD 5
 
-void RexxSaveStack::live()
+void RexxSaveStack::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
   RexxObject **rp;
 
-  setUpMemoryMark
-
   for (rp = this->stack; rp < this->stack+this->stackSize(); rp++) {
     RexxObject *thisObject = *rp;      /* get the next object in the stack */
-    if (thisObject == OREF_NULL) {
+    if (thisObject == OREF_NULL)
+    {
         continue;                      /* an empty entry? just go on */
     }
                                        /* if the object has already been marked, */
-    else if (thisObject->isObjectMarked(memoryObject.markWord)) {
+    else if (thisObject->isObjectMarked(liveMark))
+    {
         *rp = OREF_NULL;               /* we can clear this out now, rather than keeping it in the stack */
     }
-    else {
+    else
+    {
         /* this is an object we need to keep alive, but we'll only */
         /* do this for one GC cycle.  We'll clear this out now, to */
         /* make sure we don't keep this pinned longer than */
@@ -279,6 +280,5 @@ void RexxSaveStack::live()
         *rp = OREF_NULL;
     }
   }
-  cleanUpMemoryMark
 }
 

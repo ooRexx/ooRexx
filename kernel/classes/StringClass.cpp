@@ -119,26 +119,22 @@ HashCode RexxString::getObjectHashCode()
 
 
 
-void RexxString::live()
+void RexxString::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->NumberString);
   memory_mark(this->objectVariables);
-  cleanUpMemoryMark
 }
 
-void RexxString::liveGeneral()
+void RexxString::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->NumberString);
   memory_mark_general(this->objectVariables);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxString::flatten(RexxEnvelope *envelope)

@@ -65,24 +65,20 @@ RexxClause::RexxClause()
   this->free = 1;                      /* we have a free token              */
 }
 
-void RexxClause::live()
+void RexxClause::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->tokens);
-  cleanUpMemoryMark
 }
 
-void RexxClause::liveGeneral()
+void RexxClause::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->tokens);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxClause::flatten(RexxEnvelope *envelope)

@@ -91,12 +91,11 @@ RexxMessage::RexxMessage(
   }
 }
 
-void RexxMessage::live(void)
+void RexxMessage::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->receiver);
   memory_mark(this->target);
   memory_mark(this->message);
@@ -108,15 +107,13 @@ void RexxMessage::live(void)
   memory_mark(this->startActivity);
   memory_mark(this->objectVariables);
   memory_mark(this->waitingActivities);
-  cleanUpMemoryMark
 }
 
-void RexxMessage::liveGeneral(void)
+void RexxMessage::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->receiver);
   memory_mark_general(this->target);
   memory_mark_general(this->message);
@@ -128,7 +125,6 @@ void RexxMessage::liveGeneral(void)
   memory_mark_general(this->startActivity);
   memory_mark_general(this->objectVariables);
   memory_mark_general(this->waitingActivities);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxMessage::flatten(RexxEnvelope *envelope)

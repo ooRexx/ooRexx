@@ -59,8 +59,8 @@ class RexxClause : public RexxInternalObject {
   RexxClause();
   inline RexxClause(RESTORETYPE restoreType) { ; };
 
-  void        live();
-  void        liveGeneral();
+  void        live(size_t);
+  void        liveGeneral(int reason);
   void        flatten(RexxEnvelope *);
   void        setStart(size_t, size_t);
   void        setEnd(size_t, size_t);

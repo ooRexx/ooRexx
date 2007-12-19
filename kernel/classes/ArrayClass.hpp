@@ -98,8 +98,8 @@ typedef struct copyElelmentParm {
    inline ~RexxArray() { ; };
 
    void         init(size_t, size_t);
-   void         live();
-   void         liveGeneral();
+   void         live(size_t);
+   void         liveGeneral(int reason);
    void         flatten(RexxEnvelope *);
    RexxObject  *copy();
    RexxArray   *makeArray();

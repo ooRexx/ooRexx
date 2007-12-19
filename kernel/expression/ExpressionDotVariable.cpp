@@ -58,24 +58,20 @@ RexxDotVariable::RexxDotVariable(
   OrefSet(this, this->variableName, variable_name);
 }
 
-void RexxDotVariable::live()
+void RexxDotVariable::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->variableName);
-  cleanUpMemoryMark
 }
 
-void RexxDotVariable::liveGeneral()
+void RexxDotVariable::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->variableName);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxDotVariable::flatten(RexxEnvelope * envelope)

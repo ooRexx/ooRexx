@@ -75,8 +75,8 @@ class RexxStringClass : public RexxClass {
    inline RexxString() {;} ;
    inline RexxString(RESTORETYPE restoreType) { ; };
 
-   void        live();
-   void        liveGeneral();
+   void        live(size_t);
+   void        liveGeneral(int reason);
    void        flatten(RexxEnvelope *envelope);
    RexxObject *unflatten(RexxEnvelope *);
 

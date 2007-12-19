@@ -58,8 +58,8 @@ class RexxNativeCode : public RexxInternalObject {
    RexxNativeCode(PNMF, size_t);
    RexxNativeCode(PNMF);
    void        reinit(RexxInteger *);
-   void        live();
-   void        liveGeneral();
+   void        live(size_t);
+   void        liveGeneral(int reason);
    void        flatten(RexxEnvelope *envelope);
    RexxObject *unflatten(RexxEnvelope *envelope);
 

@@ -117,8 +117,8 @@ class RexxSource : public RexxInternalObject {
   static int  precedence(RexxToken *);
   void        nextLine();
   void        position(size_t, size_t);
-  void        live();
-  void        liveGeneral();
+  void        live(size_t);
+  void        liveGeneral(int reason);
   void        flatten(RexxEnvelope *);
   size_t      sourceSize();
   RexxString *get(size_t);

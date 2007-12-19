@@ -60,29 +60,25 @@ RexxInstructionAssignment::RexxInstructionAssignment(
   OrefSet(this, this->expression, _expression);
 }
 
-void RexxInstructionAssignment::live()
+void RexxInstructionAssignment::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->variable);
   memory_mark(this->expression);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionAssignment::liveGeneral()
+void RexxInstructionAssignment::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->variable);
   memory_mark_general(this->expression);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionAssignment::flatten(RexxEnvelope *envelope)

@@ -64,33 +64,29 @@ RexxInstructionSignal::RexxInstructionSignal(
   instructionFlags = flags;
 }
 
-void RexxInstructionSignal::live()
+void RexxInstructionSignal::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->target);
   memory_mark(this->name);
   memory_mark(this->condition);
   memory_mark(this->expression);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionSignal::liveGeneral()
+void RexxInstructionSignal::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->target);
   memory_mark_general(this->name);
   memory_mark_general(this->condition);
   memory_mark_general(this->expression);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionSignal::flatten(RexxEnvelope *envelope)

@@ -79,8 +79,8 @@ class RexxInstructionCall : public RexxInstructionCallBase {
 
   RexxInstructionCall(RexxObject *, RexxString *, size_t, RexxQueue *, size_t, size_t);
   inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope*);
   void execute(RexxActivation *, RexxExpressionStack *);
   void resolve(RexxDirectory *);

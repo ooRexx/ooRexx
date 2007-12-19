@@ -51,8 +51,8 @@ class RexxDirectory : public RexxHashTableCollection {
   inline void * operator new(size_t size, void *objectPtr) { return objectPtr; };
   inline RexxDirectory(RESTORETYPE restoreType) { ; };
 
-  void          live();
-  void          liveGeneral();
+  void          live(size_t);
+  void          liveGeneral(int reason);
   void          flatten(RexxEnvelope *);
   RexxObject   *unflatten(RexxEnvelope *);
   RexxObject   *copy();

@@ -94,26 +94,22 @@ HashCode RexxInteger::getHashValue()
 }
 
 
-void RexxInteger::live()
+void RexxInteger::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->objectVariables);
   memory_mark(this->stringrep);
-  cleanUpMemoryMark
 }
 
-void RexxInteger::liveGeneral()
+void RexxInteger::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->objectVariables);
   memory_mark_general(this->stringrep);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInteger::flatten(RexxEnvelope *envelope)
@@ -1052,38 +1048,36 @@ RexxIntegerClass::RexxIntegerClass()
  }
 }
 
-void RexxIntegerClass::live()
+void RexxIntegerClass::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
   int i;                               /* loop counter                      */
 
-  this->RexxClass::live();             /* do RexxClass level marking        */
+  this->RexxClass::live(liveMark);     /* do RexxClass level marking        */
 
-  setUpMemoryMark
                                        /* now mark the cached integers      */
-  for (i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ ) {
-   memory_mark(this->integercache[i - INTEGERCACHELOW]);
+  for (i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ )
+  {
+       memory_mark(this->integercache[i - INTEGERCACHELOW]);
   }
-  cleanUpMemoryMark
 }
 
-void RexxIntegerClass::liveGeneral()
+void RexxIntegerClass::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
   int  i;                              /* loop counter                      */
 
-  this->RexxClass::liveGeneral();      /* do RexxClass level marking        */
+  this->RexxClass::liveGeneral(reason); /* do RexxClass level marking        */
 
-  setUpMemoryMarkGeneral
                                        /* now mark the cached integers      */
-  for (i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ ) {
-   memory_mark_general(this->integercache[i - INTEGERCACHELOW]);
+  for (i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ )
+  {
+      memory_mark_general(this->integercache[i - INTEGERCACHELOW]);
   }
-  cleanUpMemoryMarkGeneral
 }
 
 void *RexxInteger::operator new(size_t size)

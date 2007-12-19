@@ -53,28 +53,24 @@
 // singleton class instance
 RexxClass *RexxDirectory::classInstance = OREF_NULL;
 
-void RexxDirectory::live()
+void RexxDirectory::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  this->RexxHashTableCollection::live();
-  setUpMemoryMark
+  this->RexxHashTableCollection::live(liveMark);
   memory_mark(this->method_table);
   memory_mark(this->unknown_method);
-  cleanUpMemoryMark
 }
 
-void RexxDirectory::liveGeneral()
+void RexxDirectory::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  this->RexxHashTableCollection::liveGeneral();
-  setUpMemoryMarkGeneral
+  this->RexxHashTableCollection::liveGeneral(reason);
   memory_mark_general(this->method_table);
   memory_mark_general(this->unknown_method);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxDirectory::flatten(RexxEnvelope *envelope)

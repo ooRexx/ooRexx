@@ -143,7 +143,7 @@ RexxObject * build(
   return (RexxObject *)new (tails->getSize()) RexxCompoundVariable(stem, 0, tails, tails->getSize());
 }
 
-void RexxCompoundVariable::live()
+void RexxCompoundVariable::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -151,14 +151,14 @@ void RexxCompoundVariable::live()
   size_t  i;                           /* loop counter                      */
   size_t  count;                       /* argument count                    */
 
-  setUpMemoryMark
   for (i = 0, count = this->tailCount; i < count; i++)
-    memory_mark(this->tails[i]);
+  {
+      memory_mark(this->tails[i]);
+  }
   memory_mark(this->stemName);
-  cleanUpMemoryMark
 }
 
-void RexxCompoundVariable::liveGeneral()
+void RexxCompoundVariable::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -166,11 +166,11 @@ void RexxCompoundVariable::liveGeneral()
   size_t  i;                           /* loop counter                      */
   size_t  count;                       /* argument count                    */
 
-  setUpMemoryMarkGeneral
   for (i = 0, count = this->tailCount; i < count; i++)
-    memory_mark_general(this->tails[i]);
+  {
+      memory_mark_general(this->tails[i]);
+  }
   memory_mark_general(this->stemName);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxCompoundVariable::flatten(RexxEnvelope *envelope)

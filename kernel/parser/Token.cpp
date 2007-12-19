@@ -64,24 +64,20 @@ RexxToken::RexxToken(
   this->tokenLocation = _location;      /* copy it over                      */
 }
 
-void RexxToken::live()
+void RexxToken::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->value);
-  cleanUpMemoryMark
 }
 
-void RexxToken::liveGeneral()
+void RexxToken::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->value);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxToken::flatten(RexxEnvelope *envelope)

@@ -366,32 +366,28 @@ void RexxVariableDictionary::setNextDictionary(RexxVariableDictionary *_next)
     OrefSet(this, this->next, _next);
 }
 
-void RexxVariableDictionary::live()
+void RexxVariableDictionary::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->contents);
   memory_mark(this->reservingActivity);
   memory_mark(this->waitingActivities);
   memory_mark(this->next);
   memory_mark(this->scope);
-  cleanUpMemoryMark
 }
 
-void RexxVariableDictionary::liveGeneral()
+void RexxVariableDictionary::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->contents);
   memory_mark_general(this->reservingActivity);
   memory_mark_general(this->waitingActivities);
   memory_mark_general(this->next);
   memory_mark_general(this->scope);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxVariableDictionary::flatten(RexxEnvelope *envelope)

@@ -64,24 +64,20 @@ RexxStemVariable::RexxStemVariable(
   this->index = var_index;             /* and the index                     */
 }
 
-void RexxStemVariable::live()
+void RexxStemVariable::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->stem);
-  cleanUpMemoryMark
 }
 
-void RexxStemVariable::liveGeneral()
+void RexxStemVariable::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->stem);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxStemVariable::flatten(RexxEnvelope *envelope)

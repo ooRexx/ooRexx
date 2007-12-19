@@ -58,8 +58,8 @@ class RexxInstructionSignal : public RexxInstructionCallBase {
   RexxInstructionSignal(RexxObject *, RexxString *, RexxString *, size_t);
   inline RexxInstructionSignal(RESTORETYPE restoreType) { ; };
   void execute(RexxActivation *, RexxExpressionStack *);
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope*);
   void resolve (RexxDirectory *);
   void trap (RexxActivation *, RexxDirectory *);

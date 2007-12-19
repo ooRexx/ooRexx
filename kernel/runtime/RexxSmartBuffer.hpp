@@ -53,8 +53,8 @@
 
   RexxSmartBuffer(size_t);
   inline RexxSmartBuffer(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope*);
   size_t copyData(void *, size_t);
 

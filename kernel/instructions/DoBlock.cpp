@@ -58,30 +58,26 @@ RexxDoBlock::RexxDoBlock(
   this->indent = _indent;               /* save the indentation level        */
 }
 
-void RexxDoBlock::live()
+void RexxDoBlock::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->previous);
   memory_mark(this->parent);
   memory_mark(this->to);
   memory_mark(this->by);
-  cleanUpMemoryMark
 }
 
-void RexxDoBlock::liveGeneral()
+void RexxDoBlock::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->previous);
   memory_mark_general(this->parent);
   memory_mark_general(this->to);
   memory_mark_general(this->by);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxDoBlock::flatten(RexxEnvelope *envelope)

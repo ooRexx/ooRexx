@@ -138,24 +138,20 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
 }
 
 
-void RexxMutableBuffer::live()
+void RexxMutableBuffer::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->objectVariables);
-  cleanUpMemoryMark
 }
 
-void RexxMutableBuffer::liveGeneral()
+void RexxMutableBuffer::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->objectVariables);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxMutableBuffer::flatten(RexxEnvelope *envelope)

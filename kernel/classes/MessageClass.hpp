@@ -59,8 +59,8 @@
    RexxMessage(RexxObject *, RexxObject *, RexxArray *);
    inline RexxMessage(RESTORETYPE restoreType) { ; };
 
-   void          live();
-   void          liveGeneral();
+   void          live(size_t);
+   void          liveGeneral(int reason);
    void          flatten(RexxEnvelope *);
    RexxObject   *notify(RexxMessage *);
    RexxObject   *result();

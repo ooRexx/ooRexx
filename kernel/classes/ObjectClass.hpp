@@ -99,10 +99,10 @@ public:
     inline void makeProxy() { flags |= ProxyObject; }
     inline bool isProxyObject() { return (flags & ProxyObject) != 0; }
     inline void clearObjectMark() { flags &= LiveMask; }
-    inline void setObjectMark(uint16_t mark) { clearObjectMark(); flags |= mark; }
-    inline bool isObjectMarked(uint32_t mark) { return (flags & mark) != 0; }
-    inline bool isObjectLive(uint32_t mark) { return (flags & MarkMask) == mark; }
-    inline bool isObjectDead(uint32_t mark) { return (flags & MarkMask) != mark; }
+    inline void setObjectMark(size_t mark) { clearObjectMark(); flags |= mark; }
+    inline bool isObjectMarked(size_t mark) { return (flags & mark) != 0; }
+    inline bool isObjectLive(size_t mark) { return (flags & MarkMask) == mark; }
+    inline bool isObjectDead(size_t mark) { return (flags & MarkMask) != mark; }
     inline void clear() { objectSize = 0; flags = 0; }
     inline void setOldSpace() { flags |= OldSpaceBit; }
     inline void clearOldSpace() { flags &= ~OldSpaceBit; }
@@ -117,7 +117,7 @@ public:
     inline void setPrimitive() { flags &= ~IsNonPrimitive; }
     inline bool isNonPrimitive() { return (flags & IsNonPrimitive) != 0; }
     inline bool isPrimitive() { return (flags & IsNonPrimitive) == 0; }
-    inline void initHeader(size_t l, uint32_t mark)
+    inline void initHeader(size_t l, size_t mark)
     {
         objectSize = l;
         flags = (uint16_t)mark;    // the flags are cleared except for the mark.
@@ -219,10 +219,10 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
      inline void   clearObject(size_t l) { memset(getObjectDataSpace(), '\0', l - getObjectHeaderSize()); }
      inline void   setVirtualFunctions(void *t) { *((void **)this) = t; }
 
-     inline void   setInitHeader(size_t s, uint16_t markword)  { header.initHeader(s, markword); }
-     inline void   setInitHeader(uint16_t markword)  { header.initHeader(markword); }
+     inline void   setInitHeader(size_t s, size_t markword)  { header.initHeader(s, markword); }
+     inline void   setInitHeader(size_t markword)  { header.initHeader(markword); }
 
-     inline void   setObjectLive(uint16_t markword)  { header.setObjectMark(markword); }
+     inline void   setObjectLive(size_t markword)  { header.setObjectMark(markword); }
      inline void   setHasReferences() { header.setHasReferences(); }
      inline void   setHasNoReferences() { header.setHasNoReferences(); }
      inline bool   hasReferences() { return header.hasReferences(); }
@@ -254,8 +254,8 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
                                        /* the following are virtual         */
                                        /* functions required for every      */
                                        /* class                             */
-     virtual void         live() {;}
-     virtual void         liveGeneral() {;}
+     virtual void         live(size_t) {;}
+     virtual void         liveGeneral(int reason) {;}
      virtual void         flatten(RexxEnvelope *) {;}
      virtual RexxObject  *unflatten(RexxEnvelope *) { return (RexxObject *)this; };
      virtual RexxObject  *makeProxy(RexxEnvelope *);
@@ -366,8 +366,8 @@ class RexxObject : public RexxInternalObject {
 
      RexxObject *init();
      void        uninit();
-     void live();
-     void liveGeneral();
+     void live(size_t);
+     void liveGeneral(int reason);
      void flatten(RexxEnvelope *);
      RexxObject  *copy();
      HashCode     hash();

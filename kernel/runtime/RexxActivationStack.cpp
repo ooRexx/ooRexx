@@ -53,26 +53,22 @@
 #include "RexxActivationStack.hpp"
 
 
-void RexxActivationFrameBuffer::live()
+void RexxActivationFrameBuffer::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   /* we only mark housekeeping type fields.  The main buffer */
   /* entries are marked by the owning activations. */
   memory_mark(this->previous);
-  cleanUpMemoryMark
 }
 
-void RexxActivationFrameBuffer::liveGeneral()
+void RexxActivationFrameBuffer::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->previous);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxActivationFrameBuffer::flatten(RexxEnvelope *envelope)
@@ -90,26 +86,22 @@ void RexxActivationFrameBuffer::flatten(RexxEnvelope *envelope)
 }
 
 
-void RexxActivationStack::live()
+void RexxActivationStack::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->current);
   memory_mark(this->unused);
-  cleanUpMemoryMark
 }
 
-void RexxActivationStack::liveGeneral()
+void RexxActivationStack::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->current);
   memory_mark_general(this->unused);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxActivationStack::init()

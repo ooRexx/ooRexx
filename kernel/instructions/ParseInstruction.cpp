@@ -163,7 +163,7 @@ void RexxInstructionParse::execute(
   context->pauseInstruction();         /* do debug pause if necessary       */
 }
 
-void RexxInstructionParse::live()
+void RexxInstructionParse::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -171,15 +171,15 @@ void RexxInstructionParse::live()
   size_t  i;                           /* loop counter                      */
   size_t  count;                       /* argument count                    */
 
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   for (i = 0, count = this->trigger_count; i < count; i++)
-    memory_mark(this->triggers[i]);
+  {
+      memory_mark(this->triggers[i]);
+  }
   memory_mark(this->expression);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionParse::liveGeneral()
+void RexxInstructionParse::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -187,13 +187,13 @@ void RexxInstructionParse::liveGeneral()
   size_t  i;                           /* loop counter                      */
   size_t  count;                       /* argument count                    */
 
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   for (i = 0, count = this->trigger_count; i < count; i++)
-    memory_mark_general(this->triggers[i]);
+  {
+      memory_mark_general(this->triggers[i]);
+  }
   memory_mark_general(this->expression);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionParse::flatten(RexxEnvelope *envelope)

@@ -87,30 +87,26 @@ RexxMethod::RexxMethod(
   }
 }
 
-void RexxMethod::live()
+void RexxMethod::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->scope);
   memory_mark(this->code);
   memory_mark(this->objectVariables);
   memory_mark(this->attribute);
-  cleanUpMemoryMark
 }
 
-void RexxMethod::liveGeneral()
+void RexxMethod::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->scope);
   memory_mark_general(this->code);
   memory_mark_general(this->objectVariables);
   memory_mark_general(this->attribute);
-  cleanUpMemoryMarkGeneral
                                        /* part of the saved image?          */
   if (memoryObject.restoringImage()) { /* restoring the image?              */
     this->setInternal();               /* mark as an image method           */

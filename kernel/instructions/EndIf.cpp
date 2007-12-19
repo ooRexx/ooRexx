@@ -76,29 +76,25 @@ void RexxInstructionEndIf::setEndInstruction(
   OrefSet(this, this->else_end, end_clause);
 }
 
-void RexxInstructionEndIf::live()
+void RexxInstructionEndIf::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->else_end);
   memory_mark(this->parent);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionEndIf::liveGeneral()
+void RexxInstructionEndIf::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->else_end);
   memory_mark_general(this->parent);
-  cleanUpMemoryMarkGeneral
 }
 
 

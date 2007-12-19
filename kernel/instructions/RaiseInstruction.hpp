@@ -58,8 +58,8 @@ class RexxInstructionRaise : public RexxInstruction {
   inline RexxInstructionRaise(RESTORETYPE restoreType) { ; };
   RexxInstructionRaise(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, size_t, RexxQueue *, bool);
   void execute(RexxActivation *, RexxExpressionStack *);
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope*);
 
   RexxObject *expression;              /* RC value expression               */

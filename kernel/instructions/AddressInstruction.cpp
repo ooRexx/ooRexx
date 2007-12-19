@@ -61,31 +61,27 @@ RexxInstructionAddress::RexxInstructionAddress(
   OrefSet(this, this->command, _command);
 }
 
-void RexxInstructionAddress::live()
+void RexxInstructionAddress::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->expression);
   memory_mark(this->environment);
   memory_mark(this->command);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionAddress::liveGeneral()
+void RexxInstructionAddress::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->expression);
   memory_mark_general(this->environment);
   memory_mark_general(this->command);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionAddress::flatten(RexxEnvelope *envelope)

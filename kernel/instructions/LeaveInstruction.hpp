@@ -54,8 +54,8 @@ class RexxInstructionLeave : public RexxInstruction {
 
   RexxInstructionLeave(int, RexxString *);
   inline RexxInstructionLeave(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
   void execute(RexxActivation *, RexxExpressionStack *);
 

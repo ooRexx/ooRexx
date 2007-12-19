@@ -62,8 +62,8 @@ class RexxCode : public RexxInternalObject {
 
    RexxCode(RexxSource *, RexxInstruction *, RexxDirectory *, size_t, size_t);
    inline RexxCode(RESTORETYPE restoreType) { ; };
-   void live();
-   void liveGeneral();
+   void live(size_t);
+   void liveGeneral(int reason);
    void flatten(RexxEnvelope *);
    RexxArray      * sourceRexx();
    RexxString     * getProgramName();

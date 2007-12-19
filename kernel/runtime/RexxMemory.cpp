@@ -316,7 +316,9 @@ void RexxMemory::markObjectsMain(RexxObject *rootObject)
   }
 
   RexxObject *markObject;
-  setUpMemoryMark
+
+  // set up the live marking word passed to the live() routines
+  size_t liveMark = markWord | OldSpaceBit;
 
   allocations = 0;
   pushLiveStack(OREF_NULL);            /* push a unique terminator          */
@@ -330,10 +332,8 @@ void RexxMemory::markObjectsMain(RexxObject *rootObject)
     /* the references flag because we only push the object on to */
     /* the stack if it has references. */
     allocations++;
-    markObject->live();
+    markObject->live(liveMark);
   }
-
-  cleanUpMemoryMark
 }
 
 
@@ -351,8 +351,7 @@ void  RexxMemory::killOrphans(RexxObject *rootObject)
 
   RexxObject *mref;
 
-  setUpMemoryMarkGeneral
-
+  markReason = LIVEMARK;
   /* This is the debugging mark code that traverses the object tree from          */
   /* OREF_ENV, verifying that the objects and their OREFs look OK, specifically   */
   /* that each one is in object storage, and has a behaviour whose behaviour      */
@@ -395,11 +394,9 @@ void  RexxMemory::killOrphans(RexxObject *rootObject)
        pushLiveStack(mref);
                                        /* push an ancestor marker           */
        pushLiveStack(TheNilObject);
-       mref->liveGeneral();            /* tell the ancestor to mark his kids*/
+       mref->liveGeneral(LIVEMARK);    /* tell the ancestor to mark his kids*/
     }                                  /* object have any references?      */
   }
-
-  cleanUpMemoryMark
 }
 
 void RexxMemory::checkUninit()
@@ -664,7 +661,8 @@ void RexxMemory::markObjects(void)
     this->markObjectsMain(uninitTable);
   }
                                        /* have to expand the live stack?    */
-  if (this->liveStack != this->originalLiveStack) {
+  if (this->liveStack != this->originalLiveStack)
+  {
     free((void *)this->liveStack);     /* release the old one               */
                                        /* and set back to the original      */
     this->liveStack = this->originalLiveStack;
@@ -762,6 +760,8 @@ void RexxMemory::restoreImage()
       return;
   }
 
+  markReason = RESTORINGIMAGE;         // we're doing an image restore
+
   size_t imagesize;                    /* size of the image                 */
   char *objectPointer, *endPointer;
   RexxBehaviour *imageBehav;           /*behaviour of OP object in image    */
@@ -822,7 +822,7 @@ void RexxMemory::restoreImage()
                                      /*references?                        */
     if (((RexxObject *)objectPointer)->hasReferences())
                                      /*  Yes, mark other referenced objs  */
-      ((RexxObject *)objectPointer)->liveGeneral();
+      ((RexxObject *)objectPointer)->liveGeneral(RESTORINGIMAGE);
                                      /* Point to next object in image..   */
     objectPointer += ((RexxObject *)objectPointer)->getObjectSize();
 
@@ -860,7 +860,7 @@ void RexxMemory::restoreImage()
 }
 
 
-void RexxMemory::live(void)
+void RexxMemory::live(size_t liveMark)
 /******************************************************************************/
 /* Arguments:  None                                                           */
 /*                                                                            */
@@ -868,7 +868,6 @@ void RexxMemory::live(void)
 /*                                                                            */
 /******************************************************************************/
 {
-  setUpMemoryMark
   /* Mark the save stack first, since it will be pulled off of */
   /* the stack after everything else.  This will give other */
   /* objects a chance to be marked before we remove them from */
@@ -880,13 +879,12 @@ void RexxMemory::live(void)
   memory_mark(this->variableCache);
   memory_mark(this->markTable);
   memory_mark(globalStrings);
-  cleanUpMemoryMark
   // now call the various subsystem managers to mark their references
-  ActivityManager::live();
-  LibraryManager::live();
+  ActivityManager::live(liveMark);
+  LibraryManager::live(liveMark);
 }
 
-void       RexxMemory::liveGeneral(void)
+void RexxMemory::liveGeneral(int reason)
 /******************************************************************************/
 /* Arguments:  None                                                           */
 /*                                                                            */
@@ -894,7 +892,6 @@ void       RexxMemory::liveGeneral(void)
 /*                                                                            */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->saveStack);/* Mark the save stack last, to give it a chance to clear out entries */
   memory_mark_general(this->saveTable);
   memory_mark_general(this->old2new);
@@ -902,13 +899,12 @@ void       RexxMemory::liveGeneral(void)
   memory_mark_general(this->variableCache);
   memory_mark_general(this->markTable);
   memory_mark_general(globalStrings);
-  cleanUpMemoryMarkGeneral
   // now call the various subsystem managers to mark their references
-  ActivityManager::liveGeneral();
-  LibraryManager::liveGeneral();
+  ActivityManager::liveGeneral(reason);
+  LibraryManager::liveGeneral(reason);
 }
 
-void        RexxMemory::flatten(RexxEnvelope *env)
+void RexxMemory::flatten(RexxEnvelope *env)
 /******************************************************************************/
 /* Arguments:  None                                                           */
 /*                                                                            */
@@ -1104,10 +1100,6 @@ RexxArray  *RexxMemory::newObjects(
   /* Get array object to contain all the objects.. */
   arrayOfObjects = (RexxArray *)new_array(count);
 
-                                       /* Gonna be large objects ?          */
-  if (objSize >= LargeObjectMinSize)
-    /* compute for large Object size     */
-    objSize = roundLargeObjectAllocation(objSize);
   /* Get one LARGE object, that we will parcel up into the smaller */
   /* objects over allocate by the size of one minimum object so we */
   /* can handle any potential overallocations */
@@ -1299,7 +1291,7 @@ void RexxMemory::mark(RexxObject *markObject)
 /* Function:  Perform a memory management mark operation                      */
 /******************************************************************************/
 {
-  setUpMemoryMark
+  size_t liveMark = markWord | OldSpaceBit;
 
   markObject->setObjectLive(markWord); /* Then Mark this object as live.    */
                                        /* object have any references?       */
@@ -1323,8 +1315,6 @@ void RexxMemory::mark(RexxObject *markObject)
                                        /* later.                            */
       pushLiveStack(markObject);
   }
-
-  cleanUpMemoryMark
 }
 
 RexxObject *RexxMemory::temporaryObject(size_t requestLength)
@@ -1591,6 +1581,8 @@ void RexxMemory::saveImage(void)
                                        /* of image for faster restore.      */
   _imageStats.clear();                 /* clear out image counters          */
 
+  markReason = SAVINGIMAGE;            // this is an image save
+
   globalStrings = OREF_NULL;
                                        /* memory Object not saved           */
   TheKernel->remove(getGlobalName(CHAR_MEMORY));
@@ -1650,7 +1642,6 @@ void RexxMemory::saveImage(void)
   saveTable = OREF_NULL;
                                        /* image, which will become OldSpace */
   OrefSet(&memoryObject, old2new, OREF_NULL);
-  setUpMemoryMarkGeneral
 
   pushLiveStack(OREF_NULL);            /* push a unique terminator          */
   memory_mark_general(saveArray);      /* push live root                    */
@@ -1666,13 +1657,12 @@ void RexxMemory::saveImage(void)
                                        /* the buffer copy                   */
     RexxObject *copyObject = (RexxObject *)(image_buffer+(uintptr_t)markObject->behaviour);
 
-    copyObject->liveGeneral();         /* mark other referenced objs        */
+    copyObject->liveGeneral(SAVINGIMAGE); /* mark other referenced objs        */
                                        /* non-primitive behaviour?          */
     if (copyObject->isNonPrimitive())
                                        /* mark/move behaviour live      */
       memory_mark_general(copyObject->behaviour);
   }
-  cleanUpMemoryMarkGeneral
 
   image = fopen(BASEIMAGE,"wb");
                                        /* PLace actual size at beginning of buffer*/
@@ -2155,7 +2145,7 @@ void RexxMemory::setUpMemoryTables(RexxObjectTable *old2newTable)
   /* Now get our savestack and savetable */
   /* allocate savestack with usable and allocated size */
   /* NOTE:  We do not use OREF_SET here.  We want to control the */
-  /* order in which these two are marked in the live() method of */
+  /* order in which these two are marked in the live(size_t) method of */
   /* RexxMemory.  If these are added to the mark table, they'll be */
   /* processed earlier than we'd like. */
   saveStack = new_savestack(SaveStackSize, SaveStackAllocSize);

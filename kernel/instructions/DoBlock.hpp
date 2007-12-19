@@ -56,8 +56,8 @@ class RexxDoBlock : public RexxInternalObject {
 
   RexxDoBlock(RexxBlockInstruction *, int);
   inline RexxDoBlock(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
 
   inline RexxObject * getTo() {return this->to;};

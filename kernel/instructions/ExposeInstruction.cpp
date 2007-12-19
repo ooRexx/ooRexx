@@ -62,7 +62,7 @@ RexxInstructionExpose::RexxInstructionExpose(
     OrefSet(this, this->variables[--varCount], (RexxVariableBase *)(variable_list->pop()));
 }
 
-void RexxInstructionExpose::live()
+void RexxInstructionExpose::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -70,14 +70,14 @@ void RexxInstructionExpose::live()
   size_t i;                            /* loop counter                      */
   size_t count;                        /* argument count                    */
 
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   for (i = 0, count = variableCount; i < count; i++)
-    memory_mark(this->variables[i]);
-  cleanUpMemoryMark
+  {
+      memory_mark(this->variables[i]);
+  }
 }
 
-void RexxInstructionExpose::liveGeneral()
+void RexxInstructionExpose::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -85,12 +85,12 @@ void RexxInstructionExpose::liveGeneral()
   size_t i;                            /* loop counter                      */
   size_t count;                        /* argument count                    */
 
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   for (i = 0, count = variableCount; i < count; i++)
-    memory_mark_general(this->variables[i]);
-  cleanUpMemoryMarkGeneral
+  {
+      memory_mark_general(this->variables[i]);
+  }
 }
 
 void RexxInstructionExpose::flatten(RexxEnvelope *envelope)

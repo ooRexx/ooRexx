@@ -704,12 +704,11 @@ void RexxActivation::setTrace(
     this->settings.flags |= debug_bypass;
 }
 
-void RexxActivation::live()
+void RexxActivation::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->receiver);
   memory_mark(this->method);
   memory_mark(this->code);
@@ -719,8 +718,8 @@ void RexxActivation::live()
   memory_mark(this->sender);
   memory_mark(this->dostack);
   /* the stack and the local variables handle their own marking. */
-  this->stack.live();
-  this->settings.local_variables.live();
+  this->stack.live(liveMark);
+  this->settings.local_variables.live(liveMark);
   memory_mark(this->current);
   memory_mark(this->next);
   memory_mark(this->result);
@@ -745,23 +744,22 @@ void RexxActivation::live()
   /* are created.  Since in some places, this argument list comes */
   /* from the C stack, we need to handle the marker ourselves. */
   size_t i;
-  for (i = 0; i < argcount; i++) {
+  for (i = 0; i < argcount; i++)
+  {
       memory_mark(arglist[i]);
   }
 
-  for (i = 0; i < settings.parent_argcount; i++) {
+  for (i = 0; i < settings.parent_argcount; i++)
+  {
       memory_mark(settings.parent_arglist[i]);
   }
-
-  cleanUpMemoryMark
 }
 
-void RexxActivation::liveGeneral()
+void RexxActivation::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->method);
   memory_mark_general(this->receiver);
   memory_mark_general(this->code);
@@ -771,8 +769,8 @@ void RexxActivation::liveGeneral()
   memory_mark_general(this->sender);
   memory_mark_general(this->dostack);
   /* the stack and the local variables handle their own marking. */
-  this->stack.liveGeneral();
-  this->settings.local_variables.liveGeneral();
+  this->stack.liveGeneral(reason);
+  this->settings.local_variables.liveGeneral(reason);
   memory_mark_general(this->current);
   memory_mark_general(this->next);
   memory_mark_general(this->result);
@@ -797,14 +795,15 @@ void RexxActivation::liveGeneral()
   /* are created.  Since in some places, this argument list comes */
   /* from the C stack, we need to handle the marker ourselves. */
   size_t i;
-  for (i = 0; i < argcount; i++) {
+  for (i = 0; i < argcount; i++)
+  {
       memory_mark_general(arglist[i]);
   }
 
-  for (i = 0; i < settings.parent_argcount; i++) {
+  for (i = 0; i < settings.parent_argcount; i++)
+  {
       memory_mark_general(settings.parent_arglist[i]);
   }
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxActivation::flatten(RexxEnvelope *envelope)

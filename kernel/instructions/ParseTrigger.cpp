@@ -203,7 +203,7 @@ void RexxTrigger::parse(
   }
 }
 
-void RexxTrigger::live()
+void RexxTrigger::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -211,14 +211,14 @@ void RexxTrigger::live()
   size_t  i;                           /* loop counter                      */
   size_t  count;                       /* argument count                    */
 
-  setUpMemoryMark
   for (i = 0, count = this->variableCount; i < count; i++)
-    memory_mark(this->variables[i]);
+  {
+      memory_mark(this->variables[i]);
+  }
   memory_mark(this->value);
-  cleanUpMemoryMark
 }
 
-void RexxTrigger::liveGeneral()
+void RexxTrigger::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -226,11 +226,11 @@ void RexxTrigger::liveGeneral()
   size_t  i;                           /* loop counter                      */
   size_t  count;                       /* argument count                    */
 
-  setUpMemoryMarkGeneral
   for (i = 0, count = this->variableCount; i < count; i++)
-    memory_mark_general(this->variables[i]);
+  {
+      memory_mark_general(this->variables[i]);
+  }
   memory_mark_general(this->value);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxTrigger::flatten(RexxEnvelope *envelope)

@@ -79,7 +79,7 @@ RexxInstructionCall::RexxInstructionCall(
   }
 }
 
-void RexxInstructionCall::live()
+void RexxInstructionCall::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -87,17 +87,17 @@ void RexxInstructionCall::live()
   size_t i;                            /* loop counter                      */
   size_t count;                        /* argument count                    */
 
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->name);
   memory_mark(this->target);
   memory_mark(this->condition);
   for (i = 0, count = argumentCount; i < count; i++)
-    memory_mark(this->arguments[i]);
-  cleanUpMemoryMark
+  {
+      memory_mark(this->arguments[i]);
+  }
 }
 
-void RexxInstructionCall::liveGeneral()
+void RexxInstructionCall::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -105,15 +105,15 @@ void RexxInstructionCall::liveGeneral()
   size_t i;                            /* loop counter                      */
   size_t count;                        /* argument count                    */
 
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->name);
   memory_mark_general(this->target);
   memory_mark_general(this->condition);
   for (i = 0, count = argumentCount; i < count; i++)
-    memory_mark_general(this->arguments[i]);
-  cleanUpMemoryMarkGeneral
+  {
+      memory_mark_general(this->arguments[i]);
+  }
 }
 
 void RexxInstructionCall::flatten(RexxEnvelope *envelope)

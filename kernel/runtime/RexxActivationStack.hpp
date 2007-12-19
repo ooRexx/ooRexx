@@ -54,8 +54,8 @@ class RexxActivationFrameBuffer : public RexxInternalObject {
 
      RexxActivationFrameBuffer() { ; }
      inline RexxActivationFrameBuffer(RESTORETYPE restoreType) { ; }
-     void live();
-     void liveGeneral();
+     void live(size_t);
+     void liveGeneral(int reason);
      void flatten(RexxEnvelope *);
 
      inline bool hasCapacity(size_t entries) { return size - next >= entries; }
@@ -105,8 +105,8 @@ class RexxActivationStack {
 
   inline void *operator new(size_t size, void *ptr) { return ptr;};
   RexxActivationStack() { ; }
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
 
   void init();
   void expandCapacity(size_t entries);

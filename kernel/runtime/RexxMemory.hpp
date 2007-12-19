@@ -60,21 +60,15 @@
 #define MinimumObjectSize ((size_t)24)
 #define MaximumObjectSize ((size_t)0xfffffff0)
 
-/* Or lower 8 bits for large obj size*/
-#define LargeObjectSizeMask 0xFFFFFF00
-/* Minimum size of a large object    */
-#define LargeObjectMinSize  0x01000000
-
-inline void SetObjectLive(void *o, uint16_t mark) {
+inline void SetObjectLive(void *o, size_t mark) {
     ((RexxObject *)o)->setObjectLive(mark);
 }
 #define IsObjectGrained(o)  ((((size_t)o)%ObjectGrain) == 0)
 #define IsValidSize(s) ((s) >= MinimumObjectSize && ((s) % ObjectGrain) == 0)
 
 inline size_t roundObjectBoundary(size_t n) { return RXROUNDUP(n,ObjectGrain); }
-// inline size_t roundObjectBoundary(size_t n) { return (n + 7) & 0xFFFFFFF8; }
-inline size_t roundLargeObjectAllocation(size_t n) { return n > LargeObjectMinSize ? RXROUNDUP(n, VeryLargeAllocationUnit) : RXROUNDUP(n, LargeAllocationUnit); }
-inline size_t roundObjectResize(size_t n) { return n > LargeObjectMinSize ? RXROUNDUP(n, VeryLargeObjectGrain) : RXROUNDUP(n, ObjectGrain); }
+inline size_t roundLargeObjectAllocation(size_t n) { return RXROUNDUP(n, LargeAllocationUnit); }
+inline size_t roundObjectResize(size_t n) { return RXROUNDUP(n, ObjectGrain); }
 
 class RexxActivationFrameBuffer;
 class MemorySegment;
@@ -85,6 +79,16 @@ class RexxVariable;
 #ifdef _DEBUG
 class RexxMemory;
 #endif
+
+
+enum
+{
+    LIVEMARK,
+    RESTORINGIMAGE,
+    SAVINGIMAGE,
+    FLATTENINGOBJECT,
+    UNFLATTENINGOBJECT,
+};
                                        /* This class is implemented in      */
                                        /*OS2MEM.C, since the function is    */
                                        /*system dependant.                  */
@@ -143,8 +147,8 @@ class RexxMemory : public RexxObject {
   inline operator RexxObject*() { return (RexxObject *)this; };
   inline RexxObject *operator=(DeadObject *d) { return (RexxObject *)this; };
 
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
   RexxObject  *makeProxy(RexxEnvelope *);
 
@@ -258,7 +262,8 @@ class RexxMemory : public RexxObject {
   static void *virtualFunctionTable[];             /* table of virtual functions        */
   static PCPPM exportedMethods[];      /* start of exported methods table   */
 
-  uint16_t markWord;                   /* current marking counter           */
+  size_t markWord;                     /* current marking counter           */
+  int    markReason;                   // reason for calling liveGeneral()
   SMTX flattenMutex;                   /* locks for various memory processes */
   SMTX unflattenMutex;
   SMTX envelopeMutex;
@@ -400,16 +405,6 @@ inline RexxObject *new_object(size_t s, size_t t) { return memoryObject.newObjec
 
 inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memoryObject.newObjects(s, c, t); }
 
-#define setUpMemoryMark                \
- {                                     \
-   uint16_t headerMarkedValue = memoryObject.markWord | OldSpaceBit;
-
-#define cleanUpMemoryMark               \
- }
-
-#define setUpMemoryMarkGeneral       {
-#define cleanUpMemoryMarkGeneral     }
-
 #define setUpFlatten(type)        \
   {                               \
   long  newSelf = envelope->currentOffset; \
@@ -418,7 +413,7 @@ inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memo
 #define cleanUpFlatten                    \
  }
 
-#define ObjectNeedsMarking(oref) ((oref) != OREF_NULL && !((oref)->isObjectMarked(headerMarkedValue)) )
+#define ObjectNeedsMarking(oref) ((oref) != OREF_NULL && !((oref)->isObjectMarked(liveMark)) )
 #define memory_mark(oref)  if (ObjectNeedsMarking(oref)) memoryObject.mark((RexxObject *)(oref))
 #define memory_mark_general(oref) (memoryObject.markGeneral((void *)&(oref)))
 

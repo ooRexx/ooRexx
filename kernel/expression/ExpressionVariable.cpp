@@ -63,24 +63,20 @@ RexxParseVariable::RexxParseVariable(
   this->index = var_index;             /* save the index                    */
 }
 
-void RexxParseVariable::live()
+void RexxParseVariable::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->variableName);
-  cleanUpMemoryMark
 }
 
-void RexxParseVariable::liveGeneral()
+void RexxParseVariable::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->variableName);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxParseVariable::flatten(RexxEnvelope *envelope)

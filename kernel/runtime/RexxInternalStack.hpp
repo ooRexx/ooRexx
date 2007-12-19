@@ -53,8 +53,8 @@ class RexxInternalStack : public RexxInternalObject {
 
   RexxInternalStack() { ; }
   inline RexxInternalStack(RESTORETYPE restoreType) { ; }
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
 
   inline void         push(RexxObject *value) { *(++this->top) = value; };

@@ -55,8 +55,8 @@ class RexxVariableReference : public RexxVariableBase {
 
   inline RexxVariableReference(RESTORETYPE restoreType) { ; };
   RexxVariableReference(RexxVariableBase *);
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
   RexxList *list(RexxActivation *, RexxExpressionStack *);
   void drop(RexxActivation *);

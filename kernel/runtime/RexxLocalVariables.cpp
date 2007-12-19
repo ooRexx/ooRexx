@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                          otplocalvariables.c   */
+/* REXX Kernel                                        RexxLocalVariables.cpp  */
 /*                                                                            */
 /* Primitive Local Variable Cache                                             */
 /*                                                                            */
@@ -47,7 +47,7 @@
 #include "RexxLocalVariables.hpp"
 #include "RexxActivation.hpp"
 
-void RexxLocalVariables::live()
+void RexxLocalVariables::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -55,18 +55,16 @@ void RexxLocalVariables::live()
    RexxVariable **entry;                /* marked stack entry                */
    RexxVariable **top;
 
-   setUpMemoryMark
                                        /* loop through the stack entries    */
-   for (entry = locals, top = entry + size; entry < top; entry++) {
+   for (entry = locals, top = entry + size; entry < top; entry++)
+   {
        memory_mark(*entry);            /* marking each one                  */
    }
 
    memory_mark(dictionary);            /* also mark any created vdict       */
-
-   cleanUpMemoryMark
 }
 
-void RexxLocalVariables::liveGeneral()
+void RexxLocalVariables::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -74,15 +72,12 @@ void RexxLocalVariables::liveGeneral()
    RexxVariable **entry;                /* marked stack entry                */
    RexxVariable **top;
 
-   setUpMemoryMarkGeneral
                                        /* loop through the stack entries    */
-   for (entry = locals, top = entry + size; entry < top; entry++) {
+   for (entry = locals, top = entry + size; entry < top; entry++)
+   {
        memory_mark_general(*entry);    /* marking each one                  */
    }
-
    memory_mark_general(dictionary);    /* also mark any created vdict       */
-
-   cleanUpMemoryMarkGeneral
 }
 
 

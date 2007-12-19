@@ -81,34 +81,30 @@ RexxExpressionLogical::RexxExpressionLogical(RexxSource *source, size_t count, R
 /**
  * The runtime, non-debug live marking routine.
  */
-void RexxExpressionLogical::live()
+void RexxExpressionLogical::live(size_t liveMark)
 {
   size_t  i;                           /* loop counter                      */
   size_t  count;                       /* argument count                    */
 
-  setUpMemoryMark
   for (i = 0, count = this->expressionCount; i < count; i++)
   {
       memory_mark(this->expressions[i]);
   }
-  cleanUpMemoryMark
 }
 
 /**
  * The generalized live marking routine used for non-performance
  * critical marking operations.
  */
-void RexxExpressionLogical::liveGeneral()
+void RexxExpressionLogical::liveGeneral(int reason)
 {
   size_t  i;                           /* loop counter                      */
   size_t  count;                       /* argument count                    */
 
-  setUpMemoryMarkGeneral
   for (i = 0, count = this->expressionCount; i < count; i++)
   {
       memory_mark_general(this->expressions[i]);
   }
-  cleanUpMemoryMarkGeneral
 }
 
 /**

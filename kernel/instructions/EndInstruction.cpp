@@ -58,27 +58,23 @@ RexxInstructionEnd::RexxInstructionEnd(
   OrefSet(this, this->name, _name);
 }
 
-void RexxInstructionEnd::live()
+void RexxInstructionEnd::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->name);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionEnd::liveGeneral()
+void RexxInstructionEnd::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->name);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionEnd::flatten(RexxEnvelope *envelope)

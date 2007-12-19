@@ -431,12 +431,11 @@ void RexxSource::position(
    }
 }
 
-void RexxSource::live()
+void RexxSource::live(size_t liveMark)
 /******************************************************************************/
 /* Perform garbage collection marking of a source object                      */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->sourceArray);
   memory_mark(this->programName);
   memory_mark(this->clause);
@@ -470,10 +469,9 @@ void RexxSource::live()
   memory_mark(this->merged_public_routines);
   memory_mark(this->methods);
   memory_mark(this->active_class);
-  cleanUpMemoryMark
 }
 
-void RexxSource::liveGeneral()
+void RexxSource::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Perform generalized marking of a source object                  */
 /******************************************************************************/
@@ -497,7 +495,6 @@ void RexxSource::liveGeneral()
     this->flags &= ~reclaim_possible;  /* can't recover source immediately  */
   }
 #endif
-  setUpMemoryMarkGeneral
   memory_mark_general(this->sourceArray);
   memory_mark_general(this->programName);
   memory_mark_general(this->clause);
@@ -531,7 +528,6 @@ void RexxSource::liveGeneral()
   memory_mark_general(this->merged_public_routines);
   memory_mark_general(this->methods);
   memory_mark_general(this->active_class);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxSource::flatten (RexxEnvelope *envelope)

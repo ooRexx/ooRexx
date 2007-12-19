@@ -67,25 +67,21 @@ RexxInstruction::RexxInstruction(
   }
 }
 
-void RexxInstruction::live(void)
+void RexxInstruction::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);
-  cleanUpMemoryMark
 }
 
-void RexxInstruction::liveGeneral(void)
+void RexxInstruction::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* do common marking                 */
   memory_mark_general(this->nextInstruction);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstruction::flatten(RexxEnvelope *envelope)
@@ -108,27 +104,23 @@ void * RexxInstruction::operator new(size_t size)
   return new_object(size, T_Instruction); /* Get new object                    */
 }
 
-void RexxInstructionExpression::live(void)
+void RexxInstructionExpression::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);
   memory_mark(this->expression);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionExpression::liveGeneral(void)
+void RexxInstructionExpression::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* do common marking                 */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->expression);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionExpression::flatten(RexxEnvelope *envelope)

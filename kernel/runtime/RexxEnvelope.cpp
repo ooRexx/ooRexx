@@ -61,14 +61,13 @@ RexxEnvelope::RexxEnvelope()
   this->clearObject();                 /* just clear and                    */
 }
 
-void RexxEnvelope::live()
+void RexxEnvelope::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /*                                                                            */
 /*  NOTE: Do not mark flattenStack                                            */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->home);
   memory_mark(this->receiver);
   memory_mark(this->duptable);
@@ -76,18 +75,16 @@ void RexxEnvelope::live()
   memory_mark(this->buffer);
   memory_mark(this->rehashtable);
   memory_mark(this->objectVariables);
-  cleanUpMemoryMark
 
 }
 
-void RexxEnvelope::liveGeneral()
+void RexxEnvelope::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /*                                                                            */
 /*  NOTE: Do not mark flattenStack                                            */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->home);
   memory_mark_general(this->receiver);
   memory_mark_general(this->duptable);
@@ -95,8 +92,6 @@ void RexxEnvelope::liveGeneral()
   memory_mark_general(this->buffer);
   memory_mark_general(this->rehashtable);
   memory_mark_general(this->objectVariables);
-  cleanUpMemoryMarkGeneral
-
 }
 
 void RexxEnvelope::flatten(RexxEnvelope *envelope)
@@ -321,7 +316,7 @@ void RexxEnvelope::puff(
                                            /* Note that this flavor of          */
                                            /* mark_general should update the    */
                                            /* mark fields in the objects.       */
-        puffObject->liveGeneral();
+        puffObject->liveGeneral(UNFLATTENINGOBJECT);
         /* Point to next object in image.    */
         bufferPointer += puffObject->getObjectSize();
     }
@@ -359,7 +354,7 @@ void RexxEnvelope::puff(
         /*  and no longer reference it.      */
         if (((RexxObject *)bufferPointer)->isObjectLive(memoryObject.markWord))
             /* Mark other referenced objs        */
-            ((RexxObject *)bufferPointer)->liveGeneral();
+            ((RexxObject *)bufferPointer)->liveGeneral(UNFLATTENINGOBJECT);
         /* Note that this flavor of          */
         /* mark_general will run any proxies */
         /* created by unflatten and fixup    */

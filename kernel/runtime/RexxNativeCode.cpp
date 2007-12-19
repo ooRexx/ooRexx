@@ -117,24 +117,21 @@ void RexxNativeCode::reinit(           /* reinitialize the nmethod entry    */
 }
 
 
-void RexxNativeCode::live()
+void RexxNativeCode::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->library);
   memory_mark(this->procedure);
-  cleanUpMemoryMark
 }
 
 
-void RexxNativeCode::liveGeneral()
+void RexxNativeCode::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->library);
   memory_mark_general(this->procedure);
 
@@ -148,7 +145,6 @@ void RexxNativeCode::liveGeneral()
           this->entry = LibraryManager::resolveInternalMethod(index);
       }
   }
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxNativeCode::flatten(RexxEnvelope *envelope)

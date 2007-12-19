@@ -317,7 +317,6 @@ class MemorySegmentSet {
       void insertSegment(MemorySegment *segment);
       MemorySegment *findEmptySegment(size_t allocationLength);
       MemorySegment *splitSegment(size_t allocationLength);
-      void adjustLargeObject(DeadObject *obj, size_t size);
       void mergeSegments(size_t allocationLength);
       void combineEmptySegments(MemorySegment *front, MemorySegment *back);
       virtual size_t suggestMemoryExpansion();

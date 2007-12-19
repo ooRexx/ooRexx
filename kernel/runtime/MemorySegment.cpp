@@ -490,10 +490,6 @@ void MemorySegmentSet::addSegment(MemorySegment *segment, bool createDeadObject)
       /* Insert the segment's dead space into the proper chain */
       if (createDeadObject) {
         DeadObject *ptr = segment->createDeadObject();
-        /* if the segment size is a large object, make sure */
-        /* no memory is lost by the truncation of the last byte */
-        if (segment->size() > LargeObjectMinSize)
-          adjustLargeObject(ptr,segment->size());
         addDeadObject(ptr);
       }
   }
@@ -750,27 +746,6 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
 }
 
 
-void MemorySegmentSet::adjustLargeObject(DeadObject *obj, size_t size)
-/******************************************************************************/
-/* Function:  Adjust the space for an object to account for extra space       */
-/* created by rounding the size of a really large object.                     */
-/******************************************************************************/
-{
-    size_t diffLen;
-    /* if an object is larger than 16 MB, the last 8 bits (256) */
-    /* are truncated and therefore the object must have an size */
-    /* dividable by 256 and the rest must be put to the dead */
-    /* chain */
-    if (size >= LargeObjectMinSize)
-    {
-        if ((diffLen = size - obj->getObjectSize()) > 0)
-        {
-            addDeadObject((char *)obj + obj->getObjectSize(), diffLen);
-        }
-    }
-}
-
-
 size_t NormalSegmentSet::suggestMemoryExpansion()
 /******************************************************************************/
 /* Function:  Decide if we should add additional segments to the normal heap  */
@@ -794,10 +769,6 @@ size_t NormalSegmentSet::suggestMemoryExpansion()
         /* our memory threshold.  It will be the job of others to */
         /* translate this into segment sized units. */
         size_t expansionSize = newDeadBytes - deadObjectBytes;
-        /* cap the segment size so we never end up with large objects in the segment. */
-        if (expansionSize >= LargestNormalSegmentSize) {
-            expansionSize = LargestNormalSegmentSize;
-        }
         return expansionSize;
     }
     /* no expansion required yet. */
@@ -1140,11 +1111,6 @@ void MemorySegmentSet::sweep()
                 deadObjectBytes += deadLength;
                 /* now add to the dead chain */
                 addDeadObject((char *)objectPtr, deadLength);
-                /* if an object is larger than 16 MB, the last 8 bits (256) are truncated and therefore
-                   the object must have an size dividable by 256 and the rest must be put to the dead chain */
-                if (deadLength >= LargeObjectMinSize) {
-                    adjustLargeObject((DeadObject *)objectPtr, deadLength);
-                }
                 /* update object Pointers.           */
                 objectPtr += deadLength;
             }
@@ -1654,10 +1620,6 @@ void MemorySegmentSet::combineEmptySegments(
     memory->verboseMessage("Two segments combined to create segment of %d bytes\n", front->size());
     /* and add the resulting dead object to the cache */
     DeadObject *ptr = front->createDeadObject();
-    /* if the segment size is a large object, make sure */
-    /* no memory is lost by the truncation of the last byte */
-    if (front->size() > LargeObjectMinSize)
-      adjustLargeObject(ptr,front->size());
     addDeadObject(ptr);
 }
 
@@ -1745,7 +1707,7 @@ void MemorySegment::markAllObjects()
         /*refs?                              */
         if (((RexxObject *)op)->hasReferences()) {
             /*  yes, Then lets mark them         */
-            ((RexxObject *)op)->liveGeneral();
+            ((RexxObject *)op)->liveGeneral(RESTORINGIMAGE);
         }
         op += ((RexxObject *)op)->getObjectSize();   /* move to next object               */
     }

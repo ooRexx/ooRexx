@@ -74,8 +74,8 @@ typedef size_t HashLink;
    inline RexxHashTable(RESTORETYPE restoreType) { ; };
    inline RexxHashTable() { ; }
 
-   void         live();
-   void         liveGeneral();
+   void         live(size_t);
+   void         liveGeneral(int reason);
    void         flatten(RexxEnvelope *);
    RexxArray  * makeArray();
    void         empty();

@@ -84,20 +84,18 @@ RexxBehaviour::RexxBehaviour(
 
 }
 
-void RexxBehaviour::live()
+void RexxBehaviour::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->methodDictionary);
   memory_mark(this->instanceMethodDictionary);
   memory_mark(this->scopes);
   memory_mark(this->owningClass);
-  cleanUpMemoryMark
 }
 
-void RexxBehaviour::liveGeneral()
+void RexxBehaviour::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -118,12 +116,10 @@ void RexxBehaviour::liveGeneral()
       }
   }
 
-  setUpMemoryMarkGeneral
   memory_mark_general(this->methodDictionary);
   memory_mark_general(this->instanceMethodDictionary);
   memory_mark_general(this->scopes);
   memory_mark_general(this->owningClass);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxBehaviour::flatten(RexxEnvelope *envelope)

@@ -53,8 +53,8 @@
    void       *operator new(size_t);
    inline void       *operator new(size_t size, void *ptr) { return ptr; };
 
-   void        live();
-   void        liveGeneral();
+   void        live(size_t);
+   void        liveGeneral(int reason);
    void        flatten(RexxEnvelope *);
    RexxInteger *available();
    RexxObject  *next();

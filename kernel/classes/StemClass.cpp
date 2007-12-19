@@ -114,30 +114,26 @@ void RexxStem::copyFrom(RexxCompoundTable &_tails)
 }
 
 
-void RexxStem::live()
+void RexxStem::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->value);
   memory_mark(this->stemName);
   memory_mark(this->objectVariables);
   markCompoundTable();
-  cleanUpMemoryMark
 }
 
-void RexxStem::liveGeneral()
+void RexxStem::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->value);
   memory_mark_general(this->stemName);
   memory_mark_general(this->objectVariables);
   markGeneralCompoundTable();
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxStem::flatten(RexxEnvelope *envelope)

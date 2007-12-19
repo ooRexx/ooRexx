@@ -49,27 +49,24 @@
 #include "RexxActivation.hpp"
 #include "ForwardInstruction.hpp"
 
-void RexxInstructionForward::live()
+void RexxInstructionForward::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Process live calls                                              */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->target);
   memory_mark(this->message);
   memory_mark(this->superClass);
   memory_mark(this->arguments);
   memory_mark(this->array);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionForward::liveGeneral()
+void RexxInstructionForward::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Process general live calls                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->target);
@@ -77,7 +74,6 @@ void RexxInstructionForward::liveGeneral()
   memory_mark_general(this->superClass);
   memory_mark_general(this->arguments);
   memory_mark_general(this->array);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionForward::flatten(RexxEnvelope *envelope)

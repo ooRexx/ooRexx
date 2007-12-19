@@ -144,26 +144,22 @@ size_t RexxList::getFree(void)
   return new_index;                    /* return the first free element     */
 }
 
-void RexxList::live(void)
+void RexxList::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->table);
   memory_mark(this->objectVariables);
-  cleanUpMemoryMark
 }
 
-void RexxList::liveGeneral(void)
+void RexxList::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->table);
   memory_mark_general(this->objectVariables);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxList::flatten(RexxEnvelope *envelope)

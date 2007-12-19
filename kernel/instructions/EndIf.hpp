@@ -55,8 +55,8 @@ class RexxInstructionEndIf : public RexxInstructionSet {
 
   RexxInstructionEndIf(RexxInstructionIf *);
   inline RexxInstructionEndIf(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope*);
   void execute(RexxActivation *, RexxExpressionStack *);
   void setEndInstruction(RexxInstructionEndIf *);

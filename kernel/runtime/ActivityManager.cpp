@@ -100,7 +100,7 @@ void ActivityManager::init()
     localEnvironment = new_directory();
 }
 
-void ActivityManager::live()
+void ActivityManager::live(size_t liveMark)
 /******************************************************************************/
 /* NOTE: we do not mark the UninitTables.  MEMORY will request the table      */
 /*  and mark it for us.  This is so that it can determine if there are        */
@@ -111,7 +111,6 @@ void ActivityManager::live()
 /*  also been reclaimed.                                                      */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(activeActivities);
   memory_mark(availableActivities);
   memory_mark(allActivities);
@@ -120,10 +119,9 @@ void ActivityManager::live()
   memory_mark(lastWaitingActivity);
   memory_mark(localEnvironment);
   memory_mark(localServer);
-  cleanUpMemoryMark
 }
 
-void ActivityManager::liveGeneral()
+void ActivityManager::liveGeneral(int reason)
 /******************************************************************************/
 /* NOTE: we do not mark the UninitTables.  MEMORY will request the table      */
 /*  and mark it for us.  This is so that it can determine if there are        */
@@ -135,7 +133,6 @@ void ActivityManager::liveGeneral()
 {
   if (!memoryObject.savingImage())
   {
-      setUpMemoryMarkGeneral
       memory_mark_general(activeActivities);
       memory_mark_general(availableActivities);
       memory_mark_general(allActivities);
@@ -144,7 +141,6 @@ void ActivityManager::liveGeneral()
       memory_mark_general(lastWaitingActivity);
       memory_mark_general(localEnvironment);
       memory_mark_general(localServer);
-      cleanUpMemoryMarkGeneral
   }
 }
 

@@ -62,8 +62,8 @@ typedef struct listentry {
    inline RexxListTable(RESTORETYPE restoreType) { ; };
    inline RexxListTable() {;};
 
-   void         live();
-   void         liveGeneral();
+   void         live(size_t);
+   void         liveGeneral(int reason);
    void         flatten(RexxEnvelope *);
    inline LISTENTRY   *address() {return this->elements; };
 

@@ -55,8 +55,8 @@ class RexxStemVariable : public RexxVariableBase {
 
   inline RexxStemVariable(RESTORETYPE restoreType) { ; };
   RexxStemVariable(RexxString *, size_t);
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
   RexxObject *getValue(RexxVariableDictionary *);

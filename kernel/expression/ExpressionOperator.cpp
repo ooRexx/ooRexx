@@ -144,26 +144,22 @@ RexxObject *RexxUnaryOperator::evaluate(
   return result;                       /* return the result                 */
 }
 
-void RexxExpressionOperator::live()
+void RexxExpressionOperator::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->left_term);
   memory_mark(this->right_term);
-  cleanUpMemoryMark
 }
 
-void RexxExpressionOperator::liveGeneral()
+void RexxExpressionOperator::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->left_term);
   memory_mark_general(this->right_term);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxExpressionOperator::flatten(RexxEnvelope *envelope)

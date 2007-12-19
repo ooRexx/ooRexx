@@ -64,27 +64,23 @@ RexxInstructionTrace::RexxInstructionTrace(
    traceSetting = trace;               /* and the trace setting             */
 }
 
-void RexxInstructionTrace::live()
+void RexxInstructionTrace::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->expression);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionTrace::liveGeneral()
+void RexxInstructionTrace::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->expression);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionTrace::flatten(RexxEnvelope *envelope)

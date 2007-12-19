@@ -46,28 +46,24 @@
 #include "RexxActivity.hpp"
 #include "ActivityManager.hpp"
 
-void RexxVariable::live()
+void RexxVariable::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->variableValue);
   memory_mark(this->variable_name);
   memory_mark(this->dependents);
-  cleanUpMemoryMark
 }
 
-void RexxVariable::liveGeneral()
+void RexxVariable::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->variableValue);
   memory_mark_general(this->variable_name);
   memory_mark_general(this->dependents);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxVariable::flatten(RexxEnvelope *envelope)

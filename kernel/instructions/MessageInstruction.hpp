@@ -57,8 +57,8 @@ class RexxInstructionMessage : public RexxInstruction {
   RexxInstructionMessage(RexxExpressionMessage *);
   RexxInstructionMessage(RexxExpressionMessage *, RexxObject *);
   inline RexxInstructionMessage(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
   void execute(RexxActivation *, RexxExpressionStack *);
 

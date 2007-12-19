@@ -63,8 +63,8 @@ class RexxInstructionParse : public RexxInstruction {
   RexxInstructionParse(RexxObject *, unsigned short, size_t, size_t, RexxQueue *);
   inline RexxInstructionParse(RESTORETYPE restoreType) { ; };
   void execute(RexxActivation *, RexxExpressionStack *);
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope*);
 
   int               stringSource;      // where the parsed data originates

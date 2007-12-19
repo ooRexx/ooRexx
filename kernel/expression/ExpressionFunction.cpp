@@ -109,7 +109,7 @@ void RexxExpressionFunction::resolve(
   }
 }
 
-void RexxExpressionFunction::live()
+void RexxExpressionFunction::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -117,15 +117,15 @@ void RexxExpressionFunction::live()
   size_t i;                            /* loop counter                      */
   size_t count;                        /* argument count                    */
 
-  setUpMemoryMark
   memory_mark(this->functionName);
   memory_mark(this->target);
   for (i = 0, count = this->argument_count; i < count; i++)
-    memory_mark(this->arguments[i]);
-  cleanUpMemoryMark
+  {
+      memory_mark(this->arguments[i]);
+  }
 }
 
-void RexxExpressionFunction::liveGeneral()
+void RexxExpressionFunction::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -133,12 +133,12 @@ void RexxExpressionFunction::liveGeneral()
   size_t i;                            /* loop counter                      */
   size_t count;                        /* argument count                    */
 
-  setUpMemoryMarkGeneral
   memory_mark_general(this->functionName);
   memory_mark_general(this->target);
   for (i = 0, count = this->argument_count; i < count; i++)
-    memory_mark_general(this->arguments[i]);
-  cleanUpMemoryMarkGeneral
+  {
+      memory_mark_general(this->arguments[i]);
+  }
 }
 
 void RexxExpressionFunction::flatten(RexxEnvelope *envelope)

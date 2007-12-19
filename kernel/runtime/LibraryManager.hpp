@@ -57,8 +57,8 @@ class LibraryManager
 {
 public:
     static void init();
-    static void live();
-    static void liveGeneral();
+    static void live(size_t);
+    static void liveGeneral(int reason);
     static inline RexxDirectory *getLibraries() { return libraries; }
     static void restore(RexxDirectory *savedLibraries);
     static void reload();

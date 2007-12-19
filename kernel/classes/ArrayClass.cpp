@@ -119,38 +119,39 @@ RexxObject  *RexxArray::copy(void)
   return (RexxObject *)newArray;       /* return the new array              */
 }
 
-void RexxArray::live(void)
+void RexxArray::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
   RexxObject **arrayPtr;
   RexxObject **endPtr;
-  setUpMemoryMark
+
   memory_mark(this->dimensions);
   memory_mark(this->objectVariables);
                                        /* mark expanded array               */
   memory_mark(this->expansionArray);
   for (arrayPtr = this->objects, endPtr = arrayPtr + this->arraySize; arrayPtr < endPtr; arrayPtr++)
-    memory_mark(*arrayPtr);
-  cleanUpMemoryMark
+  {
+      memory_mark(*arrayPtr);
+  }
 }
 
-void RexxArray::liveGeneral(void)
+void RexxArray::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
   RexxObject **arrayPtr;
 
-  setUpMemoryMarkGeneral
   memory_mark_general(this->dimensions);
   memory_mark_general(this->objectVariables);
   memory_mark_general(this->expansionArray);
 
   for (arrayPtr = this->objects; arrayPtr < this->objects + this->arraySize; arrayPtr++)
-    memory_mark_general(*arrayPtr);
-  cleanUpMemoryMarkGeneral
+  {
+      memory_mark_general(*arrayPtr);
+  }
 }
 
 void RexxArray::flatten(RexxEnvelope *envelope)

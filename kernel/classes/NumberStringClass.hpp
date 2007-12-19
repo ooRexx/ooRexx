@@ -107,8 +107,8 @@
     RexxNumberString(size_t) ;
     inline RexxNumberString(RESTORETYPE restoreType) { ; };
     virtual HashCode getHashValue();
-    void        live();
-    void        liveGeneral();
+    void        live(size_t);
+    void        liveGeneral(int reason);
     void        flatten(RexxEnvelope *);
 
     bool         numberValue(wholenumber_t &result, size_t precision);

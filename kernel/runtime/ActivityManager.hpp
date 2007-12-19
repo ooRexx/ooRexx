@@ -46,8 +46,8 @@ class RexxStack;
 class ActivityManager
 {
 public:
-    static void live();
-    static void liveGeneral();
+    static void live(size_t);
+    static void liveGeneral(int reason);
 
     static void addWaitingActivity(RexxActivity *a, bool release);
     static bool hasWaiters() { return firstWaitingActivity != OREF_NULL; }

@@ -57,8 +57,8 @@
   RexxBehaviour(size_t, PCPPM *);
   inline RexxBehaviour() {;};
   inline RexxBehaviour(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope*);
   RexxObject *copy();
   void        copyBehaviour(RexxBehaviour *source);

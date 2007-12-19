@@ -140,7 +140,7 @@ void RexxInstructionGuard::execute(
   }
 }
 
-void RexxInstructionGuard::live()
+void RexxInstructionGuard::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -148,17 +148,17 @@ void RexxInstructionGuard::live()
   size_t i;                            /* loop counter                      */
   size_t count;                        /* argument count                    */
 
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   for (i = 0, count = variableCount; i < count; i++)
-    memory_mark(this->variables[i]);
+  {
+      memory_mark(this->variables[i]);
+  }
   memory_mark(this->expression);
-  cleanUpMemoryMark
 }
 
 
 
-void RexxInstructionGuard::liveGeneral()
+void RexxInstructionGuard::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -166,13 +166,13 @@ void RexxInstructionGuard::liveGeneral()
   size_t i;                            /* loop counter                      */
   size_t count;                        /* argument count                    */
 
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->expression);
   for (i = 0, count = variableCount; i < count; i++)
-    memory_mark_general(this->variables[i]);
-  cleanUpMemoryMarkGeneral
+  {
+      memory_mark_general(this->variables[i]);
+  }
 }
 
 void RexxInstructionGuard::flatten(RexxEnvelope *envelope)

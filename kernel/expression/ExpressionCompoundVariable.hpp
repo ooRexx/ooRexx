@@ -60,8 +60,8 @@ class RexxCompoundVariable : public RexxVariableBase {
 
   RexxCompoundVariable(RexxString *, size_t, RexxQueue *, size_t);
   inline RexxCompoundVariable(RESTORETYPE restoreType) { ; };
-  void live();
-  void liveGeneral();
+  void live(size_t);
+  void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
   RexxObject *getValue(RexxActivation *context);

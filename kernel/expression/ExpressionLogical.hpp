@@ -56,8 +56,8 @@ class RexxExpressionLogical : public RexxInternalObject {
 
   RexxExpressionLogical(RexxSource *, size_t, RexxQueue *);
   inline RexxExpressionLogical(RESTORETYPE restoreType) { ; };
-  void        live();
-  void        liveGeneral();
+  void        live(size_t);
+  void        liveGeneral(int reason);
   void        flatten(RexxEnvelope *);
   RexxObject *evaluate(RexxActivation*, RexxExpressionStack *);
 

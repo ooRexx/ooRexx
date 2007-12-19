@@ -378,8 +378,8 @@ class RexxToken : public RexxInternalObject {
 
   RexxToken(int, int, RexxString *, SourceLocation &);;
   inline RexxToken(RESTORETYPE restoreType) { ; };
-  void       live();
-  void       liveGeneral();
+  void       live(size_t);
+  void       liveGeneral(int reason);
   void       flatten(RexxEnvelope *);
   inline void setStart(size_t l, size_t o) { tokenLocation.setStart(l, o); }
   inline void setEnd(size_t l, size_t o) { tokenLocation.setEnd(l, o); }

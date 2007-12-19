@@ -84,7 +84,7 @@ RexxInstructionRaise::RexxInstructionRaise(
     instructionFlags |= raise_return;  /* turn on the return flag           */
 }
 
-void RexxInstructionRaise::live()
+void RexxInstructionRaise::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -92,18 +92,18 @@ void RexxInstructionRaise::live()
   size_t  count;                       /* count of array expressions        */
   size_t    i;                         /* loop counter                      */
 
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->condition);
   memory_mark(this->expression);
   memory_mark(this->description);
   memory_mark(this->result);
   for (i = 0, count = arrayCount; i < count; i++)
-    memory_mark(this->additional[i]);
-  cleanUpMemoryMark
+  {
+      memory_mark(this->additional[i]);
+  }
 }
 
-void RexxInstructionRaise::liveGeneral()
+void RexxInstructionRaise::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -111,7 +111,6 @@ void RexxInstructionRaise::liveGeneral()
   size_t  count;                       /* count of array expressions        */
   size_t    i;                         /* loop counter                      */
 
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->condition);
@@ -119,8 +118,9 @@ void RexxInstructionRaise::liveGeneral()
   memory_mark_general(this->description);
   memory_mark_general(this->result);
   for (i = 0, count = arrayCount; i < count; i++)
-    memory_mark_general(this->additional[i]);
-  cleanUpMemoryMarkGeneral
+  {
+      memory_mark_general(this->additional[i]);
+  }
 }
 
 void RexxInstructionRaise::flatten(RexxEnvelope *envelope)

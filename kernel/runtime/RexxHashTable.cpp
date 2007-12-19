@@ -151,7 +151,7 @@ RexxTable *RexxHashTable::newInstance(
   return newObj;                       /* return the object                 */
 }
 
-void RexxHashTable::live(void)
+void RexxHashTable::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -161,18 +161,18 @@ void RexxHashTable::live(void)
                                        /* hash table size                   */
   size_t count = this->totalSlotsSize();
 
-  setUpMemoryMark
                                        /* loop through all of the entries   */
-  for (ep = this->entries, endp = ep + count; ep < endp; ep++) {
-    if (ep->index != OREF_NULL) {      /* have a value here?                */
-      memory_mark(ep->index);          /* mark both the index and the       */
-      memory_mark(ep->value);          /* value                             */
+  for (ep = this->entries, endp = ep + count; ep < endp; ep++)
+  {
+    if (ep->index != OREF_NULL)        /* have a value here?                */
+    {
+        memory_mark(ep->index);          /* mark both the index and the       */
+        memory_mark(ep->value);          /* value                             */
     }
   }
-  cleanUpMemoryMark
 }
 
-void RexxHashTable::liveGeneral(void)
+void RexxHashTable::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -181,15 +181,15 @@ void RexxHashTable::liveGeneral(void)
                                        /* hash table size                   */
   size_t count = this->totalSlotsSize();
 
-  setUpMemoryMarkGeneral
                                        /* loop through all of the entries   */
-  for (ep = this->entries; ep < this->entries + count; ep++) {
-    if (ep->index != OREF_NULL) {      /* have a value here?                */
-      memory_mark_general(ep->index);  /* mark both the index and the       */
-      memory_mark_general(ep->value);  /* value                             */
+  for (ep = this->entries; ep < this->entries + count; ep++)
+  {
+    if (ep->index != OREF_NULL)        /* have a value here?                */
+    {
+        memory_mark_general(ep->index);  /* mark both the index and the       */
+        memory_mark_general(ep->value);  /* value                             */
     }
   }
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxHashTable::flatten(RexxEnvelope *envelope)

@@ -50,8 +50,8 @@ class RexxExpressionOperator : public RexxInternalObject {
 
   RexxExpressionOperator(int, RexxObject *, RexxObject *);
   inline RexxExpressionOperator(RESTORETYPE restoreType) { ; };
-  void   live();
-  void   liveGeneral();
+  void   live(size_t);
+  void   liveGeneral(int reason);
   void   flatten(RexxEnvelope *);
 
   inline const char *operatorName() { return operatorNames[oper - 1]; }

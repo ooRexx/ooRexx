@@ -103,7 +103,7 @@ RexxInstructionMessage::RexxInstructionMessage(
     instructionFlags |= message_i_double; /* turn this on                      */
 }
 
-void RexxInstructionMessage::live()
+void RexxInstructionMessage::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
@@ -111,17 +111,17 @@ void RexxInstructionMessage::live()
   size_t  i;                           /* loop counter                      */
   size_t  count;                       /* argument count                    */
 
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->name);
   memory_mark(this->target);
   memory_mark(this->super);
   for (i = 0, count = argumentCount; i < count; i++)
-    memory_mark(this->arguments[i]);
-  cleanUpMemoryMark
+  {
+      memory_mark(this->arguments[i]);
+  }
 }
 
-void RexxInstructionMessage::liveGeneral()
+void RexxInstructionMessage::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
@@ -129,15 +129,15 @@ void RexxInstructionMessage::liveGeneral()
   size_t  i;                           /* loop counter                      */
   size_t  count;                       /* argument count                    */
 
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->name);
   memory_mark_general(this->target);
   memory_mark_general(this->super);
   for (i = 0, count = argumentCount; i < count; i++)
-    memory_mark_general(this->arguments[i]);
-  cleanUpMemoryMarkGeneral
+  {
+      memory_mark_general(this->arguments[i]);
+  }
 }
 
 void RexxInstructionMessage::flatten(RexxEnvelope *envelope)

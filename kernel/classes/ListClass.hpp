@@ -69,8 +69,8 @@
    inline RexxList() { ; }
 
    void          init();
-   void          live();
-   void          liveGeneral();
+   void          live(size_t);
+   void          liveGeneral(int reason);
    void          flatten(RexxEnvelope *);
    RexxObject   *copy();
    RexxArray    *makeArray();

@@ -108,26 +108,22 @@ HashCode RexxNumberString::getHashValue()
     return stringValue()->getHashValue();
 }
 
-void RexxNumberString::live()
+void RexxNumberString::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->objectVariables);
   memory_mark(this->stringObject);
-  cleanUpMemoryMark
 }
 
-void RexxNumberString::liveGeneral()
+void RexxNumberString::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->objectVariables);
   memory_mark_general(this->stringObject);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxNumberString::flatten(RexxEnvelope *envelope)

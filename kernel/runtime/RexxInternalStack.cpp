@@ -46,32 +46,32 @@
 #include "StringClass.hpp"
 #include "RexxInternalStack.hpp"
 
-void RexxInternalStack::live()
+void RexxInternalStack::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
    RexxObject **entry;                 /* marked stack entry                */
 
-  setUpMemoryMark
                                        /* loop through the stack entries    */
    for (entry = this->stack; entry <= this->top; entry++)
-     memory_mark(*entry);              /* marking each one                  */
-  cleanUpMemoryMark
+   {
+       memory_mark(*entry);              /* marking each one                  */
+   }
 }
 
-void RexxInternalStack::liveGeneral()
+void RexxInternalStack::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
    RexxObject **entry;                 /* marked stack entry                */
 
-   setUpMemoryMarkGeneral
                                        /* loop through the stack entries    */
    for (entry = this->stack; entry <= this->top; entry++)
-     memory_mark_general(*entry);      /* marking each one                  */
-   cleanUpMemoryMarkGeneral
+   {
+       memory_mark_general(*entry);      /* marking each one                  */
+   }
 }
 
 void RexxInternalStack::flatten(RexxEnvelope * envelope)
@@ -81,14 +81,15 @@ void RexxInternalStack::flatten(RexxEnvelope * envelope)
 {
   setUpFlatten(RexxInternalStack)
 
-  long i;                              /* pointer for scanning stack entries*/
-  long count;                          /* number of elements                */
+  size_t i;                            /* pointer for scanning stack entries*/
+  size_t count;                        /* number of elements                */
 
   count = this->top - this->stack;     /* get the total count               */
                                        /* loop through the stack entries    */
    for (i = 0; i < count; i++)
-     flatten_reference(newThis->stack[i], envelope);
-
+   {
+       flatten_reference(newThis->stack[i], envelope);
+   }
   cleanUpFlatten
 }
 

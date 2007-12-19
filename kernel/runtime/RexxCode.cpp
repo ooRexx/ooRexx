@@ -70,28 +70,24 @@ RexxCode::RexxCode(
   this->vdictSize = variable_index;    /* save the initial vdict size       */
 }
 
-void RexxCode::live()
+void RexxCode::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->source);
   memory_mark(this->start);
   memory_mark(this->labels);
-  cleanUpMemoryMark
 }
 
-void RexxCode::liveGeneral()
+void RexxCode::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->source);
   memory_mark_general(this->start);
   memory_mark_general(this->labels);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxCode::flatten(RexxEnvelope * envelope)

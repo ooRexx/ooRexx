@@ -81,27 +81,23 @@ void  RexxInstructionElse::setEndInstruction(
   this->parent->setEndInstruction(end_clause);
 }
 
-void RexxInstructionElse::live()
+void RexxInstructionElse::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->nextInstruction);  /* must be first one marked          */
   memory_mark(this->parent);
-  cleanUpMemoryMark
 }
 
-void RexxInstructionElse::liveGeneral()
+void RexxInstructionElse::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
                                        /* must be first one marked          */
   memory_mark_general(this->nextInstruction);
   memory_mark_general(this->parent);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxInstructionElse::flatten(RexxEnvelope *envelope)

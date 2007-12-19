@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              IndirectVariableReference.c     */
+/* REXX Translator                            IndirectVariableReference.cpp   */
 /*                                                                            */
 /* Primitive Translator Expression Parsing Variable Indirect Reference Class  */
 /*                                                                            */
@@ -61,24 +61,20 @@ RexxVariableReference::RexxVariableReference(
   OrefSet(this, this->variableObject, variable);
 }
 
-void RexxVariableReference::live()
+void RexxVariableReference::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  setUpMemoryMark
   memory_mark(this->variableObject);
-  cleanUpMemoryMark
 }
 
-void RexxVariableReference::liveGeneral()
+void RexxVariableReference::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  setUpMemoryMarkGeneral
   memory_mark_general(this->variableObject);
-  cleanUpMemoryMarkGeneral
 }
 
 void RexxVariableReference::flatten(RexxEnvelope *envelope)
