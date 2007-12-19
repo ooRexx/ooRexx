@@ -469,7 +469,7 @@ bool RexxNumberString::numberValue(wholenumber_t &result, size_t numDigits)
     // is this easily within limits (very common)?
     if (length <= numDigits && numberExp >= 0)
     {
-        if (!createUnsignedValue(number, length, false, numberExp, Numerics::MAX_WHOLENUMBER, intnum))
+        if (!createUnsignedValue(number, length, false, numberExp, Numerics::maxValueForDigits(numDigits), intnum))
         {
             return false;                   // too big to handle
         }
@@ -503,14 +503,14 @@ bool RexxNumberString::numberValue(wholenumber_t &result, size_t numDigits)
     if (numberExp < 0)
     {
         // now convert this into an unsigned value
-        if (!createUnsignedValue(number, numberLength + numberExp, carry, 0, Numerics::MAX_WHOLENUMBER, intnum))
+        if (!createUnsignedValue(number, numberLength + numberExp, carry, 0, Numerics::maxValueForDigits(numDigits), intnum))
         {
             return false;                   // to big to handle
         }
     }
     else
     {                             /* straight out number. just compute.*/
-        if (!createUnsignedValue(number, numberLength, carry, numberExp, Numerics::MAX_WHOLENUMBER, intnum))
+        if (!createUnsignedValue(number, numberLength, carry, numberExp, Numerics::maxValueForDigits(numDigits), intnum))
         {
             return false;                   // to big to handle
         }
@@ -548,7 +548,7 @@ bool RexxNumberString::unsignedNumberValue(stringsize_t &result, size_t numDigit
     // is this easily within limits (very common)?
     if (length <= numDigits && numberExp >= 0)
     {
-        if (!createUnsignedValue(number, length, false, numberExp, Numerics::MAX_WHOLENUMBER, intnum))
+        if (!createUnsignedValue(number, length, false, numberExp, Numerics::maxValueForDigits(numDigits), intnum))
         {
             return false;                   // too big to handle
         }
@@ -581,14 +581,14 @@ bool RexxNumberString::unsignedNumberValue(stringsize_t &result, size_t numDigit
     if (numberExp < 0)
     {
         // now convert this into an unsigned value
-        if (!createUnsignedValue(number, numberLength + numberExp, carry, 0, Numerics::MAX_WHOLENUMBER, intnum))
+        if (!createUnsignedValue(number, numberLength + numberExp, carry, 0, Numerics::maxValueForDigits(numDigits), intnum))
         {
             return false;                   // to big to handle
         }
     }
     else
     {                             /* straight out number. just compute.*/
-        if (!createUnsignedValue(number, numberLength, carry, numberExp, Numerics::MAX_WHOLENUMBER, intnum))
+        if (!createUnsignedValue(number, numberLength, carry, numberExp, Numerics::maxValueForDigits(numDigits), intnum))
         {
             return false;                   // to big to handle
         }
@@ -704,7 +704,7 @@ bool  RexxNumberString::createUnsignedValue(const char *thisnum, stringsize_t in
     }
 
     // was ths out of range for this conversion?
-    if (intNumber > maxValue)
+    if (intNumber >= maxValue)
     {
         return false;
     }

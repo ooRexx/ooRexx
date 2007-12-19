@@ -76,15 +76,15 @@ bool Numerics::DEFAULT_FORM = Numerics::FORM_SCIENTIFIC;
 
 /* Array for valid whole number at various digits settings */
 /*  for value 1-8.                                         */
-int Numerics::validMaxWhole[] = {10,
-                                 100,
-                                 1000,
-                                 10000,
-                                 100000,
-                                 1000000,
-                                 10000000,
-                                 100000000,
-                                 1000000000};
+wholenumber_t Numerics::validMaxWhole[] = {10,
+                                           100,
+                                           1000,
+                                           10000,
+                                           100000,
+                                           1000000,
+                                           10000000,
+                                           100000000,
+                                           1000000000};
 
 NumericSettings Numerics::defaultSettings;
 NumericSettings *Numerics::settings = &Numerics::defaultSettings;

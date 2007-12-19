@@ -267,7 +267,7 @@ bool RexxInteger::numberValue(wholenumber_t &result, size_t digits)
 {
                                        /* is the long value expressable as a*/
                                        /*  whole number in REXX term.       */
-    if (digits < Numerics::DEFAULT_DIGITS && Numerics::abs(value) > Numerics::validMaxWhole[digits - 1])
+    if (digits < Numerics::DEFAULT_DIGITS && Numerics::abs(value) >= Numerics::validMaxWhole[digits - 1])
     {
         return false;                      /* nope, not a valid long.           */
     }

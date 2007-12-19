@@ -88,7 +88,7 @@ public:
     static stringsize_t formatStringSize(stringsize_t integer, char *dest);
     static stringsize_t formatInt64(int64_t integer, char *dest);
 
-    static int validMaxWhole[];          // table of maximum values per digits setting
+    static wholenumber_t validMaxWhole[];          // table of maximum values per digits setting
     static size_t digits() { return settings->digits; }
     static size_t fuzz()   { return settings->fuzz; }
     static bool   form()   { return settings->form; }
@@ -100,6 +100,23 @@ public:
     static inline stringsize_t minVal(stringsize_t n1, stringsize_t n2) { return n2 > n1 ? n1 : n2; }
     static inline wholenumber_t maxVal(wholenumber_t n1, wholenumber_t n2) { return n2 > n1 ? n2 : n1; }
     static inline stringsize_t maxVal(stringsize_t n1, stringsize_t n2) { return n2 > n1 ? n2 : n1; }
+    static inline wholenumber_t maxValueForDigits(size_t d)
+    {
+        if (d > DEFAULT_DIGITS)
+        {
+            return validMaxWhole[DEFAULT_DIGITS - 1];
+        }
+        else
+        {
+            return validMaxWhole[d - 1];
+        }
+    }
+
+    static inline wholenumber_t multiplierForExponent(size_t e)
+    {
+        return validMaxWhole[e - 1];
+    }
+
 
 protected:
 
