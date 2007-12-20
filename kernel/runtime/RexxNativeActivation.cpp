@@ -49,7 +49,7 @@
 #include "RexxNativeCode.hpp"
 #include "RexxActivation.hpp"
 #include "RexxNativeActivation.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "MessageClass.hpp"
 #include "RexxVariableDictionary.hpp"
 #include "SourceFile.hpp"
@@ -58,6 +58,7 @@
 #include "ExpressionBaseVariable.hpp"
 #include "ProtectedObject.hpp"
 #include "RexxNativeAPI.h"                      /* bring in the native code defines  */
+#include "PointerClass.hpp"
 
 #include <math.h>
 #include <limits.h>
@@ -660,8 +661,12 @@ void *RexxNativeActivation::pointer(
 /* Function:  Return as a pointer the value of an integer                     */
 /******************************************************************************/
 {
-                                       /* just "unwrap" the pointer         */
-  return (void *)((RexxInteger *)object)->getValue();
+    if (!isOfClass(Pointer, object))
+    {
+        return NULL;
+    }
+    // just unwrap thee pointer
+    return ((RexxPointer *)object)->pointer();
 }
 
 RexxObject *RexxNativeActivation::dispatch()
@@ -1330,7 +1335,7 @@ int REXXENTRY REXX_STEMSORT(CSTRING stemname, int order, int type, size_t start,
 
       /* this must be a stem variable in order for the sorting to work. */
 
-      if ( (!isOfClass(StemVariable, retriever)) && (!isOfClass(CompoundVariable, retriever)) )
+      if ( (!isOfClass(StemVariableTerm, retriever)) && (!isOfClass(CompoundVariableTerm, retriever)) )
       {
           return false;
       }
@@ -1338,7 +1343,7 @@ int REXXENTRY REXX_STEMSORT(CSTRING stemname, int order, int type, size_t start,
       RexxString *tail = OREF_NULLSTRING ;
       ProtectedObject p2(tail);
 
-      if (isOfClass(CompoundVariable, retriever))
+      if (isOfClass(CompoundVariableTerm, retriever))
       {
         length = variable->getLength();      /* get the string length             */
         position = 0;                        /* start scanning at first character */

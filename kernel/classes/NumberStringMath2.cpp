@@ -49,7 +49,7 @@
 #include "RexxCore.h"
 #include "NumberStringClass.hpp"
 #include "ArrayClass.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "RexxActivity.hpp"
 #include "NumberStringMath.hpp"
 #include "ActivityManager.hpp"

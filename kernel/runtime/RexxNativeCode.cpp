@@ -99,7 +99,7 @@ RexxNativeCode::RexxNativeCode(
 }
 
 void RexxNativeCode::reinit(           /* reinitialize the nmethod entry    */
-     RexxInteger *handle )             /* library handle information        */
+     RexxPointer *handle )             /* library handle information        */
 /****************************************************************************/
 /* Function:  Reinitialize a REXX native method                             */
 /****************************************************************************/

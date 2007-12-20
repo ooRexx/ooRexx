@@ -45,6 +45,7 @@
 #include "DirectoryClass.hpp"
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"
+#include "PointerClass.hpp"
 #include <stdlib.h>
 #include <process.h>
 #include "malloc.h"
@@ -109,7 +110,7 @@ RexxString *SysVersion(void)
 
 
 void *SysLoadProcedure(
-  RexxInteger * LibraryHandle,         /* library load handle               */
+  RexxPointer * LibraryHandle,         /* library load handle               */
   RexxString  * Procedure)             /* required procedure name           */
 /******************************************************************************/
 /* Function:  Resolve a named procedure in a library                          */
@@ -122,7 +123,7 @@ void *SysLoadProcedure(
 
   Name = Procedure->getStringData();   /* use the ASCII-Z form of this      */
                                        /* get the module handle             */
-  Handle = (HMODULE)LibraryHandle->getValue();
+  Handle = (HMODULE)LibraryHandle->pointer();
                                        /* try to get the function address   */
   if ( !(Function =(PFN)GetProcAddress(Handle, Name)) )
                                        /* report an exception               */
@@ -130,7 +131,7 @@ void *SysLoadProcedure(
   return (void *)Function;             /* return the pointer information    */
 }
 
-RexxInteger * SysLoadLibrary(
+RexxPointer * SysLoadLibrary(
      RexxString * Library)             /* required library name             */
 /******************************************************************************/
 /* Function:  Load a named library, returning the library handle              */
@@ -147,12 +148,12 @@ RexxInteger * SysLoadLibrary(
                                        /* if this has been loaded in this   */
                                        /* process already                   */
     if (GetProcAddress( Handle, (LPCSTR)(DWORD)1) )
-      return new_integer((LONG)Handle);/* return handle as an integer       */
+      return new_pointer(Handle);      /* return handle as an integer       */
     else {                             /* not already loaded                */
                                        /* try to load the module            */
 
       if (Handle = LoadLibrary((LPCTSTR)Name))
-        return new_integer((LONG)Handle);
+        return new_pointer(Handle);
                                         /* return the new handle info        */
     }
   }
@@ -160,7 +161,7 @@ RexxInteger * SysLoadLibrary(
   else if (!(Handle = LoadLibrary((LPCTSTR)Name)))
                                        /* report an error                    */
     reportException(Error_Execution_library, Library);
-  return new_integer((LONG)Handle);    /* return the new handle info         */
+  return new_pointer(Handle);          /* return the new handle info         */
 }
 RexxString * SysGetCurrentQueue(void)
 /******************************************************************************/
@@ -365,7 +366,7 @@ int SysCreateThread (
 }
 
 
-void SysSetThreadPriority(long tid, HANDLE han, int prio)
+void SysSetThreadPriority(thread_id_t tid, HANDLE han, int prio)
 {
   ULONG pri;
 

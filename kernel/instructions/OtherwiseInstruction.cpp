@@ -48,7 +48,7 @@
 #include "Token.hpp"
 #include "OtherwiseInstruction.hpp"
 
-RexxInstructionOtherWise::RexxInstructionOtherWise(
+RexxInstructionOtherwise::RexxInstructionOtherwise(
     RexxToken *token)                  /* actual otherwise token            */
 /******************************************************************************/
 /* Function:  Complete initialization of an OTHERWISE                         */
@@ -60,7 +60,7 @@ RexxInstructionOtherWise::RexxInstructionOtherWise(
   this->setLocation(location);         /* set the clause location also      */
 }
 
-void RexxInstructionOtherWise::execute(
+void RexxInstructionOtherwise::execute(
     RexxActivation      *context,      /* current activation context        */
     RexxExpressionStack *stack )       /* evaluation stack                  */
 /****************************************************************************/

@@ -46,7 +46,7 @@
 #include "RexxCore.h"
 #include "StackClass.hpp"
 #include "StringClass.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "RexxSmartBuffer.hpp"
 #include "ArrayClass.hpp"
 #include "RexxEnvelope.hpp"

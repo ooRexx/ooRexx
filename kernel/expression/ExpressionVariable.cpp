@@ -321,7 +321,7 @@ void *RexxParseVariable::operator new(size_t size)
 
   newObject = new_object(size);        /* Get new object                    */
                                        /* object parse_assignment behaviour */
-  newObject->setBehaviour(TheParseVariableBehaviour);
+  newObject->setBehaviour(TheVariableTermBehaviour);
   return newObject;
 }
 

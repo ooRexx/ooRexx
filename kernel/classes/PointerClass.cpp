@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,66 +36,109 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                RexxBuffer.c    */
+/* REXX Kernel                                                RexxPointer.cpp */
 /*                                                                            */
-/* Primitive Buffer Class                                                     */
+/* Primitive Pointer Class                                                    */
 /*                                                                            */
 /******************************************************************************/
 #include <stdlib.h>
 #include <string.h>
 #include "RexxCore.h"
-#include "RexxActivity.hpp"
+#include "PointerClass.hpp"
 #include "ActivityManager.hpp"
-#include "RexxBuffer.hpp"
 
-RexxBuffer *RexxBuffer::expand(
-    size_t length)                     /* minimum space needed              */
+
+RexxClass *RexxPointer::classInstance = OREF_NULL;   // singleton class instance
+RexxPointer *RexxPointer::nullPointer = OREF_NULL;  // single version of a null pointer
+
+
+void RexxPointer::createInstance()
 /******************************************************************************/
-/* Function:  Create a larger buffer and copy existing data into it           */
+/* Function:  Create initial bootstrap objects                                */
 /******************************************************************************/
 {
-  RexxBuffer * newBuffer;              /* returned new buffer               */
-
-                                       /* we will either return a buffer    */
-                                       /* twice the size of the current     */
-                                       /* buffer, or this size of           */
-                                       /* current(this)buffer + requested   */
-                                       /* minimum length.                   */
-  if (length > this->getLength())      /* need more than double?            */
-                                       /* increase by the requested amount  */
-    newBuffer = new_buffer(this->getLength() + length);
-  else                                 /* just double the existing length   */
-    newBuffer = new_buffer(this->getLength() * 2);
-                                       /* have new buffer, so copy data from*/
-                                       /* current buffer into new buffer.   */
-  memcpy(newBuffer->address(), this->data, this->getLength());
-  return newBuffer;                    /* all done, return new buffer       */
-
+    CLASS_CREATE(Pointer, "Pointer", RexxClass);
+    TheNullPointer = new_pointer(NULL);       // a NULL pointer object
 }
 
-void *RexxBuffer::operator new(size_t size,
-    size_t length)                     /* buffer length                     */
+
+/**
+ * Primitive-level comparison of pointer values.
+ *
+ * @param other  The other comparison value.
+ *
+ * @return True if the two objects are equal, false otherwise.
+ */
+RexxObject *RexxPointer::equal(RexxObject *other)
+{
+    required_arg(other, ONE);            /* must have the other argument      */
+
+    if (!isOfClass(Pointer, other))
+    {
+        return TheFalseObject;
+    }
+
+    return this->pointer() == ((RexxPointer *)other)->pointer() ? TheTrueObject : TheFalseObject;
+}
+
+
+/**
+ * Primitive-level comparison of pointer values.
+ *
+ * @param other  The other comparison value.
+ *
+ * @return True if the two objects are equal, false otherwise.
+ */
+RexxObject *RexxPointer::notEqual(RexxObject *other)
+{
+    required_arg(other, ONE);            /* must have the other argument      */
+
+    if (!isOfClass(Pointer, other))
+    {
+        return TheTrueObject;
+    }
+
+    return this->pointer() != ((RexxPointer *)other)->pointer() ? TheTrueObject : TheFalseObject;
+}
+
+
+/**
+ * Override of the default hash value method.
+ */
+HashCode RexxPointer::getHashValue()
+{
+    // generate a hash from the pointer value...but obscure this a touch to get
+    // a better bit distribution
+    return (HashCode)(~((uintptr_t)pointerData));
+}
+
+
+void *RexxPointer::operator new(size_t size)
 /******************************************************************************/
-/* Function:  Create a new buffer object                                      */
+/* Function:  Create a new pointer object                                     */
 /******************************************************************************/
 {
-  RexxBuffer *newBuffer;               /* new object                        */
-
                                        /* Get new object                    */
-  newBuffer = (RexxBuffer *) new_object(size + length - sizeof(char[4]));
-                                       /* Give new object its behaviour     */
-  newBuffer->setBehaviour(TheBufferBehaviour);
-                                       /* Initialize this new buffer        */
-  newBuffer->size = length;            /* set the length of the buffer      */
-  newBuffer->setHasNoReferences();     /* this has no references            */
-  return (void *)newBuffer;            /* return the new buffer             */
+  RexxObject *newObject = new_object(size, T_Pointer);
+  newObject->setHasNoReferences();     /* this has no references            */
+  return (void *)newObject;            /* return the new object             */
 }
+
+
+RexxObject *RexxPointer::newRexx(RexxObject **args, size_t argc)
+/******************************************************************************/
+/* Function:  Allocate a pointer object from Rexx code.                       */
+/******************************************************************************/
+{
+    // we do not allow these to be allocated from Rexx code...just return
+    // .nil as a value if someone does this.
+    return TheNilObject;
+}
+
 
 #include "RexxNativeAPI.h"
 
-#define this ((RexxBuffer *)self)
-
-char *REXXENTRY REXX_BUFFER_ADDRESS(REXXOBJECT self)
+void *REXXENTRY REXX_POINTER_VALUE(REXXOBJECT self)
 /******************************************************************************/
 /* Function:  External interface to the object method                         */
 /******************************************************************************/
@@ -103,38 +146,16 @@ char *REXXENTRY REXX_BUFFER_ADDRESS(REXXOBJECT self)
 /******************************************************************************/
 /* NOTE:  This method does not reaquire kernel access                         */
 /******************************************************************************/
-  return this->address();              /* just return this directly         */
+                                       /* forward the method                */
+  return ((RexxPointer *)self)->pointer();
 }
 
-size_t REXXENTRY REXX_BUFFER_LENGTH(REXXOBJECT self)
-/******************************************************************************/
-/* Function:  External interface to the object method                         */
-/******************************************************************************/
-{
-/******************************************************************************/
-/* NOTE:  This method does not reaquire kernel access                         */
-/******************************************************************************/
-  return this->getLength();               /* just return this directly         */
-}
-
-REXXOBJECT REXXENTRY REXX_BUFFER_EXTEND(REXXOBJECT self, size_t length)
-/******************************************************************************/
-/* Function:  Extend the length of a buffer                                   */
-/******************************************************************************/
-{
-    NativeContextBlock context;
-                                       /* return new expanded buffer        */
-    return context.protect((RexxObject *)this->expand(length));
-}
-
-#undef RexxBuffer
-
-REXXOBJECT REXXENTRY REXX_BUFFER_NEW(size_t length)
+REXXOBJECT REXXENTRY REXX_POINTER_NEW(void *value)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
 {
     NativeContextBlock context;
                                        /* just forward and return           */
-    return context.protect((RexxObject *)new (length) RexxBuffer());
+    return context.protect(new_pointer(value));
 }

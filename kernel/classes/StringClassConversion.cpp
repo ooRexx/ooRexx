@@ -47,7 +47,7 @@
 #include <math.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "RexxBuiltinFunctions.h"                     /* Gneral purpose BIF Header file    */
 
 #include "NumberStringMath.hpp"
@@ -729,9 +729,9 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
                                        /* allocate a temp buffer            */
   Buffer = (RexxBuffer *)new_buffer(CurrentDigits + OVERFLOWSPACE + 1);
                                        /* set accumulator pointer           */
-  Accumulator = Buffer->data + CurrentDigits + OVERFLOWSPACE;
+  Accumulator = Buffer->address() + CurrentDigits + OVERFLOWSPACE;
                                        /* clear the buffer                  */
-  memset(Buffer->data, '\0', CurrentDigits + OVERFLOWSPACE + 1);
+  memset(Buffer->address(), '\0', CurrentDigits + OVERFLOWSPACE + 1);
   HighDigit = Accumulator - 1;         /* set initial high point            */
 
   while (StringLength--) {             /* while more digits                 */

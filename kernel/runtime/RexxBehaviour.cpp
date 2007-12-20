@@ -480,14 +480,20 @@ void RexxBehaviour::setMethodDictionaryScope(
 /* Function:  Set a new set of scoping information for an object              */
 /******************************************************************************/
 {
-  long i;
-                                       /* traverse the method dictionary    */
-  for (i = this->methodDictionary->first();
-        this->methodDictionary->index(i) != OREF_NULL;
-        i = this->methodDictionary->next(i)) {
-                                       /* setting each scope                */
-    ((RexxMethod *)this->methodDictionary->value(i))->setScope((RexxClass *)scope);
-  }
+    // we might not have instance methods to process
+    if (methodDictionary == OREF_NULL)
+    {
+        return;
+    }
+
+                                         /* traverse the method dictionary    */
+    for (HashLink i = this->methodDictionary->first();
+          this->methodDictionary->index(i) != OREF_NULL;
+          i = this->methodDictionary->next(i))
+    {
+                                         /* setting each scope                */
+        ((RexxMethod *)this->methodDictionary->value(i))->setScope((RexxClass *)scope);
+    }
 }
 
 
@@ -511,9 +517,8 @@ RexxSupplier *RexxBehaviour::getMethods(RexxObject *scope)
 
     size_t count = 0;
 
-    long i;
     // travese the method dictionary, searching for methods with the target scope
-    for (i = this->methodDictionary->first(); this->methodDictionary->index(i) != OREF_NULL; i = this->methodDictionary->next(i))
+    for (HashLink i = this->methodDictionary->first(); this->methodDictionary->index(i) != OREF_NULL; i = this->methodDictionary->next(i))
     {
         if (((RexxMethod *)this->methodDictionary->value(i))->getScope() == scope)
         {
@@ -526,7 +531,7 @@ RexxSupplier *RexxBehaviour::getMethods(RexxObject *scope)
     count = 1;
 
     // pass two, copy the entries into the array
-    for (i = this->methodDictionary->first(); this->methodDictionary->index(i) != OREF_NULL; i = this->methodDictionary->next(i))
+    for (HashLink i = this->methodDictionary->first(); this->methodDictionary->index(i) != OREF_NULL; i = this->methodDictionary->next(i))
     {
         if (((RexxMethod *)this->methodDictionary->value(i))->getScope() == scope)
         {

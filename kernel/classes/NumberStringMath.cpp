@@ -50,7 +50,7 @@
 #include "NumberStringClass.hpp"
 #include "ArrayClass.hpp"
 #include "RexxActivity.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "NumberStringMath.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"

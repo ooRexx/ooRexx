@@ -51,6 +51,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="Table" class="RexxTable" include="TableClass.hpp"/>
 <Class id="Relation" class="RexxRelation" include="RelationClass.hpp"/>
 <Class id="MutableBuffer" class="RexxMutableBuffer" include="MutableBufferClass.hpp"/>
+<Class id="Pointer" class="RexxPointer" include="PointerClass.hpp"/>
+<Class id="Buffer" class="RexxBuffer" include="BufferClass.hpp"/>
 </Exported>
 <Internal>
 <Class id="NilObject" class="RexxNilObject" include="ObjectClass.hpp"/>
@@ -59,7 +61,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="RexxCode" class="RexxCode" include="RexxCode.hpp"/>
 <Class id="NativeCode" class="RexxNativeCode" include="RexxNativeCode.hpp"/>
 
-<Class id="Buffer" class="RexxBuffer" include="RexxBuffer.hpp"/>
 <Class id="HashTable" class="RexxHashTable" include="RexxHashTable.hpp"/>
 <Class id="ListTable" class="RexxListTable" include="RexxListTable.hpp"/>
 <Class id="SmartBuffer" class="RexxSmartBuffer" include="RexxSmartBuffer.hpp"/>
@@ -99,7 +100,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="NopInstruction" class="RexxInstructionNop" include="NopInstruction.hpp"/>
 <Class id="NumericInstruction" class="RexxInstructionNumeric" include="NumericInstruction.hpp"/>
 <Class id="OptionsInstruction" class="RexxInstructionOptions" include="OptionsInstruction.hpp"/>
-<Class id="OtherwiseInstruction" class="RexxInstructionOtherWise" include="OtherwiseInstruction.hpp"/>
+<Class id="OtherwiseInstruction" class="RexxInstructionOtherwise" include="OtherwiseInstruction.hpp"/>
 <Class id="ParseInstruction" class="RexxInstructionParse" include="ParseInstruction.hpp"/>
 <Class id="ProcedureInstruction" class="RexxInstructionProcedure" include="ProcedureInstruction.hpp"/>
 <Class id="QueueInstruction" class="RexxInstructionQueue" include="QueueInstruction.hpp"/>

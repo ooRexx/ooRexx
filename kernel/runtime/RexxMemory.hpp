@@ -407,7 +407,7 @@ inline RexxArray *new_arrayOfObject(size_t s, size_t c, size_t t)  { return memo
 
 #define setUpFlatten(type)        \
   {                               \
-  long  newSelf = envelope->currentOffset; \
+  size_t newSelf = envelope->currentOffset; \
   type *newThis = (type *)this;
 
 #define cleanUpFlatten                    \

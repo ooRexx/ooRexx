@@ -114,7 +114,7 @@ OKCOBJS=$(OKCOBJ1) $(OKCOBJ2) $(OKLOBJS)
 
 # Following all part of rexx
 OKPOBJ1=$(OR_OUTDIR)\RexxEnvelope.$(OBJ) $(OR_OUTDIR)\ArrayClass.$(OBJ) $(OR_OUTDIR)\RexxMisc.$(OBJ)   \
-        $(OR_OUTDIR)\ClassClass.$(OBJ) $(OR_OUTDIR)\DeadObject.$(OBJ)
+        $(OR_OUTDIR)\ClassClass.$(OBJ) $(OR_OUTDIR)\DeadObject.$(OBJ) $(OR_OUTDIR)\PointerClass.$(OBJ)
 OKPOBJ2=$(OR_OUTDIR)\DirectoryClass.$(OBJ) $(OR_OUTDIR)\MethodClass.$(OBJ)
 OKPOBJ3=$(OR_OUTDIR)\ListClass.$(OBJ)   $(OR_OUTDIR)\RexxMemory.$(OBJ) $(OR_OUTDIR)\MemorySegment.$(OBJ) \
          $(OR_OUTDIR)\MemoryStats.$(OBJ) $(OR_OUTDIR)\MessageClass.$(OBJ)    \
@@ -125,7 +125,7 @@ OKPOBJ4=$(OR_OUTDIR)\QueueClass.$(OBJ)  $(OR_OUTDIR)\SupplierClass.$(OBJ)  \
 	$(OR_OUTDIR)\PrimitiveBehaviours.$(OBJ) $(OR_OUTDIR)\VirtualFunctionTable.$(OBJ)
 OKPOBJ5=$(OR_OUTDIR)\IntegerClass.$(OBJ)    $(OR_OUTDIR)\NumberStringClass.$(OBJ)
 OKIOBJ1=$(OR_OUTDIR)\RexxActivation.$(OBJ) $(OR_OUTDIR)\RexxActivity.$(OBJ) $(OR_OUTDIR)\KeywordConstants.$(OBJ)  \
-        $(OR_OUTDIR)\RexxBehaviour.$(OBJ)  $(OR_OUTDIR)\RexxBuffer.$(OBJ) $(OR_OUTDIR)\ActivityManager.$(OBJ) \
+        $(OR_OUTDIR)\RexxBehaviour.$(OBJ)  $(OR_OUTDIR)\BufferClass.$(OBJ) $(OR_OUTDIR)\ActivityManager.$(OBJ) \
 	$(OR_OUTDIR)\Interpreter.$(OBJ)
 OKIOBJ2=$(OR_OUTDIR)\RexxHashTable.$(OBJ)   $(OR_OUTDIR)\RexxCode.$(OBJ) $(OR_OUTDIR)\LibraryManager.$(OBJ) \
         $(OR_OUTDIR)\RexxListTable.$(OBJ) $(OR_OUTDIR)\RexxNativeActivation.$(OBJ) $(OR_OUTDIR)\RexxNativeCode.$(OBJ)

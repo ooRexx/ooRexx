@@ -111,6 +111,7 @@ errorHeaders = $(messages_dir)/RexxMessageNumbers.h \
                $(messages_dir)/RexxErrorCodes.h \
                $(messages_dir)/RexxMessageTable.h
 classesHeaders = $(classes_dir)/ArrayClass.hpp \
+                 $(classes_dir)/BufferClass.hpp \
                  $(classes_dir)/ClassClass.hpp \
                  $(classes_dir)/DirectoryClass.hpp \
                  $(classes_dir)/IntegerClass.hpp \
@@ -121,6 +122,7 @@ classesHeaders = $(classes_dir)/ArrayClass.hpp \
                  $(classes_dir)/NumberStringClass.hpp \
                  $(classes_dir)/NumberStringMath.hpp \
                  $(classes_dir)/ObjectClass.hpp \
+                 $(classes_dir)/PointerClass.hpp \
                  $(classes_dir)/QueueClass.hpp \
                  $(classes_dir)/RelationClass.hpp \
                  $(classes_dir)/StackClass.hpp \
@@ -205,7 +207,6 @@ runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/Interpreter.hpp \
                  $(runtime_dir)/ProtectedObject.hpp \
                  $(runtime_dir)/RexxBehaviour.hpp \
-                 $(runtime_dir)/RexxBuffer.hpp \
                  $(runtime_dir)/RexxBuiltinFunctions.h \
                  $(runtime_dir)/RexxCode.hpp \
                  $(runtime_dir)/RexxCollection.hpp \
@@ -355,6 +356,7 @@ librexxapi_la_LDFLAGS = $(VERSION_INFO)
 # Sources for librexx.so
 #
 classes_sources = $(classes_dir)/ArrayClass.cpp \
+                  $(classes_dir)/BufferClass.cpp \
                   $(classes_dir)/ClassClass.cpp \
                   $(classes_dir)/DirectoryClass.cpp \
                   $(classes_dir)/IntegerClass.cpp \
@@ -366,6 +368,7 @@ classes_sources = $(classes_dir)/ArrayClass.cpp \
                   $(classes_dir)/NumberStringMath.cpp \
                   $(classes_dir)/NumberStringMath2.cpp \
                   $(classes_dir)/ObjectClass.cpp \
+                  $(classes_dir)/PointerClass.cpp \
                   $(classes_dir)/QueueClass.cpp \
                   $(classes_dir)/RelationClass.cpp \
                   $(classes_dir)/StackClass.cpp \
@@ -467,7 +470,6 @@ runtime_sources  = $(runtime_dir)/DeadObject.cpp \
                    $(runtime_dir)/LibraryManager.cpp \
                    $(runtime_dir)/Interpreter.cpp \
                    $(runtime_dir)/RexxBehaviour.cpp \
-                   $(runtime_dir)/RexxBuffer.cpp \
                    $(runtime_dir)/RexxCode.cpp \
                    $(runtime_dir)/RexxCollection.cpp \
                    $(runtime_dir)/RexxCompoundElement.cpp \

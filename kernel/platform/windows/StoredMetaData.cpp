@@ -45,7 +45,7 @@
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "RexxSmartBuffer.hpp"
 #include "MethodClass.hpp"
 #include "RexxCode.hpp"
@@ -271,7 +271,7 @@ void SysSaveProgram(
                                        /* retrieve the length of the buffer */
   BufferLength = FlatBuffer->current;
   MethodBuffer = FlatBuffer->buffer;   /* get to the actual data buffer     */
-  BufferAddress = MethodBuffer->data;  /* retrieve buffer starting address  */
+  BufferAddress = MethodBuffer->address();  /* retrieve buffer starting address  */
                                        /* clear out the cntrol info         */
   memset((void *)&Control, 0, sizeof(Control));
                                        /* fill in version info              */
@@ -396,7 +396,7 @@ void SysSaveProgramBuffer(
                                        /* retrieve the length of the buffer */
   BufferLength = (LONG)FlatBuffer->current;
   MethodBuffer = FlatBuffer->buffer;   /* get to the actual data buffer     */
-  BufferAddress = MethodBuffer->data;  /* retrieve buffer starting address  */
+  BufferAddress = MethodBuffer->address();  /* retrieve buffer starting address  */
                                        /* get the final buffer              */
   Buffer = (char *)SysAllocateResultMemory(BufferLength + CONTROLSZ);
   OutBuffer->strptr = Buffer;          /* fill in the result pointer        */
@@ -437,7 +437,6 @@ void SysSaveTranslatedProgram(
   char         *BufferAddress;         /* address of flattened method data  */
   LONG          BufferLength;          /* length of the flattened method    */
   RexxString   *Version;               /* REXX version string               */
-  RexxActivity *activity;              /* the current activity              */
 
   Handle = fopen(File, "wb");          /* open the output file              */
   if (Handle == NULL)                  /* get an open error?                */
@@ -449,7 +448,7 @@ void SysSaveTranslatedProgram(
                                        /* retrieve the length of the buffer */
   BufferLength = (LONG)FlatBuffer->current;
   MethodBuffer = FlatBuffer->buffer;   /* get to the actual data buffer     */
-  BufferAddress = MethodBuffer->data;  /* retrieve buffer starting address  */
+  BufferAddress = MethodBuffer->address();  /* retrieve buffer starting address  */
                                        /* clear out the cntrol info         */
   memset((void *)&Control, 0, sizeof(Control));
                                        /* fill in version info              */

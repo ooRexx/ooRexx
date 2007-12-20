@@ -160,7 +160,7 @@ thread_id_t SysQueryThreadID()
 }
 
 
-void SysSetThreadPriority(long tid, int  prio)
+void SysSetThreadPriority(thread_id_t tid, int  prio)
 {
    int schedpolicy;
    struct sched_param schedparam;

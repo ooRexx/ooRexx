@@ -1367,9 +1367,9 @@ RexxInstruction *RexxSource::otherwiseNew(
   RexxObject *newObject;               /* newly created object              */
 
                                        /* create a new translator object    */
-  newObject = new_instruction(OTHERWISE, OtherWise);
+  newObject = new_instruction(OTHERWISE, Otherwise);
                                        /* now complete this                 */
-  new ((void *)newObject) RexxInstructionOtherWise(token);
+  new ((void *)newObject) RexxInstructionOtherwise(token);
   return (RexxInstruction *)newObject; /* done, return this                 */
 }
 

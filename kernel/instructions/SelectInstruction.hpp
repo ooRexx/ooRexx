@@ -46,7 +46,7 @@
 
 #include "RexxInstruction.hpp"
 
-class RexxInstructionOtherWise;
+class RexxInstructionOtherwise;
 
 class RexxInstructionSelect : public RexxBlockInstruction
 {
@@ -68,13 +68,13 @@ public:
     bool isLoop();
     void terminate(RexxActivation *, RexxDoBlock *);
 
-    void setOtherwise(RexxInstructionOtherWise *);
+    void setOtherwise(RexxInstructionOtherwise *);
     void addWhen(RexxInstructionIf *);
 
 protected:
     RexxQueue                *when_list; /* list of WHEN end targets          */
     RexxInstructionEnd       *end;       /* END matching the SELECT           */
-    RexxInstructionOtherWise *otherwise; /* OTHERWISE matching the SELECT     */
+    RexxInstructionOtherwise *otherwise; /* OTHERWISE matching the SELECT     */
     RexxString * label;      // the select label
 };
 #endif

@@ -60,6 +60,8 @@
 #include "MethodClass.hpp"
 #include "RelationClass.hpp"
 #include "SupplierClass.hpp"
+#include "PointerClass.hpp"
+#include "BufferClass.hpp"
 
 // restore a class from its
 // associated primitive behaviour
@@ -848,7 +850,7 @@ void RexxMemory::restoreImage()
   TheFalseObject = (RexxInteger *)saveArray->get(saveArray_FALSE);
   TheNilObject   = saveArray->get(saveArray_NIL);
   TheNullArray   = (RexxArray *)saveArray->get(saveArray_NULLA);
-  TheNullPointer   = (RexxInteger *)saveArray->get(saveArray_NULLPOINTER);
+  TheNullPointer   = (RexxPointer *)saveArray->get(saveArray_NULLPOINTER);
   TheClassClass  = (RexxClass *)saveArray->get(saveArray_CLASS);
   TheCommonRetrievers = (RexxDirectory *)saveArray->get(saveArray_COMMON_RETRIEVERS);
   TheStaticRequires   = (RexxDirectory *)saveArray->get(saveArray_STATIC_REQ);
@@ -2263,6 +2265,8 @@ void RexxMemory::restore()
   RESTORE_CLASS(Table, RexxClass);
   RESTORE_CLASS(Relation, RexxClass);
   RESTORE_CLASS(MutableBuffer, RexxMutableBufferClass);
+  RESTORE_CLASS(Pointer, RexxClass);
+  RESTORE_CLASS(Buffer, RexxClass);
 
   memoryObject.setOldSpace();          /* Mark Memory Object as OldSpace    */
   /* initialize the tables used for garbage collection. */

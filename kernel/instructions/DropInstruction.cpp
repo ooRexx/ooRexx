@@ -49,7 +49,7 @@
 #include "ExpressionBaseVariable.hpp"
 #include "StackClass.hpp"
 #include "RexxActivity.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 
 RexxInstructionDrop::RexxInstructionDrop(
     size_t     varCount,               /* number of variables to process    */

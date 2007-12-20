@@ -39,6 +39,7 @@
 #include "RexxCore.h"
 #include "LibraryManager.hpp"
 #include "DirectoryClass.hpp"
+#include "PointerClass.hpp"
 
 // the table of loaded libraries
 RexxDirectory *LibraryManager::libraries = OREF_NULL;
@@ -140,7 +141,7 @@ RexxNativeCode *LibraryManager::createNativeCode(RexxString *procedure, RexxStri
         return newCode;                 // this is cool, just return it
     }
     // we need to resolve this procedure
-    PNMF entry = (PNMF)SysLoadProcedure((RexxInteger *)libraryInfo->at(OREF_NULLSTRING), procedure);
+    PNMF entry = (PNMF)SysLoadProcedure((RexxPointer *)libraryInfo->at(OREF_NULLSTRING), procedure);
     // and create a code object from this entry point
     newCode = new RexxNativeCode (procedure, library, entry);
     // add this to the resolved procedure cache
@@ -167,7 +168,8 @@ PNMF LibraryManager::resolveExternalMethod(RexxString *procedure, RexxString *li
     }
 
     // we need to resolve this procedure
-    return (PNMF)SysLoadProcedure((RexxInteger *)libraryInfo->at(OREF_NULLSTRING), procedure);
+    return (PNMF)SysLoadProcedure((RexxPointer *)libraryInfo->at(OREF_NULLSTRING), procedure);
+
 }
 
 
@@ -197,7 +199,7 @@ RexxNativeCode *LibraryManager::createInternalNativeCode(size_t index)
 void LibraryManager::reloadLibrary(RexxString *libraryName, RexxDirectory *libraryInfo)
 {
     // reload the library and get the handle
-    RexxInteger *libraryHandle = SysLoadLibrary(libraryName);
+    RexxPointer *libraryHandle = SysLoadLibrary(libraryName);
     // and stuff the new handle into the library definition
     libraryInfo->setEntry(OREF_NULLSTRING, libraryHandle);
                                          /* now traverse the entire table     */

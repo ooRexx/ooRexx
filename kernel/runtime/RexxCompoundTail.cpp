@@ -45,7 +45,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxCompoundTail.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "ExpressionVariable.hpp"
 
 
@@ -203,7 +203,7 @@ void RexxCompoundTail::buildUnresolvedTail(
       if (part != OREF_NULL)
       {
           // if this is a variable, just copy the name.  Otherwixe, copy the value
-          if (isOfClass(ParseVariable, part))
+          if (isOfClass(VariableTerm, part))
           {
               ((RexxParseVariable *)part)->getName()->copyIntoTail(this);
           }
@@ -292,11 +292,11 @@ RexxString *RexxCompoundTail::createCompoundName(RexxString *stem)
 /* Function:  Create a fully resolved compound name from a tail buffer        */
 /******************************************************************************/
 {
-  long len1;                           /* length of stem                    */
+  size_t len1;                         /* length of stem                    */
   RexxString *result;                  /* result string                     */
   char *data;                          /* character pointer                 */
 
-  len1 = stem->getLength();                 /* get the stem length               */
+  len1 = stem->getLength();            /* get the stem length               */
                                        /* create a new string               */
   result = (RexxString *)raw_string(len1 + length);
   data = result->getWritableData();    /* point to the string data          */

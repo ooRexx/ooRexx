@@ -261,8 +261,8 @@ public:
    inline RexxString *getCurrentExit() { return this->nestedInfo.currentExit; }
    inline size_t      getRandomSeed() { return nestedInfo.randomSeed; }
    inline void setRandomSeed(size_t seed) { this->nestedInfo.randomSeed = seed; };
-   inline void setSysExit(long exitNum, RexxString *exitName) { this->nestedInfo.sysexits[exitNum -1] = exitName;}
-   inline RexxString *querySysExits(long exitNum) {return this->nestedInfo.sysexits[exitNum -1];}
+   inline void setSysExit(int exitNum, RexxString *exitName) { this->nestedInfo.sysexits[exitNum -1] = exitName;}
+   inline RexxString *querySysExits(int exitNum) {return this->nestedInfo.sysexits[exitNum -1];}
    inline RexxString **getSysExits() {return this->nestedInfo.sysexits;}
    inline void clearExits() { memset((void *)&this->nestedInfo.sysexits, 0, sizeof(this->nestedInfo.sysexits)); }
    inline void saveNestedInfo(NestedActivityState &saveInfo) { saveInfo = nestedInfo; }

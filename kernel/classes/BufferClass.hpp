@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                RexxBuffer.hpp  */
+/* REXX Kernel                                               BufferClass.hpp  */
 /*                                                                            */
 /* Primitive Buffer Class Definitions                                         */
 /*                                                                            */
@@ -44,7 +44,8 @@
 #ifndef Included_RexxBuffer
 #define Included_RexxBuffer
 
- class RexxBuffer : public RexxInternalObject {
+ class RexxBuffer : public RexxObject
+ {
   public:
   void *operator new(size_t, size_t);
   inline void *operator new(size_t size, void *ptr) {return ptr;};
@@ -58,6 +59,13 @@
   inline size_t getLength(void) { return this->size; };
   inline char *address(void) {return this->data; }
   inline void copyData(size_t offset, const char *string, size_t length) { memcpy(this->data + offset, string, length); }
+  RexxObject *newRexx(RexxObject **args, size_t argc);
+
+  static void createInstance();
+
+  static RexxClass *classInstance;   // singleton class instance
+
+ protected:
 
    size_t size;                        // size of the buffer
    char data[4];                       /* actual data length                */

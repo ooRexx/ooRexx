@@ -59,6 +59,7 @@
 #include "RexxActivation.hpp"
 #include "ThreadSupport.hpp"
 #include "ActivityManager.hpp"
+#include "PointerClass.hpp"
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
@@ -175,14 +176,14 @@ RexxString *SysVersion(void)
 }
 
 void *SysLoadProcedure(
-  RexxInteger * LibraryHandle,         /* library load handle               */
+  RexxPointer * LibraryHandle,         /* library load handle               */
   RexxString  * Procedure)             /* required procedure name           */
 /******************************************************************************/
 /* Function:  Resolve a named procedure in a library                          */
 /******************************************************************************/
 {
    void *load_address;
-   load_address = dlsym((void *)LibraryHandle->getValue(), Procedure->getStringData());
+   load_address = dlsym((void *)LibraryHandle->pointer(), Procedure->getStringData());
    if (load_address == NULL)
    {
       reportException(Error_External_name_not_found_method, Procedure);
@@ -190,7 +191,7 @@ void *SysLoadProcedure(
    return load_address;
 }
 
-RexxInteger * SysLoadLibrary(
+RexxPointer * SysLoadLibrary(
      RexxString * Library)             /* required library name             */
 /******************************************************************************/
 /* Function:  Load a named library, returning the library handle              */

@@ -69,6 +69,7 @@
 #include "RexxMemory.hpp"
 #include "RexxVariableDictionary.hpp"
 #include "ProtectedObject.hpp"
+#include "PointerClass.hpp"
 
 const size_t ACT_STACK_SIZE = 10;
 
@@ -1820,7 +1821,7 @@ bool RexxActivity::sysExitFunc(
   RexxString   *exitname;              /* Exit routine name                 */
   RXFNCCAL_PARM exit_parm;             /* exit parameters                   */
   char          retbuffer[DEFRXSTRING];/* Default result buffer             */
-  long          argindex;              /* Counter for arg array             */
+  size_t        argindex;              /* Counter for arg array             */
   PCONSTRXSTRING argrxarray;           /* Array of args in PRXSTRING form   */
   RexxString   *temp;                  /* temporary argument                */
   RexxString   *stdqueue;              /* current REXX queue                */
@@ -2146,7 +2147,6 @@ bool  RexxActivity::sysExitMsqSiz(
 {
   RexxString   *exitname;              /* Exit routine name                 */
   RXMSQSIZ_PARM exit_parm;             /* exit parameters                   */
-  long          tempSize;
 
                                        /* get the exit handler              */
   exitname = this->querySysExits(RXMSQ);
@@ -2155,8 +2155,7 @@ bool  RexxActivity::sysExitMsqSiz(
     if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQSIZ, (void *)&exit_parm, false))
       return true;                     /* this wasn't handled               */
                                        /* Get queue size and return it      */
-    tempSize = exit_parm.rxmsq_size;   /* temporary place holder for new_integer */
-    *returnsize = (RexxInteger *)new_integer(tempSize);
+    *returnsize = new_integer(exit_parm.rxmsq_size);
 
     return false;                      /* this was handled                  */
   }

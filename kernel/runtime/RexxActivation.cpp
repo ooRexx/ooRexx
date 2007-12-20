@@ -52,7 +52,7 @@
 #include <string.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "DirectoryClass.hpp"
 #include "RexxVariableDictionary.hpp"
 #include "RexxActivation.hpp"
@@ -1160,7 +1160,7 @@ void RexxActivation::termination()
   if (this->environmentList != OREF_NULL && this->environmentList->getSize() != 0) {
                                        /* Yes, then restore the environment */
                                        /*  to the ist on added.             */
-    RestoreEnvironment(((RexxBuffer *)this->environmentList->lastItem())->data);
+    RestoreEnvironment(((RexxBuffer *)this->environmentList->lastItem())->address());
   }
   this->environmentList = OREF_NULL;   /* Clear out the env list            */
   this->closeStreams();                /* close any open streams            */
@@ -1414,7 +1414,7 @@ void RexxActivation::signalTo(
 /* Function:  Signal to a targer instruction                                  */
 /******************************************************************************/
 {
-  long lineNum;
+  size_t lineNum;
                                        /* internal routine or Interpret     */
                                        /* instruction activation?           */
   if (this->activation_context == INTERPRET) {
@@ -2148,7 +2148,7 @@ RexxObject * RexxActivation::internalCall(
 /******************************************************************************/
 {
   RexxActivation * newActivation;      /* new activation for call           */
-  long             lineNum;            /* line number of the call           */
+  size_t           lineNum;            /* line number of the call           */
   RexxObject *     returnObject;
   RexxObject **    _arguments = _stack->arguments(_argcount);
 
@@ -2449,7 +2449,7 @@ void RexxActivation::traceValue(       /* trace an intermediate value       */
 {
   RexxString * buffer;                 /* buffer for building result        */
   RexxString * stringvalue;            /* object string value               */
-  long         outlength;              /* output length                     */
+  stringsize_t outlength;              /* output length                     */
 
                                        /* tracing currently suppressed or   */
                                        /* no value was received?            */
@@ -2750,7 +2750,7 @@ void RexxActivation::traceSourceString()
 {
   RexxString * buffer;                 /* buffer for building result        */
   RexxString * string;                 /* the source string                 */
-  long         outlength;              /* output length                     */
+  stringsize_t outlength;              /* output length                     */
 
                                        /* already traced?                   */
   if (this->settings.flags&source_traced)
@@ -3199,14 +3199,13 @@ void RexxActivation::closeStreams()
 {
   RexxDirectory *streams;              /* stream directory                  */
   RexxString    *index;                /* index for stream directory        */
-  long j;                              /* position for stream directory     */
 
                                        /* exiting a bottom level?           */
   if (this->activation_context&PROGRAM_OR_METHOD) {
     streams = this->settings.streams;  /* get the streams directory         */
     if (streams != OREF_NULL) {        /* actually have a table?            */
                                        /* traverse this                     */
-      for (j = streams->first(); (index = (RexxString *)streams->index(j)) != OREF_NULL; j = streams->next(j)) {
+      for (HashLink j = streams->first(); (index = (RexxString *)streams->index(j)) != OREF_NULL; j = streams->next(j)) {
                                        /* closing each stream               */
         streams->at(index)->sendMessage(OREF_CLOSE);
       }

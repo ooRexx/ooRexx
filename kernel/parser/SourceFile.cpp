@@ -48,7 +48,7 @@
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "DirectoryClass.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"
 #include "MethodClass.hpp"
@@ -120,7 +120,7 @@ void RexxSource::initBuffered(
   OrefSet(this, this->sourceBuffer, (RexxBuffer *)source_buffer);
   OrefSet(this, this->sourceIndices, (RexxBuffer *)new_smartbuffer());
                                        /* point to the data part            */
-  start = ((RexxBuffer *)this->sourceBuffer)->data;
+  start = ((RexxBuffer *)this->sourceBuffer)->address();
                                        /* get the buffer length             */
   length = ((RexxBuffer *)this->sourceBuffer)->getLength();
 
@@ -415,14 +415,14 @@ void RexxSource::position(
      }
      else {                            /* single buffer source              */
                                        /* get the descriptors pointer       */
-       descriptors = (LINE_DESCRIPTOR *)(this->sourceIndices->data);
+       descriptors = (LINE_DESCRIPTOR *)(this->sourceIndices->address());
                                        /* source buffered in a string?      */
        if (isOfClass(String, this->sourceBuffer))
                                        /* point to the data part            */
          buffer_start = ((RexxString *)(this->sourceBuffer))->getStringData();
        else
                                        /* point to the data part            */
-         buffer_start = this->sourceBuffer->data;
+         buffer_start = this->sourceBuffer->address();
                                        /* calculate the line start          */
        this->current = buffer_start + descriptors[line - this->interpret_adjust].position;
                                        /* and get the length                */
@@ -630,14 +630,14 @@ RexxString *RexxSource::get(
                                        /* buffered version?                 */
   else if (this->sourceBuffer != OREF_NULL) {
                                        /* get the descriptors pointer       */
-    descriptors = (LINE_DESCRIPTOR *)(this->sourceIndices->data);
+    descriptors = (LINE_DESCRIPTOR *)(this->sourceIndices->address());
                                        /* source buffered in a string?      */
     if (isOfClass(String, this->sourceBuffer))
                                        /* point to the data part            */
       buffer_start = ((RexxString *)(this->sourceBuffer))->getStringData();
     else
                                        /* point to the data part            */
-      buffer_start = this->sourceBuffer->data;
+      buffer_start = this->sourceBuffer->address();
                                        /* create a new string version       */
     return new_string(buffer_start + descriptors[_position].position, descriptors[_position].length);
   }
@@ -2833,7 +2833,7 @@ RexxMethod *RexxSource::translateBlock(
         if (second->getType() != KEYWORD_SELECT)
           syntaxError(Error_Unexpected_when_otherwise);
                                        /* hook up the OTHERWISE instruction */
-        ((RexxInstructionSelect *)second)->setOtherwise((RexxInstructionOtherWise *)_instruction);
+        ((RexxInstructionSelect *)second)->setOtherwise((RexxInstructionOtherwise *)_instruction);
         this->pushDo(_instruction);     /* add this to the control queue     */
         token = nextReal();            /* get the next token                */
                                        /* OTHERWISE instr form?             */
@@ -2893,7 +2893,7 @@ RexxMethod *RexxSource::translateBlock(
                                        /* while still more references       */
   while (_instruction != (RexxInstruction *)TheNilObject) {
                                        /* actually a function call?         */
-    if (isOfClass(Function, _instruction))
+    if (isOfClass(FunctionCallTerm, _instruction))
                                        /* resolve the function call         */
       ((RexxExpressionFunction *)_instruction)->resolve(this->labels);
     else
@@ -4613,7 +4613,7 @@ void *RexxSource::operator new (size_t size)
   newObject = new_object(sizeof(RexxSource));
   newObject->clearObject(sizeof(RexxSource)); /* clear object          */
                                        /* Give new object its behaviour     */
-  newObject->setBehaviour(TheSourceBehaviour);
+  newObject->setBehaviour(TheRexxSourceBehaviour);
   return newObject;                    /* return the new object             */
 }
 

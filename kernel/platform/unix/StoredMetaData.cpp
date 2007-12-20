@@ -48,7 +48,7 @@
 #define INCL_REXX_STREAM
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "RexxSmartBuffer.hpp"
 #include "MethodClass.hpp"
 #include "RexxCode.hpp"
@@ -143,9 +143,9 @@ RexxMethod *SysRestoreProgram(
     buffersize = buffersize - position + 1;
     buffer = new_buffer(buffersize);   /* get a buffer object               */
                                        /* Copy in a blank line              */
-    memcpy(buffer->data,line_end,line_end_size);
+    memcpy(buffer->address(),line_end,line_end_size);
                                        /* read the entire file in one shot  */
-    fread(buffer->data+line_end_size, 1, buffersize, Handle);
+    fread(buffer->address()+line_end_size, 1, buffersize, Handle);
     fclose(Handle);                    /* close the file                    */
     ProtectedObject p(buffer);
                                        /* Create a method object            */
@@ -247,7 +247,7 @@ void SysSaveProgramBuffer(
                                        /* retrieve the length of the buffer */
   BufferLength = FlatBuffer->current;
   MethodBuffer = FlatBuffer->buffer;   /* get to the actual data buffer     */
-  BufferAddress = MethodBuffer->data;  /* retrieve buffer starting address  */
+  BufferAddress = MethodBuffer->address(); /* retrieve buffer starting address  */
                                        /* get the final buffer              */
   Buffer = (char *)SysAllocateResultMemory(BufferLength + CONTROLSZ);
   OutBuffer->strptr = Buffer;          /* fill in the result pointer        */
@@ -299,7 +299,7 @@ void SysSaveTranslatedProgram(
                                        /* retrieve the length of the buffer */
   BufferLength = FlatBuffer->current;
   MethodBuffer = FlatBuffer->buffer;   /* get to the actual data buffer     */
-  BufferAddress = MethodBuffer->data;  /* retrieve buffer starting address  */
+  BufferAddress = MethodBuffer->address();  /* retrieve buffer starting address  */
                                        /* clear out the cntrol info         */
   memset((void *)&Control, 0, sizeof(Control));
                                        /* fill in version info              */

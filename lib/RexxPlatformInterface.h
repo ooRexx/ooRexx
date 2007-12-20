@@ -55,6 +55,7 @@ class RexxMethod;
 class RexxDateTime;
 class RexxNativeActivation;
 class RexxBuffer;
+class RexxPointer;
 
 #ifndef SysGetCurrentTime
 void SysGetCurrentTime(RexxDateTime *);/* get the current time              */
@@ -76,9 +77,9 @@ void SysRelinquish(void);              /* allow the system to run           */
 
 #ifndef SysSetThreadPriority
 #ifdef THREADHANDLE
-void SysSetThreadPriority(long, HANDLE, int);  /* give a thread priority            */
+void SysSetThreadPriority(thread_id_t, HANDLE, int);  /* give a thread priority            */
 #else
-void SysSetThreadPriority(long, int);  /* give a thread priority            */
+void SysSetThreadPriority(thread_id_t, int);  /* give a thread priority            */
 #endif
 #endif
 
@@ -179,12 +180,12 @@ int SysCreateThread (PTHREADFN, size_t, void *);
 
 #ifndef SysLoadProcedure
                                        /* load a named procedure            */
-void *SysLoadProcedure (RexxInteger *, RexxString *);
+void *SysLoadProcedure (RexxPointer *, RexxString *);
 #endif
 
 #ifndef SysLoadLibrary
                                        /* load a named library              */
-RexxInteger * SysLoadLibrary (RexxString *);
+RexxPointer * SysLoadLibrary (RexxString *);
 #endif
 
 #ifndef SysValidateAddressName
@@ -257,7 +258,7 @@ void SysTerminateThread(thread_id_t threadid);
 #endif
 
 #ifndef SysIsThreadEqual
-#define SysIsThreadEqual(t1, t2) (((long)(t1)) == ((long)(t2)))
+#define SysIsThreadEqual(t1, t2) (((thread_id_t)(t1)) == ((thread_id_t)(t2)))
 #endif
 
 #ifndef SysInitializeThread

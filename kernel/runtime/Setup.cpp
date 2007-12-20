@@ -74,6 +74,8 @@
 #include "ExpressionVariable.hpp"
 #include "RexxLocalVariables.hpp"
 #include "ProtectedObject.hpp"
+#include "PointerClass.hpp"
+#include "BufferClass.hpp"
 
 PCPPM RexxMemory::exportedMethods[] = {/* start of exported methods table   */
                                        /* NOTE:  getAttribute and           */
@@ -520,16 +522,16 @@ CPPM(RexxRelation::hasItem),
 
 CPPM(RexxRelation::newRexx),
 
-CPPM(RexxMemory::reclaim),             /* Memory methods                    */
-CPPM(RexxMemory::setParms),
-CPPM(RexxMemory::dump),
-CPPM(RexxMemory::setDump),
-CPPM(RexxMemory::gutCheck),
-
 CPPM(RexxLocal::local),                /* the .local environment methods    */
 CPPM(RexxLocal::runProgram),
 CPPM(RexxLocal::callProgram),
 CPPM(RexxLocal::callString),
+
+CPPM(RexxPointer::equal),
+CPPM(RexxPointer::notEqual),
+CPPM(RexxPointer::newRexx),
+
+CPPM(RexxBuffer::newRexx),
 
 NULL                                   /* final terminating method          */
 };
@@ -690,6 +692,10 @@ void RexxMemory::createImage()
   CLASS_CREATE(Array, "Array", RexxClass);  /* RexxArray                         */
   TheNullArray = new_array((size_t)0); /* set up a null array               */
 
+  // The pointer class needs to be created early because other classes
+  // use the instances to store information.
+  RexxPointer::createInstance();
+
   CLASS_CREATE(Directory, "Directory", RexxClass);  /* RexxDirectory                     */
   TheEnvironment = new_directory();    /* create the environment directory  */
                                        /* setup OREF_ENV as the mark start  */
@@ -708,15 +714,16 @@ void RexxMemory::createImage()
   ThePublicRoutines = new_directory();
   TheStaticRequires = new_directory();
 
+
                                        /* RexxMethod                        */
   CLASS_CREATE(Method, "Method", RexxMethodClass);
   CLASS_CREATE(Queue, "Queue", RexxClass);      /* RexxQueue                         */
-  TheNullPointer = new_pointer(NULL);  /* a NULL pointer object             */
   CLASS_CREATE(List, "List", RexxListClass);   /* RexxList                          */
   CLASS_CREATE(Stem, "Stem", RexxClass);       /* RexxStem                          */
   CLASS_CREATE(Supplier, "Supplier", RexxClass);   /* RexxSupplier                      */
   CLASS_CREATE(Message, "Message", RexxClass);    /* RexxMessage                       */
   CLASS_CREATE(MutableBuffer, "MutableBuffer", RexxClass);
+  RexxBuffer::createInstance();
 
                                        /* build the common retriever tables */
   TheCommonRetrievers = (RexxDirectory *)new_directory();
@@ -1546,6 +1553,58 @@ void RexxMemory::createImage()
                                        /* method                            */
   TheTableClass->subClassable(false);
 
+
+  /***************************************************************************/
+  /*           POINTER                                                       */
+  /***************************************************************************/
+                                       /* Add the NEW methods to the class  */
+                                       /* behaviour mdict                   */
+  defineKernelMethod(CHAR_NEW, ThePointerClassBehaviour, CPPM(RexxPointer::newRexx), A_COUNT);
+                                       /* set the scope of the methods to   */
+                                       /* this classes oref                 */
+  ThePointerClassBehaviour->setMethodDictionaryScope(ThePointerClass);
+
+
+                                       /* Add the instance methods to the   */
+                                       /* instance behaviour mdict          */
+  defineKernelMethod(CHAR_EQUAL                        ,ThePointerBehaviour, CPPM(RexxPointer::equal), 1);
+  defineKernelMethod(CHAR_BACKSLASH_EQUAL              ,TheIntegerBehaviour, CPPM(RexxInteger::notEqual), 1);
+  defineKernelMethod(CHAR_STRICT_EQUAL                 ,ThePointerBehaviour, CPPM(RexxPointer::equal), 1);
+  defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL       ,TheIntegerBehaviour, CPPM(RexxInteger::notEqual), 1);
+
+                                       /* set the scope of the methods to   */
+                                       /* this classes oref                 */
+  ThePointerBehaviour->setMethodDictionaryScope(ThePointerClass);
+
+                                       /* Now call the class subclassable   */
+                                       /* method                            */
+  ThePointerClass->subClassable(false);
+
+
+  /***************************************************************************/
+  /*           BUFFER                                                        */
+  /***************************************************************************/
+                                       /* Add the NEW methods to the class  */
+                                       /* behaviour mdict                   */
+  defineKernelMethod(CHAR_NEW, TheBufferClassBehaviour, CPPM(RexxBuffer::newRexx), A_COUNT);
+                                       /* set the scope of the methods to   */
+                                       /* this classes oref                 */
+  TheBufferClassBehaviour->setMethodDictionaryScope(TheBufferClass);
+
+
+                                       /* Add the instance methods to the   */
+                                       /* instance behaviour mdict          */
+
+  // NO instance methods on buffer
+
+                                       /* set the scope of the methods to   */
+                                       /* this classes oref                 */
+  TheBufferBehaviour->setMethodDictionaryScope(TheBufferClass);
+
+                                       /* Now call the class subclassable   */
+                                       /* method                            */
+  TheBufferClass->subClassable(false);
+
   /***************************************************************************/
   /***************************************************************************/
   /***************************************************************************/
@@ -1574,6 +1633,8 @@ void RexxMemory::createImage()
   kernel_public(CHAR_SUPPLIER         ,TheSupplierClass,TheEnvironment);
   kernel_public(CHAR_SYSTEM           ,TheSystem       ,TheEnvironment);
   kernel_public(CHAR_TABLE            ,TheTableClass   ,TheEnvironment);
+  kernel_public(CHAR_POINTER          ,ThePointerClass ,TheEnvironment);
+  kernel_public(CHAR_BUFFER           ,TheBufferClass  ,TheEnvironment);
   kernel_public(CHAR_TRUE             ,TheTrueObject   ,TheEnvironment);
 
   kernel_public(CHAR_PUBLIC_ROUTINES  ,ThePublicRoutines, TheEnvironment);

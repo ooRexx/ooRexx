@@ -276,7 +276,7 @@ void RexxInstructionSelect::addWhen(
 }
 
 void RexxInstructionSelect::setOtherwise(
-    RexxInstructionOtherWise *_otherwise) /* partner OTHERWISE for SELECT      */
+    RexxInstructionOtherwise *_otherwise) /* partner OTHERWISE for SELECT      */
 /******************************************************************************/
 /* Function:  Associate an OTHERSISE instruction with its surrounding SELECT  */
 /******************************************************************************/

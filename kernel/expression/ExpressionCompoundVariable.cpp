@@ -372,7 +372,7 @@ void * RexxCompoundVariable::operator new(size_t size,
                                        /* Get new object                    */
   newObject = new_object(size + ((tailCount - 1) * sizeof(RexxObject *)));
                                        /* Give new object its behaviour     */
-  newObject->setBehaviour(TheCompoundVariableBehaviour);
+  newObject->setBehaviour(TheCompoundVariableTermBehaviour);
   return newObject;                    /* return the new compound variable  */
 }
 

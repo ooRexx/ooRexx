@@ -45,7 +45,7 @@
 #define  INCL_REXX_STREAM
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "RexxNativeAPI.h"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
@@ -364,7 +364,7 @@ RexxBuffer *SysReadProgram(
       UnsafeBlock releaser;
 
                            /* read in a buffer of data   */
-      if (ReadFile(fileHandle, buffer->data, buffersize, &bytesRead, NULL) == 0) {
+      if (ReadFile(fileHandle, buffer->address(), buffersize, &bytesRead, NULL) == 0) {
         return OREF_NULL;                  /* return nothing                    */
       }
       CloseHandle(fileHandle);                /* close the file now         */

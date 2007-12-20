@@ -58,7 +58,7 @@
 
     virtual RexxObject *mergeItem(RexxObject *, RexxObject *);
 
-    RexxObject   *copyValues(long depth);
+    RexxObject   *copyValues(int depth);
     RexxObject   *removeRexx(RexxObject *);
     RexxObject   *getRexx(RexxObject *);
     RexxObject   *put(RexxObject *, RexxObject *);

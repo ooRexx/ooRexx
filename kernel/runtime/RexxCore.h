@@ -142,7 +142,6 @@ inline size_t RANDOMIZE(size_t seed) { return (seed * RANDOM_FACTOR + 1); }
 #define new_message(t,m,a)                (new RexxMessage ((RexxObject *)t, (RexxObject *)m, (RexxArray *)a))
 #define new_method(i,e,a,c)               (new RexxMethod (i, e, a, c))
 #define new_CPPmethod(p,s,c)              (new RexxMethod (p, s, c))
-#define new_pointer(p)                    (TheIntegerClass->newCache((uintptr_t)p))
 #define new_smartbuffer()                 (new RexxSmartBuffer(1024))
 #define new_sizedSmartBuffer(size)        (new RexxSmartBuffer(size))
 #define new_stack(s)                      (new(s) RexxStack (s))
@@ -228,6 +227,8 @@ EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
 #define TheSupplierClass RexxSupplier::classInstance
 #define TheTableClass RexxTable::classInstance
 #define TheRelationClass RexxRelation::classInstance
+#define ThePointerClass RexxPointer::classInstance
+#define TheBufferClass RexxBuffer::classInstance
 
 #define TheEnvironment RexxMemory::environment
 #define ThePublicRoutines RexxMemory::publicRoutines
@@ -243,7 +244,7 @@ EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
 
 #define TheFalseObject RexxInteger::falseObject
 #define TheTrueObject RexxInteger::trueObject
-#define TheNullPointer RexxInteger::nullPointer
+#define TheNullPointer RexxPointer::nullPointer
 
 #define IntegerZero RexxInteger::integerZero
 #define IntegerOne RexxInteger::integerOne

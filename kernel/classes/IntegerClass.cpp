@@ -1155,7 +1155,6 @@ PCPPM RexxInteger::operatorMethods[] =
 
 
 #include "RexxNativeAPI.h"
-#undef RexxInteger
 
 int REXXENTRY REXX_INTEGER_VALUE(REXXOBJECT self)
 /******************************************************************************/

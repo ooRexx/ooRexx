@@ -1,8 +1,4 @@
-<?xml version="1.0"?>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-<xsl:output method="text"/>
-<xsl:template match="Classes">
-<xsl:text>/*----------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
 /* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
@@ -40,44 +36,48 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX  Support                                                              */
+/* REXX Kernel                                                RexxPointer.hpp */
 /*                                                                            */
-/* Defines for mapping class ids to behaviours                                */
+/* Primitive Pointer Class Definitions                                        */
 /*                                                                            */
-/*        -- DO NOT CHANGE THIS FILE, ALL CHANGES WILL BE LOST! --            */
 /******************************************************************************/
+#ifndef Included_RexxPointer
+#define Included_RexxPointer
 
-#ifndef PrimitiveBehaviourNames_Included
-#define PrimitiveBehaviourNames_Included
+#include "ObjectClass.hpp"
 
-    </xsl:text>
+class RexxPointer : public RexxObject
+{
+public:
+    inline void *operator new(size_t, void *ptr) { return ptr; }
+    inline void  operator delete(void *, void *) { ; }
+    void *operator new(size_t);
+    inline void  operator delete(void *) { ; }
 
-    <xsl:for-each select="Exported/Class">
-        <xsl:text>
-#define The</xsl:text><xsl:value-of select="@id"/><xsl:text>Behaviour      (&amp;RexxBehaviour::primitiveBehaviours[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>])
-#define The</xsl:text><xsl:value-of select="@id"/><xsl:text>ClassBehaviour    (&amp;RexxBehaviour::primitiveBehaviours[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>Class])</xsl:text>
-    </xsl:for-each>
+    inline RexxPointer() { pointerData = NULL; };
+    inline RexxPointer(void *ptr)  { pointerData = ptr; };
+    inline RexxPointer(RESTORETYPE restoreType) { ; };
+    inline void *pointer() { return pointerData; }
 
-    <xsl:for-each select="Internal/Class">
-        <xsl:text>
-#define The</xsl:text><xsl:value-of select="@id"/><xsl:text>Behaviour      (&amp;RexxBehaviour::primitiveBehaviours[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>])</xsl:text>
-    </xsl:for-each>
+    RexxObject  *equal(RexxObject *);
+    RexxObject  *notEqual(RexxObject *other);
+    virtual HashCode getHashValue();
 
-    <xsl:for-each select="Transient/Class">
-        <xsl:text>
-#define The</xsl:text><xsl:value-of select="@id"/><xsl:text>Behaviour      (&amp;RexxBehaviour::primitiveBehaviours[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>])</xsl:text>
-    </xsl:for-each>
+    RexxObject *newRexx(RexxObject **args, size_t argc);
 
-    <xsl:text>
+    static void createInstance();
+
+    static RexxClass *classInstance;   // singleton class instance
+    static RexxPointer *nullPointer;  // single version of a null pointer
+
+protected:
+    void *pointerData;               /* actual pointer value              */
+};
 
 
-/* -------------------------------------------------------------------------- */
-/* --            ==================================================        -- */
-/* --            DO NOT CHANGE THIS FILE, ALL CHANGES WILL BE LOST!        -- */
-/* --            ==================================================        -- */
-/* -------------------------------------------------------------------------- */
+inline RexxPointer *new_pointer(void *p)
+{
+
+    return new RexxPointer(p);
+}
 #endif
-</xsl:text>
-</xsl:template>
-<xsl:template match="CopyRight"></xsl:template>
-</xsl:stylesheet>

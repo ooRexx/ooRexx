@@ -48,7 +48,7 @@
 #include <float.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "RexxActivation.hpp"
 #include "NumberStringMath.hpp"
 #include "RexxBuiltinFunctions.h"                     /* Gneral purpose BIF Header file    */
@@ -2546,10 +2546,10 @@ RexxString *RexxNumberString::d2xD2c(
   Target = new_buffer(BufferLength);   /* set up format buffer              */
   Scan = this->number;                 /* point to first digit              */
                                        /* set accumulator pointer           */
-  Accumulator = Target->data + BufferLength - 2;
+  Accumulator = Target->address() + BufferLength - 2;
   HighDigit = Accumulator - 1;         /* set initial high position         */
                                        /* clear the accumulator             */
-  memset(Target->data, '\0', BufferLength);
+  memset(Target->address(), '\0', BufferLength);
   while (TargetLength--) {             /* while more digits                 */
                                        /* add next digit                    */
     HighDigit = AddToBaseSixteen(*Scan++, Accumulator, HighDigit);

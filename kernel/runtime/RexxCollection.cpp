@@ -259,7 +259,7 @@ RexxObject *RexxHashTableCollection::merge(
 
 
 RexxObject *RexxHashTableCollection::copyValues(
-   long depth)                         /* depth to propagate the copy to    */
+   int  depth)                         /* depth to propagate the copy to    */
 /******************************************************************************/
 /* Arguments:  Recursion depth                                                */
 /*                                                                            */

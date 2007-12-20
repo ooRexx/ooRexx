@@ -50,7 +50,7 @@
 
 #include "RexxCore.h"                    /* bring in global defines           */
 #include "StringClass.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "MethodClass.hpp"
 #include "RexxCode.hpp"
 #include "ArrayClass.hpp"
@@ -1049,7 +1049,7 @@ RexxMethod * process_instore(
                                        /* get a buffer object               */
         source_buffer = new_buffer(instore[0].strlength);
                                        /* copy source into the buffer       */
-        memcpy(source_buffer->data, instore[0].strptr, instore[0].strlength);
+        memcpy(source_buffer->address(), instore[0].strptr, instore[0].strlength);
                                        /* reconnect this with the source    */
         ((RexxCode *)method)->getSource()->setBufferedSource(source_buffer);
       }
@@ -1063,7 +1063,7 @@ RexxMethod * process_instore(
                                        /* get a buffer object               */
       source_buffer = new_buffer(instore[0].strlength);
                                        /* copy source into the buffer       */
-      memcpy(source_buffer->data, instore[0].strptr, instore[0].strlength);
+      memcpy(source_buffer->address(), instore[0].strptr, instore[0].strlength);
                                        /* translate this source             */
       method = TheMethodClass->newRexxBuffer(name, source_buffer, (RexxClass *)TheNilObject);
                                        /* return this back in instore[1]    */
@@ -1089,7 +1089,7 @@ void CreateMethod(
                                        /* get a buffer object               */
  source_buffer = new_buffer(pRexxScriptArgs->ProgramBuffer->strlength);
                                        /* copy source into the buffer       */
- memcpy(source_buffer->data,
+ memcpy(source_buffer->address(),
    pRexxScriptArgs->ProgramBuffer->strptr, pRexxScriptArgs->ProgramBuffer->strlength);
                                        /* translate this source             */
  *pRexxScriptArgs->pmethod = TheMethodClass->newRexxBuffer(name, source_buffer, (RexxClass *)TheNilObject);

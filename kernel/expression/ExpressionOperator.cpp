@@ -186,7 +186,7 @@ void *RexxUnaryOperator::operator new(size_t size)
                                        /* Get new object                    */
   newObject = new_object(sizeof(RexxUnaryOperator));
                                        /* Give new object its behaviour     */
-  newObject->setBehaviour(TheUnaryOperatorBehaviour);
+  newObject->setBehaviour(TheUnaryOperatorTermBehaviour);
   return newObject;
 }
 
@@ -200,7 +200,7 @@ void *RexxBinaryOperator::operator new(size_t size)
                                        /* Get new object                    */
   newObject = new_object(sizeof(RexxBinaryOperator));
                                        /* Give new object its behaviour     */
-  newObject->setBehaviour(TheBinaryOperatorBehaviour);
+  newObject->setBehaviour(TheBinaryOperatorTermBehaviour);
   return newObject;
 }
 

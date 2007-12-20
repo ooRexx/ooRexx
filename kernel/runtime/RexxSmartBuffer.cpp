@@ -44,7 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "RexxCore.h"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "RexxSmartBuffer.hpp"
 
 RexxSmartBuffer::RexxSmartBuffer(size_t startSize)

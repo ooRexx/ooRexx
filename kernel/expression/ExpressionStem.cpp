@@ -319,7 +319,7 @@ void *RexxStemVariable::operator new(size_t size)
                                        /* Get new object                    */
   newObject = (RexxObject *)new_object(size);
                                        /* Give new object its behaviour     */
-  newObject->setBehaviour(TheStemVariableBehaviour);
+  newObject->setBehaviour(TheStemVariableTermBehaviour);
   return newObject;                    /* return the new object             */
 }
 

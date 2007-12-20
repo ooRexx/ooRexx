@@ -46,7 +46,7 @@
 #include "RexxCore.h"
 #include "ObjectClass.hpp"
 #include "StringClass.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "RexxSmartBuffer.hpp"
 #include "DirectoryClass.hpp"
 #include "RexxVariableDictionary.hpp"
@@ -394,6 +394,7 @@ RexxObject * RexxObject::strictEqual(
 /* Function:  Process the default "==" strict comparison operator             */
 /******************************************************************************/
 {
+    required_arg(other, ONE);            /* must have the other argument      */
                                        /* this is direct object equality    */
     return (RexxObject *)((this == other)? TheTrueObject: TheFalseObject);
 }
@@ -409,7 +410,7 @@ RexxObject * RexxObject::equal(RexxObject * other)
   return (RexxObject *)((this == other)? TheTrueObject: TheFalseObject);
 }
 
-RexxInteger *RexxObject::strictNotEqual(RexxObject *other)
+RexxObject *RexxObject::strictNotEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Return the strict inequality of two objects                     */
 /******************************************************************************/
@@ -418,7 +419,7 @@ RexxInteger *RexxObject::strictNotEqual(RexxObject *other)
    return this != other ? TheTrueObject : TheFalseObject;
 }
 
-RexxInteger *RexxObject::notEqual(RexxObject *other)
+RexxObject *RexxObject::notEqual(RexxObject *other)
 /******************************************************************************/
 /* Function:  Return the inequality of two objects                            */
 /******************************************************************************/

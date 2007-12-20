@@ -84,7 +84,7 @@ typedef REXXOBJECT STRING;             /* REXX string object                */
 #define ooRexxArray2(v1,v2)      REXX_ARRAY_NEW2(v1,v2)
 #define ooRexxBuffer(l)          REXX_BUFFER_NEW(l)
 #define ooRexxInteger(v)         REXX_INTEGER_NEW(v)
-#define ooRexxPointer(v)         REXX_INTEGER_NEW((intptr_t)v)
+#define ooRexxPointer(v)         REXX_POINTER_NEW(v)
 #define ooRexxReceiver()         REXX_RECEIVER()
 #define ooRexxSend(r,n,aa)       REXX_SEND(r,n,aa)
 #define ooRexxSend0(r,n)         REXX_SEND(r,n,ooRexxArray(0))
@@ -217,8 +217,7 @@ r  n##_m (t1 p1, t2 p2, t3 p3, t4 p4, t5 p5, t6 p6)
 #define buffer_put(r,s,b,l)      REXX_BUFFER_COPYDATA(r,s,(CSTRING)b,l)
 
 #define integer_value(r)         REXX_INTEGER_VALUE(r)
-// TODO:  HACK!!!!!!!!!!!!!!!!
-#define pointer_value(r)         ((void *)REXX_INTEGER_VALUE(r))
+#define pointer_value(r)         REXX_POINTER_VALUE(r))
 
 #define string_get(r,s,b,l)      REXX_STRING_GET(r,s,b,l)
 #define string_length(r)         REXX_STRING_LENGTH(r)
@@ -276,6 +275,9 @@ REXXOBJECT REXXENTRY REXX_BUFFER_EXTEND(REXXOBJECT, size_t);
 
 int        REXXENTRY REXX_INTEGER_VALUE(REXXOBJECT);
 REXXOBJECT REXXENTRY REXX_INTEGER_NEW(int);
+
+void      *REXXENTRY REXX_POINTER_VALUE(REXXOBJECT);
+REXXOBJECT REXXENTRY REXX_POINTER_NEW(void *);
 
 double     REXXENTRY REXX_DOUBLE(REXXOBJECT);
 bool       REXXENTRY REXX_ISDOUBLE(REXXOBJECT);

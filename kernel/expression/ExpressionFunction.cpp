@@ -235,6 +235,6 @@ void *RexxExpressionFunction::operator new(size_t size,
                                        /* Get new object                    */
   newObject = new_object(size + (argCount - 1) * sizeof(RexxObject *));
                                        /* Give new object its behaviour     */
-  newObject->setBehaviour(TheFunctionBehaviour);
+  newObject->setBehaviour(TheFunctionCallTermBehaviour);
   return newObject;                    /* and return the function           */
 }

@@ -56,7 +56,7 @@
 
 #include "RexxCore.h"                    /* bring in global defines           */
 #include "StringClass.hpp"
-#include "RexxBuffer.hpp"
+#include "BufferClass.hpp"
 #include "MethodClass.hpp"
 #include "RexxCode.hpp"
 #include "ArrayClass.hpp"
@@ -468,7 +468,7 @@ RexxMethod * process_instore(
                                        /* get a buffer object               */
         source_buffer = new_buffer(instore[0].strlength);
                                        /* copy source into the buffer       */
-        memcpy(source_buffer->data, instore[0].strptr, instore[0].strlength);
+        memcpy(source_buffer->address(), instore[0].strptr, instore[0].strlength);
                                        /* reconnect this with the source    */
         ((RexxCode *)method)->getSource()->setBufferedSource(source_buffer);
       }
@@ -479,11 +479,11 @@ RexxMethod * process_instore(
                                        /* get a buffer object               */
     source_buffer = new_buffer(instore[0].strlength);
                                        /* copy source into the buffer       */
-    memcpy(source_buffer->data, instore[0].strptr, instore[0].strlength);
+    memcpy(source_buffer->address(), instore[0].strptr, instore[0].strlength);
 
-  if (source_buffer->data[0] == '#' && source_buffer->data[1] == '!')
+  if (source_buffer->address()[0] == '#' && source_buffer->address()[1] == '!')
   {
-    memcpy(source_buffer->data, "--", 2);
+    memcpy(source_buffer->address(), "--", 2);
   }
                                        /* translate this source             */
     method = TheMethodClass->newRexxBuffer(name, source_buffer, (RexxClass *)TheNilObject);

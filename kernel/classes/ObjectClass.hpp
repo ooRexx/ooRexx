@@ -451,9 +451,9 @@ class RexxObject : public RexxInternalObject {
      RexxMethod  *methodLookup(RexxString *name );
      RexxVariableDictionary *getObjectVariables(RexxObject *);
      RexxObject  *equal(RexxObject *);
-     RexxInteger *notEqual(RexxObject *other);
+     RexxObject  *notEqual(RexxObject *other);
      RexxObject  *strictEqual(RexxObject *);
-     RexxInteger *strictNotEqual(RexxObject *other);
+     RexxObject  *strictNotEqual(RexxObject *other);
 
      RexxInteger *identityHashRexx();
 

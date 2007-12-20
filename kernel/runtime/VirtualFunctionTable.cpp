@@ -69,11 +69,12 @@
 #include "TableClass.hpp"
 #include "RelationClass.hpp"
 #include "MutableBufferClass.hpp"
+#include "PointerClass.hpp"
+#include "BufferClass.hpp"
 #include "RexxBehaviour.hpp"
 #include "SourceFile.hpp"
 #include "RexxCode.hpp"
 #include "RexxNativeCode.hpp"
-#include "RexxBuffer.hpp"
 #include "RexxHashTable.hpp"
 #include "RexxListTable.hpp"
 #include "RexxSmartBuffer.hpp"
@@ -249,6 +250,18 @@ void RexxMemory::buildVirtualFunctionTable()
    objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_MutableBufferClass] = *((void **)objectPtr);
    
+   objectPtr = new (objectPtr) RexxPointer(RESTOREIMAGE);
+   virtualFunctionTable[T_Pointer] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   virtualFunctionTable[T_PointerClass] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) RexxBuffer(RESTOREIMAGE);
+   virtualFunctionTable[T_Buffer] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   virtualFunctionTable[T_BufferClass] = *((void **)objectPtr);
+   
    objectPtr = new (objectPtr) RexxNilObject(RESTOREIMAGE);
    virtualFunctionTable[T_NilObject] = *((void **)objectPtr);
    
@@ -263,9 +276,6 @@ void RexxMemory::buildVirtualFunctionTable()
    
    objectPtr = new (objectPtr) RexxNativeCode(RESTOREIMAGE);
    virtualFunctionTable[T_NativeCode] = *((void **)objectPtr);
-   
-   objectPtr = new (objectPtr) RexxBuffer(RESTOREIMAGE);
-   virtualFunctionTable[T_Buffer] = *((void **)objectPtr);
    
    objectPtr = new (objectPtr) RexxHashTable(RESTOREIMAGE);
    virtualFunctionTable[T_HashTable] = *((void **)objectPtr);
@@ -378,7 +388,7 @@ void RexxMemory::buildVirtualFunctionTable()
    objectPtr = new (objectPtr) RexxInstructionOptions(RESTOREIMAGE);
    virtualFunctionTable[T_OptionsInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionOtherWise(RESTOREIMAGE);
+   objectPtr = new (objectPtr) RexxInstructionOtherwise(RESTOREIMAGE);
    virtualFunctionTable[T_OtherwiseInstruction] = *((void **)objectPtr);
    
    objectPtr = new (objectPtr) RexxInstructionParse(RESTOREIMAGE);
