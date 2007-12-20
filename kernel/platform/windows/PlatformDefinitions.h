@@ -398,8 +398,6 @@ int SysCreateThread (
   void     *Arguments );               /* thread procedure argument block   */
 
 
-#define SysValidateAddressName(OREF)   // OS2MISC: Validates address
-                                       // command name Need on win?
 #define SysAllocateHeap();             // no shared memory on windows yet
 #define SysReleaseHeap();              // no shared memory on windows yet
 

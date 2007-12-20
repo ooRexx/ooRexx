@@ -387,4 +387,19 @@ void SysSetThreadPriority(thread_id_t tid, HANDLE han, int prio)
   SetThreadPriority( han, pri);
 }
 
+#define MAX_ADDRESS_NAME_LENGTH  250   /* maximum command environment name  */
+
+void SysValidateAddressName(
+  RexxString *Name )                   /* name to validate                  */
+/******************************************************************************/
+/* Function:  Validate an external address name                               */
+/******************************************************************************/
+{
+                                         /* name too long?                    */
+    if (Name->getLength() > MAX_ADDRESS_NAME_LENGTH)
+    {
+                                         /* go report an error                */
+        reportException(Error_Environment_name_name, MAX_ADDRESS_NAME_LENGTH, Name);
+    }
+}
 
