@@ -85,6 +85,8 @@
 #define ThePointerClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_PointerClass])
 #define TheBufferBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Buffer])
 #define TheBufferClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_BufferClass])
+#define TheWeakReferenceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_WeakReference])
+#define TheWeakReferenceClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_WeakReferenceClass])
 #define TheNilObjectBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NilObject])
 #define TheBehaviourBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Behaviour])
 #define TheRexxSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RexxSource])

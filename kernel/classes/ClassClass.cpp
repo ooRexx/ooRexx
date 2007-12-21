@@ -56,6 +56,7 @@
 #include "RexxActivity.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
+#include "WeakReferenceClass.hpp"
 
 
 // singleton class instance
@@ -78,6 +79,7 @@ void RexxClass::live(size_t liveMark)
   memory_mark(this->metaClassScopes);
   memory_mark(this->classSuperClasses);
   memory_mark(this->instanceSuperClasses);
+  memory_mark(this->subClasses);
 }
 
 void RexxClass::liveGeneral(int reason)
@@ -96,6 +98,7 @@ void RexxClass::liveGeneral(int reason)
   memory_mark_general(this->metaClassScopes);
   memory_mark_general(this->classSuperClasses);
   memory_mark_general(this->instanceSuperClasses);
+  memory_mark_general(this->subClasses);
 }
 
 void RexxClass::flatten(RexxEnvelope *envelope)
@@ -299,13 +302,14 @@ RexxArray *RexxClass::getSuperClasses()
   return (RexxArray *)this->instanceSuperClasses->copy();
 }
 
+
 RexxArray *RexxClass::getSubClasses()
 /*****************************************************************************/
 /* Function:  Return an array of the subclasses                              */
 /*****************************************************************************/
 {
-                                       /* return a copy of the list         */
-    return memoryObject.getSubClasses(this);
+    // remove any gc classes from the list now, and return the array
+    return subClasses->weakReferenceArray();
 }
 
 void RexxClass::addSubClass(RexxClass *subClass)
@@ -313,8 +317,10 @@ void RexxClass::addSubClass(RexxClass *subClass)
 /* Function:  Add a subclass to a class                                      */
 /*****************************************************************************/
 {
-                                       /* just add to the global list       */
-    memoryObject.newSubClass(subClass, this);
+    // wrap a weak reference around the subclass
+    WeakReference *ref = new WeakReference(subClass);
+    // add this to the front of the subclass list
+    subClasses->addFirst((RexxObject *)ref);
 }
 
 void RexxClass::defmeths(
@@ -474,6 +480,8 @@ void RexxClass::subClassable(bool restricted)
                                        /* as is the instance superclasses    */
                                        /* list.                              */
   OrefSet(this, this->instanceSuperClasses, new_array((size_t)0));
+  // create the subclasses list
+  OrefSet(this, this->subClasses, new_list());
   if (this != TheObjectClass) {        /* not .object?                      */
                                        /* add object to the list             */
     this->classSuperClasses->addLast(TheObjectClass);
@@ -660,7 +668,7 @@ void  RexxClass::updateSubClasses()
 /******************************************************************************/
 {
   size_t       index;                  /* subclass index number             */
-  RexxArray   *subClasses;             /* array of class subclasses         */
+  RexxArray   *subClassList;           /* array of class subclasses         */
                                        /* start out the class mdict with    */
                                        /* a clear mdict and scopes tables   */
   this->behaviour->setMethodDictionary(OREF_NULL);
@@ -676,14 +684,14 @@ void  RexxClass::updateSubClasses()
                                        // impact on metaclasses.
   this->createClassBehaviour(this->behaviour);
 
-  subClasses = this->getSubClasses();  /* get the subclasses list           */
-  ProtectedObject p(subClasses);
+  subClassList = this->getSubClasses(); /* get the subclasses list           */
+  ProtectedObject p(subClassList);
                                        /* loop thru the subclass doing the  */
                                        /* same for each of them             */
-  for (index = 1; index <= subClasses->size(); index++) {
+  for (index = 1; index <= subClassList->size(); index++) {
                                        /* get the next subclass             */
                                        /* and recursively update them       */
-    ((RexxClass *)subClasses->get(index))->updateSubClasses();
+    ((RexxClass *)subClassList->get(index))->updateSubClasses();
   }
 }
 
@@ -693,20 +701,20 @@ void RexxClass::updateInstanceSubClasses()
 /******************************************************************************/
 {
   size_t        index;                 /* working index                     */
-  RexxArray   *subClasses;             /* array of class subclasses         */
+  RexxArray   *subClassList;           /* array of class subclasses         */
                                        /* create the instance behaviour from*/
                                        /* the instance superclass list      */
   this->instanceBehaviour->setMethodDictionary(OREF_NULL);
   this->instanceBehaviour->setScopes(OREF_NULL);
   this->createInstanceBehaviour(this->instanceBehaviour);
-  subClasses = this->getSubClasses();  /* get the subclasses list           */
-  ProtectedObject p(subClasses);
+  subClassList = this->getSubClasses(); /* get the subclasses list           */
+  ProtectedObject p(subClassList);
                                        /* loop thru the subclass doing the  */
                                        /* same for each of them             */
-  for (index = 1; index <= subClasses->size(); index++) {
+  for (index = 1; index <= subClassList->size(); index++) {
                                        /* get the next subclass             */
                                        /* recursively update these          */
-    ((RexxClass *)subClasses->get(index))->updateInstanceSubClasses();
+    ((RexxClass *)subClassList->get(index))->updateInstanceSubClasses();
   }
 }
 
@@ -1012,12 +1020,36 @@ RexxObject *RexxClass::uninherit(
     reportException(Error_Execution_uninherit, this, mixin_class);
                                        /* update the mixin class subclass    */
                                        /* list to not have this class        */
-  memoryObject.removeSubClass(mixin_class, this);
+  removeSubclass(mixin_class);
                                        /* any subclasses that we have need   */
                                        /* to redo their behaviour's          */
                                        /* this also updates our own behaviour*/
   this->updateSubClasses();            /* tables.                           */
   return OREF_NULL;                    /* returns nothing                   */
+}
+
+
+/**
+ * Remove a subclass from the uninherit list after an uninherit
+ * operation.
+ *
+ * @param c      The class to remove.
+ */
+void RexxClass::removeSubclass(RexxClass *c)
+{
+    size_t index = subClasses->firstIndex();
+    // scan the subclasses list looking for the removed class
+    while (index != LIST_END)
+    {
+        WeakReference *ref = (WeakReference *)subClasses->getValue(index);
+        RexxObject *sc = ref->get();
+        if (sc == c)
+        {
+            subClasses->removeIndex(index);
+            return;
+        }
+        index = subClasses->nextIndex(index);
+    }
 }
 
 RexxObject *RexxClass::enhanced(
@@ -1362,6 +1394,9 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     new_class->metaClassScopes->add(this, TheNilObject);
     new_class->metaClassScopes->add(this->behaviour->getScopes()->allAt(TheNilObject), this);
   }
+
+  // create the subclasses list
+  OrefSet(new_class, new_class->subClasses, new_list());
                                        /* set up the instance behaviour with */
                                        /*  object's instance methods         */
   OrefSet(new_class, new_class->instanceBehaviour, (RexxBehaviour *)TheObjectClass->instanceBehaviour->copy());

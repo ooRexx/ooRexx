@@ -53,6 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="MutableBuffer" class="RexxMutableBuffer" include="MutableBufferClass.hpp"/>
 <Class id="Pointer" class="RexxPointer" include="PointerClass.hpp"/>
 <Class id="Buffer" class="RexxBuffer" include="BufferClass.hpp"/>
+<Class id="WeakReference" class="WeakReference" include="WeakReferenceClass.hpp"/>
 </Exported>
 <Internal>
 <Class id="NilObject" class="RexxNilObject" include="ObjectClass.hpp"/>

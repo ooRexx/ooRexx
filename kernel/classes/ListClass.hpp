@@ -110,6 +110,7 @@
    RexxObject   *removeLast() { return (this->last != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->last)) : TheNilObject; }
    RexxObject   *removeFirstItem() { return (this->first != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->first)) : OREF_NULL; }
    RexxObject   *removeLastItem() { return (this->last != LIST_END) ? this->primitiveRemove(ENTRY_POINTER(this->last)) : OREF_NULL; }
+   RexxObject   *removeIndex(size_t i) { return this->primitiveRemove(ENTRY_POINTER(i)); }
    LISTENTRY    *getEntry(RexxObject *, RexxObject *);
    LISTENTRY    *getEntry(size_t);
    RexxObject   *indexOfValue(RexxObject *);
@@ -123,6 +124,7 @@
    void          addFirst(RexxObject *value);
    inline size_t getSize() {return this->count;}
    RexxObject   *append(RexxObject *);
+   RexxArray    *weakReferenceArray();
 
    static RexxClass *classInstance;
 

@@ -45,6 +45,7 @@
 #define Included_RexxClass
 
 
+
  class RexxClass : public RexxObject {
   public:
    void *operator new(size_t, size_t, const char *, RexxBehaviour *, RexxBehaviour *);
@@ -122,6 +123,7 @@
    inline RexxBehaviour *getInstanceBehaviour() {return this->instanceBehaviour;};
    inline void         setMetaClass() { classFlags |= META_CLASS; }
           void         addSubClass(RexxClass *);
+          void         removeSubclass(RexxClass *c);
 
 
    static void createClass();
@@ -161,5 +163,7 @@
                                         /* class specific information        */
                                         /* defines for this field are at the */
      uint32_t       classFlags;         /* top of this header file           */
+
+     RexxList      *subClasses;         // our list of weak referenced subclasses
  };
  #endif

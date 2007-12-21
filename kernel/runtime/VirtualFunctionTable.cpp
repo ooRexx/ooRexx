@@ -71,6 +71,7 @@
 #include "MutableBufferClass.hpp"
 #include "PointerClass.hpp"
 #include "BufferClass.hpp"
+#include "WeakReferenceClass.hpp"
 #include "RexxBehaviour.hpp"
 #include "SourceFile.hpp"
 #include "RexxCode.hpp"
@@ -261,6 +262,12 @@ void RexxMemory::buildVirtualFunctionTable()
    
    objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_BufferClass] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) WeakReference(RESTOREIMAGE);
+   virtualFunctionTable[T_WeakReference] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   virtualFunctionTable[T_WeakReferenceClass] = *((void **)objectPtr);
    
    objectPtr = new (objectPtr) RexxNilObject(RESTOREIMAGE);
    virtualFunctionTable[T_NilObject] = *((void **)objectPtr);

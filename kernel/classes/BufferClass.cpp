@@ -109,8 +109,8 @@ RexxObject *RexxBuffer::newRexx(RexxObject **args, size_t argc)
 /* Function:  Allocate a buffer  object from Rexx code.                       */
 /******************************************************************************/
 {
-    // we do not allow these to be allocated from Rexx code...just return
-    // .nil as a value if someone does this.
+    // we do not allow these to be allocated from Rexx code...
+    reportException(Error_Unsupported_new_method, ((RexxClass *)this)->getId());
     return TheNilObject;
 }
 

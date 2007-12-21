@@ -4210,6 +4210,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Incorrect_method_queue_index</SymbolicName>
         <Text>Incorrect queue index <q><Sub position="1" name="index"/></q></Text>
       </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>967</Subcode>
+        <MessageNumber>691</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unsupported_new_method</SymbolicName>
+        <Text>New method is not supported for the <Sub position="1" name="name"/> class</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

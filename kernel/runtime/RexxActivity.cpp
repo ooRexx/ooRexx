@@ -129,6 +129,12 @@ void RexxActivity::runThread()
         }
         catch (ActivityException)    // we've had a termination event, raise an error
         {
+            // it's possible that we might not have the kernel lock when
+            // control returns to here.  Make sure we have it.
+            if (ActivityManager::currentActivity != this)
+            {
+                this->requestAccess();
+            }
             this->error(0);
         }
 
@@ -1552,9 +1558,13 @@ void RexxActivity::releaseAccess()
 /* Function:  Release exclusive access to the kernel                          */
 /******************************************************************************/
 {
-    // reset the numeric settings
-    Numerics::setDefaultSettings();
-    ActivityManager::unlockKernel();
+    // make sure we're really the holder on this
+    if (ActivityManager::currentActivity == this)
+    {
+        // reset the numeric settings
+        Numerics::setDefaultSettings();
+        ActivityManager::unlockKernel();
+    }
 }
 
 void RexxActivity::requestAccess()

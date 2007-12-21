@@ -594,6 +594,7 @@
 #define Error_Invalid_argument_general_msg                           688
 #define Error_Translation_duplicate_attribute_msg                    689
 #define Error_Invalid_argument_format_msg                            690
+#define Error_Unsupported_new_method_msg                             691
 
 
 #endif

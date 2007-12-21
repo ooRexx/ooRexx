@@ -36,49 +36,55 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                RexxPointer.hpp */
+/* REXX Memory access                                                         */
 /*                                                                            */
-/* Primitive Pointer Class Definitions                                        */
+/* Implementation of a weak reference model                                   */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxPointer
-#define Included_RexxPointer
 
-#include "ObjectClass.hpp"
+#ifndef Included_WeakReference
+#define Included_WeakReference
 
-class RexxPointer : public RexxObject
+#include "RexxCore.h"
+
+
+// A weak reference handler.  When the object referenced by a weak reference
+// goes out of scope, the reference field is nulled, and the WeakReference object
+// is enqueued to notify the owning object that a state change has occurred.
+class WeakReference : public RexxObject
 {
+    friend class RexxMemory;
 public:
-    inline void *operator new(size_t, void *ptr) { return ptr; }
-    inline void  operator delete(void *, void *) { ; }
+    inline WeakReference(RESTORETYPE restoreType) { ; };
+    WeakReference();
+    WeakReference(RexxObject *referent);
+
+    inline void *operator new(size_t, void *ptr) {return ptr;}
+    inline void  operator delete(void *, void *) {;}
     void *operator new(size_t);
-    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *) {;}
 
-    inline RexxPointer() { pointerData = NULL; };
-    inline RexxPointer(void *ptr)  { pointerData = ptr; };
-    inline RexxPointer(RESTORETYPE restoreType) { ; };
-    inline void *pointer() { return pointerData; }
+    void        live(size_t);
+    void        liveGeneral(int);
+    void        flatten(RexxEnvelope *);
+    RexxObject *unflatten(RexxEnvelope *);
 
-    RexxObject  *equal(RexxObject *);
-    RexxObject  *notEqual(RexxObject *other);
-    virtual HashCode getHashValue();
-    virtual RexxString *stringValue();
+    RexxObject *value();
+    inline RexxObject *get() { return referentObject; }
+    void   clear();
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
 
     static void createInstance();
 
     static RexxClass *classInstance;   // singleton class instance
-    static RexxPointer *nullPointer;  // single version of a null pointer
 
 protected:
-    void *pointerData;               /* actual pointer value              */
+
+    RexxObject *referentObject;      // the object we refer to
+    WeakReference *nextReferenceList;  // used by memory management to keep track of reference objects
 };
 
-
-inline RexxPointer *new_pointer(void *p)
-{
-
-    return new RexxPointer(p);
-}
 #endif
+
+

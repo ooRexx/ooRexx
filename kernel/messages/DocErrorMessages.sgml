@@ -3075,6 +3075,12 @@ special character (such as a parenthesis).
 <para>Incorrect queue index "<emphasis>index</emphasis>"</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>967</term>
+<listitem>
+<para>New method is not supported for the <emphasis>name</emphasis> class</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR97">

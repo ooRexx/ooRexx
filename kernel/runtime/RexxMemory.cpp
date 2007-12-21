@@ -62,6 +62,7 @@
 #include "SupplierClass.hpp"
 #include "PointerClass.hpp"
 #include "BufferClass.hpp"
+#include "WeakReferenceClass.hpp"
 
 // restore a class from its
 // associated primitive behaviour
@@ -137,12 +138,13 @@ RexxMemory::RexxMemory()
   this->dumpEnable = false;
   this->objOffset = 0;
   this->envelope = NULL;
-  if (this->envelopeMutex) MTXCL(this->envelopeMutex);
-  if (this->flattenMutex) MTXCL(this->flattenMutex);
-  if (this->unflattenMutex) MTXCL(this->unflattenMutex);
-  EVCLEAR(this->envelopeMutex);        /* clear out the mutexes also        */
-  EVCLEAR(this->flattenMutex);
-  EVCLEAR(this->unflattenMutex);
+  this->envelopeMutex = 0;
+  this->flattenMutex = 0;
+  this->unflattenMutex = 0;
+  // we always start out with an empty list.  WeakReferences that are in the
+  // saved image will (MUST) never be set to a new value, so it's not necessary
+  // to hook those back up again.
+  weakReferenceList = OREF_NULL;
 }
 
 void RexxMemory::init(bool _restoringImage)
@@ -199,8 +201,6 @@ void RexxMemory::init(bool _restoringImage)
   /* make sure we have an inital segment set to allocate from. */
   newSpaceNormalSegments.getInitialSet();
 
-  // TODO:  this is just scaffolding until the WeakReference support is in.
-  subClasses = new_object_table();
   // get the initial uninit table
   uninitTable = new_object_table();
 }
@@ -565,80 +565,7 @@ bool RexxMemory::isPendingUninit(RexxObject *obj)
 }
 
 
-void RexxMemory::checkSubClasses()
-/******************************************************************************/
-/* Function:  Scan the table of subclasses for now dead class objects         */
-/******************************************************************************/
-{
-  HashLink    position;                /* position within the table         */
-  RexxObject *classObj;                /* object to check                   */
-
-  // it's possible that this will occur before the subclasses table is allocated,
-  // so don't process if nothing there yet.
-  if (subClasses == OREF_NULL)
-  {
-      return;
-  }
-
-                                       /* check each VALUE position, not the*/
-                                       /* index positions for dead objects  */
-                                       /* the values are the subclasses, and*/
-                                       /* are the ones we're trying to clean*/
-                                       /* out of memory                     */
-  for (position = subClasses->first(); (classObj = subClasses->value(position)) != OREF_NULL; position = subClasses->next(position)) {
-                                       /* is this object now dead?          */
-    while (classObj->isObjectDead(markWord) && classObj->isNewSpace()) {
-                                       /* remove from the table             */
-      subClasses->removeItem(classObj, subClasses->index(position));
-                                       /* see of something moved into this  */
-                                       /* slot                              */
-      classObj = subClasses->value(position);
-      if (classObj == OREF_NULL)       /* cleared the chain for this?       */
-        break;                         /* done clearing                     */
-    }
-  }
-}
-
-
-/**
- * Get the subclasses derived from a particular class.
- *
- * @param c      The source class.
- *
- * @return An array of subclasses of the class.
- */
-RexxArray *RexxMemory::getSubClasses(RexxClass *c)
-{
-    return subClasses->allAt(c);
-}
-
-
-/**
- * Add a new subclass->baseclass pairing to the subclasses list.
- *
- * @param sub    The subclass.
- * @param base   The base class.
- */
-void RexxMemory::newSubClass(RexxClass *sub, RexxClass *base)
-{
-    subClasses->add(sub, base);
-}
-
-
-/**
- * Remove a new subclass->baseclass pairing from the subclasses
- * list.
- *
- * @param sub    The subclass.
- * @param base   The base class.
- */
-void RexxMemory::removeSubClass(RexxClass *sub, RexxClass *base)
-{
-    subClasses->removeItem(sub, base);
-}
-
-
-void RexxMemory::markObjects(void)
+void RexxMemory::markObjects()
 /******************************************************************************/
 /* Function:   Main mark routine for garbage collection.  This reoutine       */
 /*  Determines which mark routine to call and does all additional processing  */
@@ -649,17 +576,23 @@ void RexxMemory::markObjects(void)
   if (this->orphanCheck) {             /* debugging bad OREF's?             */
                                        /* yup, call debugging mark          */
     this->killOrphans(this);
-    this->checkSubClasses();           /* check the subclass table          */
+    // now process the weak reference queue...We check this before the
+    // uninit list is processed so that the uninit list doesn't mark any of the
+    // weakly referenced items.  We don't want an object placed on the uninit queue
+    // to end up strongly referenced later.
+    checkWeakReferences();
     this->checkUninit();               /* flag all objects about to be dead */
-    this->killOrphans(subClasses);     /* debug mark the subclasses and     */
     this->killOrphans(uninitTable);    /* the uninit table                  */
   } else {
                                        /* call normal,speedy,efficient mark */
     this->markObjectsMain(this);
-    this->checkSubClasses();           /* check the subclass table          */
+    // now process the weak reference queue...We check this before the
+    // uninit list is processed so that the uninit list doesn't mark any of the
+    // weakly referenced items.  We don't want an object placed on the uninit queue
+    // to end up strongly referenced later.
+    checkWeakReferences();
     this->checkUninit();               /* flag all objects about to be dead */
                                        /* now mark the unInit table and the */
-    this->markObjectsMain(subClasses); /* subclass table                    */
     this->markObjectsMain(uninitTable);
   }
                                        /* have to expand the live stack?    */
@@ -670,6 +603,60 @@ void RexxMemory::markObjects(void)
     this->liveStack = this->originalLiveStack;
   }
   verboseMessage("Mark operation completed\n");
+}
+
+
+/******************************************************************************/
+/* Function:  Scan the weak reference queue looking for either dead weak      */
+/* objects or weak references that refer to objects that have gone out of     */
+/* scope.  Objects with registered notification objects (that are still in    */
+/* scope) will be moved to a notification queue, which is processed after     */
+/* everything is scanned.                                                     */
+/******************************************************************************/
+void RexxMemory::checkWeakReferences()
+{
+    WeakReference *current = weakReferenceList;
+    // list of "live" weak references...built while scanning
+    WeakReference *newList = OREF_NULL;
+
+    // loop through the list
+    while (current != OREF_NULL)
+    {
+        // we have to save the next one in the list
+        WeakReference *next = current->nextReferenceList;
+        // this reference still in scope?
+        if (current->isObjectLive(markWord))
+        {
+            // keep this one in the list
+            current->nextReferenceList = newList;
+            newList = current;
+            // have a reference?
+            if (current->referentObject != OREF_NULL)
+            {
+                // if the object is not alive, null out the reference
+                if (!current->referentObject->isObjectLive(markWord))
+                {
+                    current->referentObject = OREF_NULL;
+                }
+            }
+        }
+        // step to the new nest item
+        current = next;
+    }
+
+    // update the list
+    weakReferenceList = newList;
+}
+
+
+void RexxMemory::addWeakReference(WeakReference *ref)
+/******************************************************************************/
+/* Function:  Add a new weak reference to the tracking table                  */
+/******************************************************************************/
+{
+    // just add this to the front of the list
+    ref->nextReferenceList = weakReferenceList;
+    weakReferenceList = ref;
 }
 
 
@@ -2176,13 +2163,12 @@ void RexxMemory::closeLocks()
                                        /* Create/Open Shared MUTEX      */
                                        /* Semophores used to serialize  */
                                        /* the flatten/unflatten process */
-  MTXCR(flattenMutex);
-  MTXCR(unflattenMutex);
-  MTXCR(envelopeMutex);
+  MTXCL(flattenMutex);
+  MTXCL(unflattenMutex);
+  MTXCL(envelopeMutex);
   flattenMutex = 0;
   unflattenMutex = 0;
   envelopeMutex = 0;
-
 }
 
 
@@ -2267,6 +2253,7 @@ void RexxMemory::restore()
   RESTORE_CLASS(MutableBuffer, RexxMutableBufferClass);
   RESTORE_CLASS(Pointer, RexxClass);
   RESTORE_CLASS(Buffer, RexxClass);
+  RESTORE_CLASS(WeakReference, RexxClass);
 
   memoryObject.setOldSpace();          /* Mark Memory Object as OldSpace    */
   /* initialize the tables used for garbage collection. */

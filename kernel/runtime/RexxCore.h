@@ -229,6 +229,7 @@ EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
 #define TheRelationClass RexxRelation::classInstance
 #define ThePointerClass RexxPointer::classInstance
 #define TheBufferClass RexxBuffer::classInstance
+#define TheWeakReferenceClass WeakReference::classInstance
 
 #define TheEnvironment RexxMemory::environment
 #define ThePublicRoutines RexxMemory::publicRoutines

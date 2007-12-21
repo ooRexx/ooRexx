@@ -129,7 +129,8 @@ classesHeaders = $(classes_dir)/ArrayClass.hpp \
                  $(classes_dir)/StemClass.hpp \
                  $(classes_dir)/StringClass.hpp \
                  $(classes_dir)/SupplierClass.hpp \
-                 $(classes_dir)/TableClass.hpp
+                 $(classes_dir)/TableClass.hpp \
+                 $(classes_dir)/WeakReferenceClass.hpp
 expressionHeaders = $(expression_dir)/BuiltinFunctions.hpp \
                     $(expression_dir)/ExpressionBaseVariable.hpp \
                     $(expression_dir)/ExpressionCompoundVariable.hpp \
@@ -381,7 +382,8 @@ classes_sources = $(classes_dir)/ArrayClass.cpp \
                   $(classes_dir)/StringClassUtil.cpp \
                   $(classes_dir)/StringClassWord.cpp \
                   $(classes_dir)/SupplierClass.cpp \
-                  $(classes_dir)/TableClass.cpp
+                  $(classes_dir)/TableClass.cpp \
+                  $(classes_dir)/WeakReferenceClass.cpp
 expression_sources = $(expression_dir)/BuiltinFunctions.cpp \
                      $(expression_dir)/ExpressionCompoundVariable.cpp \
                      $(expression_dir)/ExpressionDotVariable.cpp \

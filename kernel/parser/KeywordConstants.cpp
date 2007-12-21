@@ -391,8 +391,8 @@ int RexxSource::builtin(
 /* Function:  Return a numeric builtin function identifier for a token      */
 /****************************************************************************/
 {
-    // not a symbol?  not a keyword
-    if (!token->isSymbol())
+    // This can be a symbol or a literal
+    if (!token->isSymbolOrLiteral())
     {
         return 0;
     }

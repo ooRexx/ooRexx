@@ -493,6 +493,7 @@
 #define Error_Application_error                            93964
 #define Error_Incorrect_method_abstract                    93965
 #define Error_Incorrect_method_queue_index                 93966
+#define Error_Unsupported_new_method                       93967
 #define Error_No_method                                    97000
 #define Error_No_method_name                               97001
 #define Error_No_method_user_defined                       97900

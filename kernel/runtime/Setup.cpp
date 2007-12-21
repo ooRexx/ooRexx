@@ -76,6 +76,7 @@
 #include "ProtectedObject.hpp"
 #include "PointerClass.hpp"
 #include "BufferClass.hpp"
+#include "WeakReferenceClass.hpp"
 
 PCPPM RexxMemory::exportedMethods[] = {/* start of exported methods table   */
                                        /* NOTE:  getAttribute and           */
@@ -533,6 +534,9 @@ CPPM(RexxPointer::newRexx),
 
 CPPM(RexxBuffer::newRexx),
 
+CPPM(WeakReference::newRexx),
+CPPM(WeakReference::value),
+
 NULL                                   /* final terminating method          */
 };
 
@@ -724,6 +728,7 @@ void RexxMemory::createImage()
   CLASS_CREATE(Message, "Message", RexxClass);    /* RexxMessage                       */
   CLASS_CREATE(MutableBuffer, "MutableBuffer", RexxClass);
   RexxBuffer::createInstance();
+  WeakReference::createInstance();
 
                                        /* build the common retriever tables */
   TheCommonRetrievers = (RexxDirectory *)new_directory();
@@ -1605,6 +1610,29 @@ void RexxMemory::createImage()
                                        /* method                            */
   TheBufferClass->subClassable(false);
 
+
+  /***************************************************************************/
+  /*           WEAKREFERENCE                                                 */
+  /***************************************************************************/
+                                       /* Add the NEW methods to the class  */
+                                       /* behaviour mdict                   */
+  defineKernelMethod(CHAR_NEW, TheWeakReferenceClassBehaviour, CPPM(WeakReference::newRexx), A_COUNT);
+                                       /* set the scope of the methods to   */
+                                       /* this classes oref                 */
+  TheWeakReferenceClassBehaviour->setMethodDictionaryScope(TheWeakReferenceClass);
+
+
+                                       /* Add the instance methods to the   */
+                                       /* instance behaviour mdict          */
+  defineKernelMethod(CHAR_VALUE                        ,TheWeakReferenceBehaviour, CPPM(WeakReference::value), 0);
+                                       /* set the scope of the methods to   */
+                                       /* this classes oref                 */
+  TheWeakReferenceBehaviour->setMethodDictionaryScope(TheWeakReferenceClass);
+
+                                       /* Now call the class subclassable   */
+                                       /* method                            */
+  TheWeakReferenceClass->subClassable(false);
+
   /***************************************************************************/
   /***************************************************************************/
   /***************************************************************************/
@@ -1635,6 +1663,7 @@ void RexxMemory::createImage()
   kernel_public(CHAR_TABLE            ,TheTableClass   ,TheEnvironment);
   kernel_public(CHAR_POINTER          ,ThePointerClass ,TheEnvironment);
   kernel_public(CHAR_BUFFER           ,TheBufferClass  ,TheEnvironment);
+  kernel_public(CHAR_WEAKREFERENCE    ,TheWeakReferenceClass  ,TheEnvironment);
   kernel_public(CHAR_TRUE             ,TheTrueObject   ,TheEnvironment);
 
   kernel_public(CHAR_PUBLIC_ROUTINES  ,ThePublicRoutines, TheEnvironment);

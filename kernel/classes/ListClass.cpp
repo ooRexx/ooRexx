@@ -48,6 +48,7 @@
 #include "SupplierClass.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
+#include "WeakReferenceClass.hpp"
 
 // singleton class instance
 RexxClass *RexxList::classInstance = OREF_NULL;
@@ -1045,6 +1046,52 @@ RexxObject *RexxList::itemsRexx(void)
 {
                                        /* return the item count             */
   return (RexxObject *)new_integer(this->count);
+}
+
+
+RexxArray *RexxList::weakReferenceArray()
+/******************************************************************************/
+/* Function:  Scan the list removing all cleared weak reference objects,      */
+/*            and return an array of the dereferenced week array objects.     */
+/******************************************************************************/
+{
+    LISTENTRY *element;                  /* current working entry             */
+    size_t      i;                       /* next item to process              */
+
+    i = this->firstIndex();              /* point to the first element        */
+    size_t itemCount = this->count;
+    while (itemCount--)                  /* step through the array elements   */
+    {
+        element = ENTRY_POINTER(i);      /* get the next item                 */
+        // step to the next element now, so we can remove this one
+        i = element->next;
+
+        // get the reference value
+        WeakReference *ref = (WeakReference *)element->value;
+        // has the referenced object gone out of scope?
+        if (ref->get() == OREF_NULL)
+        {
+            // remove this element from the list...note that this also
+            // decrements the count, which will effect the number of
+            // loop iterations.
+            primitiveRemove(element);
+        }
+    }
+
+    // we've removed the dead references, so make a second pass copying
+    // the real values into the returned array
+    RexxArray *array = (RexxArray *)new_array(this->count);
+    i = this->firstIndex();              /* point to the first element        */
+    for (size_t j = 1; i <= this->count; j++) /* step through the array elements   */
+    {
+        element = ENTRY_POINTER(i);      /* get the next item                 */
+                                         /* copy over to the array            */
+        // get the reference value
+        WeakReference *ref = (WeakReference *)element->value;
+        array->put(ref->get(), j);
+        i = element->next;               /* get the next pointer              */
+    }
+    return array;                        /* return the array element          */
 }
 
 void *RexxList::operator new(size_t size)

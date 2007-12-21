@@ -75,6 +75,7 @@ class MemorySegment;
 class MemorySegmentPool;
 class RexxMethod;
 class RexxVariable;
+class WeakReference;
 
 #ifdef _DEBUG
 class RexxMemory;
@@ -162,16 +163,12 @@ class RexxMemory : public RexxObject {
   RexxArray  *newObjects(size_t size, size_t count, size_t objectType);
   void        reSize(RexxObject *, size_t);
   void        checkUninit();
-  void        checkSubClasses();
   void        runUninits();
   void        removeUninitObject(RexxObject *obj);
   void        addUninitObject(RexxObject *obj);
   bool        isPendingUninit(RexxObject *obj);
   inline void checkUninitQueue() { if (pendingUninits > 0) runUninits(); }
 
-  RexxArray  *getSubClasses(RexxClass *);
-  void        newSubClass(RexxClass *newClass, RexxClass *superClass);
-  void        removeSubClass(RexxClass *subClass, RexxClass *superClass);
   void        markObjects(void);
   void        markObjectsMain(RexxObject *);
   void        killOrphans(RexxObject *);
@@ -249,6 +246,8 @@ class RexxMemory : public RexxObject {
   void        setUpMemoryTables(RexxObjectTable *old2newTable);
   void        forceUninits();
   inline RexxDirectory *getGlobalStrings() { return globalStrings; }
+  void        addWeakReference(WeakReference *ref);
+  void        checkWeakReferences();
 
   static void restore();
   static void buildVirtualFunctionTable();
@@ -358,8 +357,6 @@ enum
   size_t            pendingUninits;    // objects waiting to have uninits run
   bool              processingUninits; // true when we are processing the uninit table
 
-  RexxObjectTable  *subClasses;        // the table of subclasses
-
   MemorySegmentPool *firstPool;        /* First segmentPool block.          */
   MemorySegmentPool *currentPool;      /* Curent segmentPool being carved   */
   OldSpaceSegmentSet oldSpaceSegments;
@@ -384,6 +381,7 @@ enum
 
   size_t allocations;                  /* number of allocations since last GC */
   size_t collections;                  /* number of garbage collections     */
+  WeakReference *weakReferenceList;    // list of active weak references
 
   static RexxDirectory *globalStrings; // table of global strings
 };
