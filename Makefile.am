@@ -768,7 +768,12 @@ EXTRA_DIST = $(messages_dir)/RexxMessageNumbers.xsl \
              $(messages_dir)/DocErrorMessages.sgml \
              $(messages_dir)/gencat.inp \
              $(messageXML) \
+             $(classesXML) \
              $(kernel_platform_unix_dir)/UnixGencat.xsl \
+             $(runtime_dir)/ClassTypeCodes.xsl \
+             $(runtime_dir)/PrimitiveBehaviourNames.xsl \
+             $(runtime_dir)/PrimitiveBehaviours.xsl \
+             $(runtime_dir)/VirtualFunctionTable.xsl \
              $(errorHeaders) \
              $(platform_unix_dir)/rexx.sh \
              $(platform_unix_dir)/rexx.csh \
@@ -785,7 +790,7 @@ EXTRA_DIST = $(messages_dir)/RexxMessageNumbers.xsl \
              $(runtimeHeaders) \
              $(streamlibraryHeaders) \
              $(libHeaders) \
-	     $(include_HEADERS) \
+             $(include_HEADERS) \
              $(rexxapiHeaders) \
              $(rexxapiunixHeaders) \
              $(rxregexpHeaders) \
