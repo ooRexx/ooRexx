@@ -41,10 +41,10 @@ In General:
 The API samples in the "callrexx" directory demonstrate how to
 invoke the interpreter from within an application.
 
-The sample callrexx1.c demonstrates the dynamic linking of the
-REXXSTART-command which is only possible from a calling C++ program.
+The callrexx1 sample (callrexx1.cpp) demonstrates the dynamic linking of
+the REXXSTART-command which is only possible from a calling C++ program.
 
-The sample callrexx2 demonstrates the dynamic loading of the
+The callrexx2 sample demonstrates the dynamic loading of the
 REXXSTART command via dlopen and dlsym functions from a calling
 C program (use callrexx2c.mak) as well as from a calling C++
 program (use callrexx2cpp.mak).
@@ -58,7 +58,7 @@ The directory contains
 
 - Makefiles for the C rsp C++ programs
 - C-source code which needs to be compiled using the makefiles
-- Open Object Rexx interface porgrams
+- Open Object Rexx interface programs
 
 The examples show
 
