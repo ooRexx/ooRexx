@@ -54,6 +54,7 @@
 #include "StringClass.hpp"
 #include "RexxMisc.hpp"
 #include "ActivityManager.hpp"
+#include "PointerClass.hpp"
                                        /* Since self will ALWAYS be OBJECT  */
 
 enum { STOP, START };
@@ -72,7 +73,7 @@ RexxDirectory *RexxLocal::local()
 }
 
 RexxObject *RexxLocal::runProgram(
-  RexxInteger *arguments)              /* system specific arguments         */
+  RexxPointer *arguments)              /* system specific arguments         */
 /******************************************************************************/
 /* Function:  Bootstrap the process of running a REXX program                 */
 /******************************************************************************/
@@ -80,7 +81,7 @@ RexxObject *RexxLocal::runProgram(
   void *   argument_block;             /* system dependent argument block   */
 
                                        /* get the argument pointer          */
-  argument_block = (void *)arguments->getValue();
+  argument_block = (void *)arguments->pointer();
   SysRunProgram(argument_block);       /* go run the program                */
   return OREF_NULL;                    /* always returns null               */
 }

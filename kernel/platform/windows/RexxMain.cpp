@@ -66,6 +66,7 @@
 #include "SubcommandAPI.h"
 #include "RexxAPIManager.h"
 #include "Interpreter.hpp"
+#include "PointerClass.hpp"
 
 #include <fcntl.h>
 #include <io.h>
@@ -492,7 +493,7 @@ int APIENTRY RexxStart(
 
   ActivityManager::getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
-  tempArgument = (RexxObject *)new_integer((LONG)&RexxStartArguments);
+  tempArgument = (RexxObject *)new_pointer(&RexxStartArguments);
                                        /* pass along to the real method     */
   rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, &resultObject);
   ActivityManager::returnActivity();
@@ -623,7 +624,7 @@ APIRET REXXENTRY RexxCreateMethod(
 
   ActivityManager::getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
-  tempArgument = (RexxObject *)new_integer((LONG)&RexxScriptArgs);
+  tempArgument = (RexxObject *)new_pointer(&RexxScriptArgs);
                                        /* pass along to the real method     */
   rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, &resultObject);
 
@@ -705,7 +706,7 @@ APIRET REXXENTRY RexxRunMethod(
   RunActivity = tempActivity; // set to current
   tempActivity->setExitObjects(true); // enable object passing thru classic rexx interface!
                                        /* wrap up the argument              */
-  tempArgument = (RexxObject *)new_integer((LONG)&RexxScriptArgs);
+  tempArgument = (RexxObject *)new_pointer(&RexxScriptArgs);
                                        /* pass along to the real method     */
   rc = tempActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, &resultObject);
 
@@ -750,7 +751,7 @@ APIRET REXXENTRY RexxStoreMethod(RexxObject * method, PRXSTRING scriptData)
 
   ActivityManager::getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
-  tempArgument = (RexxObject *)new_integer((LONG)&RexxScriptArgs);
+  tempArgument = (RexxObject *)new_pointer(&RexxScriptArgs);
                                        /* pass along to the real method     */
   rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, &resultObject);
   ActivityManager::returnActivity();
@@ -792,7 +793,7 @@ APIRET REXXENTRY RexxLoadMethod(const char *dirname, PRXSTRING scriptData, RexxO
 
   ActivityManager::getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
-  tempArgument = (RexxObject *)new_integer((LONG)&RexxScriptArgs);
+  tempArgument = (RexxObject *)new_pointer(&RexxScriptArgs);
                                        /* pass along to the real method     */
   rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, &resultObject);
   ActivityManager::returnActivity();
@@ -839,7 +840,7 @@ APIRET REXXENTRY RexxTranslateProgram(
 
   ActivityManager::getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
-  tempArgument = (RexxObject *)new_integer((LONG)&RexxStartArguments);
+  tempArgument = (RexxObject *)new_pointer(&RexxStartArguments);
                                        /* pass along to the real method     */
   rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, &resultObject);
   ActivityManager::returnActivity();
