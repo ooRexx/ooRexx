@@ -770,10 +770,10 @@ int GetLine(
   if (scan) {                          /* found one                  */
                                        /* calculate the length       */
     length = scan - filedata->scan;
-    copylength = length; 
+    copylength = length;
     if (copylength > size)
     {
-        copylength = size; 
+        copylength = size;
     }
                                        /* copy over the data         */
     memcpy(line, filedata->scan, copylength);
@@ -782,7 +782,7 @@ int GetLine(
     /* we don't want the CR character in the result string*/
     if ( line[copylength - 1] == CH_CR ) {
       line[copylength - 1] = '\0';
-    } 
+    }
 
     filedata->data -= length + 1;      /* reduce the length          */
     filedata->scan = scan + 1;         /* set new scan point         */
@@ -832,10 +832,10 @@ int GetLine(
     }
     else        /* the line is full, scan until LF found but no copy */
     {
-       copylength = filedata->data; 
+       copylength = filedata->data;
        if (size < copylength)
        {
-           copylength = size; 
+           copylength = size;
        }
                                       /* copy over the data         */
        memcpy(line, filedata->scan, copylength);
@@ -907,12 +907,12 @@ const char *mystrstr(
     else target[p] = toupper(needle[p]);
   }
   target[p] = '\0';
-  const char *hit = strstr(line, target); 
+  const char *hit = strstr(line, target);
   if (hit == NULL)
   {
-      return NULL; 
+      return NULL;
   }
-  // adjust original pointer to offset 
+  // adjust original pointer to offset
   return haystack +  (hit - line);
 }
 
@@ -1035,7 +1035,7 @@ int SearchPath(
 *************************************************************************/
 int initUtilSems()
 {
-  int rc = 0; 
+  int rc = 0;
   int semId;
 
   if(!apidata->rexxutilsems){          /* if no semaphore set aviable    */
@@ -2551,12 +2551,12 @@ APIRET APIENTRY SysSearchPath(
   /* uppercase name.                                                 */
   if (ulRc)
   {
-    char *temp = strdup(args[0].strptr); 
-    strupr(temp); 
+    char *temp = strdup(args[0].strptr);
+    strupr(temp);
     ulRc = SearchPath(SearchFlag, temp, args[1].strptr,
                          (char *)buf, sizeof(buf));
-    free(temp); 
-  } 
+    free(temp);
+  }
 
   BUILDRXSTRING(retstr, (const char *)buf);          /* pass back result           */
   return VALID_ROUTINE;
@@ -2984,7 +2984,7 @@ APIRET APIENTRY SysCloseEventSem(
   int       handle;                    /* semaphore  handle          */
   union semun semopts;               /* for semaphore control          */
   int i;                               /* counter                    */
-  int used = 0;    
+  int used = 0;
   const char *     character;
   char      c[2]={'\0','\0'};
 
@@ -3640,7 +3640,7 @@ APIRET APIENTRY SysCloseMutexSem(
   int       handle;                    /* semaphore  handle          */
   union semun semopts;               /* for semaphore control          */
   int i;                               /* counter                    */
-  int used = 0;    
+  int used = 0;
   const char *character;
   char      c[2]={'\0','\0'};
 
@@ -3781,7 +3781,7 @@ APIRET APIENTRY SysFileTree(
   strcpy(ldp.varname, args[1].strptr);
   ldp.stemlen = args[1].strlength;
   /* uppercase the name  */
-  strupr(ldp.varname); 
+  strupr(ldp.varname);
 
   if (ldp.varname[ldp.stemlen-1] != '.')
     ldp.varname[ldp.stemlen++] = '.';
@@ -4604,9 +4604,9 @@ APIRET APIENTRY SysGetKey(
     return INVALID_ROUTINE;            /* raise an error             */
 
   if (numargs == 1) {                  /* validate arguments         */
-    if (!rxstricmp(args[0].strptr, "NOECHO"))
+    if (!stricmp(args[0].strptr, "NOECHO"))
       echo = false;
-    else if (rxstricmp(args[0].strptr, "ECHO"))
+    else if (stricmp(args[0].strptr, "ECHO"))
       return INVALID_ROUTINE;          /* Invalid option             */
   }
 
@@ -4692,7 +4692,7 @@ APIRET APIENTRY SysAddFuncPkg(
           RexxRegisterFunctionDll( funcblock[j].name,
                                    argstring, funcblock[j].name);
         }
-    } 
+    }
   }
   return VALID_ROUTINE;
 }
