@@ -220,12 +220,12 @@ RexxObject *RexxArray::empty()
     // everything.
     if (this->isNewSpace())
     {
-        memset(this->data(), '\0', sizeof(RexxObject *) * this->arraySize);
+        memset(this->data(), '\0', sizeof(RexxObject *) * this->size());
     }
     else
     {
         // sigh, we have to use OrefSet
-        for (size_t i = 0; i < this->arraySize; i++)
+        for (size_t i = 0; i < this->size(); i++)
         {
 
             OrefSet(this, this->objects[i], OREF_NULL);
