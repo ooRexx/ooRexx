@@ -69,7 +69,7 @@ RexxMethod0(REXXOBJECT, rexx_query_queue)
                                        /* query the queue                   */
    rc = RexxQueryQueue(string_data(queue_name), &count);
                                        /* return zero for any errors        */
-   return rc ? IntegerZero : RexxInteger(count);
+   return rc ? IntegerZero : ooRexxInteger(count);
 }
 
 /****************************************************************************/
