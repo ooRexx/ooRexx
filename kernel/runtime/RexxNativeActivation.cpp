@@ -403,6 +403,13 @@ RexxObject *RexxNativeActivation::run(
     }
     catch (RexxActivation *)
     {
+        // if we're not the current kernel holder when things return, make sure we
+        // get the lock before we continue
+        if (ActivityManager::currentActivity != activity)
+        {
+            activity->requestAccess();
+        }
+
         // it's possible that we can get terminated by a throw during condition processing.
         // we intercept this here, perform any cleanup we need to perform, then let the
         // condition trap propagate.
@@ -422,6 +429,12 @@ RexxObject *RexxNativeActivation::run(
     }
     catch (RexxNativeActivation *)
     {
+        // if we're not the current kernel holder when things return, make sure we
+        // get the lock before we continue
+        if (ActivityManager::currentActivity != activity)
+        {
+            activity->requestAccess();
+        }
         // TODO  Use protected object on the result
         if (this->result != OREF_NULL)     /* have a value?                     */
             holdObject(this->result);        /* get result held longer            */
