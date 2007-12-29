@@ -71,30 +71,49 @@ Function AddToPath
     SetRebootFlag true
     Goto AddToPath_done
 
+  ; A very few users have reported that their path setting was erased and
+  ; replaced by only the ooRexx install directory.  This could happen if there
+  ; is an error reading the current path from the registry.  If we detect this
+  ; problem we do not change the PATH (or PATHEXT.)
   AddToPath_NT:
     StrCmp $R7 "true" AddToPath_AllUsers
     ReadRegStr $1 HKCU "Environment" "$R8"
-    Goto AddToPath_UserCont
+    StrCmp $1 "" 0 AddToPath_UserCont               ; if the value is blank, try again, if not continue
+    ReadRegStr $1 HKCU "Environment" "$R8"
+    StrCmp $1 "" AddToPath_Abort AddToPath_UserCont ; if still blank, abort, if not continue
+
   AddToPath_AllUsers:
     ReadRegStr $1 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "$R8"
+    StrCmp $1 "" 0 AddToPath_UserCont               ; if the value is blank, try again, if not continue
+    ReadRegStr $1 HKCU "Environment" "$R8"
+    StrCmp $1 "" AddToPath_Abort 0                  ; if still blank, abort, if not continue
   AddToPath_UserCont:
-    StrCpy $2 $1 1 -1 # copy last char
-    StrCmp $2 ";" 0 +2 # if last char == ;
-    StrCpy $1 $1 -1 # remove last char
-    StrCmp $1 "" AddToPath_NTdoIt ; if current value is blank, do not prepend existing value
+    StrCpy $2 $1 1 -1  # copy last char from path value to $2
+    StrCmp $2 ";" 0 +2 # if last char == ';' then
+    StrCpy $1 $1 -1    # remove last char from path value
+    StrCmp $1 "" AddToPath_Abort ; final check, never ever write back an empty string to the PATH / PATHEXT
     StrCpy $0 "$1;$0"
-    AddToPath_NTdoIt:
-      StrCmp $R7 "true" AddToPath_AllUsers_doit
-      ; writing registry for current user
-      WriteRegExpandStr HKCU "Environment" "$R8" $0
-      DetailPrint "$4 added to $R8 for Current User"
-      Goto AddToPath_UserCont_doit
-    AddToPath_AllUsers_doit:
-      ; writing registry for all users
-      WriteRegExpandStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "$R8" $0
-      DetailPrint "$4 added to $R8 for All Users"
-    AddToPath_UserCont_doit:
-      SendMessage ${HWND_BROADCAST} ${WM_SETTINGCHANGE} 0 "STR:Environment" /TIMEOUT=10000
+    StrCmp $R7 "true" AddToPath_AllUsers_doit
+    ; writing registry for current user
+    WriteRegExpandStr HKCU "Environment" "$R8" $0
+    DetailPrint "$4 added to $R8 for Current User"
+    Goto AddToPath_UserCont_doit
+  AddToPath_AllUsers_doit:
+    ; writing registry for all users
+    WriteRegExpandStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "$R8" $0
+    DetailPrint "$4 added to $R8 for All Users"
+  AddToPath_UserCont_doit:
+    SendMessage ${HWND_BROADCAST} ${WM_SETTINGCHANGE} 0 "STR:Environment" /TIMEOUT=10000
+    Goto AddToPath_done
+
+  ; Error reading the PATH or PATHEXT value, warn the user.  NOTE that this will
+  ; put up the message box on a silent install.  The message box could be
+  ; prevented by using the  /SD IDOK flag.  But, then the user would not know
+  ; that an error had happened.  I would like to log the error to the install
+  ; log file, but that requires building the NSIS system and setting some
+  ; compile flags.
+  AddToPath_Abort:
+    MessageBox MB_OK|MB_ICONINFORMATION "There was a problem reading the current value of $R8.$\nYou will need to set the $R8 environment variable manually."
 
   AddToPath_done:
     Pop $3
