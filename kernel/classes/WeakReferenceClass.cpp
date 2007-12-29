@@ -44,6 +44,7 @@
 
 #include "RexxCore.h"
 #include "WeakReferenceClass.hpp"
+#include "ProtectedObject.hpp"
 
 
 RexxClass *WeakReference::classInstance = OREF_NULL;   // singleton class instance
@@ -199,6 +200,7 @@ RexxObject *WeakReference::newRexx(RexxObject **init_args, size_t argCount)
   {
       newObj->hasUninit();
   }
+
                                        /* Initialize the new instance       */
   newObj->sendMessage(OREF_INIT, init_args, argCount);
   return newObj;                       /* return the new instance           */

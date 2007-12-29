@@ -156,6 +156,7 @@ class RexxSource : public RexxInternalObject {
   void        createMethod(RexxDirectory *target, RexxString *name, bool privateMethod, bool protectedMethod, bool guardedMethod);
   void        createAttributeGetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever, bool privateMethod, bool protectedMethod, bool guardedMethod);
   void        createAttributeSetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever, bool privateMethod, bool protectedMethod, bool guardedMethod);
+  void        createConstantGetterMethod(RexxDirectory *classTarget, RexxDirectory *target, RexxString *name, RexxObject *value);
   void        flushControl(RexxInstruction *);
   RexxMethod *translateBlock(RexxDirectory *);
   RexxInstruction *instruction();

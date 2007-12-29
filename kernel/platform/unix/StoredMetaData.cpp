@@ -212,7 +212,8 @@ RexxMethod *SysRestoreProgramBuffer(
   ProtectedObject p(Buffer);
                                        /* "puff" this out usable form       */
   Method = TheMethodClass->restore(Buffer, StartPointer);
-  Source = Method->getSource();        /* and now the source object         */
+                                       /* and now the source object         */
+  Source = ((RexxCode*)Method->getCode())->getSourceObject();   /* and now the source object         */
                                        /* switch the file name (this might  */
                                        /* be different than the name        */
   Source->setProgramName(Name);        /* originally saved under            */
@@ -378,7 +379,7 @@ RexxMethod *SysRestoreTranslatedProgram(
                                        /* "puff" this out usable form       */
   Method = TheMethodClass->restore(Buffer, StartPointer);
   ProtectedObject p2(Method);
-  Source = Method->getSource();        /* and now the source object         */
+  Source = ((RexxCode*)Method->getCode())->getSourceObject();   /* and now the source object         */
                                        /* switch the file name (this might  */
                                        /* be different than the name        */
   Source->setProgramName(FileName);    /* originally saved under            */

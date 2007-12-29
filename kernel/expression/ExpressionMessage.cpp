@@ -49,6 +49,7 @@
 #include "ExpressionMessage.hpp"
 #include "Token.hpp"
 #include "SourceFile.hpp"
+#include "ProtectedObject.hpp"
 
 RexxExpressionMessage::RexxExpressionMessage(
     RexxObject *_target,                /* message send target               */
@@ -86,7 +87,7 @@ RexxObject *RexxExpressionMessage::evaluate(
 /* Function:  Evaluate a message send in an expression                        */
 /******************************************************************************/
 {
-  RexxObject *result;                  /* message expression result         */
+  ProtectedObject result;              /* message expression result         */
   RexxObject *_super;                  /* target super class                */
   size_t      argcount;                /* count of arguments                */
   RexxObject *_target;                 /* message target                    */
@@ -112,9 +113,9 @@ RexxObject *RexxExpressionMessage::evaluate(
                                        /* real argument?                    */
     if (this->arguments[i] != OREF_NULL) {
                                        /* evaluate the expression           */
-      result = this->arguments[i]->evaluate(context, stack);
+      RexxObject *resultArg = this->arguments[i]->evaluate(context, stack);
                                        /* trace if necessary                */
-      context->traceIntermediate(result, TRACE_PREFIX_ARGUMENT);
+      context->traceIntermediate(resultArg, TRACE_PREFIX_ARGUMENT);
     }
     else {
       stack->push(OREF_NULL);          /* push an non-existent argument     */
@@ -124,10 +125,10 @@ RexxObject *RexxExpressionMessage::evaluate(
   }
   if (_super == OREF_NULL)             /* no super class override?          */
                                        /* issue the fast message            */
-    result = stack->send(this->messageName, argcount);
+    stack->send(this->messageName, argcount, result);
   else
                                        /* evaluate the message w/override   */
-    result = stack->send(this->messageName, _super, argcount);
+    stack->send(this->messageName, _super, argcount, result);
   stack->popn(argcount);               /* remove any arguments              */
   if (this->doubleTilde)               /* double twiddle form?              */
     result = _target;                  /* get the target element            */
@@ -138,8 +139,8 @@ RexxObject *RexxExpressionMessage::evaluate(
                                        /* need to raise an exception        */
     reportException(Error_No_result_object_message, this->messageName);
                                        /* trace if necessary                */
-  context->traceMessage(messageName, result);
-  return result;                       /* return the result                 */
+  context->traceMessage(messageName, (RexxObject *)result);
+  return (RexxObject *)result;         /* return the result                 */
 }
 
 void RexxExpressionMessage::live(size_t liveMark)
@@ -240,15 +241,14 @@ void RexxExpressionMessage::assign(
     // any other arguments that are part of the encoded message term.
     size_t argcount = (size_t)this->argumentCount;
 
-    RexxObject *result;
     for (size_t i = 0; i < argcount; i++)
     {
         // non-omitted argument?
         if (this->arguments[i] != OREF_NULL)
         {
             // evaluate and potentiall trace
-            result = this->arguments[i]->evaluate(context, stack);
-            context->traceResult(result);
+            RexxObject *resultArg = this->arguments[i]->evaluate(context, stack);
+            context->traceResult(resultArg);
         }
         else
         {
@@ -258,16 +258,18 @@ void RexxExpressionMessage::assign(
         }
     }
 
+    ProtectedObject result;
+
     // now send the message the appropriate way
     if (_super == OREF_NULL)
     {
         // normal message send
-        result = stack->send(this->messageName, argcount + 1);
+        stack->send(this->messageName, argcount + 1, result);
     }
     else
     {
         // send with an override
-        result = stack->send(this->messageName, _super, argcount + 1);
+        stack->send(this->messageName, _super, argcount + 1, result);
     }
     // remove all arguments (arguments + target + assignment value)
     stack->popn(argcount + 2);

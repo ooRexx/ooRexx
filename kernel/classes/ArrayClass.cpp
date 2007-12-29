@@ -787,24 +787,32 @@ RexxObject *RexxArray::sectionSubclass(
 {
   size_t i;                            /* loop counter                      */
   RexxArray *newArray;                 /* returned array                    */
+  ProtectedObject result;
 
   if (_start > this->size())           /* too big?                          */
+  {
+      this->behaviour->getOwningClass()->sendMessage(OREF_NEW, IntegerZero, result);
+      newArray = (RexxArray *)(RexxObject *)result;
+  }
                                        /* return a zero element one         */
-    newArray = (RexxArray *)this->behaviour->getOwningClass()->sendMessage(OREF_NEW, IntegerZero);
   else {
     if (_end > this->size() - _start + 1)
                                        /* go past the bounds?               */
       _end = this->size() - _start + 1;/* truncate to the end               */
     if (_end == 0)                     /* requesting zero?                  */
+    {
+        this->behaviour->getOwningClass()->sendMessage(OREF_NEW, IntegerZero, result);
+        newArray = (RexxArray *)(RexxObject *)result;
+    }
                                        /* return a zero element one         */
-      newArray = (RexxArray *)this->behaviour->getOwningClass()->sendMessage(OREF_NEW, IntegerZero);
     else {                             /* real sectioning to do             */
                                        /* create a new array                */
-      newArray = (RexxArray *)this->behaviour->getOwningClass()->sendMessage(OREF_NEW, new_integer(_end));
-      ProtectedObject p(newArray);
-      for (i = 1; i <= _end; i++) {     /* loop through the elements         */
+      this->behaviour->getOwningClass()->sendMessage(OREF_NEW, new_integer(_end), result);
+      newArray = (RexxArray *)(RexxObject *)result;
+      for (i = 1; i <= _end; i++)       /* loop through the elements         */
+      {
                                        /* copy an element                   */
-        newArray->sendMessage(OREF_PUT, this->get(_start + i - 1), new_integer(i));
+          newArray->sendMessage(OREF_PUT, this->get(_start + i - 1), new_integer(i));
       }
     }
   }
@@ -2196,16 +2204,17 @@ void RexxArray::quickSort(RexxObject *comparator, size_t left, size_t right)
  */
 wholenumber_t RexxArray::sortCompare(RexxObject *comparator, RexxObject *left, RexxObject *right)
 {
-    RexxObject *result = comparator->sendMessage(OREF_COMPARE, left, right);
+    ProtectedObject result;
+    comparator->sendMessage(OREF_COMPARE, left, right, result);
     if (result == OREF_NULL)
     {
         reportException(Error_No_result_object_message, OREF_COMPARE);
     }
 
     wholenumber_t comparison;
-    if (!result->numberValue(comparison, Numerics::DEFAULT_DIGITS))
+    if (!((RexxObject *)result)->numberValue(comparison, Numerics::DEFAULT_DIGITS))
     {
-        reportException(Error_Invalid_whole_number_compare, result);
+        reportException(Error_Invalid_whole_number_compare, (RexxObject *)result);
     }
     return comparison;
 }
@@ -2458,16 +2467,19 @@ RexxObject  *RexxArray::of(RexxObject **args, size_t argCount)
                                        /* is array obj to be from internal  */
   if (TheArrayClass != (RexxClass *)this) {
                                        /* nope, better create properly      */
+    ProtectedObject result;
                                        /* send new to actual class.         */
-    newArray = (RexxArray *)this->sendMessage(OREF_NEW, new_integer(argCount));
-    ProtectedObject p(newArray);
+    this->sendMessage(OREF_NEW, new_integer(argCount), result);
+    newArray = (RexxArray *)result;
                                        /* For each argument to of, send a   */
                                        /* put message                       */
     for (i = 0; i < argCount; i++) {
        item = args[i];                 /* get the item                      */
        if (item != OREF_NULL)          /* have a real item here?            */
+       {
                                        /* place it in the target array      */
-         newArray->sendMessage(OREF_PUT, item, new_integer(i+1));
+           newArray->sendMessage(OREF_PUT, item, new_integer(i+1));
+       }
     }
     return newArray;
   }

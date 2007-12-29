@@ -44,6 +44,8 @@
 #ifndef Included_RexxListTable
 #define Included_RexxListTable
 
+#include "ObjectClass.hpp"
+
 typedef struct listentry {
   RexxObject *value;                   /* list element value                */
   size_t next;                         /* next list element in chain        */

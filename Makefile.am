@@ -194,6 +194,7 @@ platformHeaders = $(kernel_platform_unix_dir)/APIDefinitions.h \
 platformcommonHeaders =
 runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/ClassTypeCodes.h \
+                 $(runtime_dir)/CPPCode.hpp \
                  $(runtime_dir)/GlobalNames.h \
                  $(runtime_dir)/MemorySegment.hpp \
                  $(runtime_dir)/MemoryStats.hpp \
@@ -210,6 +211,7 @@ runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/RexxBehaviour.hpp \
                  $(runtime_dir)/RexxBuiltinFunctions.h \
                  $(runtime_dir)/RexxCode.hpp \
+                 $(runtime_dir)/CPPCode.hpp \
                  $(runtime_dir)/RexxCollection.hpp \
                  $(runtime_dir)/RexxCompoundElement.hpp \
                  $(runtime_dir)/RexxCompoundTable.hpp \
@@ -473,6 +475,7 @@ runtime_sources  = $(runtime_dir)/DeadObject.cpp \
                    $(runtime_dir)/Interpreter.cpp \
                    $(runtime_dir)/RexxBehaviour.cpp \
                    $(runtime_dir)/RexxCode.cpp \
+                   $(runtime_dir)/CPPCode.cpp \
                    $(runtime_dir)/RexxCollection.cpp \
                    $(runtime_dir)/RexxCompoundElement.cpp \
                    $(runtime_dir)/RexxCompoundTable.cpp \

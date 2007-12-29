@@ -493,10 +493,10 @@ RexxQueue *RexxQueue::ofRexx(
 {
   size_t   arraysize;                  /* size of the array                 */
   size_t   i;                          /* loop counter                      */
-  RexxQueue *newQueue;                 /* newly created list                */
   RexxObject *item;                    /* item to add                       */
 
   if (TheQueueClass == ((RexxClass *)this)) {        /* creating an internel list item?   */
+    RexxQueue *newQueue;                 /* newly created list                */
     arraysize = argCount;              /* get the array size                */
     newQueue = new RexxQueue;          /* get a new list                    */
     ProtectedObject p(newQueue);
@@ -509,12 +509,15 @@ RexxQueue *RexxQueue::ofRexx(
                                        /* add this to the list end          */
       newQueue->addLast(item);
     }
+    return newQueue;
   }
-  else {
+  else
+  {
+    ProtectedObject result;
     arraysize = argCount;              /* get the array size                */
                                        /* get a new list                    */
-    newQueue = (RexxQueue *)this->sendMessage(OREF_NEW);
-    ProtectedObject p(newQueue);
+    this->sendMessage(OREF_NEW, result);
+    RexxQueue *newQueue = (RexxQueue *)(RexxObject *)result;
     for (i = 0; i < arraysize; i++) {  /* step through the array            */
       item = args[i];                  /* get the next item                 */
       if (item == OREF_NULL) {         /* omitted item?                     */
@@ -524,8 +527,8 @@ RexxQueue *RexxQueue::ofRexx(
                                        /* add this to the list end          */
       newQueue->sendMessage(OREF_QUEUENAME, item);
     }
+    return newQueue;                     /* give back the list                */
   }
-  return newQueue;                     /* give back the list                */
 }
 
 

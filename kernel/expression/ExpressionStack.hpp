@@ -47,6 +47,8 @@
 
 #include "ArrayClass.hpp"
 
+class ProtectedObject;
+
 class RexxExpressionStack {
  public:
 
@@ -65,12 +67,10 @@ class RexxExpressionStack {
 
   inline void setFrame(RexxObject **frames, size_t items) { stack = frames; size = items; top = stack; *top = OREF_NULL; }
 
-  inline RexxObject *send(RexxString *message, RexxObject *scope, size_t count) {
-                 return (RexxObject *)(*(this->top - count))->messageSend(message, count,
-                            (RexxObject **)(this->top - count + 1), scope); };
-  inline RexxObject *send(RexxString *message, size_t count) {
-                 return (RexxObject *)(*(this->top - count))->messageSend(message, count,
-                            (RexxObject **)(this->top -count + 1)); };
+  inline void send(RexxString *message, RexxObject *scope, size_t count, ProtectedObject &result) {
+                 (*(this->top - count))->messageSend(message, count, (RexxObject **)(this->top - count + 1), scope, result); };
+  inline void send(RexxString *message, size_t count, ProtectedObject &result) {
+                 (*(this->top - count))->messageSend(message, count, (RexxObject **)(this->top -count + 1), result); };
   inline void         push(RexxObject *value) { *(++this->top) = value; };
   inline RexxObject * pop() { return *(this->top--); };
   inline RexxObject * fastPop() { return *(this->top--); };

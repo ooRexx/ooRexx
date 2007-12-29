@@ -460,6 +460,7 @@ RexxObject *RexxStem::request(
 /* Function:  Forward all REQUEST messages on to the default value            */
 /******************************************************************************/
 {
+  ProtectedObject result;
                                        /* Verify we have a string parm      */
   makeclass = REQUIRED_STRING(makeclass, ARG_ONE)->upper();
                                        /* array request?                    */
@@ -468,10 +469,14 @@ RexxObject *RexxStem::request(
                                        /* process here directly             */
       return (RexxObject *)this->makeArray();
     else                               /* go to the real make array method  */
-      return this->sendMessage(OREF_MAKEARRAY);
+    {
+        this->sendMessage(OREF_MAKEARRAY, result);
+        return (RexxObject *)result;
+    }
   }
                                        /* just forward on                   */
-  return (RexxObject *)this->value->sendMessage(OREF_REQUEST, makeclass);
+  this->value->sendMessage(OREF_REQUEST, makeclass, result);
+  return (RexxObject *)result;
 }
 
 RexxObject *RexxStem::newRexx(

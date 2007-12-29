@@ -298,7 +298,6 @@ char *resolve_tilde(const char *path)
 /****************************************************************************/
 RexxMethod1(REXXOBJECT, sysDirectory, CSTRING, dir)
 {
-//char buffer[CCHMAXPATH+2];
   APIRET rc;
   char  *rdir;                         /* resolved path */
 
@@ -406,9 +405,9 @@ RexxMethod1(REXXOBJECT,sysRxfuncdrop,CSTRING,name)
     send_exception(Error_Incorrect_call);
                                        /* try to drop the function          */
   if (!RexxDeregisterFunction(name))
-    return ooRexxFalse;   
+    return ooRexxFalse;
   else
-    return ooRexxTrue;    
+    return ooRexxTrue;
 
 }
 
@@ -451,7 +450,7 @@ bool ExecExternalSearch(
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* the count of arguments            */
   RexxString     * calltype,           /* Type of call                      */
-  RexxObject    ** result )            /* Result of function call           */
+  ProtectedObject &result )            /* Result of function call           */
 {
                                        /* have activation do the call       */
   return activation->callExternalRexx(target, parent, arguments, argcount, calltype, result);
@@ -472,7 +471,7 @@ bool MacroSpaceSearch(
   size_t           argcount,           /* the count of arguments            */
   RexxString     * calltype,           /* Type of call                      */
   bool             order,              /* Pre/Post order search flag        */
-  RexxObject    ** result )            /* Result of function call           */
+  ProtectedObject &result )            /* Result of function call           */
 {
   unsigned short Position;             /* located macro search position     */
   const char  *MacroName;              /* ASCII-Z name version              */
@@ -502,8 +501,8 @@ bool MacroSpaceSearch(
                                        /* run as a call                     */
       APICLEANUP(MACROCHAIN);          /* now we have a copy of the routine */
       if (Routine == OREF_NULL) return false;
-    *result = Routine->call(activity, (RexxObject *)activation, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL);
-    activation->getSource()->mergeRequired(Routine->getSource());
+    Routine->call(activity, (RexxObject *)activation, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL, result);
+    activation->getSource()->mergeRequired(((RexxCode *)Routine->getCode())->getSourceObject());
     return true;                       /* return success we found it flag   */
   }
   return false;                        /* nope, nothing to find here        */
@@ -533,7 +532,7 @@ bool RegExternalFunction(
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* the count of arguments            */
   RexxString     * calltype,           /* Type of call                      */
-  RexxObject    ** result )            /* Result of function call           */
+  ProtectedObject &result )            /* Result of function call           */
 {
   const char   *funcname;              /* Pointer to function name          */
   const char   *queuename;             /* Pointer to active queue name      */
@@ -611,7 +610,6 @@ bool RegExternalFunction(
   activity->enterKernel();             /* now re-enter the kernel           */
 
 /* END CRITICAL window here -->>  kernel calls now allowed again            */
-  ProtectedObject p;
 
   SysReleaseResultMemory(argrxarray);
 
@@ -619,15 +617,14 @@ bool RegExternalFunction(
     if (functionrc == 0) {             /* If good rc from function          */
       if (funcresult.strptr) {         /* If we have a result, return it    */
                                        /* make a string result              */
-        *result = new_string(funcresult.strptr, funcresult.strlength);
-        p = *result;
+        result = new_string(funcresult.strptr, funcresult.strlength);
                                        /* user give us a new buffer?        */
         if (funcresult.strptr != default_return_buffer )
                                        /* free it                           */
             SysReleaseResultMemory(funcresult.strptr);
       }
       else
-        *result = OREF_NULL;           /* nothing returned                  */
+        result = OREF_NULL;            /* nothing returned                  */
     }
     else                               /* Bad rc from function, signal      */
                                        /* error                             */
@@ -648,7 +645,7 @@ bool RegExternalFunction(
 /*               4) REXX programs with default extension                      */
 /*               5) Macro-space post-order functions                          */
 /******************************************************************************/
-RexxObject * SysExternalFunction(
+void SysExternalFunction(
   RexxActivation * activation,         /* Current Activation                */
   RexxActivity   * activity,           /* activity in use                   */
   RexxString     * target,             /* Name of external function         */
@@ -656,27 +653,34 @@ RexxObject * SysExternalFunction(
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* count of arguments                */
   RexxString     * calltype,           /* Type of call                      */
-  bool           * foundFnc)
+  bool           * foundFnc,
+  ProtectedObject &result)
 {
-  RexxObject * result;                 /* Init function result to null      */
-
   *foundFnc = true;
                                        /* check for macrospace first        */
-  if (!MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_PREORDER, &result)) {
+  if (MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_PREORDER, result))
+  {
+      return;
+  }
                                        /* no luck try for a registered func */
-    if (!RegExternalFunction(activation, activity, target, arguments, argcount, calltype, &result)) {
+  if (RegExternalFunction(activation, activity, target, arguments, argcount, calltype, result))
+  {
+      return;
+  }
                                        /* no go for an external file        */
-      if (!ExecExternalSearch(activation, activity, target, parent, arguments, argcount, calltype, &result)) {
+  if (ExecExternalSearch(activation, activity, target, parent, arguments, argcount, calltype, result))
+  {
+      return;
+  }
                                        /* last shot, post-order macro space */
                                        /* function.  If still not found,    */
                                        /* then raise an error               */
-        if (!MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_POSTORDER, &result)) {
-          *foundFnc = false;
-        }
-      }
-    }
+  if (MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_POSTORDER, result))
+  {
+      return;
   }
-  return result;                       /* return result                     */
+  // not found
+  *foundFnc = false;
 }
 
 /******************************************************************************/

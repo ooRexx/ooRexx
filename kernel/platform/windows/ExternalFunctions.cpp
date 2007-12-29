@@ -265,8 +265,6 @@ RexxMethod2 (REXXOBJECT, sysFilespec, CSTRING, Option, CSTRING, Name)
             ScanPtr++;                 /* step past the colon               */
             PathEnd = ScanPtr;         /* save current position             */
             PathPtr = mempbrk(ScanPtr, "\\/", EndPtr - ScanPtr);
-//          if (PathPtr == NULL)       /* nothing at all?                   */
-//            return RexxString("");   /* just return null string           */
             while (PathPtr) {          /* while more backslashes            */
               PathPtr++;               /* step past the last match          */
               PathEnd = PathPtr;       /* save the position                 */
@@ -380,7 +378,7 @@ bool ExecExternalSearch(
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* the count of arguments            */
   RexxString     * calltype,           /* Type of call                      */
-  RexxObject    ** result )            /* Result of function call           */
+  ProtectedObject &result )            /* Result of function call           */
 {
                                        /* have activation do the call       */
   return activation->callExternalRexx(target, parent, arguments, argcount, calltype, result);
@@ -401,7 +399,7 @@ bool MacroSpaceSearch(
   size_t           argcount,           /* the count of arguments            */
   RexxString     * calltype,           /* Type of call                      */
   int              order,              /* Pre/Post order search flag        */
-  RexxObject    ** result )            /* Result of function call           */
+  ProtectedObject &result )            /* Result of function call           */
 {
 
   unsigned short Position;             /* located macro search position     */
@@ -429,9 +427,9 @@ bool MacroSpaceSearch(
 
     if (Routine == OREF_NULL) return false;
                                        /* run as a call                     */
-    *result = Routine->call(activity, (RexxObject *)activation, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL);
+    Routine->call(activity, (RexxObject *)activation, target, arguments, argcount, calltype, OREF_NULL, EXTERNALCALL, result);
     /* merge (class) definitions from macro with current settings */
-    activation->getSource()->mergeRequired(Routine->getSource());
+    activation->getSource()->mergeRequired(((RexxCode *)Routine->getCode())->getSourceObject());
     return true;                       /* return success we found it flag   */
   }
   return false;                        /* nope, nothing to find here        */
@@ -460,11 +458,11 @@ bool RegExternalFunction(
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* the count of arguments            */
   RexxString     * calltype,           /* Type of call                      */
-  RexxObject    ** result )            /* Result of function call           */
+  ProtectedObject &result )            /* Result of function call           */
 {
   const char *funcname;                /* Pointer to function name          */
   const char *queuename;               /* Pointer to active queue name      */
-  long      rc;                        /* RexxCallFunction return code      */
+  int       rc;                        /* RexxCallFunction return code      */
   size_t    argindex;                  /* Index into arg array              */
   PCONSTRXSTRING argrxarray;           /* Array of args in PRXSTRING form   */
   RXSTRING  funcresult;                /* Function result                   */
@@ -472,8 +470,6 @@ bool RegExternalFunction(
   int functionrc;                      /* Return code from function         */
                                        /* default return code buffer        */
   char      default_return_buffer[DEFRXSTRING];
-
-// retrofit by IH
 
   funcname = target->getStringData();   /* point to the function name        */
   if (RexxQueryFunction(funcname) != 0) {  /* is the function registered ?  */
@@ -484,8 +480,6 @@ bool RegExternalFunction(
                                        /* from concurrent access of multiple*/
                                        /* processes                         */
                                        /* try to register SysLoadFuncs      */
-
-
       if (RexxQueryFunction("SYSLOADFUNCS") == RXSUBCOM_NOTREG)
       {
         /* SysLoadFunc is not registered */
@@ -564,15 +558,14 @@ bool RegExternalFunction(
     if (functionrc == 0) {           /* If good rc from function          */
       if (funcresult.strptr) {       /* If we have a result, return it    */
                                        /* make a string result              */
-        *result = new_string(funcresult.strptr, funcresult.strlength);
-        ProtectedObject p(*result);
+        result = new_string(funcresult.strptr, funcresult.strlength);
                                        /* user give us a new buffer?        */
         if (funcresult.strptr != default_return_buffer )
                                        /* free it                           */
             SysReleaseResultMemory(funcresult.strptr);
       }
       else
-        *result = OREF_NULL;         /* nothing returned                  */
+        result = OREF_NULL;          /* nothing returned                  */
     }
     else                             /* Bad rc from function, signal      */
                                        /* error                             */
@@ -597,7 +590,7 @@ bool RegExternalFunction(
 /*               4) REXX programs with default extension                      */
 /*               5) Macro-space post-order functions                          */
 /******************************************************************************/
-RexxObject * SysExternalFunction(
+void SysExternalFunction(
   RexxActivation * activation,         /* Current Activation                */
   RexxActivity   * activity,           /* activity in use                   */
   RexxString     * target,             /* Name of external function         */
@@ -605,32 +598,37 @@ RexxObject * SysExternalFunction(
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* count of arguments                */
   RexxString     * calltype,           /* Type of call                      */
-  bool           * foundFnc)
+  bool           * foundFnc,
+  ProtectedObject &result)
 {
-  RexxObject * result;                 /* Init function result to null      */
-  //RXSTRING  funcresult;                /* Function result                 */
-  //unsigned short functionrc;           /* Return code from function       */
-  //char      default_return_buffer[10]; /* default return code buffer      */
-
   *foundFnc = true;
 
-  if (!MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_PREORDER, &result)) {
+  if (MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_PREORDER, result))
+  {
+      return;
+  }
                                        /* no luck try for a registered func */
-    if (!RegExternalFunction(activation, activity, target, arguments, argcount, calltype, &result)) {
+  if (RegExternalFunction(activation, activity, target, arguments, argcount, calltype, result))
+  {
+      return;
+  }
                                        /* no go for an external file        */
-      if (!ExecExternalSearch(activation, activity, target, parent, arguments, argcount, calltype, &result)) {
+  if (ExecExternalSearch(activation, activity, target, parent, arguments, argcount, calltype, result))
+  {
+      return;
+  }
                                        /* last shot, post-order macro space */
                                        /* function.  If still not found,    */
                                        /* then raise an error               */
-        if (!MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_POSTORDER, &result)) {
-//          reportException(Error_Routine_not_found_name, target);
-            *foundFnc = false;
-        }
-      }
-    }
+  if (MacroSpaceSearch(activation, activity, target, arguments, argcount, calltype, MS_POSTORDER, result))
+  {
+      return;
   }
-  return result;                       /* return result                     */
+  // FAILED!
+  *foundFnc = false;
+  return;
 }
+
 
 /******************************************************************************/
 /* Name:       SysGetMacroCode                                                */

@@ -82,6 +82,16 @@ public:
         return *this;
     }
 
+    inline bool operator == (RexxObject *o)
+    {
+        return protectedObject == o;
+    }
+
+    inline bool operator != (RexxObject *o)
+    {
+        return protectedObject != o;
+    }
+
     // cast conversion operators for some very common uses of protected object.
     inline operator RexxObject *()
     {

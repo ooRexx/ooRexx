@@ -169,10 +169,24 @@ void RexxNativeActivation::flatten(RexxEnvelope *envelope)
   cleanUpFlatten
 }
 
-
-RexxObject *RexxNativeActivation::run(
+void RexxNativeActivation::prepare(
+    RexxObject  *_receiver,
+    RexxString  *_msgname,
     size_t       _argcount,             /* argument count                    */
     RexxObject **_arglist)              /* method argument list              */
+{
+    receiver = _receiver;
+    msgname = _msgname;
+    argcount = _argcount;
+    arglist = _arglist;
+}
+
+void RexxNativeActivation::run(
+    RexxObject  *_receiver,             // the object receiver
+    RexxString  *_msgname,              // the message name
+    size_t       _argcount,             /* argument count                    */
+    RexxObject **_arglist,              /* method argument list              */
+    ProtectedObject &resultObj)         // the returned result
 /******************************************************************************/
 /* Function:  Execute a REXX native method                                    */
 /******************************************************************************/
@@ -188,11 +202,13 @@ RexxObject *RexxNativeActivation::run(
     RexxObject * argument;               /* current argument object           */
     bool         used_arglist;           /* method requested an arglist       */
 
+    receiver = _receiver;
+    msgname = _msgname;
     this->arglist = _arglist;            /* save the argument information     */
     this->argcount = _argcount;          /* set the argument count            */
     used_arglist = false;                /* no arglist requested              */
                                          /* get the entry point address       */
-    methp = this->method->getNativeCode()->getEntry();
+    methp = this->code->getEntry();
     itypes = (*methp)(0);                /* get type information from method  */
     *ivalues = ibufp;
     ibufp += tsize[(int)(*itypes)];      /* step over first type              */
@@ -435,9 +451,6 @@ RexxObject *RexxNativeActivation::run(
         {
             activity->requestAccess();
         }
-        // TODO  Use protected object on the result
-        if (this->result != OREF_NULL)     /* have a value?                     */
-            holdObject(this->result);        /* get result held longer            */
         this->guardOff();                  /* release any variable locks        */
         this->argcount = 0;                /* make sure we don't try to mark any arguments */
         // the lock holder gets here by longjmp from a kernel reentry.  We need to
@@ -447,7 +460,9 @@ RexxObject *RexxNativeActivation::run(
         this->activity->restoreActivationLevel(activityLevel);
         this->activity->pop(false);        /* pop this from the activity        */
         this->setHasNoReferences();        /* mark this as not having references in case we get marked */
-        return this->result;               /* and finished                      */
+        // set the return value and get outta here
+        resultObj = this->result;
+        return;
     }
 
     // belt and braces...this restores the activity level to whatever
@@ -521,13 +536,14 @@ RexxObject *RexxNativeActivation::run(
             break;
     }
 
+    // set the return value and get outta here
+    resultObj = this->result;
     // Use protected object to pass back the result
-    holdObject(result);                  /* get result held longer            */
     this->guardOff();                    /* release any variable locks        */
     this->argcount = 0;                  /* make sure we don't try to mark any arguments */
     this->activity->pop(false);          /* pop this from the activity        */
     this->setHasNoReferences();          /* mark this as not having references in case we get marked */
-    return(RexxObject *)result;         /* and finished                      */
+    return;                             /* and finished                      */
 }
 
 
@@ -687,7 +703,9 @@ RexxObject *RexxNativeActivation::dispatch()
 /* Function:  Redispatch an activation on a different activity                */
 /******************************************************************************/
 {
-  return this->run(0, NULL);           /* just do a method run              */
+    ProtectedObject result;
+    this->run(receiver, msgname, argcount, arglist, result);  /* just do a method run              */
+    return (RexxObject *)result;
 }
 
 void RexxNativeActivation::traceBack(
@@ -971,31 +989,47 @@ void RexxNativeActivation::raiseCondition(RexxString *condition, RexxString *des
 }
 
 
-
-
-void * RexxNativeActivation::operator new(size_t size,
-     RexxObject         * receiver,    /* receiver object                   */
-     RexxMethod         * method,      /* method to run                     */
-     RexxActivity       * activity,    /* current activity                  */
-     RexxString         * msgname,     /* invoked message                   */
-     RexxActivationBase * activation)  /* current activation                */
-/******************************************************************************/
-/* Function:  Create a new native activation object                           */
-/******************************************************************************/
+/**
+ * Constructor for a new native activation.
+ *
+ * @param _activity The activity we're running under.
+ * @param _method   The method we're executing.
+ * @param _code     The native code controlling the execution.
+ */
+RexxNativeActivation::RexxNativeActivation(RexxActivity *_activity, RexxMethod *_method, RexxNativeCode *_code)
 {
-  RexxNativeActivation * newObject;    /* new activation object             */
+    this->activity = _activity;      /* the activity running on           */
+    this->method = _method;
+    this->code = _code;
+}
 
+
+/**
+ * Constructor for a new native activation used to create a
+ * callback context for exit call outs.
+ *
+ * @param _activity The activity we're running under.
+ */
+RexxNativeActivation::RexxNativeActivation(RexxActivity *_activity, RexxActivation*_activation)
+{
+    this->activity = _activity;      /* the activity running on           */
+    this->activation = _activation;  // our parent context
+}
+
+
+/**
+ * Allocate a new native Activation.
+ *
+ * @param size   the allocation size.
+ *
+ * @return A pointer to the newly allocated object.
+ */
+void * RexxNativeActivation::operator new(size_t size)
+{
                                        /* Get new object                    */
-  newObject = (RexxNativeActivation *)new_object(size);
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheNativeActivationBehaviour);
+  RexxObject *newObject = new_object(size, T_NativeActivation);
   newObject->clearObject();            /* clear out at start                */
-  newObject->receiver = receiver;      /* the receiving object              */
-  newObject->method = method;          /* the method to run                 */
-  newObject->activity = activity;      /* the activity running on           */
-  newObject->msgname = msgname;        /* the message name                  */
-  newObject->argcount = 0;             /* no arguments until we've been given some */
-  return (RexxObject *)newObject;      /* return the new object             */
+  return newObject;                    /* return the new object             */
 }
 
 REXXOBJECT REXXENTRY REXX_MSGNAME()
@@ -1116,8 +1150,11 @@ REXXOBJECT REXXENTRY REXX_SUPER(CSTRING msgname, REXXOBJECT arguments)
                                          /* copying each OREF                 */
         argarray[i-1] = args->get(i);
     }
+    ProtectedObject result;
                                        /* now send the message              */
-    return context.protect(context.self->getReceiver()->messageSend((RexxString *)new_string(msgname), count, argarray, context.self->getReceiver()->superScope(context.self->getMethod()->getScope())));
+    context.self->getReceiver()->messageSend((RexxString *)new_string(msgname), count, argarray, context.self->getReceiver()->superScope(context.self->getMethod()->getScope()), result);
+                                       /* now send the message              */
+    return context.protect((RexxObject *)result);
 }
 
 REXXOBJECT REXXENTRY REXX_SETVAR(CSTRING name, REXXOBJECT value)

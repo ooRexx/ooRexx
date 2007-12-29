@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              MessageInstruction.c      */
+/* REXX Translator                                  MessageInstruction.c      */
 /*                                                                            */
 /* Primitive Message Instruction Parse Class                                  */
 /*                                                                            */
@@ -48,6 +48,7 @@
 #include "RexxVariableDictionary.hpp"
 #include "MessageInstruction.hpp"
 #include "ExpressionMessage.hpp"
+#include "ProtectedObject.hpp"
 
 RexxInstructionMessage::RexxInstructionMessage(
     RexxExpressionMessage *message)    /* templace message to process       */
@@ -167,7 +168,7 @@ void RexxInstructionMessage::execute (
 /* Function:  Execute a REXX THEN instruction                               */
 /****************************************************************************/
 {
-  RexxObject *result;                  /* message expression result         */
+  ProtectedObject result;              /* message expression result         */
   RexxObject *_super;                  /* target super class                */
   size_t      argcount;                /* count of arguments                */
   RexxObject *_target;                 /* message target                    */
@@ -204,18 +205,18 @@ void RexxInstructionMessage::execute (
   }
   if (super == OREF_NULL)              /* no super class override?          */
                                        /* issue the fast message            */
-    result = stack->send(this->name, argcount);
+    stack->send(this->name, argcount, result);
   else
                                        /* evaluate the message w/override   */
-    result = stack->send(this->name, _super, argcount);
+    stack->send(this->name, _super, argcount, result);
   stack->popn(argcount);               /* remove any arguments              */
   if (instructionFlags&message_i_double) /* double twiddle form?              */
     result = _target;                  /* get the target element            */
   if (result != OREF_NULL) {           /* result returned?                  */
-    context->traceResult(result);      /* trace if necessary                */
+    context->traceResult((RexxObject *)result);  /* trace if necessary                */
                                        /* set the RESULT variable to the    */
                                        /* message return value              */
-    context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, result);
+    context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *)result);
   }
   else                                 /* drop the variable RESULT          */
     context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);

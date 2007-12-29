@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxCode.c     */
+/* REXX Kernel                                                 RexxCode.cpp   */
 /*                                                                            */
 /* Primitive Method Class                                                     */
 /*                                                                            */
@@ -50,7 +50,11 @@
 #include "DirectoryClass.hpp"
 #include "RexxInstruction.hpp"
 #include "SourceFile.hpp"
+#include "ActivityManager.hpp"
+#include "RexxActivation.hpp"
 #include <ctype.h>
+
+
 
 RexxCode::RexxCode(
      RexxSource      * _source,        /* source object                     */
@@ -69,6 +73,53 @@ RexxCode::RexxCode(
   this->maxStack = maxstack;
   this->vdictSize = variable_index;    /* save the initial vdict size       */
 }
+
+
+void RexxCode::call(
+    RexxActivity *activity,            /* activity running under            */
+    RexxMethod *method,                // the method object getting invoked
+    RexxObject *receiver,              /* object receiving the message      */
+    RexxString *msgname,               /* message to be run                 */
+    RexxObject**argPtr,                /* arguments to the method           */
+    size_t      argcount,              /* the count of arguments            */
+    RexxString *calltype,              /* COMMAND/ROUTINE/FUNCTION          */
+    RexxString *environment,           /* initial command environment       */
+    int   context,                     /* type of context                   */
+    ProtectedObject &result)           // the method result
+/******************************************************************************/
+/* Function:  Call a method as a top level program or external function call  */
+/******************************************************************************/
+{
+    // check the stack space before proceeding
+    activity->checkStackSpace();       /* have enough stack space?          */
+                                       /* add to the activity stack         */
+    RexxActivation *newacta = ActivityManager::newActivation(activity, method, this, OREF_NULL, calltype, environment, context);
+    activity->push(newacta);
+                /* run the method and return result  */
+    newacta->run(receiver, msgname, argPtr, argcount, OREF_NULL, result);
+}
+
+
+void RexxCode::run(
+    RexxActivity *activity,            /* activity running under            */
+    RexxMethod *method,                // the method object getting invoked
+    RexxObject *receiver,              /* object receiving the message      */
+    RexxString *msgname,               /* message to be run                 */
+    size_t      argcount,              /* the count of arguments            */
+    RexxObject**argPtr,                /* arguments to the method           */
+    ProtectedObject &result)           // the method result
+/******************************************************************************/
+/* Function:  Call a method as a top level program or external function call  */
+/******************************************************************************/
+{
+    RexxActivation *newacta = ActivityManager::newActivation(activity, method, this);
+                                       /* add to the activity stack         */
+    activity->push(newacta);
+                                       /* run the method and return result  */
+    newacta->run(receiver, msgname, argPtr, argcount, OREF_NULL, result);
+    ActivityManager::currentActivity->yield(NULL);    /* yield control now */
+}
+
 
 void RexxCode::live(size_t liveMark)
 /******************************************************************************/
@@ -104,7 +155,7 @@ void RexxCode::flatten(RexxEnvelope * envelope)
   cleanUpFlatten
 }
 
-RexxArray * RexxCode::sourceRexx()
+RexxArray *RexxCode::getSource()
 /******************************************************************************/
 /* Function:  Extract the source from a method from the source object as an   */
 /*            array of strings.                                               */
@@ -151,5 +202,15 @@ void * RexxCode::operator new(size_t size)
                                        /* Give new object its behaviour     */
   newMethod->setBehaviour(TheRexxCodeBehaviour);
   return newMethod;                    /* return the new method             */
+}
+
+
+RexxObject *RexxCode::setSecurityManager(RexxObject *manager)
+/******************************************************************************/
+/* Function:  Associate a security manager with a method's source             */
+/******************************************************************************/
+{
+    source->setSecurityManager(manager);
+    return TheTrueObject;
 }
 

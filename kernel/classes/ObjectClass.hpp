@@ -47,12 +47,7 @@
 
 #include "Numerics.hpp"
 
-
 #include <stddef.h>
-
-#define getAttributeIndex 0            /* location of getAttribute method   */
-#define setAttributeIndex 1            /* location of setAttribute method   */
-#define abstractIndex     2            /* location of the abstractMethod    */
 
   class RexxObject;
   class RexxBehaviour;
@@ -65,6 +60,7 @@
   class RexxNumberString;
   class RexxMethod;
   class RexxMessage;
+  class ProtectedObject;
 
 
   enum
@@ -416,16 +412,25 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *shriekRun(RexxMethod *, RexxString *, RexxString *, RexxObject **, size_t);
      RexxObject  *run(RexxObject **, size_t);
 
-     RexxObject  *messageSend(RexxString *, size_t, RexxObject **);
-     RexxObject  *messageSend(RexxString *, size_t, RexxObject **, RexxObject *);
+     void         messageSend(RexxString *, size_t, RexxObject **, ProtectedObject &);
+     void         messageSend(RexxString *, size_t, RexxObject **, RexxObject *, ProtectedObject &);
      RexxMethod  *checkPrivate(RexxMethod *);
-     RexxObject  *processUnknown(RexxString *, size_t, RexxObject **);
-     RexxObject  *processProtectedMethod(RexxString *, size_t, RexxObject **);
+     void         processUnknown(RexxString *, size_t, RexxObject **, ProtectedObject &);
+     void         processProtectedMethod(RexxString *, size_t, RexxObject **, ProtectedObject &);
+     void         sendMessage(RexxString *, RexxArray *, ProtectedObject &);
+     inline void  sendMessage(RexxString *message, ProtectedObject &result) { this->messageSend(message, 0, OREF_NULL, result); };
+     inline void  sendMessage(RexxString *message, RexxObject **args, size_t argCount, ProtectedObject &result) { this->messageSend(message, argCount, args, result); };
+     inline void  sendMessage(RexxString *message, RexxObject *argument1, ProtectedObject &result)
+         { this->messageSend(message, 1, &argument1, result); }
+     void         sendMessage(RexxString *, RexxObject *, RexxObject *, ProtectedObject &);
+     void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
+     void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
+     void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject&);
+
      RexxObject  *sendMessage(RexxString *, RexxArray *);
-     inline RexxObject  *sendMessage(RexxString *message) { return this->messageSend(message, 0, OREF_NULL); };
-     inline RexxObject  *sendMessage(RexxString *message, RexxObject **args, size_t argCount) { return this->messageSend(message, argCount, args); };
-     inline RexxObject  *sendMessage(RexxString *message, RexxObject *argument1)
-         { return this->messageSend(message, 1, &argument1); }
+     RexxObject  *sendMessage(RexxString *message);
+     RexxObject  *sendMessage(RexxString *message, RexxObject **args, size_t argCount);
+     RexxObject  *sendMessage(RexxString *message, RexxObject *argument1);
      RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *);
      RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *);
      RexxObject  *sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
@@ -435,9 +440,6 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *defMethods(RexxDirectory *);
      void         setObjectVariable(RexxString *, RexxObject *, RexxObject *);
      RexxObject  *getObjectVariable(RexxString *, RexxObject *);
-     RexxObject  *setAttribute(RexxObject *);
-     RexxObject  *getAttribute();
-     RexxObject  *abstractMethod(RexxObject **, size_t);
      void         addObjectVariables(RexxVariableDictionary *);
      void         copyObjectVariables(RexxObject *newObject);
      RexxObject  *superScope(RexxObject *);

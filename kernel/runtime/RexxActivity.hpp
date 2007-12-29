@@ -214,7 +214,7 @@ public:
    bool sysExitSioTrc(RexxActivation *, RexxString *);
    bool sysExitSioTrd(RexxActivation *, RexxString **);
    bool sysExitSioDtr(RexxActivation *, RexxString **);
-   bool sysExitFunc(RexxActivation *, RexxString *, RexxObject *, RexxObject **, RexxObject **, size_t);
+   bool sysExitFunc(RexxActivation *, RexxString *, RexxObject *, ProtectedObject &, RexxObject **, size_t);
    bool sysExitCmd(RexxActivation *, RexxString *, RexxString *, RexxString **, RexxObject **);
    bool sysExitMsqPll(RexxActivation *, RexxString **);
    bool sysExitMsqPsh(RexxActivation *, RexxString *, int);
@@ -231,7 +231,7 @@ public:
    RexxObject *lineOut(RexxString *);
    RexxString *lineIn(RexxActivation *);
    void terminateMethod();
-   int  messageSend(RexxObject *, RexxString *, size_t, RexxObject **, RexxObject **);
+   int  messageSend(RexxObject *, RexxString *, size_t, RexxObject **, ProtectedObject &);
    void generateRandomNumberSeed();
 
    void activate() { nestedCount++; }

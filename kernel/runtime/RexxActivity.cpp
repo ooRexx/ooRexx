@@ -1327,7 +1327,7 @@ void RexxActivity::exitKernel(
   RexxNativeActivation *new_activation;/* new native activation             */
 
                                        /* create a new native activation    */
-  new_activation = new ((RexxObject *)activation, (RexxMethod *)OREF_NULL, this, message_name, (RexxActivationBase *)activation) RexxNativeActivation;
+  new_activation = new RexxNativeActivation(this, activation);
                                        /* push it on the activity stack     */
   this->push((RexxActivationBase *)new_activation);
   if (enable)                          /* need variable pool access?        */
@@ -1335,6 +1335,8 @@ void RexxActivity::exitKernel(
     new_activation->enableVariablepool();
   releaseAccess();                     /* now give up control               */
 }
+
+
 void RexxActivity::enterKernel()
 /******************************************************************************/
 /*  Function:  Recover the kernel access and pop the native activation        */
@@ -1820,7 +1822,7 @@ bool RexxActivity::sysExitFunc(
     RexxActivation *activation,        /* calling activation                */
     RexxString     *rname,             /* routine name                      */
     RexxObject     *calltype,          /* type of call                      */
-    RexxObject     **funcresult,       /* function result                   */
+    ProtectedObject &funcresult,       /* function result                   */
     RexxObject    **arguments,         /* argument array                    */
     size_t          argcount)          /* argument count                    */
 /******************************************************************************/
@@ -1848,7 +1850,7 @@ bool RexxActivity::sysExitFunc(
                                        /* did manager handle this?          */
     if (activation->callSecurityManager(OREF_CALL, securityArgs)) {
                                        /* get the return code               */
-      *funcresult = securityArgs->fastAt(OREF_RESULT);
+      funcresult = securityArgs->fastAt(OREF_RESULT);
       return false;                    /* we've handled this                */
     }
   }
@@ -1954,12 +1956,6 @@ bool RexxActivity::sysExitFunc(
     else if (exit_parm.rxfnc_flags.rxffnfnd)
                                        /* also an error                     */
       reportException(Error_Routine_not_found_name,rname);
-                                       /* shv_exit return a value?          */
-    if (this->nestedInfo.shvexitvalue != OREF_NULL) {
-                                       /* return this information           */
-      *funcresult = this->nestedInfo.shvexitvalue;
-      return false;                    /* return that request was handled   */
-    }
                                        /* Was it a function call??          */
     if (exit_parm.rxfnc_retc.strptr == OREF_NULL && calltype == OREF_FUNCTIONNAME)
                                        /* Have to return data               */
@@ -1970,12 +1966,12 @@ bool RexxActivity::sysExitFunc(
       if (this->exitObjects == true) {
         RexxObject *transfer = NULL;
         if (sscanf(exit_parm.rxfnc_retc.strptr,"%p",&transfer) == 1)
-          *funcresult = transfer;
+          funcresult = transfer;
         else
           reportException(Error_Function_no_data_function,rname);
       } else
                                        /* Get input string and return it    */
-        *funcresult = new_string((char *)exit_parm.rxfnc_retc.strptr, exit_parm.rxfnc_retc.strlength);
+        funcresult = new_string((char *)exit_parm.rxfnc_retc.strptr, exit_parm.rxfnc_retc.strlength);
                                        /* user give us a new buffer?        */
       if (exit_parm.rxfnc_retc.strptr != retbuffer)
                                        /* free it                           */
@@ -2725,7 +2721,7 @@ int RexxActivity::messageSend(
     RexxString      *msgname,          /* name of the message to process    */
     size_t           count,            /* count of arguments                */
     RexxObject     **arguments,        /* array of arguments                */
-    RexxObject     **result )          /* message result                    */
+    ProtectedObject &result )          /* message result                    */
 /******************************************************************************/
 /* Function:    send a message (with message lookup) to an object.  This      */
 /*              method will do any needed activity setup before hand.         */
@@ -2737,7 +2733,7 @@ int RexxActivity::messageSend(
   NestedActivityState saveInfo;        /* saved activity info               */
 
   rc = 0;                              /* default to a clean return         */
-  *result = OREF_NULL;                 /* default to no return value        */
+  result = OREF_NULL;                  /* default to no return value        */
   this->saveNestedInfo(saveInfo);      /* save critical nesting info        */
                                        /* make sure we have the stack base  */
   this->nestedInfo.stackptr = SysGetThreadStackBase(TOTAL_STACK_SIZE);
@@ -2756,8 +2752,7 @@ int RexxActivity::messageSend(
   try
   {
                                        /* issue a straight message send     */
-      *result = receiver->messageSend(msgname, count, arguments);
-
+      receiver->messageSend(msgname, count, arguments, result);
   }
   catch (ActivityException)
   {
@@ -2826,19 +2821,16 @@ int REXXENTRY RexxSendMessage (
       argument_array = argument_list->makeArray();
       ProtectedObject p1(argument_array);
       va_end(arguments);                 /* end of argument processing        */
+      ProtectedObject result;
       if (start_class == OREF_NULL)      /* no start scope given?             */
                                          /* issue a straight message send     */
-        result = receiver->messageSend(new_string(msgname)->upper(),
-            argument_array->size(), argument_array->data());
+        receiver->messageSend(new_string(msgname)->upper(), argument_array->size(), argument_array->data(), result);
       else
                                          /* go issue the message with override*/
-        result = receiver->messageSend(new_string(msgname)->upper(),
-            argument_array->size(), argument_array->data(), start_class);
-      // TODO fix this usage up
+        receiver->messageSend(new_string(msgname)->upper(), argument_array->size(), argument_array->data(), start_class, result);
       if (result != OREF_NULL) {         /* if we got a result, protect it.   */
-        saveObject(result);              /* because might not have references */
                                          /* convert the return result         */
-        process_message_result(result, result_pointer, returnType);
+        process_message_result((RexxObject *)result, result_pointer, returnType);
       }
   }
   catch (ActivityException)

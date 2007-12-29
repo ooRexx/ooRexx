@@ -62,29 +62,14 @@
 // singleton class instance
 RexxMethodClass *RexxMethod::classInstance = OREF_NULL;
 
-RexxMethod::RexxMethod(
-    size_t method,                     /* method table index                */
-    PCPPM entry,                       /* method entry point                */
-    size_t argCount,                   /* arguments number/type             */
-    RexxInternalObject *codeObj)       /* associated method code            */
+RexxMethod::RexxMethod(BaseCode *codeObj)
 /******************************************************************************/
 /* Function:  Initialize a method object                                      */
 /******************************************************************************/
 {
-
-  this->clearObject();                 /* start out fresh                   */
-  this->methodFlags = 0;               /* clear all of the flags            */
-  this->setMethodIndex(method);        /* save the method code number       */
-  this->cppEntry = entry;              /* set the entry point               */
-  this->setArgumentCount(argCount);    /* and the arguments                 */
-                                       /* get the argument information      */
-  OrefSet(this, this->code, codeObj);  /* store the code                    */
-  if (code != OREF_NULL) {             /* have some sort of code?           */
-    if (isOfClass(RexxCode, code))         /* written in REXX?                  */
-      this->setRexxMethod();           /* turn on the REXX flag             */
-    else
-      this->setNativeMethod();    ;    /* this is a native method           */
-  }
+    this->clearObject();                 /* start out fresh                   */
+    this->methodFlags = 0;               /* clear all of the flags            */
+    OrefSet(this, this->code, codeObj);  /* store the code                    */
 }
 
 void RexxMethod::live(size_t liveMark)
@@ -92,10 +77,9 @@ void RexxMethod::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark(this->scope);
-  memory_mark(this->code);
-  memory_mark(this->objectVariables);
-  memory_mark(this->attribute);
+    memory_mark(this->scope);
+    memory_mark(this->code);
+    memory_mark(this->objectVariables);
 }
 
 void RexxMethod::liveGeneral(int reason)
@@ -103,16 +87,9 @@ void RexxMethod::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  memory_mark_general(this->scope);
-  memory_mark_general(this->code);
-  memory_mark_general(this->objectVariables);
-  memory_mark_general(this->attribute);
-                                       /* part of the saved image?          */
-  if (memoryObject.restoringImage()) { /* restoring the image?              */
-    this->setInternal();               /* mark as an image method           */
-                                       /* reset the method entry point      */
-    this->cppEntry = RexxMemory::exportedMethods[this->getMethodIndex()];
-  }
+    memory_mark_general(this->scope);
+    memory_mark_general(this->code);
+    memory_mark_general(this->objectVariables);
 }
 
 void RexxMethod::flatten(RexxEnvelope *envelope)
@@ -125,133 +102,29 @@ void RexxMethod::flatten(RexxEnvelope *envelope)
    flatten_reference(newThis->scope, envelope);
    flatten_reference(newThis->code, envelope);
    flatten_reference(newThis->objectVariables, envelope);
-   flatten_reference(newThis->attribute, envelope);
 
   cleanUpFlatten
 }
 
-RexxObject * RexxMethod::unflatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  unflatten an object                                             */
-/******************************************************************************/
-{
-                                       /* Does the entry have a value?      */
-                                       /* if not then we haven't unflattened*/
-  if (this->code == OREF_NULL)         /* is this a kernel method?          */
-                                       /* reset the method entry point      */
-    this->cppEntry = RexxMemory::exportedMethods[this->getMethodIndex()];
-  return (RexxObject *)this;           /* return ourself.                   */
-}
 
-RexxObject *RexxMethod::run(
+void RexxMethod::run(
     RexxActivity *activity,            /* activity running under            */
     RexxObject *receiver,              /* object receiving the message      */
     RexxString *msgname,               /* message to be run                 */
     size_t count,                      /* count of arguments                */
-    RexxObject **argPtr)               /* arguments to the method           */
+    RexxObject **argPtr,               /* arguments to the method           */
+    ProtectedObject &result)           // the returned result
 /******************************************************************************/
 /* Function:  Run a method on an object                                       */
 /******************************************************************************/
 {
-  RexxObject*  result = OREF_NULL;     /* result of the activation run      */
-  size_t i;                            /* loop counter                      */
-  RexxObject * argument_list[7];       /* arguments removed from the array  */
-  RexxActivation *newacta;             /* newly created activation          */
-  RexxNativeActivation *newNActa;      /* newly created Native activation   */
-  PCPPM methodEntry;                   /* kernel method entry point         */
-
-  if (this->code == OREF_NULL) {       /* directly to a kernel method?      */
-    methodEntry = this->cppEntry;      /* get the entry point               */
-                                       /* expecting an array?               */
-                                       /* expecting a pointer/count pair?   */
-    if (this->getArgumentCount() == A_COUNT) {
-                                       /* we can pass this right on         */
-      result = (receiver->*((PCPPMC1)methodEntry))(argPtr, count);
-    }
-    else {                             /* receiver expects fixed arguments  */
-      if (count > this->getArgumentCount()) /* too many arguments?               */
-        reportException(Error_Incorrect_method_maxarg, this->getArgumentCount());
-      if (count < this->getArgumentCount()) { /* need to pad these out?            */
-        for (i = 0; i < count; i++)    /* copy over the arguments so we     */
-                                       /* don't clobber things in the caller*/
-          argument_list[i] = argPtr[i];
-                                       /* null out any missing arguments    */
-        for (i = count; i < this->getArgumentCount(); i++)
-          argument_list[i] = OREF_NULL;
-        argPtr = &argument_list[0];    /* point at the new argument list    */
-      }
-
-      switch (this->getArgumentCount()) { /* switch based on number of args    */
-
-        case 0:                        /* zero                              */
-          result = (receiver->*((PCPPM0)methodEntry))();
-          break;
-
-        case 1:
-          result = (receiver->*((PCPPM1)methodEntry))(argPtr[0]);
-          break;
-
-        case 2:
-          result = (receiver->*((PCPPM2)methodEntry))(argPtr[0], argPtr[1]);
-          break;
-
-        case 3:
-          result = (receiver->*((PCPPM3)methodEntry))(argPtr[0], argPtr[1], argPtr[2]);
-          break;
-
-        case 4:
-          result = (receiver->*((PCPPM4)methodEntry))(argPtr[0], argPtr[1], argPtr[2], argPtr[3]);
-          break;
-
-        case 5:
-          result = (receiver->*((PCPPM5)methodEntry))(argPtr[0], argPtr[1], argPtr[2],
-              argPtr[3], argPtr[4]);
-          break;
-
-        case 6:
-          result = (receiver->*((PCPPM6)methodEntry))(argPtr[0], argPtr[1], argPtr[2],
-              argPtr[3], argPtr[4], argPtr[5]);
-          break;
-
-        case 7:
-          result = (receiver->*((PCPPM7)methodEntry))(argPtr[0], argPtr[1], argPtr[2],
-              argPtr[3], argPtr[4], argPtr[5], argPtr[6]);
-          break;
-
-        default:
-          logic_error("too many args for kernel kmethod");
-          break;
-      }
-    }
-    return result;                     /* and return the result             */
-  }
-  else if (this->isRexxMethod()) {     /* written in REXX?                  */
-
-    newacta = ActivityManager::newActivation(receiver, this, activity, msgname, (RexxActivation *)TheNilObject, METHODCALL);
-                                       /* add to the activity stack         */
-
-    activity->push(newacta);
-                                       /* run the method and return result  */
-    result = newacta->run(argPtr, count, OREF_NULL);
-    ActivityManager::currentActivity->yield(NULL);    /* yield control now */ /* NULL instead of result */
-      /* yield stores the argument but result is already saved in run so we don't need to save again */
-    // TODO:  replace this with ProtectedObject usage
-    if (result != OREF_NULL)
-    {
-        discardObject(result);
-    }
-    return result;                     /* and return it                     */
-  }
-  else {                               /* native activation                 */
-                                       /* create a new native activation    */
-    newNActa = new (receiver, this, activity, msgname, (RexxActivation *)TheNilObject) RexxNativeActivation;
-    activity->push(newNActa);          /* push it on the activity stack     */
-                                       /* and go run it                     */
-    return newNActa->run(count, argPtr);
-  }
+    ProtectedObject p(this);           // belt-and-braces to make sure this is protected
+    // just forward this to the code object
+    code->run(activity, this, receiver, msgname, count, argPtr, result);
 }
 
-RexxObject *RexxMethod::call(
+
+void RexxMethod::call(
     RexxActivity *activity,            /* activity running under            */
     RexxObject *receiver,              /* object receiving the message      */
     RexxString *msgname,               /* message to be run                 */
@@ -259,43 +132,17 @@ RexxObject *RexxMethod::call(
     size_t      argcount,              /* the count of arguments            */
     RexxString *calltype,              /* COMMAND/ROUTINE/FUNCTION          */
     RexxString *environment,           /* initial command environment       */
-    int   context)                     /* type of context                   */
+    int   context,                     /* type of context                   */
+    ProtectedObject &result)           // the method result
 /******************************************************************************/
 /* Function:  Call a method as a top level program or external function call  */
 /******************************************************************************/
 {
-  RexxActivation *newacta;             /* newly created activation          */
-  RexxObject * returnObject;
-  ProtectedObject p(this);
-
-  ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
-  if (this->isRexxMethod()) {          /* this written in REXX?             */
-                                       /* add to the activity stack         */
-    newacta = ActivityManager::newActivation(receiver, this, activity, msgname, (RexxActivation *)TheNilObject, context);
-
-    activity->push(newacta);
-
-
-    if (calltype != OREF_NULL)         /* have a a calltype override?       */
-                                       /* set the call type information     */
-      newacta->setCallType(calltype);
-    if (environment != OREF_NULL)      /* have an default environment?      */
-                                       /* set it also                       */
-      newacta->setDefaultAddress(environment);
-
-    // the random seed is copied from the calling activity, this led
-    // to reproducable random sequences even though no specific seed was given!
-    // see feat. 900 for example program.
-    newacta->adjustRandomSeed();
-                /* run the method and return result  */
-    returnObject = newacta->run(argPtr, argcount, OREF_NULL);
-    return returnObject;
-
-  }
-  else                                 /* kernel/native method              */
-                                       /* pass on the call                  */
-    return this->run(activity, receiver, msgname, argcount, argPtr);
+    ProtectedObject p(this);           // belt-and-braces to make sure this is protected
+    // just forward this to the code object
+    code->call(activity, this, receiver, msgname, argPtr, argcount, calltype, environment, context, result);
 }
+
 
 RexxMethod *RexxMethod::newScope(
     RexxClass  *_scope)                 /* new method scope                  */
@@ -323,12 +170,7 @@ RexxArray  *RexxMethod::source()
 /* Function:  Return an array of source strings that represent this method    */
 /******************************************************************************/
 {
-  if (this->isRexxMethod())            /* this written in REXX?             */
-                                       /* return associated source          */
-    return this->rexxCode->sourceRexx();
-  else                                 /* kernel/native code                */
-                                       /* this is always a null array       */
-    return (RexxArray *)TheNullArray->copy();
+    return code->getSource();
 }
 
 RexxObject *RexxMethod::setSecurityManager(
@@ -337,13 +179,7 @@ RexxObject *RexxMethod::setSecurityManager(
 /* Function:  Associate a security manager with a method's source             */
 /******************************************************************************/
 {
-  if (this->isRexxMethod()) {          /* this written in REXX?             */
-                                       /* return associated source          */
-    this->getSource()->setSecurityManager(manager);
-    return TheTrueObject;              /* this worked ok                    */
-  }
-  else                                 /* kernel/native code                */
-    return TheFalseObject;             /* nothing to set security on        */
+    return code->setSecurityManager(manager);
 }
 
 void RexxMethod::setScope(
@@ -442,13 +278,11 @@ void *RexxMethod::operator new (size_t size)
 /* Function:  create a new method instance                                    */
 /******************************************************************************/
 {
-  RexxObject * newMethod;              /* newly created method              */
-
-                                       /* get a new method object           */
-  newMethod = new_object(size);
-                                       /* Give new object method behaviour  */
-  newMethod->setBehaviour(TheMethodClass->getInstanceBehaviour());
-  return newMethod;                    /* Initialize this new method        */
+                                         /* get a new method object           */
+    RexxObject *newMethod = new_object(size);
+                                         /* Give new object method behaviour  */
+    newMethod->setBehaviour(TheMethodClass->getInstanceBehaviour());
+    return newMethod;                    /* Initialize this new method        */
 }
 
 
@@ -459,12 +293,12 @@ RexxMethod *RexxMethodClass::newRexxMethod(
 /* Function:  Convert a new source object to a method with the given scope    */
 /******************************************************************************/
 {
-  RexxMethod *newMethod;               /* newly created method              */
-
                                        /* create a new method object        */
-  newMethod = (RexxMethod *)source->method();
+  RexxMethod *newMethod = (RexxMethod *)source->method();
   if (scope != OREF_NULL)              /* given a scope too?                */
-    newMethod->setScope(scope);        /* set the scope                     */
+  {
+      newMethod->setScope(scope);        /* set the scope                     */
+  }
   return newMethod;                    /* return the new method object      */
 }
 
@@ -487,7 +321,8 @@ RexxMethod *RexxMethodClass::newRexxCode(
                                        /* request an array version          */
   newSourceArray = source->requestArray();
                                        /* couldn't convert?                 */
-  if (newSourceArray == (RexxArray *)TheNilObject) {
+  if (newSourceArray == (RexxArray *)TheNilObject)
+  {
                                        /* get the string representation     */
     sourceString = source->makeString();
                                        /* got back .nil?                    */
@@ -498,7 +333,8 @@ RexxMethod *RexxMethodClass::newRexxCode(
                                        /* wrap an array around the value    */
     newSourceArray = new_array(sourceString);
   }
-  else {                               /* have an array, make sure all      */
+  else                                 /* have an array, make sure all      */
+  {
                                        /* is it single dimensional?         */
     if (newSourceArray->getDimension() != 1)
                                        /* raise an error                    */
@@ -526,16 +362,25 @@ RexxMethod *RexxMethodClass::newRexxCode(
 
   ProtectedObject p(newSource);
                                        /* now complete method creation      */
-//  return this->newRexxMethod(newSource, OREF_NULL);
-  if (option != OREF_NULL) {
-    if (isOfClass(Method, option)) {
+  if (option != OREF_NULL)
+  {
+    if (isOfClass(Method, option))
+    {
       result = this->newRexxMethod(newSource, OREF_NULL);
-      result->setLocalRoutines(((RexxMethod*) option)->getLocalRoutines());
-      result->setPublicRoutines(((RexxMethod*) option)->getPublicRoutines());
-    } else {
+      RexxCode *resultCode = (RexxCode *)result->getCode();
+      BaseCode *code = result->getCode();
+      if (isOfClass(RexxCode, code))
+      {
+          resultCode->setLocalRoutines(((RexxCode *) code)->getLocalRoutines());
+          resultCode->setPublicRoutines(((RexxCode *) code)->getPublicRoutines());
+      }
+    }
+    else
+    {
       if (!isOfClass(String, option))
         reportException(Error_Incorrect_method_argType, IntegerThree, "Method/String object");
-      else {
+      else
+      {
         // default given? set option to NULL (see code below)
         if (!stricmp("PROGRAMSCOPE",((RexxString*) option)->getStringData()))
           option = NULL;
@@ -545,11 +390,13 @@ RexxMethod *RexxMethodClass::newRexxCode(
     }
   }
   // option NULL => set default: Program Scope.
-  else if (option == NULL) {
+  else if (option == NULL)
+  {
     result = this->newRexxMethod(newSource, OREF_NULL);
     // new default: insert program scope into method object
-    result->setLocalRoutines(ActivityManager::currentActivity->getCurrentActivation()->getSource()->getLocalRoutines());
-    result->setPublicRoutines(ActivityManager::currentActivity->getCurrentActivation()->getSource()->getPublicRoutines());
+    RexxCode *resultCode = (RexxCode *)result->getCode();
+    resultCode->setLocalRoutines(ActivityManager::currentActivity->getCurrentActivation()->getSource()->getLocalRoutines());
+    resultCode->setPublicRoutines(ActivityManager::currentActivity->getCurrentActivation()->getSource()->getPublicRoutines());
   }
 
   return result;
@@ -649,14 +496,8 @@ RexxMethod *RexxMethodClass::newEntry(PNMF entry)
 /* Function:  Create a native method from an entry point                      */
 /******************************************************************************/
 {
-  RexxMethod *newMethod;               /* newly created method              */
-  RexxNativeCode *newCode;             /* associated REXX code object       */
-
-                                       /* create a new code object          */
-  newCode = new RexxNativeCode(entry);
                                        /* get a new method object           */
-  newMethod = new_method(0, (PCPPM)NULL, 0, (RexxInternalObject *)newCode);
-  return newMethod;
+    return new_method(new RexxNativeCode(entry));
 }
 
 
@@ -668,11 +509,8 @@ RexxMethod *RexxMethodClass::restore(
 /*           the method                                                       */
 /******************************************************************************/
 {
-
-  RexxEnvelope *envelope;              /* containing envelope               */
-
                                        /* Get new envelope object           */
-  envelope  = new_envelope();
+  RexxEnvelope *envelope  = new_envelope();
   ProtectedObject p(envelope);
                                        /* now puff up the method object     */
   envelope->puff(buffer, startPointer);
@@ -688,12 +526,40 @@ RexxMethod *RexxMethodClass::newFile(
 /* Function:  Create a method from a fully resolved file name                 */
 /******************************************************************************/
 {
-  RexxSource *source;                  /* created source object             */
-
                                        /* create a source object            */
-  source = ((RexxSource *)TheNilObject)->classNewFile(filename);
+  RexxSource *source = ((RexxSource *)TheNilObject)->classNewFile(filename);
   ProtectedObject p(source);
                                        /* finish up processing of this      */
   return this->newRexxMethod(source, (RexxClass *)TheNilObject);
 }
 
+
+
+void BaseCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *msgname, size_t argCount, RexxObject **arguments, ProtectedObject &result)
+{
+    // this is a NOP for the base
+}
+
+
+void BaseCode::call(RexxActivity *activity, RexxMethod *method, RexxObject *receiver,  RexxString *msgname,
+   RexxObject **arguments, size_t argcount, RexxString *ct, RexxString *env, int context, ProtectedObject &result)
+{
+    run(activity, method, receiver, msgname, argcount, arguments, result);
+}
+
+
+RexxArray *BaseCode::getSource()
+{
+                                       /* this is always a null array       */
+    return (RexxArray *)TheNullArray->copy();
+}
+
+
+RexxObject *BaseCode::setSecurityManager(RexxObject *manager)
+/******************************************************************************/
+/* Function:  Associate a security manager with a method's source             */
+/******************************************************************************/
+{
+    // the default is just to return a failure
+    return TheFalseObject;
+}

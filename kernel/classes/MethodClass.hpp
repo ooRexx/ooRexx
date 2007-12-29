@@ -44,8 +44,9 @@
 #ifndef Included_RexxMethod
 #define Included_RexxMethod
 
-#include "RexxCode.hpp"
-#include "RexxNativeCode.hpp"
+class BaseCode;
+                                       /* pointer to native method function */
+typedef char *(REXXENTRY *PNMF)(void **);
 
 class RexxMethodClass;
 
@@ -53,19 +54,16 @@ class RexxMethodClass;
   public:
   void *operator new(size_t);
   inline void *operator new(size_t size, void *ptr) { return ptr; };
-  RexxMethod(size_t, PCPPM, size_t, RexxInternalObject *);
+  RexxMethod(BaseCode *_code);
   inline RexxMethod(RESTORETYPE restoreType) { ; };
   void execute(RexxObject *, RexxObject *);
   void live(size_t);
   void liveGeneral(int reason);
   void flatten(RexxEnvelope*);
-  RexxObject   *unflatten(RexxEnvelope *envelope);
-  RexxObject   *run(RexxActivity *,  RexxObject *, RexxString *,  size_t, RexxObject **);
-  RexxObject   *call(RexxActivity *,  RexxObject *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int);
+  void          run(RexxActivity *,  RexxObject *, RexxString *,  size_t, RexxObject **, ProtectedObject &);
+  void          call(RexxActivity *,  RexxObject *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
   RexxMethod  *newScope(RexxClass  *);
   RexxArray   *source();
-  void              setAttribute(RexxVariableBase *variable) {OrefSet(this, this->attribute, variable); }
-  RexxVariableBase *getAttribute() { return this->attribute; };
   void         setScope(RexxClass  *);
   RexxSmartBuffer  *saveMethod();
   RexxObject  *setUnGuardedRexx();
@@ -78,40 +76,18 @@ class RexxMethodClass;
   RexxObject  *isPrivateRexx();
   RexxObject  *isProtectedRexx();
 
-   inline size_t getMethodIndex() {return this->methodIndex; };
-   inline size_t getArgumentCount() {return this->argumentCount; };
-   inline void   setMethodIndex(size_t num) { methodIndex = num; };
-   inline void   setArgumentCount(size_t args) { this->argumentCount = args; };
-
    inline bool   isGuarded()      {return (this->methodFlags & UNGUARDED_FLAG) == 0; };
-   inline bool   isInternal()     {return (this->methodFlags & INTERNAL_FLAG) != 0; };
    inline bool   isPrivate()      {return (this->methodFlags & PRIVATE_FLAG) != 0;}
    inline bool   isProtected()    {return (this->methodFlags & PROTECTED_FLAG) != 0;}
    inline bool   isSpecial()      {return (this->methodFlags & (PROTECTED_FLAG | PRIVATE_FLAG)) != 0;}
 
-   inline bool   isRexxMethod()   {return (this->methodFlags & REXX_METHOD) != 0; };
-   inline bool   isNativeMethod() {return (this->methodFlags & NATIVE_METHOD) != 0; };
-   inline bool   isCPPMethod()    {return (this->methodFlags & KERNEL_CPP_METHOD) != 0; };
-
    inline void   setUnGuarded()    {this->methodFlags |= UNGUARDED_FLAG;};
    inline void   setGuarded()      {this->methodFlags &= ~UNGUARDED_FLAG;};
-   inline void   setInternal()     {this->methodFlags |= INTERNAL_FLAG;};
    inline void   setPrivate()      {this->methodFlags |= (PRIVATE_FLAG | PROTECTED_FLAG);};
    inline void   setProtected()    {this->methodFlags |= PROTECTED_FLAG;};
-   inline void   setRexxMethod()   {this->methodFlags |= REXX_METHOD; };
-   inline void   setNativeMethod() {this->methodFlags |= NATIVE_METHOD; };
-   inline void   setCPPMethod()    {this->methodFlags |= KERNEL_CPP_METHOD; };
+   inline RexxClass *getScope() {return this->scope;}
 
-   RexxInteger *Private() { return  (this->isPrivate() ? TheTrueObject : TheFalseObject); };
-   inline RexxObject *getCode() {return (RexxObject *)this->code;}
-   inline RexxCode   *getRexxCode() {return this->rexxCode;}
-   inline RexxNativeCode *getNativeCode() {return this->nativeCode;}
-   inline RexxSource *getSource() {return this->rexxCode->getSource();}
-   inline RexxClass  *getScope() {return this->scope;}
-   inline void setLocalRoutines(RexxDirectory *r) { getSource()->setLocalRoutines(r); }
-   inline void setPublicRoutines(RexxDirectory *r) { getSource()->setPublicRoutines(r); }
-   inline RexxDirectory *getLocalRoutines() { return getSource()->getLocalRoutines(); }
-   inline RexxDirectory *getPublicRoutines() { return getSource()->getPublicRoutines(); }
+   inline BaseCode  *getCode()     { return this->code; }
 
    static RexxMethodClass *classInstance;
 
@@ -120,29 +96,12 @@ class RexxMethodClass;
    {
        PRIVATE_FLAG      = 0x01,        // private method
        UNGUARDED_FLAG    = 0x02,        // Method can run with GUARD OFF
-       INTERNAL_FLAG     = 0x04,        // method is part of saved image
-       REXX_METHOD       = 0x08,        // method is a REXX method
-       NATIVE_METHOD     = 0x10,        // method is a native C method
        PROTECTED_FLAG    = 0x40,        // method is protected
-       KERNEL_CPP_METHOD = 0x80,        // method is a kernel C++ meth
    };
 
-
-
-   // TODO:  the method number and arguments should be moved into a native code object rather than
-   // being in the method object.
-   uint16_t   methodIndex;           // kernel method number
-   uint8_t    argumentCount;         // argument count
-   uint8_t    methodFlags;           // method status flags
-
+   size_t    methodFlags;              // method status flags
    RexxClass  *scope;                  /* pointer to the method scope       */
-   RexxVariableBase *attribute;      /* method attribute info             */
-   union {
-      RexxInternalObject *code;        /* associated "code" object          */
-      RexxNativeCode     *nativeCode;  /* associated "code" object          */
-      RexxCode           *rexxCode;    /* associated "code" object          */
-   };
-   PCPPM  cppEntry;                    /* C++ Method entry point.           */
+   BaseCode   *code;                   // the backing code object
  };
 
 class RexxMethodClass : public RexxClass {
@@ -157,4 +116,20 @@ class RexxMethodClass : public RexxClass {
   RexxMethod  *newFileRexx(RexxString *);
 };
 
+
+inline RexxMethod *new_method(BaseCode *c)  { return new RexxMethod(c); }
+
+
+/**
+ * Base class for a code object.  Code objects can be invoked as
+ * methods, or called.
+ */
+class BaseCode : public RexxInternalObject
+{
+public:
+    virtual void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  size_t, RexxObject **, ProtectedObject &);
+    virtual void call(RexxActivity *, RexxMethod *, RexxObject *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
+    virtual RexxArray *getSource();
+    virtual RexxObject *setSecurityManager(RexxObject *manager);
+};
 #endif

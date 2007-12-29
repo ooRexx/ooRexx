@@ -47,6 +47,7 @@
 #include "StringClass.hpp"
 #include "DirectoryClass.hpp"
 #include "LibraryManager.hpp"
+#include "RexxNativeActivation.hpp"
 #include <ctype.h>
 
 
@@ -185,6 +186,16 @@ RexxObject * RexxNativeCode::unflatten(RexxEnvelope *envelope)
    return (RexxObject *)this;          /* return ourself.                   */
 }
 
+
+void RexxNativeCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+    size_t count, RexxObject **argPtr, ProtectedObject &result)
+{
+    // create a new native activation
+    RexxNativeActivation *newNActa = new RexxNativeActivation(activity, method, this);
+    activity->push(newNActa);          /* push it on the activity stack     */
+                                       /* and go run it                     */
+    newNActa->run(receiver, messageName, count, argPtr, result);
+}
 
 
 void * RexxNativeCode::operator new(

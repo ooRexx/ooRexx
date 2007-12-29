@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxCode.hpp   */
+/* REXX Kernel                                                 RexxCode.hpp   */
 /*                                                                            */
 /* Primitive REXX Code Class Definitions                                      */
 /*                                                                            */
@@ -45,6 +45,7 @@
 #define Included_RexxCode
 
 #include "SourceFile.hpp"
+#include "MethodClass.hpp"
 
                                        /* various types of call or function */
                                        /* calls                             */
@@ -53,7 +54,8 @@
 #define EXTERNAL_ROUTINE 3
 #define DYNAMIC_ROUTINE  4
 
-class RexxCode : public RexxInternalObject {
+class RexxCode : public BaseCode
+{
   public:
    void *operator new(size_t);
    inline void *operator new(size_t size, void *ptr) {return ptr;};
@@ -65,9 +67,10 @@ class RexxCode : public RexxInternalObject {
    void live(size_t);
    void liveGeneral(int reason);
    void flatten(RexxEnvelope *);
-   RexxArray      * sourceRexx();
+   RexxArray      * getSource();
+   RexxObject     * setSecurityManager(RexxObject *);
    RexxString     * getProgramName();
-   inline RexxSource *getSource() { return source; }
+   inline RexxSource *getSourceObject() { return source; }
    inline RexxInstruction *getFirstInstruction() { return start; }
    inline RexxDirectory   *getLabels() { return labels; }
    inline size_t getMaxStackSize() { return maxStack; }
@@ -85,6 +88,8 @@ class RexxCode : public RexxInternalObject {
    inline RexxDirectory *getMethods() { return source->getMethods(); };
    inline RexxMethod *resolveRoutine(RexxString *n) { return source->resolveRoutine(n); }
    inline void        mergeRequired(RexxSource *s) { source->mergeRequired(s); }
+   virtual void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  size_t, RexxObject **, ProtectedObject &);
+   virtual void call(RexxActivity *, RexxMethod *, RexxObject *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
 
 protected:
 

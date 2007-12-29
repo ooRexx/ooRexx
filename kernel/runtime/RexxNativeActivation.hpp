@@ -44,23 +44,24 @@
 #ifndef Included_RexxNativeActivation
 #define Included_RexxNativeActivation
 
-#include <setjmp.h>
 #include "RexxActivity.hpp"
+class RexxNativeCode;
 
 class RexxNativeActivation : public RexxActivationBase {
  public:
-         void *operator new(size_t, RexxObject *, RexxMethod *, RexxActivity *, RexxString *, RexxActivationBase *);
+         void *operator new(size_t);
   inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *, RexxObject *, RexxMethod *, RexxActivity *, RexxString *, RexxActivationBase *) { }
   inline void  operator delete(void *, void *) { ; }
   inline void  operator delete(void *) { ; }
 
   inline RexxNativeActivation(RESTORETYPE restoreType) { ; };
-  inline RexxNativeActivation() {;};
+         RexxNativeActivation(RexxActivity *, RexxMethod *, RexxNativeCode *);
+         RexxNativeActivation(RexxActivity *_activity, RexxActivation *_activation);
   void live(size_t);
   void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
-  RexxObject *run(size_t, RexxObject **);
+  void prepare(RexxObject *, RexxString *, size_t, RexxObject **);
+  void run(RexxObject *, RexxString *, size_t, RexxObject **, ProtectedObject &);
   RexxObject *saveObject(RexxObject *);
   RexxVariableDictionary *methodVariables();
   bool   isInteger(RexxObject *);
@@ -107,25 +108,26 @@ class RexxNativeActivation : public RexxActivationBase {
 
 protected:
 
-  RexxMethod     *method;              /* Method to run                     */
-  RexxString     *msgname;             /* name of the message running       */
-  RexxObject     *receiver;            // the object receiving the message
-  RexxActivity   *activity;            /* current activity                  */
-  RexxActivation *activation;          /* parent activation                 */
-  RexxObject    **arglist;             /* copy of the argument list         */
-  RexxArray      *argArray;            /* optionally create argument array  */
-  RexxObjectTable *savelist;           /* list of saved objects             */
-  RexxObject     *firstSavedObject;    /* first saved object instance       */
-  RexxMessage    *objnotify;           /* an object to notify if excep occur*/
-  RexxObject     *result;              /* result from RexxRaise call        */
-                                       /* running object variable pool      */
-  RexxVariableDictionary *objectVariables;
-  int             nextvariable;        /* next variable to retrieve         */
-  RexxVariableDictionary *nextcurrent; /* current processed vdict           */
-  RexxCompoundElement *compoundelement;/* current compound variable value   */
-  RexxStem *      nextstem;            /* our working stem variable         */
-  size_t          argcount;            /* size of the argument list         */
-  bool            vpavailable;         /* Variable pool access flag         */
-  int             object_scope;        /* reserve/release state of variables*/
+    RexxActivity   *activity;            /* current activity                  */
+    RexxMethod     *method;              /* Method to run                     */
+    RexxNativeCode *code;                // the code object controlling the target
+    RexxObject     *receiver;            // the object receiving the message
+    RexxString     *msgname;             /* name of the message running       */
+    RexxActivation *activation;          /* parent activation                 */
+    RexxObject    **arglist;             /* copy of the argument list         */
+    RexxArray      *argArray;            /* optionally create argument array  */
+    RexxObjectTable *savelist;           /* list of saved objects             */
+    RexxObject     *firstSavedObject;    /* first saved object instance       */
+    RexxMessage    *objnotify;           /* an object to notify if excep occur*/
+    RexxObject     *result;              /* result from RexxRaise call        */
+                                         /* running object variable pool      */
+    RexxVariableDictionary *objectVariables;
+    int             nextvariable;        /* next variable to retrieve         */
+    RexxVariableDictionary *nextcurrent; /* current processed vdict           */
+    RexxCompoundElement *compoundelement;/* current compound variable value   */
+    RexxStem *      nextstem;            /* our working stem variable         */
+    size_t          argcount;            /* size of the argument list         */
+    bool            vpavailable;         /* Variable pool access flag         */
+    int             object_scope;        /* reserve/release state of variables*/
 };
 #endif

@@ -51,6 +51,8 @@
 #include "RexxActivation.hpp"
 #include "RexxNativeActivation.hpp"
 #include "MessageClass.hpp"
+#include "RexxNativeCode.hpp"
+#include "ProtectedObject.hpp"
 
 // singleton class instance
 RexxClass *RexxMessage::classInstance = OREF_NULL;
@@ -258,13 +260,15 @@ RexxObject *RexxMessage::send(RexxObject *_receiver)
                                        /* set this for resource deadlock    */
                                        /* checking purposes                 */
   OrefSet(this, this->startActivity, myActivity);
+  ProtectedObject p;
                                        /*  call message_send to do the send */
                                        /* and assign our result.            */
   if (this->startscope != TheNilObject)/* have a starting scope?            */
                                        /* send it with an override          */
-    this->resultObject = this->receiver->messageSend(this->message, this->args->size(), (RexxObject **)this->args->data(), this->startscope);
+    this->receiver->messageSend(this->message, this->args->size(), (RexxObject **)this->args->data(), this->startscope, p);
   else                                 /* no over ride                      */
-    this->resultObject = this->receiver->messageSend(this->message, this->args->size(), (RexxObject **)this->args->data());
+    this->receiver->messageSend(this->message, this->args->size(), (RexxObject **)this->args->data(), p);
+  this->resultObject = (RexxObject *)p;
   this->setResultReturned();           /* Indicate we have a result.        */
   this->sendNotification();
   return this->resultObject;           /* return the result of the send.    */
@@ -302,7 +306,7 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
   }
                                        /* create a native method object     */
                                        /*  this method is found in OKNMSG.C */
-  newNMethod = TheMethodClass->newEntry((PNMF)message_nstart);
+  newNMethod = new_method(new RexxNativeCode((PNMF)message_nstart));
                                        /* get the current activity          */
   oldActivity = ActivityManager::currentActivity;
                                        /* Create the new activity           */
@@ -317,8 +321,9 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
   OrefSet(this, this->startActivity, newActivity);
                                        /* create the native method to be run*/
                                        /* on the activity                   */
-  newNativeAct = (RexxNativeActivation *) new ((RexxObject *)this, newNMethod, newActivity, this->message, OREF_NULL) RexxNativeActivation;
+  newNativeAct = new RexxNativeActivation(newActivity, newNMethod, (RexxNativeCode *)newNMethod->getCode());
   newNativeAct->setObjNotify(this);
+  newNativeAct->prepare(this, message, 0, NULL);
                                        /* Push new nativeAct onto activity  */
   newActivity->push(newNativeAct);     /*stack                              */
                                        /* indicate we want the NativeAct to */

@@ -54,6 +54,7 @@
 
 
 class RexxInstructionCallBase;
+class ProtectedObject;
 
 #define trace_debug         0x00000001 /* interactive trace mode flag       */
 #define trace_all           0x00000002 /* trace all instructions            */
@@ -174,7 +175,8 @@ RexxObject * activation_find  (void);
    inline void  operator delete(void *, void *) { ; }
 
    inline RexxActivation(RESTORETYPE restoreType) { ; };
-   RexxActivation(RexxObject *, RexxMethod *, RexxActivity *, RexxString *, RexxActivation *, int);
+   RexxActivation(RexxActivity* _activity, RexxMethod * _method, RexxCode *_code);
+   RexxActivation(RexxActivity *_activity, RexxMethod *_method, RexxCode *_code, RexxActivation *_parent, RexxString *calltype, RexxString *env, int context);
    void init(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, int);
    void live(size_t);
    void liveGeneral(int reason);
@@ -208,7 +210,12 @@ RexxObject * activation_find  (void);
    inline bool isTopLevelCall() { return activation_context == METHODCALL; }
    inline bool isNestedCall() { return (activation_context & INTERNAL_LEVEL_CALL) != 0; }
 
-   RexxObject      * run(RexxObject **, size_t, RexxInstruction *);
+   RexxObject *run(RexxObject *_receiver, RexxString *msgname, RexxObject **_arglist,
+       size_t _argcount, RexxInstruction * start, ProtectedObject &resultObj);
+   inline     RexxObject *run(RexxObject **_arglist, size_t _argcount, ProtectedObject &_result)
+   {
+       return run(OREF_NULL, OREF_NULL, _arglist, _argcount, OREF_NULL, _result);
+   }
    void              reply(RexxObject *);
    RexxObject      * forward(RexxObject *, RexxString *, RexxObject *, RexxObject **, size_t, bool);
    void              returnFrom(RexxObject *result);
@@ -239,10 +246,10 @@ RexxObject * activation_find  (void);
    RexxString      * trapState(RexxString *);
    void              trapDelay(RexxString *);
    void              trapUndelay(RexxString *);
-   bool              callExternalRexx(RexxString *, RexxString *, RexxObject **, size_t, RexxString *, RexxObject **);
-   RexxObject      * externalCall(RexxString *, size_t, RexxExpressionStack *, RexxString *);
-   RexxObject      * internalCall(RexxInstruction *, size_t, RexxExpressionStack *);
-   RexxObject      * internalCallTrap(RexxInstruction *, RexxDirectory *);
+   bool              callExternalRexx(RexxString *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
+   RexxObject      * externalCall(RexxString *, size_t, RexxExpressionStack *, RexxString *, ProtectedObject &);
+   RexxObject      * internalCall(RexxInstruction *, size_t, RexxExpressionStack *, ProtectedObject &);
+   RexxObject      * internalCallTrap(RexxInstruction *, RexxDirectory *, ProtectedObject &);
    RexxObject      * command(RexxString *, RexxString *);
    int64_t           getElapsed();
    RexxDateTime      getTime();
@@ -321,7 +328,7 @@ RexxObject * activation_find  (void);
    inline void              addBlock()    { this->blockNest++; };
    inline bool              hasActiveBlocks() { return blockNest != 0; }
    inline bool              inMethod()  {return this->activation_context == METHODCALL; }
-   inline RexxSource *      getSource() {return this->settings.parent_code->getSource(); };
+   inline RexxSource *      getSource() {return this->settings.parent_code->getSourceObject(); };
    inline void              indent() {this->settings.traceindent++; };
    inline void              unindent() {this->settings.traceindent--; };
    inline void              setIndent(size_t v) {this->settings.traceindent=(v); };

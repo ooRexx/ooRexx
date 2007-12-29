@@ -183,9 +183,13 @@ bool RexxClass::isEqual(
                                        /* can compare at primitive level    */
     return this->equal(other) == TheTrueObject;
   else
+  {
+      ProtectedObject r;
                                        /* other wise giveuser version a     */
                                        /*chance                             */
-    return this->sendMessage(OREF_STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
+      this->sendMessage(OREF_STRICT_EQUAL, other, r);
+      return ((RexxObject *)r)->truthValue(Error_Logical_value_method);
+  }
 }
 
 RexxObject *RexxClass::equal(
@@ -655,9 +659,13 @@ RexxSupplier *RexxClass::methods(
                                        /* if not one of the above           */
                                        /* check if it is a  superclass      */
   if (this->behaviour->checkScope(class_object))
+  {
                                        /*  let the class specified return   */
                                        /*  it's own methods                 */
-    return (RexxSupplier *)class_object->sendMessage(OREF_METHODS, TheNilObject);
+      ProtectedObject r;
+      class_object->sendMessage(OREF_METHODS, TheNilObject, r);
+      return (RexxSupplier *)(RexxObject *)r;
+  }
                                        /* or just return a null supplier    */
   return (RexxSupplier *)TheNullArray->supplier();
 }
@@ -875,9 +883,11 @@ RexxTable *RexxClass::methodDictionaryCreate(
   ProtectedObject p(newDictionary);
                                        /* loop thru the supplier object     */
                                        /* obtained from the source mdict    */
-  supplier = (RexxSupplier *)sourceCollection->sendMessage(OREF_SUPPLIERSYM);
-  ProtectedObject p2(supplier);
-  for (; supplier->available() == TheTrueObject; supplier->next()) {
+  ProtectedObject p2;
+  sourceCollection->sendMessage(OREF_SUPPLIERSYM, p2);
+  supplier = (RexxSupplier *)(RexxObject *)p2;
+  for (; supplier->available() == TheTrueObject; supplier->next())
+  {
                                        /* get the method name (uppercased)  */
     method_name = REQUEST_STRING(supplier->index())->upper();
                                        /* get the method                    */
@@ -1085,9 +1095,11 @@ RexxObject *RexxClass::enhanced(
   dummy_subclass->instanceBehaviour->setMethodDictionary(OREF_NULL);
   dummy_subclass->instanceBehaviour->setScopes(OREF_NULL);
   dummy_subclass->createInstanceBehaviour(dummy_subclass->instanceBehaviour);
+  ProtectedObject r;
                                        /* get an instance of the enhanced   */
                                        /* subclass                          */
-  enhanced_object = dummy_subclass->sendMessage(OREF_NEW, args + 1, argCount - 1);
+  dummy_subclass->sendMessage(OREF_NEW, args + 1, argCount - 1, r);
+  enhanced_object = (RexxObject *)r;
                                        /* change the create_class in the    */
                                        /* instance behaviour to point to the*/
                                        /* original class object             */
@@ -1143,9 +1155,10 @@ RexxClass  *RexxClass::subclass(
   {
       reportException(Error_Translation_bad_metaclass, meta_class);
   }
+  ProtectedObject p;
                                        /* get a copy of the metaclass class */
-  new_class = (RexxClass *)meta_class->sendMessage(OREF_NEW, class_id);
-  ProtectedObject p(new_class);
+  meta_class->sendMessage(OREF_NEW, class_id, p);
+  new_class = (RexxClass *)(RexxObject *)p;
   if (this->isMetaClass()) {           /* if the superclass is a metaclass  */
     new_class->setMetaClass();         /* mark the new class as a meta class*/
                                        /* and if the metaclass lists haven't */
@@ -1204,7 +1217,8 @@ RexxClass  *RexxClass::subclass(
   this->addSubClass(new_class);        /* list to reflect the new class     */
   /* if the class object has an UNINIT method defined, make sure we */
   /* add this to the table of classes to be processed. */
-  if (new_class->hasUninitMethod()) {
+  if (new_class->hasUninitMethod())
+  {
       new_class->hasUninit();
   }
   new_class->sendMessage(OREF_INIT);   /* now drive any user INIT methods   */
@@ -1426,7 +1440,6 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
   if (new_class->hasUninitDefined()) {
       new_class->setHasUninitDefined();
   }
-                                       /* go do any inits                   */
   new_class->sendMessage(OREF_INIT, args + 1, argCount - 1);
   return new_class;                    /* return the new class              */
 }

@@ -79,6 +79,7 @@
 #include "StreamNative.h"
 #include "ProtectedObject.hpp"
 #include "LibraryManager.hpp"
+#include "CPPCode.hpp"
 
 #define HOLDSIZE         60            /* room for 60 temporaries           */
 
@@ -1933,7 +1934,8 @@ void RexxSource::methodDirective()
     {
                                        /* Go check the next clause to make  */
         this->checkDirective();        /* sure that no code follows         */
-        _method = new_method(abstractIndex, CPPM(RexxObject::abstractMethod), A_COUNT, OREF_NULL);
+        // this uses a special code block
+        _method = new_method(new AbstractCode());
     }
     /* not an external method?           */
     else if (externalname == OREF_NULL)
@@ -1959,7 +1961,7 @@ void RexxSource::methodDirective()
                                          /* create a new native method        */
             RexxNativeCode *nmethod = new_native_code((RexxString *)(_words->get(3)), (RexxString *)(_words->get(2)));
             /* turn into a real method object    */
-            _method = new_method(0, (PCPPM)NULL, 0, (RexxObject *)nmethod);
+            _method = new_method(nmethod);
         }
         /* is it 'REXX entry' form?          */
         else if (((RexxString *)(_words->get(1)))->strCompare(CHAR_REXX))
@@ -1984,7 +1986,7 @@ void RexxSource::methodDirective()
             /* create a new native method        */
             RexxNativeCode *nmethod = new RexxNativeCode(NULL, index);
             /* turn into a real method object    */
-            _method = new_method(0, (PCPPM)NULL, 0, (RexxObject *)nmethod);
+            _method = new_method(nmethod);
         }
         else
         {
@@ -2309,7 +2311,7 @@ void RexxSource::createAttributeGetterMethod(RexxDirectory *target, RexxString *
     this->checkDirective();
 
     // create the kernel method for the accessor
-    RexxMethod *_method = new_method(getAttributeIndex, CPPM(RexxObject::getAttribute), 0, OREF_NULL);
+    RexxMethod *_method = new_method(new AttributeGetterCode(retriever));
 
     if (privateMethod)
     {
@@ -2323,9 +2325,6 @@ void RexxSource::createAttributeGetterMethod(RexxDirectory *target, RexxString *
     {
         _method->setUnGuarded();
     }
-    // set the the retriever as the attribute
-    _method->setAttribute(retriever);
-
     // and finally add to the target method directory.
     target->put(_method, name);
 }
@@ -2350,7 +2349,7 @@ void RexxSource::createAttributeSetterMethod(RexxDirectory *target, RexxString *
     this->checkDirective();
 
     // create the kernel method for the accessor
-    RexxMethod *_method = new_method(setAttributeIndex, CPPM(RexxObject::setAttribute), 1, OREF_NULL);
+    RexxMethod *_method = new_method(new AttributeSetterCode(retriever));
 
     if (privateMethod)
     {
@@ -2364,11 +2363,26 @@ void RexxSource::createAttributeSetterMethod(RexxDirectory *target, RexxString *
     {
         _method->setUnGuarded();
     }
-    // set the the retriever as the attribute
-    _method->setAttribute(retriever);
-
     // and finally add to the target method directory.
     target->put(_method, name);
+}
+
+
+/**
+ * Create a CONSTANT "get" method.
+ *
+ * @param target The target method directory.
+ * @param name   The name of the attribute.
+ */
+void RexxSource::createConstantGetterMethod(RexxDirectory *classTarget, RexxDirectory *target, RexxString *name, RexxObject *value)
+{
+    // no code can follow the automatically generated methods
+    this->checkDirective();
+
+    ConstantGetterCode *code = new ConstantGetterCode(value);
+    // and finally add to both method directories.
+    target->put(new_method(code), name);
+    classTarget->put(new_method(code), name);
 }
 
 
@@ -2914,7 +2928,7 @@ RexxMethod *RexxSource::translateBlock(
                                (this->maxstack+ 10),
                                this->variableindex);
                                        /* now return as a method object     */
-  return new_method(0, (PCPPM)NULL, 0, (RexxObject *)newCode);
+  return new_method(newCode);
 }
 
 RexxInstruction *RexxSource::instruction()

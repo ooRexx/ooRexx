@@ -42,6 +42,7 @@
 #include "DirectoryClass.hpp"
 #include "ActivityManager.hpp"
 #include "Interpreter.hpp"
+#include "ProtectedObject.hpp"
 
 // The currently active activity.
 RexxActivity *ActivityManager::currentActivity = OREF_NULL;
@@ -289,16 +290,23 @@ void ActivityManager::checkShutdown()
 }
 
 
-RexxActivation *ActivityManager::newActivation(
-     RexxObject     *receiver,         /* message receiver                  */
-     RexxMethod     *runMethod,        /* method to run                     */
-     RexxActivity   *activity,         /* current activity                  */
-     RexxString     *msgname,          /* message name processed            */
-     RexxActivation *activation,       /* parent activation                 */
-     int             context )         /* execution context                 */
-/******************************************************************************/
-/* Function:  Get an activation from cache or create new one                  */
-/******************************************************************************/
+/**
+ * Create a new activation for CALLing a method (vs. a method
+ * invocation).
+ *
+ * @param activity The activity we're running on.
+ * @param method   The method object being invoked.
+ * @param code     The code object associated with the method.
+ * @param parent   The parent activation.  OREF_NULL is used if this is a top-level
+ *                 call.
+ * @param calltype The type of call being made.
+ * @param environment
+ *                 The initial address environment.
+ * @param context  The context of the invocation.
+ *
+ * @return The newly created activation.
+ */
+RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code, RexxActivation *parent, RexxString *calltype, RexxString *environment, int context)
 {
 
     if (activationCacheSize != 0)  /* have a cached entry?              */
@@ -308,7 +316,7 @@ RexxActivation *ActivityManager::newActivation(
         RexxActivation *resultActivation = (RexxActivation *)activations->stackTop();
         /* reactivate this                   */
         resultActivation->setHasReferences();
-        resultActivation = new (resultActivation) RexxActivation (receiver, runMethod, activity, msgname, activation, context);
+        resultActivation = new (resultActivation) RexxActivation(activity, method, code, parent, calltype, environment, context);
         activations->pop();          /* Remove reused activation from stac*/
         return resultActivation;
 
@@ -316,8 +324,40 @@ RexxActivation *ActivityManager::newActivation(
     else                                 /* need to create a new one          */
     {
         /* Create new Activation.            */
-        return new RexxActivation (receiver, runMethod, activity, msgname, activation, context);
+        return new RexxActivation(activity, method, code, parent, calltype, environment, context);
+    }
+}
 
+
+/**
+ * Create a new activation for CALLing a method (vs. a method
+ * invocation).
+ *
+ * @param activity The activity we're running on.
+ * @param method   The method object being invoked.
+ * @param code     The code object associated with the method.
+ *
+ * @return The newly created activation.
+ */
+RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code)
+{
+
+    if (activationCacheSize != 0)  /* have a cached entry?              */
+    {
+        activationCacheSize--;       /* remove an entry from the count    */
+                                           /* get the top cached entry          */
+        RexxActivation *resultActivation = (RexxActivation *)activations->stackTop();
+        /* reactivate this                   */
+        resultActivation->setHasReferences();
+        resultActivation = new (resultActivation) RexxActivation(activity, method, code);
+        activations->pop();          /* Remove reused activation from stac*/
+        return resultActivation;
+
+    }
+    else                                 /* need to create a new one          */
+    {
+        /* Create new Activation.            */
+        return new RexxActivation(activity, method, code);
     }
 }
 
@@ -837,8 +877,12 @@ void ActivityManager::startup()
                                          /* get the local environment         */
                                          /* get the server class              */
     RexxObject *server_class = env_find(new_string("!SERVER"));
-                                         /* create a new server object        */
-    currentActivity->messageSend(server_class, OREF_NEW, 0, OREF_NULL, &localServer);
+    {
+        ProtectedObject result;
+                                             /* create a new server object        */
+        currentActivity->messageSend(server_class, OREF_NEW, 0, OREF_NULL, result);
+        localServer = (RexxObject *)result;
+    }
                                          /* now release this activity         */
     returnActivity();
 }

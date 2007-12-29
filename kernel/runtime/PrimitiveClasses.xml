@@ -61,6 +61,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="RexxSource" class="RexxSource" include="SourceFile.hpp"/>
 <Class id="RexxCode" class="RexxCode" include="RexxCode.hpp"/>
 <Class id="NativeCode" class="RexxNativeCode" include="RexxNativeCode.hpp"/>
+<Class id="CPPCode" class="CPPCode" include="CPPCode.hpp"/>
+<Class id="AttributeGetterCode" class="AttributeGetterCode" include="CPPCode.hpp"/>
+<Class id="AttributeSetterCode" class="AttributeSetterCode" include="CPPCode.hpp"/>
+<Class id="ConstantGetterCode" class="ConstantGetterCode" include="CPPCode.hpp"/>
+<Class id="AbstractCode" class="AbstractCode" include="CPPCode.hpp"/>
 
 <Class id="HashTable" class="RexxHashTable" include="RexxHashTable.hpp"/>
 <Class id="ListTable" class="RexxListTable" include="RexxListTable.hpp"/>

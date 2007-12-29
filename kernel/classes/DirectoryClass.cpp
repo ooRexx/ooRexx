@@ -183,9 +183,10 @@ RexxSupplier *RexxDirectory::supplier(void)
       RexxString *name = (RexxString *)methodTable->index(i);
                                        /* get the method                    */
       RexxMethod *method = (RexxMethod *)methodTable->value(i);
+      ProtectedObject v;
                                        /* run the method                    */
-      RexxObject *v = method->run(ActivityManager::currentActivity, this, name, 0, NULL);
-      result->put(v, name);            /* add to the table                  */
+      method->run(ActivityManager::currentActivity, this, name, 0, NULL, v);
+      result->put((RexxObject *)v, name);  /* add to the table                  */
     }
   }
   return result->supplier();           /* convert this to a supplier        */
@@ -199,7 +200,9 @@ RexxArray *RexxDirectory::requestArray()
   if (isOfClass(Directory, this))          /* primitive level object?           */
     return this->makeArray();          /* just do the makearray             */
   else                                 /* need to so full request mechanism */
-    return (RexxArray *)this->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
+  {
+      return (RexxArray *)this->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
+  }
 }
 
 RexxArray *RexxDirectory::makeArray(void)
@@ -283,9 +286,10 @@ RexxArray *RexxDirectory::allItems()
       name = (RexxString *)methodTable->index(j);
                                        /* need to extract method values     */
       RexxMethod *method = (RexxMethod *)methodTable->value(j);
+      ProtectedObject v;
                                        /* run the method                    */
-      RexxObject *v = method->run(ActivityManager::currentActivity, this, name, 0, NULL);
-      result->put(v, i++);             /* add to the array                  */
+      method->run(ActivityManager::currentActivity, this, name, 0, NULL, v);
+      result->put((RexxObject *)v, i++);  /* add to the array                  */
     }
   }
   return result;                       /* send back the array               */
@@ -535,15 +539,22 @@ RexxObject *RexxDirectory::at(
                                        /* look for a method                 */
       method = (RexxMethod *)this->method_table->stringGet(_index);
       if (method != OREF_NULL)         /* have a method?                    */
+      {
+          ProtectedObject v;
                                        /* run the method                    */
-        return method->run(ActivityManager::currentActivity, this, _index, 0, NULL);
+          method->run(ActivityManager::currentActivity, this, _index, 0, NULL, v);
+          return (RexxObject *)v;
+
+      }
     }
                                        /* got an unknown method?            */
     if (this->unknown_method != OREF_NULL)
     {
         RexxObject *arg = _index;
+        ProtectedObject v;
                                        /* run it                            */
-        return this->unknown_method->run(ActivityManager::currentActivity, this, OREF_UNKNOWN, 1, (RexxObject **)&arg);
+        this->unknown_method->run(ActivityManager::currentActivity, this, OREF_UNKNOWN, 1, (RexxObject **)&arg, v);
+        return (RexxObject *)v;
     }
   }
   return result;                       /* return a result                   */
@@ -669,9 +680,10 @@ RexxObject *RexxDirectory::indexRexx(RexxObject *target)
                 // we need to run each method, looking for a value that matches
                 RexxString *name = (RexxString *)methodTable->index(i);
                 RexxMethod *method = (RexxMethod *)methodTable->value(i);
-                RexxObject *v = method->run(ActivityManager::currentActivity, this, name, 0, NULL);
+                ProtectedObject v;
+                method->run(ActivityManager::currentActivity, this, name, 0, NULL, v);
                 // got a match?
-                if (target->equalValue(v))
+                if (target->equalValue((RexxObject *)v))
                 {
                     return name;    // the name is the index
                 }

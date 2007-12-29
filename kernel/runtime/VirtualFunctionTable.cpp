@@ -76,6 +76,7 @@
 #include "SourceFile.hpp"
 #include "RexxCode.hpp"
 #include "RexxNativeCode.hpp"
+#include "CPPCode.hpp"
 #include "RexxHashTable.hpp"
 #include "RexxListTable.hpp"
 #include "RexxSmartBuffer.hpp"
@@ -283,6 +284,21 @@ void RexxMemory::buildVirtualFunctionTable()
    
    objectPtr = new (objectPtr) RexxNativeCode(RESTOREIMAGE);
    virtualFunctionTable[T_NativeCode] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) CPPCode(RESTOREIMAGE);
+   virtualFunctionTable[T_CPPCode] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) AttributeGetterCode(RESTOREIMAGE);
+   virtualFunctionTable[T_AttributeGetterCode] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) AttributeSetterCode(RESTOREIMAGE);
+   virtualFunctionTable[T_AttributeSetterCode] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) ConstantGetterCode(RESTOREIMAGE);
+   virtualFunctionTable[T_ConstantGetterCode] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) AbstractCode(RESTOREIMAGE);
+   virtualFunctionTable[T_AbstractCode] = *((void **)objectPtr);
    
    objectPtr = new (objectPtr) RexxHashTable(RESTOREIMAGE);
    virtualFunctionTable[T_HashTable] = *((void **)objectPtr);

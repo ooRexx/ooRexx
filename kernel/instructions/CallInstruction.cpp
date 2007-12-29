@@ -51,6 +51,7 @@
 #include "RexxActivity.hpp"
 #include "CallInstruction.hpp"
 #include "SourceFile.hpp"
+#include "ProtectedObject.hpp"
 
 extern pbuiltin builtin_table[];       /* table of builtin function stubs   */
 
@@ -176,7 +177,7 @@ void RexxInstructionCall::execute(
   size_t  i;                           /* loop counter                      */
   int     type;                        /* type of call                      */
   size_t  builtin_index;               /* builtin function index            */
-  RexxObject       *result = OREF_NULL;/* returned result                   */
+  ProtectedObject   result;            /* returned result                   */
   RexxInstruction  *_target;            /* resolved call target              */
   RexxString       *_name;              /* resolved function name            */
   RexxDirectory    *labels;            /* labels table                      */
@@ -227,10 +228,10 @@ void RexxInstructionCall::execute(
                                        /* real argument?                    */
       if (this->arguments[i] != OREF_NULL) {
                                        /* evaluate the expression           */
-        result = this->arguments[i]->evaluate(context, stack);
+        RexxObject *argResult = this->arguments[i]->evaluate(context, stack);
 
                                        /* trace if necessary                */
-        context->traceIntermediate(result, TRACE_PREFIX_ARGUMENT);
+        context->traceIntermediate(argResult, TRACE_PREFIX_ARGUMENT);
       }
       else {
         stack->push(OREF_NULL);        /* push an non-existent argument     */
@@ -242,7 +243,7 @@ void RexxInstructionCall::execute(
 
       case call_internal:              /* need to process internal routine  */
                                        /* go process the internal call      */
-        result = context->internalCall(_target, argcount, stack);
+        context->internalCall(_target, argcount, stack, result);
         break;
 
       case call_builtin:               /* builtin function call             */
@@ -252,16 +253,14 @@ void RexxInstructionCall::execute(
 
       case call_external:              /* need to call externally           */
                                        /* go process the external call      */
-        result = context->externalCall(_name, argcount, stack, OREF_ROUTINENAME);
+        context->externalCall(_name, argcount, stack, OREF_ROUTINENAME, result);
         break;
     }
     if (result != OREF_NULL) {         /* result returned?                  */
                                        /* set the RESULT variable to the    */
                                        /* message return value              */
-      context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, result);
-      context->traceResult(result);    /* trace if necessary                */
-      // TODO:  Need to fix this up to use protected object
-      if (type != call_builtin) discardObject(result);
+      context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *)result);
+      context->traceResult((RexxObject *)result);  /* trace if necessary                */
     }
     else                               /* drop the variable RESULT          */
       context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
@@ -276,16 +275,14 @@ void RexxInstructionCall::trap(
 /* Function:  Process a CALL ON trap                                          */
 /******************************************************************************/
 {
-  RexxObject * result;
+  ProtectedObject result;
   context->trapDelay(this->condition); /* put trap into delay state         */
 
   switch (instructionFlags&call_type_mask) {    /* process various call types        */
 
     case call_internal:                /* need to process internal routine  */
                                        /* go process the internal call      */
-      result = context->internalCallTrap(this->target, conditionObj);
-      // TODO:  Need to fix this up to use protected object
-      if (result != OREF_NULL) discardObject(result);
+      context->internalCallTrap(this->target, conditionObj, result);
       break;
 
     case call_builtin:                 /* builtin function call             */
@@ -295,9 +292,7 @@ void RexxInstructionCall::trap(
 
     case call_external:                /* need to call externally           */
                                        /* go process the externnl call      */
-      result = context->externalCall((RexxString *)this->name, 0, context->getStack(), OREF_ROUTINENAME);
-      // TODO use protected object
-      if (result != OREF_NULL) discardObject(result);
+      context->externalCall((RexxString *)this->name, 0, context->getStack(), OREF_ROUTINENAME, result);
       break;
   }
                                        /* restore the trap state            */

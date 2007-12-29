@@ -140,8 +140,6 @@ inline size_t RANDOMIZE(size_t seed) { return (seed * RANDOM_FACTOR + 1); }
 #define new_queue()                       (new RexxQueue)
 #define new_integer(v)                    (TheIntegerClass->newCache(v))
 #define new_message(t,m,a)                (new RexxMessage ((RexxObject *)t, (RexxObject *)m, (RexxArray *)a))
-#define new_method(i,e,a,c)               (new RexxMethod (i, e, a, c))
-#define new_CPPmethod(p,s,c)              (new RexxMethod (p, s, c))
 #define new_smartbuffer()                 (new RexxSmartBuffer(1024))
 #define new_sizedSmartBuffer(size)        (new RexxSmartBuffer(size))
 #define new_stack(s)                      (new(s) RexxStack (s))

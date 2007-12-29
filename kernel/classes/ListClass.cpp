@@ -342,13 +342,15 @@ RexxObject *RexxList::sectionSubclass(
 /******************************************************************************/
 {
   RexxList *newList;                   /* returned array                    */
+  ProtectedObject r;
 
                                        /* create a new list                 */
-  newList = (RexxList *)this->behaviour->getOwningClass()->sendMessage(OREF_NEW);
-  ProtectedObject p(newList);
+  this->behaviour->getOwningClass()->sendMessage(OREF_NEW, r);
+  newList = (RexxList *)(RexxObject *)r;
                                        /* while still more to go and not at */
                                        /* the end of the list               */
-  while (counter-- > 0) {              /* while still more items            */
+  while (counter-- > 0)                /* while still more items            */
+  {
                                        /* add the this item to new list     */
     newList->sendMessage(OREF_INSERT, element->value);
     if (element->next == LIST_END)     /* this the last one?                */
@@ -796,7 +798,9 @@ RexxArray *RexxList::requestArray()
   if (isOfClass(List, this))               /* primitive level object?           */
     return this->makeArray();              /* just do the makearray             */
   else                                     /* need to so full request mechanism */
-    return (RexxArray *)this->sendMessage( OREF_REQUEST, OREF_ARRAYSYM);
+  {
+      return (RexxArray *)this->sendMessage( OREF_REQUEST, OREF_ARRAYSYM);
+  }
 }
 
 
@@ -1082,7 +1086,7 @@ RexxArray *RexxList::weakReferenceArray()
     // the real values into the returned array
     RexxArray *array = (RexxArray *)new_array(this->count);
     i = this->firstIndex();              /* point to the first element        */
-    for (size_t j = 1; i <= this->count; j++) /* step through the array elements   */
+    for (size_t j = 1; j <= this->count; j++) /* step through the array elements   */
     {
         element = ENTRY_POINTER(i);      /* get the next item                 */
                                          /* copy over to the array            */
@@ -1129,6 +1133,7 @@ RexxList *RexxListClass::newRexx(
   if (this->hasUninitDefined()) {
     newList->hasUninit();
   }
+
                                        /* Initialize the new list instance  */
   newList->sendMessage(OREF_INIT, init_args, argCount);
   return newList;                      /* return the new list item          */
@@ -1162,9 +1167,10 @@ RexxList *RexxListClass::classOf(
   }
   else {
     size = argCount;                   /* get the array size                */
+    ProtectedObject p;
                                        /* get a new list                    */
-    newList = (RexxList *)this->sendMessage(OREF_NEW);
-    ProtectedObject p(newList);
+    this->sendMessage(OREF_NEW, p);
+    newList = (RexxList *)(RexxObject *)p;
     for (i = 0; i < size; i++) {       /* step through the array            */
       item = args[i];                  /* get the next item                 */
       if (item == OREF_NULL) {         /* omitted item?                     */

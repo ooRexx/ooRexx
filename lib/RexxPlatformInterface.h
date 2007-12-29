@@ -56,6 +56,7 @@ class RexxDateTime;
 class RexxNativeActivation;
 class RexxBuffer;
 class RexxPointer;
+class ProtectedObject;
 
 #ifndef SysGetCurrentTime
 void SysGetCurrentTime(RexxDateTime *);/* get the current time              */
@@ -139,7 +140,7 @@ void SysReleaseResultMemory(void *);   /* release a result memory block     */
 
 #ifndef SysExternalFunction
                                        /* call an external function         */
-RexxObject * SysExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxObject **, size_t, RexxString *, bool *);
+void SysExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxObject **, size_t, RexxString *, bool *, ProtectedObject &);
 #endif
 
 #ifndef SysGetMacroCode

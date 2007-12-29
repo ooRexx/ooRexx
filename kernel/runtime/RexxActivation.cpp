@@ -104,63 +104,34 @@ void * RexxActivation::operator new(size_t size)
   return (RexxObject *)newObject;      /* return the new object             */
 }
 
-RexxActivation::RexxActivation(
-     RexxObject     * _receiver,       /* message receiver                  */
-     RexxMethod     * _method,         /* method to run                     */
-     RexxActivity   * _activity,       /* current activity                  */
-     RexxString     * msgname,         /* message name processed            */
-     RexxActivation * activation,      /* parent activation                 */
-     int              context )        /* execution context                 */
-/******************************************************************************/
-/* Function:  Initialize an activation object instance.                       */
-/*            NOTE:  This object is created by the activity class instead of  */
-/*            directly by the activation class.  The activity class protects  */
-/*            the new object so that it is not necessary to protect this      */
-/*            from garbage collection during the INIT method.                 */
-/******************************************************************************/
+/**
+ * Initialize an activation for a method invocation.
+ *
+ * @param _activity The activity we're running under.
+ * @param _method   The method being invoked.
+ * @param _code     The code to execute.
+ */
+RexxActivation::RexxActivation(RexxActivity* _activity, RexxMethod * _method, RexxCode *_code)
 {
-  this->clearObject();                 /* start with a fresh object         */
-  if (context == DEBUGPAUSE) {         /* actually a debug pause?           */
-    this->debug_pause = true;          /* set up for debugging intercepts   */
-    context = INTERPRET;               /* this is really an interpret       */
-  }
-  this->settings.intermediate_trace = false;
-  this->activation_context = context;  /* save the context                  */
-  this->receiver = _receiver;          /* save the message receiver         */
-  this->method = _method;              /* save the method pointer           */
-  this->code = _method->getRexxCode(); /* get the REXX method object        */
-  this->activity = _activity;          /* save the activity pointer         */
-                                       /* save the sender activation        */
-  this->sender = _activity->getCurrentActivation();
-  this->execution_state = ACTIVE;      /* we are now in active execution    */
-  this->object_scope = SCOPE_RELEASED; /* scope not reserved yet            */
-                                       /* default to method for now         */
-  this->settings.calltype = OREF_METHODNAME;
-  /* create a new evaluation stack.  This must be done before a */
-  /* local variable frame is created. */
-  this->setHasNoReferences();          /* during allocateStack..            */
-                                       /* a live marking can happen without */
-                                       /* a properly set up stack (::live() */
-                                       /* is called). Setting the NoRefBit  */
-                                       /* when creating the stack avoids it.*/
-  _activity->allocateStackFrame(&this->stack, this->code->getMaxStackSize());
-  this->setHasReferences();
-  if (context&INTERNAL_LEVEL_CALL) {   /* internal call or interpret?       */
-                                       /* inherit parents settings          */
-    activation->putSettings(this->settings);
-    if (context == INTERNALCALL) {     /* internal call?                    */
-                                       /* force a new copy of the traps     */
-                                       /* table to be created whenever it   */
-                                       /* is changed                        */
-      this->settings.flags &= ~traps_copied;
-      this->settings.flags &= ~reply_issued; /* this is a new activation that can use its own return */
-                                       /* invalidate the timestamp          */
-      this->settings.timestamp.valid = false;
-    }
-    /* this is a nested call until we issue a procedure */
-    settings.local_variables.setNested();
-  }
-  else {                               /* external method activation        */
+    this->clearObject();                 /* start with a fresh object         */
+    this->activity = _activity;          /* save the activity pointer         */
+    this->method = _method;              /* save the method pointer           */
+    this->code = _code;                  /* get the REXX method object        */
+    this->settings.intermediate_trace = false;
+    this->activation_context = METHODCALL;  // the context is a method call
+                                         /* save the sender activation        */
+    this->sender = _activity->getCurrentActivation();
+    this->execution_state = ACTIVE;      /* we are now in active execution    */
+    this->object_scope = SCOPE_RELEASED; /* scope not reserved yet            */
+    /* create a new evaluation stack.  This must be done before a */
+    /* local variable frame is created. */
+    this->setHasNoReferences();          /* during allocateStack..            */
+                                         /* a live marking can happen without */
+                                         /* a properly set up stack (::live() */
+                                         /* is called). Setting the NoRefBit  */
+                                         /* when creating the stack avoids it.*/
+    _activity->allocateStackFrame(&this->stack, this->code->getMaxStackSize());
+    this->setHasReferences();
                                        /* get initial settings template     */
     this->settings = activationSettingsTemplate;
                                        /* set up for internal calls         */
@@ -179,10 +150,91 @@ RexxActivation::RexxActivation(
     this->random_seed = this->activity->getRandomSeed();
                                        /* copy the source security manager  */
     this->settings.securityManager = this->code->getSecurityManager();
-                                       /* default to method for now         */
+    // and the call type is METHOD
     this->settings.calltype = OREF_METHODNAME;
-  }
-  this->settings.msgname = msgname;    /* use the passed message name       */
+}
+
+
+RexxActivation::RexxActivation(RexxActivity *_activity, RexxMethod *_method, RexxCode *_code, RexxActivation *_parent,
+    RexxString *calltype, RexxString *env, int context)
+{
+    this->clearObject();                 /* start with a fresh object         */
+    this->activity = _activity;          /* save the activity pointer         */
+    this->method = _method;              /* save the method pointer           */
+    this->code = _code;                  /* get the REXX method object        */
+    if (context == DEBUGPAUSE)           /* actually a debug pause?           */
+    {
+        this->debug_pause = true;        /* set up for debugging intercepts   */
+        context = INTERPRET;             /* this is really an interpret       */
+    }
+    this->activation_context = context;  /* save the context                  */
+    this->settings.intermediate_trace = false;
+    /* save the sender activation        */
+    this->sender = _activity->getCurrentActivation();
+    this->execution_state = ACTIVE;      /* we are now in active execution    */
+    this->object_scope = SCOPE_RELEASED; /* scope not reserved yet            */
+    /* create a new evaluation stack.  This must be done before a */
+    /* local variable frame is created. */
+    this->setHasNoReferences();          /* during allocateStack..            */
+                                         /* a live marking can happen without */
+                                         /* a properly set up stack (::live() */
+                                         /* is called). Setting the NoRefBit  */
+                                         /* when creating the stack avoids it.*/
+    _activity->allocateStackFrame(&stack, code->getMaxStackSize());
+    this->setHasReferences();
+    // the random seed is copied from the calling activity, this led
+    // to reproducable random sequences even though no specific seed was given!
+    // see feat. 900 for example program.
+    adjustRandomSeed();
+    if (context&INTERNAL_LEVEL_CALL)     /* internal call or interpret?       */
+    {
+        /* inherit parents settings          */
+        _parent->putSettings(this->settings);
+        if (context == INTERNALCALL)       /* internal call?                    */
+        {
+            /* force a new copy of the traps     */
+            /* table to be created whenever it   */
+            /* is changed                        */
+            this->settings.flags &= ~traps_copied;
+            this->settings.flags &= ~reply_issued; /* this is a new activation that can use its own return */
+            /* invalidate the timestamp          */
+            this->settings.timestamp.valid = false;
+        }
+        /* this is a nested call until we issue a procedure */
+        settings.local_variables.setNested();
+    }
+    else                                 /* external method activation        */
+    {
+        /* get initial settings template     */
+        this->settings = activationSettingsTemplate;
+        /* set up for internal calls         */
+        this->settings.parent_method = this->method;
+        /* save the source also              */
+        this->settings.parent_code = this->code;
+
+        /* allocate a frame for the local variables from activity stack */
+        settings.local_variables.init(this, code->getLocalVariableSize());
+        this->activity->allocateLocalVariableFrame(&settings.local_variables);
+        /* set the initial and initial       */
+        /* alternate address settings        */
+        this->settings.current_env = SysInitialAddressName();
+        this->settings.alternate_env = this->settings.current_env;
+        /* get initial random seed value     */
+        this->random_seed = this->activity->getRandomSeed();
+        /* copy the source security manager  */
+        this->settings.securityManager = this->code->getSecurityManager();
+    }
+
+    // if we have a default environment specified, apply the override.
+    if (env != OREF_NULL)
+    {
+        setDefaultAddress(env);
+    }
+    // set the call type
+    if (calltype != OREF_NULL)
+    {
+        this->settings.calltype = calltype;
+    }
 }
 
 
@@ -191,19 +243,14 @@ RexxObject * RexxActivation::dispatch()
 /* Function:  Re-dispatch an activation after a REPLY                         */
 /******************************************************************************/
 {
+    ProtectedObject r;
                                        /* go run this                       */
-  RexxObject * resultObj;
-  resultObj = this->run(NULL, 0, OREF_NULL);
-  // TODO:  Need to replace this with ProtectedObject
-  if (resultObj != OREF_NULL) discardObject(result);
-  return resultObj;
+    return this->run(receiver, settings.msgname, arglist, argcount, OREF_NULL, r);
 }
 
 
-RexxObject * RexxActivation::run(
-     RexxObject      **_arglist,       /* argument list to the activity     */
-     size_t            _argcount,      /* the argument count                */
-     RexxInstruction * start)          /* starting instruction              */
+RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, RexxObject **_arglist,
+     size_t _argcount, RexxInstruction * start, ProtectedObject &resultObj)
 /******************************************************************************/
 /* Function:  Run a REXX method...this is it!  This is the heart of the       */
 /*            interpreter that makes the whole thing run!                     */
@@ -215,13 +262,14 @@ RexxObject * RexxActivation::run(
 #ifndef FIXEDTIMERS                      /* currently disabled                */
     size_t             instructionCount; /* instructions without yielding     */
 #endif
-    RexxObject *resultObj = OREF_NULL;
+    this->receiver = _receiver;          /* save the message receiver         */
+    this->settings.msgname = msgname;    /* use the passed message name       */
 
     /* not a reply restart situation?    */
     if (this->execution_state != REPLIED)
     {
-        /* exits possible?                   */
-        if (!this->method->isInternal() && this->activity->isClauseExitUsed())
+        /* exits possible?  We don't use exits for methods in the image */
+        if (!this->code->isOldSpace() && this->activity->isClauseExitUsed())
         {
             /* check at the end of each clause   */
             this->settings.flags |= clause_boundary;
@@ -376,8 +424,6 @@ RexxObject * RexxActivation::run(
                     this->sender->mergeTraps(this->condition_queue, this->handler_queue);
                 }
                 resultObj = this->result;  /* save the result                   */
-                // TODO:  Replace this with protected object
-                if (resultObj != OREF_NULL) saveObject(resultObj);
                 this->activity->pop(false);        /* now pop the current activity      */
                 /* now go run the uninit stuff       */
                 memoryObject.checkUninitQueue();
@@ -385,10 +431,6 @@ RexxObject * RexxActivation::run(
             else
             {                               /* execution_state is REPLIED        */
                 resultObj = this->result;          /* save the result                   */
-                if (resultObj != OREF_NULL)
-                {
-                    saveObject(resultObj);
-                }
                 /* reset the next instruction        */
                 this->next = this->current->nextInstruction;
                 oldActivity = this->activity;      /* save the current activity         */
@@ -1028,8 +1070,6 @@ RexxObject *RexxActivation::forward(
 /* Function:  Process a REXX FORWARD instruction                              */
 /******************************************************************************/
 {
-  RexxObject *resultObj;               /* message result                    */
-
   if (target == OREF_NULL)             /* no target?                        */
     target = this->receiver;           /* use this                          */
   if (message == OREF_NULL)            /* no message override?              */
@@ -1039,12 +1079,14 @@ RexxObject *RexxActivation::forward(
     _argcount = this->argcount;
   }
   if (continuing) {                    /* just processing the message?      */
+    ProtectedObject result;
     if (superClass == OREF_NULL)       /* no override?                      */
                                        /* issue the message and return      */
-      return target->messageSend(message, _argcount, _arguments);
+      target->messageSend(message, _argcount, _arguments, result);
     else
                                        /* issue the message with override   */
-      return target->messageSend(message, _argcount, _arguments, superClass);
+      target->messageSend(message, _argcount, _arguments, superClass, result);
+    return (RexxObject *)result;
   }
   else {                               /* got to shut down and issue        */
     this->settings.flags |= forwarded; /* we are now a phantom activation   */
@@ -1060,15 +1102,16 @@ RexxObject *RexxActivation::forward(
     this->settings.flags &= ~trace_debug;
                                        /* let debug prompt know of changes  */
     this->settings.flags |= debug_bypass;
+    ProtectedObject r;
     if (superClass == OREF_NULL)       /* no over ride?                     */
                                        /* issue the simple message          */
-      resultObj = target->messageSend(message, _argcount, _arguments);
+      target->messageSend(message, _argcount, _arguments, r);
     else
                                        /* use the full override             */
-      resultObj = target->messageSend(message, _argcount, _arguments, superClass);
-    this->result = resultObj;          /* save the result value             */
+      target->messageSend(message, _argcount, _arguments, superClass, r);
+    this->result = (RexxObject *)r;    /* save the result value             */
                                        /* already had a reply issued?       */
-    if (this->settings.flags&reply_issued && resultObj != OREF_NULL)
+    if (this->settings.flags&reply_issued && this->result != OREF_NULL)
                                        /* flag this as an error             */
       reportException(Error_Execution_reply_exit);
     this->termination();               /* run "program" termination method  */
@@ -1842,19 +1885,17 @@ void RexxActivation::interpret(
 {
   RexxMethod     * newMethod;          /* new method to process             */
   RexxActivation * newActivation;      /* new activation for call           */
-  RexxObject     * resultObj;
 
   ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
                                        /* translate the code                */
   newMethod = this->code->interpret(codestring, this->current->getLineNumber());
                                        /* create a new activation           */
-  newActivation = ActivityManager::newActivation(this->receiver, newMethod, this->activity, this->settings.msgname, this, INTERPRET);
+  newActivation = ActivityManager::newActivation(this->activity, newMethod, (RexxCode *)newMethod->getCode(), this, OREF_NULL, OREF_NULL, INTERPRET);
   this->activity->push(newActivation); /* push on the activity stack        */
+  ProtectedObject r;
                                        /* run the internal routine on the   */
                                        /* new activation                    */
-  resultObj = newActivation->run(arglist, argcount, OREF_NULL);
-  // TODO:  Replace this with protected object
-  if (resultObj != OREF_NULL) discardObject(resultObj);
+  newActivation->run(OREF_NULL, OREF_NULL, arglist, argcount, OREF_NULL, r);
 }
 
 
@@ -1866,7 +1907,6 @@ void RexxActivation::debugInterpret(   /* interpret interactive debug input */
 {
     RexxMethod     * newMethod;          /* new method to process             */
     RexxActivation * newActivation;      /* new activation for call           */
-    RexxObject     * resultObj;
 
     this->debug_pause = true;            /* now in debug pause                */
     try
@@ -1874,16 +1914,12 @@ void RexxActivation::debugInterpret(   /* interpret interactive debug input */
         /* translate the code                */
         newMethod = this->code->interpret(codestring, this->current->getLineNumber());
         /* create a new activation           */
-        newActivation = ActivityManager::newActivation(this->receiver, newMethod, this->activity, this->settings.msgname, this, DEBUGPAUSE);
+        newActivation = ActivityManager::newActivation(this->activity, newMethod, (RexxCode *)newMethod->getCode(), this, OREF_NULL, OREF_NULL, DEBUGPAUSE);
         this->activity->push(newActivation); /* push on the activity stack        */
+        ProtectedObject r;
                                              /* run the internal routine on the   */
                                              /* new activation                    */
-        resultObj = newActivation->run(arglist, argcount, OREF_NULL);
-        // TODO use protected object
-        if (resultObj != OREF_NULL)
-        {
-            discardHoldObject(resultObj);
-        }
+        newActivation->run(OREF_NULL, OREF_NULL, arglist, argcount, OREF_NULL, r);
     }
     catch (RexxActivation *t)
     {
@@ -1931,17 +1967,17 @@ RexxObject * RexxActivation::rexxVariable(   /* retrieve a program entry        
   return OREF_NULL;                    // not recognized
 }
 
-RexxObject * RexxActivation::externalCall(
+RexxObject *RexxActivation::externalCall(
     RexxString          * target,      /* target of the call                */
     size_t                _argcount,   /* count of arguments                */
     RexxExpressionStack * _stack,      /* stack of arguments                */
-    RexxString          * calltype )   /* FUNCTION or ROUTINE               */
+    RexxString          * calltype,    /* FUNCTION or ROUTINE               */
+    ProtectedObject     & resultObj)
 /******************************************************************************/
 /* Function:  Process an external function call                               */
 /******************************************************************************/
 {
   RexxMethod   * routine;              /* resolved call pointer             */
-  RexxObject   * resultObj;            /* command return code               */
   RexxObject   **_arguments;           /* argument array                    */
   bool           found;
 
@@ -1952,21 +1988,21 @@ RexxObject * RexxActivation::externalCall(
   routine = this->settings.parent_code->resolveRoutine(target);
   if (routine == OREF_NULL) {          /* still not found?                  */
                                        /* if exit declines call             */
-    if (this->activity->sysExitFunc(this, target, calltype, &resultObj, _arguments, _argcount)) {
+    if (this->activity->sysExitFunc(this, target, calltype, resultObj, _arguments, _argcount)) {
                                        /* exist in functions definition?    */
       routine = (RexxMethod *)TheFunctionsDirectory->get(target);
       if (routine == OREF_NULL)        /* not found yet?                    */
       {
                                            /* do external search and execute    */
-          resultObj = SysExternalFunction(this, this->activity, target,
-              this->code->getProgramName(), _arguments, _argcount, calltype, &found);
+          SysExternalFunction(this, this->activity, target,
+              this->code->getProgramName(), _arguments, _argcount, calltype, &found, resultObj);
 
 #ifdef SCRIPTING
           if (!found) {
             char newCalltype[32] = "AX";
             sprintf(newCalltype+2,"%p",calltype); // store info that is is called in engine
                                                   // context, also store calltype information
-            found = !this->activity->sysExitFunc(this, target, new_string(newCalltype), &resultObj, _arguments, _argcount);
+            found = !this->activity->sysExitFunc(this, target, new_string(newCalltype), resultObj, _arguments, _argcount);
             //if (found)
             //  result = routine->call(this->activity, (RexxObject *)this, target, arguments, calltype, OREF_NULL, EXTERNALCALL);
           }
@@ -1977,19 +2013,25 @@ RexxObject * RexxActivation::externalCall(
               if (routine == OREF_NULL)        /* not found yet?                    */
                   reportException(Error_Routine_not_found_name, target);
               else
-                  resultObj = routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL);
+              {
+                  routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
+              }
           }
       }
 
       else                             /* we found a routine so run it      */
-                                       /* run a special way                 */
-        resultObj = routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL);
+      {
+                                         /* run a special way                 */
+          routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
+      }
     }
   }
   else                                 /* we found a routine so run it      */
+  {
                                        /* run a special way                 */
-    resultObj = routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL);
-  return resultObj;                    /* return the function result        */
+      routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
+  }
+  return (RexxObject *)resultObj;      /* return the function result        */
 }
 
 
@@ -1999,7 +2041,7 @@ bool RexxActivation::callExternalRexx(
   RexxObject **     _arguments,        /* Argument array                    */
   size_t            _argcount,         /* number of arguments in the call   */
   RexxString *      calltype,          /* Type of call                      */
-  RexxObject **     resultObj)         /* Result of function call           */
+  ProtectedObject  &resultObj)         /* Result of function call           */
 /******************************************************************************/
 /* Function:  Call a rexx protram as an external routine                      */
 /******************************************************************************/
@@ -2025,9 +2067,10 @@ bool RexxActivation::callExternalRexx(
     else {                             /* Try to run method                 */
       ProtectedObject p(routine);
                                        /* run as a call                     */
-      *resultObj = routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, this->settings.current_env, EXTERNALCALL);
+      routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, this->settings.current_env, EXTERNALCALL, resultObj);
+      RexxCode *routineCode = (RexxCode *)routine->getCode();
                                        /* now merge all of the public info  */
-      this->settings.parent_code->mergeRequired(routine->getSource());
+      this->settings.parent_code->mergeRequired(routineCode->getSourceObject());
       return true;                     /* Return routine found flag         */
     }
   }
@@ -2046,7 +2089,7 @@ RexxObject * RexxActivation::loadRequired(
   RexxString    * fullname = OREF_NULL;/* fully resolved install name       */
   RexxMethod    * _method = OREF_NULL; /* method to invoke                  */
   RexxDirectory * securityArgs = OREF_NULL;   /* security check arguments          */
-  RexxObject    * resultObj;
+  ProtectedObject resultObj;
   unsigned short  usMacroPosition;     /* macro search order                */
   bool            fFileExists = true;  /* does required file exist          */
   bool            fMacroExists = false;/* does required macro exist         */
@@ -2121,20 +2164,21 @@ RexxObject * RexxActivation::loadRequired(
   ProtectedObject p(method);
 
   this->activity->addRunningRequires(fullname);
-  if (this->hasSecurityManager()) {
-    resultObj = securityArgs->fastAt(new_string(CHAR_SECURITYMANAGER));
-    if (resultObj != OREF_NULL && resultObj != TheNilObject)
-      _method->setSecurityManager(resultObj);
+  if (this->hasSecurityManager())
+  {
+
+    RexxObject *manager = securityArgs->fastAt(new_string(CHAR_SECURITYMANAGER));
+    if (manager != OREF_NULL && manager != TheNilObject)
+      _method->setSecurityManager(manager);
   }
   this->stack.pop();                   /* now remove the protection         */
                                        /* run a special way                 */
-  resultObj = _method->call(this->activity, (RexxObject *)this, target, NULL, 0, OREF_ROUTINENAME, OREF_NULL, EXTERNALCALL);
-  // TODO replace with protected object
-  if ((resultObj != OREF_NULL) && _method->isRexxMethod()) discardObject(resultObj);
+  _method->call(this->activity, (RexxObject *)this, target, NULL, 0, OREF_ROUTINENAME, OREF_NULL, EXTERNALCALL, resultObj);
                                        /* No longer installing routine.     */
   this->activity->removeRunningRequires(fullname);
+  RexxCode *methodCode = (RexxCode *)_method->getCode();
                                        /* now merge all of the info         */
-  this->settings.parent_code->mergeRequired(_method->getSource());
+  this->settings.parent_code->mergeRequired(methodCode->getSourceObject());
   return _method;                      /* return the method  (but not needed!)  */
 }
 
@@ -2142,33 +2186,33 @@ RexxObject * RexxActivation::loadRequired(
 RexxObject * RexxActivation::internalCall(
     RexxInstruction     *target,       /* target of the call                */
     size_t               _argcount,     /* count of arguments                */
-    RexxExpressionStack *_stack )       /* stack of arguments                */
+    RexxExpressionStack *_stack,        /* stack of arguments                */
+    ProtectedObject &returnObject)
 /******************************************************************************/
 /* Function:  Process an internal function or subroutine call                 */
 /******************************************************************************/
 {
   RexxActivation * newActivation;      /* new activation for call           */
   size_t           lineNum;            /* line number of the call           */
-  RexxObject *     returnObject;
   RexxObject **    _arguments = _stack->arguments(_argcount);
 
   lineNum = this->current->getLineNumber();  /* get the current line number       */
                                        /* initialize the SIGL variable      */
   this->setLocalVariable(OREF_SIGL, VARIABLE_SIGL, new_integer(lineNum));
                                        /* create a new activation           */
-  newActivation = ActivityManager::newActivation(this->receiver, this->settings.parent_method,
-                 this->activity, this->settings.msgname, this, INTERNALCALL);
+  newActivation = ActivityManager::newActivation(this->activity, this->settings.parent_method,
+                 this->settings.parent_code, this, OREF_NULL, OREF_NULL, INTERNALCALL);
 
   this->activity->push(newActivation); /* push on the activity stack        */
                                        /* run the internal routine on the   */
                                        /* new activation                    */
-  returnObject = newActivation->run(_arguments, _argcount, target);
-  return returnObject;
+  return newActivation->run(OREF_NULL, OREF_NULL, _arguments, _argcount, target, returnObject);
 }
 
 RexxObject * RexxActivation::internalCallTrap(
     RexxInstruction * target,          /* target of the call                */
-    RexxDirectory   * conditionObj )   /* processed condition object        */
+    RexxDirectory   * conditionObj,    /* processed condition object        */
+    ProtectedObject &result)
 /******************************************************************************/
 /* Function:  Call an internal condition trap                                 */
 /******************************************************************************/
@@ -2181,14 +2225,14 @@ RexxObject * RexxActivation::internalCallTrap(
                                        /* initialize the SIGL variable      */
   this->setLocalVariable(OREF_SIGL, VARIABLE_SIGL, new_integer(lineNum));
                                        /* create a new activation           */
-  newActivation = ActivityManager::newActivation(this->receiver, this->settings.parent_method,
-                 this->activity, this->settings.msgname, this, INTERNALCALL);
+  newActivation = ActivityManager::newActivation(this->activity, this->settings.parent_method,
+                 this->settings.parent_code, this, OREF_NULL, OREF_NULL, INTERNALCALL);
                                        /* set the new condition object      */
   newActivation->setConditionObj(conditionObj);
   this->activity->push(newActivation); /* push on the activity stack        */
                                        /* run the internal routine on the   */
                                        /* new activation                    */
-  return newActivation->run(NULL, 0, target);
+  return newActivation->run(OREF_NULL, OREF_NULL, NULL, 0, target, result);
 }
 
 
@@ -2228,7 +2272,7 @@ void RexxActivation::traceBack(
   RexxSource   * _source;              /* current method source             */
   RexxString   * line;                 /* traceback line                    */
 
-  _source = this->code->getSource();    /* get the source object             */
+  _source = this->code->getSourceObject();  /* get the source object             */
   if (_source->isTraceable()) {         /* if we still have real source      */
     line = this->formatTrace(this->current, _source);
     if (line != OREF_NULL)             /* have a real line?                 */
@@ -2984,7 +3028,7 @@ void RexxActivation::traceClause(      /* trace a REXX instruction          */
   if (!this->code->isTraceable())      /* if we don't have real source      */
     return;                            /* just ignore for this              */
                                        /* format the line                   */
-  line = this->formatTrace(clause, this->code->getSource());
+  line = this->formatTrace(clause, this->code->getSourceObject());
   if (line != OREF_NULL) {             /* have a source line?               */
                                        /* newly into debug mode?            */
     if ((this->settings.flags&trace_debug && !(this->settings.flags&debug_prompt_issued)))
@@ -3115,7 +3159,7 @@ void RexxActivation::addLocalRoutine(RexxString *name, RexxMethod *_method)
     if (routines == OREF_NULL)
     {
 
-        settings.parent_code->getSource()->setLocalRoutines(new_directory());
+        settings.parent_code->getSourceObject()->setLocalRoutines(new_directory());
         routines = settings.parent_code->getLocalRoutines();
     }
     // if a method by that name exists, it will be OVERWRITTEN!

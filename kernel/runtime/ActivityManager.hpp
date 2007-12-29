@@ -41,6 +41,7 @@
 class RexxActivity;
 class RexxObjectTable;
 class RexxStack;
+class RexxCode;
 
 
 class ActivityManager
@@ -71,7 +72,8 @@ public:
     static void createKernelLock();
     static void closeKernelLock();
     static void init();
-    static RexxActivation *newActivation(RexxObject *receiver, RexxMethod *runMethod, RexxActivity *activity, RexxString *msgname, RexxActivation *activation, int context);
+    static RexxActivation *newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code, RexxActivation *parent, RexxString *calltype, RexxString *environment, int context);
+    static RexxActivation *newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code);
     static void cacheActivation(RexxActivation *activation);
     static RexxActivity *newActivity(int priority);
     static void haltAllActivities();

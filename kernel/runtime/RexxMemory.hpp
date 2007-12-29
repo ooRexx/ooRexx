@@ -337,7 +337,6 @@ enum
   bool objectReferenceOK(RexxObject *o);
   void restoreImage();
 
-  static size_t resolveExportedMethod(PCPPM   targetMethod);
   static RexxMethod *createKernelMethod(PCPPM entryPoint, size_t arguments);
   static RexxMethod *createProtectedKernelMethod(PCPPM entryPoint, size_t arguments);
   static RexxMethod *createPrivateKernelMethod(PCPPM entryPoint, size_t arguments);

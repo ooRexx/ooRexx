@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -43,10 +43,11 @@
 /******************************************************************************/
 #ifndef Included_RexxNativeCode
 #define Included_RexxNativeCode
-                                       /* pointer to native method function */
-typedef char *(REXXENTRY *PNMF)(void **);
 
-class RexxNativeCode : public RexxInternalObject {
+#include "MethodClass.hpp"
+
+class RexxNativeCode : public BaseCode
+{
   public:
    inline void *operator new(size_t size, void *ptr) { return ptr; }
    void        *operator new(size_t size);
@@ -62,6 +63,8 @@ class RexxNativeCode : public RexxInternalObject {
    void        liveGeneral(int reason);
    void        flatten(RexxEnvelope *envelope);
    RexxObject *unflatten(RexxEnvelope *envelope);
+   virtual void run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+       size_t count, RexxObject **argPtr, ProtectedObject &result);
 
    inline PNMF        getEntry() { return this->entry; };
    inline void        setEntry(PNMF v) { this->entry = v; };

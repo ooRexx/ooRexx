@@ -470,7 +470,7 @@ RexxMethod * process_instore(
                                        /* copy source into the buffer       */
         memcpy(source_buffer->address(), instore[0].strptr, instore[0].strlength);
                                        /* reconnect this with the source    */
-        ((RexxCode *)method)->getSource()->setBufferedSource(source_buffer);
+        ((RexxCode *)method)->getSourceObject()->setBufferedSource(source_buffer);
       }
       return method;                   /* go return it                      */
     }
@@ -520,7 +520,7 @@ void  SysRunProgram(
   tokenize_only = false;               /* default is to run the program     */
                                        /* create the native method to be run*/
                                        /* on the activity                   */
-  newNativeAct = new ((RexxObject *)ActivityManager::currentActivity, OREF_NULL, ActivityManager::currentActivity, OREF_PROGRAM, OREF_NULL) RexxNativeActivation;
+  newNativeAct = new RexxNativeActivation(ActivityManager::currentActivity, OREF_NULL);
   ActivityManager::currentActivity->push(newNativeAct); /* Push new nativeAct onto stack     */
   self = (RexxStartInfo *)ControlInfo; /* address all of the arguments      */
   if (self->programname != NULL)       /* have an actual name?              */

@@ -66,6 +66,7 @@
 #include "SubcommandAPI.h"
 #include "RexxAPIManager.h"
 #include "Interpreter.hpp"
+#include "ProtectedObject.hpp"
 #include "PointerClass.hpp"
 
 #include <fcntl.h>
@@ -215,7 +216,7 @@ void WinEnterKernel(bool execute)
     ActivityManager::getActivity(); // create a "current" activity
   }
 
-  RexxNativeActivation *newNativeAct = new ((RexxObject *)ActivityManager::currentActivity, OREF_NULL, ActivityManager::currentActivity, OREF_PROGRAM, OREF_NULL) RexxNativeActivation;
+  RexxNativeActivation *newNativeAct = new RexxNativeActivation(ActivityManager::currentActivity, OREF_NULL);
   ActivityManager::currentActivity->push(newNativeAct); /* Push new nativeAct onto stack     */
   WinStore = ActivityManager::currentActivity;
 }
@@ -443,22 +444,10 @@ int APIENTRY RexxStart(
 {
 
   int      rc;                         /* RexxStart return code             */
-// HANDLE   orexx_active_sem;
-
-  WinBeginExceptions                   /* Begin of exception handling       */
-
-  /* the current block is to implement a global counter of how many REXX programs
-  are running on the system */
-// I don't see why we should need this block and it causes trouble
-//  orexx_active_sem = OpenSemaphore(SEMAPHORE_ALL_ACCESS, true, "OBJECTREXX_RUNNING");
-//  if (orexx_active_sem)
-//     ReleaseSemaphore(orexx_active_sem,1,NULL);
-//  else
-//     orexx_active_sem = CreateSemaphore(NULL, 1, MAX_REXX_PROGS, "OBJECTREXX_RUNNING");
+//  WinBeginExceptions                 /* Begin of exception handling       */
 
   RexxStartInfo RexxStartArguments;    /* entry argument information        */
   RexxObject *  tempArgument;          /* temporary argument item           */
-  RexxObject *  resultObject;          /* dummy returned result             */
 
                                        /* copy all of the arguments into    */
                                        /* the info control block, which is  */
@@ -492,14 +481,17 @@ int APIENTRY RexxStart(
   RexxInitialize();                    /* Perform any needed inits          */
 
   ActivityManager::getActivity();     /* get a base activity under us      */
-                                       /* wrap up the argument              */
-  tempArgument = (RexxObject *)new_pointer(&RexxStartArguments);
-                                       /* pass along to the real method     */
-  rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, &resultObject);
+  {
+      ProtectedObject resultObject;        /* dummy returned result             */
+                                           /* wrap up the argument              */
+      tempArgument = (RexxObject *)new_pointer(&RexxStartArguments);
+                                           /* pass along to the real method     */
+      rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
+  }
   ActivityManager::returnActivity();
   RexxTerminate();                     /* perform needed termination        */
 
-  WinEndExceptions                     /* End of Exception handling         */
+//  WinEndExceptions                   /* End of Exception handling         */
 
   return -rc;                          /* return the error code (negated)   */
 }
@@ -609,7 +601,6 @@ APIRET REXXENTRY RexxCreateMethod(
   LONG     rc;                         /* RexxStart return code             */
   RexxScriptInfo RexxScriptArgs;
   RexxObject *  tempArgument;          /* temporary argument item           */
-  RexxObject *  resultObject;          /* dummy returned result             */
 
 
                                        /* clear the RexxScriptArgs block    */
@@ -625,8 +616,11 @@ APIRET REXXENTRY RexxCreateMethod(
   ActivityManager::getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
   tempArgument = (RexxObject *)new_pointer(&RexxScriptArgs);
-                                       /* pass along to the real method     */
-  rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, &resultObject);
+  {
+      ProtectedObject  resultObject;       /* dummy returned result             */
+                                           /* pass along to the real method     */
+      rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
+  }
 
                                        /* if error, get condition data from */
                                        /* condition object.                 */
@@ -682,7 +676,6 @@ APIRET REXXENTRY RexxRunMethod(
   LONG     rc;                         /* RexxStart return code             */
   RexxScriptInfo RexxScriptArgs;
   RexxObject *  tempArgument;          /* temporary argument item           */
-  RexxObject *  resultObject;          /* dummy returned result             */
   RexxActivity *tempActivity;
   RexxActivity *store;
 
@@ -707,8 +700,11 @@ APIRET REXXENTRY RexxRunMethod(
   tempActivity->setExitObjects(true); // enable object passing thru classic rexx interface!
                                        /* wrap up the argument              */
   tempArgument = (RexxObject *)new_pointer(&RexxScriptArgs);
-                                       /* pass along to the real method     */
-  rc = tempActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, &resultObject);
+  {
+      ProtectedObject  resultObject;       /* dummy returned result             */
+                                           /* pass along to the real method     */
+      rc = tempActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
+  }
 
                                        /* if error, get condition data from */
                                        /* condition object.                 */
@@ -739,7 +735,6 @@ APIRET REXXENTRY RexxStoreMethod(RexxObject * method, PRXSTRING scriptData)
   LONG     rc;                         /* RexxStart return code             */
   RexxScriptInfo RexxScriptArgs;
   RexxObject *  tempArgument;          /* temporary argument item           */
-  RexxObject *  resultObject;          /* dummy returned result             */
 
                                        /* clear the RexxScriptArgs block    */
   memset((void *)&RexxScriptArgs, 0, sizeof(RexxScriptInfo));
@@ -752,8 +747,11 @@ APIRET REXXENTRY RexxStoreMethod(RexxObject * method, PRXSTRING scriptData)
   ActivityManager::getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
   tempArgument = (RexxObject *)new_pointer(&RexxScriptArgs);
-                                       /* pass along to the real method     */
-  rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, &resultObject);
+  {
+      ProtectedObject resultObject;        /* dummy returned result             */
+                                           /* pass along to the real method     */
+      rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
+  }
   ActivityManager::returnActivity();
   RexxTerminate();                     /* perform needed termination        */
   return rc;                           /* return the error code             */
@@ -779,7 +777,6 @@ APIRET REXXENTRY RexxLoadMethod(const char *dirname, PRXSTRING scriptData, RexxO
   LONG     rc;                         /* RexxStart return code             */
   RexxScriptInfo RexxScriptArgs;
   RexxObject *  tempArgument;          /* temporary argument item           */
-  RexxObject *  resultObject;          /* dummy returned result             */
 
                                        /* clear the RexxScriptArgs block    */
   memset((void *)&RexxScriptArgs, 0, sizeof(RexxScriptInfo));
@@ -794,8 +791,11 @@ APIRET REXXENTRY RexxLoadMethod(const char *dirname, PRXSTRING scriptData, RexxO
   ActivityManager::getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
   tempArgument = (RexxObject *)new_pointer(&RexxScriptArgs);
-                                       /* pass along to the real method     */
-  rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, &resultObject);
+  {
+      ProtectedObject  resultObject;       /* dummy returned result             */
+                                           /* pass along to the real method     */
+      rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
+  }
   ActivityManager::returnActivity();
 
   RexxTerminate();                     /* perform needed termination        */
@@ -823,7 +823,6 @@ APIRET REXXENTRY RexxTranslateProgram(
   LONG     rc;                         /* RexxStart return code             */
   RexxStartInfo RexxStartArguments;    /* entry argument information        */
   RexxObject *  tempArgument;          /* temporary argument item           */
-  RexxObject *  resultObject;          /* dummy returned result             */
 
                                        /* clear the RexxStart block         */
   memset((void *)&RexxStartArguments, 0, sizeof(RexxStartInfo));
@@ -841,8 +840,11 @@ APIRET REXXENTRY RexxTranslateProgram(
   ActivityManager::getActivity();     /* get a base activity under us      */
                                        /* wrap up the argument              */
   tempArgument = (RexxObject *)new_pointer(&RexxStartArguments);
-                                       /* pass along to the real method     */
-  rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, &resultObject);
+  {
+      ProtectedObject resultObject;        /* dummy returned result             */
+                                           /* pass along to the real method     */
+      rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
+  }
   ActivityManager::returnActivity();
   RexxTerminate();                     /* perform needed termination        */
   return rc;                           /* return the error code             */
@@ -1052,7 +1054,7 @@ RexxMethod * process_instore(
                                        /* copy source into the buffer       */
         memcpy(source_buffer->address(), instore[0].strptr, instore[0].strlength);
                                        /* reconnect this with the source    */
-        ((RexxCode *)method)->getSource()->setBufferedSource(source_buffer);
+        ((RexxCode *)method)->getSourceObject()->setBufferedSource(source_buffer);
       }
       return method;                   /* go return it                      */
     }
@@ -1237,7 +1239,7 @@ void  SysRunProgram(
   tokenize_only = false;               /* default is to run the program     */
                                        /* create the native method to be run*/
                                        /* on the activity                   */
-  newNativeAct = new ((RexxObject *)ActivityManager::currentActivity, OREF_NULL, ActivityManager::currentActivity, OREF_PROGRAM, OREF_NULL) RexxNativeActivation;
+  newNativeAct = new RexxNativeActivation(ActivityManager::currentActivity, OREF_NULL);
   ActivityManager::currentActivity->push(newNativeAct); /* Push new nativeAct onto stack     */
   switch (*((short *)ControlInfo)) {
     case CREATEMETHOD:

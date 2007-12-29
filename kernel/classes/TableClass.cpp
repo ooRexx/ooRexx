@@ -128,7 +128,9 @@ RexxArray  *RexxTable::requestArray()
   if (isOfClass(Table, this))              /* primitive level object?           */
     return this->makeArray();          /* just do the makearray             */
   else                                 /* need to so full request mechanism */
-    return (RexxArray *)this->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
+  {
+      return (RexxArray *)this->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
+  }
 }
 
 RexxObject *RexxTable::itemsRexx(void)
