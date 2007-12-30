@@ -2438,7 +2438,7 @@ void RexxSource::createConstantGetterMethod(RexxDirectory *classTarget, RexxDire
     if (target->entry(name) != OREF_NULL)
     {
         /* this is an error                  */
-        syntaxError(Error_Translation_duplicate_attribute);
+        syntaxError(Error_Translation_duplicate_constant);
     }
 
     ConstantGetterCode *code = new ConstantGetterCode(value);
@@ -2450,7 +2450,7 @@ void RexxSource::createConstantGetterMethod(RexxDirectory *classTarget, RexxDire
         if (classTarget->entry(name) != OREF_NULL)
         {
             /* this is an error                  */
-            syntaxError(Error_Translation_duplicate_attribute);
+            syntaxError(Error_Translation_duplicate_constant);
         }
         classTarget->put(new_method(code), name);
     }
