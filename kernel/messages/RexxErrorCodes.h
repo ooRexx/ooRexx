@@ -565,6 +565,7 @@
 #define Error_Translation_class_external_bad_class_server  99929
 #define Error_Translation_use_strict_ellipsis              99930
 #define Error_Translation_duplicate_attribute              99931
+#define Error_Translation_duplicate_constant               99932
 #define Error_at_line                                      101000
 #define Message_Translations_January                       101006
 #define Message_Translations_February                      101007

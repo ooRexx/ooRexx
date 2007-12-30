@@ -4867,6 +4867,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Translation_duplicate_attribute</SymbolicName>
         <Text>Duplicate ::ATTRIBUTE directive instruction</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>932</Subcode>
+        <MessageNumber>695</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_duplicate_constant</SymbolicName>
+        <Text>Duplicate ::CONSTANT directive instruction</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

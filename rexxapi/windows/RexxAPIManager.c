@@ -634,7 +634,7 @@ int   FillAPIComBlock(
 
 int RxGetModAddress(const char *dll_name,
                     char *function_name,      // gets uppercased potentially, so can't be const
-                    size_t *error_codes,
+                    int  *error_codes,
                     REXXPFN * function_address)
 {
    int      rc = 0 ;                   /* Function result.           */

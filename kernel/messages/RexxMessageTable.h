@@ -567,6 +567,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Translation_class_external_bad_class_server)
       MINOR(Error_Translation_use_strict_ellipsis)
       MINOR(Error_Translation_duplicate_attribute)
+      MINOR(Error_Translation_duplicate_constant)
   MAJOR(Error_at_line)
       MINOR(Message_Translations_January)
       MINOR(Message_Translations_February)

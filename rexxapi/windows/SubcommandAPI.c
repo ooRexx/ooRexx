@@ -122,7 +122,7 @@ extern ULONG queue_get_pid(DWORD * envchars);
 /*********************************************************************/
 
 typedef struct _loaderr {
-   ULONG     errors[2];                /* two entries                */
+   int       errors[2];                /* two entries                */
 }  loaderr;
 
 /*********************************************************************/

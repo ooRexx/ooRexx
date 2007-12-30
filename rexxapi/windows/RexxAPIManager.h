@@ -242,7 +242,7 @@ APIRET APIENTRY RexxExecuteMacroFunction (
 
 ULONG           RxAPIStartUp(int chain);
 int             FillAPIComBlock(HAPIBLOCK *, const char *, const char *, const char *);
-int  RxGetModAddress(const char *dll_name, char *function_name, size_t *error_codes, REXXPFN *function_address);
+int  RxGetModAddress(const char *dll_name, char *function_name, int *error_codes, REXXPFN *function_address);
 ULONG get_session(void);
 BOOL  Initialize( VOID ) ;
 

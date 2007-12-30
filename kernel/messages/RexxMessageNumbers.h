@@ -599,6 +599,7 @@
 #define Error_Symbol_or_string_attribute_msg                         692
 #define Error_Symbol_or_string_constant_msg                          693
 #define Error_Symbol_or_string_constant_value_msg                    694
+#define Error_Translation_duplicate_constant_msg                     695
 
 
 #endif

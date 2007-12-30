@@ -2434,12 +2434,24 @@ void RexxSource::createConstantGetterMethod(RexxDirectory *classTarget, RexxDire
 {
     // no code can follow the automatically generated methods
     this->checkDirective();
+    // make sure we don't have one of these define already.
+    if (target->entry(name) != OREF_NULL)
+    {
+        /* this is an error                  */
+        syntaxError(Error_Translation_duplicate_attribute);
+    }
 
     ConstantGetterCode *code = new ConstantGetterCode(value);
     // and finally add to both method directories.
     target->put(new_method(code), name);
     if (classTarget != OREF_NULL)
     {
+        // make sure we don't have one of these define already.
+        if (classTarget->entry(name) != OREF_NULL)
+        {
+            /* this is an error                  */
+            syntaxError(Error_Translation_duplicate_attribute);
+        }
         classTarget->put(new_method(code), name);
     }
 }

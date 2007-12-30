@@ -599,6 +599,7 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Symbol_or_string_attribute    "String or symbol expected as ::ATTRIBUTE directive name"
    Error_Symbol_or_string_constant    "String or symbol expected as ::CONSTANT directive name"
    Error_Symbol_or_string_constant_value    "String or symbol expected as ::CONSTANT value"
+   Error_Translation_duplicate_constant    "Duplicate ::CONSTANT directive instruction"
    
 END
 
