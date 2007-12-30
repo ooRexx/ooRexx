@@ -1926,7 +1926,9 @@ RexxObject *RexxMemory::setOref(void *oldValue, RexxObject *value)
       } else {
                                        /* nope, this is the first, so set   */
                                        /*the refcount to 1                  */
-        this->old2new->put(new_counter(1L), value);
+        // NOTE:  We don't use new_integer here because we need a mutable
+        // integer and can't use the one out of the cache.
+        this->old2new->put(new RexxInteger(1), value);
       }
     }
   }
@@ -2127,7 +2129,9 @@ void RexxMemory::setUpMemoryTables(RexxObjectTable *old2newTable)
   /* restored image), then add the first entry to the table. */
   if (old2new != NULL) {
      /* now add old2new itself to the old2new table! */
-     old2new->put(new_counter(1L), old2new);
+      // NOTE:  We don't use new_integer here because we need a mutable
+      // integer and can't use the one out of the cache.
+     old2new->put(new RexxInteger(1), old2new);
   }
   /* first official OrefSet!! */
   OrefSet(this, markTable, old2new);
@@ -2137,7 +2141,7 @@ void RexxMemory::setUpMemoryTables(RexxObjectTable *old2newTable)
   /* order in which these two are marked in the live(size_t) method of */
   /* RexxMemory.  If these are added to the mark table, they'll be */
   /* processed earlier than we'd like. */
-  saveStack = new_savestack(SaveStackSize, SaveStackAllocSize);
+  saveStack = new (SaveStackAllocSize) RexxSaveStack(SaveStackSize, SaveStackAllocSize);
   /* from this point on, we push things on to the save stack */
   saveTable = new_object_table();
 }

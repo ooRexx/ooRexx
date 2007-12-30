@@ -82,4 +82,6 @@ class RexxQueue : public RexxList {
  static RexxClass *classInstance;
 
 };
+
+inline RexxQueue *new_queue() { return new RexxQueue; }
 #endif

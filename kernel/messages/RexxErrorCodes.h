@@ -135,6 +135,9 @@
 #define Error_Symbol_or_string_tilde                       19909
 #define Error_Symbol_or_string_colon                       19911
 #define Error_Symbol_or_string_mixinclass                  19913
+#define Error_Symbol_or_string_attribute                   19914
+#define Error_Symbol_or_string_constant                    19915
+#define Error_Symbol_or_string_constant_value              19916
 #define Error_Symbol_expected                              20000
 #define Error_Symbol_expected_user_defined                 20900
 #define Error_Symbol_expected_drop                         20901
@@ -167,6 +170,7 @@
 #define Error_Invalid_data_end                             21909
 #define Error_Invalid_data_form                            21911
 #define Error_Invalid_data_guard_off                       21912
+#define Error_Invalid_data_constant_dir                    21913
 #define Error_Invalid_character_string                     22000
 #define Error_Invalid_character_string_char                22001
 #define Error_Invalid_character_string_DBCS                22901

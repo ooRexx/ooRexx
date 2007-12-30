@@ -96,7 +96,7 @@ void ActivityManager::init()
     activeActivities = new_list();
     availableActivities = new_list();
     allActivities = new_list();
-    activations = new_stack(ACTIVATION_CACHE_SIZE);
+    activations = new (ACTIVATION_CACHE_SIZE) RexxStack(ACTIVATION_CACHE_SIZE);
     currentActivity = OREF_NULL;
     localEnvironment = new_directory();
 }

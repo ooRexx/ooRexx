@@ -703,9 +703,9 @@ RexxObject *RexxNativeActivation::dispatch()
 /* Function:  Redispatch an activation on a different activity                */
 /******************************************************************************/
 {
-    ProtectedObject result;
-    this->run(receiver, msgname, argcount, arglist, result);  /* just do a method run              */
-    return (RexxObject *)result;
+    ProtectedObject r;
+    this->run(receiver, msgname, argcount, arglist, r);  /* just do a method run              */
+    return (RexxObject *)r;
 }
 
 void RexxNativeActivation::traceBack(

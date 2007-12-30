@@ -59,6 +59,7 @@
 KeywordEntry RexxSource::directives[] = {              /* language directive table          */
    KeywordEntry(CHAR_ATTRIBUTE,   DIRECTIVE_ATTRIBUTE),
    KeywordEntry(CHAR_CLASS,       DIRECTIVE_CLASS),
+   KeywordEntry(CHAR_CONSTANT,    DIRECTIVE_CONSTANT),
    KeywordEntry(CHAR_METHOD,      DIRECTIVE_METHOD),
    KeywordEntry(CHAR_REQUIRES,    DIRECTIVE_REQUIRES),
    KeywordEntry(CHAR_ROUTINE,     DIRECTIVE_ROUTINE),

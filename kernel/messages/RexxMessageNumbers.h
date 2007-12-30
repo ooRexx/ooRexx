@@ -233,6 +233,7 @@
 #define Error_Invalid_subkeyword_requires_msg                        292
 #define Error_Invalid_subkeyword_procedure_msg                       293
 #define Error_Invalid_subkeyword_callonname_msg                      294
+#define Error_Invalid_data_constant_dir_msg                          295
 #define Error_Invalid_subkeyword_signalonname_msg                    295
 #define Error_Invalid_subkeyword_parse_msg                           296
 #define Error_Invalid_subkeyword_use_msg                             297
@@ -595,6 +596,9 @@
 #define Error_Translation_duplicate_attribute_msg                    689
 #define Error_Invalid_argument_format_msg                            690
 #define Error_Unsupported_new_method_msg                             691
+#define Error_Symbol_or_string_attribute_msg                         692
+#define Error_Symbol_or_string_constant_msg                          693
+#define Error_Symbol_or_string_constant_value_msg                    694
 
 
 #endif

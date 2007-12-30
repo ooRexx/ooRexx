@@ -622,6 +622,24 @@ special character (such as a parenthesis).
 <para>String or symbol expected after MIXINCLASS keyword</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>914</term>
+<listitem>
+<para>String or symbol expected as ::ATTRIBUTE directive name</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>915</term>
+<listitem>
+<para>String or symbol expected as ::CONSTANT directive name</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>916</term>
+<listitem>
+<para>String or symbol expected as ::CONSTANT value</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR20">
@@ -824,6 +842,12 @@ special character (such as a parenthesis).
 <term>912</term>
 <listitem>
 <para>Data must not follow the GUARD OFF specification; found "<emphasis>data</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>913</term>
+<listitem>
+<para>Data must not follow the ::CONSTANT value; found "<emphasis>data</emphasis>"</para>
 </listitem>
 </varlistentry>
 </variablelist>

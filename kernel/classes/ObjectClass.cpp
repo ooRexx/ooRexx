@@ -1652,7 +1652,7 @@ RexxMessage *RexxObject::start(
     message = REQUIRED_STRING(message, ARG_ONE);
   }
                                        /* Create the new message object.    */
-  newMessage = new_message(this, message, new (argCount - 1, arguments + 1) RexxArray);
+  newMessage = new RexxMessage(this, message, new (argCount - 1, arguments + 1) RexxArray);
   ProtectedObject p(newMessage);
   newMessage->start(OREF_NULL);        /* Tell the message object to start  */
   return newMessage;                   /* return the new message object     */

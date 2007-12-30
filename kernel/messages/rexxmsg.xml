@@ -835,6 +835,33 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_or_string_mixinclass</SymbolicName>
         <Text>String or symbol expected after MIXINCLASS keyword</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>19</Code>
+        <Subcode>914</Subcode>
+        <MessageNumber>692</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_or_string_attribute</SymbolicName>
+        <Text>String or symbol expected as ::ATTRIBUTE directive name</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>19</Code>
+        <Subcode>915</Subcode>
+        <MessageNumber>693</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_or_string_constant</SymbolicName>
+        <Text>String or symbol expected as ::CONSTANT directive name</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>19</Code>
+        <Subcode>916</Subcode>
+        <MessageNumber>694</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_or_string_constant_value</SymbolicName>
+        <Text>String or symbol expected as ::CONSTANT value</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -1128,6 +1155,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_data_guard_off</SymbolicName>
         <Text>Data must not follow the GUARD OFF specification; found <q><Sub position="1" name="data"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>21</Code>
+        <Subcode>913</Subcode>
+        <MessageNumber>295</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_data_constant_dir</SymbolicName>
+        <Text>Data must not follow the ::CONSTANT value; found <q><Sub position="1" name="data"/></q></Text>
       </SubMessage>
     </Subcodes>
   </Message>

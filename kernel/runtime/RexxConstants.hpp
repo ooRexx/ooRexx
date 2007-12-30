@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxConstants.h     */
+/* REXX Kernel                                            RexxConstants.h     */
 /*                                                                            */
 /* Global Object REXX constants                                               */
 /*                                                                            */
@@ -100,6 +100,7 @@ CHARCONSTANT(COMPARETO, "COMPARETO");
 CHARCONSTANT(COMPARABLE, "COMPARABLE");
 CHARCONSTANT(COMPLETED, "COMPLETED");
 CHARCONSTANT(CONDITION, "CONDITION");
+CHARCONSTANT(CONSTANT, "CONSTANT");
 CHARCONSTANT(CONTINUE, "CONTINUE");
 CHARCONSTANT(COPY, "COPY");
 CHARCONSTANT(CSELF, "CSELF");

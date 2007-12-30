@@ -250,6 +250,7 @@
 #define DIRECTIVE_METHOD    2403
 #define DIRECTIVE_ROUTINE   2404
 #define DIRECTIVE_ATTRIBUTE 2405
+#define DIRECTIVE_CONSTANT  2406
 
 /* directive sub-keywords */
 #define SUBDIRECTIVE_PUBLIC      2501

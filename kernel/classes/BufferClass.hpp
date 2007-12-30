@@ -71,4 +71,5 @@
    char data[4];                       /* actual data length                */
  };
 
+ inline RexxBuffer *new_buffer(size_t s) { return new (s) RexxBuffer; }
 #endif

@@ -171,7 +171,7 @@ protected:
     RexxString *stringrep;              /* integer string representation     */
     wholenumber_t value;                /* actual integer value              */
 
-    static int validMaxWhole[];         // table of maximum values per digits setting
+    static wholenumber_t validMaxWhole[];  // table of maximum values per digits setting
 };
 
 class RexxIntegerClass : public RexxClass {
@@ -185,7 +185,7 @@ class RexxIntegerClass : public RexxClass {
   inline void operator delete(void *, size_t, const char *, RexxBehaviour *, RexxBehaviour *) { }
 
   RexxIntegerClass();
-  RexxInteger *newCache(int value) {if (value >= INTEGERCACHELOW && value < INTEGERCACHESIZE)
+  inline RexxInteger *newCache(wholenumber_t value) {if (value >= INTEGERCACHELOW && value < INTEGERCACHESIZE)
                                        return this->integercache[value - INTEGERCACHELOW];
                                      else
                                        return new RexxInteger (value); };
@@ -194,4 +194,7 @@ class RexxIntegerClass : public RexxClass {
                                      /* array of fast aloocation integers 0-99      */
   RexxInteger *integercache[INTEGERCACHESIZE - INTEGERCACHELOW];
 };
+
+
+inline RexxInteger *new_integer(wholenumber_t v) { return TheIntegerClass->newCache(v); }
 #endif

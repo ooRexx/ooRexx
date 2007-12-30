@@ -223,7 +223,7 @@ RexxEnvelope *RexxEnvelope::pack(
     // object offsets into a hashtable without having the hashtable
     // attempt to mark the references.
     duptable->contents->setHasNoReferences();
-    OrefSet(this, this->buffer, new_smartbuffer());
+    OrefSet(this, this->buffer, new RexxSmartBuffer(1024));
     // get a flatten stack from the memory object
     this->flattenStack = memoryObject.getFlattenStack();
     // push unique terminator onto stack
@@ -236,7 +236,7 @@ RexxEnvelope *RexxEnvelope::pack(
 
     // the header is just a dummy minimal object instance.  We don't bother adding
     // this to the dup table, as it won't ever be duped.
-    this->copyBuffer(new_instance());
+    this->copyBuffer(TheObjectClass->newObject());
     // we start the flattening process with the received object
     firstObject = this->receiver;
 

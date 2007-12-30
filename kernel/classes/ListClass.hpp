@@ -144,4 +144,7 @@ class RexxListClass : public RexxClass {
    RexxList     *classOf(RexxObject **, size_t);
 };
 
+
+inline RexxList *new_list() { return new RexxList; }
+
 #endif

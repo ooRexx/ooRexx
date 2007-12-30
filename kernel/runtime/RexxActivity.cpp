@@ -2786,7 +2786,6 @@ int REXXENTRY RexxSendMessage (
 /******************************************************************************/
 {
   RexxActivity *activity;              /* target activity                   */
-  RexxObject *result;                  /* returned result object            */
   RexxArray  *argument_array;          /* array of arguments                */
   RexxList   *argument_list;           /* temp list of arguments            */
   char returnType;                     /* type of return value              */
@@ -2821,23 +2820,22 @@ int REXXENTRY RexxSendMessage (
       argument_array = argument_list->makeArray();
       ProtectedObject p1(argument_array);
       va_end(arguments);                 /* end of argument processing        */
-      ProtectedObject result;
+      ProtectedObject r;
       if (start_class == OREF_NULL)      /* no start scope given?             */
                                          /* issue a straight message send     */
-        receiver->messageSend(new_string(msgname)->upper(), argument_array->size(), argument_array->data(), result);
+        receiver->messageSend(new_string(msgname)->upper(), argument_array->size(), argument_array->data(), r);
       else
                                          /* go issue the message with override*/
-        receiver->messageSend(new_string(msgname)->upper(), argument_array->size(), argument_array->data(), start_class, result);
-      if (result != OREF_NULL) {         /* if we got a result, protect it.   */
+        receiver->messageSend(new_string(msgname)->upper(), argument_array->size(), argument_array->data(), start_class, r);
+      if (r != OREF_NULL) {             /* if we got a result, convert it.   */
                                          /* convert the return result         */
-        process_message_result((RexxObject *)result, result_pointer, returnType);
+        process_message_result((RexxObject *)r, result_pointer, returnType);
       }
   }
   catch (ActivityException)
   {
                                        /* do error cleanup                  */
       rc = activity->error(startDepth);
-      result = OREF_NULL;                /* no result in this case            */
   }
 
   memoryObject.runUninits();           /* be sure to finish UNINIT methods  */

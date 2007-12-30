@@ -119,7 +119,7 @@ void RexxSource::initBuffered(
 
                                        /* set the source buffer             */
   OrefSet(this, this->sourceBuffer, (RexxBuffer *)source_buffer);
-  OrefSet(this, this->sourceIndices, (RexxBuffer *)new_smartbuffer());
+  OrefSet(this, this->sourceIndices, (RexxBuffer *)new RexxSmartBuffer(1024));
                                        /* point to the data part            */
   start = ((RexxBuffer *)this->sourceBuffer)->address();
                                        /* get the buffer length             */
@@ -875,7 +875,7 @@ void RexxSource::globalSetup()
 /******************************************************************************/
 {
                                        /* holding pen for temporaries       */
-  OrefSet(this, this->holdstack, new_stack(HOLDSIZE));
+  OrefSet(this, this->holdstack, new (HOLDSIZE) RexxStack(HOLDSIZE));
                                        /* create a save table               */
   OrefSet(this, this->savelist, new_object_table());
                                        /* allocate global control tables    */
@@ -2033,7 +2033,7 @@ void RexxSource::attributeDirective()
     if (!token->isSymbolOrLiteral())
     {
         /* report an error                   */
-        syntaxError(Error_Symbol_or_string_method, token);
+        syntaxError(Error_Symbol_or_string_attribute, token);
     }
     RexxString *name = token->value; /* get the string name               */
                                      /* and the name form also            */
@@ -2257,6 +2257,62 @@ void RexxSource::attributeDirective()
 
 
 /**
+ * Process a ::CONSTANT directive in a source file.
+ */
+void RexxSource::constantDirective()
+{
+    this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
+    RexxToken *token = nextReal();   /* get the next token                */
+
+                                     /* not a symbol or a string          */
+    if (!token->isSymbolOrLiteral())
+    {
+        /* report an error                   */
+        syntaxError(Error_Symbol_or_string_constant, token);
+    }
+    RexxString *name = token->value; /* get the string name               */
+                                     /* and the name form also            */
+    RexxString *internalname = this->commonString(name->upper());
+
+    // we only expect just a single value token here
+    token = nextReal();                /* get the next token                */
+                                       /* not a symbol or a string          */
+    if (!token->isSymbolOrLiteral())
+    {
+        /* report an error                   */
+        syntaxError(Error_Symbol_or_string_constant_value, token);
+    }
+    // this will be some sort of literal value
+    RexxObject *value = this->commonString(token->value);
+
+    token = nextReal();                /* get the next token                */
+    // No other options on this instruction
+    if (!token->isEndOfClause())
+    {
+        /* report an error                   */
+        syntaxError(Error_Invalid_data_constant_dir, token);
+    }
+
+    RexxDirectory *methodsDir = OREF_NULL;
+    RexxDirectory *classesDir = OREF_NULL;
+    // now figure out which dictionary we need to add the methods to.
+    // if there's no active class, then we only define this in the methods dir
+    if (this->active_class == OREF_NULL)
+    {
+        methodsDir = this->methods;  /* adding to the global set          */
+    }
+    else
+    {
+        // we add methods to both directories
+        classesDir = ((RexxDirectory *)(this->active_class->get(CLASS_CLASS_METHODS)));
+        methodsDir = ((RexxDirectory *)(this->active_class->get(CLASS_METHODS)));
+    }
+    // create the method pair and quit.
+    createConstantGetterMethod(classesDir, methodsDir, internalname, value);
+}
+
+
+/**
  * Create a Rexx method body.
  *
  * @param target The target method directory.
@@ -2382,7 +2438,10 @@ void RexxSource::createConstantGetterMethod(RexxDirectory *classTarget, RexxDire
     ConstantGetterCode *code = new ConstantGetterCode(value);
     // and finally add to both method directories.
     target->put(new_method(code), name);
-    classTarget->put(new_method(code), name);
+    if (classTarget != OREF_NULL)
+    {
+        classTarget->put(new_method(code), name);
+    }
 }
 
 
@@ -2600,6 +2659,10 @@ void RexxSource::directive()
 
         case DIRECTIVE_ATTRIBUTE:          /* ::ATTRIBUTE directive             */
             attributeDirective();
+            break;
+
+        case DIRECTIVE_CONSTANT:           /* ::CONSTANT directive              */
+            constantDirective();
             break;
 
         default:                           /* unknown directive                 */

@@ -127,32 +127,6 @@ inline size_t RANDOMIZE(size_t seed) { return (seed * RANDOM_FACTOR + 1); }
 #define OrefSet(o,r,v) memoryObject.checkSetOref((RexxObject *)o, (RexxObject **)&(r), (RexxObject *)v, __FILE__, __LINE__)
 #endif
 
-/******************************************************************************/
-/* Object creation macros                                                     */
-/******************************************************************************/
-
-#define new_behaviour(t)                  (new (t) RexxBehaviour)
-#define new_buffer(s)                     (new (s) RexxBuffer)
-#define new_clause()                      (new RexxClause)
-#define new_counter(v)                    (new RexxInteger (v))
-#define new_envelope()                    (new RexxEnvelope)
-#define new_list()                        (new RexxList)
-#define new_queue()                       (new RexxQueue)
-#define new_integer(v)                    (TheIntegerClass->newCache(v))
-#define new_message(t,m,a)                (new RexxMessage ((RexxObject *)t, (RexxObject *)m, (RexxArray *)a))
-#define new_smartbuffer()                 (new RexxSmartBuffer(1024))
-#define new_sizedSmartBuffer(size)        (new RexxSmartBuffer(size))
-#define new_stack(s)                      (new(s) RexxStack (s))
-#define new_savestack(s,a)                (new(a) RexxSaveStack (s, a))
-#define new_instance()                    (TheObjectClass->newObject())
-#define new_supplier(c,f)                 (new RexxSupplier (c,f))
-
-#define MCPP   0                       /* C++ method start index            */
-#define MSSCPP 0                       /* C++ class method start index      */
-
-
-
-
 class RexxExpressionStack;
                                        /* builtin function prototype        */
 typedef RexxObject *builtin_func(RexxActivation *, int, RexxExpressionStack *);

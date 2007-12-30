@@ -1079,14 +1079,14 @@ RexxObject *RexxActivation::forward(
     _argcount = this->argcount;
   }
   if (continuing) {                    /* just processing the message?      */
-    ProtectedObject result;
+    ProtectedObject r;
     if (superClass == OREF_NULL)       /* no override?                      */
                                        /* issue the message and return      */
-      target->messageSend(message, _argcount, _arguments, result);
+      target->messageSend(message, _argcount, _arguments, r);
     else
                                        /* issue the message with override   */
-      target->messageSend(message, _argcount, _arguments, superClass, result);
-    return (RexxObject *)result;
+      target->messageSend(message, _argcount, _arguments, superClass, r);
+    return (RexxObject *)r;
   }
   else {                               /* got to shut down and issue        */
     this->settings.flags |= forwarded; /* we are now a phantom activation   */
@@ -2206,13 +2206,13 @@ RexxObject * RexxActivation::internalCall(
   this->activity->push(newActivation); /* push on the activity stack        */
                                        /* run the internal routine on the   */
                                        /* new activation                    */
-  return newActivation->run(OREF_NULL, OREF_NULL, _arguments, _argcount, target, returnObject);
+  return newActivation->run(receiver, OREF_NULL, _arguments, _argcount, target, returnObject);
 }
 
 RexxObject * RexxActivation::internalCallTrap(
     RexxInstruction * target,          /* target of the call                */
     RexxDirectory   * conditionObj,    /* processed condition object        */
-    ProtectedObject &result)
+    ProtectedObject &resultObj)
 /******************************************************************************/
 /* Function:  Call an internal condition trap                                 */
 /******************************************************************************/
@@ -2232,7 +2232,7 @@ RexxObject * RexxActivation::internalCallTrap(
   this->activity->push(newActivation); /* push on the activity stack        */
                                        /* run the internal routine on the   */
                                        /* new activation                    */
-  return newActivation->run(OREF_NULL, OREF_NULL, NULL, 0, target, result);
+  return newActivation->run(OREF_NULL, OREF_NULL, NULL, 0, target, resultObj);
 }
 
 

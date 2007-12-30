@@ -510,7 +510,7 @@ RexxMethod *RexxMethodClass::restore(
 /******************************************************************************/
 {
                                        /* Get new envelope object           */
-  RexxEnvelope *envelope  = new_envelope();
+  RexxEnvelope *envelope  = new RexxEnvelope;
   ProtectedObject p(envelope);
                                        /* now puff up the method object     */
   envelope->puff(buffer, startPointer);

@@ -75,4 +75,7 @@
   public:
    RexxObject  *newRexx(RexxObject **, size_t);
  };
+
+
+ inline RexxSupplier *new_supplier(RexxArray *c, RexxArray *f) { return new RexxSupplier(c, f); }
  #endif
