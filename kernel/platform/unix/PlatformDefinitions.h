@@ -219,7 +219,7 @@ void SysStartTimeSlice( void );
 # include <crt_externs.h>
 inline char **getEnvironment()
 {
-     return _NSGetEnviron();
+     return (*_NSGetEnviron());
 }
 #else
 inline char **getEnvironment()
