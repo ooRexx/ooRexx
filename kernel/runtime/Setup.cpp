@@ -865,9 +865,8 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_SETBUFFERSIZE                , TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::setBufferSize), 1);
 
   defineKernelMethod(CHAR_LENGTH                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::lengthRexx), 0);
-  defineKernelMethod(CHAR_REQUEST                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::requestRexx), 1);
-  defineKernelMethod(CHAR_STRING                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::requestString), 0);
-  defineKernelMethod(CHAR_UNINIT                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::uninitMB), 0);
+  defineKernelMethod(CHAR_MAKEARRAY                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::makearray), 1);
+  defineKernelMethod(CHAR_STRING                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::makeString), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

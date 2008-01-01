@@ -48,6 +48,7 @@
 #include "RexxNativeAPI.h"
 #include "StreamNative.h"
 #include "StreamCommandParser.h"
+#include "StringUtil.hpp"
 
 #define full_name_parameter(stream_info) SysQualifyStreamName(stream_info)
 
@@ -2309,7 +2310,7 @@ TTS *ttsp;
 
    /* if opening a printer port, select second open flags */
    /* to open the file in write-only mode                                   */
-   if (CaselessCompare(stream_info->full_name_parameter, "\\DEV\\LPT", 8) == 0 ) {
+   if (StringUtil::caselessCompare(stream_info->full_name_parameter, "\\DEV\\LPT", 8) == 0 ) {
      /* this is a printer port on OS/2 (PRN will be converted to the        */
      /* current LPTx port)                                                  */
      second_oflag = o_binary | wr_creat;

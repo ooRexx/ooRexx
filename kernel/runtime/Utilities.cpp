@@ -145,33 +145,6 @@ void missing_argument(
     reportException(Error_Incorrect_method_noarg, argumentPosition);
 }
 
-int  CaselessCompare(                  /* do a caseless memory comparison   */
-     const char *string1,              /* first compare string              */
-     const char *string2,              /* second compare string             */
-     size_t      length)               /* comparison length                 */
-/******************************************************************************/
-/* Function:  Compare two strings, ignoring differences in case               */
-/******************************************************************************/
-{
-                                       /* totally equal?                    */
-  if (!memcmp(string1, string2, length))
-    return 0;                          /* return equality indicator         */
-
-  while (length--) {                   /* need to do it the hardway         */
-                                       /* not equal?                        */
-    if (toupper(*string1) != toupper(*string2)) {
-                                       /* first one less?                   */
-      if (toupper(*string1) < toupper(*string2))
-        return -1;                     /* return less than indicator        */
-      else
-        return 1;                      /* first is larger                   */
-    }
-    string1++;                         /* step first pointer                */
-    string2++;                         /* and second pointer also           */
-  }
-  return 0;                            /* fall through, these are equal     */
-}
-
 const char *mempbrk(
   const char *String,                  /* search string                     */
   const char *Set,                     /* reference set                     */

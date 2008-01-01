@@ -46,8 +46,10 @@
 
 #include "StringClass.hpp"
 #include "IntegerClass.hpp"
+#include "BufferClass.hpp"
 
 class RexxMutableBuffer;
+class RexxClass;
 
 class RexxMutableBufferClass : public RexxClass {
  public:
@@ -60,32 +62,37 @@ class RexxMutableBufferClass : public RexxClass {
      friend class RexxMutableBufferClass;
   public:
    inline void       *operator new(size_t size, void *ptr){return ptr;};
-   inline             RexxMutableBuffer() {;} ;
+          void       *operator new(size_t size, RexxClass *bufferClass);
+          void       *operator new(size_t size);
+                      RexxMutableBuffer();
+                      RexxMutableBuffer(size_t, size_t);
    inline             RexxMutableBuffer(RESTORETYPE restoreType) { ; };
 
    void               live(size_t);
    void               liveGeneral(int reason);
    void               flatten(RexxEnvelope *envelope);
-   RexxObject        *unflatten(RexxEnvelope *);
 
    RexxObject        *copy();
+   void               ensureCapacity(size_t addedLength);
 
-   RexxObject        *lengthRexx() { return this->data->lengthRexx(); }
-   RexxString        *requestString() { return new_string(this->data->getStringData(), this->data->getLength()); } /* NEVER return the reference we hold, always a copy! */
-   RexxObject        *requestRexx(RexxString*);
+   RexxObject        *lengthRexx();
 
    RexxMutableBuffer *append(RexxObject*);
    RexxMutableBuffer *insert(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
    RexxMutableBuffer *overlay(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
    RexxMutableBuffer *mydelete(RexxObject*, RexxObject*);
-   RexxString        *substr(RexxInteger *startPosition, RexxInteger *len, RexxString *pad) { return this->data->substr(startPosition,len,pad); }
-   RexxInteger       *lastPos(RexxString *needle, RexxInteger *_start) { return this->data->lastPosRexx(needle, _start); }
-   RexxInteger       *posRexx(RexxString *needle, RexxInteger *_start) { return this->data->posRexx(needle, _start); }
-   RexxString        *subchar(RexxInteger *startPosition) { return this->data->subchar(startPosition); }
+   RexxString        *substr(RexxInteger *startPosition, RexxInteger *len, RexxString *pad);
+   RexxInteger       *lastPos(RexxString *needle, RexxInteger *_start);
+   RexxInteger       *posRexx(RexxString *needle, RexxInteger *_start);
+   RexxString        *subchar(RexxInteger *startPosition);
 
    RexxInteger       *getBufferSize() { return new_integer(bufferLength); }
    RexxObject        *setBufferSize(RexxInteger*);
-   void               uninitMB();
+   RexxArray         *makearray(RexxString *div);
+   RexxString        *makeString();
+
+   inline const char *getStringData() { return data->address(); }
+   inline size_t      getLength()     { return dataLength; }
 
    static RexxClass *classInstance;
 
@@ -93,7 +100,7 @@ class RexxMutableBufferClass : public RexxClass {
 
    size_t             bufferLength;    /* buffer length                   */
    size_t             defaultSize;     /* default size when emptied       */
-   RexxString        *data;            /* string (not to be shared with   */
-                                       /* the world as a string, NEVER!!) */
+   size_t             dataLength;      // current length of data
+   RexxBuffer        *data;            /* buffer used for the data        */
  };
 #endif

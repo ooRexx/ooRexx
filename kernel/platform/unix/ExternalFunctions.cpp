@@ -82,6 +82,7 @@
 #include "APIUtilities.h"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
+#include "StringUtil.hpp"
 
 
 #define CMDBUFSIZE      1024                 /* Max size of executable cmd     */
@@ -550,7 +551,7 @@ bool RegExternalFunction(
                                        /* Do we have the function?          */
   if (RexxQueryFunction(funcname) != 0) {
                                        /* this a system routine?            */
-    if (CaselessCompare(funcname, "SYS", 3) == 0) {
+    if (StringUtil::caselessCompare(funcname, "SYS", 3) == 0) {
                                        /* try to register SysLoadFuncs      */
       if (RexxRegisterFunctionDll("SYSLOADFUNCS", "rexxutil", "SysLoadFuncs") == 0) {
                                        /* first registration?               */

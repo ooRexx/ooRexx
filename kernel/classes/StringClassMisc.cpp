@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  okbmisc.c     */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Miscellaneous REXX string methods                                          */
 /*                                                                            */
@@ -51,6 +51,7 @@
 #include "RexxBuiltinFunctions.h"                     /* General purpose BIF Header file   */
 #include "SourceFile.hpp"
 #include "ActivityManager.hpp"
+#include "StringUtil.hpp"
 
 const char *Memcpbrk(
   const char *String,                  /* search string                     */
@@ -430,7 +431,7 @@ RexxInteger *RexxString::caselessAbbrev(RexxString *info, RexxInteger *_length)
         return TheFalseObject;
     }
     /* do the comparison                 */
-    return(CaselessCompare(this->getStringData(), info->getStringData(), len2) == 0) ? TheTrueObject : TheFalseObject;
+    return(StringUtil::caselessCompare(this->getStringData(), info->getStringData(), len2) == 0) ? TheTrueObject : TheFalseObject;
 }
 
 
@@ -623,11 +624,7 @@ RexxObject *RexxString::dataType(RexxString *pType)
 
 RexxInteger *RexxString::lastPosRexx(RexxString  *needle, RexxInteger *_start)
 {
-    needle = REQUIRED_STRING(needle, ARG_ONE);
-    // find out where to start the search. The default is at the very end.
-    size_t startPos = optional_position(_start, getLength(), ARG_TWO);
-    // now perform the actual search.
-    return new_integer(lastPos(needle, startPos));
+    return StringUtil::lastPosRexx(getStringData(), getLength(), needle, _start);
 }
 
 
@@ -656,29 +653,7 @@ RexxInteger *RexxString::caselessLastPosRexx(RexxString  *needle, RexxInteger *_
  */
 size_t RexxString::lastPos(RexxString  *needle, size_t _start)
 {
-    size_t haystackLen = this->getLength();          /* get the haystack length           */
-    size_t needleLen = needle->getLength();          /* and get the length too            */
-
-    // no match possible if either string is null
-    if (needleLen == 0 || haystackLen == 0)
-    {
-        return 0;
-    }
-    else
-    {
-        // get the start position for the search.
-        haystackLen = Numerics::minVal(_start, haystackLen);
-                                         /* do the search                     */
-        const char *matchLocation = lastPos(needle->getStringData(), needleLen, this->getStringData(), haystackLen);
-        if (matchLocation == NULL)
-        {
-            return 0;
-        }
-        else
-        {
-            return matchLocation - this->getStringData() + 1;
-        }
-    }
+    return StringUtil::lastPos(getStringData(), getLength(), needle, _start);
 }
 
 
@@ -708,7 +683,7 @@ size_t RexxString::caselessLastPos(RexxString *needle, size_t _start)
         // get the start position for the search.
         haystackLen = Numerics::minVal(_start, haystackLen);
                                          /* do the search                     */
-        const char *matchLocation = caselessLastPos(needle->getStringData(), needleLen, this->getStringData(), haystackLen);
+        const char *matchLocation = StringUtil::caselessLastPos(needle->getStringData(), needleLen, this->getStringData(), haystackLen);
         if (matchLocation == NULL)
         {
             return 0;
@@ -718,86 +693,6 @@ size_t RexxString::caselessLastPos(RexxString *needle, size_t _start)
             return matchLocation - this->getStringData() + 1;
         }
     }
-}
-
-
-/**
- * Absolutely most primitive version of a lastpos search.  This
- * version searches directly in a buffer rather than a Rexx
- * String.
- *
- * @param needle    Pointer to the needle string.
- * @param needleLen Length of the needle string.
- * @param haystack  The pointer to the haystack string.
- * @param haystackLen
- *                  The length of the haystack string.
- *
- * @return A pointer to the match location or NULL if there is no match.
- */
-const char *RexxString::lastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen)
-{
-    // if the needle's longer than the haystack, no chance of a match
-    if (needleLen > haystackLen)
-    {
-        return NULL;
-    }
-    // set the search startpoing point relative to the end of the search string
-    haystack = haystack + haystackLen - needleLen;
-    // this is the possible number of compares we might need to perform
-    size_t count = haystackLen - needleLen + 1;
-    // now scan backward
-    while (count > 0)
-    {
-        // got a match at this position, return it directly
-        if (memcmp(haystack, needle, needleLen) == 0)
-        {
-            return haystack;
-        }
-        // decrement count and position
-        count--;
-        haystack--;
-    }
-    return NULL;   // nothing to see here folks, move along
-}
-
-
-/**
- * Absolutely most primitive version of a caseless lastpos
- * search. This version searches directly in a buffer rather
- * than a Rexx String.
- *
- * @param needle    Pointer to the needle string.
- * @param needleLen Length of the needle string.
- * @param haystack  The pointer to the haystack string.
- * @param haystackLen
- *                  The length of the haystack string.
- *
- * @return A pointer to the match location or NULL if there is no match.
- */
-const char *RexxString::caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen)
-{
-    // if the needle's longer than the haystack, no chance of a match
-    if (needleLen > haystackLen)
-    {
-        return NULL;
-    }
-    // set the search startpoing point relative to the end of the search string
-    haystack = haystack + haystackLen - needleLen;
-    // this is the possible number of compares we might need to perform
-    size_t count = haystackLen - needleLen + 1;
-    // now scan backward
-    while (count > 0)
-    {
-        // got a match at this position, return it directly
-        if (CaselessCompare(haystack, needle, needleLen) == 0)
-        {
-            return haystack;
-        }
-        // decrement count and position
-        count--;
-        haystack--;
-    }
-    return NULL;   // nothing to see here folks, move along
 }
 
 size_t RexxString::countStr(RexxString *needle)
@@ -998,15 +893,7 @@ RexxInteger *RexxString::posRexx(
 /* Function:  String class POS method/function                                */
 /******************************************************************************/
 {
-  size_t _start;                       /* converted start position          */
-
-                                       /* force needle to a string          */
-  needle = REQUIRED_STRING(needle, ARG_ONE);
-                                       /* get the starting position         */
-  _start = optional_position(pstart, 1, ARG_TWO);
-                                       /* pass on to the primitive function */
-                                       /* and return as an integer object   */
-  return new_integer(this->pos(needle, _start - 1));
+    return StringUtil::posRexx(getStringData(), getLength(), needle, pstart);
 }
 
 
@@ -1031,39 +918,7 @@ RexxInteger *RexxString::caselessPosRexx(
 
 size_t RexxString::pos(RexxString *needle, size_t _start)
 {
-    // get the two working lengths
-    size_t haystack_length = getLength();
-    size_t needle_length = needle->getLength();
-
-    // ok, there are a few quick checks we can perform.  If the needle is
-    // bigger than the haystack, or the needle is a null string or
-    // our haystack length after adjusting to the starting position
-    // zero, then we can quickly return zero.
-    if (needle_length > haystack_length + _start || needle_length == 0 || _start + needle_length > haystack_length)
-    {
-        return 0;
-    }
-
-    // address the string value
-    const char *haypointer = getStringData() + _start;
-    const char *needlepointer = needle->getStringData();
-    size_t location = _start + 1;         // this is the match location as an index
-    // calculate the number of probes we can make in this string
-    size_t count = (haystack_length - _start) - needle_length + 1;
-
-    // now scan
-    while (count--)
-    {
-                                           /* get a hit?                        */
-        if (memcmp(haypointer, needlepointer, needle_length) == 0)
-        {
-            return location;
-        }
-        // step our pointers accordingly
-        location++;
-        haypointer++;
-    }
-    return 0;  // we got nothing...
+    return StringUtil::pos(getStringData(), getLength(), needle, _start);
 }
 
 
@@ -1093,7 +948,7 @@ size_t RexxString::caselessPos(RexxString *needle, size_t _start)
     while (count--)
     {
                                            /* get a hit?                        */
-        if (CaselessCompare(haypointer, needlepointer, needle_length) == 0)
+        if (StringUtil::caselessCompare(haypointer, needlepointer, needle_length) == 0)
         {
             return location;
         }
@@ -1397,7 +1252,7 @@ bool RexxString::primitiveCaselessMatch(stringsize_t _start, RexxString *other, 
         return false;
     }
 
-    return CaselessCompare(getStringData() + _start, other->getStringData() + offset, len) == 0;
+    return StringUtil::caselessCompare(getStringData() + _start, other->getStringData() + offset, len) == 0;
 }
 
 
@@ -1618,7 +1473,7 @@ RexxInteger *RexxString::primitiveCaselessCompareTo(RexxString *other, stringsiz
 
     len = Numerics::minVal(myLength, otherLength);
 
-    wholenumber_t result = CaselessCompare(getStringData() + _start, other->getStringData() + _start, len);
+    wholenumber_t result = StringUtil::caselessCompare(getStringData() + _start, other->getStringData() + _start, len);
 
     // if they compare equal, then they are only
     if (result == 0)

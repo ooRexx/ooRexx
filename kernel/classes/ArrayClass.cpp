@@ -1174,7 +1174,7 @@ RexxString *RexxArray::toString(       /* concatenate array elements to create s
       }
   }
 
-  newString = mutbuffer->requestString();
+  newString = mutbuffer->makeString();
   return newString;
 }
 

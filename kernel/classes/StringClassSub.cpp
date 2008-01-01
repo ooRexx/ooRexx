@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  okbsubs.c     */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* substring oriented REXX string methods                                     */
 /*                                                                            */
@@ -48,8 +48,9 @@
 #include <math.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuiltinFunctions.h"                          /* Gneral purpose BIF Header file       */
+#include "RexxBuiltinFunctions.h"
 #include "ActivityManager.hpp"
+#include "StringUtil.hpp"
 
 
 /* the CENTER function (and the CENTRE function) */
@@ -575,52 +576,7 @@ RexxString *RexxString::substr(RexxInteger *position,
                                RexxInteger *_length,
                                RexxString  *pad)
 {
-  char     PadChar;                    /* pad character                     */
-  size_t   Position;                   /* start position                    */
-  size_t   Length;                     /* required length                   */
-  size_t   StringLength;               /* input string length               */
-  size_t   SubstrLength;               /* length plucked from string        */
-  size_t   PadCount;                   /* number of pad characters          */
-  RexxString *Retval;                  /* returned value                    */
-
-                                       /* get starting position             */
-  Position = get_position(position, ARG_ONE) - 1;
-  StringLength = this->getLength();         /* get the string length             */
-  if (StringLength == 0)               /* string of zerolength              */
-    Length = 0L;                       /* no partial to handle              */
-  else if (StringLength >= Position)   /* pos within the string?            */
-    Length = StringLength - Position;  /* length is remainder               */
-  else
-    Length = 0L;                       /* string is used up                 */
-                                       /* go get length or use default if   */
-                                       /* not supplied.                     */
-  Length = optional_length(_length, Length, ARG_TWO);
-                                       /* go get optional pad character,    */
-                                       /*  is used if omitted.              */
-  PadChar = get_pad(pad, ' ', ARG_THREE);
-
-  if (Length == 0)                     /* nothing to return?                */
-    Retval = OREF_NULLSTRING;          /* return a null string              */
-  else {
-    if (Position > StringLength) {     /* start past the string?            */
-      SubstrLength = 0;                /* nothing to copy                   */
-      PadCount = Length;               /* just pad characters               */
-    }
-    else {                             /* have something to copy            */
-                                       /* get string size                   */
-      SubstrLength = Numerics::minVal(Length, StringLength - Position);
-                                       /* and number of pad chars           */
-      PadCount = Length - SubstrLength;
-    }
-    Retval = raw_string(Length);       /* get result string                 */
-    if (SubstrLength)                  /* data to copy?                     */
-                                       /* yes, copy over                    */
-      memcpy(Retval->getWritableData(), this->getStringData() + Position, SubstrLength);
-    if (PadCount)                      /* padding needed?                   */
-                                       /* add the pad characters            */
-      memset(Retval->getWritableData() + SubstrLength, PadChar, PadCount);
-  }
-  return Retval;                       /* return extracted string           */
+    return StringUtil::substr(getStringData(), getLength(), position, _length, pad);
 }
 
 
@@ -639,16 +595,6 @@ RexxString *RexxString::substr(RexxInteger *position,
  */
 RexxString *RexxString::subchar(RexxInteger *positionArg)
 {
-    // the starting position isn't optional
-    size_t position = get_position(positionArg, ARG_ONE) - 1;
-    size_t stringLength = this->getLength();
-
-    // beyond the bounds, this is a null string
-    if (position >= stringLength)
-    {
-        return OREF_NULLSTRING;
-    }
-    // return the single character
-    return this->extract(position, 1);
+    return StringUtil::subchar(getStringData(), getLength(), positionArg);
 }
 

@@ -156,7 +156,7 @@ OEPOBJS=$(OR_OUTDIR)\NumberStringMath.$(OBJ)   $(OR_OUTDIR)\NumberStringMath2.$(
 #part of rexx
 OKSOBJS=$(OR_OUTDIR)\StringClass.$(OBJ) $(OR_OUTDIR)\StringClassUtil.$(OBJ) $(OR_OUTDIR)\StringClassSub.$(OBJ)   \
         $(OR_OUTDIR)\StringClassWord.$(OBJ) $(OR_OUTDIR)\StringClassMisc.$(OBJ) $(OR_OUTDIR)\StringClassBit.$(OBJ)    \
-        $(OR_OUTDIR)\StringClassConversion.$(OBJ) $(OR_OUTDIR)\MutableBufferClass.$(OBJ)
+        $(OR_OUTDIR)\StringClassConversion.$(OBJ) $(OR_OUTDIR)\MutableBufferClass.$(OBJ) $(OR_OUTDIR)\StringUtil.$(OBJ)
 
 # in rexx
 # OKNOBJS contain C methods, therefore have different dependancy rules.....

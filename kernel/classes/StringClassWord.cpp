@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  okbword.c     */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Word-related REXX string methods                                           */
 /*                                                                            */
@@ -49,6 +49,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxBuiltinFunctions.h"                     /* Gneral purpose BIF Header file    */
+#include "StringUtil.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -678,7 +679,7 @@ RexxInteger *RexxString::caselessWordPos(RexxString  *phrase, RexxInteger *pstar
 
             // now compare the two words, using a caseless comparison
             // if the words don't match, terminate now
-            if (CaselessCompare(needlePosition, haystackPosition, needleWordLength))
+            if (StringUtil::caselessCompare(needlePosition, haystackPosition, needleWordLength))
             {
                 break;                       /* get out fast.                     */
             }

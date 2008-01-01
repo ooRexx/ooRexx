@@ -46,6 +46,7 @@
 
 #include "NumberStringClass.hpp"
 #include "IntegerClass.hpp"
+#include "StringUtil.hpp"
                                        /* return values from the is_symbol  */
                                        /* validation method                 */
 #define  STRING_BAD_VARIABLE   0
@@ -214,7 +215,6 @@ class RexxStringClass : public RexxClass {
    RexxInteger *caselessLastPosRexx(RexxString *, RexxInteger *);
    size_t       lastPos(RexxString  *needle, size_t start);
    size_t       caselessLastPos(RexxString  *needle, size_t start);
-   const char * lastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
    const char * caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
 
    RexxInteger *posRexx(RexxString *, RexxInteger *);
@@ -328,7 +328,7 @@ class RexxStringClass : public RexxClass {
        if (compareLength > other->length) {
            compareLength = other->length;
        }
-       int result = CaselessCompare(stringData, other->stringData, compareLength);
+       int result = StringUtil::caselessCompare(stringData, other->stringData, compareLength);
        if (result == 0) {
            if (length > other->length) {
                result = 1;
@@ -387,7 +387,7 @@ class RexxStringClass : public RexxClass {
                compareLength = stringLength;
            }
 
-           result = CaselessCompare(stringData + startCol, other->stringData + startCol, compareLength);
+           result = StringUtil::caselessCompare(stringData + startCol, other->stringData + startCol, compareLength);
            if (result == 0 && stringLength < colLength) {
                if (length > other->length) {
                    result = 1;

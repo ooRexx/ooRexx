@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,37 +35,32 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#ifndef REXXAPITYPES_INCLUDED
-#define REXXAPITYPES_INCLUDED
+/******************************************************************************/
+/* REXX Kernel                                                                */
+/*                                                                            */
+/* String Utilities shared between String class and MutableBuffer class       */
+/*                                                                            */
+/******************************************************************************/
+#ifndef Included_StringUtil
+#define Included_StringUtil
 
-// The limit values for the portable int types are only included in C++ if the
-// following is defined before including stdint.h.
-#define __STDC_LIMIT_MACROS
+class RexxString;
+class RexxInteger;
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <limits.h>
-#include <pthread.h>
+class StringUtil
+{
+public:
+    static RexxString *substr(const char *, size_t, RexxInteger *, RexxInteger *, RexxString *);
+    static RexxInteger *posRexx(const char *stringData, size_t length, RexxString *needle, RexxInteger *pstart);
+    static size_t pos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start);
+    static RexxInteger *lastPosRexx(const char *stringData, size_t haystackLen, RexxString  *needle, RexxInteger *_start);
+    static size_t lastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start);
+    static const char *lastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
+    static RexxString *subchar(const char *stringData, size_t stringLength, RexxInteger *positionArg);
+    static RexxArray *makearray(const char *start, size_t length, RexxString *separator);
+    static const char * caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
+    static int caselessCompare(const char *, const char *, size_t);
+};
 
-#if __WORDSIZE == 64
-#define __REXX64__
-#else
-#undef __REXX64__
 #endif
-
-#define APIENTRY
-#define RexxEntry    APIENTRY
-#define REXXENTRY    APIENTRY
-
-typedef void *REXXPFN;
-typedef pid_t process_id_t;
-#ifndef LINUX
-typedef tid_t thread_id_t;
-#else
-typedef pthread_t thread_id_t;
-#endif
-
-#define VLARexxEntry                   /* external entry points       */
-#endif /* REXXAPITYPES_INCLUDED */
 

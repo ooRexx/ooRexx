@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxBuiltinFunctions.h       */
+/* REXX Kernel                                   RexxBuiltinFunctions.h       */
 /*                                                                            */
 /* REXX String method utility definitions                                     */
 /*                                                                            */

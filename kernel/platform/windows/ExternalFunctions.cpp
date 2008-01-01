@@ -72,6 +72,7 @@
 #include "SubcommandAPI.h"                  /* Get private REXXAPI API's      */
 #include "RexxAPIManager.h"
 #include "ProtectedObject.hpp"
+#include "StringUtil.hpp"
 
 #define DEFEXT "REX"                        /* Default OS/2 REXX program ext  */
 #define DIRLEN        256                   /* length of a directory          */
@@ -475,7 +476,7 @@ bool RegExternalFunction(
   if (RexxQueryFunction(funcname) != 0) {  /* is the function registered ?  */
 
                                        /* this a system routine?            */
-    if (CaselessCompare(funcname, "SYS", 3) == 0) {
+    if (StringUtil::caselessCompare(funcname, "SYS", 3) == 0) {
       MTXRQ(apiProtect);               /* protect these instructions        */
                                        /* from concurrent access of multiple*/
                                        /* processes                         */

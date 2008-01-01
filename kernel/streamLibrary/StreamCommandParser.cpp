@@ -47,6 +47,7 @@
 #include "RexxCore.h"                    /* global REXX definitions           */
 #include "RexxNativeAPI.h"
 #include "StreamCommandParser.h"       /* local structures                  */
+#include "StringUtil.hpp"
 
 /*********************************************************************/
 /*  gettoken                                                         */
@@ -136,7 +137,7 @@ int  parser(TTS *ttsp, const char *TokenString, void *userparms)
    while ((result = gettoken(TokenString,tsp)) == 0) {
      for (work_ttsp = ttsp;            /* check against the table           */
          (*(work_ttsp->token)) &&
-         (CaselessCompare(work_ttsp->token, tsp->string, tsp->length));
+         (StringUtil::caselessCompare(work_ttsp->token, tsp->string, tsp->length));
        work_ttsp++ ) {
      }
      if (!*(work_ttsp->token)) {       /* no token found?                   */

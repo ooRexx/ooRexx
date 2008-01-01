@@ -250,8 +250,6 @@ EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
 /******************************************************************************/
 
 void logic_error (const char *desc);
-                                       /* do a case insensitive compare     */
-int  CaselessCompare(const char *, const char *, size_t);
 const char *mempbrk(const char *, const char *, size_t);     /* search for characters             */
 
                                        /* find an environment symbol        */

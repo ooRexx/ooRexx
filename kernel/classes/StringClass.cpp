@@ -53,6 +53,7 @@
 #include "RexxActivity.hpp"
 #include "RexxBuiltinFunctions.h"                          /* Gneral purpose BIF Header file       */
 #include "ProtectedObject.hpp"
+#include "StringUtil.hpp"
 
 // singleton class instance
 RexxClass *RexxString::classInstance = OREF_NULL;
@@ -477,7 +478,7 @@ bool RexxString::primitiveCaselessIsEqual(RexxObject *otherObj)
         return false;
     }
     // do the actual string compare
-    return CaselessCompare(this->getStringData(), other->getStringData(), otherLen) == 0;
+    return StringUtil::caselessCompare(this->getStringData(), other->getStringData(), otherLen) == 0;
 }
 
 
@@ -1521,83 +1522,9 @@ RexxArray *RexxString::makeArray(RexxString *div)
 /* Function:  Split string into an array                                      */
 /******************************************************************************/
 {
-  size_t size = 32;                    /* initial size                      */
-  size_t linecount = 0;                /* number of lines                   */
-  size_t len;                          /* target string length              */
-  const char **lines = OREF_NULL;      /* array holding the single lines    */
-  const char *startPtr = this->getStringData();
-  const char *end   = this->getStringData() + this->getLength();
-  RexxArray  *result;
-  RexxString *entry;
-  const char   *tmp;                   /* temporary character pointer       */
-  char   separator = '\n';             /* default separator                 */
-
-                                       /* special separator given?          */
-  if (div != OREF_NULL) {
-                                       /* it must be a string object        */
-    if (!isOfClass(String, div)) {
-      reportException(Error_Incorrect_method_nostring, IntegerOne);
-    }
-                                       /* it must only contain one character*/
-    if (div->getLength() > 1) {
-      reportException(Error_Incorrect_method_pad, div);
-    }
-
-                                       /* use the first character           */
-    separator = div->getStringData()[0];
-  }
-                                       /* if the string to be worked on is  */
-                                       /* larger than 2K, try to calculate  */
-                                       /* an initial size by assuming an    */
-                                       /* average 64 characters per line    */
-                                       /* this will reduce the number of    */
-                                       /* reallocations...                  */
-  if (this->getLength() > 2048) {
-    size = this->getLength() / 64;
-  }
-
-                                       /* allocate the initial array        */
-  lines = (const char **) calloc(size,sizeof(char*));
-
-                                       /* dissect string                    */
-  while (startPtr < end) {
-    tmp = startPtr;
-                                       /* search for separator character    */
-    while (tmp < end && *tmp != separator) tmp++;
-                                       /* insert address of line start      */
-    lines[linecount++] = startPtr;
-    startPtr = tmp+1;
-                                       /* if array is full, double it       */
-    if (linecount == size) {
-      lines = (const char**) realloc(lines,size*2*sizeof(char*));
-                                       /* clear out 2nd half                */
-      memset(lines+size,0x00,sizeof(char*)*size);
-      size *= 2;
-    }
-
-  }
-  lines[linecount] = end;
-
-  result = new_array(linecount);       /* create the array                  */
-  ProtectedObject p(result);
-
-  for (size = 0; size < linecount; size++) {
-    len = lines[size+1] - lines[size];
-                                       /* ends with separator?              */
-    if (lines[size][len-1] == separator) {
-      len--;                           /* don't include separator           */
-                                       /* newline separator? remove 0x0d... */
-      if (separator == '\n' && lines[size][len-1] == 0x0d) {
-        len--;
-      }
-    }
-    entry = new_string(lines[size], len);
-    result->put(entry, size+1);
-  }
-
-  free(lines);
-  return result;
+    return StringUtil::makearray(getStringData(), getLength(), div);
 }
+
 
 RexxObject *RexxString::notOp()
 /******************************************************************************/
