@@ -413,8 +413,7 @@ inline void SysDeregisterSignals(SYSEXCEPTIONBLOCK *e) { HandleException = false
 inline void SysRegisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
 inline void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
                                        //Temp workaround for message handling
-#define SysMessageHeader(int) OREF_NULL
-//#define SysSaveProgram(a,b)            // Unable to save a program image
+#define SysMessageHeader(n) OREF_NULL
                                        // in Windows, no EA's
 #define SysClauseBoundary(a)
 

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              TraceInstruction.c    */
+/* REXX Translator                                      TraceInstruction.c    */
 /*                                                                            */
 /* Primitive Trace Parse Class                                                */
 /*                                                                            */
@@ -50,9 +50,9 @@
 
 RexxInstructionTrace::RexxInstructionTrace(
     RexxObject *_expression,           /* TRACE VALUE expression            */
-    unsigned short trace,              /* trace setting                     */
+    size_t       trace,                /* trace setting                     */
     size_t      debug_flags,           /* new debug setting                 */
-    int         debug_skip )           /* debug clauses to skip             */
+    wholenumber_t debug_skip )         /* debug clauses to skip             */
 /******************************************************************************/
 /* Function:  Initialize a trace instruction                                  */
 /******************************************************************************/
@@ -60,7 +60,7 @@ RexxInstructionTrace::RexxInstructionTrace(
                                        /* process the expression            */
    OrefSet(this, this->expression, _expression);
    this->debugskip = debug_skip;       /* copy the skip value               */
-   instructionFlags = debug_flags;     /* save the debug flags              */
+   instructionFlags = (uint16_t)debug_flags;     /* save the debug flags              */
    traceSetting = trace;               /* and the trace setting             */
 }
 

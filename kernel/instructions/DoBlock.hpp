@@ -54,7 +54,7 @@ class RexxDoBlock : public RexxInternalObject {
   inline void  operator delete(void *) { ; }
   inline void  operator delete(void *, void *) { ; }
 
-  RexxDoBlock(RexxBlockInstruction *, int);
+  RexxDoBlock(RexxBlockInstruction *, size_t);
   inline RexxDoBlock(RESTORETYPE restoreType) { ; };
   void live(size_t);
   void liveGeneral(int reason);

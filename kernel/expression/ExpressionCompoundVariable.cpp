@@ -363,16 +363,22 @@ void RexxCompoundVariable::clearGuard(
 }
 
 void * RexxCompoundVariable::operator new(size_t size,
-    int  tailCount)                    /* count of tails                    */
+    size_t tailCount)                   /* count of tails                    */
 /******************************************************************************/
 /* Function:  Create a new compound variable object                           */
 /******************************************************************************/
 {
   RexxObject * newObject;              /* newly created object              */
+  if (tailCount == 0)
+  {
+     // this object is normal sized, minus the dummy tail element
+     newObject = new_object(size - sizeof(RexxObject *), T_CompoundVariableTerm);
+  }
+  else
+  {
                                        /* Get new object                    */
-  newObject = new_object(size + ((tailCount - 1) * sizeof(RexxObject *)));
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheCompoundVariableTermBehaviour);
+      newObject = new_object(size + ((tailCount - 1) * sizeof(RexxObject *)), T_CompoundVariableTerm);
+  }
   return newObject;                    /* return the new compound variable  */
 }
 

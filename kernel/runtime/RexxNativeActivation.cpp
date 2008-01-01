@@ -334,7 +334,7 @@ void RexxNativeActivation::run(
                         case REXXD_STRING:         /* Required STRING object            */
                             {
                                 /* force to a string value           */
-                                RexxObject *temp = REQUIRED_STRING(argument, i + 1) ;
+                                RexxObject *temp = REQUIRED_STRING(argument,(int)i + 1) ;
                                 if (temp != argument)    /* new object created?               */
                                                          /* make it safe                      */
                                     this->saveObject(temp);
@@ -859,7 +859,7 @@ void RexxNativeActivation::resetNext()
 /* Function: Reset the next state of the variable pool                        */
 /******************************************************************************/
 {
-  this->nextvariable = -1;             /* turn off next index               */
+  this->nextvariable = SIZE_MAX;       /* turn off next index               */
   this->nextcurrent = OREF_NULL;       /* clear the next value              */
   this->nextstem = OREF_NULL;          /* clear the secondary pointer       */
   this->compoundelement = OREF_NULL;
@@ -881,7 +881,7 @@ bool RexxNativeActivation::fetchNext(
   if (nextCurrent() == OREF_NULL) {
     /* grab the activation context */
     RexxActivation *act = activity->getCurrentActivation();
-    setNextVariable(-1);               /* request the first item            */
+    setNextVariable(SIZE_MAX);         /* request the first item            */
     /* Get the local variable dictionary from the context. */
     setNextCurrent(act->getLocalVariables());
                                        /* we are not on a stem              */
@@ -1051,7 +1051,7 @@ REXXOBJECT REXXENTRY REXX_RECEIVER()
     return context.protect(context.self->getReceiver());
 }
 
-int REXXENTRY REXX_INTEGER(REXXOBJECT object)
+wholenumber_t REXXENTRY REXX_INTEGER(REXXOBJECT object)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/
@@ -1174,13 +1174,13 @@ REXXOBJECT REXXENTRY REXX_SETVAR(CSTRING name, REXXOBJECT value)
 /* return the names of all public routines in the current */
 /* activation context. *the caller* must free the memory! */
 /**********************************************************/
-REXXOBJECT REXXENTRY REXX_GETFUNCTIONNAMES(char *** names, int * num)
+REXXOBJECT REXXENTRY REXX_GETFUNCTIONNAMES(char *** names, size_t* num)
 {
     NativeContextBlock context;
   RexxArray              * funcArray;
   RexxString             * name;
-  int                      i;
-  int                      j;
+  size_t                   i;
+  size_t                   j;
 
                                        /* pick up current activation        */
 
@@ -1195,7 +1195,7 @@ REXXOBJECT REXXENTRY REXX_GETFUNCTIONNAMES(char *** names, int * num)
     if (funcArray != OREF_NULL) {
       *num = j = funcArray->numItems();
       *names = (char**) SysAllocateExternalMemory(sizeof(char*)*j);
-      for (i=0;i<j;i++) {
+      for (i=0; i < j; i++) {
         name = ((RexxString*) funcArray->get(i+1));
         (*names)[i] = (char*) SysAllocateExternalMemory(1+sizeof(char)*name->getLength());
         memcpy((*names)[i], name->getStringData(), name->getLength());

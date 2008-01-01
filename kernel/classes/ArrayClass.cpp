@@ -577,7 +577,7 @@ bool  RexxArray::validateIndex(        /* validate an array index           */
                                        /* report apropriate bounds          */
       reportException(Error_Incorrect_method_minarg, _start);
                                        /* validate integer index            */
-    position = _index[0]->requiredPositive(_start);
+    position = _index[0]->requiredPositive((int)_start);
                                        /* out of bounds?                    */
     if (position > this->size() ) {
       if (position >= MAX_FIXEDARRAY_SIZE)
@@ -612,7 +612,7 @@ bool  RexxArray::validateIndex(        /* validate an array index           */
                                        /* this is an error too              */
           reportException(Error_Incorrect_method_noarg, i + _start);
                                        /* validate integer index            */
-        position = value->requiredPositive(i);
+        position = value->requiredPositive((int)i);
                                        /* get the current dimension         */
         _dimension = ((RexxInteger *)this->dimensions->get(i))->getValue();
         if (position > _dimension) {   /* too large?                        */
@@ -1630,7 +1630,7 @@ RexxArray *RexxArray::extendMulti(     /* Extend multi array                */
                                        /* Get value for 1st dimension       */
                                        /*  its the last element             */
     i = newDimArraySize - 1;
-    newDimSize = _index[i]->requiredPositive(i);
+    newDimSize = _index[i]->requiredPositive((int)i);
                                        /* Yes, is 1st Dimension going to    */
                                        /* be bigger than current size?      */
     if (newDimSize > this->size())
@@ -1651,7 +1651,7 @@ RexxArray *RexxArray::extendMulti(     /* Extend multi array                */
       currDimSize = ((RexxInteger *)this->dimensions->get(oldDimension))->getValue();
                                        /* Get indexd  size of this dimension*/
 
-      newDimSize = _index[newDimension - 1]->requiredPositive(newDimension);
+      newDimSize = _index[newDimension - 1]->requiredPositive((int)newDimension);
                                        /* does this dimension need to be    */
                                        /*  expanded.                        */
       if (newDimSize > currDimSize) {
@@ -1876,7 +1876,7 @@ void *   RexxArray::operator new(size_t size, RexxObject **args, size_t argCount
     if (current_dim == OREF_NULL)      /* was this one omitted?             */
       missing_argument(i+1);           /* must have this value              */
                                        /* get the long value                */
-    cur_size = current_dim->requiredNonNegative(i+1);
+    cur_size = current_dim->requiredNonNegative((int)(i+1));
                                        /* going to do an overflow?          */
     if (cur_size != 0 && ((MAX_FIXEDARRAY_SIZE / cur_size) < total_size))
                                        /* this is an error                  */

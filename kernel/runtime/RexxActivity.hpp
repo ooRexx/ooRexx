@@ -231,7 +231,7 @@ public:
    RexxObject *lineOut(RexxString *);
    RexxString *lineIn(RexxActivation *);
    void terminateMethod();
-   int  messageSend(RexxObject *, RexxString *, size_t, RexxObject **, ProtectedObject &);
+   wholenumber_t messageSend(RexxObject *, RexxString *, size_t, RexxObject **, ProtectedObject &);
    void generateRandomNumberSeed();
 
    void activate() { nestedCount++; }

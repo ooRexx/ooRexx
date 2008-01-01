@@ -634,7 +634,7 @@ int   FillAPIComBlock(
 
 int RxGetModAddress(const char *dll_name,
                     char *function_name,      // gets uppercased potentially, so can't be const
-                    int  *error_codes,
+                    int *error_codes,
                     REXXPFN * function_address)
 {
    int      rc = 0 ;                   /* Function result.           */
@@ -691,7 +691,7 @@ int RxGetModAddress(const char *dll_name,
 /* This function was written for defect 136 */
 /* It will remove all the subcommand entries for a specific process */
 
-VOID RxFreeProcessSubcomList(ULONG pid)
+void RxFreeProcessSubcomList(process_id_t pid)
 {
     APIBLOCK        *block;              /* block to free             */
     APIBLOCK        *c;

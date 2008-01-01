@@ -70,10 +70,10 @@ RexxInstructionCall::RexxInstructionCall(
   OrefSet(this, this->name, (RexxString *)_name);
                                        /* and the condition                 */
   OrefSet(this, this->condition, _condition);
-  instructionFlags = flags;                   /* copy the flags                    */
-  builtinIndex = builtin_index;        /* and the builtin function index    */
+  instructionFlags = (uint16_t)flags;  /* copy the flags                    */
+  builtinIndex = (uint16_t)builtin_index; /* and the builtin function index    */
                                        /* no arguments                      */
-  argumentCount = argCount;
+  argumentCount = (uint16_t)argCount;
   while (argCount > 0) {               /* now copy the argument pointers    */
                                        /* in reverse order                  */
     OrefSet(this, this->arguments[--argCount], argList->pop());

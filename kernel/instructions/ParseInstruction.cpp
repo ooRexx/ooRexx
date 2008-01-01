@@ -66,7 +66,7 @@ RexxInstructionParse::RexxInstructionParse(
 {
                                        /* save the expression               */
   OrefSet(this, this->expression, _expression);
-  instructionFlags = flags;            /* save the expression               */
+  instructionFlags = (uint16_t)flags;  /* save the expression               */
   stringSource = string_source;        // our instruction type is determined by the source
   this->trigger_count = templateCount; /* save the size                     */
   while (templateCount > 0)            /* loop through the template list    */

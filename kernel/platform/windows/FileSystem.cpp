@@ -121,7 +121,7 @@ const char *SysFileExtension(
   const char *Name )                   /* file name                         */
 {
   const char *Scan;                    /* scanning pointer                  */
-  int       Length;                    /* extension length                  */
+  size_t    Length;                    /* extension length                  */
 
   Scan = strrchr(Name, '\\');          /* have a path?                      */
   if (Scan)                            /* find one?                         */
@@ -138,7 +138,7 @@ const char *SysFileExtension(
 
   Scan++;                              /* step over the period              */
   Length = strlen(Scan);               /* calculate residual length         */
-  if (!Length)                         /* if no residual length             */
+  if (Length == 0)                     /* if no residual length             */
     return  NULL;                      /* so return null extension          */
   return --Scan;                       /* return extension position         */
 }
@@ -163,7 +163,7 @@ RexxString * LocateProgram(
   const char  *Extension;              /* start of file extension           */
   RexxString * Result;                 /* returned name                     */
   int          i;                      /* loop counter                      */
-  int          ExtensionSpace;         /* room for an extension             */
+  size_t       ExtensionSpace;         /* room for an extension             */
 
   // retrofit by IH
   bool         Found;                  /* found the file                    */
@@ -326,7 +326,7 @@ void SysLoadImage(
   ReadFile(fileHandle, imageSize, sizeof(size_t), &bytesRead, NULL);
   *imageBuffer = memoryObject.allocateImageBuffer(*imageSize);
                        /* read in the image                 */
-  ReadFile(fileHandle, *imageBuffer, *imageSize, &bytesRead, NULL);
+  ReadFile(fileHandle, *imageBuffer, (DWORD)*imageSize, &bytesRead, NULL);
   // set this to the actual size read.
   *imageSize = bytesRead;
   CloseHandle(fileHandle);                /* and close the file                */
@@ -364,7 +364,7 @@ RexxBuffer *SysReadProgram(
       UnsafeBlock releaser;
 
                            /* read in a buffer of data   */
-      if (ReadFile(fileHandle, buffer->address(), buffersize, &bytesRead, NULL) == 0) {
+      if (ReadFile(fileHandle, buffer->address(), (DWORD)buffersize, &bytesRead, NULL) == 0) {
         return OREF_NULL;                  /* return nothing                    */
       }
       CloseHandle(fileHandle);                /* close the file now         */
@@ -517,7 +517,7 @@ size_t line_write_check(const char * buffer, size_t length, FILE * sfile)
    result = fwrite(buffer,1,length,sfile);
    if ((result != length) && (ferror(sfile)) && (errno == ENOMEM))
    {
-     ULONG ulMod;
+     size_t ulMod;
      size_t ulTempValue;
      const char *pTemp = buffer;
      clearerr(sfile);  /* clear memory err, give a new chance */

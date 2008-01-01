@@ -182,7 +182,7 @@ RexxMethod2(REXXOBJECT,                // Return type
   if (*pszString != '!')
     sscanf(pszString, "%p", &pAutomaton);
   if (pAutomaton) {
-    int i = pAutomaton->match( string_data(pArgString), string_length(pArgString) );
+    int i = pAutomaton->match( string_data(pArgString), (int)string_length(pArgString) );
     sprintf(szBuffer, "%d", pAutomaton->getCurrentPos());
     REXX_SETVAR("!POS", ooRexxString(szBuffer));
     sprintf(szBuffer,"%d",i);
@@ -229,7 +229,7 @@ RexxMethod2(REXXOBJECT,                // Return type
     // we start out matching minimal
     pAutomaton->setMinimal(true);
     do {
-      i = pAutomaton->match(pszString, strlength);
+      i = pAutomaton->match(pszString, (int)strlength);
       strlength--;
       pszString++;
     } while (i == 0 && strlength != 0);
@@ -242,7 +242,7 @@ RexxMethod2(REXXOBJECT,                // Return type
         pszString--; // correct starting pos
         strlength++; // correct starting len
         while (strlength != 0) {
-          if (pAutomaton->match(pszString, strlength) != 0) {
+          if (pAutomaton->match(pszString, (int)strlength) != 0) {
             break;
           }
           strlength--;

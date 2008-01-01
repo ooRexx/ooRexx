@@ -82,8 +82,8 @@ class RexxInteger : public RexxObject {
   RexxSupplier *instanceMethods(RexxClass *);
 
   bool        isEqual(RexxObject *);
-  int         strictComp(RexxObject *);
-  inline int  comp(RexxObject *other)
+  wholenumber_t strictComp(RexxObject *);
+  inline wholenumber_t comp(RexxObject *other)
     {
       required_arg(other, ONE);            /* make sure this is really there    */
                                            /* able to compare here?             */
@@ -142,8 +142,8 @@ class RexxInteger : public RexxObject {
   inline wholenumber_t getValue() {return this->value;}
   inline wholenumber_t wholeNumber() {return this->value;}
   inline stringsize_t stringSize() {return (stringsize_t)this->value;}
-  inline int  incrementValue() {return ++this->value;}
-  inline int  decrementValue() {return --this->value;}
+  inline wholenumber_t incrementValue() {return ++this->value;}
+  inline wholenumber_t decrementValue() {return --this->value;}
   inline RexxString *getStringrep() {return this->stringrep;}
 
   static void createClass();

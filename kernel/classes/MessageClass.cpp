@@ -286,7 +286,7 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
   RexxActivity *newActivity;           /* Activity the start will be run on */
   RexxActivity *oldActivity;           /* Currently executing activity      */
   RexxNativeActivation *newNativeAct;  /* Native Activation to run on       */
-  size_t        i;                     /* loop counter                      */
+  int           i;                     /* loop counter                      */
 
                                        /* has message already been sent or  */
                                        /* is another start message pending? */

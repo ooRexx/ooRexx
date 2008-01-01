@@ -105,10 +105,10 @@ void RexxExpressionStack::migrate(RexxActivity *activity)
 }
 
 void RexxExpressionStack::expandArgs(
-     int argcount,                     /* count of arguments                */
-     int min,                          /* minimum required arguments        */
-     int max,                          /* maximum required arguments        */
-     char  *function )                 /* function being processed          */
+     size_t argcount,                  /* count of arguments                */
+     size_t min,                       /* minimum required arguments        */
+     size_t max,                       /* maximum required arguments        */
+     const char *function )            /* function being processed          */
 /******************************************************************************/
 /* Function:  Verify that a function has received all of its required         */
 /*            arguments, and did not receive extras.                          */
@@ -138,7 +138,7 @@ void RexxExpressionStack::expandArgs(
 }
 
 RexxString *RexxExpressionStack::requiredStringArg(
-    int    position)                   /* position of argument              */
+    size_t position)                   /* position of argument              */
 /******************************************************************************/
 /* Function:  Retrieve an object from the expression stack and potentially    */
 /*            convert it into a string argument.                              */
@@ -158,7 +158,7 @@ RexxString *RexxExpressionStack::requiredStringArg(
 }
 
 RexxString *RexxExpressionStack::optionalStringArg(
-    int     position)                   /* position of argument              */
+    size_t  position)                   /* position of argument              */
 /******************************************************************************/
 /* Function:  Retrieve an object from the expression stack and potentially    */
 /*            convert it into a string argument.                              */
@@ -170,7 +170,7 @@ RexxString *RexxExpressionStack::optionalStringArg(
   argument = this->peek(position);     /* get the argument in question      */
   if (argument == OREF_NULL)           /* missing a required argument?      */
     return OREF_NULL;                  /* finished already                  */
-  if (isOfClass(String, argument))         /* string object already?            */
+  if (isOfClass(String, argument))     /* string object already?            */
     return (RexxString *)argument;     /* finished                          */
                                        /* get the string form, raising a    */
                                        /* NOSTRING condition if necessary   */
@@ -180,9 +180,9 @@ RexxString *RexxExpressionStack::optionalStringArg(
 }
 
 RexxInteger *RexxExpressionStack::requiredIntegerArg(
-     int    position,                  /* position of argument              */
-     int    argcount,                  /* count of arguments                */
-     char  *function)                  /* function being processed          */
+     size_t position,                  /* position of argument              */
+     size_t argcount,                  /* count of arguments                */
+     const char *function)             /* function being processed          */
 /******************************************************************************/
 /* Function:  Retrieve an object from the expression stack and potentially    */
 /*            convert it into an integer argument.                            */
@@ -208,9 +208,9 @@ RexxInteger *RexxExpressionStack::requiredIntegerArg(
 
 
 RexxInteger *RexxExpressionStack::optionalIntegerArg(
-     int    position,                  /* position of argument              */
-     int    argcount,                  /* count of arguments                */
-     char  *function)                  /* function being processed          */
+     size_t position,                  /* position of argument              */
+     size_t argcount,                  /* count of arguments                */
+     const char *function)             /* function being processed          */
 /******************************************************************************/
 /* Function:  Retrieve an object from the expression stack and potentially    */
 /*            convert it into an integer argument.                            */

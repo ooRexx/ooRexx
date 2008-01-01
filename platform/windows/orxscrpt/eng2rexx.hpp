@@ -93,7 +93,7 @@ void REXXENTRY SetWSHPropertyChange( RexxObject* (__stdcall *f)(RexxString*,Rexx
 }
 // these three come from orexxole.c
 RexxObject *Variant2Rexx(VARIANT *);
-VOID Rexx2Variant(RexxObject *, VARIANT *, VARTYPE, INT);
+void Rexx2Variant(RexxObject *, VARIANT *, VARTYPE, size_t);
 void setCreationCallback(int (__stdcall *f)(CLSID, IUnknown*));
 
 #endif

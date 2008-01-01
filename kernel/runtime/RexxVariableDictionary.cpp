@@ -247,7 +247,7 @@ RexxVariable *RexxVariableDictionary::nextVariable(
   RexxVariable *variable;              /* variable entry                    */
   RexxObject *value;                   /* variable value                    */
 
-  if (activation->nextVariable() == -1)/* first time through?               */
+  if (activation->nextVariable() == SIZE_MAX)/* first time through?               */
                                        /* get the first item                */
     activation->setNextVariable(this->contents->first());
   else                                 /* step to the next index item       */

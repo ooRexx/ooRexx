@@ -446,7 +446,7 @@ RexxInstruction *RexxSource::createDoLoop(RexxInstructionDo *newDo, bool isLoop)
 /* Function:  Create a new DO translator object                               */
 /******************************************************************************/
 {
-    int _position = markPosition();     // get a reset position before getting next token
+    size_t _position = markPosition();   // get a reset position before getting next token
     // We've already figured out this is either a LOOP or a DO, now we need to
     // decode what else is going on.
     RexxToken *token = nextReal();
@@ -969,7 +969,7 @@ RexxInstruction *RexxSource::guardNew()
   RexxToken  *token;                   /* current working token             */
   bool        on_off = false;          /* ON or OFF version                 */
   RexxObject *_expression;             /* WHEN expression                   */
-  int         variable_count;          /* count of variables                */
+  size_t      variable_count;          /* count of variables                */
 
   _expression = OREF_NULL;             /* default no expression             */
   variable_list = OREF_NULL;           /* no variable either                */
@@ -1684,14 +1684,14 @@ RexxInstruction *RexxSource::raiseNew()
   RexxObject            *_expression;  /* condition extra expression        */
   RexxObject            *description;  /* description expression            */
   RexxObject            *additional;   /* additional expression             */
-  int                    arrayCount;   /* array expressions                 */
+  size_t                 arrayCount;   /* array expressions                 */
   RexxObject            *result;       /* result expression                 */
   int                    _keyword;     /* type of condition found           */
   RexxQueue             *saveQueue;    /* temporary save queue              */
   bool                   raiseReturn;  /* return form                       */
 
 
-  arrayCount = -1;                     /* clear out the temporaries         */
+  arrayCount = SIZE_MAX;               /* clear out the temporaries         */
   _expression = OREF_NULL;
   description = OREF_NULL;
   additional = OREF_NULL;
@@ -1773,7 +1773,7 @@ RexxInstruction *RexxSource::raiseNew()
 
       case SUBKEY_ADDITIONAL:          /* RAISE ... ADDITIONAL expr         */
                                        /* have a additional already?        */
-        if (additional != OREF_NULL || arrayCount != -1)
+        if (additional != OREF_NULL || arrayCount != SIZE_MAX)
                                        /* this is invalid                   */
           syntaxError(Error_Invalid_subkeyword_additional);
                                        /* get the keyword value             */
@@ -1787,7 +1787,7 @@ RexxInstruction *RexxSource::raiseNew()
 
       case SUBKEY_ARRAY:               /* RAISE ... ARRAY expr              */
                                        /* have a additional already?        */
-        if (additional != OREF_NULL || arrayCount != -1)
+        if (additional != OREF_NULL || arrayCount != SIZE_MAX)
                                        /* this is invalid                   */
           syntaxError(Error_Invalid_subkeyword_additional);
         token = nextReal();            /* get the next token                */
@@ -1829,7 +1829,7 @@ RexxInstruction *RexxSource::raiseNew()
     }
     token = nextReal();                /* step to the next keyword          */
   }
-  if (arrayCount != -1)                /* have the array version?           */
+  if (arrayCount != SIZE_MAX)          /* have the array version?           */
                                        /* create a new translator object    */
     newObject = new_variable_instruction(RAISE, Raise, sizeof(RexxInstructionRaise) + (arrayCount - 1) * sizeof(RexxObject *));
   else                                 /* static instruction size           */
@@ -2125,8 +2125,8 @@ RexxInstruction *RexxSource::traceNew()
   RexxString *value;                   /* string value of symbol            */
   RexxObject *_expression;             /* trace expression                  */
   RexxObject *newObject;               /* newly created object              */
-  int         setting;                 /* new trace setting                 */
-  int         debug;                   /* new debug setting                 */
+  size_t      setting;                 /* new trace setting                 */
+  size_t      debug;                   /* new debug setting                 */
   wholenumber_t debug_skip;            /* amount to skip                    */
   size_t      debug_flags;             /* current debug flags               */
 

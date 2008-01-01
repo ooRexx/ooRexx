@@ -85,14 +85,14 @@
     inline RexxNumberStringBase() { ; }
     void   mathRound(char *);
     char  *stripLeadingZeros(char *);
-          char * adjustNumber(char *, char *, size_t, size_t);
+    char * adjustNumber(char *, char *, size_t, size_t);
 
     RexxString *stringObject;          /* converted string value          */
     short NumFlags;                    /* Flags for use by the Numberstring met*/
     short sign;                        /* sign for this number (-1 is neg)     */
     size_t  NumDigits;                 /* Maintain a copy of digits setting of */
                                        /* From when object was created         */
-    int     exp;
+    wholenumber_t exp;
     size_t  length;
  };
 
@@ -125,8 +125,8 @@
     bool         truthValue(int);
 
     bool        isEqual(RexxObject *);
-    int         strictComp(RexxObject *);
-    int         comp(RexxObject *);
+    wholenumber_t strictComp(RexxObject *);
+    wholenumber_t comp(RexxObject *);
     RexxInteger *equal(RexxObject *);
     RexxInteger *strictEqual(RexxObject *);
     RexxInteger *notEqual(RexxObject *);

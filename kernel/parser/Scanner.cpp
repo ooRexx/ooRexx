@@ -377,8 +377,8 @@ unsigned int RexxSource::locateToken(
 }
 
 RexxString *RexxSource::packLiteral(
-  int        start,                    /* start of the literal in line      */
-  int        length,                   /* length of the literal to reduce   */
+  size_t     start,                    /* start of the literal in line      */
+  size_t     length,                   /* length of the literal to reduce   */
   int        type )                    /* type of literal to process        */
 /****************************************************************************/
 /* Function:  Convert and check a hex or binary constant, packing it down   */
@@ -388,17 +388,17 @@ RexxString *RexxSource::packLiteral(
   int    _first;                       /* switch to mark first group        */
   int    blanks;                       /* switch to say if scanning blanks  */
   int    count;                        /* count for group                   */
-  int    i;                            /* loop counter                      */
-  int    j;                            /* loop counter                      */
-  int    k;                            /* loop counter                      */
-  int    m;                            /* temporary integer                 */
+  size_t i;                            /* loop counter                      */
+  size_t j;                            /* loop counter                      */
+  size_t k;                            /* loop counter                      */
+  size_t m;                            /* temporary integer                 */
   int    byte;                         /* individual byte of literal        */
   int    nibble;                       /* individual nibble of literal      */
-  int    oddhex;                       /* odd number of characters in first */
-  int    inpointer;                    /* current input position            */
+  size_t oddhex;                       /* odd number of characters in first */
+  size_t inpointer;                    /* current input position            */
   int    outpointer;                   /* current output pointer            */
   RexxString *value;                   /* reduced value                     */
-  int    real_length;                  /* real number of digits in string   */
+  size_t real_length;                  /* real number of digits in string   */
   char   error_output[2];              /* used for formatting error         */
 
  _first = true;                        /* initialize group flags and        */

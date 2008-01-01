@@ -272,7 +272,7 @@ void RexxEnvelope::puff(
 /*            stuff )                                                         */
 /******************************************************************************/
 {
-    int   primitiveTypeNum = 0;          /* primitive behaviour type number   */
+    size_t primitiveTypeNum = 0;         /* primitive behaviour type number   */
 
     char *bufferPointer = startPointer;  /* copy the starting point           */
                                          /* point to end of buffer            */

@@ -127,11 +127,11 @@ class ActivationSettings
       RexxDirectory * streams;             /* Directory of openned streams      */
       RexxString    * halt_description;    /* description from a HALT condition */
       RexxObject    * securityManager;     /* security manager object           */
-      int  traceoption;                    /* current active trace option       */
+      size_t traceoption;                  /* current active trace option       */
       size_t flags;                        /* trace/numeric and other settings  */
       wholenumber_t trace_skip;            /* count of trace events to skip     */
       int  return_status;                  /* command return status             */
-      int  traceindent;                    /* trace indentation                 */
+      size_t  traceindent;                 /* trace indentation                 */
       NumericSettings numericSettings;     /* globally effective settings       */
       int64_t elapsed_time;                /* elapsed time clock                */
       RexxDateTime timestamp;              /* current timestamp                 */
@@ -224,7 +224,7 @@ RexxObject * activation_find  (void);
    void              expose(RexxVariableBase **variables, size_t count);
    RexxVariableBase *getVariableRetriever(RexxString  *variable);
    RexxVariableBase *getDirectVariableRetriever(RexxString  *variable);
-   void              setTrace(int, int);
+   void              setTrace(size_t, size_t);
    void              setTrace(RexxString *);
    void              raise(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, RexxDirectory *);
    void              toggleAddress();
@@ -680,7 +680,7 @@ RexxObject * activation_find  (void);
    RexxMessage         *objnotify;     /* an object to notify if excep occur*/
                                        /* LIst of Saved Local environments  */
    RexxList            *environmentList;
-   int                  pending_count; /* number of pending conditions      */
+   size_t               pending_count; /* number of pending conditions      */
    RexxQueue           *handler_queue; /* queue of trapped condition handler*/
                                        /* queue of trapped conditions       */
    RexxQueue           *condition_queue;

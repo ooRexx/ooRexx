@@ -53,10 +53,10 @@
 
 class RexxExpressionFunction : public RexxInternalObject {
  public:
-  void *operator new(size_t, int);
+  void *operator new(size_t, size_t);
   inline void *operator new(size_t size, void *ptr) {return ptr;};
   inline void  operator delete(void *) { ; }
-  inline void  operator delete(void *, int) { ; }
+  inline void  operator delete(void *, size_t) { ; }
   inline void  operator delete(void *, void *) { ; }
 
   RexxExpressionFunction(RexxString *, size_t, RexxQueue *, size_t, bool);

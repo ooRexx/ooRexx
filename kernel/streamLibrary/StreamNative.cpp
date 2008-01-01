@@ -55,7 +55,7 @@ size_t stream_query_line_position(REXXOBJECT self, STREAM_INFO *stream_info, siz
 size_t read_backward_by_line(REXXOBJECT self, STREAM_INFO *stream_info, size_t *line_count, size_t *current_line, size_t *current_position);
 size_t read_forward_by_line(REXXOBJECT self, STREAM_INFO *stream_info, size_t *line_count, size_t *current_line, size_t *current_position);
 size_t read_from_end_by_line(REXXOBJECT self, STREAM_INFO *stream_info, size_t *line_count, size_t *current_line, size_t *current_position);
-int  set_line_position(REXXOBJECT self, STREAM_INFO *stream_info);
+size_t set_line_position(REXXOBJECT self, STREAM_INFO *stream_info);
 int reclength_token(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *userparms);
 void table_fixup(TTS *ttsp, size_t parse_fields[]);
 int    unknown_offset(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *user_parms);
@@ -221,10 +221,10 @@ char *allocate_stream_buffer(
 
 void openStream(
     STREAM_INFO *stream_info,          /* target stream information block   */
-    int          openFlags,            /* _sopen flags                      */
-    int          openMode,             /* _sopen mode                       */
+    size_t       openFlags,            /* _sopen flags                      */
+    size_t       openMode,             /* _sopen mode                       */
     const char  *fdopenMode,           /* fdopen mode information           */
-    int          sharedFlag )          /* flag for shared open              */
+    size_t       sharedFlag )          /* flag for shared open              */
 /******************************************************************************/
 /* Function:  Open a stream in a specific mode                                */
 /******************************************************************************/
@@ -242,7 +242,7 @@ void openStream(
           && (stream_info->full_name_parameter[3] > '0') && (stream_info->full_name_parameter[3] <= '9'))
         {
             openFlags &=~o_creat;      /* COM ports require OPEN_EXISTING... */
-            stream_info->fh = _sopen(stream_info->full_name_parameter, openFlags, sharedFlag, openMode);  /* ... and exclusive access */
+            stream_info->fh = _sopen(stream_info->full_name_parameter, (int)openFlags, (int)sharedFlag, (int)openMode);  /* ... and exclusive access */
             if (stream_info->fh != -1)
                 osf = (HANDLE)_get_osfhandle(stream_info->fh);
             else osf = NULL;
@@ -251,7 +251,7 @@ void openStream(
             if (osf && GetCommState(osf, &dcb))
                 SetCommState(osf, &dcb);
         }
-        else stream_info->fh = _sopen(stream_info->full_name_parameter, openFlags, sharedFlag, openMode);  /* allow sharing for normal files */
+        else stream_info->fh = _sopen(stream_info->full_name_parameter, (int)openFlags, (int)sharedFlag, (int)openMode);  /* allow sharing for normal files */
     }
     else
 #endif
@@ -268,9 +268,9 @@ void openStream(
 #endif
 
 #ifdef WIN32
-    stream_info->fh = _sopen(stream_info->full_name_parameter, openFlags|_O_NOINHERIT , sharedFlag, openMode);
+    stream_info->fh = _sopen(stream_info->full_name_parameter, (int)(openFlags|_O_NOINHERIT), (int)sharedFlag, (int)openMode);
 #else
-    stream_info->fh = _sopen(stream_info->full_name_parameter, openFlags, sharedFlag, openMode);
+    stream_info->fh = _sopen(stream_info->full_name_parameter, (int)openFlags, (int)sharedFlag, (int)openMode);
 #endif
   if (stream_info->fh != -1)           /* have a handle?                    */
                                        /* now get the FILE information      */
@@ -2519,7 +2519,7 @@ TTS *ttsp;
 
    STREAM_INFO *stream_info;           /* stream information                */
    size_t new_position = 0;            /* new stream position               */
-   int result = 0;                     /* returned result                   */
+   size_t result = 0;                  /* returned result                   */
    position_offset = 0;                /* the position offset               */
    position_flags = 0;                 /* positioning flags                 */
    from_start = 0;                     /* from_start flag                   */
@@ -3182,13 +3182,13 @@ size_t read_from_end_by_line(
 /*             read from the beginning of the stream counting the lines                     */
 /********************************************************************************************/
 
-int set_line_position(
+size_t set_line_position(
   REXXOBJECT self,                     /* target stream object              */
   STREAM_INFO *stream_info)            /* current stream position           */
 {
 
    char *buffer;                       /* read buffer                       */
-   size_t buffer_count;                  /* count of characters read          */
+   size_t buffer_count;                /* count of characters read          */
                                        /* already set up?                   */
    if (stream_info->line_read_position && stream_info->line_write_position)
                                        /* return the read position          */

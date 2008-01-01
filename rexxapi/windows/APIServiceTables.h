@@ -61,10 +61,10 @@ typedef struct apireg_node {
     char  *apidll_proc;                /* procedure name             */
     char   apiuser[USERLENGTH];        /* user area                  */
     void  *apiaddr;                    /* routine address            */
-    ULONG  apimod_handle;              /* dynalink module handle     */
-    ULONG  apidrop_auth;               /* Permission to drop         */
+    HANDLE apimod_handle;              /* dynalink module handle     */
+    size_t apidrop_auth;               /* Permission to drop         */
     process_id_t  apipid;              /* Pid of Registrant          */
-    ULONG  apisid;                     /* Session ID.                */
+    process_id_t apisid;               /* Session ID.                */
     size_t apisize;                    /* actual total size of block */
     process_id_t *pUserPIDs;           /* processes using this block */
     size_t uPIDBlockSize;              /* size of array of PIDs      */
@@ -82,29 +82,29 @@ typedef struct _MACRO {                /****** MACRO structure *******/
       char           name[NAMESIZE];   /* function name              */
       RXSTRING       image;            /* pcode+literals image       */
       size_t         i_size;           /* size of image              */
-      int            srch_pos;         /* search order position      */
+      size_t         srch_pos;         /* search order position      */
       } MACRO;                         /******************************/
                                        /******************************/
 typedef MACRO *PMACRO;                 /* pointer to MACRO structure */
                                        /******************************/
-#define MACROIMAGE_ABS(cb)    (((LONG)((cb)->image.strptr))? \
-                              (PSZ)((PSZ)(cb) + (LONG)((cb)->image.strptr)):\
+#define MACROIMAGE_ABS(cb)    ((cb)->image.strptr != NULL? \
+                              ((char *)(cb))  + (uintptr_t)(cb)->image.strptr:\
                               NULL)
-#define MACROIMAGE_REL(cb)    (((LONG)((cb)->image.strptr))? \
-                                                          (LONG)((cb)->image.strptr)) - (LONG)((PSZ)(cb)):NULL)
+#define MACROIMAGE_REL(cb)    ((cb)->image.strptr != NULL? \
+                                  (cb)->image.strptr - ((char *)(cb)):NULL)
 
 
 #define MACROSIZE    sizeof(MACRO)     /* size of MACRO structure    */
 #define PMNULL       ((PMACRO *)0)     /* null pointer to PMACRO     */
 #define SZSTR(x)     (x?strlen(x)+1:0) /* size of allocated string   */
 
-#define APIBLOCKNAME(cb)    (((LONG)((cb)->apiname))? \
-                            (PSZ)((PSZ)(cb) + (LONG)((cb)->apiname)):\
+#define APIBLOCKNAME(cb)    ((cb)->apiname != NULL ? \
+                            ((char *)(cb)) + (uintptr_t)((cb)->apiname):\
                             NULL)
-#define APIBLOCKDLLNAME(cb) (((LONG)((cb)->apidll_name))? \
-                            (PSZ)((PSZ)cb + (LONG)((cb)->apidll_name)): \
+#define APIBLOCKDLLNAME(cb) ((cb)->apidll_name != NULL ? \
+                            ((char *)(cb)) + (uintptr_t)((cb)->apidll_name): \
                             NULL)
-#define APIBLOCKDLLPROC(cb) (((LONG)((cb)->apidll_proc))? \
-                            (PSZ)((PSZ)(cb) + (LONG)((cb)->apidll_proc)): \
+#define APIBLOCKDLLPROC(cb) ((cb)->apidll_proc != NULL ? \
+                            ((char *)(cb)) + (uintptr_t)((cb)->apidll_proc): \
                             NULL)
 #endif

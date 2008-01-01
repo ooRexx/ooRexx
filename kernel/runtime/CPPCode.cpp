@@ -65,9 +65,9 @@ void *CPPCode::operator new(size_t size)
  */
 CPPCode::CPPCode(size_t index, PCPPM entry, size_t argcount)
 {
-    methodIndex = index;
+    methodIndex = (uint16_t)index;
     cppEntry = entry;
-    argumentCount = argcount;
+    argumentCount = (uint16_t)argcount;
 }
 
 

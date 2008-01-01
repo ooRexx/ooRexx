@@ -61,8 +61,8 @@
 
 typedef struct _QUEUEITEM {
     struct _QUEUEITEM *next;
-    PUCHAR   queue_element;
-    ULONG    size;
+    char    *queue_element;
+    size_t   size;
     SYSTEMTIME addtime;
     } QUEUEITEM;
 typedef QUEUEITEM *PQUEUEITEM;
@@ -74,14 +74,14 @@ typedef QUEUEITEM *PQUEUEITEM;
 typedef struct _QUEUEHEADER {
     struct _QUEUEHEADER *next;
     ULONG  waiting;                    /* count of processes waiting */
-    ULONG item_count;                  /* number of items in queue   */
-    ULONG  waitprocess;                /* waitprocess not needed */
+    size_t item_count;                 /* number of items in queue   */
+    ULONG   waitprocess;               /* waitprocess not needed */
     HANDLE  waitsem;                   /* event semaphore for pull   */
-    ULONG process_count;               /* to count processes */
+    size_t process_count;              /* to count processes */
                                        /* the session queue is used in */
     PQUEUEITEM queue_first;            /* first queue item           */
     PQUEUEITEM queue_last;             /* last queue item            */
-    PSZ   queue_name;                  /* pointer to queue name      */
+    char *queue_name;                  /* pointer to queue name      */
     ULONG queue_session;               /* session of queue           */
     } QUEUEHEADER;
 
@@ -102,21 +102,21 @@ typedef  struct {
 
 
 typedef struct _GLOBALREXXAPIDATA {    /* Do not move next two items */
-  LONG          init;                  /* Initialization flag        */
+  int           init;                  /* Initialization flag        */
   PQUEUEHEADER  base;                  /* Base of queues             */
   PQUEUEHEADER  session_base;          /* Base for session queues    */
   PAPIBLOCK baseblock[REGNOOFTYPES];   /* Registration chains        */
-  ULONG         SessionId;             /* Current session id         */
-  PUCHAR        macrobase;             /* Pointer to Macro Space     */
-  ULONG         macrocount;            /* count of fncs in macrospc  */
-  PUCHAR        InternalMacroPtr;      /* macro Pointer for save/load*/
-  ULONG         mcount;                /* number of macros that fit  */
-  PCHAR           ListArgPtr;               /* argument list for save/load*/
-  ULONG           ListArgCount;           /* argument cnt for save/load */
+  process_id_t  SessionId;             /* Current session id         */
+  char         *macrobase;             /* Pointer to Macro Space     */
+  size_t        macrocount;            /* count of fncs in macrospc  */
+  char         *InternalMacroPtr;      /* macro Pointer for save/load*/
+  size_t        mcount;                /* number of macros that fit  */
+  char         *ListArgPtr;            /* argument list for save/load*/
+  size_t        ListArgCount;          /* argument cnt for save/load */
   HANDLE        comhandle[NUMBEROFCOMBLOCKS];
-  PVOID         comblock[NUMBEROFCOMBLOCKS];
-  ULONG         comblockQueue_ExtensionLevel;
-  ULONG         comblockMacro_ExtensionLevel;
+  void         *comblock[NUMBEROFCOMBLOCKS];
+  size_t        comblockQueue_ExtensionLevel;
+  size_t        comblockMacro_ExtensionLevel;
   process_id_t  MemMgrPid;
   ULONG         MemMgrVersion;         /* to check if dlls match */
   RXAPI_MESSAGE msg;
@@ -126,15 +126,15 @@ typedef struct _GLOBALREXXAPIDATA {    /* Do not move next two items */
 #define   RX    (*RexxinitExports)        /* Access to global data      */
 
 typedef struct _LOCALREXXAPIDATA {          /* Do not move next two items */
-  LONG          local_init;            /* Initialization flag        */
+  int           local_init;            /* Initialization flag        */
   HANDLE        MutexSem[3];           /* API, Queue, and Macro mutex */
   HANDLE        MsgMutex;               /* RxAPI message mutex */
   HANDLE        MsgEvent;               /* RxAPI message event */
   HANDLE        ResultEvent;            /* RxAPI message result event */
   HANDLE        comhandle[NUMBEROFCOMBLOCKS];
-  PVOID         comblock[NUMBEROFCOMBLOCKS];
-  ULONG         comblockQueue_ExtensionLevel;
-  ULONG         comblockMacro_ExtensionLevel;
+  void         *comblock[NUMBEROFCOMBLOCKS];
+  size_t        comblockQueue_ExtensionLevel;
+  size_t        comblockMacro_ExtensionLevel;
   HANDLE        hFMap;                  /* Handle to major memory mapped file */
   LONG          UID;
 }  LOCALREXXAPIDATA;
@@ -146,25 +146,25 @@ typedef  struct {
    WORD AddFlag;
    WORD PullFlag;
    HANDLE WaitSem;
-   ULONG ProcessID;
-   CHAR qName[MAXQUEUENAME];
+   process_id_t ProcessID;
+   char qName[MAXQUEUENAME];
    QUEUEITEM queue_item;              /* first queue item           */
    } RXQUEUE_TALK;
 
 
    /* this data is used to communicate between rexx and the memory manager */
 typedef  struct {
-    char data[COMREGSIZE - sizeof(ULONG)];
-    ULONG curAPI;
+    char data[COMREGSIZE - sizeof(size_t)];
+    size_t curAPI;
    } RXREG_TALK;
 
 
    /* this data is used to communicate between rexx and the memory manager */
 typedef struct {
-      CHAR           name[NAMESIZE];   /* function name              */
+      char           name[NAMESIZE];   /* function name              */
       RXSTRING       image;            /* pcode+literals image       */
-      ULONG          i_size;           /* size of image              */
-      ULONG          srch_pos;         /* search order position      */
+      size_t         i_size;           /* size of image              */
+      size_t         srch_pos;         /* search order position      */
       } RXMACRO_TALK;
 
 
@@ -227,8 +227,8 @@ if (rc=RxAPIStartUp(API_API)) return (rc)
 extern "C" {
 #endif
 
-VOID RxFreeProcessSubcomList(ULONG pid);
-ULONG RxQueueDetach(ULONG pid);
+void RxFreeProcessSubcomList(process_id_t pid);
+APIRET RxQueueDetach(process_id_t pid);
 ULONG RxInterProcessInit(BOOL sessionqueue);
 
 
@@ -243,7 +243,6 @@ APIRET APIENTRY RexxExecuteMacroFunction (
 ULONG           RxAPIStartUp(int chain);
 int             FillAPIComBlock(HAPIBLOCK *, const char *, const char *, const char *);
 int  RxGetModAddress(const char *dll_name, char *function_name, int *error_codes, REXXPFN *function_address);
-ULONG get_session(void);
 BOOL  Initialize( VOID ) ;
 
 extern _declspec(dllexport) SECURITY_ATTRIBUTES * SetSecurityDesc(SECURITY_ATTRIBUTES * sa);

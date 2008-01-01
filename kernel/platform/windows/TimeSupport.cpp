@@ -190,9 +190,9 @@ RexxMethod2(void, alarm_startTimer,
     bool fState = false;                 /* Initial state of semaphore        */
     unsigned int msecInADay = 86400000;  /* number of milliseconds in a day   */
     REXXOBJECT cancelObj;                /* object to check for cancel        */
-    int cancelVal;                       /* value of cancel                   */
+    wholenumber_t cancelVal;             /* value of cancel                   */
     HANDLE SemHandle = 0;                /* Event-semaphore handle            */
-    unsigned int TimerHandle = 0;        /* Timer handle                      */
+    UINT_PTR TimerHandle = 0;            /* Timer handle                      */
 
     /* Create an event semaphore that can be used to cancel the alarm. */
     SemHandle = CreateEvent(NULL, TRUE, fState, NULL);
@@ -204,7 +204,7 @@ RexxMethod2(void, alarm_startTimer,
     }
 
     /* Set the state variables. */
-    ooRexxVarSet("EVENTSEMHANDLE", ooRexxInteger((long)SemHandle));
+    ooRexxVarSet("EVENTSEMHANDLE", ooRexxPointer(SemHandle));
     ooRexxVarSet("TIMERSTARTED", ooRexxTrue);
 
     if ( numdays > 0 )
@@ -245,7 +245,7 @@ RexxMethod2(void, alarm_startTimer,
     if ( alarmtime > 0 )
     {
         /* Start a timer for the fractional portion of the alarm. */
-        TimerHandle = SetTimer(NULL, 0, alarmtime, NULL);
+        TimerHandle = SetTimer(NULL, 0, (UINT)alarmtime, NULL);
         if ( !TimerHandle )
         {
             /* Couldn't create a timer, raise an exception. */
@@ -278,7 +278,7 @@ RexxMethod2(void, alarm_startTimer,
 /*                      used to signal the timer should be canceled. */
 /*********************************************************************/
 RexxMethod1(void, alarm_stopTimer,
-            size_t, eventSemHandle)
+            POINTER, eventSemHandle)
 {
     /* Post the event semaphore to signal the alarm should be canceled. */
     if ( ! EVPOST((HANDLE)eventSemHandle) )

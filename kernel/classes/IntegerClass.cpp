@@ -609,7 +609,7 @@ bool RexxInteger::isEqual(
   return this->stringValue()->isEqual(other);
 }
 
-int  RexxInteger::strictComp(
+wholenumber_t RexxInteger::strictComp(
     RexxObject *other)                 /* other comparison value            */
 /******************************************************************************/
 /* Function:  Compare the two values.                                         */
@@ -860,7 +860,7 @@ RexxObject *RexxInteger::Max(
 /* Function:  Perform MAX function on integer objects                         */
 /******************************************************************************/
 {
-  int          maxvalue;               /* current maximum                   */
+  wholenumber_t maxvalue;              /* current maximum                   */
   size_t       arg;                    /* current arg position              */
   RexxObject * argument;               /* current argument object           */
 
@@ -886,7 +886,7 @@ RexxObject *RexxInteger::Max(
 
     if (isOfClass(Integer, argument)) {    /* is this an INTEGER object?        */
                                        /* yes, gets its value.              */
-      int v = ((RexxInteger *)argument)->getValue();
+      wholenumber_t v = ((RexxInteger *)argument)->getValue();
       if (v > maxvalue)                /* is this number larger than max?   */
         maxvalue = v;                  /* yes, it is our new max.           */
     }
@@ -908,7 +908,7 @@ RexxObject *RexxInteger::Min(
 /* Function:  Perform MAX function on integer objects                         */
 /******************************************************************************/
 {
-  int          minvalue;               /* current minimum                   */
+  wholenumber_t minvalue;              /* current minimum                   */
   size_t       arg;                    /* current arg position              */
   RexxObject * argument;               /* current argument object           */
 
@@ -933,7 +933,7 @@ RexxObject *RexxInteger::Min(
 
     if (isOfClass(Integer, argument)) {    /* is this an INTEGER object?        */
                                        /* yes, gets its value.              */
-      int v = ((RexxInteger *)argument)->getValue();
+      wholenumber_t v = ((RexxInteger *)argument)->getValue();
       if (v < minvalue)                /* is this number larger than min?   */
         minvalue = v;                  /* yes, it is our new max.           */
     }
@@ -1156,7 +1156,7 @@ PCPPM RexxInteger::operatorMethods[] =
 
 #include "RexxNativeAPI.h"
 
-int REXXENTRY REXX_INTEGER_VALUE(REXXOBJECT self)
+wholenumber_t REXXENTRY REXX_INTEGER_VALUE(REXXOBJECT self)
 /******************************************************************************/
 /* Function:  External interface to the object method                         */
 /******************************************************************************/
@@ -1168,7 +1168,7 @@ int REXXENTRY REXX_INTEGER_VALUE(REXXOBJECT self)
   return ((RexxInteger *)self)->getValue();
 }
 
-REXXOBJECT REXXENTRY REXX_INTEGER_NEW(int value)
+REXXOBJECT REXXENTRY REXX_INTEGER_NEW(wholenumber_t value)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
 /******************************************************************************/

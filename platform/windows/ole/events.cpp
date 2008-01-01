@@ -58,7 +58,7 @@
 extern VOID ORexxOleFree(PVOID ptr);
 extern BOOL fIsRexxArray(RexxObject *TestObject);
 extern RexxObject *Variant2Rexx(VARIANT *pVariant);
-extern VOID Rexx2Variant(RexxObject *RxObject, VARIANT *pVariant, VARTYPE DestVt, INT iArgPos);
+extern VOID Rexx2Variant(RexxObject *RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
 
 // CTOR
 // set reference count to one
@@ -236,7 +236,7 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
                 pString = string_data((RexxString*) ooRexxSend0(RexxStr,"STRING"));
                 sscanf(pString,"%d",&k);
 
-                for (i=1,j=0; i <= k && j < pDispParams->cArgs; j++) {
+                for (i=1,j=0; i <= k && j < (int)pDispParams->cArgs; j++) {
                   if (pList->pusOptFlags[j] & PARAMFLAG_FOUT) {
                     sprintf(szBuff,"%d",i);
                     Rexx2Variant(ooRexxSend1(rxArray,"AT",ooRexxString(szBuff)),&pDispParams->rgvarg[j],pDispParams->rgvarg[j].vt,-1);

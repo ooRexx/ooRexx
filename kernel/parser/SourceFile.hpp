@@ -109,7 +109,7 @@ class RexxSource : public RexxInternalObject {
   static int  subKeyword(RexxToken *);
   static int  keyword(RexxToken *);
   static int  builtin(RexxToken *);
-  static int  resolveBuiltin(RexxString *);
+  static size_t resolveBuiltin(RexxString *);
   static int  condition(RexxToken *);
   static int  parseOption(RexxToken *);
   static int  keyDirective(RexxToken *);
@@ -132,7 +132,7 @@ class RexxSource : public RexxInternalObject {
   bool        nextSpecial(unsigned int, SourceLocation &);
   unsigned int locateToken(RexxToken *);
   void        globalSetup();
-  RexxString *packLiteral(int, int, int);
+  RexxString *packLiteral(size_t, size_t, int);
   RexxMethod *method();
   RexxMethod *interpretMethod(RexxDirectory *);
   RexxMethod *interpret(RexxString *, RexxDirectory *, size_t);
@@ -207,7 +207,7 @@ class RexxSource : public RexxInternalObject {
   RexxSource *classNewBuffered(RexxString *, RexxBuffer *);
   RexxSource *classNewFile(RexxString *);
   RexxObject *sourceNewObject(size_t, RexxBehaviour *, int);
-  void        parseTraceSetting(RexxString *, int *, int*);
+  void        parseTraceSetting(RexxString *, size_t *, size_t *);
   size_t      processVariableList(int);
   RexxObject *parseConditional(int *, int);
   RexxObject *parseLogical(RexxToken *first, int terminators);

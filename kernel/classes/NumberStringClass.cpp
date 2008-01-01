@@ -186,8 +186,8 @@ RexxString *RexxNumberString::stringValue()
     int    carry;
     size_t createdDigits;
     size_t MaxNumSize, LenValue;
-    int   numindex;
-    int  temp, ExpValue, ExpFactor;
+    wholenumber_t numindex;
+    wholenumber_t temp, ExpValue, ExpFactor;
     size_t charpos;
     RexxString *StringObj;
 
@@ -250,7 +250,7 @@ RexxString *RexxNumberString::stringValue()
             expstring[0] = '\0';               /* string vlaue of exp factor, Null  */
                                                /* is left of decimal > NumDigits or */
             if ((temp >= (int)createdDigits) ||  /* exponent twice numDigits          */
-                ((size_t)labs(ExpValue) > (createdDigits*2)) )
+                ((size_t)Numerics::abs(ExpValue) > (createdDigits*2)) )
             {
                 /* Yes, we need to go exponential.   */
                 /* we need Engineering format?       */
@@ -260,7 +260,7 @@ RexxString *RexxNumberString::stringValue()
                         temp -= 2;                      /* force 2 char adjustment to left   */
                     temp = (temp/3) * 3;             /* get count to the right of Decimal */
                 }
-                if (labs(temp) > MAXNUM)
+                if (Numerics::abs(temp) > MAXNUM)
                 {        /* is adjusted number too big?       */
                     if (temp > MAXNUM)              /* did it overflow?                  */
                                                     /* Yes, report overflow error.       */
@@ -298,10 +298,10 @@ RexxString *RexxNumberString::stringValue()
                                                /* Size is length of number plus exp.*/
                 MaxNumSize = (size_t)ExpValue + LenValue;
             /*is exponent larger than length,    */
-            else if ((size_t)labs(ExpValue) >= LenValue)
+            else if ((size_t)Numerics::abs(ExpValue) >= LenValue)
                 /* Yes, we will need to add zeros to */
                 /* the front plus a 0.               */
-                MaxNumSize = labs(ExpValue) + 2;
+                MaxNumSize = Numerics::abs(ExpValue) + 2;
 
             else                               /*Won't be adding any digits, just   */
                 MaxNumSize = LenValue + 1;        /* length of number + 1 for decimal  */
@@ -398,7 +398,7 @@ RexxString *RexxNumberString::stringValue()
             {                             /* we have a partial Decimal number  */
                                           /* add in the first digit a 1.       */
                                           /* Start filling in digits           */
-                for (numindex = (int)LenValue - 1;numindex > temp - 1 ;numindex-- )
+                for (numindex = (wholenumber_t)LenValue - 1; numindex > temp - 1 ;numindex-- )
                 {
                     num = this->number[numindex];   /* working copy of this Digit.       */
                                                     /* now put the number as a character */
@@ -410,7 +410,7 @@ RexxString *RexxNumberString::stringValue()
 
                 /* Start filling in digits           */
                 /* add numbers before decimal point  */
-                for (numindex = temp - 1;numindex >= 0 ;numindex-- )
+                for (numindex = temp - 1; numindex >= 0; numindex-- )
                 {
                     num = this->number[numindex];   /* working copy of this Digit.       */
                     num += ch_ZERO;
@@ -1260,7 +1260,7 @@ RexxString *RexxNumberString::formatInternal(
   wholenumber_t    temp;               /* temporary calculation holder      */
   size_t exponentsize = 0;             /* size of the exponent              */
   char   exponent[15];                 /* character exponent value          */
-  int    adjust;                       /* exponent adjustment factor        */
+  wholenumber_t adjust;                /* exponent adjustment factor        */
   size_t size;                         /* total size of the result          */
   size_t leadingSpaces;                /* number of leading spaces          */
   size_t leadingZeros = 0;             /* number of leading zeros           */
@@ -1278,7 +1278,7 @@ RexxString *RexxNumberString::formatInternal(
     temp = this->exp + this->length - 1;
                                        /* is left of dec>digits             */
                                        /* or twice digits on right          */
-    if (temp >= (wholenumber_t)exptrigger || labs(this->exp) > (wholenumber_t)(exptrigger * 2)) {
+    if (temp >= (wholenumber_t)exptrigger || Numerics::abs(this->exp) > (wholenumber_t)(exptrigger * 2)) {
       if (form == Numerics::FORM_ENGINEERING) {  /* request for Engineering notation? */
         if (temp < 0)                  /* yes, is it a whole number?        */
           temp = temp - 2;             /* no, force two char left adjustment  -2 instead of -1 */
@@ -1286,7 +1286,7 @@ RexxString *RexxNumberString::formatInternal(
       }
       this->exp = this->exp - temp;    /* adjust the exponent               */
       expfactor = temp;                /* save the factor                   */
-      temp = ::abs(temp);              /* get positive exponent value       */
+      temp = Numerics::abs(temp);      /* get positive exponent value       */
                                        /* format exponent to a string       */
       sprintf(exponent, "%d", temp);
                                        /* get the number of digits needed   */
@@ -1344,7 +1344,7 @@ RexxString *RexxNumberString::formatInternal(
 
                                        /* did rounding trigger the          */
                                        /* exponential form?                 */
-          if (mathexp != 0 && (temp >= (wholenumber_t)exptrigger || (size_t)labs(this->exp) > exptrigger * 2)) {
+          if (mathexp != 0 && (temp >= (wholenumber_t)exptrigger || (size_t)Numerics::abs(this->exp) > exptrigger * 2)) {
                                        /* yes, request for                  */
             if (form == Numerics::FORM_ENGINEERING) {
                                        /* Engineering notation fmt?         */
@@ -1377,7 +1377,7 @@ RexxString *RexxNumberString::formatInternal(
       integers = this->length + this->exp;
     else {
                                        /* no integer part?                  */
-      if ((size_t)labs(this->exp) > this->length)
+      if ((size_t)Numerics::abs(this->exp) > this->length)
         integers = 1;                  /* just the leading zero             */
       else                             /* get the integer part              */
         integers = this->length + this->exp;
@@ -1391,7 +1391,7 @@ RexxString *RexxNumberString::formatInternal(
       temp = this->length + this->exp; /* use all of number                 */
     else {
                                        /* no integer part?                  */
-      if ((size_t)labs(this->exp) > this->length)
+      if ((size_t)Numerics::abs(this->exp) > this->length)
         temp = 1;                      /* just the leading zero             */
       else
                                        /* get the integer part              */
@@ -1722,14 +1722,14 @@ int RexxNumberString::format(const char *_number, size_t _length)
      while (*InPtr >= ch_ZERO && *InPtr <= ch_NINE) {
                                        /* Add this digit to Exponent value. */
        ExpValue = ExpValue * 10 + ((*InPtr++) - '0');
-       if (ExpValue > 999999999L)      /* Exponent can only be 9 digits long*/
+       if (ExpValue > Numerics::MAX_EXPONENT)   /* Exponent can only be 9 digits long*/
          return 1;                     /* if more than that, indicate error.*/
        if (ExpValue)                   /* Any significance in the Exponent? */
          MaxDigits++;                  /*  Yes, bump up the digits counter. */
      }
      this->exp += (ExpValue * ExpSign);/* Compute real exponent.            */
                                        /* Is it bigger than allowed max     */
-     if (labs(this->exp) > 999999999L)
+     if (Numerics::abs(this->exp) > Numerics::MAX_EXPONENT)
        return 1;                       /* yes, indicate error.              */
    }
 
@@ -1948,7 +1948,7 @@ bool RexxNumberString::isEqual(
     return this->stringValue()->isEqual(other);
 }
 
-int  RexxNumberString::strictComp(RexxObject *other)
+wholenumber_t RexxNumberString::strictComp(RexxObject *other)
 /******************************************************************************/
 /* Function:  Compare the two values.                                         */
 /*                                                                            */
@@ -1963,7 +1963,7 @@ int  RexxNumberString::strictComp(RexxObject *other)
  return this->stringValue()->strictComp(other);
 }
 
-int  RexxNumberString::comp(
+wholenumber_t RexxNumberString::comp(
     RexxObject *right)                 /* right hand side of compare      */
 /******************************************************************************/
 /* Function:  Do a value comparison of two number strings for the non-strict  */
@@ -1979,10 +1979,10 @@ int  RexxNumberString::comp(
   wholenumber_t     aRexp;             /* adjusted right exponent           */
   size_t    aLlen;                     /* adjusted left length              */
   size_t    aRlen;                     /* adjusted right length             */
-  wholenumber_t      MinExp;                    /* minimum exponent                  */
+  wholenumber_t      MinExp;           /* minimum exponent                  */
   size_t    NumberDigits;              /* current digits setting            */
   char     *scan;                      /* scan pointer                      */
-  int       rc;                        /* compare result                    */
+  wholenumber_t rc;                    /* compare result                    */
 
                                        /* the compare is acually done by    */
                                        /* subtracting the two numbers, the  */

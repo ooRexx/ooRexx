@@ -387,7 +387,7 @@ class NormalSegmentSet : public MemorySegmentSet
     inline  RexxObject *allocateObject(size_t allocationLength)
     {
         DeadObject *newObject;
-        int targetPool;
+        size_t targetPool;
         size_t realLength;
 
         /* Calculate the dead chain.  Note that if this is larger than */
@@ -400,7 +400,7 @@ class NormalSegmentSet : public MemorySegmentSet
         if (targetPool < DeadPools) {
 
             /* pick up the last successful one */
-            int currentDead = lastUsedSubpool[targetPool];
+            size_t currentDead = lastUsedSubpool[targetPool];
             /* loop through the small pool chains looking for a block. */
             /* We only go up to the largest blocks as a last resort to */
             /* reduce the fragmentation. */
@@ -517,7 +517,7 @@ class NormalSegmentSet : public MemorySegmentSet
         else {
             /* calculate the dead chain          */
             /* and add that to the appropriate chain */
-            unsigned int deadChain = LengthToDeadPool(deadLength);
+            size_t deadChain = LengthToDeadPool(deadLength);
             subpools[deadChain].addSingle(new (largeObject) DeadObject(deadLength));
             /* we can mark this subpool as having items again */
             lastUsedSubpool[deadChain] = deadChain;
@@ -530,7 +530,7 @@ class NormalSegmentSet : public MemorySegmentSet
 
     DeadObjectPool largeDead;             /* the set of large dead objects */
     DeadObjectPool subpools[DeadPools];   /* our set of allocation subpools */
-    int lastUsedSubpool[DeadPools + 1];   /* a look-aside index to tell us what pool to use for a given size */
+    size_t lastUsedSubpool[DeadPools + 1];/* a look-aside index to tell us what pool to use for a given size */
     MemorySegment *recoverSegment;        /* our last-ditch memory segment */
 };
 

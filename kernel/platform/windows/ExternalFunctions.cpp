@@ -124,7 +124,7 @@ RexxMethod2(REXXOBJECT, sysBeep, wholenumber_t, Frequency, wholenumber_t, Durati
                                        /* raise an error             */
     send_exception(Error_Incorrect_call);
 
-  Beep(Frequency, Duration);           /* sound beep                 */
+  Beep((DWORD)Frequency, (DWORD)Duration);  /* sound beep                 */
   return ooRexxString("");             /* always returns a null      */
 }
 

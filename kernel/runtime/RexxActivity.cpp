@@ -586,9 +586,9 @@ void RexxActivity::raiseException(
   RexxActivation  *poppedActivation;   /* activation popped from the stack  */
   RexxString      *errortext;          /* primary error message             */
   RexxString      *message;            /* secondary error message           */
-  int              primary;            /* primary message code              */
+  wholenumber_t    primary;            /* primary message code              */
   char             work[10];           /* temp buffer for formatting        */
-  int              newVal;
+  size_t           newVal;
 
   // during error processing, we need to request the string value of message
   // substitution objects.  It is possible that the string process will also
@@ -739,10 +739,10 @@ RexxString *RexxActivity::messageSubstitution(
 /*            error message.                                                  */
 /******************************************************************************/
 {
-  int         substitutions;           /* number of substitutions           */
-  int         subposition;             /* substitution position             */
-  int         i;                       /* loop counter                      */
-  int         selector;                /* substitution position             */
+  size_t      substitutions;           /* number of substitutions           */
+  size_t      subposition;             /* substitution position             */
+  size_t      i;                       /* loop counter                      */
+  size_t      selector;                /* substitution position             */
   RexxString *newmessage;              /* resulting new error message       */
   RexxString *front;                   /* front message part                */
   RexxString *back;                    /* back message part                 */
@@ -821,10 +821,10 @@ void RexxActivity::reraiseException(
   RexxArray      *additional;          /* passed on information             */
   RexxObject     *errorcode;           /* full error code                   */
   RexxString     *message;             /* secondary error message           */
-  int             errornumber;         /* binary error number               */
-  int             primary;             /* primary message code              */
+  wholenumber_t   errornumber;         /* binary error number               */
+  wholenumber_t   primary;             /* primary message code              */
   char            work[10];            /* temp buffer for formatting        */
-  int             newVal;
+  wholenumber_t   newVal;
 
   activation = this->getCurrentActivation();/* get the current activation        */
                                        /* have a target activation?         */
@@ -914,7 +914,7 @@ RexxObject *RexxActivity::display(RexxDirectory *exobj)
   RexxObject *position;                /* position in program error occurred*/
   RexxString *programname;             /* name of program being run         */
   size_t    i;                         /* loop counter                      */
-  int       errorCode;                 /* error message code                */
+  wholenumber_t errorCode;             /* error message code                */
   RexxObject *rc;
 
                                        /* get the traceback info            */
@@ -1131,14 +1131,13 @@ void RexxActivity::push(
 /******************************************************************************/
 {
   RexxInternalStack *newstack;         /* replacement activation stack      */
-  int  i;                              /* loop counter                      */
 
   if (this->depth == this->size) {     /* reached the end?                  */
                                        /* get a larger stack                */
     newstack = new_internalstack(this->size*2);
-    for (i = this->size; i; i--)       /* loop through the old stack        */
+    for (size_t i = this->size; i != 0; i--)  /* loop through the old stack        */
                                        /* copying onto the new stack        */
-      newstack->push(this->activations->peek((long)(i-1)));
+      newstack->push(this->activations->peek(i-1));
     this->activations = newstack;      /* replace the old stack             */
     this->size *= 2;                   /* size is twice as big              */
   }
@@ -1167,14 +1166,15 @@ void RexxActivity::pushNil()
 /******************************************************************************/
 {
   RexxInternalStack *newstack;         /* replacement activation stack      */
-  int  i;                              /* loop counter                      */
 
   if (this->depth == this->size) {     /* reached the end?                  */
                                        /* get a larger stack                */
     newstack = new_internalstack(this->size*2);
-    for (i = this->size; i; i--)       /* loop through the old stack        */
+    for (size_t i = this->size; i != 0; i--)  /* loop through the old stack        */
+    {
                                        /* copying onto the new stack        */
-      newstack->push(this->activations->peek((long)(i-1)));
+        newstack->push(this->activations->peek((long)(i-1)));
+    }
     this->activations = newstack;      /* replace the old stack             */
     this->size *= 2;                   /* size is twice as big              */
   }
@@ -1878,7 +1878,7 @@ bool RexxActivity::sysExitFunc(
                                        /* this is the CALL instruction      */
       exit_parm.rxfnc_flags.rxffsub = 1;
                                        /* fill in the name parameter        */
-    exit_parm.rxfnc_namel = rname->getLength();
+    exit_parm.rxfnc_namel = (unsigned short)rname->getLength();
     exit_parm.rxfnc_name = rname->getWritableData();
 
                                        /* Get current active queue name     */
@@ -1886,10 +1886,10 @@ bool RexxActivity::sysExitFunc(
                                        /* fill in the name                  */
     exit_parm.rxfnc_que = stdqueue->getWritableData();
                                        /* and the length                    */
-    exit_parm.rxfnc_quel = stdqueue->getLength();
+    exit_parm.rxfnc_quel = (unsigned short)stdqueue->getLength();
                                        /* Build arg array of RXSTRINGs      */
                                        /* get number of args                */
-    exit_parm.rxfnc_argc = argcount;
+    exit_parm.rxfnc_argc = (unsigned short)argcount;
 
 
     /* allocate enough memory for all arguments.           */
@@ -2028,7 +2028,7 @@ bool RexxActivity::sysExitCmd(
     exit_parm.rxcmd_flags.rxfcfail = 0;/* Initialize failure/error to zero  */
     exit_parm.rxcmd_flags.rxfcerr = 0;
                                        /* fill in the environment parm      */
-    exit_parm.rxcmd_addressl = environment->getLength();
+    exit_parm.rxcmd_addressl = (unsigned short)environment->getLength();
     exit_parm.rxcmd_address = environment->getWritableData();
                                        /* make cmdaname into RXSTRING form  */
     MAKERXSTRING(exit_parm.rxcmd_command, cmdname->getWritableData(), cmdname->getLength());
@@ -2716,7 +2716,7 @@ void process_message_result(
   }
 }
 
-int RexxActivity::messageSend(
+wholenumber_t RexxActivity::messageSend(
     RexxObject      *receiver,         /* target object                     */
     RexxString      *msgname,          /* name of the message to process    */
     size_t           count,            /* count of arguments                */
@@ -2727,7 +2727,7 @@ int RexxActivity::messageSend(
 /*              method will do any needed activity setup before hand.         */
 /******************************************************************************/
 {
-  int     rc;                          /* message return code               */
+  wholenumber_t rc;                    /* message return code               */
   SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
   size_t  startDepth;                  /* starting depth of activation stack*/
   NestedActivityState saveInfo;        /* saved activity info               */
@@ -2789,7 +2789,7 @@ int REXXENTRY RexxSendMessage (
   RexxArray  *argument_array;          /* array of arguments                */
   RexxList   *argument_list;           /* temp list of arguments            */
   char returnType;                     /* type of return value              */
-  int  rc;                             /* message return code               */
+  wholenumber_t rc;                    /* message return code               */
   va_list arguments;                   /* message argument list             */
   SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
   NestedActivityState saveInfo;        /* saved activity info               */
@@ -2845,7 +2845,7 @@ int REXXENTRY RexxSendMessage (
   activity->popNil();                  /* remove the nil marker             */
                                        /* release our activity usage        */
   ActivityManager::returnActivity(activity);
-  return rc;                           /* return the error code             */
+  return (int)rc;                      /* return the error code             */
 }
 
 

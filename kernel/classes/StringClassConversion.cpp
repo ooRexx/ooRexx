@@ -165,7 +165,7 @@ char PackByte2(
 /*                                                                   */
 /*********************************************************************/
 
-int ValidateSet(
+size_t ValidateSet(
   const char *String,                  /* string to validate                */
   size_t    Length,                    /* string length                     */
   const char *Set,                     /* character set                     */

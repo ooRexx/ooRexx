@@ -195,11 +195,11 @@ void SysValidateAddressName(RexxString *);
 #endif
 
 #ifndef SysMessageText
-RexxString *SysMessageText (int);      /* retrieve an error message         */
+RexxString *SysMessageText(wholenumber_t);   /* retrieve an error message         */
 #endif
 
 #ifndef SysMessageHeader
-RexxString *SysMessageHeader (int);    /* get the header for an error msg   */
+RexxString *SysMessageHeader(wholenumber_t);    /* get the header for an error msg   */
 #endif
 
 #ifndef SysReadProgram

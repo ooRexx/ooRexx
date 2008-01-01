@@ -61,7 +61,7 @@ class RexxInstructionTrace : public RexxInstruction {
   inline void  operator delete(void *) { }
   inline void  operator delete(void *, void *) { }
 
-  RexxInstructionTrace(RexxObject *, unsigned short, size_t, int);
+  RexxInstructionTrace(RexxObject *, size_t, size_t, wholenumber_t);
   inline RexxInstructionTrace(RESTORETYPE restoreType) { ; };
   void live(size_t);
   void liveGeneral(int reason);
@@ -69,7 +69,7 @@ class RexxInstructionTrace : public RexxInstruction {
   void execute(RexxActivation *, RexxExpressionStack *);
 
   RexxObject *expression;              /* trace value expression            */
-  int         debugskip;               /* clauses to skip                   */
-  int         traceSetting;            // new trace setting
+  wholenumber_t debugskip;             /* clauses to skip                   */
+  size_t      traceSetting;            // new trace setting
 };
 #endif

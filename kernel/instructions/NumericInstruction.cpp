@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              NumericInstruction.c      */
+/* REXX Translator                                  NumericInstruction.c      */
 /*                                                                            */
 /* Primitive Numeric Parse Class                                              */
 /*                                                                            */
@@ -58,7 +58,7 @@ RexxInstructionNumeric::RexxInstructionNumeric(
 {
                                        /* copy the expression               */
   OrefSet(this, this->expression, _expression);
-  instructionFlags = flags;
+  instructionFlags = (uint16_t)flags;
   switch (type)
   {
       case SUBKEY_DIGITS:

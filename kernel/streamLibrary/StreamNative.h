@@ -149,7 +149,7 @@
 
 #define stream_time ctime(&stat_info.st_mtime)
 
-#define set_stream_position(o) fseek(stream_info->stream_file,o,0)
+#define set_stream_position(o) fseek(stream_info->stream_file,(long)o,0)
 
 #define update_stream_size(s) stream_info->pseudo_stream_size = \
                             (s > stream_info->pseudo_stream_size) ? s - 1 : stream_info->pseudo_stream_size
@@ -161,7 +161,7 @@
 
 #define checked_line_write(b,c) line_write_check(b, c, stream_info->stream_file)
 
-#define non_binary_read(b,n) fgets(b, n,stream_info->stream_file)
+#define non_binary_read(b,n) fgets(b, (int)n, stream_info->stream_file)
 
 #define binary_read(b,n) fread(b, 1, n,stream_info->stream_file)
 

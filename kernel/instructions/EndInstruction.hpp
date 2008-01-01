@@ -68,7 +68,7 @@ class RexxInstructionEnd : public RexxInstruction {
   void execute(RexxActivation *, RexxExpressionStack *);
 
   inline RexxString *endName() { return this->name; };
-  inline void        setStyle(size_t type) { instructionFlags = type; };
+  inline void        setStyle(size_t type) { instructionFlags = (uint16_t)type; };
   inline size_t      getStyle(void)        { return instructionFlags; };
 
  RexxString * name;                    /* specified control variable name   */

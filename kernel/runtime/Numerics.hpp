@@ -61,6 +61,8 @@ class Numerics
 public:
     static wholenumber_t MAX_WHOLENUMBER;
     static wholenumber_t MIN_WHOLENUMBER;
+    static wholenumber_t MAX_EXPONENT;
+    static wholenumber_t MIN_EXPONENT;
     static stringsize_t DEFAULT_DIGITS;
     // the digits setting used internally for function/method arguments to allow
     // for the full range

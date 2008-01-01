@@ -241,7 +241,7 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                 else ReplyMessage((LRESULT)SetCapture((HWND)lParam));
                 return (TRUE);
              case WM_USER_GETKEYSTATE:
-                ReplyMessage((LRESULT)GetAsyncKeyState(wParam));
+                ReplyMessage((LRESULT)GetAsyncKeyState((int)wParam));
                 return (TRUE);
 
              case WM_USER_SUBCLASS:

@@ -172,7 +172,7 @@ static int
 static ULONG
   rxstrfrmfile(HFILE,PRXSTRING,ULONG); /* read a RXSTRING from file  */
 
-static ULONG
+static size_t
   rxstrlen(RXSTRING);                  /* strlen of a RXSTRING       */
 
 
@@ -191,7 +191,7 @@ extern void UnmapComBlock(int chain);
 
 static BOOL ReceiveMacro(PMACRO element, ULONG kind);
 static void ReturnMacro(PMACRO element, BOOL withImage);
-static RXQUEUE_TALK * FillMacroComBlock(BOOL add, const char *name, const char *data, size_t datalen, ULONG spos);
+static RXQUEUE_TALK * FillMacroComBlock(BOOL add, const char *name, const char *data, size_t datalen, size_t spos);
 static RXQUEUE_TALK * FillMacroComBlock_List(size_t argc, const char ** argv);
 static BOOL CheckMacroComBlock();
 
@@ -203,7 +203,7 @@ extern _declspec(dllexport) APIRET APIClearMacroSpace(void);
 extern _declspec(dllexport) APIRET APIQueryMacro(void);
 extern _declspec(dllexport) APIRET APIReorderMacro(void);
 extern _declspec(dllexport) APIRET APIExecuteMacroFunction(void);
-extern _declspec(dllexport) APIRET APIList(ULONG kind);
+extern _declspec(dllexport) APIRET APIList(int kind);
 
 /*********************************************************************/
 
@@ -232,7 +232,7 @@ RexxAddMacro(
   size_t pos )                         /* search order pos request   */
 {
   MACRO  p;
-  ULONG   rc;
+  APIRET  rc;
 
   if (pos != RXMACRO_SEARCH_BEFORE &&  /* if pos flag not before and */
        pos != RXMACRO_SEARCH_AFTER )   /*   not after, then          */
@@ -245,7 +245,7 @@ RexxAddMacro(
   if (!(rc=callrexx(s, &p))) {        /* call REXXSAA to get image  */
       APISTARTUP_MACRO();                        /* do common entry code       */
       if (FillMacroComBlock(TRUE, n, p.image.strptr, p.i_size, pos))
-          rc = MySendMessage(RXAPI_MACRO,MACRO_ADD,1 /* update if exists */);
+          rc = (APIRET)MySendMessage(RXAPI_MACRO,MACRO_ADD,1 /* update if exists */);
       else rc = RXMACRO_NO_STORAGE;
       GlobalFree(p.image.strptr);
       APICLEANUP_MACRO();                        /* release shared resources   */
@@ -315,7 +315,7 @@ APIRET
 APIENTRY
 RexxDropMacro(const char *n)                       /* name of macro to delete    */
 {
-  ULONG  rc;                           /* return code from function  */
+  APIRET rc;                           /* return code from function  */
 
   if (!API_RUNNING()) return (RXMACRO_NO_STORAGE);
 
@@ -326,7 +326,7 @@ RexxDropMacro(const char *n)                       /* name of macro to delete   
   APISTARTUP_MACRO();                        /* do common entry code       */
 
   if (FillMacroComBlock(FALSE, n, NULL, 0, 0))    /* just put the name into com port */
-      rc = MySendMessage(RXAPI_MACRO,MACRO_DROP,0);
+      rc = (APIRET)MySendMessage(RXAPI_MACRO,MACRO_DROP,0);
   else rc = RXMACRO_NO_STORAGE;
 
   APICLEANUP_MACRO();                        /* release shared resources   */
@@ -373,7 +373,7 @@ APIRET
 APIENTRY
 RexxClearMacroSpace(void)
 {
-  ULONG  rc;                           /* return code from function  */
+  APIRET rc;                           /* return code from function  */
 
   if (!API_RUNNING()) return (RXMACRO_NO_STORAGE);
 
@@ -381,7 +381,7 @@ RexxClearMacroSpace(void)
   if (!CheckMacroComBlock()) return(RXMACRO_NO_STORAGE);
 
   APISTARTUP_MACRO();                        /* do common entry code       */
-  rc = MySendMessage(RXAPI_MACRO,MACRO_CLEAR,0);
+  rc = (APIRET)MySendMessage(RXAPI_MACRO,MACRO_CLEAR,0);
   APICLEANUP_MACRO();                        /* release shared resources   */
   return (rc);                         /* and exit with return code  */
 }
@@ -426,9 +426,12 @@ RexxSaveMacroSpace(
   const char **av,                     /* argument list              */
   const char * fnam )                  /* file name                  */
 {
-  ULONG  i, rc = 0, found;
+  ULONG  i;
   MACRO tmp;
   HFILE f;
+
+  LRESULT found;
+  APIRET rc = 0;
 
   if (!API_RUNNING()) return (RXMACRO_NO_STORAGE);
 
@@ -476,7 +479,7 @@ RexxSaveMacroSpace(
       {
           if (ReceiveMacro(&tmp, RECEIVE_IMAGELIST))
           {
-              rc = file_write(f,tmp.image.SPT,tmp.image.SLN); /* write image to file   */
+              rc = file_write(f,tmp.image.SPT,(ULONG)tmp.image.SLN); /* write image to file   */
               GlobalFree(tmp.image.SPT);    /* allocated within ReceiveMacro */
               if (!rc) found = MySendMessage(RXAPI_MACRO,MACRO_LIST,LIST_IMAGE);
           } else rc = RXMACRO_NO_STORAGE;
@@ -535,12 +538,13 @@ static BOOL getNextMacro(ULONG kind)
 }
 
 
-APIRET APIList(ULONG kind)
+APIRET APIList(int kind)
 {
   RXMACRO_TALK * intercom;
-  ULONG i, sl, size = 0;
+  ULONG i, size = 0;
   PSZ * ptr;
   PSZ str;
+  size_t sl;
 
   intercom = (RXMACRO_TALK *)RX.comblock[API_MACRO];
   if (kind == LIST_INIT)
@@ -641,7 +645,7 @@ RexxQueryMacro(
   const char *name,                    /* name to search for         */
   unsigned short *pos )                /* pointer for return of pos  */
 {
-  ULONG  rc;                           /* return code from call      */
+  APIRET rc;                           /* return code from call      */
 
   if (!API_RUNNING()) return (RXMACRO_NO_STORAGE);
 
@@ -652,7 +656,7 @@ RexxQueryMacro(
 
   if (FillMacroComBlock(FALSE, name, NULL, 0, 0))    /* just put the name into com port */
   {
-      rc = MySendMessage(RXAPI_MACRO,MACRO_QUERY,0);
+      rc = (APIRET)MySendMessage(RXAPI_MACRO,MACRO_QUERY,0);
       if (rc == RXMACRO_OK) *pos = (USHORT) ((RXMACRO_TALK *)LRX.comblock[API_MACRO])->srch_pos;
   }
   else rc = RXMACRO_NO_STORAGE;
@@ -697,7 +701,7 @@ RexxReorderMacro(
   const char *name,                    /* name of function to change */
   size_t pos )                         /* new position for function  */
 {
-  ULONG  rc;                           /* return code from call      */
+  APIRET rc;                           /* return code from call      */
 
   if ( pos != RXMACRO_SEARCH_BEFORE && /* if pos flag not before and */
        pos != RXMACRO_SEARCH_AFTER )   /*   not after, then          */
@@ -711,7 +715,7 @@ RexxReorderMacro(
   APISTARTUP_MACRO();                        /* do common entry code       */
 
   if (FillMacroComBlock(FALSE, name, NULL, 0, pos))    /* just put the name and pos into com port */
-      rc = MySendMessage(RXAPI_MACRO,MACRO_REORDER,0);
+      rc = (APIRET)MySendMessage(RXAPI_MACRO,MACRO_REORDER,0);
   else rc = RXMACRO_NO_STORAGE;
 
   APICLEANUP_MACRO();                        /* release shared resources   */
@@ -755,7 +759,7 @@ APIRET APIENTRY RexxExecuteMacroFunction(
   PRXSTRING p )                        /* storage for image return   */
 {
   MACRO tmp;                           /* temp macro pointer         */
-  ULONG  rc=RXMACRO_OK;                /* return code from function  */
+  APIRET rc=RXMACRO_OK;                /* return code from function  */
 
   if (!API_RUNNING()) return (RXMACRO_NO_STORAGE);
 
@@ -765,7 +769,7 @@ APIRET APIENTRY RexxExecuteMacroFunction(
   APISTARTUP_MACRO();                        /* do common entry code       */
 
   if (FillMacroComBlock(FALSE, name, NULL, 0, 0))    /* just put the name into com port */
-      rc = MySendMessage(RXAPI_MACRO,MACRO_EXECUTE,0);
+      rc = (APIRET)MySendMessage(RXAPI_MACRO,MACRO_EXECUTE,0);
   else rc = RXMACRO_NO_STORAGE;
 
   p->strptr = NULL;
@@ -929,8 +933,8 @@ static BOOL eraselst(
 
   while (ptr && !err) {                /* while valid pointer...     */
     t=ptr->next;
-    err = (BOOL)GlobalFree(ptr->image.SPT);  /* free this block's string   */
-    if (!err) err = (BOOL)GlobalFree(ptr);   /* free macro header          */
+    err = GlobalFree(ptr->image.SPT) != 0;  /* free this block's string   */
+    if (!err) err = GlobalFree(ptr) != 0;   /* free macro header          */
     ptr=t;                             /* point to next, if any      */
   }                                    /* end of "while..." loop     */
   return (!err);                       /* return to caller           */
@@ -1044,12 +1048,11 @@ ULONG     size)
 /*  Output:             length of the RXSTRING                       */
 /*                                                                   */
 /*********************************************************************/
-static ULONG rxstrlen(
+static size_t rxstrlen(
   RXSTRING r )
 {
-  ULONG len;
+  size_t len = 0;
 
-  len = 0L;                            /* initialize zero length     */
   if (RXVALIDSTRING(r))
     len = r.SLN;                       /* get length of short string */
   return len;
@@ -1134,8 +1137,9 @@ static int   ldmacro(
   HFILE    f )
 {
   PMACRO tbase,wbase,w,t;
-  ULONG  tbase_size;                   /* size of allocated temp stor*/
-  ULONG  rc,i;
+  size_t tbase_size;                   /* size of allocated temp stor*/
+  ULONG  i;
+  int    rc;
   RXSTRING p;
   PMACRO pOld = NULL;
 
@@ -1151,7 +1155,7 @@ static int   ldmacro(
   if (!tbase)
     return(RXMACRO_NO_STORAGE);        /* no memory available        */
 
-  if (file_read(f, (PVOID)tbase, tbase_size))      /* read macro headers from fil*/
+  if (file_read(f, (void *)tbase, (ULONG)tbase_size))  /* read macro headers from fil*/
   {
       GlobalFree(tbase);                 /* free macro header list */
       return(RXMACRO_FILE_ERROR);        /* there was file error       */
@@ -1166,7 +1170,7 @@ static int   ldmacro(
       w = tbase;                         /* check for duplicates first */
       while (w) {                        /* go through the entire list */
           if (FillMacroComBlock(FALSE, w->name, NULL, 0, 0))    /* just put the name into com port */
-              rc = MySendMessage(RXAPI_MACRO,MACRO_QUERY,0);
+              rc = (int)MySendMessage(RXAPI_MACRO,MACRO_QUERY,0);
           else return RXMACRO_NO_STORAGE;
           if (rc == RXMACRO_OK) {
               GlobalFree(tbase);                 /* free macro header list */
@@ -1182,7 +1186,7 @@ static int   ldmacro(
               return(RXMACRO_NOT_FOUND);     /* macro not there            */
           }
           if (FillMacroComBlock(FALSE, av[i], NULL, 0, 0))    /* just put the name into com port */
-              rc = MySendMessage(RXAPI_MACRO,MACRO_QUERY,0);
+              rc = (int)MySendMessage(RXAPI_MACRO,MACRO_QUERY,0);
           else return RXMACRO_NO_STORAGE;
           if (rc == RXMACRO_OK) {
               GlobalFree(tbase);                 /* free macro header list */
@@ -1197,10 +1201,10 @@ static int   ldmacro(
   {       /* read all macro functs...   */
       p = RXSTRING_EMPTY;                /* initialize to empty string */
       if (!ac || request(ac,av,w->name)) /* if all, or as requested..  */
-          rc=rxstrfrmfile(f,&p,w->i_size);  /* read function from file    */
+          rc=rxstrfrmfile(f, &p, (ULONG)w->i_size);  /* read function from file    */
       else {
           w->image.strptr = NULL;
-          if (SetFilePointer(f,w->i_size,0,FILE_CURRENT)==0xFFFFFFFF)
+          if (SetFilePointer(f,(LONG)w->i_size,0,FILE_CURRENT)==0xFFFFFFFF)
               rc= RXMACRO_FILE_ERROR;          /* error changing file pointer*/
       }
       if (rc) break;                       /* for any error break loop   */
@@ -1221,7 +1225,7 @@ static int   ldmacro(
           if (w->image.strptr)
           {
               if (FillMacroComBlock(TRUE, w->name, w->image.strptr, w->i_size, w->srch_pos))
-                  rc = MySendMessage(RXAPI_MACRO,MACRO_ADD,0 /* don't update if exists */);
+                  rc = (int)MySendMessage(RXAPI_MACRO,MACRO_ADD,0 /* don't update if exists */);
               else rc = RXMACRO_NO_STORAGE;
               GlobalFree(w->image.strptr);       /* free image */
           }
@@ -1283,7 +1287,7 @@ static int macrofile_open(
 /* functions needed to use communication port */
 
 static RXQUEUE_TALK *
-    FillMacroComBlock(BOOL add, const char *name, const char *data, size_t datalen, ULONG spos)
+    FillMacroComBlock(BOOL add, const char *name, const char *data, size_t datalen, size_t spos)
 {
     RXMACRO_TALK * icom;
 
@@ -1367,7 +1371,7 @@ static BOOL CheckMacroComBlock()
         UnmapComBlock(API_MACRO);
         return MapComBlock(API_MACRO);
     }
-    return (BOOL) LRX.comblock[API_MACRO];
+    return LRX.comblock[API_MACRO] != 0;
 }
 
 
@@ -1383,8 +1387,8 @@ static RXQUEUE_TALK *
 
     if (argc)
     {
-        ULONG i,size = 0;
-        PCHAR ptr;
+        size_t i,size = 0;
+        char *ptr;
         for (i=0; i<argc;i++)
             size += strlen(argv[i])+1;
 
@@ -1396,17 +1400,16 @@ static RXQUEUE_TALK *
             if (!CheckMacroComBlock()) return NULL;
             icom = LRX.comblock[API_MACRO];
         }
-          ptr = (PUCHAR)(icom + 1);  /* set absolute pointer */
+        ptr = (char *)(icom + 1);  /* set absolute pointer */
 
         for (i=0; i<argc;i++)
         {
-            INT sl;
-            sl = strlen(argv[i])+1;
+            size_t sl = strlen(argv[i])+1;
             memcpy(ptr, argv[i],sl);
             ptr += sl;
         }
         icom->image.strlength = size;
-        icom->image.strptr = (PCHAR)sizeof(RXMACRO_TALK);   /* set relative pointer */
+        icom->image.strptr = (char *)sizeof(RXMACRO_TALK);   /* set relative pointer */
     }
     return LRX.comblock[API_MACRO];
 }

@@ -612,7 +612,7 @@ bool ReadNextBuffer(
   size = min(MAX_READ, filedata->residual);
 
                                        /* read the file in           */
-  if (!ReadFile(filedata->handle, filedata->buffer, size,
+  if (!ReadFile(filedata->handle, filedata->buffer, (DWORD)size,
                 (LPDWORD)&filedata->data, NULL))
       return 1;
 
@@ -766,7 +766,7 @@ bool SetFileMode(
   if ((dwfileattrib = GetFileAttributes(file)) != 0xffffffff) {
                                        /* if worked                  */
                                        /* set the attributes         */
-    if ((dwfileattrib = SetFileAttributes(file,attr)) != 0)
+    if ((dwfileattrib = SetFileAttributes(file, (DWORD)attr)) != 0)
       return false;   /* give back success flag     */
     else
       return true;
@@ -855,6 +855,25 @@ bool string2ulong(
   }
   *number = accumulator;               /* return the value           */
   return true;                         /* good number                */
+}
+
+/********************************************************************
+* Function:  string2pointer(string)                                 *
+*                                                                   *
+* Purpose:   Validates and converts an ASCII-Z string from string   *
+*            form to a pointer value.  Returns false if the number  *
+*            is not valid, true if the number was successfully      *
+*            converted.                                             *
+*                                                                   *
+* RC:        true - Good number converted                           *
+*            false - Invalid number supplied.                       *
+*********************************************************************/
+
+bool string2pointer(
+  const char *string,                  /* string to convert          */
+  void  *pointer)                      /* converted number           */
+{
+  return sscanf(string, "%p", pointer) == 1;
 }
 
 /********************************************************************
@@ -973,7 +992,7 @@ void getpath(
 
       SetCurrentDirectory(drv);        /* change to specified drive  */
                                        /* Get current directory      */
-      GetCurrentDirectory(len, path);
+      GetCurrentDirectory((DWORD)len, path);
       SetCurrentDirectory(szBuff);     /* go back to where we were   */
                                        /* need a trailing slash?     */
       if (path[strlen(path) - 1] != '\\')
@@ -1255,7 +1274,7 @@ ULONG FormatFile(
                                        /* Place new string in Stem      */
   ldp->vlen = strlen(ldp->Temp);
   ldp->count++;
-  ltoa(ldp->count, ldp->varname+ldp->stemlen, 10);
+  ltoa((long)ldp->count, ldp->varname+ldp->stemlen, 10);
   ldp->shvb.shvnext = NULL;
   ldp->shvb.shvname.strptr = ldp->varname;
   ldp->shvb.shvname.strlength = strlen(ldp->varname);
@@ -2051,8 +2070,8 @@ LONG APIENTRY SysFileSearch(
   CHAR        line[MAX_LINE_LEN];      /* Line read from file        */
   char       *ptr;                     /* Pointer to char str found  */
   ULONG       num = 0;                 /* Line number                */
-  ULONG       len;                     /* Length of string           */
-  ULONG       len2;                    /* Length of string           */
+  size_t      len;                     /* Length of string           */
+  size_t      len2;                    /* Length of string           */
   ULONG       rc = 0;                  /* Return code of this func   */
   bool        linenums = false;        /* Set true for linenums in   */
                                        /* output                     */
@@ -2110,9 +2129,7 @@ LONG APIENTRY SysFileSearch(
       if (linenums) {
         wsprintf(ldp.ibuf, "%d ", num);
         len2 = strlen(ldp.ibuf);
-//      memcpy(ldp.ibuf+len2, line, len);
         memcpy(ldp.ibuf+len2, line, min(len, IBUF_LEN-len2));
-//      ldp.vlen = len+len2;
         ldp.vlen = min(IBUF_LEN, len+len2);
       }
       else {
@@ -2120,7 +2137,7 @@ LONG APIENTRY SysFileSearch(
         ldp.vlen = len;
       }
       ldp.count++;
-      ltoa(ldp.count, ldp.varname+ldp.stemlen, 10);
+      ltoa((long)ldp.count, ldp.varname+ldp.stemlen, 10);
 
       if (ldp.ibuf[ldp.vlen-1] == '\n')
         ldp.vlen--;
@@ -2142,7 +2159,7 @@ LONG APIENTRY SysFileSearch(
 
   CloseFile(&filedata);                /* Close that file            */
                                        /* set stem.0 to lines read   */
-  ltoa(ldp.count, ldp.ibuf, 10);
+  ltoa((long)ldp.count, ldp.ibuf, 10);
   ldp.varname[ldp.stemlen] = '0';
   ldp.varname[ldp.stemlen+1] = 0;
   ldp.shvb.shvnext = NULL;
@@ -2382,7 +2399,7 @@ LONG APIENTRY SysFileTree(
     return INVALID_ROUTINE;
   }
                                        /* return lines read          */
-  ltoa(ldp.count, ldp.Temp, 10);
+  ltoa((long)ldp.count, ldp.Temp, 10);
   ldp.varname[ldp.stemlen] = '0';
   ldp.varname[ldp.stemlen+1] = 0;
   ldp.shvb.shvnext = NULL;
@@ -2533,10 +2550,10 @@ LONG APIENTRY SysIni(
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
 
-  ULONG       x;                       /* Temp counter               */
-  ULONG       len;                     /* Len var used when creating */
+  size_t      x;                       /* Temp counter               */
+  size_t      len;                     /* Len var used when creating */
                                        /* stem                       */
-  ULONG       lSize;                   /* Size of queried info buffer*/
+  size_t      lSize;                   /* Size of queried info buffer*/
                                        /* area                       */
   PSZ         IniFile;                 /* Ini file (USER, SYSTEM,    */
                                        /* BOTH, file)                */
@@ -2553,7 +2570,7 @@ LONG APIENTRY SysIni(
   bool        terminate = true;        /* perform WinTerminate call  */
   RXSTEMDATA  ldp;                     /* local data                 */
   PSZ         next;                    /* next returned string       */
-  ULONG       buffersize;              /* return buffer size         */
+  size_t      buffersize;              /* return buffer size         */
 
 
   buffersize = retstr->strlength;      /* save default buffer size   */
@@ -2629,19 +2646,18 @@ LONG APIENTRY SysIni(
     if (WildCard && QueryApps)
                                        /* Retrieve the names of all  */
                                        /* applications.              */
-      lSize = GetPrivateProfileString(NULL, NULL, "", Val, lSize, IniFile);
+      lSize = GetPrivateProfileString(NULL, NULL, "", Val, (DWORD)lSize, IniFile);
     else if (WildCard && !QueryApps)
                                        /* Retrieve all keys for an   */
                                        /* application                */
-      lSize = GetPrivateProfileString(App, NULL, "", Val, lSize, IniFile);
+      lSize = GetPrivateProfileString(App, NULL, "", Val, (DWORD)lSize, IniFile);
     else
                                        /* Retrieve a single key value*/
-      lSize = GetPrivateProfileString(App, Key, "", Val, lSize, IniFile);
+      lSize = GetPrivateProfileString(App, Key, "", Val, (DWORD)lSize, IniFile);
 
     if (lSize <= 0) {
       Error = true;
       BUILDRXSTRING(retstr, ERROR_RETSTR);
-//      GlobalFree(Val);                  /* release buffer             */
     }
     else if (WildCard == false) {
       if (lSize > buffersize)
@@ -2652,7 +2668,6 @@ LONG APIENTRY SysIni(
         }
       memcpy(retstr->strptr, Val, lSize);
       retstr->strlength = lSize;
-//      GlobalFree(Val);                 /* release buffer             */
     }
   }
   else {                               /* Set or delete Key          */
@@ -2706,7 +2721,7 @@ LONG APIENTRY SysIni(
           strcpy(ldp.ibuf, next);
           ldp.vlen = len;
           ldp.count++;
-          ltoa(ldp.count, ldp.varname+ldp.stemlen, 10);
+          ltoa((long)ldp.count, ldp.varname+ldp.stemlen, 10);
 
           if (ldp.ibuf[ldp.vlen-1] == '\n')
             ldp.vlen--;
@@ -2739,7 +2754,7 @@ LONG APIENTRY SysIni(
     }
 
                                        /* set number returned        */
-    ltoa(ldp.count, ldp.ibuf, 10);
+    ltoa((long)ldp.count, ldp.ibuf, 10);
     ldp.varname[ldp.stemlen] = '0';
     ldp.varname[ldp.stemlen+1] = 0;
     ldp.shvb.shvnext = NULL;
@@ -3158,7 +3173,7 @@ LONG APIENTRY SysSleep(
 
   LONG milliseconds;
   LONG secs_buf;
-  LONG length;
+  size_t length;
   LONG digits;
   PCHAR string;
 
@@ -3460,7 +3475,7 @@ LONG APIENTRY RxWinExec(
   int         CmdShow;                 /* show window style flags    */
   int         index;                   /* table index                */
   ULONG       pid;                     /* PID or error return code   */
-  ULONG       length;                  /* length of option           */
+  size_t      length;                  /* length of option           */
   STARTUPINFO si;
   PROCESS_INFORMATION procInfo;
 
@@ -3531,7 +3546,7 @@ ULONG  show_flags[] =                  /* show window styles        */
   else {
     pid = GetLastError();
     if ( pid > 31 )                    /* maintain compatibility to  */
-      pid = -pid;                      /* versions < ooRexx 3.1.2    */
+      pid = (ULONG)-((int)pid);        /* versions < ooRexx 3.1.2    */
   }
                                        /* return value as string     */
   sprintf(retstr->strptr, "%d", pid);
@@ -3989,7 +4004,7 @@ LONG APIENTRY SysCreateMutexSem(
     retstr->strlength = 0;             /* return null string         */
   else {
                                        /* format the result          */
-    sprintf(retstr->strptr, "%lu", handle);
+    sprintf(retstr->strptr, "%p", handle);
                                        /* set the length             */
     retstr->strlength = strlen(retstr->strptr);
   }
@@ -4022,7 +4037,7 @@ LONG APIENTRY SysOpenMutexSem(
                                        /* get a binary handle        */
                                        /* try to open it             */
   handle = OpenMutex(MUTEX_ALL_ACCESS, TRUE, args[0].strptr);
-  wsprintf(retstr->strptr, "%lu", handle); /* format the return code */
+  wsprintf(retstr->strptr, "%p", handle); /* format the return code */
   retstr->strlength = strlen(retstr->strptr);
   return VALID_ROUTINE;                /* good completion            */
 }
@@ -4044,14 +4059,14 @@ LONG APIENTRY SysReleaseMutexSem(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  HANDLE    handle;                    /* mutex handle               */
+  void     *handle;                    /* mutex handle               */
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (size_t *)&handle))
+  if (!string2pointer(args[0].strptr, &handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
-  if (!ReleaseMutex(handle))
+  if (!ReleaseMutex((HANDLE)handle))
      RETVAL(GetLastError())
   else
      RETVAL(0)
@@ -4074,14 +4089,14 @@ LONG APIENTRY SysCloseMutexSem(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  HANDLE    handle;                    /* mutex handle               */
+  void     *handle;                    /* mutex handle               */
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (size_t *)&handle))
+  if (!string2pointer(args[0].strptr, &handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
-  if (!CloseHandle(handle))
+  if (!CloseHandle((HANDLE)handle))
      RETVAL(GetLastError())
   else
      RETVAL(0)
@@ -4104,7 +4119,7 @@ LONG APIENTRY SysRequestMutexSem(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  HANDLE    handle;                    /* mutex handle               */
+  void     *handle;                    /* mutex handle               */
   APIRET    rc;                        /* creation return code       */
   int       timeout;                   /* timeout value              */
 
@@ -4119,10 +4134,10 @@ LONG APIENTRY SysRequestMutexSem(
       return INVALID_ROUTINE;          /* raise error if bad         */
   }
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (size_t *)&handle))
+  if (!string2pointer(args[0].strptr, &handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
                                        /* request the semaphore      */
-  rc = WaitForSingleObject(handle, timeout);
+  rc = WaitForSingleObject((HANDLE)handle, timeout);
   if (rc == WAIT_FAILED)
     wsprintf(retstr->strptr, "%d", GetLastError());
   else
@@ -4177,7 +4192,7 @@ LONG APIENTRY SysCreateEventSem(
   else
   {
                                        /* format the result          */
-    sprintf(retstr->strptr, "%lu", handle);
+    sprintf(retstr->strptr, "%p", handle);
                                        /* set the length             */
     retstr->strlength = strlen(retstr->strptr);
   }
@@ -4208,7 +4223,7 @@ LONG APIENTRY SysOpenEventSem(
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
   handle = OpenEvent(EVENT_ALL_ACCESS, TRUE, args[0].strptr); /* try to open it */
-  wsprintf(retstr->strptr, "%lu", handle); /* format the return code */
+  wsprintf(retstr->strptr, "%p", handle); /* format the return code */
   retstr->strlength = strlen(retstr->strptr);
   return VALID_ROUTINE;                /* good completion            */
 }
@@ -4230,14 +4245,14 @@ LONG APIENTRY SysPostEventSem(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  HANDLE    handle;                    /* mutex handle               */
+  void     *handle;                    /* mutex handle               */
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (size_t *)&handle))
+  if (!string2pointer(args[0].strptr, &handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
-  if (!SetEvent(handle))
+  if (!SetEvent((HANDLE)handle))
      RETVAL(GetLastError())
   else
      RETVAL(0)
@@ -4260,14 +4275,14 @@ LONG APIENTRY SysResetEventSem(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  HANDLE    handle;                    /* mutex handle               */
+  void     *handle;                    /* mutex handle               */
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (size_t *)&handle))
+  if (!string2pointer(args[0].strptr, &handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
-  if (!ResetEvent(handle))
+  if (!ResetEvent((HANDLE)handle))
      RETVAL(GetLastError())
   else
      RETVAL(0)
@@ -4291,14 +4306,14 @@ LONG APIENTRY SysPulseEventSem(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  HANDLE    handle;                    /* mutex handle               */
+  void     *handle;                    /* mutex handle               */
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (size_t *)&handle))
+  if (!string2pointer(args[0].strptr, &handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
-  if (!PulseEvent(handle))
+  if (!PulseEvent((HANDLE)handle))
      RETVAL(GetLastError())
   else
      RETVAL(0)
@@ -4322,14 +4337,14 @@ LONG APIENTRY SysCloseEventSem(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  HANDLE    handle;                    /* mutex handle               */
+  void     *handle;                    /* mutex handle               */
 
   if (numargs != 1)                    /* Only one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (size_t *)&handle))
+  if (!string2pointer(args[0].strptr, &handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
-  if (!CloseHandle(handle))
+  if (!CloseHandle((HANDLE)handle))
      RETVAL(GetLastError())
   else
      RETVAL(0)
@@ -4352,7 +4367,7 @@ LONG APIENTRY SysWaitEventSem(
   PSZ       queuename,                 /* Current queue              */
   PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  HANDLE    handle;                    /* mutex handle               */
+  void     *handle;                    /* mutex handle               */
   APIRET    rc;                        /* creation return code       */
   int       timeout;                   /* timeout value              */
 
@@ -4367,10 +4382,10 @@ LONG APIENTRY SysWaitEventSem(
       return INVALID_ROUTINE;          /* raise error if bad         */
   }
                                        /* get a binary handle        */
-  if (!string2ulong(args[0].strptr, (size_t *)&handle))
+  if (!string2pointer(args[0].strptr, &handle))
     return INVALID_ROUTINE;            /* raise error if bad         */
                                        /* request the semaphore      */
-  rc = WaitForSingleObject(handle, timeout);
+  rc = WaitForSingleObject((HANDLE)handle, timeout);
   if (rc == WAIT_FAILED)
     wsprintf(retstr->strptr, "%d", GetLastError());
   else
@@ -4615,9 +4630,9 @@ LONG APIENTRY SysShutDownSystem(
   if (!InitiateSystemShutdown(
      machine,            /* address of name of computer to shut down */
      message,         /* address of message to display in dialog box */
-     timeout,                          /* time to display dialog box */
-     forceClose,     /* force applications with unsaved changes flag */
-     reboot                            /*                reboot flag */
+     (DWORD)timeout,       /* time to display dialog box */
+     (BOOL)forceClose,     /* force applications with unsaved changes flag */
+     (BOOL)reboot          /*                reboot flag */
   )) RETVAL(GetLastError())
   else
      RETVAL(0)
@@ -4706,14 +4721,14 @@ LONG APIENTRY SysWaitNamedPipe(
 /*********************************************************************/
 void FormatResult(
   double    result,                    /* formatted result           */
-  ULONG     precision,                 /* required precision         */
+  size_t    precision,                 /* required precision         */
   PRXSTRING retstr )                   /* return string              */
 {
   if (result == 0)                     /* zero result?               */
     strcpy(retstr->strptr, "0");       /* make exactly 0             */
   else
                                        /* format the result          */
-    _gcvt(result, precision, retstr->strptr);
+    _gcvt(result, (int)precision, retstr->strptr);
                                        /* set the length             */
   retstr->strlength = strlen(retstr->strptr);
                                        /* end in a period?           */
@@ -5372,7 +5387,7 @@ LONG APIENTRY SysDumpVariables(
                                      /* if buffer is not big enough, */
                                      /* reallocate                   */
       if (current + new_size >= end) {
-        int offset = current - buffer;
+        size_t offset = current - buffer;
         buffer_size *= 2;
         /* if new buffer too small, use the minimal fitting size */
         if (buffer_size - offset < new_size) {
@@ -5403,7 +5418,7 @@ LONG APIENTRY SysDumpVariables(
     }
   } while (rc == RXSHV_OK);
 
-  WriteFile(outFile, buffer, current - buffer, &dwBytesWritten, NULL);
+  WriteFile(outFile, buffer, (DWORD)(current - buffer), &dwBytesWritten, NULL);
   free(buffer);
 
   if (fCloseFile)
@@ -6516,7 +6531,8 @@ LONG APIENTRY SysFromUniCode(
   DWORD dwFlags = 0;
   char  *strDefaultChar = NULL;
   BOOL  bUsedDefaultChar = FALSE;
-  UINT  len, codePage;
+  UINT  codePage;
+  size_t len;
   char* str = NULL;
   char* strptr = NULL;
   CHAR  stemName[MAX];
@@ -6599,7 +6615,7 @@ LONG APIENTRY SysFromUniCode(
   iBytesNeeded = WideCharToMultiByte( codePage,
                                       dwFlags,
                                       (LPWSTR) strptr,     // (LPWSTR)args[0].strptr,
-                                      args[0].strlength/2, // len,
+                                      (int)(args[0].strlength/2), // len,
                                       NULL,
                                       0,
                                       NULL,
@@ -6637,9 +6653,9 @@ LONG APIENTRY SysFromUniCode(
   iBytesDestination = WideCharToMultiByte(codePage,               //codepage
                                           dwFlags,                //conversion flags
                                           (LPWSTR) strptr,        // (LPWSTR)args[0].strptr,  //source string
-                                          args[0].strlength/2,    // len,                     //source string length
+                                          (int)(args[0].strlength/2),    // len,                     //source string length
                                           str,                    //target string
-                                          iBytesNeeded,           //size of target buffer
+                                          (int)iBytesNeeded,      //size of target buffer
                                           strDefaultChar,
                                           &bUsedDefaultChar);
 
@@ -6829,7 +6845,7 @@ LONG APIENTRY SysToUniCode(
   ulWCharsNeeded = MultiByteToWideChar( codePage,
                                         dwFlags,
                                         args[0].strptr,
-                                        args[0].strlength,
+                                        (int)args[0].strlength,
                                         NULL,
                                         NULL);
 
@@ -6846,7 +6862,7 @@ LONG APIENTRY SysToUniCode(
   ulWCharsNeeded = MultiByteToWideChar( codePage,
                                         dwFlags,
                                         args[0].strptr,
-                                        args[0].strlength,
+                                        (int)args[0].strlength,
                                         lpwstr,
                                         ulWCharsNeeded);
 
@@ -7012,7 +7028,7 @@ LONG APIENTRY SysWinGetDefaultPrinter(
 
   } else
     // NT / W2K:
-    GetProfileString("Windows", "DEVICE", ",,,", retstr->strptr, retstr->strlength);
+    GetProfileString("Windows", "DEVICE", ",,,", retstr->strptr, (DWORD)retstr->strlength);
 
   retstr->strlength = strlen(retstr->strptr);
 

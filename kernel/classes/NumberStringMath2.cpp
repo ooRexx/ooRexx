@@ -192,7 +192,7 @@ char * SubtractDivisor(char *data1, size_t length1,
 {
   char *OutPtr;
   int   carry, DivChar;
-  unsigned int  extra;
+  size_t extra;
                         /* This rountine actually does the divide of the Best Guess */
                         /*  Mult.  This Best guess is a guess at how many times the */
                         /*  dividend will go into the divisor, since it is only a   */
@@ -395,7 +395,8 @@ RexxNumberString *RexxNumberString::Division(RexxNumberString *other, unsigned i
  if (SaveRight->length > 1)            /* more than 1 digit in Accum?       */
   DivChar += *(Num2 + 1);              /*  yes, get second digit for Div    */
  DivChar++;                            /* add 1 to Div number               */
- thisDigit = resultDigits = 0;         /* initializes digit values to zero. */
+ resultDigits = 0;         /* initializes digit values to zero. */
+ thisDigit = 0;
 
                         /* We are now to enter 2 do forever loops, inside the loops */
                         /*  we test for ending conditions. and will exit the loops  */
@@ -518,7 +519,7 @@ PowerDivideDone:                       /* done doing actual divide now do   */
   if ((DivOP != OT_DIVIDE) &&          /* Is this a // or % operation, and  */
       (( CalcExp >= 0 &&               /*   and is the result bad?          */
        ( resultDigits + CalcExp) > NumberDigits) ||
-      (CalcExp < 0  && (size_t)labs(CalcExp) > resultDigits))) {
+      (CalcExp < 0  && (size_t)Numerics::abs(CalcExp) > resultDigits))) {
                                        /* yes, report the error and get out.*/
     if (DivOP == OT_REMAINDER)         /* remainder operation?              */
       reportException(Error_Invalid_whole_number_rem);
@@ -598,7 +599,7 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
 /*********************************************************************/
 {
  wholenumber_t powerValue;
- int     extra, OldNorm;
+ wholenumber_t extra, OldNorm;
  size_t  NumberDigits;
  char   *Accum, *AccumPtr, *OutPtr, *TempPtr;
  bool    NegativePower;
@@ -639,8 +640,8 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
     return (RexxNumberString *)IntegerZero;
 
   }                                    /* Will the result exponent overflow?*/
-  if ((HighBits(labs((int)(left->exp + left->length - 1))) +
-       HighBits(labs(powerValue)) + 1) > LONGBITS )
+  if ((HighBits(Numerics::abs(left->exp + left->length - 1)) +
+       HighBits(Numerics::abs(powerValue)) + 1) > LONGBITS )
                                        /* yes, report error and return.     */
    reportException(Error_Overflow_overflow, this, (RexxObject *)OREF_POWER, PowerObj);
                                        /* Will the result overflow ?        */
@@ -662,7 +663,9 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
                                        /*  precision value to be used in    */
                                        /*  the computation.                 */
    for (extra=0, OldNorm = powerValue; OldNorm ;extra++ )
-    OldNorm /= 10;                     /* Divide value by ten, keeping int  */
+   {
+       OldNorm /= 10;                  /* Divide value by ten, keeping int  */
+   }
    NumberDigits += (extra + 1);        /* adjust digits setting to reflect  */
 
                                        /* size of buffers, for              */
@@ -877,7 +880,8 @@ char * DividePower(char *AccumPtr, RexxNumberStringBase *Accum, char *Output, si
   DivChar += *(Num2 + 1);              /*  yes, get second digit for Div    */
  DivChar++;                            /* add 1 to Div number               */
 
- thisDigit = resultDigits = 0;         /* initializes digit values to zero. */
+ resultDigits = 0;         /* initializes digit values to zero. */
+ thisDigit = 0;
 
                         /* We are now to enter 2 do forever loops, inside the loops */
                         /*  we test for ending conditions. and will exit the loops  */

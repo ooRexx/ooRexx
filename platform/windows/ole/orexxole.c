@@ -71,12 +71,12 @@ long iInstanceCount = 0;    // count number of created OLE objects
 //******************************************************************************
 // function prototypes for local functions
 //******************************************************************************
-PVOID ORexxOleAlloc(INT iSize);
-PVOID ORexxOleReAlloc(PVOID ptr, INT iSize);
-VOID ORexxOleFree(PVOID ptr);
+void *ORexxOleAlloc(size_t iSize);
+void *ORexxOleReAlloc(void * ptr, size_t iSize);
+void ORexxOleFree(void *ptr);
 
-LPOLESTR lpAnsiToUnicode(LPCSTR pszA, int length);
-LPOLESTR lpAnsiToUnicodeLength(LPCSTR pszA, int length, int *outLength);
+LPOLESTR lpAnsiToUnicode(LPCSTR pszA, size_t length);
+LPOLESTR lpAnsiToUnicodeLength(LPCSTR pszA, size_t length, size_t *outLength);
 PSZ pszUnicodeToAnsi(LPOLESTR pszU);
 
 PSZ pszStringDupe(const char *pszOrig);
@@ -91,21 +91,21 @@ POLECONSTINFO AddConstInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId,
 
 BOOL fFindFunction(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *pDispatchEx,
                    ITypeInfo *pTypeInfo, POLECLASSINFO pClsInfo, unsigned short wFlags,
-                   PPOLEFUNCINFO ppFuncInfo, MEMBERID *pMemId, int expectedArgCount );
+                   PPOLEFUNCINFO ppFuncInfo, MEMBERID *pMemId, size_t expectedArgCount );
 BOOL fFindConstant(const char *pszConstName, POLECLASSINFO pClsInfo, PPOLECONSTINFO ppConstInfo );
 
 RexxObject *Variant2Rexx(VARIANT *pVariant);
-VOID Rexx2Variant(RexxObject *RxObject, VARIANT *pVariant, VARTYPE DestVt, INT iArgPos);
+void Rexx2Variant(RexxObject *RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
 BOOL fIsRexxArray(RexxObject *TestObject);
 BOOL fIsOLEObject(RexxObject *TestObject);
 BOOL fIsOleVariant(RexxObject *TestObject);
 BOOL createEmptySafeArray(VARIANT FAR *);
-BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, INT iArgPos);
+BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, size_t iArgPos);
 BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO pClsInfo );
 VARTYPE getUserDefinedVT( ITypeInfo *pTypeInfo, HREFTYPE hrt );
 BOOL fExploreTypeInfo( ITypeInfo *pTypeInfo, POLECLASSINFO pClsInfo );
 BOOL checkForOverride( VARIANT *, RexxObject *, VARTYPE, RexxObject **, VARTYPE * );
-BOOL isOutParam( RexxObject *, POLEFUNCINFO, INT );
+BOOL isOutParam( RexxObject *, POLEFUNCINFO, size_t);
 VOID handleVariantClear( VARIANT *, RexxObject * );
 __inline BOOL okayToClear( RexxObject * );
 static void formatDispatchException(EXCEPINFO *, char *);
@@ -475,35 +475,27 @@ void destroyTypeLibList()
 //******************************************************************************
 // Memory allocation functions implementation
 //******************************************************************************
-PVOID ORexxOleAlloc(INT iSize)
+void *ORexxOleAlloc(size_t iSize)
 {
-  PVOID  ptr = NULL;   // default value
+  void  *ptr = NULL;   // default value
 
   if (iSize) {         // only allocate when needed!
-/*    ptr = malloc( iSize );
-    if ( ptr ) {
-      memset(ptr, 0, iSize);
-    } */
     ptr = calloc(iSize,1);
-//  printf("Allocation: %p of size %d\n", ptr, iSize);
   }
   return ptr;
 }
 
 
-PVOID ORexxOleReAlloc(PVOID ptr, INT iSize)
+void *ORexxOleReAlloc(void *ptr, size_t iSize)
 {
-  PVOID rptr = realloc( ptr, iSize );
-//printf("Reallocation: %p to %p to size %d\n", ptr, rptr, iSize);
-  return rptr;
+  return realloc( ptr, iSize );
 }
 
 
-VOID ORexxOleFree(PVOID ptr)
+void ORexxOleFree(void *ptr)
 {
   if ( ptr ) {
       free( ptr );
-//    printf("Free: %p\n", ptr);
   }
 }
 
@@ -577,15 +569,15 @@ void OLEInit()
 }
 
 
-LPOLESTR lpAnsiToUnicode(LPCSTR pszA, int iInputLength)
+LPOLESTR lpAnsiToUnicode(LPCSTR pszA, size_t iInputLength)
 {
   return lpAnsiToUnicodeLength(pszA, iInputLength, NULL);
 }
 
 
-LPOLESTR lpAnsiToUnicodeLength(LPCSTR pszA, int iInputLength, int *outLength)
+LPOLESTR lpAnsiToUnicodeLength(LPCSTR pszA, size_t iInputLength, size_t *outLength)
 {
-  int           iNewLength;
+  size_t        iNewLength;
   LPOLESTR      lpOleStr = NULL;
 
   /* Special case the empty string, MultiByteToWideChar does not handle */
@@ -598,25 +590,25 @@ LPOLESTR lpAnsiToUnicodeLength(LPCSTR pszA, int iInputLength, int *outLength)
   }
   else
   {
-    iNewLength = MultiByteToWideChar( CP_ACP, 0, pszA, iInputLength, NULL, 0 );
+    iNewLength = MultiByteToWideChar( CP_ACP, 0, pszA, (int)iInputLength, NULL, 0 );
 
     if ( iNewLength )
     {
       lpOleStr = (LPOLESTR) ORexxOleAlloc(iNewLength * 2 + 2);
       if (lpOleStr)
       {
-        if ( MultiByteToWideChar( CP_ACP, 0, pszA, iInputLength, lpOleStr, iNewLength ) == 0)
+        if ( MultiByteToWideChar( CP_ACP, 0, pszA, (int)iInputLength, lpOleStr, (int)iNewLength ) == 0)
         {
           /* conversion failed */
           ORexxOleFree(lpOleStr);
           lpOleStr = NULL;
-        } /* endif */
+        }
 
         if ( outLength )
           *outLength = iNewLength;
-      } /* endif */
-    } /* endif */
-  } /* endelse */
+      }
+    }
+  }
 
   return lpOleStr;
 }
@@ -624,27 +616,27 @@ LPOLESTR lpAnsiToUnicodeLength(LPCSTR pszA, int iInputLength, int *outLength)
 
 PSZ pszUnicodeToAnsi(LPOLESTR pszU)
 {
-  int   iNewLength;
-  int   iInputLength;
+  size_t iNewLength;
+  size_t iInputLength;
   PSZ   pszAnsiStr = NULL;
 
   if (pszU == NULL) return NULL;
 
   iInputLength = wcslen(pszU) + 1;
-  iNewLength = WideCharToMultiByte(CP_ACP, 0, pszU, iInputLength, NULL, 0, NULL, NULL);
+  iNewLength = WideCharToMultiByte(CP_ACP, 0, pszU, (int)iInputLength, NULL, 0, NULL, NULL);
   if ( iNewLength )
   {
     pszAnsiStr = (PSZ) ORexxOleAlloc(iNewLength + 1);
     if (pszAnsiStr)
     {
-      if ( WideCharToMultiByte(CP_ACP, 0, pszU, iInputLength, pszAnsiStr, iNewLength, NULL, NULL) == 0)
+      if ( WideCharToMultiByte(CP_ACP, 0, pszU, (int)iInputLength, pszAnsiStr, (int)iNewLength, NULL, NULL) == 0)
       {
         /* conversion failed */
         ORexxOleFree(pszAnsiStr);
         pszAnsiStr = NULL;
-      } /* endif */
-    } /* endif */
-  } /* endif */
+      }
+    }
+  }
 
   return pszAnsiStr;
 }
@@ -667,7 +659,7 @@ PSZ pszStringDupe(const char *pszOrig)
 }
 
 
-char *prxStringDupe(const char * pszOrig, int length)
+char *prxStringDupe(const char * pszOrig, size_t length)
 {
   PSZ   pszCopy = NULL;
 
@@ -677,8 +669,8 @@ char *prxStringDupe(const char * pszOrig, int length)
     if ( pszCopy )
     {
       strcpy(pszCopy, pszOrig);
-    } /* endif */
-  } /* endif */
+    }
+  }
 
   return pszCopy;
 }
@@ -698,8 +690,8 @@ POLECLASSINFO psFindClassInfo(const char *pszCLSId, ITypeInfo *pTypeInfo)
     else
     {
       send_exception(Error_System_resources);
-    } /* endif */
-  } /* endif */
+    }
+  }
 
   /* first try to locate the specified CLSID or pTypeInfo */
   for (iIdx = 0; iIdx < iClsInfoUsed; iIdx++)
@@ -710,8 +702,8 @@ POLECLASSINFO psFindClassInfo(const char *pszCLSId, ITypeInfo *pTypeInfo)
     {
       iFound = iIdx;
       break;
-    } /* endif */
-  } /* endfor */
+    }
+  }
 
   if (iFound == -1)
   {
@@ -723,9 +715,9 @@ POLECLASSINFO psFindClassInfo(const char *pszCLSId, ITypeInfo *pTypeInfo)
         iFound = iIdx;
         ppClsInfo[iFound]->fUsed = TRUE;
         break;
-      } /* endif */
-    } /* endfor */
-  } /* endif */
+      }
+    }
+  }
 
   if (iFound == -1)
   {
@@ -760,16 +752,16 @@ POLECLASSINFO psFindClassInfo(const char *pszCLSId, ITypeInfo *pTypeInfo)
       else
       {
         iFound = -1;
-      } /* endif */
-    } /* endif */
-  } /* endif */
+      }
+    }
+  }
 
   if (iFound == -1)
     return NULL;
   else
   {
     return ppClsInfo[iFound];
-  } /* endif */
+  }
 }
 
 
@@ -796,7 +788,7 @@ VOID ClearClassInfoBlock( POLECLASSINFO pClsInfo )
     ORexxOleFree( pCurrent->pusOptFlags );
     ORexxOleFree( pCurrent );
     pCurrent = pNext;
-  } /* endwhile */
+  }
 /* will now be cleaned up in destroyTypeLibList() */
 #if 0
   /* free all constant info blocks and the included constant names */
@@ -810,7 +802,7 @@ VOID ClearClassInfoBlock( POLECLASSINFO pClsInfo )
     VariantClear( &(pCurrConst->sValue) );
     ORexxOleFree( pCurrConst );
     pCurrConst = pNextConst;
-  } /* endwhile */
+  }
 #endif
   /* clear block */
   memset(pClsInfo, 0, sizeof(OLECLASSINFO));
@@ -843,7 +835,7 @@ POLEFUNCINFO AddFuncInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId, INVOKEKIN
         ORexxOleFree( pNewBlock );
         pNewBlock = NULL;
         return pNewBlock;
-      } /* endif */
+      }
 
       while ( pCurrBlock->pNext )
       {
@@ -858,8 +850,8 @@ POLEFUNCINFO AddFuncInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId, INVOKEKIN
           ORexxOleFree( pNewBlock );
           pNewBlock = NULL;
           return pNewBlock;
-        } /* endif */
-      } /* endwhile */
+        }
+      }
 
       /* add new block to end of list */
       pCurrBlock->pNext = pNewBlock;
@@ -868,8 +860,8 @@ POLEFUNCINFO AddFuncInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId, INVOKEKIN
     {
       /* list does not exist, this is the first element */
       pClsInfo->pFuncInfo = pNewBlock;
-    } /* endif */
-  } /* endif */
+    }
+  }
 
   return pNewBlock;
 }
@@ -898,7 +890,7 @@ POLECONSTINFO AddConstInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId, PSZ psz
         ORexxOleFree( pNewBlock );
         pNewBlock = NULL;
         return pNewBlock;
-      } /* endif */
+      }
 
       while ( pCurrBlock->pNext )
       {
@@ -911,8 +903,8 @@ POLECONSTINFO AddConstInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId, PSZ psz
           ORexxOleFree( pNewBlock );
           pNewBlock = NULL;
           return pNewBlock;
-        } /* endif */
-      } /* endwhile */
+        }
+      }
 
       /* add new block to end of list */
       pCurrBlock->pNext = pNewBlock;
@@ -921,8 +913,8 @@ POLECONSTINFO AddConstInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId, PSZ psz
     {
       /* list does not exist, this is the first element */
       pClsInfo->pConstInfo = pNewBlock;
-    } /* endif */
-  } /* endif */
+    }
+  }
 
   return pNewBlock;
 }
@@ -930,7 +922,7 @@ POLECONSTINFO AddConstInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId, PSZ psz
 
 BOOL fFindFunction(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *pDispatchEx,
                    ITypeInfo *pTypeInfo, POLECLASSINFO pClsInfo, unsigned short wFlags,
-                   PPOLEFUNCINFO ppFuncInfo, MEMBERID *pMemId, int expectedArgCount )
+                   PPOLEFUNCINFO ppFuncInfo, MEMBERID *pMemId, size_t expectedArgCount )
 {
   HRESULT         hResult;
   BOOL            fFound = FALSE;
@@ -958,7 +950,7 @@ BOOL fFindFunction(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *p
             continue;
           }
 
-          if (pFuncInfo->iParmCount + pFuncInfo->iOptParms >= expectedArgCount)
+          if (pFuncInfo->iParmCount + pFuncInfo->iOptParms >= (int)expectedArgCount)
           {
             fFound = TRUE;
             *pMemId = pFuncInfo->memId;
@@ -975,7 +967,7 @@ BOOL fFindFunction(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *p
             continue;
           }
 
-          if (pFuncInfo->iParmCount + pFuncInfo->iOptParms >= expectedArgCount)
+          if (pFuncInfo->iParmCount + pFuncInfo->iOptParms >= (int)expectedArgCount)
           {
             fFound = TRUE;
             *pMemId = pFuncInfo->memId;
@@ -1014,29 +1006,27 @@ BOOL fFindFunction(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *p
         if (pDispatchEx) {
           //                 IDispatchEx::GetDispID expects a "real" BSTR
           //                 not the one MS documented as a simple OLECHAR* !
-          int len = wcslen(lpUniBuffer)+1;
+          size_t len = wcslen(lpUniBuffer)+1;
           LPOLESTR realBSTR = (LPOLESTR) ORexxOleAlloc(4+2*len);
           memcpy(realBSTR+2,lpUniBuffer,2*len);
-          *((int*) realBSTR) = len-1;
-//          hResult = pDispatchEx->GetDispID(lpUniBuffer, fdexNameCaseInsensitive, pMemId);
+          *((int*) realBSTR) = (int)len-1;
           hResult = pDispatchEx->GetDispID(realBSTR+2, fdexNameCaseInsensitive, pMemId);
           ORexxOleFree(realBSTR);
         }
         if (FAILED(hResult)) // If IDispatchEx call fails, try pDispatch
-//        else
           if (pDispatch)
           {
             hResult = pDispatch->GetIDsOfNames(IID_NULL, &lpUniBuffer, 1,
                                                LOCALE_USER_DEFAULT, pMemId);
-          }  /* endif */
+          }
 
         if (hResult == S_OK)
           fFound = TRUE;
 
         ORexxOleFree(lpUniBuffer);
-      } /* endif */
-    } /* endif */
-  } /* endif */
+      }
+    }
+  }
 
   return fFound;
 }
@@ -1384,7 +1374,7 @@ RexxObject *Variant2Rexx(VARIANT *pVariant)
   *     Setting a VT_BOOL's value to 1 for true does not produce the correct
   *     result.
   */
-VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT iArgPos)
+void Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, size_t iArgPos)
 {
   BOOL         fDone = FALSE;
   BOOL         fByRef = FALSE;
@@ -1467,10 +1457,10 @@ VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT
         {
           if (fByRef) {
             V_VT(pVariant) = VT_I4|VT_BYREF;
-            *V_I4REF(pVariant) = REXX_INTEGER(RxObject);
+            *V_I4REF(pVariant) = (LONG)REXX_INTEGER(RxObject);
           } else {
             V_VT(pVariant) = VT_I4;
-            V_I4(pVariant) = REXX_INTEGER(RxObject);
+            V_I4(pVariant) = (LONG)REXX_INTEGER(RxObject);
           }
           fDone = TRUE;
         } /* endif */
@@ -1533,7 +1523,7 @@ VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT
         send_exception1(Error_Rexx2Variant,ooRexxArray1(ooRexxString("given object")));
       }
 
-      int uniBufferLength;
+      size_t uniBufferLength;
 
       // if the target is float or double, consider LOCALE information to force rexxlike representation
       if (DestVt == VT_R8 || DestVt == VT_R4) {
@@ -1557,7 +1547,7 @@ VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT
         {
           VariantInit(&sVariant);
           V_VT(&sVariant) = VT_BSTR;
-          V_BSTR(&sVariant) = SysAllocStringLen(lpUniBuffer, uniBufferLength);
+          V_BSTR(&sVariant) = SysAllocStringLen(lpUniBuffer, (UINT)uniBufferLength);
           if (VariantChangeType(pVariant, &sVariant, 0, DestVt) == S_OK)
           {
           }
@@ -1574,7 +1564,7 @@ VOID Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, INT
         else
         {
           V_VT(pVariant) = VT_BSTR;
-          V_BSTR(pVariant) = SysAllocStringLen(lpUniBuffer, uniBufferLength);
+          V_BSTR(pVariant) = SysAllocStringLen(lpUniBuffer, (UINT)uniBufferLength);
         } /* endif */
 
         ORexxOleFree( lpUniBuffer);
@@ -1647,7 +1637,7 @@ BOOL createEmptySafeArray(VARIANT FAR *VarArray)
 }
 
 
-BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, INT iArgPos)
+BOOL fRexxArray2SafeArray(RexxObject *RxArray, VARIANT FAR *VarArray, size_t iArgPos)
 {
   BOOL            fDone = FALSE;
   LONG            lDimensions;
@@ -2932,7 +2922,6 @@ RexxMethod3(REXXOBJECT,                // Return type
             REXXOBJECT, msgName,       // Name of OLE method being called
             REXXOBJECT, msgArgs)       // Array containing OLE method parameters
 {
-  INT             i;
   HRESULT         hResult;
   CHAR            szBuffer[2048];
   CHAR           *pszFunction;
@@ -2945,7 +2934,7 @@ RexxMethod3(REXXOBJECT,                // Return type
   MEMBERID        MemId;
   POLECLASSINFO   pClsInfo = NULL;
 
-  int             iArgCount;
+  size_t          iArgCount;
   unsigned short  wFlags = 0;
   DISPPARAMS      dp;
   VARIANTARG     *pVarArgs;
@@ -3090,7 +3079,7 @@ RexxMethod3(REXXOBJECT,                // Return type
     send_exception(Error_System_resources);
   } /* endif */
 
-  for (i=0; i < iArgCount; i++)
+  for (size_t i=0; i < iArgCount; i++)
   {
     /* arguments are filled in from the end of the array */
     VariantInit(&(pVarArgs[iArgCount - i - 1]));
@@ -3098,7 +3087,7 @@ RexxMethod3(REXXOBJECT,                // Return type
     arrItem = array_at(msgArgs, i + 1);
 
     if (pTypeInfo && pFuncInfo)
-      DestVt = (i<pFuncInfo->iParmCount)?pFuncInfo->pOptVt[i]:VT_EMPTY;
+      DestVt = (i< (size_t)pFuncInfo->iParmCount)?pFuncInfo->pOptVt[i]:VT_EMPTY;
     else
       DestVt = VT_EMPTY;
 
@@ -3135,7 +3124,7 @@ RexxMethod3(REXXOBJECT,                // Return type
     dp.rgdispidNamedArgs = NULL;
   } /* endif */
 
-  dp.cArgs = iArgCount;
+  dp.cArgs = (UINT)iArgCount;
   dp.rgvarg = pVarArgs;
   VariantInit(&sResult);
 
@@ -3180,7 +3169,7 @@ RexxMethod3(REXXOBJECT,                // Return type
                                 wFlags, &dp, NULL, &sExc, &uArgErr);
   } /* endif */
 
-  for (i=0; i < (INT) dp.cArgs; i++)
+  for (size_t i=0; i < dp.cArgs; i++)
   {
     arrItem = array_at(msgArgs, i + 1);
 
@@ -3446,7 +3435,7 @@ BOOL checkForOverride( VARIANT *pVariant, RexxObject *RxObject, VARTYPE DestVt,
  * @return           True if there is enough information to be certain the
  *                   paramter is an out parameter, otherwise false.
  */
-BOOL isOutParam( RexxObject *param, POLEFUNCINFO pFuncInfo, INT i )
+BOOL isOutParam( RexxObject *param, POLEFUNCINFO pFuncInfo, size_t i )
 {
   USHORT  paramFlags = PARAMFLAG_NONE;
   BOOL    overridden = FALSE;
@@ -3461,7 +3450,7 @@ BOOL isOutParam( RexxObject *param, POLEFUNCINFO pFuncInfo, INT i )
     }
   }
 
-  if ( !overridden && pFuncInfo && i < pFuncInfo->iParmCount )
+  if ( !overridden && pFuncInfo && i < (size_t)pFuncInfo->iParmCount )
     paramFlags = pFuncInfo->pusOptFlags[i];
 
   return ((paramFlags & PARAMFLAG_FOUT) && !(paramFlags & PARAMFLAG_FRETVAL));

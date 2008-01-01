@@ -1744,7 +1744,7 @@ RexxObject *RexxMemory::gutCheck(void)
 /*  Returned:  Nothing                                                        */
 /******************************************************************************/
 {
-  int  count, testcount;
+  wholenumber_t  count, testcount;
   HashLink j;
   bool restoreimagesave;
   RexxInteger *value;

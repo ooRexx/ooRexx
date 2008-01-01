@@ -119,8 +119,8 @@ typedef struct _RexxScriptInfo {       /* Control info used by various API's*/
 } RexxScriptInfo;
 
 typedef struct _ConditionData {
-  int    code;
-  int    rc;
+  wholenumber_t code;
+  wholenumber_t rc;
   RXSTRING message;
   RXSTRING errortext;
   size_t  position;
@@ -472,11 +472,11 @@ int APIENTRY RexxStart(
      addresses and therefore _file might be -1. If so, std-streams are reassigned to the
      file standard handles returned by the system */
   if ((stdin->_file == -1) && (GetFileType(GetStdHandle(STD_INPUT_HANDLE)) != FILE_TYPE_UNKNOWN))
-      *stdin = *_fdopen(_open_osfhandle((LONG)GetStdHandle(STD_INPUT_HANDLE),_O_RDONLY), "r");
+      *stdin = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE),_O_RDONLY), "r");
   if ((stdout->_file == -1) && (GetFileType(GetStdHandle(STD_OUTPUT_HANDLE)) != FILE_TYPE_UNKNOWN))
-      *stdout = *_fdopen(_open_osfhandle((LONG)GetStdHandle(STD_OUTPUT_HANDLE),_O_APPEND), "a");
+      *stdout = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE),_O_APPEND), "a");
   if ((stderr->_file == -1) && (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_UNKNOWN))
-      *stderr = *_fdopen(_open_osfhandle((LONG)GetStdHandle(STD_ERROR_HANDLE),_O_APPEND), "a");
+      *stderr = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE),_O_APPEND), "a");
 
   RexxInitialize();                    /* Perform any needed inits          */
 
@@ -486,7 +486,7 @@ int APIENTRY RexxStart(
                                            /* wrap up the argument              */
       tempArgument = (RexxObject *)new_pointer(&RexxStartArguments);
                                            /* pass along to the real method     */
-      rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
+      rc = (int)ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
   }
   ActivityManager::returnActivity();
   RexxTerminate();                     /* perform needed termination        */
@@ -598,7 +598,7 @@ APIRET REXXENTRY RexxCreateMethod(
   RexxObject * *pmethod,               /* returned method object            */
   ConditionData *pRexxCondData)        /* returned condition data           */
 {
-  LONG     rc;                         /* RexxStart return code             */
+  APIRET   rc;                         /* RexxStart return code             */
   RexxScriptInfo RexxScriptArgs;
   RexxObject *  tempArgument;          /* temporary argument item           */
 
@@ -619,7 +619,7 @@ APIRET REXXENTRY RexxCreateMethod(
   {
       ProtectedObject  resultObject;       /* dummy returned result             */
                                            /* pass along to the real method     */
-      rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
+      rc = (APIRET)ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
   }
 
                                        /* if error, get condition data from */
@@ -673,7 +673,7 @@ APIRET REXXENTRY RexxRunMethod(
   RexxObject *securityManager,
   ConditionData *pRexxCondData)        /* returned condition data           */
 {
-  LONG     rc;                         /* RexxStart return code             */
+  APIRET   rc;                         /* RexxStart return code             */
   RexxScriptInfo RexxScriptArgs;
   RexxObject *  tempArgument;          /* temporary argument item           */
   RexxActivity *tempActivity;
@@ -703,7 +703,7 @@ APIRET REXXENTRY RexxRunMethod(
   {
       ProtectedObject  resultObject;       /* dummy returned result             */
                                            /* pass along to the real method     */
-      rc = tempActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
+      rc = (APIRET)tempActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
   }
 
                                        /* if error, get condition data from */
@@ -732,7 +732,7 @@ APIRET REXXENTRY RexxRunMethod(
 APIRET REXXENTRY RexxStoreMethod(RexxObject * method, PRXSTRING scriptData)
 
 {
-  LONG     rc;                         /* RexxStart return code             */
+  APIRET   rc;                         /* RexxStart return code             */
   RexxScriptInfo RexxScriptArgs;
   RexxObject *  tempArgument;          /* temporary argument item           */
 
@@ -750,7 +750,7 @@ APIRET REXXENTRY RexxStoreMethod(RexxObject * method, PRXSTRING scriptData)
   {
       ProtectedObject resultObject;        /* dummy returned result             */
                                            /* pass along to the real method     */
-      rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
+      rc = (APIRET)ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
   }
   ActivityManager::returnActivity();
   RexxTerminate();                     /* perform needed termination        */
@@ -774,7 +774,7 @@ APIRET REXXENTRY RexxStoreMethod(RexxObject * method, PRXSTRING scriptData)
 APIRET REXXENTRY RexxLoadMethod(const char *dirname, PRXSTRING scriptData, RexxObject * *pmethod)
 
 {
-  LONG     rc;                         /* RexxStart return code             */
+  APIRET   rc;                         /* RexxStart return code             */
   RexxScriptInfo RexxScriptArgs;
   RexxObject *  tempArgument;          /* temporary argument item           */
 
@@ -794,7 +794,7 @@ APIRET REXXENTRY RexxLoadMethod(const char *dirname, PRXSTRING scriptData, RexxO
   {
       ProtectedObject  resultObject;       /* dummy returned result             */
                                            /* pass along to the real method     */
-      rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
+      rc = (APIRET)ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
   }
   ActivityManager::returnActivity();
 
@@ -820,7 +820,7 @@ APIRET REXXENTRY RexxTranslateProgram(
    const char     *outFile,            /* output file name                  */
    PRXSYSEXIT   exits)                 /* system exits                      */
 {
-  LONG     rc;                         /* RexxStart return code             */
+  APIRET   rc;                         /* RexxStart return code             */
   RexxStartInfo RexxStartArguments;    /* entry argument information        */
   RexxObject *  tempArgument;          /* temporary argument item           */
 
@@ -843,7 +843,7 @@ APIRET REXXENTRY RexxTranslateProgram(
   {
       ProtectedObject resultObject;        /* dummy returned result             */
                                            /* pass along to the real method     */
-      rc = ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
+      rc = (APIRET)ActivityManager::currentActivity->messageSend(ActivityManager::localServer, OREF_RUN_PROGRAM, 1, &tempArgument, resultObject);
   }
   ActivityManager::returnActivity();
   RexxTerminate();                     /* perform needed termination        */
@@ -1435,15 +1435,15 @@ char *REXXENTRY RexxGetVersionInformation()
     char vbuf4[] = "\nare made available under the terms of the Common Public License v1.0";
     char vbuf5[] = "\nwhich accompanies this distribution.";
     char vbuf6[] = "\nhttp://www.oorexx.org/license.html";
-    int s0 = strlen(vbuf0);
-    int s1 = strlen(vbuf1);
-    int s2 = strlen(vbuf2);
-    int s3 = strlen(vbuf3);
-    int s4 = strlen(vbuf4);
-    int s5 = strlen(vbuf5);
-    int s6 = strlen(vbuf6);
-    int sd = strlen(__DATE__);
-    int sv = strlen(ver);
+    size_t s0 = strlen(vbuf0);
+    size_t s1 = strlen(vbuf1);
+    size_t s2 = strlen(vbuf2);
+    size_t s3 = strlen(vbuf3);
+    size_t s4 = strlen(vbuf4);
+    size_t s5 = strlen(vbuf5);
+    size_t s6 = strlen(vbuf6);
+    size_t sd = strlen(__DATE__);
+    size_t sv = strlen(ver);
     char *ptr = (char *)GlobalAlloc(GMEM_FIXED, sv+s0+s1+s2+s3+s4+s5+s6+sd+1);
     if (ptr)
     {

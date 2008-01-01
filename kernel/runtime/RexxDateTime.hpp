@@ -113,40 +113,40 @@ public:
 
     RexxDateTime();
     RexxDateTime(int64_t basetime);
-    RexxDateTime(int basedate);
-    RexxDateTime(int year, int month, int day);
-    RexxDateTime(int year, int month, int day, int hour, int minutes, int seconds, int microseconds);
+    RexxDateTime(wholenumber_t basedate);
+    RexxDateTime(wholenumber_t year, wholenumber_t month, wholenumber_t day);
+    RexxDateTime(wholenumber_t year, wholenumber_t month, wholenumber_t day, wholenumber_t hour, wholenumber_t minutes, wholenumber_t seconds, wholenumber_t microseconds);
 
     inline bool isLeapYear() {
         return ((!(year % LEAP_CYCLE)) && ((year % CENTURY) || (!(year % OLYMPIAD))));
     }
 
-    int getBaseDate();
-    int getTimeSeconds();
+    wholenumber_t getBaseDate();
+    wholenumber_t getTimeSeconds();
     int64_t getBaseTime();
     int64_t getUnixTime();
-    int getYearDay();
-    int getWeekDay();
+    wholenumber_t getYearDay();
+    wholenumber_t getWeekDay();
     const char *getMonthName();
     const char *getDayName();
-    bool setBaseDate(int basedays);
+    bool setBaseDate(wholenumber_t basedays);
     bool setBaseTime(int64_t basetime);
     bool setUnixTime(int64_t basetime);
-    void setTimeInSeconds(int basetime);
+    void setTimeInSeconds(wholenumber_t basetime);
     void clear();
-    void setDate(int newYear, int newDay);
-    void setDay(int basedays);
+    void setDate(wholenumber_t newYear, wholenumber_t newDay);
+    void setDay(wholenumber_t basedays);
     bool parseNormalDate(const char *date, const char *sep);
     bool parseStandardDate(const char *date, const char *sep);
-    bool parseEuropeanDate(const char *date, const char *sep, int currentYear);
-    bool parseUsaDate(const char *date, const char *sep, int currentYear);
-    bool parseOrderedDate(const char *date, const char *sep, int currentYear);
+    bool parseEuropeanDate(const char *date, const char *sep, wholenumber_t currentYear);
+    bool parseUsaDate(const char *date, const char *sep, wholenumber_t currentYear);
+    bool parseOrderedDate(const char *date, const char *sep, wholenumber_t currentYear);
     bool parseNormalTime(const char *date);
     bool parseCivilTime(const char *date);
     bool parseLongTime(const char *date);
-    bool setHours(int h);
-    bool setSeconds(int s);
-    bool setMinutes(int m);
+    bool setHours(wholenumber_t h);
+    bool setSeconds(wholenumber_t s);
+    bool setMinutes(wholenumber_t m);
     void formatBaseDate(char *buffer);
     void formatBaseTime(char *buffer);
     void formatUnixTime(char *buffer);
@@ -166,26 +166,26 @@ public:
     void formatSeconds(char *buffer);
 
 
-    int   year;                // current year
-    int   month;               // month of the year
-    int   day;                 // day of the month
-    int   hours;               // hour of the day (24-hour)
-    int   minutes;             // minute of the hour
-    int   seconds;             // second of the minute
-    int   microseconds;        // microseconds
-    int   valid;               // valid time stamp marker
+    wholenumber_t   year;                // current year
+    wholenumber_t   month;               // month of the year
+    wholenumber_t   day;                 // day of the month
+    wholenumber_t   hours;               // hour of the day (24-hour)
+    wholenumber_t   minutes;             // minute of the hour
+    wholenumber_t   seconds;             // second of the minute
+    wholenumber_t   microseconds;        // microseconds
+    wholenumber_t   valid;               // valid time stamp marker
 
 protected:
 
-    bool parseDateTimeFormat(const char *date, const char *format, const char *sep, int currentYear);
-    bool getNumber(const char *input, int length, int *target);
-    bool getNumber(const char *input, int length, int *target, int max);
+    bool parseDateTimeFormat(const char *date, const char *format, const char *sep, wholenumber_t currentYear);
+    bool getNumber(const char *input, wholenumber_t length, wholenumber_t *target);
+    bool getNumber(const char *input, wholenumber_t length, wholenumber_t *target, wholenumber_t max);
 
     static const char *dayNames[];      // table of day names for date formatting
     static const char *monthNames[];    // table of month names for date formatting
-    static int   monthStarts[];         // table of first day of month values for non-leap years
-    static int   leapMonthStarts[];     // table of first day of month values for leap years
-    static int   monthdays[];           // month number of days mapping table
+    static wholenumber_t   monthStarts[];         // table of first day of month values for non-leap years
+    static wholenumber_t   leapMonthStarts[];     // table of first day of month values for leap years
+    static wholenumber_t   monthdays[];           // month number of days mapping table
     static RexxDateTime unixBaseTime;   // a base time used for Date('T')/Time('T') calculations.
     static RexxDateTime maxBaseTime;    // the largest possible date we can handle.
 

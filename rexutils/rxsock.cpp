@@ -167,8 +167,8 @@ int stricmp(const char *op1, const char *op2)
  *------------------------------------------------------------------*/
 void StripBlanks(char *string)
 {
-    int sLen;
-    int leading;
+    size_t sLen;
+    size_t leading;
 
     sLen = strlen(string);
 
@@ -642,7 +642,7 @@ void hostent2stem(struct hostent *pHostEnt, const char *pszStem)
     /*---------------------------------------------------------------
      * set addr
      *---------------------------------------------------------------*/
-    addr.s_addr = (*(size_t *)pHostEnt->h_addr);
+    addr.s_addr = (u_long)(*(size_t *)pHostEnt->h_addr);
     RxVarSet(pszStem,"addr",inet_ntoa(addr));
     RxVarSet(pszStem,"addr",inet_ntoa(addr));
 
@@ -661,7 +661,7 @@ void hostent2stem(struct hostent *pHostEnt, const char *pszStem)
     for (count=0; pHostEnt->h_addr_list[count]; count++)
     {
         sprintf(szBuffer,"addr.%d",count+1);
-        addr.s_addr = (*(size_t *)pHostEnt->h_addr_list[count]);
+        addr.s_addr = (u_long)(*(size_t *)pHostEnt->h_addr_list[count]);
 
         RxVarSet(pszStem,szBuffer, inet_ntoa(addr));
     }
@@ -842,7 +842,7 @@ static int Initialized = 0;
 APIRET APIENTRY SockFunctionGateWay(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     size_t                       i;
-    size_t                       ulRc;
+    APIRET                       ulRc;
     RexxFunctionHandler         *pRxFunc;
 #ifdef WIN32
     WORD wVersionRequested;

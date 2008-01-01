@@ -89,7 +89,7 @@ typedef struct msgEntry {              /* define for error table entries    */
 #endif
 
 RexxString * SysMessageText(           /* simplified whole code             */
-    int code )                         /* message code to extract           */
+    wholenumber_t code )               /* message code to extract           */
 /****************************************************************************/
 /* Function:  Return a message from the message catalog, including header.  */
 /****************************************************************************/
@@ -159,7 +159,7 @@ RexxString * SysMessageText(           /* simplified whole code             */
 
 
 RexxString * SysMessageHeader(
-    int code )                         /* message code to extract           */
+    wholenumber_t code )               /* message code to extract           */
 /****************************************************************************/
 /* Function:  Return a message header derived from the in-store error table */
 /****************************************************************************/

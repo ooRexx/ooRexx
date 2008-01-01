@@ -53,13 +53,13 @@
 
 extern HINSTANCE horyxkDll;            /* Handle to oryxk dll               */
 RexxString *  SysMessageText(
-    int code )                         /* message code to extract           */
+    wholenumber_t code)                /* message code to extract           */
 {
 char           DataArea[256];          /* buf addr to return message        */
 
                                        /* loop through looking for the      */
                                        /* error code                        */
- if (LoadString(horyxkDll, code, DataArea, 255))
+ if (LoadString(horyxkDll, (UINT)code, DataArea, 255))
     return new_string(DataArea, strlen(DataArea));
  else
     return OREF_NULL;                  /* no message retrieved              */

@@ -184,7 +184,7 @@ RexxMethod *SysRestoreProgram(
       {
                                                /* read the file size                */
           BufferSize = Control.ImageSize;      /* get the method info size          */
-          if (fseek(Handle, 0-sizeof(compiledHeader)-sizeof(Control)-BufferSize, SEEK_END) != 0) {
+          if (fseek(Handle, (long)(0-sizeof(compiledHeader)-sizeof(Control)-BufferSize), SEEK_END) != 0) {
             fclose(Handle);                    /* close the file                    */
             return OREF_NULL;                  /* not a saved program               */
           }
@@ -314,7 +314,7 @@ RexxMethod *SysRestoreProgramBuffer(
   char         *MethodInfo;            /* buffered flattened method         */
   char         *StartPointer;          /* start of buffered information     */
   RexxBuffer   *Buffer;                /* Buffer to unflatten               */
-  LONG          BufferSize;            /* size of the buffer                */
+  size_t        BufferSize;            /* size of the buffer                */
   RexxMethod   *Method;                /* unflattened method                */
   RexxSource   *Source;                /* REXX source object                */
 

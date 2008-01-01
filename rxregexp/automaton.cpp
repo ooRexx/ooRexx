@@ -555,7 +555,7 @@ int automaton::set()
 
   // empty sets are not allowed
   if (i == 0) throw E_ILLEGAL_SET;
-  else currentPos+=(ptr-(regexp+currentPos));
+  else currentPos+=(int)(ptr-(regexp+currentPos));
 
   // set SET transition (bits 16 to 27 contain the set number)
   // that is created by insertSet

@@ -1271,7 +1271,7 @@ APIRET APIENTRY SockSelect(const char *name, size_t argc, PCONSTRXSTRING argv, c
 APIRET APIENTRY SockSend(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int      sock;
-    int      dataLen;
+    size_t   dataLen;
     const char *data;
     int      flags;
     APIRET   rc;
@@ -1349,7 +1349,7 @@ APIRET APIENTRY SockSend(const char *name, size_t argc, PCONSTRXSTRING argv, con
 APIRET APIENTRY SockSendTo(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int      sock;
-    int      dataLen;
+    size_t   dataLen;
     const char *data;
     int      flags;
     APIRET   rc;

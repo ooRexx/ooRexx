@@ -73,7 +73,7 @@ class RexxInstruction : public RexxInternalObject {
   inline void setNext(RexxInstruction *next) { OrefSet(this, this->nextInstruction, next); };
   void        setStart(size_t line, size_t off) { instructionLocation.setStart(line, off); }
   void        setEnd(size_t line, size_t off) { instructionLocation.setEnd(line, off); }
-  inline      void        setType(size_t type) { instructionType = type; };
+  inline      void        setType(size_t type) { instructionType = (uint16_t)type; };
   inline      size_t      getType()            { return instructionType;  };
   inline      bool        isType(size_t type)  { return instructionType == type; }
   inline      size_t      getLineNumber()      { return instructionLocation.getLineNumber(); }

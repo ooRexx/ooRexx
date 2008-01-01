@@ -80,7 +80,7 @@ RexxExpressionFunction::RexxExpressionFunction(
   }
                                        /* set the builtin index for later   */
   /* resolution step                   */
-  this->builtin_index = builtinIndex;
+  this->builtin_index = (uint16_t)builtinIndex;
 
   if (string)                          /* have a string lookup?             */
     this->flags |= function_nointernal;/* do not check for internal routines*/
@@ -223,16 +223,22 @@ RexxObject *RexxExpressionFunction::evaluate(
 }
 
 void *RexxExpressionFunction::operator new(size_t size,
-    int   argCount)                    /* count of arguments                */
+    size_t   argCount)                 /* count of arguments                */
 /******************************************************************************/
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
   RexxObject *newObject;               /* newly create object               */
 
-                                       /* Get new object                    */
-  newObject = new_object(size + (argCount - 1) * sizeof(RexxObject *));
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheFunctionCallTermBehaviour);
+  if (argCount == 0)
+  {
+      // allocate with singleton item chopped off
+      newObject = new_object(size - sizeof(RexxObject *), T_FunctionCallTerm);
+  }
+  else
+  {
+                                           /* Get new object                    */
+      newObject = new_object(size + (argCount - 1) * sizeof(RexxObject *), T_FunctionCallTerm);
+  }
   return newObject;                    /* and return the function           */
 }

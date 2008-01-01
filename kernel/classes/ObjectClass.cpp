@@ -1195,7 +1195,7 @@ RexxString *RexxObject::requestStringNoNOSTRING()
 }
 
 RexxString *RexxObject::requiredString(
-    int   position )                   /* required argument position        */
+    size_t position )                  /* required argument position        */
 /******************************************************************************/
 /* Function:  Handle a string request for a REXX object in a context where    */
 /*            the object MUST have a string value.                            */
@@ -1252,7 +1252,7 @@ RexxInteger *RexxObject::requestInteger(
 }
 
 RexxInteger *RexxObject::requiredInteger(
-    int    position,                   /* precision to use                  */
+    size_t position,                   /* precision to use                  */
     size_t precision)                  /* argument position for errors      */
 /******************************************************************************/
 /* Function:  Request an integer value from an object.  If this is not a      */
@@ -1324,7 +1324,7 @@ bool RexxObject::requestUnsignedNumber(stringsize_t &result, size_t precision)
 
 
 wholenumber_t RexxObject::requiredNumber(
-    int    position ,                  /* precision to use                  */
+    size_t position ,                  /* precision to use                  */
     size_t precision)                  /* argument position for errors      */
 /******************************************************************************/
 /* Function:  Request a long value from an object.  If this is not a          */
@@ -1355,7 +1355,7 @@ wholenumber_t RexxObject::requiredNumber(
 }
 
 stringsize_t RexxObject::requiredPositive(
-    int    position,                   /* precision to use                  */
+    size_t position,                   /* precision to use                  */
     size_t precision)                  /* argument position for errors      */
 /******************************************************************************/
 /* Function:  Request a a positive long value from an object.  If this is not */
@@ -1374,7 +1374,7 @@ stringsize_t RexxObject::requiredPositive(
 
 
 stringsize_t RexxObject::requiredNonNegative(
-    int    position ,                  /* precision to use                  */
+    size_t position ,                  /* precision to use                  */
     size_t precision)                  /* argument position for errors      */
 /******************************************************************************/
 /* Function:  Request a non-negative long value from an object.  If this is   */

@@ -502,7 +502,7 @@ wholenumber_t RexxString::compareTo(RexxObject *other )
 }
 
 
-int RexxString::comp(RexxObject *other)
+wholenumber_t RexxString::comp(RexxObject *other)
 /******************************************************************************/
 /* Function:  Do a value comparison of two strings for the non-strict         */
 /*            comparisons.  This returns for the compares:                    */
@@ -519,7 +519,7 @@ int RexxString::comp(RexxObject *other)
   const char *secondStart;             /* other start pointer               */
   size_t firstLen;                     /* this compare length               */
   size_t secondLen;                    /* other compare length              */
-  int  result;                         /* compare result                    */
+  wholenumber_t result;                /* compare result                    */
 
                                        /* We need to see if the objects can */
                                        /* be Converted to NumberString Objs */
@@ -605,7 +605,7 @@ int RexxString::comp(RexxObject *other)
   return result;                       /* return the compare result         */
 }
 
-int RexxString::strictComp(RexxObject *otherObj)
+wholenumber_t RexxString::strictComp(RexxObject *otherObj)
 /******************************************************************************/
 /* Function:  Do a strict comparison of two strings.  This returns:           */
 /*                                                                            */
@@ -616,7 +616,7 @@ int RexxString::strictComp(RexxObject *otherObj)
 {
   const char *otherData;               /* the other character data          */
   size_t otherLen;                     /* length of the other string        */
-  int  result;                         /* compare result                    */
+  wholenumber_t result;                /* compare result                    */
   RexxString *other;                   /* converted string value            */
 
   required_arg(otherObj, ONE);         /* this is required.                 */

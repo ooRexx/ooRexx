@@ -99,10 +99,10 @@ extern __declspec(dllimport) PAPIBLOCK APIsearch(PSZ, PSZ, LONG, DWORD);
 
 extern _declspec(dllimport) APIRET APIAddQueue(void);
 extern _declspec(dllimport) APIRET APIPullQueue(void);
-extern _declspec(dllimport) APIRET APICreateQueue(ULONG Pid, BOOL newProcess);
-extern _declspec(dllimport) APIRET APISessionQueue(ULONG Pid, BOOL newProcess);
-extern _declspec(dllimport) APIRET APIDeleteQueue(ULONG Pid, BOOL SessionQ);
-extern _declspec(dllimport) LONG APIQueryQueue(void);
+extern _declspec(dllimport) PQUEUEHEADER APICreateQueue(process_id_t Pid, BOOL newProcess);
+extern _declspec(dllimport) size_t APISessionQueue(process_id_t Pid, BOOL newProcess);
+extern _declspec(dllimport) size_t APIDeleteQueue(process_id_t Pid, BOOL SessionQ);
+extern _declspec(dllimport) size_t APIQueryQueue();
 extern _declspec(dllimport) LONG addPID(PAPIBLOCK cblock, process_id_t processID);
 extern _declspec(dllimport) LONG removePID(PAPIBLOCK cblock, process_id_t processID);
 extern _declspec(dllimport) char** APInamedObjects;
@@ -112,7 +112,7 @@ extern _declspec(dllimport) char** APInamedObjects;
 
 extern _declspec(dllimport) SECURITY_DESCRIPTOR SD_NullAcl;      /* let RXAPI.EXE share its null ACL */
 
-BOOL AllocComBlock(int chain, int size, int modifer, SECURITY_ATTRIBUTES * sa);
+BOOL AllocComBlock(int chain, size_t size, size_t modifer, SECURITY_ATTRIBUTES * sa);
 void FreeComBlock(int chain);
 
 extern _declspec(dllimport) APIRET APIAddMacro(BOOL updateIfExists);
@@ -121,7 +121,7 @@ extern _declspec(dllimport) APIRET APIClearMacroSpace(void);
 extern _declspec(dllimport) APIRET APIQueryMacro(void);
 extern _declspec(dllimport) APIRET APIReorderMacro(void);
 extern _declspec(dllimport) APIRET APIExecuteMacroFunction(void);
-extern _declspec(dllimport) APIRET APIList(ULONG kind);
+extern _declspec(dllimport) APIRET APIList(int kind);
 
 static BOOL API_Stopped = FALSE;
 
@@ -465,7 +465,7 @@ BOOL Install()
                   0,
                   REG_EXPAND_SZ,
                   (const BYTE*)szFilePath,
-                  strlen(szFilePath) + 1);
+                  (DWORD)strlen(szFilePath) + 1);
 
     // Set the supported types flags.
     dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
@@ -935,11 +935,12 @@ BOOL APIMessageHandler()
            APIRETURN(result);
            break;
         case RXAPI_QUEUECREATE:
-           result = APICreateQueue(0, FALSE);  /* create a named queue */
+           // a non-null pointer is success, so we need to return zero for that.
+           result = APICreateQueue(0, FALSE) == NULL;  /* create a named queue */
            APIRETURN(result);
            break;
         case RXAPI_QUEUEDELETE:
-           result = APIDeleteQueue(RX.msg.wParam, FALSE);  /* delete a named queue */
+           result = APIDeleteQueue((process_id_t)RX.msg.wParam, FALSE);  /* delete a named queue */
            APIRETURN(result);
            break;
         case RXAPI_QUEUEQUERY:
@@ -949,8 +950,7 @@ BOOL APIMessageHandler()
         case RXAPI_QUEUECOMEXTEND:
            {
                SECURITY_ATTRIBUTES sa;
-               ULONG size;
-               size = RX.msg.wParam / PAGE_SIZE + 1;
+               size_t size = RX.msg.wParam / PAGE_SIZE + 1;
                FreeComBlock(API_QUEUE);
                result = !AllocComBlock(API_QUEUE, size * PAGE_SIZE, size, SetSecurityDesc(&sa));
                RX.comblockQueue_ExtensionLevel = size;
@@ -966,18 +966,17 @@ BOOL APIMessageHandler()
            APIRETURN(result);
            break;
         case RXAPI_QUEUESESSION:
-           result =  APISessionQueue(RX.msg.wParam, (BOOL)RX.msg.lParam);  /* search and evtl. create a session queue */
+           result =  APISessionQueue((process_id_t)RX.msg.wParam, (BOOL)RX.msg.lParam);  /* search and evtl. create a session queue */
            APIRETURN(result);
            break;
         case RXAPI_QUEUESESSIONDEL:
-           result = APIDeleteQueue(RX.msg.wParam, TRUE);  /* delete a session queue */
+           result = APIDeleteQueue((process_id_t)RX.msg.wParam, TRUE);  /* delete a session queue */
            APIRETURN(result);
            break;
         case RXAPI_MACROCOMEXTEND:
            {
                SECURITY_ATTRIBUTES sa;
-               ULONG size;
-               size = RX.msg.wParam / PAGE_SIZE + 1;
+               size_t size = RX.msg.wParam / PAGE_SIZE + 1;
                FreeComBlock(API_MACRO);
                result = !AllocComBlock(API_MACRO, size * PAGE_SIZE, size, SetSecurityDesc(&sa));
                RX.comblockMacro_ExtensionLevel = size;
@@ -999,7 +998,7 @@ BOOL APIMessageHandler()
                     break;
                case MACRO_EXECUTE:result = APIExecuteMacroFunction();
                     break;
-               case MACRO_LIST:result = APIList(RX.msg.lParam);
+               case MACRO_LIST:result = APIList((int)RX.msg.lParam);
                     break;
                default: result = 2;  /* not found */
            }
@@ -1013,8 +1012,8 @@ BOOL APIMessageHandler()
               if (!m_bIsRunning) // RIN006 m_bIsRunning flag signals, that the rxapi is running as an SERVICE
               {
 
-               if ((APIDeleteQueue(RX.msg.wParam, TRUE)<2) && (!RX.base))    /* delete a session queue */
-                  RxFreeProcessSubcomList((ULONG) RX.msg.wParam);
+               if ((APIDeleteQueue((process_id_t)RX.msg.wParam, TRUE)<2) && (!RX.base))    /* delete a session queue */
+                  RxFreeProcessSubcomList((process_id_t)RX.msg.wParam);
 
                /* check if there's still another rexx program running that needs RXAPI */
                orexx_active_sem = OpenSemaphore(SEMAPHORE_ALL_ACCESS, TRUE, "OBJECTREXX_RUNNING");
@@ -1049,7 +1048,7 @@ BOOL APIMessageHandler()
             APIRETURN(result);
              break;
         case RXAPI_PROCESSCLEANUP:
-           RxFreeProcessSubcomList((LONG)RX.msg.lParam);
+           RxFreeProcessSubcomList((process_id_t)RX.msg.lParam);
            APIRETURN(0);
            break;
 
@@ -1099,7 +1098,7 @@ BOOL APIWin_Register(HINSTANCE hInstance)
 #endif
 
 
-BOOL AllocComBlock(int chain, int size, int modifier, SECURITY_ATTRIBUTES * sa)
+BOOL AllocComBlock(int chain, size_t size, size_t modifier, SECURITY_ATTRIBUTES * sa)
 {
     // The com blocks used for the QUEUE and MACROSPACE apis need to
     // be reallocatable.  Because we're using named memory, this requires
@@ -1113,7 +1112,7 @@ BOOL AllocComBlock(int chain, int size, int modifier, SECURITY_ATTRIBUTES * sa)
 
     if (chain == API_QUEUE || chain == API_MACRO)
     {
-        sprintf(mapName, "%s%d", FMAPNAME_COMBLOCK(chain), modifier);
+        sprintf(mapName, "%s%u", FMAPNAME_COMBLOCK(chain), modifier);
     }
     else
     {
@@ -1121,7 +1120,7 @@ BOOL AllocComBlock(int chain, int size, int modifier, SECURITY_ATTRIBUTES * sa)
     }
 
     RX.comhandle[chain] = CreateFileMapping(INVALID_HANDLE_VALUE, sa,
-                                     PAGE_READWRITE, 0, size, mapName);
+                                     PAGE_READWRITE, 0, (DWORD)size, mapName);
     if (!RX.comhandle[chain])
         return FALSE;
 

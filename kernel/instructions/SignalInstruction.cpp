@@ -61,7 +61,7 @@ RexxInstructionSignal::RexxInstructionSignal(
   OrefSet(this, this->expression, _expression);
   OrefSet(this, this->condition, _condition);
   OrefSet(this, this->name, _name);
-  instructionFlags = flags;
+  instructionFlags = (uint16_t)flags;
 }
 
 void RexxInstructionSignal::live(size_t liveMark)

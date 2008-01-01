@@ -129,7 +129,7 @@ inline size_t RANDOMIZE(size_t seed) { return (seed * RANDOM_FACTOR + 1); }
 
 class RexxExpressionStack;
                                        /* builtin function prototype        */
-typedef RexxObject *builtin_func(RexxActivation *, int, RexxExpressionStack *);
+typedef RexxObject *builtin_func(RexxActivation *, size_t, RexxExpressionStack *);
 typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
 
                                        /*  as "overLoading" of hashValue  */
@@ -258,8 +258,8 @@ const char *mempbrk(const char *, const char *, size_t);     /* search for chara
 #define env_find(s) (TheEnvironment->entry(s))
                                        /* various exception/condition       */
                                        /* reporting routines                */
-void missing_argument(int position);
-int  message_number(RexxString *);
+void missing_argument(size_t position);
+wholenumber_t message_number(RexxString *);
                                        /* verify argument presence          */
 #define required_arg(arg, position) if (arg == OREF_NULL) missing_argument(ARG_##position)
 
@@ -277,8 +277,6 @@ int  message_number(RexxString *);
 # define NO_CSTRING            NULL
 #endif
 #define NO_RSTRING       NULL
-
-// TODO:  Make these a name space
 
 /******************************************************************************/
 /* Global Objects - Names                                                     */
@@ -347,7 +345,7 @@ inline RexxString *REQUEST_STRING(RexxObject *object)
 /* The next routine is specifically for REQUESTing a STRING needed as a method*/
 /* argument.  This raises an error if the object cannot be converted to a     */
 /* string value.                                                              */
-inline RexxString * REQUIRED_STRING(RexxObject *object, int position)
+inline RexxString * REQUIRED_STRING(RexxObject *object, size_t position)
 {
   if (object == OREF_NULL)             /* missing argument?                 */
     missing_argument(position);        /* raise an error                    */

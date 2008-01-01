@@ -2691,7 +2691,7 @@ void RexxSource::flushControl(
 /*            for new added instructions                                      */
 /******************************************************************************/
 {
-  int              type;               /* instruction type                  */
+  size_t           type;               /* instruction type                  */
   RexxInstruction *second;             /* additional created instructions   */
 
   for (;;) {                           /* loop through the control stack    */
@@ -2744,8 +2744,8 @@ RexxMethod *RexxSource::translateBlock(
   RexxInstruction *second;             /* secondary clause for IF/WHEN      */
   RexxToken       *token;              /* current working token             */
   RexxCode        *newCode;            /* newly created method              */
-  int              type;               /* instruction type information      */
-  int              controltype;        /* type on the control stack         */
+  size_t           type;               /* instruction type information      */
+  size_t           controltype;        /* type on the control stack         */
 
                                        /* no instructions yet               */
   OrefSet(this, this->first, OREF_NULL);
@@ -4759,8 +4759,8 @@ RexxObject *RexxSource::sourceNewObject(
 
 void RexxSource::parseTraceSetting(
     RexxString *value,                 /* string with trace setting         */
-    int        *setting,               /* new trace setting                 */
-    int        *debug )                /* new debug mode setting            */
+    size_t     *setting,               /* new trace setting                 */
+    size_t     *debug )                /* new debug mode setting            */
 /******************************************************************************/
 /* Function:  Process a trace setting                                         */
 /******************************************************************************/
@@ -4786,7 +4786,7 @@ void RexxSource::parseTraceSetting(
 
         case '?':                      /* debug toggle character            */
                                        /* already toggling?                 */
-          if (*debug == DEBUG_TOGGLE)
+          if (*debug == (size_t)DEBUG_TOGGLE)
             *debug = DEBUG_IGNORE;     /* this is back to no change at all  */
           else
             *debug = DEBUG_TOGGLE;     /* need to toggle the debug mode     */

@@ -58,11 +58,11 @@ class RexxExpressionStack {
   void live(size_t);
   void liveGeneral(int reason);
   void flatten(RexxEnvelope *);
-  void         expandArgs(int, int, int, char *);
-  RexxString * requiredStringArg(int);
-  RexxString * optionalStringArg(int);
-  RexxInteger *requiredIntegerArg(int, int, char *);
-  RexxInteger *optionalIntegerArg(int, int, char *);
+  void         expandArgs(size_t, size_t, size_t, const char *);
+  RexxString * requiredStringArg(size_t);
+  RexxString * optionalStringArg(size_t);
+  RexxInteger *requiredIntegerArg(size_t, size_t, const char *);
+  RexxInteger *optionalIntegerArg(size_t, size_t, const char *);
   void         migrate(RexxActivity *);
 
   inline void setFrame(RexxObject **frames, size_t items) { stack = frames; size = items; top = stack; *top = OREF_NULL; }
@@ -89,6 +89,8 @@ class RexxExpressionStack {
   inline void         setTop(size_t v) {this->top = this->stack + v;};
   inline void         toss() { this->top--; };
   inline RexxObject **getFrame() { return stack; }
+
+protected:
 
   size_t size;                         /* size of the expstack              */
   RexxObject **top;                    /* current expstack top location     */

@@ -907,7 +907,7 @@ BUILTIN(USERID) {
 #define ERRORTEXT_n   1
 
 BUILTIN(ERRORTEXT) {
-  int    error_number;                 /* requested error number            */
+  wholenumber_t  error_number;         /* requested error number            */
   RexxString *result;                  /* function result                   */
 
   check_args(ERRORTEXT);               /* check on required number of args  */
@@ -1237,9 +1237,9 @@ BUILTIN(DATE) {
         timestamp = current;
     }
 
-    int day = timestamp.day;          /* get various date parts            */
-    int month = timestamp.month;
-    int year = timestamp.year;
+    wholenumber_t day = timestamp.day;          /* get various date parts            */
+    wholenumber_t month = timestamp.month;
+    wholenumber_t year = timestamp.year;
 
     switch (style)
     {                     /* process the various styles        */

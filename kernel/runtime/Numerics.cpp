@@ -52,6 +52,8 @@
 #ifdef __REXX64__
 wholenumber_t Numerics::MAX_WHOLENUMBER = __INT64_C(999999999999999999);
 wholenumber_t Numerics::MIN_WHOLENUMBER = __INT64_C(-999999999999999999);
+wholenumber_t Numerics::MAX_EXPONENT = __INT64_C(999999999999999999);
+wholenumber_t Numerics::MIN_EXPONENT = __INT64_C(-999999999999999999);
 stringsize_t Numerics::DEFAULT_DIGITS  = ((stringsize_t)18);
     // the digits setting used internally for function/method arguments to allow
     // for the full range
@@ -59,6 +61,8 @@ stringsize_t Numerics::ARGUMENT_DIGITS  = ((stringsize_t)20);
 #else
 wholenumber_t Numerics::MAX_WHOLENUMBER = 999999999;
 wholenumber_t Numerics::MIN_WHOLENUMBER = -999999999;
+wholenumber_t Numerics::MAX_EXPONENT = 999999999;
+wholenumber_t Numerics::MIN_EXPONENT = -999999999;
 stringsize_t Numerics::DEFAULT_DIGITS  = ((stringsize_t)9);
     // the digits setting used internally for function/method arguments to allow
     // for the full binary value range

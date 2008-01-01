@@ -401,13 +401,13 @@ int RexxSource::builtin(
 }
 
 
-int RexxSource::resolveBuiltin(
+size_t RexxSource::resolveBuiltin(
     RexxString *value)                 /* name to check                     */
 /******************************************************************************/
 /* Function:  Return a numeric keyword identifier for a string                */
 /******************************************************************************/
 {
-    return resolveKeyword(value, builtinFunctions, tabSize(builtinFunctions));
+    return (size_t)resolveKeyword(value, builtinFunctions, tabSize(builtinFunctions));
 }
 
 

@@ -120,8 +120,8 @@ class RexxStringClass : public RexxClass {
    bool        isEqual(RexxObject *);
    bool        primitiveIsEqual(RexxObject *);
    bool        primitiveCaselessIsEqual(RexxObject *);
-   int         strictComp(RexxObject *);
-   int         comp(RexxObject *);
+   wholenumber_t strictComp(RexxObject *);
+   wholenumber_t comp(RexxObject *);
    wholenumber_t compareTo(RexxObject *);
    RexxInteger *equal(RexxObject *);
    RexxInteger *strictEqual(RexxObject *);
@@ -279,7 +279,7 @@ class RexxStringClass : public RexxClass {
    inline char *getWritableData() { return this->stringData; };
    inline void put(size_t s, const void *b, size_t l) { memcpy((this->stringData+s), b, l); };
    inline void put(size_t s, RexxString *o) { put(s, o->getStringData(), o->getLength()); };
-   inline void set(size_t s,int c,int l) { memset((this->stringData+s),c,(size_t)l); };
+   inline void set(size_t s,int c, size_t l) { memset((this->stringData+s), c, l); };
    inline char getChar(size_t p) { return *(this->stringData+p); };
    inline char putChar(size_t p,char c) { return *(this->stringData+p) = c; };
    inline bool upperOnly() {return (this->Attributes&STRING_NOLOWER) != 0;};

@@ -118,7 +118,7 @@ public:
         objectSize = l;
         flags = (uint16_t)mark;    // the flags are cleared except for the mark.
     }
-    inline void initHeader(uint32_t mark)
+    inline void initHeader(size_t mark)
     {
         flags = (uint16_t)mark;    // the flags are cleared except for the mark.
     }
@@ -227,11 +227,11 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
      inline void   setNonPrimitive() { header.setNonPrimitive(); }
      inline bool   isPrimitive() { return header.isPrimitive(); }
      inline bool   isNonPrimitive() { return header.isNonPrimitive(); }
-     inline bool   isObjectMarked(uint16_t markword) { return header.isObjectMarked(markword); }
-     inline void   setObjectMark(uint16_t markword) { header.setObjectMark(markword); }
+     inline bool   isObjectMarked(size_t markword) { return header.isObjectMarked(markword); }
+     inline void   setObjectMark(size_t markword) { header.setObjectMark(markword); }
      inline void   clearObjectMark() { header.clearObjectMark(); }
-     inline bool   isObjectLive(uint32_t mark) { return header.isObjectLive(mark); }
-     inline bool   isObjectDead(uint32_t mark) { return header.isObjectDead(mark); }
+     inline bool   isObjectLive(size_t mark) { return header.isObjectLive(mark); }
+     inline bool   isObjectDead(size_t mark) { return header.isObjectDead(mark); }
      inline bool   isOldSpace() { return header.isOldSpace(); }
      inline bool   isNewSpace() { return header.isNewSpace(); }
      inline void   setNewSpace() { header.setNewSpace(); }
@@ -324,7 +324,7 @@ class RexxObject : public RexxInternalObject {
      // RexxInternalObject, but it would increase the size of all internal objects
      // by 4 bytes.  Since the minimum object size is large enough to always have
      // that field, it's safe to clear this here.
-     inline void initializeNewObject(size_t size, uint32_t mark, void *vft, RexxBehaviour *b)
+     inline void initializeNewObject(size_t size, size_t mark, void *vft, RexxBehaviour *b)
      {
          // we need to make this a function object of some type in case
          // a GC cycle gets triggered before this is complete.  By default,
@@ -337,7 +337,7 @@ class RexxObject : public RexxInternalObject {
          objectVariables = OREF_NULL;
      }
 
-     inline void initializeNewObject(uint32_t mark, void *vft, RexxBehaviour *b)
+     inline void initializeNewObject(size_t mark, void *vft, RexxBehaviour *b)
      {
          // we need to make this a function object of some type in case
          // a GC cycle gets triggered before this is complete.  By default,
@@ -386,12 +386,12 @@ class RexxObject : public RexxInternalObject {
      bool         requestNumber(wholenumber_t &, size_t);
      bool         requestUnsignedNumber(stringsize_t &, size_t);
      RexxArray   *requestArray();
-     RexxString  *requiredString(int);
+     RexxString  *requiredString(size_t);
      RexxString  *requiredString();
-     RexxInteger *requiredInteger(int, size_t);
-     wholenumber_t requiredNumber(int position, size_t precision = Numerics::DEFAULT_DIGITS);
-     stringsize_t requiredPositive(int position, size_t precision = Numerics::DEFAULT_DIGITS);
-     stringsize_t requiredNonNegative(int position, size_t precision = Numerics::DEFAULT_DIGITS);
+     RexxInteger *requiredInteger(size_t, size_t);
+     wholenumber_t requiredNumber(size_t position, size_t precision = Numerics::DEFAULT_DIGITS);
+     stringsize_t requiredPositive(size_t position, size_t precision = Numerics::DEFAULT_DIGITS);
+     stringsize_t requiredNonNegative(size_t position, size_t precision = Numerics::DEFAULT_DIGITS);
 
      bool         isEqual(RexxObject *);
      bool         isInstanceOf(RexxClass *);

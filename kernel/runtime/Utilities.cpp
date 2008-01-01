@@ -63,7 +63,7 @@ void logic_error (const char *desc)
 }
 
 
-int message_number(
+wholenumber_t message_number(
     RexxString *errorcode)             /* REXX error code as string         */
 /******************************************************************************/
 /* Function:  Parse out the error code string into the messagecode valuey     */
@@ -135,14 +135,14 @@ void process_new_args(
 }
 
 void missing_argument(
-    int   argumentPosition)            /* position of the missing argument  */
+    size_t argumentPosition)           /* position of the missing argument  */
 /******************************************************************************/
 /* Function:  Raise an error for a missing argument, given the target         */
 /*            position.                                                       */
 /******************************************************************************/
 {
                                        /* just raise the error              */
-  reportException(Error_Incorrect_method_noarg, argumentPosition);
+    reportException(Error_Incorrect_method_noarg, argumentPosition);
 }
 
 int  CaselessCompare(                  /* do a caseless memory comparison   */

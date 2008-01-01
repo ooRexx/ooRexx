@@ -108,7 +108,7 @@ RexxArray* __stdcall DispParms2RexxArray(void *arguments)
 LONG APIENTRY RexxCatchExit(LONG ExitNumber, LONG Subfunction, PEXIT parmblock)
 {
    char **names;
-   int  iCount;
+   size_t iCount;
    LinkedList *myList = NULL;
 
    // get LISTOFNAMES, containing a pointer to the list that will
