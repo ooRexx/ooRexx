@@ -289,7 +289,7 @@ union semun {
 #endif
 
 extern REXXAPIDATA  *apidata;          /* Global state data          */
-extern int opencnt[][2];               /* open count array for sems  */
+extern thread_id_t opencnt[][2];       /* open count array for sems  */
 extern char *resolve_tilde(const char *);
 extern bool rexxutil_call;             /* internal call flag         */
 extern RexxMutex rexxutil_call_sem;
