@@ -176,7 +176,7 @@ char *SysGetThreadStackBase(size_t);   /* query current thread stack start  */
 
 #ifndef SysCreateThread
                                        /* create a new thread               */
-int SysCreateThread (PTHREADFN, size_t, void *);
+thread_id_t SysCreateThread (PTHREADFN, size_t, void *);
 #endif
 
 #ifndef SysLoadProcedure

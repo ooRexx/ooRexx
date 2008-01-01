@@ -392,12 +392,6 @@ size_t line_write_check(const char * , size_t, FILE * );
 #define SysQueryThread() GetCurrentThread()
 #endif
 
-int SysCreateThread (
-  PTHREADFN ThreadProcedure,           /* address of thread procedure       */
-  size_t    StackSize,                 /* required stack size               */
-  void     *Arguments );               /* thread procedure argument block   */
-
-
 #define SysAllocateHeap();             // no shared memory on windows yet
 #define SysReleaseHeap();              // no shared memory on windows yet
 

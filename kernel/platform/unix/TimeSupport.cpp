@@ -164,12 +164,7 @@ RexxMethod2(void, alarm_startTimer,
   while (numdays > 0) {                /* is it some future day?            */
 
                                        /* start timer to wake up after a day*/
-    rc = SysCreateThread(async_timer, C_STACK_SIZE, (void *)&tinfo);
-    if (!rc) {                         /* Error received?                   */
-                                       /* raise error                       */
-      send_exception(Error_System_service);
-      return;
-    }
+    SysCreateThread(async_timer, C_STACK_SIZE, (void *)&tinfo);
 
     semHandle->wait();                 /* wait for semaphore to be posted   */
     SysThreadYield();                  /* give the timer thread a chance    */
@@ -187,12 +182,7 @@ RexxMethod2(void, alarm_startTimer,
   tinfo.sem = semHandle;               /* setup the info for timer thread   */
   tinfo.time = alarmtime;
                                        /* start the timer                   */
-  rc = SysCreateThread(async_timer, C_STACK_SIZE, (void *)&tinfo);
-  if (!rc) {                           /* Error received?                   */
-                                       /* raise error                       */
-     send_exception(Error_System_service);
-     return;
-  }
+  SysCreateThread(async_timer, C_STACK_SIZE, (void *)&tinfo);
   semHandle->wait();                   /* wait for semaphore to be posted   */
     SysThreadYield();                  /* give the timer thread a chance    */
   return;

@@ -97,7 +97,7 @@ void SysThreadInit(void)
 /*  are no performance improvements.                               */
 /*****************************************************************************/
 
-int SysCreateThread(PTHREADFN threadFnc, size_t stackSize, void *args)
+thread_id_t SysCreateThread(PTHREADFN threadFnc, size_t stackSize, void *args)
 {
    int             rc;
    pthread_t       newThread;
@@ -139,7 +139,7 @@ int SysCreateThread(PTHREADFN threadFnc, size_t stackSize, void *args)
    }
    rc = pthread_attr_destroy(&newThreadAttr);
 
-   return (int)newThread;
+   return (thread_id_t)newThread;
 }
 
 
