@@ -214,6 +214,21 @@ void SysStartTimeSlice( void );
 #define SYSINITIALADDRESS "bash"
 #endif
 
+
+#ifdef __APPLE__
+# include <crt_externs.h>
+inline char **getEnvironment()
+{
+     return _NSGetEnviron();
+}
+#else
+inline char **getEnvironment()
+{
+   extern char **environ;
+   return environ;
+}
+#endif
+
 /******************************************************************************/
 /* REQUIRED:  Define the macro to call the line_write_function                */
 /******************************************************************************/

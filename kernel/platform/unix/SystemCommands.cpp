@@ -94,8 +94,6 @@
 
 extern int putflag;
 
-extern char **environ;
-
 extern char achRexxCurDir[ CCHMAXPATH+2 ];  /* Save current working direct    */
 
 char * args[MAX_COMMAND_ARGS+1];            /* Array for argument parsing */
@@ -330,7 +328,7 @@ bool sys_process_export(const char * cmd, int *rc, int flag)
 
   memset(temparray, '\0', sizeof(temparray));
 
-  Environment = environ;               /* get the environment               */
+  Environment = getEnvironment();       /* get the environment               */
   if(flag == EXPORT_FLAG)
   {
      st = &cmd[6];
@@ -366,7 +364,7 @@ bool sys_process_export(const char * cmd, int *rc, int flag)
     }
   }
   putflag = 1;                         /* prevent do it again               */
-  Environment = environ;               /* reset the environment pointer     */
+  Environment = getEnvironment();      /* reset the environment pointer     */
 
 /* do we have a assignment operator? If not return true           */
 /* The operating system treads this like no command, and so do we */
@@ -418,7 +416,7 @@ bool sys_process_export(const char * cmd, int *rc, int flag)
 
   while((tmpptr = (strchr(runptr, '$'))) != 0)
   {
-    Environment = environ;   /* get the beginning of the environment*/
+    Environment = getEnvironment();  /* get the beginning of the environment*/
     HitFlag = true;          /* if not true inputvalue= outputvalue*/
     copyval = tmpptr - runptr;
     if (copyval)   /* runarray should keep the 'real' environment  */
@@ -511,7 +509,7 @@ bool sys_process_export(const char * cmd, int *rc, int flag)
      *runarray = '\0';
   }
 
-  Environment = environ;            /* get the beginning of the environment*/
+  Environment = getEnvironment();     /* get the beginning of the environment*/
 
   for(;*Environment != NULL;Environment++)
   {

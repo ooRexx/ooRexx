@@ -59,7 +59,6 @@
 
 #define  SELECTOR  "ENVIRONMENT"       /* environment selector              */
 
-extern char **environ;
 extern int putflag;
 
 /*********************************************************************/
@@ -83,7 +82,7 @@ int SetEnvironmentVariable(
   size_t i;
   char   namebufcurr[256];             /* buf for extracted name            */
 
-  Environment = environ;               /* get the environment               */
+  Environment = getEnvironment();      /* get the environment               */
   if(!putflag){                        /* first change in the environment ? */
     /* copy all entries to dynamic memory                                   */
     for(;*Environment != NULL;Environment++){/*for all entries in the env   */
@@ -93,7 +92,7 @@ int SetEnvironmentVariable(
       putenv(Env_Var_String);          /* and chain it in                   */
     }
     putflag = 1;                       /* prevent do it again               */
-    Environment = environ;             /* reset the environment pointer     */
+    Environment = getEnvironment();    /* reset the environment pointer     */
   }
                                        /* calculate the size                */
   size = strlen(Name->getStringData())+strlen(Value->getStringData())+2;
