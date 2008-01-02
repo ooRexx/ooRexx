@@ -3469,7 +3469,7 @@ APIRET APIENTRY SysRequestMutexSem(
 
     if(!getval(apidata->rexxutilsems, handle)){/* if sem is locked     */
                                                /* and I'm the owner    */
-      if((opencnt[handle][1]) == (int)pthread_self()){
+      if((opencnt[handle][1]) == pthread_self()){
         sprintf(retstr->strptr, "%d", 0);    /* no errors              */
       }
       else {                             /* wait for it                */
@@ -3491,7 +3491,7 @@ APIRET APIENTRY SysRequestMutexSem(
   else {                                 /* need timeout porcess       */
       if(!getval(apidata->rexxutilsems, handle)){/* if sem is locked   */
                                                  /* and I'm the owner  */
-        if((opencnt[handle][1])== (int)pthread_self()){
+        if((opencnt[handle][1]) == pthread_self()){
           sprintf(retstr->strptr, "%d", 0);/* no errors                */
         }
         else {                           /* wait for it                */
@@ -3606,7 +3606,7 @@ APIRET APIENTRY SysReleaseMutexSem(
   }
   if(!getval(apidata->rexxutilsems, handle)){/* if sem is locked     */
                                              /* and I'm the owner    */
-    if((opencnt[handle][1])== (int)pthread_self()){
+    if((opencnt[handle][1])== pthread_self()){
       /* unlock the sem                                              */
       unlocksem(apidata->rexxutilsems, handle);
       (opencnt[handle][1])= 0;         /* reset the owner TID        */
