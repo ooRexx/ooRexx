@@ -58,9 +58,9 @@ APIRET APIENTRY RexxPullQueue (
         const char *,                          /* Name of queue to read from  */
         PRXSTRING,                             /* RXSTRING to receive data    */
         REXXDATETIME *,                        /* Stor for data date/time     */
-        unsigned int);                         /* wait status (WAIT|NOWAIT)   */
+        size_t);                               /* wait status (WAIT|NOWAIT)   */
 typedef APIRET (APIENTRY *PFNREXXPULLQUEUE)(const char *, PCONSTRXSTRING, REXXDATETIME *,
-                                           unsigned int);
+                                           size_t);
 
 #endif /* REXXPLATFORMAPIS_INCLUDED */
 

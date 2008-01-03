@@ -184,7 +184,7 @@ RexxMethod1(REXXOBJECT, rexx_create_queue,
 {
    char buf[name_parameter_length+1];  /* creation buffer                   */
    APIRET rc;                          /* creation return code              */
-   unsigned int dup_flag = 0;          /* duplicate name flag               */
+   size_t dup_flag = 0;                /* duplicate name flag               */
 
                                        /* create a queue                    */
    rc = RexxCreateQueue(buf, sizeof(buf), queue_name, &dup_flag);
