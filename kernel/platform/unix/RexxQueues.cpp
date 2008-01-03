@@ -61,7 +61,7 @@
 RexxMethod0(REXXOBJECT, rexx_query_queue)
 {
    REXXOBJECT queue_name;              /* current queue name                */
-   unsigned int count = 0;             /* count of lines                    */
+   size_t count = 0;                   /* count of lines                    */
    APIRET rc;                          /* queue query return code           */
 
                                        /* get the queue name                */

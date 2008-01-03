@@ -87,10 +87,10 @@ int __cdecl main(
 {
   LONG      i;                 /* loop counter for arguments         */
   LONG      rc;                /* return code from API calls         */
-  ULONG     entries;           /* number of entries in queue         */
+  size_t    entries;           /* number of entries in queue         */
   DATETIME  dt;                /* date/time structure for reading    */
   const char *quename=NULL;    /* initialize queuename to NULL       */
-  ULONG     linelen ;          /* input line length                  */
+  size_t    linelen ;          /* input line length                  */
   CONSTRXSTRING  queuedata;    /* data added to the queue            */
   PSZ       t;                 /* argument pointer                   */
   DWORD     envvalue;

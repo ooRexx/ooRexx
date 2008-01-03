@@ -201,11 +201,9 @@ RexxRegisterSubcomDll(
   const char *   UserArea,                     /* User data                  */
   size_t DropAuth )                    /* Drop Authority             */
 {
-  ULONG  rc;                           /* Function return code.      */
                                        /* Register the subcommand.   */
-  rc = RegRegisterDll(EnvName, ModuleName, EntryPoint, UserArea,
+  return RegRegisterDll(EnvName, ModuleName, EntryPoint, UserArea,
                       DropAuth, REGSUBCOMM);
-  return (rc);                         /* and exit with return code  */
 }
 
 /*********************************************************************/
