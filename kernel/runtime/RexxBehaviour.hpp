@@ -103,7 +103,7 @@
    inline bool  isResolved()     {  return (behaviourFlags & BEHAVIOUR_NOT_RESOLVED) == 0; };
    inline bool  isEnhanced()     {  return (behaviourFlags & ENHANCED_OBJECT) != 0; };
    inline bool  isInternalClass()  {  return (behaviourFlags & INTERNAL_CLASS) != 0; };
-   inline bool  isTransientClass()  {  return (behaviourFlags & INTERNAL_CLASS) != 0; };
+   inline bool  isTransientClass()  {  return (behaviourFlags & TRANSIENT_CLASS) != 0; };
    inline void  setResolved()    {  behaviourFlags &= ~BEHAVIOUR_NOT_RESOLVED; };
    inline void  setNotResolved() {  behaviourFlags |= BEHAVIOUR_NOT_RESOLVED; };
    inline void  setEnhanced()    {  behaviourFlags |= ENHANCED_OBJECT; };
