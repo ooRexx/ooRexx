@@ -1423,7 +1423,12 @@ void RexxMemory::saveImageMark(RexxObject *markObject, RexxObject **pMarkObject)
         if (behaviour->isNonPrimitive())
             /* tag this as a non-primitive behav */
             bufferReference->setNonPrimitive();
-        else {
+        else
+        {
+            if (behaviour->isTransientClass())
+            {
+                logic_error("Transient class included in image buffer");
+            }
             /* clear this out, as this is overloaded with the oldspace */
             /* flag. */
             bufferReference->setPrimitive();

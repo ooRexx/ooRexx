@@ -150,7 +150,7 @@
        NON_PRIMITIVE_BEHAVIOUR = 0x0001,
        ENHANCED_OBJECT         = 0x0002,
        INTERNAL_CLASS          = 0x0004,
-       TRANSIENT_CLASS         = 0x0004,
+       TRANSIENT_CLASS         = 0x0008,
        BEHAVIOUR_NOT_RESOLVED  = 0x0010
    };
 
