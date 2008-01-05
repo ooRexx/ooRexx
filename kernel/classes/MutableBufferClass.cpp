@@ -114,8 +114,12 @@ RexxMutableBuffer::RexxMutableBuffer()
 {
     bufferLength = DEFAULT_BUFFER_LENGTH;   /* save the length of the buffer    */
     defaultSize  = bufferLength;            /* store the default buffer size    */
-
+    // NB:  we clear this before we allocate the new buffer because allocating the
+    // new buffer might trigger a garbage collection, causing us to mark bogus
+    // reference.
+    data = OREF_NULL;
     data = new_buffer(bufferLength);
+
 }
 
 
@@ -339,12 +343,6 @@ RexxMutableBuffer *RexxMutableBuffer::overlay(RexxObject *str, RexxObject *pos, 
     size_t replaceLength = optional_length(len, string->getLength(), ARG_THREE);
 
     char padChar = get_pad(pad, ' ', ARG_FOUR);
-
-    // if nothing to replace, we can just return immediately.
-    if (replaceLength == 0)
-    {
-        return this;
-    }
 
     // make sure we have room for this
     ensureCapacity(begin + replaceLength);
