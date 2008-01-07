@@ -3855,9 +3855,9 @@ RexxMethod2(REXXOBJECT,                // Return type
             OSELF, self,               // Pointer to self
             CSTRING, varName)          // string defining variable to query
 {
-  RexxString *RxString REXX_GETVAR(varName);
+  RexxString *RxString = (RexxString *)REXX_GETVAR(varName);
   if ( RxString )
-    return RxString
+    return RxString;
   else
     return ooRexxNil;
 }
