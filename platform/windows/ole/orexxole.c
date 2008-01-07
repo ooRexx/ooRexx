@@ -2532,100 +2532,110 @@ RexxMethod1(REXXOBJECT,                // Return type
             OLEObject_Uninit,          // Object_method name
             OSELF, self)               // Pointer to self
 {
-  RexxString       *RxString;
-  const char       *pszRxString;
-  IDispatch        *pDispatch = NULL;
-  ITypeInfo        *pTypeInfo = NULL;
-  POLECLASSINFO     pClsInfo = NULL;
-  OLEObjectEvent   *pEventHandler = NULL;  // event handling
-  IConnectionPoint *pConnectionPoint = NULL; // event handling
-  DWORD             dwCookie = 0;  // event handling
+    RexxString       *RxString;
+    const char       *pszRxString;
+    IDispatch        *pDispatch = NULL;
+    ITypeInfo        *pTypeInfo = NULL;
+    POLECLASSINFO     pClsInfo = NULL;
+    OLEObjectEvent   *pEventHandler = NULL;  // event handling
+    IConnectionPoint *pConnectionPoint = NULL; // event handling
+    DWORD             dwCookie = 0;  // event handling
 
-  if ( !fInitialized )
-    OLEInit();
+    if ( !fInitialized )
+        OLEInit();
 
-  /* get event handler & release */
-  RxString = (RexxString *)REXX_GETVAR("!EVENTHANDLER");
-  pszRxString = string_data(RxString);
-  if (*pszRxString != '!') {
-    sscanf(pszRxString, "%p", &pEventHandler);
+    /* If there is an event handler, release it */
+    RxString = (RexxString *)REXX_GETVAR("!EVENTHANDLER");
+    if ( RxString )
+    {
+        pszRxString = string_data(RxString);
+        sscanf(pszRxString, "%p", &pEventHandler);
 
-    RxString = (RexxString *)REXX_GETVAR("!CONNECTIONPOINT");
-    pszRxString = string_data(RxString);
-    if (*pszRxString != '!')
-      sscanf(pszRxString, "%p", &pConnectionPoint);
+        RxString = (RexxString *)REXX_GETVAR("!CONNECTIONPOINT");
+        if ( RxString )
+        {
+            pszRxString = string_data(RxString);
+            sscanf(pszRxString, "%p", &pConnectionPoint);
+            if ( pConnectionPoint )
+            {
+                RxString = (RexxString *)REXX_GETVAR("!EVENTHANDLERCOOKIE");
+                if ( RxString )
+                {
+                    pszRxString = string_data(RxString);
+                    sscanf(pszRxString, "%ld", &dwCookie);
+                }
+                pConnectionPoint->Unadvise(dwCookie);   // remove connection
+                pConnectionPoint->Release();            // free cp
+            }
 
-    RxString = (RexxString *)REXX_GETVAR("!EVENTHANDLERCOOKIE");
-    pszRxString = string_data(RxString);
-    sscanf(pszRxString, "%ld", &dwCookie);
+        }
 
-    if (pConnectionPoint != NULL) {
-      pConnectionPoint->Unadvise(dwCookie);   // remove connection
-      pConnectionPoint->Release();            // free cp
+        if ( pEventHandler != NULL )
+        {
+            pEventHandler->Release();        // terminate event handler
+        }
     }
-    if (pEventHandler != NULL) {
-      pEventHandler->Release();        // terminate event handler
+
+    /** Get the IDispatch pointer for the OLE object.  Theoretically, we have to
+     *  have the IDispatch pointer or we would never be here.  But, ... make
+     *  sure we do have it.
+     */
+    RxString = (RexxString *)REXX_GETVAR("!IDISPATCH");
+    if ( RxString )
+    {
+        pszRxString = string_data(RxString);
+        sscanf(pszRxString, "%p", &pDispatch);
     }
 
-  }
-
-  /* get the IDispatch pointer for that object */
-  RxString = (RexxString *)REXX_GETVAR("!IDISPATCH");
-  pszRxString = string_data(RxString);
-  sscanf(pszRxString, "%p", &pDispatch);
-  //fprintf(stdout,"DBG: %p _Uninit\n",pDispatch);
-
-  /* get the CLSID for that object */
-  RxString = (RexxString *)REXX_GETVAR("!CLSID");
-  pszRxString = string_data(RxString);
-  if (*pszRxString != '!')
-  {
-    pClsInfo = psFindClassInfo(pszRxString, NULL);
-    if (pClsInfo)
-      pTypeInfo = pClsInfo->pTypeInfo;
-  }
-  else
-  {
-    /* we don't have a CLSID, so get type info pointer */
-    RxString = (RexxString *)REXX_GETVAR("!ITYPEINFO");
-    pszRxString = string_data(RxString);
-    sscanf(pszRxString, "%p", &pTypeInfo);
-    if (pTypeInfo)
-      pClsInfo = psFindClassInfo(NULL, pTypeInfo);
-  } /* endif */
-
-  /* if typeinfo was NOT retrieved from !ITYPEINFO */
-  /* of the object it must NOT be released!!       */
-  RxString = (RexxString *)REXX_GETVAR("!ITYPEINFO");
-  pszRxString = string_data(RxString);
-  if (*pszRxString != '!') {
-//  if ( pTypeInfo ) /* we have a type info - release instance */
-//  {
-    pTypeInfo->Release();
-    pTypeInfo = NULL;
-  } /* endif */
-
-  if ( pClsInfo )
-  {
-    /* reduce instance counter, clear item if 0 reached */
-    pClsInfo->iInstances--;
-    if ( pClsInfo->iInstances == 0 )
-      ClearClassInfoBlock( pClsInfo );
-  } /* endif */
-
-  if ( pDispatch )
-  {
-    pDispatch->Release();
-  } /* endif */
-
-  if (iInstanceCount > 0) {
-    iInstanceCount--;
-    if (iInstanceCount == 0) {
-      destroyTypeLibList();  // remove info list on constants
-      OleUninitialize();
+    /** For some OLE objects we will only have an IDispatch pointer, for others
+     *  we will have the dispatch pointer and internal class info. We try to
+     *  find the internal info through !CLSID or !ITYPEINFO.
+     */
+    RxString = (RexxString *)REXX_GETVAR("!CLSID");
+    if ( RxString )
+    {
+        pszRxString = string_data(RxString);
+        pClsInfo = psFindClassInfo(pszRxString, NULL);
     }
-  }
-  return ooRexxNil;
+    else
+    {
+        /* We don't have a CLSID, try the type info pointer */
+        RxString = (RexxString *)REXX_GETVAR("!ITYPEINFO");
+        if ( RxString )
+        {
+            pszRxString = string_data(RxString);
+            sscanf(pszRxString, "%p", &pTypeInfo);
+            if ( pTypeInfo )
+            {
+                pClsInfo = psFindClassInfo(NULL, pTypeInfo);
+                pTypeInfo->Release();
+            }
+        }
+    }
+
+    if ( pClsInfo )
+    {
+        /* reduce instance counter, clear item if 0 reached */
+        pClsInfo->iInstances--;
+        if ( pClsInfo->iInstances == 0 )
+            ClearClassInfoBlock( pClsInfo );
+    }
+
+    if ( pDispatch )
+    {
+        pDispatch->Release();
+    }
+
+    if ( iInstanceCount > 0 )
+    {
+        iInstanceCount--;
+        if ( iInstanceCount == 0 )
+        {
+            destroyTypeLibList();  // remove info list on constants
+            OleUninitialize();
+        }
+    }
+    return ooRexxNil;
 }
 
 
@@ -2964,16 +2974,19 @@ RexxMethod3(REXXOBJECT,                // Return type
 
   /* get the IDispatch pointer for that object */
   RxString = (RexxString *)REXX_GETVAR("!IDISPATCH");
-  pszRxString = string_data(RxString);
-  sscanf(pszRxString, "%p", &pDispatch);
+  if ( RxString )
+  {
+    pszRxString = string_data(RxString);
+    sscanf(pszRxString, "%p", &pDispatch);
+  }
   if (!pDispatch)
     send_exception(Error_Interpretation_initialization);
 
   /* get the CLSID for that object */
   RxString = (RexxString *)REXX_GETVAR("!CLSID");
-  pszRxString = string_data(RxString);
-  if (*pszRxString != '!')
+  if ( RxString )
   {
+    pszRxString = string_data(RxString);
     pClsInfo = psFindClassInfo(pszRxString, NULL);
     if (pClsInfo)
       pTypeInfo = pClsInfo->pTypeInfo;
@@ -2982,10 +2995,13 @@ RexxMethod3(REXXOBJECT,                // Return type
   {
     /* we don't have a CLSID, so get type info pointer */
     RxString = (RexxString *)REXX_GETVAR("!ITYPEINFO");
-    pszRxString = string_data(RxString);
-    sscanf(pszRxString, "%p", &pTypeInfo);
-    if (pTypeInfo)
-      pClsInfo = psFindClassInfo(NULL, pTypeInfo);
+    if ( RxString )
+    {
+      pszRxString = string_data(RxString);
+      sscanf(pszRxString, "%p", &pTypeInfo);
+      if (pTypeInfo)
+        pClsInfo = psFindClassInfo(NULL, pTypeInfo);
+    }
   } /* endif */
 
   pszFunction = pszStringDupe(string_data(msgName));
@@ -3621,18 +3637,21 @@ RexxMethod2(REXXOBJECT,                // Return type
   if ( !fInitialized )
     OLEInit();
 
-  /* get the IDispatch pointer for that object */
+  /* Get the IDispatch pointer for the OLE object we represent. */
   RxString = (RexxString *)REXX_GETVAR("!IDISPATCH");
-  pszRxString = string_data(RxString);
-  sscanf(pszRxString, "%p", &pDispatch);
+  if ( RxString )
+  {
+    pszRxString = string_data(RxString);
+    sscanf(pszRxString, "%p", &pDispatch);
+  }
   if (!pDispatch)
     send_exception(Error_Interpretation_initialization);
 
-  /* get the CLSID for that object */
+  /* See if we have internal class info stored for the OLE object */
   RxString = (RexxString *)REXX_GETVAR("!CLSID");
-  pszRxString = string_data(RxString);
-  if (*pszRxString != '!')
+  if ( RxString )
   {
+    pszRxString = string_data(RxString);
     pClsInfo = psFindClassInfo(pszRxString, NULL);
 
     if (pClsInfo)
@@ -3640,13 +3659,16 @@ RexxMethod2(REXXOBJECT,                // Return type
   }
   else
   {
-    /* we don't have a CLSID, so get type info pointer */
+    /* We don't have a CLSID, see if we have a type info pointer */
     RxString = (RexxString *)REXX_GETVAR("!ITYPEINFO");
-    pszRxString = string_data(RxString);
-    sscanf(pszRxString, "%p", &pTypeInfo);
-    if (pTypeInfo)
-      pClsInfo = psFindClassInfo(NULL, pTypeInfo);
-  } /* endif */
+    if ( RxString )
+    {
+      pszRxString = string_data(RxString);
+      sscanf(pszRxString, "%p", &pTypeInfo);
+      if (pTypeInfo)
+        pClsInfo = psFindClassInfo(NULL, pTypeInfo);
+    }
+  }
 
   if (stricmp(string_data(classID), "ARRAY") == 0)
   {
@@ -3827,6 +3849,10 @@ RexxMethod2(REXXOBJECT,                // Return type
 //     to get hold of internal data stored with other REXX OLE objects they
 //     are handling.
 //
+// DFX TODO This method now can return NULL when it never did before.  Need to
+// track down every where this is called and ensure the code can handle getting
+// back NULL.
+//
 //******************************************************************************
 RexxMethod2(REXXOBJECT,                // Return type
             OLEObject_GetVar,          // Object_method name
@@ -3856,6 +3882,11 @@ RexxMethod2(REXXOBJECT,                // Return type
 //     library of the object. If the constant with this name can not be
 //     found .NIL will be returned indicating failure of the search.
 //
+//     It is *only* possible to retrieve this information through the Type
+//     Library of the OLE object.  It is not required that an OLE object have a
+//     type library.  If we have no stored internal class info, then it is not
+//     possible to determine the value of the constant.
+//
 //******************************************************************************
 RexxMethod2(REXXOBJECT,                // Return type
             OLEObject_GetConst,        // Object_method name
@@ -3864,7 +3895,6 @@ RexxMethod2(REXXOBJECT,                // Return type
 {
   RexxString      *RxString;
   const char      *pszRxString;
-  IDispatch       *pDispatch = NULL;     // IDispatch is not NEEDED !!! remove!
   ITypeInfo       *pTypeInfo = NULL;
   POLECLASSINFO   pClsInfo = NULL;
   POLECONSTINFO   pConstInfo = NULL;
@@ -3874,13 +3904,9 @@ RexxMethod2(REXXOBJECT,                // Return type
   if ( !fInitialized )
     OLEInit();
 
-  /* get the IDispatch pointer for that object
-  RxString = (RexxString *)REXX_GETVAR("!IDISPATCH");
-  pszRxString = string_data(RxString);
-  sscanf(pszRxString, "%p", &pDispatch);
-*/
-
-  /* get the CLSID for that object */
+  /** Try to retrieve the internal class info through either the !CLSID  or
+   *  !TYPEINFO variables.
+   */
   RxString = (RexxString *)REXX_GETVAR("!CLSID");
   pszRxString = string_data(RxString);
   if (*pszRxString != '!')
@@ -3891,13 +3917,16 @@ RexxMethod2(REXXOBJECT,                // Return type
   }
   else
   {
-    /* we don't have a CLSID, so get type info pointer */
+    /* No CLSID, try the type info pointer */
     RxString = (RexxString *)REXX_GETVAR("!ITYPEINFO");
-    pszRxString = string_data(RxString);
-    sscanf(pszRxString, "%p", &pTypeInfo);
-    if (pTypeInfo)
-      pClsInfo = psFindClassInfo(NULL, pTypeInfo);
-  } /* endif */
+    if ( RxString )
+    {
+      pszRxString = string_data(RxString);
+      sscanf(pszRxString, "%p", &pTypeInfo);
+      if (pTypeInfo)
+        pClsInfo = psFindClassInfo(NULL, pTypeInfo);
+    }
+  }
 
   if ( pClsInfo && constName)
   {
@@ -4131,76 +4160,81 @@ RexxMethod1(REXXOBJECT,                // Return type
   if ( !fInitialized )
     OLEInit();
 
-  /* get the IDispatch pointer for that object */
+  /* Get the IDispatch pointer for the OLE object we represent */
   RxString = (RexxString *)REXX_GETVAR("!IDISPATCH");
-  pszRxString = string_data(RxString);
-  if (sscanf(pszRxString, "%p", &pDispatch) != 1) send_exception(Error_Interpretation_initialization);
+  if ( RxString )
+  {
+    pszRxString = string_data(RxString);
+    sscanf(pszRxString, "%p", &pDispatch);
+  }
 
+  if ( ! pDispatch )
+  {
+    send_exception(Error_Interpretation_initialization);
+  }
 
-  if (pDispatch) {
-    hResult = pDispatch->GetTypeInfoCount(&iTypeInfoCount);
-    // check if type information is available
-    if (iTypeInfoCount && SUCCEEDED(hResult)) {
-      hResult = pDispatch->GetTypeInfo(0, LOCALE_USER_DEFAULT, &pTypeInfo);  // AddRef type info pointer
-      // did we get a ITypeInfo interface pointer?
-      if (pTypeInfo) {
-        // create a Stem that will contain all info
-        RxResult = ooRexxSend0(ooRexxSend0(ooRexxEnvironment,"STEM"),"NEW");
+  hResult = pDispatch->GetTypeInfoCount(&iTypeInfoCount);
+  // check if type information is available
+  if (iTypeInfoCount && SUCCEEDED(hResult)) {
+    hResult = pDispatch->GetTypeInfo(0, LOCALE_USER_DEFAULT, &pTypeInfo);  // AddRef type info pointer
+    // did we get a ITypeInfo interface pointer?
+    if (pTypeInfo) {
+      // create a Stem that will contain all info
+      RxResult = ooRexxSend0(ooRexxSend0(ooRexxEnvironment,"STEM"),"NEW");
 
-        // get type library
-        hResult = pTypeInfo->GetContainingTypeLib(&pTypeLib,&iTypeIndex); // AddRef type lib pointer
-        if (hResult == S_OK && pTypeLib) {
-          BSTR         bName, bDoc;
-          ITypeInfo   *pTypeInfo2 = NULL;
+      // get type library
+      hResult = pTypeInfo->GetContainingTypeLib(&pTypeLib,&iTypeIndex); // AddRef type lib pointer
+      if (hResult == S_OK && pTypeLib) {
+        BSTR         bName, bDoc;
+        ITypeInfo   *pTypeInfo2 = NULL;
 
-          // Get the library name and documentation
-          hResult = pTypeLib->GetDocumentation(-1,&bName,&bDoc,NULL,NULL);
-          if (bName) {
-            sprintf(pszInfoBuffer,"%S",bName);
-            ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!LIBNAME"));
-          }
-          if (bDoc) {
-            sprintf(pszInfoBuffer,"%S",bDoc);
-            ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!LIBDOC"));
-          }
-          SysFreeString(bName);
-          SysFreeString(bDoc);
+        // Get the library name and documentation
+        hResult = pTypeLib->GetDocumentation(-1,&bName,&bDoc,NULL,NULL);
+        if (bName) {
+          sprintf(pszInfoBuffer,"%S",bName);
+          ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!LIBNAME"));
+        }
+        if (bDoc) {
+          sprintf(pszInfoBuffer,"%S",bDoc);
+          ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!LIBDOC"));
+        }
+        SysFreeString(bName);
+        SysFreeString(bDoc);
 
-          // Now get the COM class name and documentation
-          hResult = pTypeLib->GetDocumentation(iTypeIndex,&bName,&bDoc,NULL,NULL);
-          if (bName) {
-            sprintf(pszInfoBuffer,"%S",bName);
-            ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!COCLASSNAME"));
-          }
-          if (bDoc) {
-            sprintf(pszInfoBuffer,"%S",bDoc);
-            ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!COCLASSDOC"));
-          }
-
-          hResult = pTypeLib->GetTypeInfo(iTypeIndex,&pTypeInfo2);   // AddRef type info pointer2
-          if (pTypeInfo2) {
-            hResult = pTypeInfo2->GetTypeAttr(&pTypeAttr);           // AddRef type attr pointer
-            if (hResult == S_OK) {
-              InsertTypeInfo(pTypeInfo2,pTypeAttr,RxResult,&iCount);
-              pTypeInfo2->ReleaseTypeAttr(pTypeAttr);                // Release type attr pointer
-            }
-          }
-
-          pTypeInfo2->Release();                                     // Release type info pointer2
-          SysFreeString(bName);
-          SysFreeString(bDoc);
-
-          sprintf(pszInfoBuffer,"%d",iCount);
-          ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("0"));
-
+        // Now get the COM class name and documentation
+        hResult = pTypeLib->GetDocumentation(iTypeIndex,&bName,&bDoc,NULL,NULL);
+        if (bName) {
+          sprintf(pszInfoBuffer,"%S",bName);
+          ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!COCLASSNAME"));
+        }
+        if (bDoc) {
+          sprintf(pszInfoBuffer,"%S",bDoc);
+          ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("!COCLASSDOC"));
         }
 
-        if (pTypeLib) pTypeLib->Release();                           // Release type lib pointer
-        pTypeInfo->Release();                                        // Release type info pointer
+        hResult = pTypeLib->GetTypeInfo(iTypeIndex,&pTypeInfo2);   // AddRef type info pointer2
+        if (pTypeInfo2) {
+          hResult = pTypeInfo2->GetTypeAttr(&pTypeAttr);           // AddRef type attr pointer
+          if (hResult == S_OK) {
+            InsertTypeInfo(pTypeInfo2,pTypeAttr,RxResult,&iCount);
+            pTypeInfo2->ReleaseTypeAttr(pTypeAttr);                // Release type attr pointer
+          }
+        }
 
-      } /* end if (type info pointer) */
-    } /* end if (type info available) */
-  } /* endif (dispatch pointer) */
+        pTypeInfo2->Release();                                     // Release type info pointer2
+        SysFreeString(bName);
+        SysFreeString(bDoc);
+
+        sprintf(pszInfoBuffer,"%d",iCount);
+        ooRexxSend2(RxResult,"[]=",ooRexxString(pszInfoBuffer),ooRexxString("0"));
+
+      }
+
+      if (pTypeLib) pTypeLib->Release();                           // Release type lib pointer
+      pTypeInfo->Release();                                        // Release type info pointer
+
+    } /* end if (type info pointer) */
+  } /* end if (type info available) */
 
   return RxResult;
 }
@@ -4378,7 +4412,8 @@ RexxMethod2(REXXOBJECT,                      // Return type
 //
 //   Notes:
 //     This method will retrieve the needed information from the object's
-//     event list which was created in Init.
+//     event list which was created in Init, if the user requested events and if
+//     the OLE object supports connnection points.
 //
 //******************************************************************************
 RexxMethod1(REXXOBJECT,                // Return type
@@ -4400,12 +4435,10 @@ RexxMethod1(REXXOBJECT,                // Return type
   if ( !fInitialized )
     OLEInit();
 
-  /* get the event object that contains the list */
+  /* See if we have the event object that contains the list */
   RxString = (RexxString *)REXX_GETVAR("!EVENTHANDLER");
-  pszRxString = string_data(RxString);
-
-  // got a pointer?
-  if (*pszRxString != '!') {
+  if ( RxString ) {
+    pszRxString = string_data(RxString);
     if (sscanf(pszRxString, "%p", &pEventHandler) != 1) send_exception(Error_Interpretation_initialization);
 
     if (pEventHandler) {
@@ -4559,6 +4592,8 @@ RexxMethod3(REXXOBJECT,                // Return type
         if (SUCCEEDED(hResult))
         {
           sprintf(szBuffer, "IDISPATCH=%p", pDispatch);
+          printf("OLEObject~GetObject got IID_IDispatch: %p IMoniker: %p display name: %s\n",
+                 pDispatch, pMoniker, string_data(argString));
           if (OLEObjectClass == optClass)
             ResultObj = ooRexxSend2(optClass, "NEW", ooRexxString(szBuffer), ooRexxString("WITHEVENTS"));
           else
