@@ -1408,9 +1408,9 @@ void Rexx2Variant(RexxObject *_RxObject, VARIANT *pVariant, VARTYPE _DestVt, siz
     if (fIsOLEObject(RxObject))
     {
       RxString = (RexxString *)ooRexxSend1(RxObject, "!GETVAR", ooRexxString("!IDISPATCH"));
-      pszRxString = string_data(RxString);
-      if (*pszRxString != '!')
+      if (RxString)
       {
+        pszRxString = string_data(RxString);
         if (fByRef) {
           if (sscanf(pszRxString, "%p", &(V_DISPATCHREF(pVariant))) == 1)
           {
@@ -3849,18 +3849,17 @@ RexxMethod2(REXXOBJECT,                // Return type
 //     to get hold of internal data stored with other REXX OLE objects they
 //     are handling.
 //
-// DFX TODO This method now can return NULL when it never did before.  Need to
-// track down every where this is called and ensure the code can handle getting
-// back NULL.
-//
 //******************************************************************************
 RexxMethod2(REXXOBJECT,                // Return type
             OLEObject_GetVar,          // Object_method name
             OSELF, self,               // Pointer to self
             CSTRING, varName)          // string defining variable to query
 {
-  /* get the desired variable */
-  return REXX_GETVAR(varName);
+  RexxString *RxString REXX_GETVAR(varName);
+  if ( RxString )
+    return RxString
+  else
+    return ooRexxNil;
 }
 
 
@@ -4592,8 +4591,6 @@ RexxMethod3(REXXOBJECT,                // Return type
         if (SUCCEEDED(hResult))
         {
           sprintf(szBuffer, "IDISPATCH=%p", pDispatch);
-          printf("OLEObject~GetObject got IID_IDispatch: %p IMoniker: %p display name: %s\n",
-                 pDispatch, pMoniker, string_data(argString));
           if (OLEObjectClass == optClass)
             ResultObj = ooRexxSend2(optClass, "NEW", ooRexxString(szBuffer), ooRexxString("WITHEVENTS"));
           else
