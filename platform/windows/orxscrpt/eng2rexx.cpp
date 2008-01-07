@@ -109,24 +109,28 @@ LONG APIENTRY RexxCatchExit(LONG ExitNumber, LONG Subfunction, PEXIT parmblock)
 {
    char **names;
    size_t iCount;
+   RexxString *rxString = NULL;
    LinkedList *myList = NULL;
 
    // get LISTOFNAMES, containing a pointer to the list that will
    // store all names we find out here...
-   sscanf(string_data(REXX_GETVAR("LISTOFNAMES")),"%p",&myList);
+   rxString = (RexxString *)REXX_GETVAR("LISTOFNAMES");
+   if ( rxString )  {
+     sscanf(string_data(rxString),"%p",&myList);
 
-   if (myList) {
+     if (myList) {
 
-     /* obtain all PUBLIC routines from the current activation */
-     REXX_GETFUNCTIONNAMES(&names,&iCount);
-     // if there were any, add to the list
-     if (iCount) {
-       while (iCount) {
-         iCount--;
-         myList->AddItem(names[iCount],LinkedList::Beginning,NULL);
-         GlobalFree(names[iCount]);
+       /* obtain all PUBLIC routines from the current activation */
+       REXX_GETFUNCTIONNAMES(&names,&iCount);
+       // if there were any, add to the list
+       if (iCount) {
+         while (iCount) {
+           iCount--;
+           myList->AddItem(names[iCount],LinkedList::Beginning,NULL);
+           GlobalFree(names[iCount]);
+         }
+         GlobalFree(names);
        }
-       GlobalFree(names);
      }
    }
 
