@@ -324,6 +324,7 @@ STDMETHODIMP ESource::InitEvent(IDispatch *SourceDispatch,
                  FILE *LogFile) {
   ITypeInfo *SourceType;
   TYPEATTR  *TypeAttributes;
+  OLECHAR    lGUID[50];
   BSTR       SourceName;
   unsigned int NameCount;
   int        i;
@@ -769,8 +770,8 @@ STDMETHODIMP ESource::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
   FPRINTF(logfile,"ESource::Invoke\n");
 #endif
 #if defined(DEBUGZ)          // Parms unique to Invoke(), & ignored by CommonInvoke().
-  char    lIID[100];
-  StringFromGUID2(riid,(unsigned short *)lIID,sizeof(lIID)/2);
+  OLECHAR    lIID[100];
+  StringFromGUID2(riid, lIID, sizeof(lIID));
   FPRINTF2(logfile,"riid %S \n",lIID);
   FPRINTF2(logfile,"pArgErr %p\n",pArgErr);
 #endif
@@ -967,6 +968,7 @@ STDMETHODIMP ESource::AddMap(char *Name, PEMAP *pbNewMap) {
 STDMETHODIMP ESource::SetMap(LPCOLESTR pName, DISPID SinkDispID) {
   PEMAP     Map;
   HRESULT   RetCode=S_OK;
+  int       tab;
 
 
 #if defined(DEBUGC)+defined(DEBUGZ)
@@ -982,7 +984,7 @@ STDMETHODIMP ESource::SetMap(LPCOLESTR pName, DISPID SinkDispID) {
    */
   while(Map) {
 #if defined(DEBUGZ)
-    int tab = 20 - wcslen(pName);
+    tab = 20 - wcslen(pName);
     tab = tab < 1 ? 1 : tab;
   FPRINTF2(logfile,"ESource::SetMap \"%S\" %*s \"%S\"\n",pName,tab," ",Map->SourceEventName);
 #endif

@@ -36,15 +36,49 @@
 @REM /*                                                                            */
 @REM /*----------------------------------------------------------------------------*/
 @echo off
-del e:\orxdev\win32dbg\dllfuncs.obj
-del e:\orxdev\win32dbg\eng2rexx.obj
-del e:\orxdev\win32dbg\engfact.obj
-del e:\orxdev\win32dbg\nameditem.obj
-del e:\orxdev\win32dbg\scrptdebug.obj
-del e:\orxdev\win32dbg\orxIDispatch.obj
-del e:\orxdev\win32dbg\OrxEvents.obj
-del e:\orxdev\win32dbg\orxscrpt.obj
-del e:\orxdev\win32dbg\classfactory.obj
-del e:\orxdev\win32dbg\utilities.obj
-del e:\orxdev\win32dbg\OrxScrptError.obj
-del e:\orxdev\win32dbg\*.log
+
+IF %SRC_DRV%x == x GOTO HELP_SRC_DRV
+IF %SRC_DIR%x == x GOTO HELP_SRC_DRV
+
+del %SRC_DRV%%SRC_DIR%\Win32Rel\dllfuncs.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\eng2rexx.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\engfact.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\nameditem.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\scrptdebug.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\orxIDispatch.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\OrxDispID.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\orxscrpt.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\classfactory.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\utilities.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\OrxScrptError.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\ORXSCRPT.dll >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\ORXSCRPT.exp >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\ORXSCRPT.lib >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\ORXSCRPT.map >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Rel\*.log >nul 2>&1
+
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\dllfuncs.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\eng2rexx.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\engfact.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\nameditem.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\scrptdebug.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\orxIDispatch.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\OrxDispID.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\orxscrpt.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\classfactory.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\utilities.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\OrxScrptError.obj >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\ORXSCRPT.dll >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\ORXSCRPT.exp >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\ORXSCRPT.lib >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\ORXSCRPT.map >nul 2>&1
+del %SRC_DRV%%SRC_DIR%\Win32Dbg\*.log >nul 2>&1
+
+goto END
+
+:HELP_SRC_DRV
+echo This clean, cleans only orxscrpt.
+echo To use it, you have to set SRC_DRV and SRC_DIR correctly
+echo in the environment.  Or, edit this *.bat file by hand
+
+:END

@@ -47,6 +47,15 @@ all: $(OR_OUTDIR)\ORXSCRPT.dll
 
 !include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
 
+# To add just debugging for this DLL, uncomment / comment the following as
+# appropriate
+
+# Adds debugging for this DLL in a otherwise relese build, plus orxscrpt logging
+#ORXSCRPT_DEBUG = /D_DEBUG /DEBUGTYPE:CV /DDEBUGC /DDEBUGZ
+
+# Adds just the orxscrpt logging.
+#ORXSCRPT_DEBUG = /DDEBUGC /DDEBUGZ
+
 !IFNDEF OR_ORYXAXSCRIPT
 !ERROR Build error, OR_ORYXAXSCRIPT not set
 !ENDIF
@@ -101,4 +110,4 @@ $(OR_OUTDIR)\ORXSCRPT.dll : $(CPPOBJS) $(RXDBG_OBJ) $(OR_OUTDIR)\ORXSCRPT.lib \
 $(CPPOBJS):  $(@B).cpp
     @ECHO .
     @ECHO Compiling $(@B).cpp
-    $(OR_CC) $(cflags_common) /EHsc $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_ORYXAXSCRIPT)\$(@B).cpp
+    $(OR_CC) $(cflags_common) /EHsc $(cflags_dll) $(ORXSCRPT_DEBUG) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_ORYXAXSCRIPT)\$(@B).cpp

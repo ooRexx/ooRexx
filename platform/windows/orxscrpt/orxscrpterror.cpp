@@ -71,12 +71,13 @@ OrxScriptError::~OrxScriptError()  {
 /*************************************************************/
 STDMETHODIMP OrxScriptError::QueryInterface(REFIID riid, void **ppvObj){
   HRESULT hResult = E_NOINTERFACE;
-  char    cIID[100],*IIDName,TrulyUnknown[]="??????";
+  OLECHAR  cIID[100];
+  char    *IIDName,TrulyUnknown[]="??????";
 
 
 #if defined(DEBUGC)+defined(DEBUGZ)
   if(RunDestructor && logfile) FPRINTF2(logfile,"\n");
-  StringFromGUID2(riid,(unsigned short *)cIID,sizeof(cIID)/2);
+  StringFromGUID2(riid, cIID, sizeof(cIID));
   if(RunDestructor && logfile) FPRINTF(logfile,"OrxScriptError::QueryInterface (ppvObj = %p,\n    riid = %S \n",ppvObj,cIID);
 #endif
   //  We should look this riid up in HKClass_Root\Interface\.... to print what it represents.  <----

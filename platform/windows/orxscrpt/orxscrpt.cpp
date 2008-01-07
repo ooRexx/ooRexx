@@ -298,12 +298,13 @@ OrxScript::~OrxScript() {
 /*************************************************************/
 STDMETHODIMP OrxScript::QueryInterface(REFIID riid, void **ppvObj){
   HRESULT hResult = E_NOINTERFACE;
-  char    cIID[100],*IIDName,TrulyUnknown[]="??????";
+  OLECHAR  cIID[100];
+  char    *IIDName,TrulyUnknown[]="??????";
 
 
 #if defined(DEBUGC)+defined(DEBUGZ)
   FPRINTF2(logfile,"\n");
-  StringFromGUID2(riid,(unsigned short *)cIID,sizeof(cIID)/2);
+  StringFromGUID2(riid, cIID, sizeof(cIID));
   FPRINTF(logfile, "OrxScript::QueryInterface (ppvObj = %p \n",ppvObj);
   FPRINTF2(logfile,"riid = %S \n",cIID);
 #endif
@@ -520,8 +521,8 @@ STDMETHODIMP OrxScript::GetScriptSite(REFIID riid, void **povSiteObject) {
 // what this is supposed to do.
 
 #if defined(DEBUGC)+defined(DEBUGZ)
-  char    cIID[100];
-  StringFromGUID2(riid,(unsigned short *)cIID,sizeof(cIID)/2);
+  OLECHAR    cIID[100];
+  StringFromGUID2(riid, cIID, sizeof(cIID));
   FPRINTF(logfile,"OrxScript::GetScriptSite (riid = %S, povSiteObject = %p)\n",cIID,povSiteObject);
   FPRINTF2(logfile,"OrxScript::GetScriptSite() Not yet implemented!!!!!\n");
 #endif
@@ -839,10 +840,10 @@ STDMETHODIMP OrxScript::AddTypeLib(REFGUID rguidTypeLib, DWORD dwMaj, DWORD dwMi
   bool       added;
 
 #if defined(DEBUGC)+defined(DEBUGZ)
-  char    cIID[100];
-  char    space[]="                 ";
+  OLECHAR  cIID[100];
+  char     space[]="                 ";
   FPRINTF3(logfile,"\n");
-  StringFromGUID2(rguidTypeLib,(unsigned short *)cIID,sizeof(cIID));
+  StringFromGUID2(rguidTypeLib, cIID, sizeof(cIID));
   FPRINTF(logfile,"OrxScript::AddTypeLib (rguidTypeLib = %S,\n\
    dwMaj = %08x, dwMin = %08x, dwFlags = %08x)\n",cIID,dwMaj,dwMin,dwFlags);
   FPRINTF2(logfile,"In english the dwFlags signifies:\n");
@@ -1668,9 +1669,10 @@ STDMETHODIMP OrxScript::GetInterfaceSafetyOptions(REFIID iid,
 
 
 #if defined(DEBUGC)+defined(DEBUGZ)
-  char    cIID[100],*IIDName,TrulyUnknown[]="??????";
+  OLECHAR   cIID[100];
+  char     *IIDName,TrulyUnknown[]="??????";
 
-  StringFromGUID2(iid,(unsigned short *)cIID,sizeof(cIID)/2);
+  StringFromGUID2(iid, cIID, sizeof(cIID));
   if(!(IIDName = NameThatInterface((OLECHAR *)&cIID[0]))) IIDName = &TrulyUnknown[0];
   FPRINTF(logfile,"OrxScript::GetInterfaceSafetyOptions() - Start\n");
   FPRINTF2(logfile,"riid = %S (%s)\n",cIID,IIDName);
@@ -1711,10 +1713,11 @@ STDMETHODIMP OrxScript::SetInterfaceSafetyOptions(REFIID iid, DWORD dwOptionSetM
 
 
 #if defined(DEBUGC)+defined(DEBUGZ)
-  char    cIID[100],*IIDName,TrulyUnknown[]="??????";
+  OLECHAR  cIID[100];
+  char    *IIDName,TrulyUnknown[]="??????";
 
   // _asm int 3
-  StringFromGUID2(iid,(unsigned short *)cIID,sizeof(cIID)/2);
+  StringFromGUID2(iid, cIID, sizeof(cIID));
   if(!(IIDName = NameThatInterface((OLECHAR *)&cIID[0]))) IIDName = &TrulyUnknown[0];
   FPRINTF(logfile,"OrxScript::SetInterfaceSafetyOptions() - Start\n");
   FPRINTF2(logfile,"riid = %S (%s)\n",cIID,IIDName);
