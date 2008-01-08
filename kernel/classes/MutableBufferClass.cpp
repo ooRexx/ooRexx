@@ -298,7 +298,7 @@ RexxMutableBuffer *RexxMutableBuffer::insert(RexxObject *str, RexxObject *pos, R
     }
     else
     {
-        ensureCapacity(insertLength = (begin - dataLength));
+        ensureCapacity(insertLength + (begin - dataLength));
     }
 
 
