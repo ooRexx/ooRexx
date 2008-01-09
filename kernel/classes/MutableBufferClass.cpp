@@ -287,16 +287,16 @@ RexxMutableBuffer *RexxMutableBuffer::insert(RexxObject *str, RexxObject *pos, R
     size_t copyLength = Numerics::minVal(insertLength, string->getLength());
     size_t padLength = insertLength - copyLength;
 
-    // if inserting a zero length string, this is simple!
-    if (insertLength == 0)
-    {
-        return this;                            /* do nothing                   */
-    }
 
     // if inserting within the current bounds, we only need to add the length
     // if inserting beyond the end, we need to make sure we add space for the gap too
     if (begin < dataLength)
     {
+        // if inserting a zero length string, this is simple!
+        if (insertLength == 0)
+        {
+            return this;                            /* do nothing                   */
+        }
         ensureCapacity(insertLength);
     }
     else
