@@ -284,6 +284,9 @@ RexxMutableBuffer *RexxMutableBuffer::insert(RexxObject *str, RexxObject *pos, R
 
     char padChar = get_pad(pad, ' ', ARG_FOUR);
 
+    size_t copyLength = Numerics::minVal(insertLength, string->getLength());
+    size_t padLength = insertLength - copyLength;
+
     // if inserting a zero length string, this is simple!
     if (insertLength == 0)
     {
@@ -313,11 +316,11 @@ RexxMutableBuffer *RexxMutableBuffer::insert(RexxObject *str, RexxObject *pos, R
         data->setData(dataLength, padChar, begin - dataLength);
     }
     /* insert string contents       */
-    data->copyData(begin, string->getStringData(), string->getLength());
+    data->copyData(begin, string->getStringData(), copyLength);
     // do we need data padding?
-    if (insertLength > string->getLength())
+    if (padLength > 0)
     {
-        data->setData(begin + string->getLength(), padChar, insertLength - string->getLength());
+        data->setData(begin + string->getLength(), padChar, padLength);
     }
     // inserting after the end? the resulting length is measured from the insertion point
     if (begin > this->dataLength)
