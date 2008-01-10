@@ -121,28 +121,28 @@ int SetEnvironmentVariable(
   return 0;                            /* return success                    */
 }
 
-RexxObject *SysValue(
+bool SysValue(
     RexxString *Name,                  /* variable name                     */
     RexxObject *NewValue,              /* new assigned value                */
-    RexxString *Selector )             /* variable selector                 */
+    RexxString *Selector,              /* variable selector                 */
+    RexxObject *&result)
 {
   const char * OldValue;               /* old environment value             */
 
   Selector = Selector->upper();        /* upper case the selector           */
                                        /* Linux environment variables can   */
                                        /* be lowercased                     */
-  // Name = Name->upper();             /* and the name too                  */
+                                       /* and the name too                  */
   if (!Selector->strCompare(SELECTOR)) /* correct selector?                 */
-                                       /* flag this error                   */
-    reportException(Error_Incorrect_call_selector, Selector);
+  {
+      return false;                    // we can't handle this one
+  }
                                        /* scan for the variable             */
-  RexxString *Retval;
-
   OldValue = getenv(Name->getStringData());
   if (OldValue != NULL)                /* have a value already?   */
-    Retval = new_string(OldValue);    /* Yes -  convert to Rexx string     */
+    result = new_string(OldValue);    /* Yes -  convert to Rexx string     */
   else
-    Retval = OREF_NULLSTRING;          /* otherwise, return null            */
+    result = OREF_NULLSTRING;          /* otherwise, return null            */
 
   if (NewValue != OREF_NULL)           /* if there's a new value, set it    */
   {
@@ -155,7 +155,7 @@ RexxObject *SysValue(
     SetEnvironmentVariable(Name, REQUIRED_STRING(NewValue, ARG_TWO));
     }
   }
-  return Retval;                       /* return old value                  */
+  return true;
 }
 
 

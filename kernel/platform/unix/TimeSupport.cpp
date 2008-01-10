@@ -145,7 +145,6 @@ RexxMethod2(void, alarm_startTimer,
                      wholenumber_t, numdays,
                      wholenumber_t, alarmtime)
 {
-  APIRET rc;                           /* return code                       */
   RexxSemaphore sem;                   /* Event-semaphore                   */
   SEV semHandle;                       /* semaphore handle                  */
   int  msecInADay = 86400000;          /* number of milliseconds in a day   */

@@ -603,43 +603,25 @@ APIRET APIENTRY RexxQueryExit(
 
 /*********************************************************************/
 /*                                                                   */
-/*  Function Name:   RexxCallExit                                    */
+/*  Function Name:   RexxResolveExit                                 */
 /*                                                                   */
-/*  Description:     Executes a system exit.                         */
+/*  Description:     Resolves a system exit.                         */
 /*                                                                   */
-/*  Entry Point:     RexxCallExit                                    */
+/*  Entry Point:     RexxResolveExit                                 */
 /*                                                                   */
 /*  Parameter(s):    name       -  Name of the desired system exit   */
-/*                   dll        -  Name of the desired dll           */
-/*                   fnc        -  Exit function number              */
-/*                   subfnc      - Exit subfunction number           */
-/*                   param_block - Exit parameter block              */
+/*                   handler    -  returned handler                  */
 /*                                                                   */
-/*  Return Value:    Return code from exit if the exit ran           */
-/*                   -1 otherwise                                    */
+/*  Return Value:    0 if the exit was resolved or rc from the       */
+/*                   resolution                                      */
 /*                                                                   */
 /*********************************************************************/
-int APIENTRY RexxCallExit(
+int APIENTRY RexxResolveExit(
   const char * name,                   /* Exit name.                 */
-  const char * dll,                    /* dll name.                  */
-  int   fnc,                           /* Exit function.             */
-  int   subfnc,                        /* Exit subfunction.          */
-  PEXIT param_block )                  /* Exit parameter block.      */
+  REXXPFN *handler)
 {
-  RexxExitHandler *exit_address;       /* Exit's calling address.    */
-  int      rc;                         /* Function return code.      */
   void *plib = NULL;
-
-  if (!(rc=RegLoad(name, dll, REGSYSEXIT, (REXXPFN *)&exit_address, &plib)))
-  {
-                                       /* call                       */
-    rc = (*exit_address)(fnc, subfnc, param_block);
-    if(plib)
-      dlclose(plib);                   /* free the DLL               */
-  }
-  else
-    rc = -1;
-  return (rc);                         /* and exit with return code  */
+  return RegLoad(name, NULL, REGSYSEXIT, (REXXPFN *)&handler, &plib);
 }
 
 

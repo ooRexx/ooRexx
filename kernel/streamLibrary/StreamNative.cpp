@@ -78,7 +78,7 @@ int    unknown_tr(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *us
 #define get_stream_info() get_verified_stream_info((STREAM_INFO *)StreamBuffer)
 
 inline STREAM_INFO * get_verified_stream_info(STREAM_INFO * StreamBuffer) {
-    if (!StreamBuffer) send_exception(Error_Incorrect_call);
+    if (!StreamBuffer) rexx_exception(Error_Incorrect_call);
     return StreamBuffer; }
 
 
@@ -382,7 +382,7 @@ void get_stream_type(                  /* read a line from an I/O stream    */
                                        /* use the dataset size as reclength */
          if (!(stream_info->stream_reclength = stream_size(stream_info)))
                                        /* raise an error for zero size      */
-           send_exception(Error_Incorrect_call);
+           rexx_exception(Error_Incorrect_call);
      }
    }
    else {
@@ -594,7 +594,7 @@ TTS *ttsp;
                                                  /* the input string should be upper cased         */
      if (parser(ttsp, ts, (void *)(&stream_info->stream_reclength)) != 0)
                                        /* this is an error                  */
-       send_exception(Error_Incorrect_call);
+       rexx_exception(Error_Incorrect_call);
    }
 /********************************************************************************************/
 /*           move over parse parameters into the stream info block                          */
@@ -1055,10 +1055,10 @@ void set_char_read_position(
 
     if (stream_info->flags.transient)  /* trying to move a transient stream?*/
                                        /* this is an error                  */
-      send_exception(Error_Incorrect_method_stream_type);
+      rexx_exception(Error_Incorrect_method_stream_type);
     if (position < 1)                  /* too small?                        */
                                        /* report an error also              */
-      send_exception1(Error_Incorrect_method_positive, ooRexxArray2(IntegerOne, ooRexxInteger(position)));
+      rexx_exception2(Error_Incorrect_method_positive, IntegerOne, ooRexxInteger(position));
                                        /* make sure we're within the bounds */
     if (stream_size(stream_info) >= position) {
                                        /* try to move to the new position   */
@@ -1087,10 +1087,10 @@ void set_line_read_position(
 
     if (stream_info->flags.transient)  /* trying to move a transient stream?*/
                                        /* this is an error                  */
-      send_exception(Error_Incorrect_method_stream_type);
+      rexx_exception(Error_Incorrect_method_stream_type);
     if (position < 1)                  /* too small?                        */
                                        /* report an error also              */
-      send_exception1(Error_Incorrect_method_positive, ooRexxArray2(IntegerOne, ooRexxInteger(position)));
+      rexx_exception2(Error_Incorrect_method_positive, IntegerOne, ooRexxInteger(position));
     if (position == 1) {               /* going to the start?               */
                                        /* set the position to the beginning */
       stream_info->line_read_char_position = 1;
@@ -1151,10 +1151,10 @@ void set_char_write_position(
   if (position != SIZE_MAX) {          /* have a position specified?        */
     if (stream_info->flags.transient)  /* trying to move a transient stream?*/
                                        /* this is an error                  */
-      send_exception(Error_Incorrect_method_stream_type);
+      rexx_exception(Error_Incorrect_method_stream_type);
     if (position < 1)                  /* too small?                        */
                                        /* report an error also              */
-      send_exception1(Error_Incorrect_method_positive, ooRexxArray2(IntegerOne, ooRexxInteger(position)));
+      rexx_exception2(Error_Incorrect_method_positive, IntegerOne, ooRexxInteger(position));
                                        /* try to move to the new position   */
     if (set_stream_position(position - 1))
                                        /* go raise appropriate notready     */
@@ -1176,10 +1176,10 @@ void set_line_write_position(
   if (position != SIZE_MAX) {          /* have a position specified?        */
     if (stream_info->flags.transient)  /* trying to move a transient stream?*/
                                        /* this is an error                  */
-      send_exception(Error_Incorrect_method_stream_type);
+      rexx_exception(Error_Incorrect_method_stream_type);
     if (position < 1)                  /* too small?                        */
                                        /* report an error also              */
-      send_exception1(Error_Incorrect_method_positive, ooRexxArray2(IntegerOne, ooRexxInteger(position)));
+      rexx_exception2(Error_Incorrect_method_positive, IntegerOne, ooRexxInteger(position));
     if (position == 1) {               /* going to the start?               */
                                        /* set the position to the beginning */
       stream_info->line_write_char_position = 1;
@@ -1503,7 +1503,7 @@ RexxMethod4(REXXOBJECT, stream_charin,
      read_length = 1;                  /* use the default length            */
    else if (read_length < 0)           /* no read requested?                */
                                        /* this is a bad count               */
-     send_exception(Error_Incorrect_method);
+     rexx_exception(Error_Incorrect_method);
    buffer = get_buffer(read_length);   /* get a read buffer                 */
                                        /*  issue the read                   */
    result = (REXXOBJECT)read_stream_line((RexxObject *)self, stream_info, buffer, read_length, !stream_info->flags.transient || stream_info->flags.binary);
@@ -1580,7 +1580,7 @@ RexxMethod4(REXXOBJECT, stream_linein,
    if (count != SIZE_MAX) {            /* no read length specified?         */
      if (count != 1 && count != 0)     /* count out of range?               */
                                        /* this is a bad count               */
-       send_exception(Error_Incorrect_method);
+       rexx_exception(Error_Incorrect_method);
    }
    setup_read_stream(OREF_NULLSTRING); /* do needed setup                   */
    if (position != SIZE_MAX)           /* have a position?                  */
@@ -1643,7 +1643,7 @@ RexxMethod3(size_t, stream_lines,
      if (ch == 'N')
        quickflag = 1;
      else if (ch != 'C')
-       send_exception(Error_Incorrect_method);
+       rexx_exception(Error_Incorrect_method);
    }
    stream_info = get_stream_info();    /* get the stream block              */
    if (!stream_info->flags.open)       /* not open yet?                     */
@@ -1902,7 +1902,7 @@ RexxMethod4(size_t, stream_lineout,
                                        /* call to routine                   */
      if (stream_info->stream_reclength < (signed)slength + ((stream_info->char_write_position % stream_info->stream_reclength) - 1))
                                        /* this is an error                  */
-       send_exception(Error_Incorrect_call);
+       rexx_exception(Error_Incorrect_call);
                                        /* same length as record length?     */
      if (stream_info->stream_reclength == slength)
                                        /* just write out the line as is     */
@@ -2214,7 +2214,7 @@ TTS *ttsp;
                                        /* go process the syntax             */
      if (parser(ttsp, ts, (void *)(&stream_info->stream_reclength)) != 0)
                                        /* this is an error                  */
-       send_exception(Error_Incorrect_call);
+       rexx_exception(Error_Incorrect_call);
    }
                                        /* save the open parameters in the   */
                                        /* stream block                      */
@@ -2227,7 +2227,7 @@ TTS *ttsp;
                                        /* do                                */
    if (i_binary && (oflag & o_trunc) && !stream_info->stream_reclength)
                                        /* this is an error                  */
-     send_exception(Error_Incorrect_call);
+     rexx_exception(Error_Incorrect_call);
                                        /* if write and append specified     */
                                        /* make sure append won              */
    if ((oflag & o_append) && (oflag & o_creat)) {
@@ -2538,12 +2538,12 @@ TTS *ttsp;
                                        /* call the parser to fix up         */
      if (parser(ttsp, ts, (void *)(&Parse_Parms)) != 0)
                                        /* this is an error                  */
-       send_exception(Error_Incorrect_call);
+       rexx_exception(Error_Incorrect_call);
    }
 
    if (stream_info->flags.transient)   /* trying to move a transient stream?*/
                                        /* this is an error                  */
-     send_exception(Error_Incorrect_method_stream_type);
+     rexx_exception(Error_Incorrect_method_stream_type);
 
 /********************************************************************************************/
 /*           set up the defaults for parameters not specified                               */
@@ -2551,7 +2551,7 @@ TTS *ttsp;
                                        /* position offset must be specified */
    if (!(position_flags & position_offset_specified))
                                        /* this is an error                  */
-     send_exception1(Error_Incorrect_call_noarg, ooRexxArray2(ooRexxString("SEEK"), ooRexxString("offset")));
+     rexx_exception2(Error_Incorrect_call_noarg, ooRexxString("SEEK"), ooRexxString("offset"));
                                        /* if direction was not specified    */
                                        /*   default from start (absolute)   */
    if (0 == from_start + from_end + forward + labs((signed)backward)) {
@@ -2972,7 +2972,7 @@ TTS *ttsp;
                                        /* parse the command string          */
      if (parser(ttsp, ts, (void *)(&dummy_parms)) != 0)
                                        /* this is an error                  */
-       send_exception(Error_Incorrect_call);
+       rexx_exception(Error_Incorrect_call);
    }
 
    if (!stream_info->flags.open)       /* unopened stream?                  */

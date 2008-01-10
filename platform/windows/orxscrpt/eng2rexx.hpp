@@ -39,13 +39,8 @@
 #ifndef ENG2REXX
 #define ENG2REXX
 
-#include "RexxCore.h"
 #include "rexx.h"
 #include "RexxNativeAPI.h"
-#include "ObjectClass.hpp"
-#include "StringClass.hpp"
-#include "ArrayClass.hpp"
-#include "RexxActivity.hpp" // needed for extended external function call catcher
 
 /************ DEFINED IN WINMAIN.C *****************/
 typedef struct _ConditionData {
@@ -67,10 +62,8 @@ extern Index *thread2EngineList;
 
 LONG APIENTRY RexxCatchExit(LONG, LONG, PEXIT);
 LONG APIENTRY RexxCatchExternalFunc(LONG, LONG, PEXIT);
-RexxObject* __stdcall engineDispatch(const char *);
-RexxObject* __stdcall propertyChange(RexxString*,RexxObject*,int,int*);
 int __stdcall scriptSecurity(CLSID,IUnknown*);
-RexxObject* Create_securityObject(OrxScript *, FILE *);
+REXXOBJECT Create_securityObject(OrxScript *, FILE *);
 void __stdcall parseText(void*);
 void __stdcall createCode(void*);
 void __stdcall runMethod(void*);
@@ -79,21 +72,18 @@ void __stdcall runMethod(void*);
 // so we have to give the prototypes here, they're not in rexx.h:
 void REXXENTRY RexxCreateDirectory(const char *);
 void REXXENTRY RexxRemoveDirectory(const char *);
-APIRET REXXENTRY RexxCreateMethod(const char *, PRXSTRING, RexxObject **, ConditionData *);
-APIRET REXXENTRY RexxLoadMethod(const char *, PRXSTRING, RexxObject **);
-APIRET REXXENTRY RexxStoreMethod(RexxObject*, PRXSTRING);
+APIRET REXXENTRY RexxCreateMethod(const char *, PRXSTRING, REXXOBJECT *, ConditionData *);
+APIRET REXXENTRY RexxLoadMethod(const char *, PRXSTRING, REXXOBJECT *);
+APIRET REXXENTRY RexxStoreMethod(REXXOBJECT, PRXSTRING);
 void WinGetVariables(void (__stdcall *callback)(void*));
 void WinEnterKernel(bool);
 void WinLeaveKernel(bool);
 extern "C" {
-APIRET REXXENTRY RexxRunMethod(const char *, RexxObject *, void *, RexxArray* (__stdcall *)(void*), PRXSYSEXIT, RexxObject * *, RexxObject *, ConditionData *);
-
-void REXXENTRY SetNovalueCallback( RexxObject* (__stdcall *f)(const char *) );
-void REXXENTRY SetWSHPropertyChange( RexxObject* (__stdcall *f)(RexxString*,RexxObject*,int,int*) );
+APIRET REXXENTRY RexxRunMethod(const char *, REXXOBJECT, void *, REXXOBJECT (__stdcall *)(void*), PRXSYSEXIT, REXXOBJECT *, REXXOBJECT, ConditionData *);
 }
 // these three come from orexxole.c
-RexxObject *Variant2Rexx(VARIANT *);
-void Rexx2Variant(RexxObject *, VARIANT *, VARTYPE, size_t);
+REXXOBJECT Variant2Rexx(VARIANT *);
+void Rexx2Variant(REXXOBJECT, VARIANT *, VARTYPE, size_t);
 void setCreationCallback(int (__stdcall *f)(CLSID, IUnknown*));
 
 #endif

@@ -104,44 +104,10 @@ RexxObject  *RexxParseVariable::evaluate(
                                        /* look up the name                  */
   variable = context->getLocalVariable(variableName, index);
   value = variable->getVariableValue();/* get the value                     */
-  if (value == OREF_NULL) {            /* no value yet?                     */
-                                       /* try for an externally supplied    */
-                                       /* value                             */
-#ifdef SCRIPTING
-    // for investigation later: can't we just set the novalueHandler?
-    // but we have to leave the REXX.DLL and enter ORXSCRPT.DLL!
-    value = context->novalueHandler(this->variableName);
-    if (value == TheNilObject) {       /* no external value?                */
-      if (NovalueCallback) {
-        // in an ActiveX Script-Engine context:
-        RexxActivity *save = ActivityManager::currentActivity;  // save current activity
-
-        value = NovalueCallback(this->variableName->getStringData());
-
-        ActivityManager::currentActivity = save;  // restore current activity
-
-        // no value found in engine?
-        if (value == NULL) {
-          // raise novalue?
-          if (context->novalueEnabled())
-            reportNovalue(this->variableName);
-          // give it default value
-          value = this->variableName;
-        }
-        else
-          // set this variable to the object found in the engine
-          variable->set(value);
-      }
-      else {
-        if (context->novalueEnabled()) /* novalue trapping enabled?         */
-                                       /* handle novalue conditions         */
-          reportNovalue(this->variableName);
-        value = this->variableName;    /* just use the name                 */
-      }
-    }
-#else
-    value = context->handleNoValueEvent(this->variableName);
-#endif
+  if (value == OREF_NULL)              /* no value yet?                     */
+  {
+      // try the various novalue mechanisms
+      value = context->handleNovalueEvent(variableName, variable);
   }
   stack->push(value);                  /* place on the evaluation stack     */
                                        /* trace if necessary                */

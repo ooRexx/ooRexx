@@ -52,7 +52,7 @@ EXPORTS
      RexxRegisterExitExe
      RexxDeregisterExit
      RexxQueryExit
-     RexxCallExit
+     RexxResolveExit
      RexxCallSubcom
      RexxRegisterFunctionDll
      RexxRegisterFunctionExe

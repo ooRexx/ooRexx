@@ -76,6 +76,7 @@ public:
     static RexxActivation *newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code);
     static void cacheActivation(RexxActivation *activation);
     static RexxActivity *newActivity(int priority);
+    static RexxActivity *newActivity(RexxActivity *);
     static void haltAllActivities();
     static void traceAllActivities(bool on);
     static bool setActivityTrace(thread_id_t thread_id, bool on_or_off);
@@ -243,6 +244,25 @@ inline void reportHalt(RexxString *description)
 
 
 inline RexxActivity *new_activity()  { return ActivityManager::newActivity(MEDIUM_PRIORITY); }
+inline RexxActivity *new_activity(RexxActivity *parent)  { return ActivityManager::newActivity(parent); }
+
+
+inline RexxString *lastMessageName()
+/******************************************************************************/
+/* Function:  Return name of last message sent via messageSend()              */
+/******************************************************************************/
+{
+  return ActivityManager::currentActivity->getLastMessageName();
+}
+
+inline RexxMethod *lastMethod()
+/******************************************************************************/
+/* Function:  Return last invoked method object (for use by kernel methods    */
+/*            only)                                                           */
+/******************************************************************************/
+{
+    return ActivityManager::currentActivity->getLastMethod();
+}
 
 
 /**

@@ -520,7 +520,7 @@ RexxObject *RexxClass::defineMethod(
                                        /* check if this is a rexx class     */
   if ( this->isRexxDefined())
                                        /* report as a nomethod condition    */
-    reportNomethod(last_msgname(), this);
+    reportNomethod(lastMessageName(), this);
                                        /* make sure there is at least one   */
                                        /* parameter                         */
   method_name = REQUIRED_STRING(method_name, ARG_ONE)->upper();
@@ -602,7 +602,7 @@ RexxObject *RexxClass::deleteMethod(
 {
   if (this->isRexxDefined())           /* check if this is a rexx class     */
                                        /* report as a nomethod condition    */
-    reportNomethod(last_msgname(), this);
+    reportNomethod(lastMessageName(), this);
                                        /* and that it can be a string        */
   method_name = REQUIRED_STRING(method_name, ARG_ONE)->upper();
                                        /* make a copy of the instance        */
@@ -927,7 +927,7 @@ RexxObject *RexxClass::inherit(
                                        /* make sure this isn't a rexx       */
   if (this->isRexxDefined())           /* defined class being changed       */
                                        /* report as a nomethod condition    */
-    reportNomethod(last_msgname(), this);
+    reportNomethod(lastMessageName(), this);
   required_arg(mixin_class, ONE);      /* make sure it was passed in        */
 
                                        /* check the mixin class is really a */
@@ -1013,7 +1013,7 @@ RexxObject *RexxClass::uninherit(
                                        /* make sure this isn't rexx defined */
   if (this->isRexxDefined())           /* class that is being changed       */
                                        /* report as a nomethod condition    */
-    reportNomethod(last_msgname(), this);
+    reportNomethod(lastMessageName(), this);
   required_arg(mixin_class, ONE);      /* make sure it was passed in        */
 
                                        /* check that the mixin class is a   */

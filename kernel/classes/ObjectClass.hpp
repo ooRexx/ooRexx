@@ -416,7 +416,7 @@ class RexxObject : public RexxInternalObject {
      void         messageSend(RexxString *, size_t, RexxObject **, RexxObject *, ProtectedObject &);
      RexxMethod  *checkPrivate(RexxMethod *);
      void         processUnknown(RexxString *, size_t, RexxObject **, ProtectedObject &);
-     void         processProtectedMethod(RexxString *, size_t, RexxObject **, ProtectedObject &);
+     void         processProtectedMethod(RexxString *, RexxMethod *, size_t, RexxObject **, ProtectedObject &);
      void         sendMessage(RexxString *, RexxArray *, ProtectedObject &);
      inline void  sendMessage(RexxString *message, ProtectedObject &result) { this->messageSend(message, 0, OREF_NULL, result); };
      inline void  sendMessage(RexxString *message, RexxObject **args, size_t argCount, ProtectedObject &result) { this->messageSend(message, argCount, args, result); };

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/* http://www.oorexx.org/license.html                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,112 +35,56 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#ifndef ProtectedObject_Included
-#define ProtectedObject_Included
 
-#include "RexxActivity.hpp"
-#include "ActivityManager.hpp"
+#include "RexxCore.h"                         /* global REXX definitions        */
+#include "RexxNativeAPI.h"                  /* Lot's of useful REXX macros    */
 
-class RexxInstruction;
 
-class ProtectedObject
+/******************************************************************************/
+/* activation_rxfuncadd - Method to support RXFUNCADD function                */
+/******************************************************************************/
+RexxMethod3(REXXOBJECT,sysRxfuncadd,CSTRING,name,CSTRING,module,CSTRING,proc)
 {
-friend class RexxActivity;
-public:
-    inline ProtectedObject() : protectedObject(OREF_NULL), next(NULL)
+    /* must have two arguments           */
+    if (name == NO_CSTRING || module == NO_CSTRING)
     {
-        // it would be better to have the activity class do this, but because
-        // we're doing this with inline methods, we run into a bit of a
-        // circular reference problem
-        next = ActivityManager::currentActivity->protectedObjects;
-        ActivityManager::currentActivity->protectedObjects = this;
+        /* raise an error                    */
+        rexx_exception(Error_Incorrect_call);
     }
-
-    inline ProtectedObject(RexxObject *o) : protectedObject(o), next(NULL)
+    if (proc == NO_CSTRING)              /* no procedure given?               */
     {
-        next = ActivityManager::currentActivity->protectedObjects;
-        ActivityManager::currentActivity->protectedObjects = this;
+        proc = name;                       /* use the defined name              */
     }
-
-    inline ProtectedObject(RexxInternalObject *o) : protectedObject((RexxObject *)o), next(NULL)
-    {
-        next = ActivityManager::currentActivity->protectedObjects;
-        ActivityManager::currentActivity->protectedObjects = this;
-    }
-
-    inline ~ProtectedObject()
-    {
-        // remove ourselves from the list and give this object a
-        // little hold protection.
-        ActivityManager::currentActivity->protectedObjects = next;
-        if (protectedObject != OREF_NULL)
-        {
-            holdObject(protectedObject);
-        }
-    }
-
-    inline ProtectedObject & operator=(RexxObject *o)
-    {
-        protectedObject = o;
-        return *this;
-    }
-
-    inline bool operator == (RexxObject *o)
-    {
-        return protectedObject == o;
-    }
-
-    inline bool operator != (RexxObject *o)
-    {
-        return protectedObject != o;
-    }
-
-    // cast conversion operators for some very common uses of protected object.
-    inline operator RexxObject *()
-    {
-        return protectedObject;
-    }
-
-    inline operator RexxString *()
-    {
-        return (RexxString *)protectedObject;
-    }
-
-    inline operator RexxMethod *()
-    {
-        return (RexxMethod *)protectedObject;
-    }
-
-    inline operator RexxArray *()
-    {
-        return (RexxArray *)protectedObject;
-    }
-
-    // this conversion helps the parsing process protect objects
-    inline operator RexxInstruction *()
-    {
-        return (RexxInstruction *)protectedObject;
-    }
-
-    inline operator void *()
-    {
-        return (void *)protectedObject;
-    }
-
-protected:
-    RexxObject *protectedObject;       // next in the chain of protected object
-    ProtectedObject *next;             // the pointer protected by the object
-};
+    /* try to register the function      */
+    return RexxRegisterFunctionDll(name, module, proc) == 0 ? ooRexxTrue : ooRexxFalse;
+}
 
 
-class ProtectedSet : public ProtectedObject
+/******************************************************************************/
+/* activation_rxfuncdrop - Method to support RXFUNCDROP function              */
+/******************************************************************************/
+RexxMethod1(REXXOBJECT,sysRxfuncdrop,CSTRING,name)
 {
-public:
-    inline ProtectedSet() : ProtectedObject() { }
-    inline ~ProtectedSet() { }
+    if (name == NO_CSTRING)              /* must have a name                  */
+    {
+        /* raise an error                    */
+        rexx_exception(Error_Incorrect_call);
+    }
+    /* try to drop the function          */
+    return RexxDeregisterFunction(name) == 0 ? ooRexxTrue : ooRexxFalse;
+}
 
-    void add(RexxObject *);
-};
 
-
-#endif
+/******************************************************************************/
+/* activation_rxfuncquery - Method to support RXFUNCQUERY function            */
+/******************************************************************************/
+RexxMethod1(REXXOBJECT,sysRxfuncquery,CSTRING,name)
+{
+    if (name == NO_CSTRING)              /* must have a name                  */
+    {
+        /* raise an error                    */
+        rexx_exception(Error_Incorrect_call);
+    }
+    /* try to drop the function          */
+    return RexxQueryFunction(name) == 0 ? ooRexxTrue : ooRexxFalse;
+}

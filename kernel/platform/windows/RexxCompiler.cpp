@@ -53,6 +53,8 @@
 
 #define BUFFERLEN         256          /* Length of message bufs used       */
 
+// TODO:  Add these to the official API list
+
 extern "C" APIRET APIENTRY RexxTranslateProgram(const char *, const char *, PRXSYSEXIT);
 extern "C" char * APIENTRY RexxGetVersionInformation();
 

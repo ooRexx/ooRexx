@@ -55,7 +55,7 @@ FPRINTF2(logfile,"OrxNamedItem::~() \n");
 
 
 STDMETHODIMP OrxNamedItem::AddItem(LPCOLESTR pName, DWORD pFlags, IUnknown *pIUnk, ITypeInfo *pITyIn){
-  int       Len;
+  size_t    Len;
   PNID      Next;
   ListItem *Item;
   OLECHAR  *lName;
@@ -77,7 +77,7 @@ FPRINTF2(logfile,"OrxNamedItem::AddItem() Saving \"%S\"\n",pName);
   sprintf(Name,"%S",pName);
   Item = Items.AddItem(Name,LinkedList::End,(void *)Next);
   if(Next && Item) {
-    lName = (OLECHAR *)((int)Next+sizeof(NID));
+    lName = (OLECHAR *)((char *)Next + sizeof(NID));
     wcscpy(lName,pName);
     Next->Name     = lName;
     Next->Flags    = pFlags;
@@ -121,7 +121,7 @@ FPRINTF2(logfile,"OrxNamedItem::AddItem() Leaving with a HRESULT of %08x\n",RetC
 
 
 STDMETHODIMP OrxNamedItem::AddItem(LPCOLESTR pName, DWORD pFlags, IDispatch *pIDisp, ITypeInfo *pTypeInfo, DISPID pDispID, PNID *pbNamedItem){
-  int       Len;
+  size_t    Len;
   PNID      Next;
   ListItem *Item;
   OLECHAR  *lName;
@@ -139,7 +139,7 @@ FPRINTF2(logfile,"OrxNamedItem::AddItem(DISPID) Saving \"%S\"\n",pName);
   Item = Items.AddItem(Name,LinkedList::End,(void *)Next);
   *pbNamedItem = NULL;
   if(Next && Item) {
-    lName = (OLECHAR *)((int)Next+sizeof(NID));
+    lName = (OLECHAR *)((char *)Next+sizeof(NID));
     wcscpy(lName,pName);
     Next->Name     = lName;
     Next->Flags    = pFlags;
@@ -254,7 +254,7 @@ FPRINTF2(logfile,"OrxNamedItem::WhoKnows() looking for \"%s\"\n",pName);
             // one object in JSCRIPT.DLL does not like the common way of using
             // BSTR (OLECHAR*), so this code creates something that has the length
             // of the OLECHAR array before the actual characters in memory...
-            unsigned int len = wcslen(lName);
+            size_t len = wcslen(lName);
             OLECHAR *VB_BSTR = (OLECHAR*) malloc(4+sizeof(OLECHAR)*(len+1));
             *((unsigned int*) VB_BSTR) = len;
             memcpy(VB_BSTR+2,lName,sizeof(OLECHAR)*(len+1));

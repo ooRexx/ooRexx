@@ -197,6 +197,15 @@
 #define RXDBG    11                   /* Test ext trace indicator before instruction.   */
 #define    RXDBGTST  1                /* subcode value.              */
 
+#define RXEXF    12                   /* scripting function call     */
+#define    RXEXFCAL 1                 /* subcode value.              */
+
+#define RXVAR    13                   /* novalue variable exit       */
+#define    RXVARNOVALUE 1             /* subcode value.              */
+
+#define RXVAL    14                   /* value() function exit       */
+#define    RXVALCALL    1             /* subcode value.              */
+
 /* Return codes for the debug exit */
 
 #define    RXDBGOFF  0                /* set trace off */

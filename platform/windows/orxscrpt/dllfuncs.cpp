@@ -71,17 +71,6 @@ BOOL APIENTRY DllMain(HANDLE hModule,
     // init REXX for this process, to keep directory entries
     // alive as long as this process is up
     RexxInitialize();
-    // enable calling back to our code if REXX interpret "hits"
-    // a unknown object name
-    SetNovalueCallback(engineDispatch);
-    // enable calling back for VALUE function with WSHPROPERTY selector
-    SetWSHPropertyChange(propertyChange);
-    // turn off dispatch messages, otherwise the WSH will interfere
-    // with the execution of the engine code and will cause everything
-    // to hang...
-
-    // TODO: This needs to be really sorted out.
-//RexxSetProcessMessages(FALSE);
 
     mutex = CreateMutex(NULL,false,NULL); // we're in deep trouble if this is zero after the call!
 
@@ -100,6 +89,8 @@ BOOL APIENTRY DllMain(HANDLE hModule,
       rc = RexxRegisterExitDll("RexxCatchExit","orxscrpt.dll","RexxCatchExit",NULL,RXEXIT_NONDROP);
       rc += RexxRegisterExitDll("RexxCatchExternalFunc","orxscrpt.dll","RexxCatchExternalFunc",NULL,RXEXIT_NONDROP);
       rc += RexxRegisterExitDll("RexxRetrieveVariables","orxscrpt.dll","RexxRetrieveVariables",NULL,RXEXIT_NONDROP);
+      rc += RexxRegisterExitDll("RexxNovalueHandler","orxscrpt.dll","RexxNovalueHandler",NULL,RXEXIT_NONDROP);
+      rc += RexxRegisterExitDll("RexxValueExtension","orxscrpt.dll","RexxValueExtension",NULL,RXEXIT_NONDROP);
       if (rc != RXEXIT_OK) {
         #if defined(DEBUGC)+defined(DEBUGZ)
         FPRINTF2(DLLlogfile,"registration failed!\n");
@@ -146,6 +137,8 @@ BOOL APIENTRY DllMain(HANDLE hModule,
         RexxDeregisterExit("RexxRetrieveVariables","orxscrpt.dll");
         RexxDeregisterExit("RexxCatchExternalFunc","orxscrpt.dll");
         RexxDeregisterExit("RexxCatchExit","orxscrpt.dll");
+        RexxDeregisterExit("RexxNovalueHandler","orxscrpt.dll");
+        RexxDeregisterExit("RexxValueExtension","orxscrpt.dll");
         #if defined(DEBUGC)+defined(DEBUGZ)
         FPRINTF2(DLLlogfile,"We are done with RexxDeregisterExit\n");
         #endif

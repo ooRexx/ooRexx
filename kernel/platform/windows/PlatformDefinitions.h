@@ -397,7 +397,6 @@ size_t line_write_check(const char * , size_t, FILE * );
 
 void SysTermination();              // No initialization / termination yet
 
-#define SysInitialize()
 extern bool HandleException;
 
                                        // our signal handling

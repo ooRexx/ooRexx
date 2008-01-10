@@ -93,7 +93,7 @@ typedef struct FLAGLISTstruct {
                                                a,                           \
                                                -1,                          \
                                                w,                           \
-                                               cb)
+                                               (int)(cb))
 
 //
 // WINBASEAPI

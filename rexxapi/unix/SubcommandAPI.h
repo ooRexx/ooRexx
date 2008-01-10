@@ -44,8 +44,6 @@
 extern "C" {
 #endif
 
-int APIENTRY RexxCallExit(const char *, const char *, int, int, PEXIT);
-
 /***    RexxLoadSubcom - Load a Subcommand environment */
 
 APIRET APIENTRY RexxLoadSubcom(
@@ -70,22 +68,8 @@ APIRET APIENTRY RexxCallSubcom(
 /***   Uppercase Entry Point Name */
 #define REXXCALLSUBCOM  RexxCallSubcom
 
-
-
-/***    RexxCallFunction - Call a function in the AFT */
-
-APIRET APIENTRY RexxCallFunction (
-        const char *,                  /* Name of function to call   */
-        size_t,                        /* Number of arguments        */
-        PCONSTRXSTRING,                /* Array of argument strings  */
-        int            *,              /* RC from function called    */
-        PRXSTRING,                     /* Storage for returned data  */
-        const char *);                 /* Name of active data queue  */
-
 #ifdef __cplusplus
 }
 #endif
 
-/***   Uppercase Entry Point Name */
-#define REXXCALLFUNCTION  RexxCallFunction
 #endif

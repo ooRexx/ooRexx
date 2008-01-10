@@ -40,7 +40,6 @@
 /*             handlers.                                                      */
 /*                                                                            */
 /*  C methods:                                                                */
-/*    SysExitHandler - Native method to invoke a system exit                  */
 /*    SysCommand     - Method to invoke a subcommand handler                  */
 /*                                                                            */
 /*  Internal routines:                                                        */
@@ -80,66 +79,6 @@ static bool ExplicitConsole;
                                        // function prototypes
 int  sys_command(const char *cmd, RexxString ** error_failure);
 int  sysCommandNT(const char *cmd, RexxString ** error_failure, bool direct);
-// LONG sysCommand32s(char *cmd, RexxString ** error_failure);
-
-/******************************************************************************/
-/* Arguments:  System Exit name                                               */
-/*             System Exit function code (see REXXSAA.H)                      */
-/*             System Exit subfunction code (see REXXSAA.H)                   */
-/*             Exit specific parm buffer                                      */
-/*                                                                            */
-/* Returned:   Return code (one of) -                                         */
-/*               RXEXIT_HANDLED (exit ran and handled task)                   */
-/*               RXEXIT_NOT_HANDLED (exit ran and declined task)              */
-/*               RXEXIT_RAISE_ERROR (exit didn't run or raised an error)      */
-/*                                                                            */
-/* Notes:      Inovkes a system exit routine.                                 */
-/******************************************************************************/
-bool SysExitHandler(
-  RexxActivity     * activity,         /* activity working under              */
-  RexxActivation   * activation,       /* activation working under            */
-  RexxString       * exitname,         /* name of the exit handler            */
-  int   function,                      /* major function                      */
-  int   subfunction,                   /* minor exit function                 */
-  void *exitbuffer,                    /* exit specific arguments             */
-  bool  enable )                       /* enable variable pool                */
-{
-  int   rc;                            /* exit return code                    */
-  const char *handler_name;            /* ASCII-Z handler name                */
-
-  handler_name = exitname->getStringData(); /* point to the handler name           */
-  activity->setCurrentExit(exitname);  /* save the exitname                   */
-/* CRITICAL window here -->>  ABSOLUTELY NO KERNEL CALLS ALLOWED              */
-
-                                       /* get ready to call the function      */
-  activity->exitKernel(activation, OREF_SYSEXITHANDLER, enable);
-
-                                       /* go call the handler                 */
-  rc = RexxCallExit(handler_name, NULL, function, subfunction, (PEXIT)exitbuffer);
-                                       /* now re-enter the kernel             */
-  activity->enterKernel();
-
-/* END CRITICAL window here -->>  kernel calls now allowed again              */
-  activity->setCurrentExit(OREF_NULL); /* clear the exitname                  */
-                                       /* got an error case?                  */
-
-  if (rc == RXEXIT_RAISE_ERROR || rc < 0) {
-    if (function == RXSIO) {           /* this the I/O function?              */
-                                       /* disable the I/O exit from here to   */
-                                       /* prevent recursive error conditions  */
-      activity->setSysExit(RXSIO, OREF_NULL);
-    }
-    if (function != RXTER)             /* not the termination exit?           */ // retrofir by IH
-                                       /* go raise an error                   */
-      reportException(Error_System_service_service, exitname);
-  }
-  if (rc == RXEXIT_HANDLED)            /* Did exit handle task?               */
-    return false;                      /* Yep                                 */
-  else                                 /* rc = RXEXIT_NOT_HANDLED             */
-    return true;                       /* tell caller to handle               */
-}
-
-
 
 /******************************************************************************/
 /* Name:       SysCommand                                                     */
@@ -187,7 +126,7 @@ RexxObject * SysCommand(
 /* CRITICAL window here -->>  ABSOLUTELY NO KERNEL CALLS ALLOWED              */
 
                                        /* get ready to call the function      */
-  activity->exitKernel(activation, OREF_COMMAND, true);
+  activity->exitKernel(activation);
   rc=RexxCallSubcom(current_address, NULL, &rxstrcmd, &flags, &sbrc, &retstr);
   activity->enterKernel();             /* now re-enter the kernel           */
 

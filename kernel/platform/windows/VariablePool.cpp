@@ -289,15 +289,6 @@ int   SysVariablePool(
                                        /* copy the value                    */
         pshvblock->shvret |= copy_value(version_number(), &pshvblock->shvvalue, &pshvblock->shvvaluelen);
       }
-                                       /* want the current exit?            */
-      else if (IS_EQUAL(variable, "EXITNAME")) {
-                                       /* get the exit name                 */
-        value = ActivityManager::currentActivity->getCurrentExit();
-        if (value == OREF_NULL)        /* is this a null?                   */
-          value = OREF_NULLSTRING;     /* this is a null string value       */
-                                       /* copy the value                    */
-        pshvblock->shvret |= copy_value(value, &pshvblock->shvvalue, &pshvblock->shvvaluelen);
-      }
                                        /* want the the current queue?       */
       else if (IS_EQUAL(variable, "QUENAME")) {
                                        /* copy the value                    */

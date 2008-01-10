@@ -64,7 +64,7 @@ typedef struct REXX_CODE_BLOCK_Struct {
   OLECHAR    *Name;          //  Item Name (or NULL) this is associated with.  (WhoKnows() may eventually need this, and the flags.)
   DWORD       Flags;         //  Received at the same time as the source.
   ULONG       StartingLN;    //  Line number the code started on.
-  RexxObject *Code;          //  Pointer to the tokenized code block.
+  REXXOBJECT  Code;          //  Pointer to the tokenized code block.
   } RCB, *PRCB;
 
 
@@ -256,20 +256,20 @@ class OrxScript : public LLLContent,
   /****** NON-INTERFACE PUBLIC METHODS ******/
   void __stdcall insertVariable(void*);
   char* getEngineName() { return EngineName; }
-  RexxObject *getSecurityManager() { return securityManager.Code; }
-  RexxObject *getSecurityObject() { return securityObject; }
+  REXXOBJECT  getSecurityManager() { return securityManager.Code; }
+  REXXOBJECT  getSecurityObject() { return securityObject; }
   DWORD getSafetyOptions() { return dwSafetyOptions; }
   OrxNamedItem* getNamedItems() { return NamedItemList; }
 
   IActiveScriptSite* getScriptSitePtr() { return pActiveScriptSite; }
-  VARIANT *GetExternalProperty(char *PropName) {
+  VARIANT *GetExternalProperty(const char *PropName) {
     PGVARIANT Property;
     Property =  (PGVARIANT)PropertyList.FindContent(PropName);
     if(Property) return &(Property->Mutant);
     else return NULL;
   }
 
-  void* findRexxFunction(char* name) {
+  void* findRexxFunction(const char* name) {
     ListItem *result = RexxFunctions->FindItem(name);
     if (result) return result->GetContent();
     return NULL;
@@ -319,7 +319,7 @@ STDMETHODIMP LocalParseProcedureText(
     /* [in]  */ OLECHAR    *Name,
     /* [in]  */ DWORD       Flags,
     /* [in]  */ ULONG       StartingLN,
-    /* [in]  */ RexxObject *Code,
+    /* [in]  */ REXXOBJECT  Code,
     /* [out] */ PRCB       *CodeBlock);
 
 
@@ -338,7 +338,7 @@ STDMETHODIMP LocalParseProcedureText(
     int                iEngineCount;               // Our Creation number.
     DWORD              dwSafetyOptions;            // Flags for Internet Explorer to allow scripts to execute.
     RCB                securityManager;            // REXX code for security manager
-    RexxObject        *securityObject;             // Object produced by running the Security Manager Code.
+    REXXOBJECT         securityObject;             // Object produced by running the Security Manager Code.
     OrxDispID          DispID;                     // The head of the chain of DispIDs that we support.
     OrxNamedItem      *NamedItemList;              // The head of the chain of NamedItems.
     VariantLList       PropertyList;               // The head of the chain of potential Properties.

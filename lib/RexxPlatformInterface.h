@@ -122,7 +122,7 @@ RexxString *SysVersion(void);          /* get the system version            */
 
 #ifndef SysValue
                                        /* system VALUE() builtin function   */
-RexxObject *SysValue(RexxString *, RexxObject *, RexxString *);
+bool SysValue(RexxString *, RexxObject *, RexxString *, RexxObject *&);
 #endif
 
 #ifndef SysUserid
@@ -140,7 +140,7 @@ void SysReleaseResultMemory(void *);   /* release a result memory block     */
 
 #ifndef SysExternalFunction
                                        /* call an external function         */
-void SysExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxObject **, size_t, RexxString *, bool *, ProtectedObject &);
+bool SysExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
 #endif
 
 #ifndef SysGetMacroCode
@@ -151,11 +151,6 @@ RexxMethod * SysGetMacroCode(RexxString *);
 #ifndef SysCommand
                                        /* invoke a command                  */
 RexxObject * SysCommand(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxString **);
-#endif
-
-#ifndef SysExitHandler
-                                       /* invoke an exit                    */
-bool SysExitHandler(RexxActivity *, RexxActivation *, RexxString *, int, int, void *, bool);
 #endif
 
 #ifndef SysThreadYield

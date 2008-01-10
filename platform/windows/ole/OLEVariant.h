@@ -47,8 +47,8 @@
 // Function prototypes for local functions
 static void convertToParamFlag( REXXOBJECT, int );
 static void convertToVT( REXXOBJECT, int );
-static RexxString * stringToVT( RexxString * );
-static RexxString * stringToFlags( RexxString * );
+static REXXOBJECT stringToVT(REXXOBJECT);
+static REXXOBJECT stringToFlags(REXXOBJECT);
 
 static __inline int  countSymbols( PSZ, CHAR );
 static __inline PSZ  stripNonCSyms( PSZ );

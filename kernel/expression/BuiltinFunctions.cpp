@@ -1668,7 +1668,8 @@ BUILTIN(VALUE) {
   int variableType = variable->isSymbol();
   bool assignable = variableType == STRING_NAME || variableType == STRING_STEM || variableType == STRING_COMPOUND_NAME;
 
-  if (selector == OREF_NULL) {         /* have a selector?                  */
+  if (selector == OREF_NULL)           /* have a selector?                  */
+  {
                                        /* get a variable retriever          */
     retriever = context->getVariableRetriever(variable);
     // this could an invalid name, or we might be trying to assign a value to a non-variable
@@ -1682,22 +1683,40 @@ BUILTIN(VALUE) {
     if (newvalue != OREF_NULL)       /* have a new value to assign?       */
                                      /* do the assignment                 */
       retriever->assign(context, stack, newvalue);
+    return result;                       /* return the indicator              */
   }
-  else if (selector->getLength() == 0) { /* null string selector?             */
+  else if (selector->getLength() == 0)   /* null string selector?             */
+  {
                                        /* get the existing value            */
     result = TheEnvironment->entry(variable);
     if (result == OREF_NULL)           /* not in the environment?           */
+    {
                                        /* turn into ".VARIABLE" as value    */
-      result = ((RexxString *)OREF_PERIOD)->concat(variable->upper());
+        result = ((RexxString *)OREF_PERIOD)->concat(variable->upper());
+    }
     if (newvalue != OREF_NULL)         /* have a new value?                 */
+    {
                                        /* do the set also                   */
-      TheEnvironment->setEntry(variable, newvalue);
+        TheEnvironment->setEntry(variable, newvalue);
+    }
+    return result;                       /* return the indicator              */
   }
-  else {                               /* external value function           */
-                                       /* need to go external on this       */
-    result = (RexxObject *)SysValue(variable, newvalue, selector);
+  else                                 /* external value function           */
+  {
+      // try the platform defined selectors.
+      if (SysValue(variable, newvalue, selector, result))
+      {
+          return result;
+      }
+      // if the exit passes on this, try the platform-defined selectors
+      if (!context->getActivity()->callValueExit(context, selector, variable, newvalue, result))
+      {
+          return result;
+      }
+      // this is an exception
+      reportException(Error_Incorrect_call_selector, selector);
   }
-  return result;                       /* return the indicator              */
+  return OREF_NULL;    // should never reach here
 }
 
 #define ABS_MIN 1
@@ -1981,14 +2000,16 @@ BUILTIN(LINEIN) {
   count = optional_integer(LINEIN, count);
   if (check_queue(name)) {             /* is this "QUEUE:"                  */
                                        /* if exit declines call             */
-    if (ActivityManager::currentActivity->sysExitMsqPll(context, &result)) {
+    if (context->getActivity()->callPullExit(context, result))
+    {
                                        /* get the default output stream     */
         stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
                                        /* pull from the queue               */
         result = (RexxString *)stream->sendMessage(OREF_LINEIN);
     }
   }
-  else {
+  else
+  {
                                        /* get a stream for this name        */
     stream = resolve_stream(name, context, stack, true, NULL, &added);
     switch (argcount) {                /* process according to argcount     */
@@ -2073,7 +2094,8 @@ BUILTIN(LINEOUT) {
   line = optional_integer(LINEOUT, line);
   if (check_queue(name)) {             /* is this "QUEUE:"                  */
                                        /* if exit declines call             */
-    if (ActivityManager::currentActivity->sysExitMsqPsh(context, string, QUEUE_FIFO)) {
+    if (context->getActivity()->callPushExit(context, string, QUEUE_FIFO))
+    {
       if (string != OREF_NULL) {       /* have an actual string to write?   */
                                        /* get the default output stream     */
         stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
@@ -2356,7 +2378,7 @@ BUILTIN(QUEUED) {
 
   check_args(QUEUED);                  /* check on required number of args  */
                                        /* get the default output stream     */
-  if (ActivityManager::currentActivity->sysExitMsqSiz(context, &queuesize)) {
+  if (context->getActivity()->callQueueSizeExit(context, queuesize)) {
     queue = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
                                        /* return count on the queue         */
     return queue->sendMessage(OREF_QUEUED);

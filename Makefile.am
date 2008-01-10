@@ -209,6 +209,7 @@ runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/LibraryManager.hpp \
                  $(runtime_dir)/Interpreter.hpp \
                  $(runtime_dir)/ProtectedObject.hpp \
+                 $(runtime_dir)/ExitHandler.hpp \
                  $(runtime_dir)/RexxBehaviour.hpp \
                  $(runtime_dir)/RexxBuiltinFunctions.h \
                  $(runtime_dir)/RexxCode.hpp \
@@ -389,6 +390,7 @@ classes_sources = $(classes_dir)/ArrayClass.cpp \
                   $(classes_dir)/TableClass.cpp \
                   $(classes_dir)/WeakReferenceClass.cpp
 expression_sources = $(expression_dir)/BuiltinFunctions.cpp \
+                     $(expression_dir)/CommonExternalFunctions.cpp \
                      $(expression_dir)/ExpressionCompoundVariable.cpp \
                      $(expression_dir)/ExpressionDotVariable.cpp \
                      $(expression_dir)/ExpressionFunction.cpp \
@@ -478,6 +480,8 @@ runtime_sources  = $(runtime_dir)/DeadObject.cpp \
                    $(runtime_dir)/RexxBehaviour.cpp \
                    $(runtime_dir)/RexxCode.cpp \
                    $(runtime_dir)/CPPCode.cpp \
+                   $(runtime_dir)/ExitHandler.cpp \
+                   $(runtime_dir)/ProtectedObject.cpp \
                    $(runtime_dir)/RexxCollection.cpp \
                    $(runtime_dir)/RexxCompoundElement.cpp \
                    $(runtime_dir)/RexxCompoundTable.cpp \

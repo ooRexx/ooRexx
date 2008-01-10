@@ -35,112 +35,46 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#ifndef ProtectedObject_Included
-#define ProtectedObject_Included
+/******************************************************************************/
+/* REXX Kernel                                                                */
+/*                                                                            */
+/* Manage a created instance of the interpreter                               */
+/*                                                                            */
+/******************************************************************************/
+#ifndef Included_ExitHandler_hpp
+#define Included_ExitHandler_hpp
 
-#include "RexxActivity.hpp"
-#include "ActivityManager.hpp"
+#include "RexxCore.h"
 
-class RexxInstruction;
+class RexxActivity;
 
-class ProtectedObject
+class ExitHandler
 {
-friend class RexxActivity;
 public:
-    inline ProtectedObject() : protectedObject(OREF_NULL), next(NULL)
+    inline ExitHandler() : entryPoint(NULL) { }
+    void setEntryPoint(REXXPFN e) { entryPoint = e; }
+    inline bool isEnabled()
     {
-        // it would be better to have the activity class do this, but because
-        // we're doing this with inline methods, we run into a bit of a
-        // circular reference problem
-        next = ActivityManager::currentActivity->protectedObjects;
-        ActivityManager::currentActivity->protectedObjects = this;
+        return entryPoint != NULL;
     }
 
-    inline ProtectedObject(RexxObject *o) : protectedObject(o), next(NULL)
+    inline void disable()
     {
-        next = ActivityManager::currentActivity->protectedObjects;
-        ActivityManager::currentActivity->protectedObjects = this;
+        entryPoint = NULL;
     }
 
-    inline ProtectedObject(RexxInternalObject *o) : protectedObject((RexxObject *)o), next(NULL)
+    int call(RexxActivity *activity, RexxActivation *activation, int major, int minor, void *parms);
+    inline ExitHandler & operator= (ExitHandler &o)
     {
-        next = ActivityManager::currentActivity->protectedObjects;
-        ActivityManager::currentActivity->protectedObjects = this;
-    }
-
-    inline ~ProtectedObject()
-    {
-        // remove ourselves from the list and give this object a
-        // little hold protection.
-        ActivityManager::currentActivity->protectedObjects = next;
-        if (protectedObject != OREF_NULL)
-        {
-            holdObject(protectedObject);
-        }
-    }
-
-    inline ProtectedObject & operator=(RexxObject *o)
-    {
-        protectedObject = o;
+        entryPoint = o.entryPoint;
         return *this;
     }
 
-    inline bool operator == (RexxObject *o)
-    {
-        return protectedObject == o;
-    }
-
-    inline bool operator != (RexxObject *o)
-    {
-        return protectedObject != o;
-    }
-
-    // cast conversion operators for some very common uses of protected object.
-    inline operator RexxObject *()
-    {
-        return protectedObject;
-    }
-
-    inline operator RexxString *()
-    {
-        return (RexxString *)protectedObject;
-    }
-
-    inline operator RexxMethod *()
-    {
-        return (RexxMethod *)protectedObject;
-    }
-
-    inline operator RexxArray *()
-    {
-        return (RexxArray *)protectedObject;
-    }
-
-    // this conversion helps the parsing process protect objects
-    inline operator RexxInstruction *()
-    {
-        return (RexxInstruction *)protectedObject;
-    }
-
-    inline operator void *()
-    {
-        return (void *)protectedObject;
-    }
+    void resolve(const char *name);
 
 protected:
-    RexxObject *protectedObject;       // next in the chain of protected object
-    ProtectedObject *next;             // the pointer protected by the object
+    REXXPFN    entryPoint;             // resolved exit entry point
 };
-
-
-class ProtectedSet : public ProtectedObject
-{
-public:
-    inline ProtectedSet() : ProtectedObject() { }
-    inline ~ProtectedSet() { }
-
-    void add(RexxObject *);
-};
-
 
 #endif
+

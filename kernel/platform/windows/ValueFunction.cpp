@@ -52,12 +52,6 @@
 #include "ActivityManager.hpp"
 
 #define  SELECTOR  "ENVIRONMENT"    /* environment selector               */
-#define  AXENGINE1 "WSHPROPERTY"    /* scripting engine selector          */
-#define  AXENGINE2 "WSHTYPELIB"     /* scripting engine selector          */
-#define  AXENGINE3 "WSHENGINE"      /* scripting engine selector          */
-
- // external scripting support
- extern RexxObject* (__stdcall *WSHPropertyChange)(RexxString*,RexxObject*,int,int*);
 
 /*********************************************************************/
 /*                                                                   */
@@ -67,24 +61,18 @@
 /*                                                                   */
 /*********************************************************************/
 
-RexxObject * SysValue(
+bool SysValue(
     RexxString * Name,                 /* variable name                     */
     RexxObject * NewValue,             /* new assigned value                */
-    RexxString * Selector )            /* variable selector                 */
+    RexxString * Selector,             /* variable selector                 */
+    RexxObject *&result)
 {
   /* GetEnvironmentVariable will not alloc memory for OldValue ! */
   char        *OldValue = NULL;        /* old environment value             */
-  RexxObject * Retval;                 /* returned old name                 */
   DWORD        dwSize;                 /* size of env. variable             */
-  int          SelectorType;           /* Scripting Engine Selector         */
-  int          RetCode;                /* Success/Fail                      */
 
   Selector = Selector->upper();        /* upper case the selector           */
   Name = Name->upper();                /* and the name too                  */
-
-//  if (!Selector->strCompare(SELECTOR)) /* correct selector?                 */
-//                                       /* flag this error                   */
-//    reportException(Error_Incorrect_call_selector, Selector);
 
   if (Selector->strCompare(SELECTOR)) {/* selector ENVIRONMENT?             */
 
@@ -97,14 +85,14 @@ RexxObject * SysValue(
       if (OldValue && GetEnvironmentVariable(Name->getStringData(),OldValue,dwSize) )
       {
                                          /* have a value already?           */
-        Retval = (RexxObject*) new_string(OldValue);
+        result = (RexxObject*) new_string(OldValue);
         SysReleaseResultMemory(OldValue);
       }
       else
-        Retval = OREF_NULLSTRING;        /* otherwise, return null            */
+        result = OREF_NULLSTRING;        /* otherwise, return null            */
     }
     else
-      Retval = OREF_NULLSTRING;
+      result = OREF_NULLSTRING;
 
     if (NewValue != OREF_NULL)           /* have a new value?                 */
     {
@@ -114,21 +102,8 @@ RexxObject * SysValue(
             SetEnvironmentVariable((LPCTSTR)Name->getStringData(),
                              (LPCTSTR)REQUIRED_STRING(NewValue,ARG_TWO)->getStringData());
     }
-  } else if (WSHPropertyChange != NULL) {     /* in engine environment?       */
-    SelectorType = 0;
-    RetCode = 0;
-    if (Selector->strCompare(AXENGINE1)) SelectorType = 1;
-    else if (Selector->strCompare(AXENGINE2)) SelectorType = 2;
-    else if (Selector->strCompare(AXENGINE3)) SelectorType = 3;
-    if (SelectorType) Retval = WSHPropertyChange(Name,NewValue,SelectorType,&RetCode);  // call into engine
-    else reportException(Error_Incorrect_call_selector, Selector);
-
-    if (RetCode == 5) reportException(Error_Incorrect_call_read_from_writeonly);
-    else if (RetCode == 4) reportException(Error_Incorrect_call_write_to_readonly);
-
-  } else
-    reportException(Error_Incorrect_call_selector, Selector);
-
-  return Retval;                       /* return old value                  */
+    return true;
+  }
+  return false;                        // we could not handle this
 }
 

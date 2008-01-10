@@ -545,7 +545,7 @@ STDMETHODIMP OrxScript::SetScriptState(SCRIPTSTATE state)
   // UINT      dummy;
   // HANDLE    execution;
   LPVOID    arguments[8];
-  RexxObject *resultDummy;
+  REXXOBJECT resultDummy;
   ConditionData cd;
 
 #if defined(DEBUGC)+defined(DEBUGZ)
@@ -1061,14 +1061,14 @@ STDMETHODIMP OrxScript::AddScriptlet(LPCOLESTR  pStrDefaultName,
   DISPID     EventSinkDispID;            // The numeric value this automates under.
 
   LPVOID     arguments[4];               // for createCode
-  RexxObject *method=NULL;
+  REXXOBJECT method=NULL;
   HANDLE     execution;
   UINT       dummy;
   PRCB       CodeBlock;
   ConditionData cd;
   OrxScriptError *ErrObj;
   bool        ErrObj_Exists;
-  RexxObject *pResult = NULL;
+  REXXOBJECT  pResult = NULL;
 
 
 #if defined(DEBUGC)+defined(DEBUGZ)
@@ -1228,7 +1228,7 @@ STDMETHODIMP OrxScript::ParseProcedureText(
   DISPID     EventSinkDispID;            // The numeric value this automates under.
 
   LPVOID     arguments[4];               // for createCode
-  RexxObject *method=NULL;
+  REXXOBJECT method=NULL;
   HANDLE     execution;
   UINT       dummy;
   PRCB       CodeBlock;
@@ -1399,12 +1399,12 @@ STDMETHODIMP OrxScript::ParseScriptText(LPCOLESTR  pStrCode,
                                         EXCEPINFO *pExcepInfo) {
 //  int PPreviously=0;    // No, we have not printed previously.
   HRESULT hResult = S_OK;
-  RexxObject *method=NULL;
+  REXXOBJECT method=NULL;
   HANDLE     execution;
   LPVOID     arguments[8];
   DISPID     lDispID;
   UINT       dummy;
-  RexxObject *resultDummy;
+  REXXOBJECT resultDummy;
   ConditionData cd;
   int        result;
   int        i;
@@ -1780,9 +1780,9 @@ STDMETHODIMP OrxScript::BuildRCB(
     /* [in]  */ OLECHAR    *Name,
     /* [in]  */ DWORD       Flags,
     /* [in]  */ ULONG       StartingLN,
-    /* [in]  */ RexxObject *Code,
+    /* [in]  */ REXXOBJECT  Code,
     /* [out] */ PRCB       *CodeBlock){
-  int        NameLen,BlockLen;
+  size_t     NameLen,BlockLen;
   PRCB       Block;
   OLECHAR   *lName;
   char       SB_NewName[MAX_PATH],*SBName=NULL;       // single byte
@@ -1795,7 +1795,7 @@ STDMETHODIMP OrxScript::BuildRCB(
   BlockLen = sizeof(RCB) + (sizeof(OLECHAR)*(NameLen+1));
   Block = (PRCB) GlobalAlloc(GMEM_FIXED,BlockLen);
   if(!Block) return E_FAIL; // serious error, could not generate code block
-  lName = (OLECHAR *)((int)Block + sizeof(RCB));
+  lName = (OLECHAR *)((char *)Block + sizeof(RCB));
   if(Name) wcscpy(lName,Name);
   else lName[0] = L'\0';
   Block->EntrySource = EntrySource;
@@ -1913,8 +1913,8 @@ FPRINTF2(logfile,"OrxScript::GetSourceIDispatch()  -- GetIDsOfNames for the SubI
 
 void OrxScript::insertVariable(void *args)
 {
-  char       *varName = ((char**) args)[0];
-  RexxObject *varValue = ((RexxObject**) args)[1];
+  char *varName = ((char**) args)[0];
+  REXXOBJECT  varValue = ((REXXOBJECT *) args)[1];
   PGVARIANT   temp;
   HRESULT     RetCode;
   DISPID      DispID;

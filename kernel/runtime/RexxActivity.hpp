@@ -51,10 +51,12 @@
 #include "RexxInternalStack.hpp"
 #include "RexxLocalVariables.hpp"
 #include "SourceLocation.hpp"
+#include "ExitHandler.hpp"
 
 
 class ProtectedObject;                 // needed for look aheads
 class RexxSource;
+class RexxMethod;
 
                                        /* interface values for the          */
                                        /* activity_queue method             */
@@ -92,25 +94,8 @@ typedef enum
     UnhandledCondition                 // we had an unhandled condition.
 } ActivityException;
 
-                                       /* system exit definitions           */
-                                       /* (these must match the externally  */
-                                       /* defined constants in REXXSAA.H)   */
-
-#define RXFNC    2                     /* Process external functions.       */
-#define RXCMD    3                     /* Process host commands.            */
-#define RXMSQ    4                     /* Manipulate queue.                 */
-#define RXSIO    5                     /* Session I/O.                      */
-#define RXHLT    7                     /* Halt processing.                  */
-#define RXTRC    8                     /* Test ext trace indicator.         */
-#define RXINI    9                     /* Initialization processing.        */
-#define RXTER   10                     /* Termination processing.           */
-#define RXDBG   11                     /* Test ext trace indicator before   */
 // used only internally, can be moved to a differnet value, if the using code is adapted accordingly
-#define RXEXF   12                     /* external function call replacer   */
-#define LAST_EXIT 12                   /* top bound of the exits            */
-
-
-extern SEV    rexxTimeSliceSemaphore;
+#define LAST_EXIT (RXNOOFEXITS - 1)    /* top bound of the exits            */
 
                                        /* information must be saved and     */
                                        /* restored on nested entries to the */
@@ -120,11 +105,9 @@ class NestedActivityState
 {
 public:
    char       *stackptr;               /* pointer to base of C stack        */
-   RexxString *currentExit;            /* current executing system exit     */
    bool        clauseExitUsed;         /* halt/trace sys exit not set ==> 1 */
-   RexxString *shvexitvalue;           /* ret'd val from varpool RXHSV_EXIT */
    size_t      randomSeed;             /* random number seed                */
-   RexxString *sysexits[LAST_EXIT];    /* Array to hold system exits        */
+   ExitHandler sysexits[LAST_EXIT];    /* Array to hold system exits        */
 };
 
                                        /* NOTE:  The following object       */
@@ -181,7 +164,7 @@ public:
    void        pop(bool);
    void        pushNil();
    void        popNil();
-   void        exitKernel(RexxActivation *, RexxString *, bool);
+   void        exitKernel(RexxActivation *);
    void        enterKernel();
    RexxObject *previous();
    void        waitReserve(RexxObject *);
@@ -208,21 +191,25 @@ public:
    void setShvVal(RexxString *);
    inline bool isClauseExitUsed() { return this->nestedInfo.clauseExitUsed; }
    void queryTrcHlt();
-   void sysExitInit(RexxActivation *);
-   void sysExitTerm(RexxActivation *);
-   bool sysExitSioSay(RexxActivation *, RexxString *);
-   bool sysExitSioTrc(RexxActivation *, RexxString *);
-   bool sysExitSioTrd(RexxActivation *, RexxString **);
-   bool sysExitSioDtr(RexxActivation *, RexxString **);
-   bool sysExitFunc(RexxActivation *, RexxString *, RexxObject *, ProtectedObject &, RexxObject **, size_t);
-   bool sysExitCmd(RexxActivation *, RexxString *, RexxString *, RexxString **, RexxObject **);
-   bool sysExitMsqPll(RexxActivation *, RexxString **);
-   bool sysExitMsqPsh(RexxActivation *, RexxString *, int);
-   bool sysExitMsqSiz(RexxActivation *, RexxInteger **);
-   bool sysExitMsqNam(RexxActivation *, RexxString **);
-   bool sysExitHltTst(RexxActivation *);
-   bool sysExitHltClr(RexxActivation *);
-   bool sysExitTrcTst(RexxActivation *, bool);
+   bool callExit(RexxActivation * activation, const char *exitName, int function, int subfunction, void *exitbuffer);
+   void callInitializationExit(RexxActivation *);
+   void callTerminationExit(RexxActivation *);
+   bool callSayExit(RexxActivation *, RexxString *);
+   bool callTraceExit(RexxActivation *, RexxString *);
+   bool callTerminalInputExit(RexxActivation *, RexxString *&);
+   bool callDebugInputExit(RexxActivation *, RexxString *&);
+   bool callFunctionExit(RexxActivation *, RexxString *, RexxObject *, ProtectedObject &, RexxObject **, size_t);
+   bool callScriptingExit(RexxActivation *, RexxString *, RexxObject *, ProtectedObject &, RexxObject **, size_t);
+   bool callCommandExit(RexxActivation *, RexxString *, RexxString *, RexxString **, RexxObject **);
+   bool callPullExit(RexxActivation *, RexxString *&);
+   bool callPushExit(RexxActivation *, RexxString *, int);
+   bool callQueueSizeExit(RexxActivation *, RexxInteger *&);
+   bool callQueueNameExit(RexxActivation *, RexxString *&);
+   bool callHaltTestExit(RexxActivation *);
+   bool callHaltClearExit(RexxActivation *);
+   bool callTraceTestExit(RexxActivation *, bool);
+   bool callNovalueExit(RexxActivation *, RexxString *, RexxObject *&);
+   bool callValueExit(RexxActivation *, RexxString *, RexxString *, RexxObject *, RexxObject *&);
    void traceOutput(RexxActivation *, RexxString *);
    void sayOutput(RexxActivation *, RexxString *);
    void queue(RexxActivation *, RexxString *, int);
@@ -244,6 +231,7 @@ public:
    bool hasSecurityManager();
    bool callSecurityManager(RexxString *name, RexxDirectory *args);
    RexxObject *nativeRelease(RexxObject *result);
+   void inheritSettings(RexxActivity *parent);
 
    inline RexxActivationBase *current(){ return this->topActivation;}
    inline RexxActivation *getCurrentActivation() {return this->currentActivation;}
@@ -257,18 +245,14 @@ public:
    inline RexxActivity *getNextWaitingActivity() { return nextWaitingActivity; }
    inline void        waitKernel() { EVWAIT(this->runsem); }
    inline void        clearWait()  { EVSET(this->runsem); }
-   inline void        setCurrentExit(RexxString *newExit) { this->nestedInfo.currentExit = newExit; }
-   inline RexxString *getCurrentExit() { return this->nestedInfo.currentExit; }
    inline size_t      getRandomSeed() { return nestedInfo.randomSeed; }
    inline void setRandomSeed(size_t seed) { this->nestedInfo.randomSeed = seed; };
-   inline void setSysExit(int exitNum, RexxString *exitName) { this->nestedInfo.sysexits[exitNum -1] = exitName;}
-   inline RexxString *querySysExits(int exitNum) {return this->nestedInfo.sysexits[exitNum -1];}
-   inline RexxString **getSysExits() {return this->nestedInfo.sysexits;}
-   inline void clearExits() { memset((void *)&this->nestedInfo.sysexits, 0, sizeof(this->nestedInfo.sysexits)); }
    inline void saveNestedInfo(NestedActivityState &saveInfo) { saveInfo = nestedInfo; }
    inline void restoreNestedInfo(NestedActivityState &saveInfo) { nestedInfo = saveInfo; }
-   inline bool useExitObjects() { return exitObjects; }
-   inline void setExitObjects(bool v) { exitObjects = v; }
+   inline RexxString *getLastMessageName() { return lastMessageName; }
+   inline RexxMethod *getLastMethod() { return lastMethod; }
+   inline void setLastMethod(RexxString *n, RexxMethod *m) { lastMessageName = n; lastMethod = m; }
+   inline int  getPriority() { return priority; }
 
    inline void allocateStackFrame(RexxExpressionStack *stack, size_t entries)
    {
@@ -291,6 +275,9 @@ public:
    }
 
    inline RexxDirectory *getCurrentCondition() { return conditionobj; }
+   void setExitHandler(int exitNum, REXXPFN e) { getExitHandler(exitNum).setEntryPoint(e); }
+   void setExitHandler(int exitNum, const char *e) { getExitHandler(exitNum).resolve(e); }
+   void setExitHandler(RXSYSEXIT &e) { getExitHandler(e.sysexit_code).resolve(e.sysexit_name); }
 
    // TODO:  This needs to be replaced by a system object.
 #ifdef THREADHANDLE
@@ -298,6 +285,10 @@ public:
 #endif
 
  protected:
+
+   ExitHandler &getExitHandler(int exitNum) {  return nestedInfo.sysexits[exitNum - 1]; }
+   bool isExitEnabled(int exitNum) { return getExitHandler(exitNum).isEnabled(); }
+
 
    RexxInternalStack  *activations;    /* stack of activations              */
    RexxActivationStack   frameStack;   /* our stack used for activation frames */
@@ -320,12 +311,13 @@ public:
    int      priority;                  /* activity priority value           */
    bool     stackcheck;                /* stack space is to be checked      */
    bool     exit;                      /* activity loop is to exit          */
-   bool     exitObjects;               // return ptrs to objects for exit handlers
    bool     requestingString;          /* in error handling currently       */
    SEV      guardsem;                  /* guard expression semaphore        */
    size_t   nestedCount;               /* extent of the nesting             */
    NestedActivityState nestedInfo;     /* info saved and restored on calls  */
    ProtectedObject *protectedObjects;  // list of stack-based object protectors
+   RexxString *lastMessageName;        // class called message
+   RexxMethod *lastMethod;             // last called method
  };
 
 #endif

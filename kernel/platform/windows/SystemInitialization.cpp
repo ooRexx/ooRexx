@@ -85,15 +85,14 @@ BOOL WINAPI DllMain(
   size_t dwSize = sizeof(size_t);
   char  szMessage[256] = "Open Object Rexx: Not cleanly installed!";
 
-   if (fdwReason == DLL_PROCESS_ATTACH) {
-//      RxAPIStartUp();
+   if (fdwReason == DLL_PROCESS_ATTACH)
+   {
      InitializeCriticalSection(&waitProtect);  // another critical section is needed...
 /* create critical section at DLL load-time (more secure) */
      SysThreadInit();
      if (fSuccess) {
        RxInterProcessInit(true);
        horyxkDll = hinstDll;            /* keep handle around */
-       MTXNCR(apiProtect, "!REXX_API_PROTECT_MTX.0");
      } else
        MessageBox(NULL, szMessage, "Startup Error!", MB_OK | MB_SYSTEMMODAL | MB_ICONHAND);
    } else if (fdwReason == DLL_PROCESS_DETACH)
@@ -105,9 +104,7 @@ BOOL WINAPI DllMain(
       MTXCL(memoryObject.envelopeMutex);
       DeleteCriticalSection(&waitProtect);
       RexxDeregisterFunction(NULL); // Send PROCESS_GONE to RXAPI
-      MTXCL(apiProtect);
    }
-
    return(fSuccess);
 }
 

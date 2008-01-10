@@ -48,3 +48,5 @@ EXPORTS
   RexxCatchExit
   RexxCatchExternalFunc
   RexxRetrieveVariables
+  RexxNovalueHandler
+  RexxValueExtension

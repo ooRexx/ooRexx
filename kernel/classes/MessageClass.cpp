@@ -286,7 +286,6 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
   RexxActivity *newActivity;           /* Activity the start will be run on */
   RexxActivity *oldActivity;           /* Currently executing activity      */
   RexxNativeActivation *newNativeAct;  /* Native Activation to run on       */
-  int           i;                     /* loop counter                      */
 
                                        /* has message already been sent or  */
                                        /* is another start message pending? */
@@ -310,12 +309,7 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
                                        /* get the current activity          */
   oldActivity = ActivityManager::currentActivity;
                                        /* Create the new activity           */
-  newActivity = new_activity();
-                                       /* propagate system exit trapping    */
-  for (i = 1; i <= LAST_EXIT; i++)     /* copy any exit handlers            */
-                                       /* from old activity to the new one  */
-    newActivity->setSysExit(i, oldActivity->querySysExits(i));
-
+  newActivity = new_activity(oldActivity);
                                        /* indicate the activity the send    */
                                        /*message should come in on.         */
   OrefSet(this, this->startActivity, newActivity);

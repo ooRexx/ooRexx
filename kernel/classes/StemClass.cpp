@@ -676,7 +676,7 @@ RexxObject *RexxStem::evaluateCompoundVariableValue(
                                        /* create a string version of the name */
       tail_name = resolved_tail->createCompoundName(stemName);
                                        /* take care of any novalue situations */
-      _value = handleNovalue(tail_name, context);
+      _value = handleNovalue(context, tail_name, variable);
     }
   }
   else {
@@ -686,7 +686,7 @@ RexxObject *RexxStem::evaluateCompoundVariableValue(
                                        /* create a string version of the name */
       tail_name = resolved_tail->createCompoundName(stemName);
                                        /* take care of any novalue situations */
-      _value = handleNovalue(tail_name, context);
+      _value = handleNovalue(context, tail_name, variable);
     }
   }
   return _value;                       /* and finally return the value */
@@ -748,8 +748,9 @@ RexxObject *RexxStem::realCompoundVariableValue(
 
 
 RexxObject *RexxStem::handleNovalue(
+    RexxActivation *context,           /* the execution context for the request */
     RexxString *name,                  /* the fully resolved compound name */
-    RexxActivation *context)           /* the execution context for the request */
+    RexxCompoundElement *variable)     // the resolved variable element
 /******************************************************************************/
 /* Function:  Process a nonvalue condition for a stem variable retrieval.     */
 /*            If a context is provided, the novalue is handled in its         */
@@ -757,9 +758,10 @@ RexxObject *RexxStem::handleNovalue(
 /******************************************************************************/
 {
     /* are we doing this directly for method execution? */
-    if (context != OREF_NULL) {
+    if (context != OREF_NULL)
+    {
         /* the context may need to do additional work */
-        return context->handleNoValueEvent(name);
+        return context->handleNovalueEvent(name, variable);
     }
     else {
         return name;                 /* just use the name                 */

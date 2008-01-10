@@ -113,7 +113,7 @@ typedef struct _RexxScriptInfo {       /* Control info used by various API's*/
   // these changes add the capability to use RexxRunMethod with
   // a. parameters and b. exits
   // as fas as I could make out, this function has never(!) been used up to now...
-  RexxArray* (__stdcall *func)(void*); // callback for converting arbitrary data into REXX data types (stored in a RexxArray)
+  REXXOBJECT (__stdcall *func)(void*); // callback for converting arbitrary data into REXX data types (stored in a RexxArray)
   void *args;                          // arguments for callback. if func == NULL, this will be treated as a RexxArray
   PRXSYSEXIT exits;                    // Array of system exit names used analogous to RexxStart() exits...
 } RexxScriptInfo;
@@ -595,7 +595,7 @@ BOOL APIENTRY RexxSetProcessMessages(BOOL onoff)
 APIRET REXXENTRY RexxCreateMethod(
   const char *dirname,                 /* directory name to save new method */
   PRXSTRING sourceData,                /* Buffer with Rexx source code      */
-  RexxObject * *pmethod,               /* returned method object            */
+  REXXOBJECT   *pmethod,               /* returned method object            */
   ConditionData *pRexxCondData)        /* returned condition data           */
 {
   APIRET   rc;                         /* RexxStart return code             */
@@ -631,20 +631,6 @@ APIRET REXXENTRY RexxCreateMethod(
   return rc;                           /* return the error code             */
 }
 
-#pragma data_seg(".sdata")
- RexxObject* (__stdcall *WSHPropertyChange)(RexxString*,RexxObject*,int,int*) = NULL;
-
-extern "C" {
-void REXXENTRY SetNovalueCallback( RexxObject* (__stdcall *f)(const char *) )
-{
-  NovalueCallback = f;
-}
-void REXXENTRY SetWSHPropertyChange( RexxObject* (__stdcall *f)(RexxString*,RexxObject*,int,int*) )
-{
-  WSHPropertyChange = f;
-}
-}
-
 /******************************************************************************/
 /* Name:       RexxRunMethod                                                  */
 /*                                                                            */
@@ -665,12 +651,12 @@ void REXXENTRY SetWSHPropertyChange( RexxObject* (__stdcall *f)(RexxString*,Rexx
 extern "C" {
 APIRET REXXENTRY RexxRunMethod(
   const char * dirname,
-  RexxObject * method,
+  REXXOBJECT method,
   void * args,
-  RexxArray* (__stdcall *f)(void*),
+  REXXOBJECT (__stdcall *f)(void*),
   PRXSYSEXIT exit_list,
-  RexxObject * *presult,
-  RexxObject *securityManager,
+  REXXOBJECT *presult,
+  REXXOBJECT *securityManager,
   ConditionData *pRexxCondData)        /* returned condition data           */
 {
   APIRET   rc;                         /* RexxStart return code             */
@@ -686,18 +672,17 @@ APIRET REXXENTRY RexxRunMethod(
                                        /* Create string object              */
   RexxScriptArgs.index = dirname;
   RexxScriptArgs.pmethod = (RexxMethod * *)&method;
-  RexxScriptArgs.presult = presult;
+  RexxScriptArgs.presult = (RexxObject **)presult;
   RexxScriptArgs.args = args;
   RexxScriptArgs.func = f;
   RexxScriptArgs.exits = exit_list;
 
   RexxInitialize();                    /* Perform any needed inits          */
 
-  if (securityManager) ((RexxMethod*) method)->setSecurityManager(securityManager);
+  if (securityManager) ((RexxMethod*) method)->setSecurityManager((RexxObject *)securityManager);
   tempActivity = ActivityManager::getActivity();     /* get a base activity under us      */
   store = RunActivity; // store old one
   RunActivity = tempActivity; // set to current
-  tempActivity->setExitObjects(true); // enable object passing thru classic rexx interface!
                                        /* wrap up the argument              */
   tempArgument = (RexxObject *)new_pointer(&RexxScriptArgs);
   {
@@ -729,7 +714,7 @@ APIRET REXXENTRY RexxRunMethod(
 /*                                                                            */
 /******************************************************************************/
 
-APIRET REXXENTRY RexxStoreMethod(RexxObject * method, PRXSTRING scriptData)
+APIRET REXXENTRY RexxStoreMethod(REXXOBJECT method, PRXSTRING scriptData)
 
 {
   APIRET   rc;                         /* RexxStart return code             */
@@ -771,7 +756,7 @@ APIRET REXXENTRY RexxStoreMethod(RexxObject * method, PRXSTRING scriptData)
 /*                                                                            */
 /******************************************************************************/
 
-APIRET REXXENTRY RexxLoadMethod(const char *dirname, PRXSTRING scriptData, RexxObject * *pmethod)
+APIRET REXXENTRY RexxLoadMethod(const char *dirname, PRXSTRING scriptData, REXXOBJECT *pmethod)
 
 {
   APIRET   rc;                         /* RexxStart return code             */
@@ -1115,76 +1100,77 @@ void RunMethod(
   RexxScriptInfo *pRexxScriptArgs,
   RexxNativeActivation *newNativeAct)
 {
-  RexxString *initial_address;         /* initial address setting           */
-  RexxArray *new_arglist;              /* passed on argument list           */
-  RexxActivity *savedAct;              /* store current activity */
-  RexxDirectory *locked_objects;       /* directory used to keep objects    */
-                                       /* around for process duration.      */
-  size_t argcount=1;
-  size_t arglength=0;
-  const char *rexxargument="";
-  const char *envname="CMD";           /* ADDRESS environment name          */
-  int i;                               // for exit installation
-  RexxString *fullname;
+    RexxString *initial_address;         /* initial address setting           */
+    RexxArray *new_arglist;              /* passed on argument list           */
+    RexxActivity *savedAct;              /* store current activity */
+    RexxDirectory *locked_objects;       /* directory used to keep objects    */
+                                         /* around for process duration.      */
+    size_t argcount=1;
+    size_t arglength=0;
+    const char *rexxargument="";
+    const char *envname="CMD";           /* ADDRESS environment name          */
+    int i;                               // for exit installation
 
-  // callback activated?
-  if (pRexxScriptArgs->func) {
-    savedAct = ActivityManager::currentActivity; // save the activity...
-    // note: imho this is "dirty". a process global variable (ActivityManager::currentActivity)
-    // might (will) be overwritten, but to save the program flow (it will be
-    // referenced again later on), i save it in a temporary variable...
-    new_arglist = (RexxArray*) pRexxScriptArgs->func(pRexxScriptArgs->args);
-    ActivityManager::currentActivity = savedAct; // restore activity
-  }
-  else if (pRexxScriptArgs->args) {
-    // func == NULL && args != NULL => treat as RexxArray;
-    new_arglist = (RexxArray*) pRexxScriptArgs->args;
-    newNativeAct->saveObject(new_arglist);
-
-  }
-  // use dummy argument array
-  else {
-                                         /* get a new argument array          */
-    new_arglist = new_array(argcount);   /* lock the argument list            */
-    newNativeAct->saveObject(new_arglist);
-                                         /* add to the argument array         */
-    new_arglist->put(new_string(rexxargument, arglength), 1);
-  }
-
-  initial_address = new_string(envname);
-                                       /* protect from garbage collect      */
-  newNativeAct->saveObject(initial_address);
-
-  /* install exits */
-  if (pRexxScriptArgs->exits != NULL) {/* have exits to process             */
-    i = 0;                             /* start with first exit             */
-                                       /* while not the list ender          */
-    while (pRexxScriptArgs->exits[i].sysexit_code != RXENDLST) {
-                                       /* convert to a string object        */
-      fullname = new_string(pRexxScriptArgs->exits[i].sysexit_name);
-                                       /* protect from garbage collect      */
-      newNativeAct->saveObject(fullname);
-                                       /* enable this exit                  */
-      ActivityManager::currentActivity->setSysExit(pRexxScriptArgs->exits[i].sysexit_code, fullname);
-      i++;                             /* step to the next exit             */
+    // callback activated?
+    if (pRexxScriptArgs->func)
+    {
+        savedAct = ActivityManager::currentActivity; // save the activity...
+        // note: imho this is "dirty". a process global variable (ActivityManager::currentActivity)
+        // might (will) be overwritten, but to save the program flow (it will be
+        // referenced again later on), i save it in a temporary variable...
+        new_arglist = (RexxArray*) pRexxScriptArgs->func(pRexxScriptArgs->args);
+        ActivityManager::currentActivity = savedAct; // restore activity
     }
-  }
+    else if (pRexxScriptArgs->args)
+    {
+        // func == NULL && args != NULL => treat as RexxArray;
+        new_arglist = (RexxArray*) pRexxScriptArgs->args;
+        newNativeAct->saveObject(new_arglist);
 
-                                       /* Check to see if halt or trace sys */
-                                       /* were set                          */
-  ActivityManager::currentActivity->queryTrcHlt();
-                                       /* run and get the result            */
-  *pRexxScriptArgs->presult = (RexxString *)((RexxObject *)ActivityManager::currentActivity)->shriekRun(*pRexxScriptArgs->pmethod, OREF_COMMAND, initial_address, new_arglist->data(), new_arglist->size());
-  if (pRexxScriptArgs->index != OREF_NULL && *pRexxScriptArgs->presult != OREF_NULL) {
-                                       /* Need to keep around for process   */
-                                       /* duration.                         */
-   locked_objects = (RexxDirectory *)ActivityManager::localEnvironment->at(new_string(pRexxScriptArgs->index));
-   locked_objects->put(*pRexxScriptArgs->presult, new_string((const char *)pRexxScriptArgs->presult, sizeof(RexxObject *)));
- }
+    }
+    // use dummy argument array
+    else
+    {
+        /* get a new argument array          */
+        new_arglist = new_array(argcount);   /* lock the argument list            */
+        newNativeAct->saveObject(new_arglist);
+        /* add to the argument array         */
+        new_arglist->put(new_string(rexxargument, arglength), 1);
+    }
 
-                                       /* finally, discard our activation   */
-  ActivityManager::currentActivity->pop(false);
-  return;
+    initial_address = new_string(envname);
+    /* protect from garbage collect      */
+    newNativeAct->saveObject(initial_address);
+
+    /* install exits */
+    if (pRexxScriptArgs->exits != NULL)  /* have exits to process             */
+    {
+        i = 0;                             /* start with first exit             */
+                                           /* while not the list ender          */
+        while (pRexxScriptArgs->exits[i].sysexit_code != RXENDLST)
+        {
+            /* enable this exit                  */
+            ActivityManager::currentActivity->setExitHandler(pRexxScriptArgs->exits[i]);
+            i++;                             /* step to the next exit             */
+        }
+    }
+
+    /* Check to see if halt or trace sys */
+    /* were set                          */
+    ActivityManager::currentActivity->queryTrcHlt();
+    /* run and get the result            */
+    *pRexxScriptArgs->presult = (RexxString *)((RexxObject *)ActivityManager::currentActivity)->shriekRun(*pRexxScriptArgs->pmethod, OREF_COMMAND, initial_address, new_arglist->data(), new_arglist->size());
+    if (pRexxScriptArgs->index != OREF_NULL && *pRexxScriptArgs->presult != OREF_NULL)
+    {
+        /* Need to keep around for process   */
+        /* duration.                         */
+        locked_objects = (RexxDirectory *)ActivityManager::localEnvironment->at(new_string(pRexxScriptArgs->index));
+        locked_objects->put(*pRexxScriptArgs->presult, new_string((const char *)pRexxScriptArgs->presult, sizeof(RexxObject *)));
+    }
+
+    /* finally, discard our activation   */
+    ActivityManager::currentActivity->pop(false);
+    return;
 }
 
 void LoadMethod(
@@ -1221,204 +1207,242 @@ void LoadMethod(
 void  SysRunProgram(
   void   *ControlInfo )                /* flattened control information     */
 {
-  RexxStartInfo *self;                 /* Rexxstart argument info           */
-  RexxArray   * new_arglist;           /* passed on argument list           */
-  size_t        i;                     /* loop counter                      */
-  RexxString  * fullname;              /* fully resolved program name       */
-  RexxString  * name;                  /* input program name                */
-  RexxMethod  * method;                /* translated file image             */
-  RexxString  * source_calltype;       /* parse source call type            */
-  bool          tokenize_only;         /* don't actually execute program    */
-  RexxString  * initial_address;       /* initial address setting           */
-  const char  * file_extension;        /* potential file extension          */
-  RexxString  * program_result;        /* returned program result           */
-  RexxNativeActivation * newNativeAct; /* Native Activation to run on       */
-  size_t        length;                /* return result length              */
-  wholenumber_t return_code;           /* converted return code info        */
+    RexxStartInfo *self;                 /* Rexxstart argument info           */
+    RexxArray   * new_arglist;           /* passed on argument list           */
+    size_t        i;                     /* loop counter                      */
+    RexxString  * fullname;              /* fully resolved program name       */
+    RexxString  * name;                  /* input program name                */
+    RexxMethod  * method;                /* translated file image             */
+    RexxString  * source_calltype;       /* parse source call type            */
+    bool          tokenize_only;         /* don't actually execute program    */
+    RexxString  * initial_address;       /* initial address setting           */
+    const char  * file_extension;        /* potential file extension          */
+    RexxString  * program_result;        /* returned program result           */
+    RexxNativeActivation * newNativeAct; /* Native Activation to run on       */
+    size_t        length;                /* return result length              */
+    wholenumber_t return_code;           /* converted return code info        */
 
-  tokenize_only = false;               /* default is to run the program     */
-                                       /* create the native method to be run*/
-                                       /* on the activity                   */
-  newNativeAct = new RexxNativeActivation(ActivityManager::currentActivity, OREF_NULL);
-  ActivityManager::currentActivity->push(newNativeAct); /* Push new nativeAct onto stack     */
-  switch (*((short *)ControlInfo)) {
-    case CREATEMETHOD:
-      CreateMethod((RexxScriptInfo *)ControlInfo, newNativeAct);
-      return;
-    case RUNMETHOD:
-      RunMethod((RexxScriptInfo *)ControlInfo, newNativeAct);
-      return;
-    case STOREMETHOD:
-      SysSaveProgramBuffer(((RexxScriptInfo *)ControlInfo)->ProgramBuffer,
-                            *(((RexxScriptInfo *)ControlInfo)->pmethod));
+    tokenize_only = false;               /* default is to run the program     */
+                                         /* create the native method to be run*/
+                                         /* on the activity                   */
+    newNativeAct = new RexxNativeActivation(ActivityManager::currentActivity, OREF_NULL);
+    ActivityManager::currentActivity->push(newNativeAct); /* Push new nativeAct onto stack     */
+    switch (*((short *)ControlInfo))
+    {
+        case CREATEMETHOD:
+            CreateMethod((RexxScriptInfo *)ControlInfo, newNativeAct);
+            return;
+        case RUNMETHOD:
+            RunMethod((RexxScriptInfo *)ControlInfo, newNativeAct);
+            return;
+        case STOREMETHOD:
+            SysSaveProgramBuffer(((RexxScriptInfo *)ControlInfo)->ProgramBuffer,
+                                 *(((RexxScriptInfo *)ControlInfo)->pmethod));
 
 
-                                       /* finally, discard our activation   */
-      ActivityManager::currentActivity->pop(false);
-      return;
-    case LOADMETHOD:
-      LoadMethod((RexxScriptInfo *)ControlInfo, newNativeAct);
-      return;
-    default:
-      break;
-  }
-  self = (RexxStartInfo *)ControlInfo; /* address all of the arguments      */
-  if (self->programname != NULL)       /* have an actual name?              */
-                                       /* get string version of the name    */
-    name = new_string(self->programname);
-  else
-    name = OREF_NULLSTRING;            /* use an "unlocatable" name         */
-  newNativeAct->saveObject(name);      /* protect from garbage collect      */
-  ActivityManager::currentActivity->clearExits();       /* make sure the exits are cleared   */
-
-  if (self->exits != NULL) {           /* have exits to process             */
-      i = 0;                           /* start with first exit             */
-                                       /* while not the list ender          */
-      while (self->exits[i].sysexit_code != RXENDLST) {
-                                       /* convert to a string object        */
-        fullname = new_string(self->exits[i].sysexit_name);
-                                       /* protect from garbage collect      */
-        newNativeAct->saveObject(fullname);
-                                       /* enable this exit                  */
-        ActivityManager::currentActivity->setSysExit(self->exits[i].sysexit_code, fullname);
-        i++;                           /* step to the next exit             */
-      }
+            /* finally, discard our activation   */
+            ActivityManager::currentActivity->pop(false);
+            return;
+        case LOADMETHOD:
+            LoadMethod((RexxScriptInfo *)ControlInfo, newNativeAct);
+            return;
+        default:
+            break;
     }
-
-                                       /* get a new argument array          */
-  if (self->runtype==TRANSLATE) {      /* just translating this?            */
-                                       /* just do the translation step      */
-    translateSource(name, newNativeAct, self->outputName);
-    return;                            /* and finished                      */
-  }
-
-  new_arglist = new_array(self->argcount);
-                                       /* lock the argument list            */
-  newNativeAct->saveObject(new_arglist);
-                                       /* loop through the argument list    */
-  for (i = 0; i < self->argcount; i++) {
-                                       /* have a real argument?             */
-    if (self->arglist[i].strptr != NULL)
-                                       /* add to the argument array         */
-      new_arglist->put(new_string(self->arglist[i].strptr, self->arglist[i].strlength), i + 1);
-  }
-  if (self->calltype == RXCOMMAND) {   /* need to process command arg?      */
-                                       /* is there an argument?             */
-    /* also check self->argcount to be a not null number         */
-    if (self->argcount != 0 && self->arglist != NULL &&
-        self->arglist[0].strptr != NULL && self->arglist[0].strlength > 1) {
-                                       /* is there a leading blank?         */
-      if (*(self->arglist[0].strptr) == ' ')
-                                       /* replace the first argument        */
-        new_arglist->put(new_string(self->arglist[0].strptr+1, self->arglist[0].strlength - 1), 1);
-                                       /* have a "//T" in the argument?     */
-      if ( (((RexxString *)(new_arglist->get(1)))->caselessPos(OREF_TOKENIZE_ONLY, 0) !=
-                              0) && RexxStartedByApplication)
-        tokenize_only = true;          /* don't execute this                */
+    self = (RexxStartInfo *)ControlInfo; /* address all of the arguments      */
+    if (self->programname != NULL)       /* have an actual name?              */
+    {
+        /* get string version of the name    */
+        name = new_string(self->programname);
     }
-    RexxStartedByApplication = true;
-  }
-  switch (self->calltype) {            /* turn calltype into a string       */
-
-    case  RXCOMMAND:                   /* command invocation                */
-      source_calltype = OREF_COMMAND;  /* this is the 'COMMAND' string      */
-      break;
-
-    case  RXFUNCTION:                  /* function invocation               */
-                                       /* 'FUNCTION' string                 */
-      source_calltype = OREF_FUNCTIONNAME;
-      break;
-
-    case  RXSUBROUTINE:                /* subroutine invocation             */
-                                       /* 'SUBROUTINE' string               */
-      source_calltype = OREF_SUBROUTINE;
-      break;
-
-    default:
-      source_calltype = OREF_COMMAND;  /* this is the 'COMMAND' string      */
-      break;
-  }
-  if (self->instore == NULL) {         /* no instore request?               */
-                                       /* go resolve the name               */
-    fullname = SysResolveProgramName(name, OREF_NULL);
-    if (fullname == OREF_NULL)         /* not found?                        */
-                                       /* got an error here                 */
-      reportException(Error_Program_unreadable_notfound, name);
-    newNativeAct->saveObject(fullname);/* protect from garbage collect      */
-                                       /* try to restore saved image        */
-    method = SysRestoreProgram(fullname);
-    if (method == OREF_NULL) {         /* unable to restore?                */
-                                       /* go translate the image            */
-      method = TheMethodClass->newFile(fullname);
-      newNativeAct->saveObject(method);/* protect from garbage collect      */
-      SysSaveProgram(fullname, method);/* go save this method               */
-    }
-  }
-  else {                               /* have an instore program           */
-                                       /* go handle instore parms           */
-    method = process_instore(self->instore, name);
-    if (method == OREF_NULL)           /* couldn't get it?                  */
-                                       /* got an error here                 */
-      reportException(Error_Program_unreadable_name, name);
-    fullname = name;                   /* copy the name                     */
-  }
-  if (self->envname != NULL)           /* have an address override?         */
-                                       /* use the provided one              */
-    initial_address = new_string(self->envname);
-  else {
-                                       /* check for a file extension        */
-    file_extension = SysFileExtension(fullname->getStringData());
-    if (file_extension != NULL)      /* have a real one?                  */
-                                       /* use extension as the environment  */
-      initial_address = new_string(file_extension + 1);
     else
-                                       /* use system defined default        */
-      initial_address = OREF_INITIALADDRESS;
-  }
-                                       /* protect from garbage collect      */
-  newNativeAct->saveObject(initial_address);
-                                       /* actually need to run this?        */
-  if (method != OREF_NULL && !tokenize_only) {
-                                       /* Check to see if halt or trace sys */
-    ActivityManager::currentActivity->queryTrcHlt();    /* were set                          */
-                                       /* run and get the result            */
-    program_result = (RexxString *)((RexxObject *)ActivityManager::currentActivity)->shriekRun(method, source_calltype, initial_address, new_arglist->data(), new_arglist->size());
-    if (self->result != NULL) {        /* if return provided for            */
-                                       /* actually have a result to return? */
-      if (program_result != OREF_NULL) {
-                                       /* force to a string value           */
-        program_result = program_result->stringValue();
-                                       /* get the result length             */
-        length = (LONG)program_result->getLength() + 1;
-                                       /* buffer too short or no return?    */
-        if (length > self->result->strlength || self->result->strptr == NULL)
-                                       /* allocate a new RXSTRING buffer    */
-          self->result->strptr = (char *)SysAllocateResultMemory(length);
-                                       /* yes, copy the data (including the */
-                                       /* terminating null implied by the   */
-                                       /* use of length + 1                 */
-        memcpy(self->result->strptr, program_result->getStringData(), length);
-                                       /* give the true data length         */
-        self->result->strlength = length - 1;
-      }
-      else {                           /* make this an invalid string       */
-        MAKERXSTRING(*(self->result), NULL, 0);
-      }
+    {
+        name = OREF_NULLSTRING;            /* use an "unlocatable" name         */
     }
 
-    if (self->retcode) {               /* asking for the binary return code?*/
-      *(self->retcode) = 0;            /* set default rc value              */
-                                       /* If there is a return val...       */
-      if (program_result != OREF_NULL) {
-                                       /* if a whole number...              */
-        if (program_result->numberValue(return_code) && return_code <= SHRT_MAX && return_code >= SHRT_MIN)
-                                       /* ...copy to return code.           */
-          *(self->retcode) = (short)return_code;
-      }
+    newNativeAct->saveObject(name);      /* protect from garbage collect      */
+
+    if (self->exits != NULL)             /* have exits to process             */
+    {
+        i = 0;                           /* start with first exit             */
+                                         /* while not the list ender          */
+        while (self->exits[i].sysexit_code != RXENDLST)
+        {
+            /* enable this exit                  */
+            ActivityManager::currentActivity->setExitHandler(self->exits[i]);
+            i++;                           /* step to the next exit             */
+        }
     }
-  }
-  ActivityManager::currentActivity->pop(false);         /* finally, discard our activation   */
+
+    /* get a new argument array          */
+    if (self->runtype==TRANSLATE)        /* just translating this?            */
+    {
+        /* just do the translation step      */
+        translateSource(name, newNativeAct, self->outputName);
+        return;                            /* and finished                      */
+    }
+
+    new_arglist = new_array(self->argcount);
+    /* lock the argument list            */
+    newNativeAct->saveObject(new_arglist);
+    /* loop through the argument list    */
+    for (i = 0; i < self->argcount; i++)
+    {
+        /* have a real argument?             */
+        if (self->arglist[i].strptr != NULL)
+        {
+            /* add to the argument array         */
+            new_arglist->put(new_string(self->arglist[i].strptr, self->arglist[i].strlength), i + 1);
+        }
+    }
+    if (self->calltype == RXCOMMAND)     /* need to process command arg?      */
+    {
+        /* is there an argument?             */
+        /* also check self->argcount to be a not null number         */
+        if (self->argcount != 0 && self->arglist != NULL &&
+            self->arglist[0].strptr != NULL && self->arglist[0].strlength > 1)
+        {
+            /* is there a leading blank?         */
+            if (*(self->arglist[0].strptr) == ' ')
+            {
+                /* replace the first argument        */
+                new_arglist->put(new_string(self->arglist[0].strptr+1, self->arglist[0].strlength - 1), 1);
+            }
+            /* have a "//T" in the argument?     */
+            if ( (((RexxString *)(new_arglist->get(1)))->caselessPos(OREF_TOKENIZE_ONLY, 0) != 0) && RexxStartedByApplication)
+            {
+                tokenize_only = true;          /* don't execute this                */
+            }
+        }
+        RexxStartedByApplication = true;
+    }
+    switch (self->calltype)              /* turn calltype into a string       */
+    {
+        case  RXCOMMAND:                   /* command invocation                */
+            source_calltype = OREF_COMMAND;  /* this is the 'COMMAND' string      */
+            break;
+
+        case  RXFUNCTION:                  /* function invocation               */
+            /* 'FUNCTION' string                 */
+            source_calltype = OREF_FUNCTIONNAME;
+            break;
+
+        case  RXSUBROUTINE:                /* subroutine invocation             */
+            /* 'SUBROUTINE' string               */
+            source_calltype = OREF_SUBROUTINE;
+            break;
+
+        default:
+            source_calltype = OREF_COMMAND;  /* this is the 'COMMAND' string      */
+            break;
+    }
+    if (self->instore == NULL)           /* no instore request?               */
+    {
+        /* go resolve the name               */
+        fullname = SysResolveProgramName(name, OREF_NULL);
+        if (fullname == OREF_NULL)         /* not found?                        */
+        {
+            /* got an error here                 */
+            reportException(Error_Program_unreadable_notfound, name);
+        }
+        newNativeAct->saveObject(fullname);/* protect from garbage collect      */
+                                           /* try to restore saved image        */
+        method = SysRestoreProgram(fullname);
+        if (method == OREF_NULL)           /* unable to restore?                */
+        {
+            /* go translate the image            */
+            method = TheMethodClass->newFile(fullname);
+            newNativeAct->saveObject(method);/* protect from garbage collect      */
+            SysSaveProgram(fullname, method);/* go save this method               */
+        }
+    }
+    else                                 /* have an instore program           */
+    {
+        /* go handle instore parms           */
+        method = process_instore(self->instore, name);
+        if (method == OREF_NULL)           /* couldn't get it?                  */
+        {
+            /* got an error here                 */
+            reportException(Error_Program_unreadable_name, name);
+        }
+        fullname = name;                   /* copy the name                     */
+    }
+    if (self->envname != NULL)           /* have an address override?         */
+    {
+        /* use the provided one              */
+        initial_address = new_string(self->envname);
+
+    }
+    else
+    {
+        /* check for a file extension        */
+        file_extension = SysFileExtension(fullname->getStringData());
+        if (file_extension != NULL)      /* have a real one?                  */
+        {
+            /* use extension as the environment  */
+            initial_address = new_string(file_extension + 1);
+        }
+        else
+        {
+            /* use system defined default        */
+            initial_address = OREF_INITIALADDRESS;
+        }
+    }
+    /* protect from garbage collect      */
+    newNativeAct->saveObject(initial_address);
+    /* actually need to run this?        */
+    if (method != OREF_NULL && !tokenize_only)
+    {
+        /* Check to see if halt or trace sys */
+        ActivityManager::currentActivity->queryTrcHlt();    /* were set                          */
+        /* run and get the result            */
+        program_result = (RexxString *)((RexxObject *)ActivityManager::currentActivity)->shriekRun(method, source_calltype, initial_address, new_arglist->data(), new_arglist->size());
+        if (self->result != NULL)          /* if return provided for            */
+        {
+            /* actually have a result to return? */
+            if (program_result != OREF_NULL)
+            {
+                /* force to a string value           */
+                program_result = program_result->stringValue();
+                /* get the result length             */
+                length = (LONG)program_result->getLength() + 1;
+                /* buffer too short or no return?    */
+                if (length > self->result->strlength || self->result->strptr == NULL)
+                {
+                    /* allocate a new RXSTRING buffer    */
+                    self->result->strptr = (char *)SysAllocateResultMemory(length);
+                }
+                /* yes, copy the data (including the */
+                /* terminating null implied by the   */
+                /* use of length + 1                 */
+                memcpy(self->result->strptr, program_result->getStringData(), length);
+                /* give the true data length         */
+                self->result->strlength = length - 1;
+            }
+            else                             /* make this an invalid string       */
+            {
+                MAKERXSTRING(*(self->result), NULL, 0);
+            }
+        }
+
+        if (self->retcode)                 /* asking for the binary return code?*/
+        {
+            *(self->retcode) = 0;            /* set default rc value              */
+                                             /* If there is a return val...       */
+            if (program_result != OREF_NULL)
+            {
+                /* if a whole number...              */
+                if (program_result->numberValue(return_code) && return_code <= SHRT_MAX && return_code >= SHRT_MIN)
+                {
+                    /* ...copy to return code.           */
+                    *(self->retcode) = (short)return_code;
+                }
+            }
+        }
+    }
+    ActivityManager::currentActivity->pop(false);         /* finally, discard our activation   */
 }
+
 
 char *REXXENTRY RexxGetVersionInformation()
 {

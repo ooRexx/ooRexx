@@ -114,7 +114,7 @@ class RexxSupplier;
   void        setValue(RexxObject *value);
   RexxArray  *tailArray();
   RexxCompoundElement *nextVariable(RexxNativeActivation *activation);
-  RexxObject *handleNovalue(RexxString *name, RexxActivation *context);
+  RexxObject *handleNovalue(RexxActivation *context, RexxString *name, RexxCompoundElement *variable);
   void        expose(RexxCompoundElement *variable);
   bool        sort(RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
 

@@ -53,7 +53,7 @@ RexxRegisterFunctionDll
 RexxRegisterExitExe
 RexxCallFunction
 RexxQueryMacro
-RexxCallExit
+RexxResolveExit
 RexxCallSubcom
 RexxDeregisterFunction
 RexxDeregisterSubcom

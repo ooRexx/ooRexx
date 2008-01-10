@@ -94,6 +94,10 @@ class ProtectedObject;
 #define RETURNED  2
 
 
+#define MS_PREORDER   0x01                  /* Macro Space Pre-Search         */
+#define MS_POSTORDER  0x02                  /* Macro Space Post-Search        */
+
+
 
                                        /* NOTE:  a template structure for   */
                                        /* the following is created in       */
@@ -250,6 +254,8 @@ RexxObject * activation_find  (void);
    RexxObject      * externalCall(RexxString *, size_t, RexxExpressionStack *, RexxString *, ProtectedObject &);
    RexxObject      * internalCall(RexxInstruction *, size_t, RexxExpressionStack *, ProtectedObject &);
    RexxObject      * internalCallTrap(RexxInstruction *, RexxDirectory *, ProtectedObject &);
+   bool              callMacroSpaceFunction(RexxString *, RexxObject **, size_t, RexxString *, int, ProtectedObject &);
+   bool              callRegisteredExternalFunction(RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
    RexxObject      * command(RexxString *, RexxString *);
    int64_t           getElapsed();
    RexxDateTime      getTime();
@@ -271,9 +277,10 @@ RexxObject * activation_find  (void);
      /* instruction? */
      if (this->activation_context&TOP_LEVEL_CALL || this->activation_context == INTERPRET) {
                                           /* real program call?                */
-         if (this->activation_context&PROGRAM_LEVEL_CALL) {
+         if (this->activation_context&PROGRAM_LEVEL_CALL)
+         {
                                           /* run termination exit              */
-             this->activity->sysExitTerm(this);
+             this->activity->callTerminationExit(this);
          }
          this->execution_state = RETURNED;/* this is an EXIT for real          */
          return;                          /* we're finished here               */
@@ -315,6 +322,7 @@ RexxObject * activation_find  (void);
    RexxObject  *novalueHandler(RexxString *);
    RexxVariableBase *retriever(RexxString *);
    RexxVariableBase *directRetriever(RexxString *);
+   RexxObject       *handleNovalueEvent(RexxString *name, RexxVariable *variable);
 
    inline RexxActivationBase  * getSender() { return (RexxActivationBase *)this->sender; }
    inline void              setCallType(RexxString *type) {this->settings.calltype = type; }
@@ -587,22 +595,6 @@ RexxObject * activation_find  (void);
    }
 
    inline bool novalueEnabled() { return settings.local_variables.getNovalue(); }
-
-   inline RexxObject *handleNoValueEvent(RexxString *name)
-   {
-                                  /* try for an externally supplied    */
-                                  /* value                             */
-     RexxObject *value = novalueHandler(name);
-     if (value == TheNilObject) { /* no external value?                */
-         /* novalue trapping enabled?         */
-         if (novalueEnabled()) {
-                                  /* handle novalue conditions         */
-             reportNovalue(name);
-         }
-         value = name;            /* just use the name                 */
-     }
-     return value;                /* return the default value          */
-   }
 
    /* The following methods be rights should be implemented by the */
    /* RexxMemory class, but aren't because of the difficulties of */

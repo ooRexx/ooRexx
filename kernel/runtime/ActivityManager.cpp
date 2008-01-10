@@ -419,6 +419,25 @@ RexxActivity *ActivityManager::newActivity(int priority)
 
 
 /**
+ * Clone off an activity from an existing activity.  Used for
+ * message start() are early reply operations.
+ *
+ * @param parent The currently running activity.  The activity-specific settings are
+ *               inherited from the parent.
+ *
+ * @return A new activity.
+ */
+RexxActivity *ActivityManager::newActivity(RexxActivity *parent)
+{
+    // create a new activity with the same priority as the parent
+    RexxActivity *activity = newActivity(parent->getPriority());
+    // copy any needed settings from the parent
+    activity->inheritSettings(parent);
+    return activity;
+}
+
+
+/**
  * Raise a halt condition on all running activities.
  */
 void ActivityManager::haltAllActivities()

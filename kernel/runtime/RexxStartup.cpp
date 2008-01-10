@@ -110,9 +110,6 @@ bool REXXENTRY RexxInitialize (void)
     ProcessFirstThread = false;        /* this is the first thread          */
     Interpreter::createLocks();
     ActivityManager::createKernelLock();
-#ifdef FIXEDTIMERS
-    EVCROPEN(rexxTimeSliceSemaphore, "OBJREXXTSSEM");      // originally EVOPEN
-#endif
     ProcessDoneInit = false;           /* allow for restart :               */
     ProcessDoneTerm = false;           /* allow for restart :               */
     memoryObject.accessPools();        /* Gain access to memory Pools       */

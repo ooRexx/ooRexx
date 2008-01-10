@@ -35,112 +35,20 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#ifndef ProtectedObject_Included
-#define ProtectedObject_Included
 
-#include "RexxActivity.hpp"
-#include "ActivityManager.hpp"
+#include "RexxCore.h"
+#include "ProtectedObject.hpp"
+#include "ListClass.hpp"
 
-class RexxInstruction;
 
-class ProtectedObject
+void ProtectedSet::add(RexxObject *o)
 {
-friend class RexxActivity;
-public:
-    inline ProtectedObject() : protectedObject(OREF_NULL), next(NULL)
+    // first one we've added?
+    if (protectedObject == OREF_NULL)
     {
-        // it would be better to have the activity class do this, but because
-        // we're doing this with inline methods, we run into a bit of a
-        // circular reference problem
-        next = ActivityManager::currentActivity->protectedObjects;
-        ActivityManager::currentActivity->protectedObjects = this;
+        protectedObject = new_list();
     }
+    RexxList *saveTable = (RexxList *)(RexxObject *)protectedObject;
+    saveTable->append(o);
+}
 
-    inline ProtectedObject(RexxObject *o) : protectedObject(o), next(NULL)
-    {
-        next = ActivityManager::currentActivity->protectedObjects;
-        ActivityManager::currentActivity->protectedObjects = this;
-    }
-
-    inline ProtectedObject(RexxInternalObject *o) : protectedObject((RexxObject *)o), next(NULL)
-    {
-        next = ActivityManager::currentActivity->protectedObjects;
-        ActivityManager::currentActivity->protectedObjects = this;
-    }
-
-    inline ~ProtectedObject()
-    {
-        // remove ourselves from the list and give this object a
-        // little hold protection.
-        ActivityManager::currentActivity->protectedObjects = next;
-        if (protectedObject != OREF_NULL)
-        {
-            holdObject(protectedObject);
-        }
-    }
-
-    inline ProtectedObject & operator=(RexxObject *o)
-    {
-        protectedObject = o;
-        return *this;
-    }
-
-    inline bool operator == (RexxObject *o)
-    {
-        return protectedObject == o;
-    }
-
-    inline bool operator != (RexxObject *o)
-    {
-        return protectedObject != o;
-    }
-
-    // cast conversion operators for some very common uses of protected object.
-    inline operator RexxObject *()
-    {
-        return protectedObject;
-    }
-
-    inline operator RexxString *()
-    {
-        return (RexxString *)protectedObject;
-    }
-
-    inline operator RexxMethod *()
-    {
-        return (RexxMethod *)protectedObject;
-    }
-
-    inline operator RexxArray *()
-    {
-        return (RexxArray *)protectedObject;
-    }
-
-    // this conversion helps the parsing process protect objects
-    inline operator RexxInstruction *()
-    {
-        return (RexxInstruction *)protectedObject;
-    }
-
-    inline operator void *()
-    {
-        return (void *)protectedObject;
-    }
-
-protected:
-    RexxObject *protectedObject;       // next in the chain of protected object
-    ProtectedObject *next;             // the pointer protected by the object
-};
-
-
-class ProtectedSet : public ProtectedObject
-{
-public:
-    inline ProtectedSet() : ProtectedObject() { }
-    inline ~ProtectedSet() { }
-
-    void add(RexxObject *);
-};
-
-
-#endif

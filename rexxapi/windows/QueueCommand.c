@@ -66,7 +66,6 @@
 
 #define DLLNAME "rexx.dll"
 
-#define DosRead(a,b,c,d) !ReadFile(hStdIn, b, c, d, NULL)
 HANDLE hStdIn;
 
 char  line[4096];              /* buffer for data to add to queue    */
@@ -78,7 +77,7 @@ void  options_error(           /* function called on errors          */
           const char *queuename ) ;
 
                                /* function to read stdin             */
-ULONG get_line(PUCHAR, ULONG, PULONG);
+size_t get_line(char *, size_t, size_t *);
 
 
 int __cdecl main(
@@ -351,7 +350,7 @@ void options_error( int   type,        /* Error type.                */
 /*********************************************************************/
 /* Function:           Read a line from stdin into a buffer          */
 /*                                                                   */
-/* Description:        Read a line from stdin using DosRead into     */
+/* Description:        Read a line from stdin using ReadFile into    */
 /*                     the supplied buffer.  If the line is longer   */
 /*                     than the buffer, then it will be truncated    */
 /*                     and the remainder of the line thrown away.    */
@@ -365,16 +364,16 @@ void options_error( int   type,        /* Error type.                */
 /*                                                                   */
 /*********************************************************************/
 
-ULONG       get_line( PUCHAR buffer,   /* Read buffer                */
-                      ULONG  bufsize,  /* Buffer size                */
-                      PULONG linelen)  /* length of line             */
+size_t get_line(char *buffer,          /* Read buffer                */
+                      size_t bufsize,  /* Buffer size                */
+                      size_t *linelen) /* length of line             */
 {
-  static CHAR savechar = '\0';         /* cached character           */
+  static char savechar = '\0';         /* cached character           */
   static BOOL eof = FALSE;             /* not hit eof yet            */
-  ULONG actual;                        /* actual bytes read          */
-  ULONG rc;                            /* DosRead return code        */
-  CHAR  newchar;                       /* character read             */
-  ULONG length;                        /* length read                */
+  ULONG  actual;                       /* actual bytes read          */
+  ULONG rc;                            /* ReadFile return code       */
+  char  newchar;                       /* character read             */
+  size_t length;                       /* length read                */
 
   if (eof)                             /* already hit end?           */
     return TRUE;                       /* all done                   */
@@ -386,7 +385,7 @@ ULONG       get_line( PUCHAR buffer,   /* Read buffer                */
     savechar = '\0';                   /* zap for next time          */
   }
                                        /* read first character       */
-  rc = DosRead(0, &newchar, 1, &actual);
+  rc = !ReadFile(hStdIn, &newchar, 1, &actual, NULL);
   while (!rc) {                        /* while no error             */
     if (!actual) {                     /* EOF?                       */
       *linelen = length;               /* set length                 */
@@ -400,7 +399,7 @@ ULONG       get_line( PUCHAR buffer,   /* Read buffer                */
     if (newchar == '\r') {             /* end of line                */
       *linelen = length;               /* passback length read       */
                                        /* read next character        */
-      rc = DosRead(0, &newchar, 1, &actual);
+      rc = !ReadFile(hStdIn, &newchar, 1, &actual, NULL);
                                        /* newline char?              */
       if (!rc && actual && newchar != '\n')
         savechar = newchar;            /* save this for next time    */
@@ -424,7 +423,7 @@ ULONG       get_line( PUCHAR buffer,   /* Read buffer                */
       }
     }
                                        /* read next character        */
-    rc = DosRead(0, &newchar, 1, &actual);
+    rc = !ReadFile(hStdIn, &newchar, 1, &actual, NULL);
   }
                                        /* had an error               */
   if (actual) {                        /* something read?            */

@@ -109,7 +109,7 @@ typedef struct _TYPELIBLIST
 
 class OLEObjectEvent : public IDispatch {
   public:
-    OLEObjectEvent(POLEFUNCINFO2, RexxObject*, GUID);
+    OLEObjectEvent(POLEFUNCINFO2, REXXOBJECT, GUID);
     virtual ~OLEObjectEvent();
 
     /* IUnknown methods */
@@ -128,7 +128,7 @@ class OLEObjectEvent : public IDispatch {
   private:
     ULONG         ulRefCounter;         // reference counter
     POLEFUNCINFO2 pEventList;           // event list
-    RexxObject   *self;                 // associated REXX OLEObject
+    REXXOBJECT    self;                 // associated REXX OLEObject
     GUID          interfaceID;          // event interface this object supports
 };
 

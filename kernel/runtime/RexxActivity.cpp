@@ -215,7 +215,6 @@ RexxActivity::RexxActivity(
     this->size = ACT_STACK_SIZE;       /* set the activation stack size     */
     this->stackcheck = true;           /* start with stack checking enabled */
                                        /* use default settings set          */
-    this->exitObjects = false;         // ENG023A: behaviour of exits: classic REXX
                                        /* set up current usage set          */
     this->numericSettings = Numerics::getDefaultSettings();
 
@@ -1039,8 +1038,6 @@ void RexxActivity::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-
   memory_mark(this->activations);
   memory_mark(this->topActivation);
   memory_mark(this->getCurrentActivation());
@@ -1049,12 +1046,6 @@ void RexxActivity::live(size_t liveMark)
   memory_mark(this->requiresTable);
   memory_mark(this->nextWaitingActivity);
   memory_mark(this->waitingObject);
-  memory_mark(this->nestedInfo.currentExit);
-  memory_mark(this->nestedInfo.shvexitvalue);
-  for (i = 0; i < LAST_EXIT; i++)
-  {
-      memory_mark(this->nestedInfo.sysexits[i]);
-  }
 
   /* have the frame stack do its own marking. */
   frameStack.live(liveMark);
@@ -1072,8 +1063,6 @@ void RexxActivity::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-
   memory_mark_general(this->activations);
   memory_mark_general(this->topActivation);
   memory_mark_general(this->currentActivation);
@@ -1082,13 +1071,6 @@ void RexxActivity::liveGeneral(int reason)
   memory_mark_general(this->requiresTable);
   memory_mark_general(this->nextWaitingActivity);
   memory_mark_general(this->waitingObject);
-  memory_mark_general(this->nestedInfo.currentExit);
-  memory_mark_general(this->nestedInfo.shvexitvalue);
-
-  for (i = 0; i < LAST_EXIT; i++)
-  {
-      memory_mark_general(this->nestedInfo.sysexits[i]);
-  }
 
   /* have the frame stack do its own marking. */
   frameStack.liveGeneral(reason);
@@ -1313,9 +1295,7 @@ void RexxActivity::popNil()
 }
 
 void RexxActivity::exitKernel(
-  RexxActivation *activation,          /* activation going external on      */
-  RexxString     *message_name,        /* reason for going external         */
-  bool            enable )             /* variable pool enabled flag        */
+  RexxActivation *activation)          /* activation going external on      */
 /******************************************************************************/
 /*  Function:  Release the kernel access because code is going to "leave"     */
 /*             the kernel.  This prepares for this by adding a native         */
@@ -1324,15 +1304,12 @@ void RexxActivity::exitKernel(
 /*             be created just to get an activation created                   */
 /******************************************************************************/
 {
-  RexxNativeActivation *new_activation;/* new native activation             */
-
                                        /* create a new native activation    */
-  new_activation = new RexxNativeActivation(this, activation);
+  RexxNativeActivation *new_activation = new RexxNativeActivation(this, activation);
                                        /* push it on the activity stack     */
   this->push((RexxActivationBase *)new_activation);
-  if (enable)                          /* need variable pool access?        */
                                        /* turn it on now                    */
-    new_activation->enableVariablepool();
+  new_activation->enableVariablepool();
   releaseAccess();                     /* now give up control               */
 }
 
@@ -1615,29 +1592,20 @@ thread_id_t  RexxActivity::threadIdMethod()
   return this->threadid;                 /* just return the thread id info    */
 }
 
-void  RexxActivity::setShvVal(
-    RexxString *retval)
-/******************************************************************************/
-/* Function:  Set a return value as a result of a call to the variable pool   */
-/*            with the RXSHV_EXIT shvcode specified                           */
-/******************************************************************************/
-{
-                                       /* set the ret'd value from var pool */
-  this->nestedInfo.shvexitvalue = retval;
-}
-
 void RexxActivity::queryTrcHlt()
 /******************************************************************************/
 /* Function:  Determine if Halt or Trace System exits are set                 */
 /*            and set a flag to indicate this.                                */
 /******************************************************************************/
 {                                      /* is HALT sys exit set              */
-  if (this->nestedInfo.sysexits[RXHLT - 1] != OREF_NULL) {
+  if (isExitEnabled(RXHLT))
+  {
     this->nestedInfo.clauseExitUsed = true;   /* set flag to indicate one is found */
     return;                            /* and return                        */
   }
                                        /* is TRACE sys exit set             */
-  if (this->nestedInfo.sysexits[RXTRC - 1] != OREF_NULL) {
+  if (isExitEnabled(RXTRC))
+  {
     this->nestedInfo.clauseExitUsed = true;   /* set flag to indicate one is found */
     return;                            /* and return                        */
   }
@@ -1645,54 +1613,92 @@ void RexxActivity::queryTrcHlt()
   this->nestedInfo.clauseExitUsed = false;    /* remember that none are set        */
 }
 
-void RexxActivity::sysExitInit(
+
+/**
+ * Call an individual exit handler.
+ *
+ * @param activation The activation this is in the context of.
+ * @param exitName   The logical name of the handler.
+ * @param function   The exit function.
+ * @param subfunction
+ *                   The exit subfunction.
+ * @param exitbuffer The parameter structure for the exit in question.
+ *
+ * @return The exit handling state.
+ */
+bool RexxActivity::callExit(RexxActivation * activation,
+    const char *exitName, int function,
+    int subfunction, void *exitbuffer)
+{
+    ExitHandler &handler = getExitHandler(function);
+
+    int rc = handler.call(this, activation, function, subfunction, exitbuffer);
+
+    /* got an error case?                  */
+    if (rc == RXEXIT_RAISE_ERROR || rc < 0)
+    {
+        if (function == RXSIO)             /* this the I/O function?              */
+        {
+            /* disable the I/O exit from here to   */
+            /* prevent recursive error conditions  */
+            nestedInfo.sysexits[RXSIO].disable();
+        }
+        if (function != RXTER)             /* not the termination exit?           */
+        {
+            /* go raise an error                   */
+            reportException(Error_System_service_service, exitName);
+
+        }
+    }
+    return rc == RXEXIT_HANDLED;         /* Did exit handle task?               */
+}
+
+
+void RexxActivity::callInitializationExit(
     RexxActivation *activation)        /* sending activation                */
 /******************************************************************************/
 /* Function:   Calls the SysExitHandler method on the System Object to run    */
 /*             the initialization system exit.                                */
 /******************************************************************************/
 {
-  RexxString *exitname;                /* Exit routine name                 */
+    if (isExitEnabled(RXINI))  // is the exit enabled?
+    {
+        /* add the variable RXPROGRAMNAME to */
+        /* the variable pool, it contains the*/
+        /* script name that is currently run */
 
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXINI);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
+        //TODO:  Remove this crud and add something to the variable pool
+        RexxString   *varName = new_string("RXPROGRAMNAME");
+        RexxString   *sourceStr = activation->getProgramName();
+        RexxVariableDictionary *vdict = activation->getLocalVariables();
+        RexxVariable *pgmName = vdict->createVariable(varName);
+        pgmName->set(sourceStr);
+                                           /* call the handler                  */
+        callExit(activation, "RXINI", RXINI, RXINIEXT, NULL);
 
-                                       /* add the variable RXPROGRAMNAME to */
-                                       /* the variable pool, it contains the*/
-                                       /* script name that is currently run */
-    RexxString   *varName = new_string("RXPROGRAMNAME");
-    RexxString   *sourceStr = activation->getProgramName();
-    RexxVariableDictionary *vdict = activation->getLocalVariables();
-    RexxVariable *pgmName = vdict->createVariable(varName);
-    pgmName->set(sourceStr);
-                                       /* call the handler                  */
-    SysExitHandler(this, activation, exitname, RXINI, RXINIEXT, NULL, true);
-                                       /* if variable was not changed, then */
-                                       /* remove it from the var. pool again*/
-    if (sourceStr == pgmName->getVariableValue()) {
-      vdict->remove(varName);
+        /* if variable was not changed, then */
+        /* remove it from the var. pool again*/
+        if (sourceStr == pgmName->getVariableValue())
+        {
+            vdict->remove(varName);
+        }
     }
-  }
 }
 
-void RexxActivity::sysExitTerm(
+void RexxActivity::callTerminationExit(
     RexxActivation *activation)        /* sending activation                */
 /******************************************************************************/
 /* Function:   Calls the SysExitHandler method on the System Object to run    */
 /*             the termination system exit.                                   */
 /******************************************************************************/
 {
-  RexxString *exitname;                /* Exit routine name                 */
-
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXTER);
-  if (exitname != OREF_NULL)           /* exit enabled?                     */
-                                       /* call the handler                  */
-    SysExitHandler(this, activation, exitname, RXTER, RXTEREXT, NULL, true);
+    if (isExitEnabled(RXTER))  // is the exit enabled?
+    {
+        callExit(activation, "RXTER", RXTER, RXTEREXT, NULL);
+    }
 }
 
-bool  RexxActivity::sysExitSioSay(
+bool  RexxActivity::callSayExit(
     RexxActivation *activation,        /* sending activation                */
     RexxString     *sayoutput)         /* line to write out                 */
 /******************************************************************************/
@@ -1700,21 +1706,17 @@ bool  RexxActivity::sysExitSioSay(
 /*             the I/O system exit.                                           */
 /******************************************************************************/
 {
-  RexxString   *exitname;              /* Exit routine name                 */
-  RXSIOSAY_PARM exit_parm;             /* exit parameters                   */
+    if (isExitEnabled(RXSIO))  // is the exit enabled?
+    {
+        RXSIOSAY_PARM exit_parm;             /* exit parameters                   */
 
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXSIO);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-                                       /* make into RXSTRING form           */
-    MAKERXSTRING(exit_parm.rxsio_string, sayoutput->getWritableData(),  sayoutput->getLength());
-                                       /* call the handler                  */
-    return SysExitHandler(this, activation, exitname, RXSIO, RXSIOSAY, (void *)&exit_parm, false);
-  }
-  return true;                         /* exit didn't handle                */
+        sayoutput->toRxstring(exit_parm.rxsio_string);
+        callExit(activation, "RXSIO", RXSIO, RXSIOSAY, &exit_parm);
+    }
+    return true;                         /* exit didn't handle                */
 }
 
-bool RexxActivity::sysExitSioTrc(
+bool RexxActivity::callTraceExit(
     RexxActivation *activation,        /* sending activation                */
     RexxString     *traceoutput)       /* line to write out                 */
 /******************************************************************************/
@@ -1722,103 +1724,84 @@ bool RexxActivity::sysExitSioTrc(
 /*             the I/O system exit.                                           */
 /******************************************************************************/
 {
-  RexxString *  exitname;              /* Exit routine name                 */
-  RXSIOTRC_PARM exit_parm;             /* exit parameters                   */
-
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXSIO);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-                                       /* make into RXSTRING form           */
-    MAKERXSTRING(exit_parm.rxsio_string, traceoutput->getWritableData(), traceoutput->getLength());
-                                       /* call the handler                  */
-    return SysExitHandler(this, activation, exitname, RXSIO, RXSIOTRC, (void *)&exit_parm, false);
-  }
-  return true;                         /* exit didn't handle                */
+    if (isExitEnabled(RXSIO))  // is the exit enabled?
+    {
+        RXSIOSAY_PARM exit_parm;             /* exit parameters                   */
+        traceoutput->toRxstring(exit_parm.rxsio_string);
+        callExit(activation, "RXSIO", RXSIO, RXSIOTRC, &exit_parm);
+    }
+    return true;                         /* exit didn't handle                */
 }
 
-bool RexxActivity::sysExitSioTrd(
+bool RexxActivity::callTerminalInputExit(
     RexxActivation *activation,        /* sending activation                */
-    RexxString **inputstring)          /* returned input string             */
+    RexxString *&inputstring)          /* returned input string             */
 /******************************************************************************/
 /* Function:   Calls the SysExitHandler method on the System Object to run    */
 /*             the I/O system exit.                                           */
 /******************************************************************************/
 {
-  RexxString   *exitname;              /* Exit routine name                 */
-  RXSIOTRD_PARM exit_parm;             /* exit parameters                   */
-  char          retbuffer[DEFRXSTRING];/* Default result buffer             */
+    if (isExitEnabled(RXSIO))  // is the exit enabled?
+    {
+        RXSIOTRD_PARM exit_parm;             /* exit parameters                   */
+        char          retbuffer[DEFRXSTRING];/* Default result buffer             */
 
-  *retbuffer = '\0';
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXSIO);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-                                       /* Pass along default RXSTRING       */
-/*     MAKERXSTRING(exit_parm.rxsiotrd_retc, retbuffer, DEFRXSTRING); */
-    MAKERXSTRING(exit_parm.rxsiotrd_retc, retbuffer, 0);
-                                       /* init shvexit return buffer        */
-    this->nestedInfo.shvexitvalue = OREF_NULL;
-                                       /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXSIO, RXSIOTRD, (void *)&exit_parm, false))
-      return true;                     /* this wasn't handled               */
-                                       /* shv_exit return a value?          */
-    if (this->nestedInfo.shvexitvalue != OREF_NULL) {
-                                       /* return this information           */
-      *inputstring = (RexxString *)this->nestedInfo.shvexitvalue;
-      return false;                    /* return that request was handled   */
+        *retbuffer = '\0';
+        /* Pass along default RXSTRING       */
+        MAKERXSTRING(exit_parm.rxsiotrd_retc, retbuffer, DEFRXSTRING);
+        if (callExit(activation, "RXSIO", RXSIO, RXSIOTRD, &exit_parm))
+        {
+            return true;
+        }
+        /* Get input string and return it    */
+        inputstring = new_string(exit_parm.rxsiotrd_retc);
+        /* user give us a new buffer?        */
+        if (exit_parm.rxsiotrd_retc.strptr != retbuffer)
+        {
+            /* free it                           */
+            SysReleaseResultMemory(exit_parm.rxsiotrd_retc.strptr);
+
+        }
+        return false;                      /* this was handled                  */
     }
-                                       /* Get input string and return it    */
-    *inputstring = (RexxString *)new_string(exit_parm.rxsiotrd_retc.strptr, exit_parm.rxsiotrd_retc.strlength);
-                                       /* user give us a new buffer?        */
-    if (exit_parm.rxsiotrd_retc.strptr != retbuffer)
-                                       /* free it                           */
-      SysReleaseResultMemory(exit_parm.rxsiotrd_retc.strptr);
-    return false;                      /* this was handled                  */
-  }
-  return true;                         /* not handled                       */
+    return true;                         /* not handled                       */
 }
 
-bool RexxActivity::sysExitSioDtr(
+bool RexxActivity::callDebugInputExit(
     RexxActivation *activation,        /* sending activation                */
-    RexxString    **inputstring)       /* returned input value              */
+    RexxString    *&inputstring)       /* returned input value              */
 /******************************************************************************/
 /* Function:   Calls the SysExitHandler method on the System Object to run    */
 /*             the I/O system exit.                                           */
 /******************************************************************************/
 {
-  RexxString   *exitname;              /* Exit routine name                 */
-  RXSIODTR_PARM exit_parm;             /* exit parameters                   */
-  char          retbuffer[DEFRXSTRING];/* Default result buffer             */
+    if (isExitEnabled(RXSIO))  // is the exit enabled?
+    {
+        RXSIOTRD_PARM exit_parm;             /* exit parameters                   */
+        char          retbuffer[DEFRXSTRING];/* Default result buffer             */
 
-  *retbuffer = '\0';
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXSIO);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-                                       /* Pass along default RXSTRING       */
-/*     MAKERXSTRING(exit_parm.rxsiodtr_retc, retbuffer, DEFRXSTRING); */
-    MAKERXSTRING(exit_parm.rxsiodtr_retc, retbuffer, 0);
-                                       /* init shvexit return buffer        */
-    this->nestedInfo.shvexitvalue = OREF_NULL;
-                                       /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXSIO, RXSIODTR, (void *)&exit_parm, false))
-      return true;                     /* this wasn't handled               */
-                                       /* shv_exit return a value?          */
-    if (this->nestedInfo.shvexitvalue != OREF_NULL) {
-                                       /* return this information           */
-      *inputstring = (RexxString *)this->nestedInfo.shvexitvalue;
-      return false;                    /* return that request was handled   */
+        *retbuffer = '\0';
+        /* Pass along default RXSTRING       */
+        MAKERXSTRING(exit_parm.rxsiotrd_retc, retbuffer, DEFRXSTRING);
+        if (callExit(activation, "RXSIO", RXSIO, RXSIODTR, &exit_parm))
+        {
+            return true;
+        }
+        /* Get input string and return it    */
+        inputstring = new_string(exit_parm.rxsiotrd_retc);
+        /* user give us a new buffer?        */
+        if (exit_parm.rxsiotrd_retc.strptr != retbuffer)
+        {
+            /* free it                           */
+            SysReleaseResultMemory(exit_parm.rxsiotrd_retc.strptr);
+
+        }
+        return false;                      /* this was handled                  */
     }
-                                       /* Get input string and return it    */
-    *inputstring = (RexxString *)new_string(exit_parm.rxsiodtr_retc.strptr, exit_parm.rxsiodtr_retc.strlength);
-                                       /* user give us a new buffer?        */
-    if (exit_parm.rxsiodtr_retc.strptr != retbuffer)
-                                       /* free it                           */
-      SysReleaseResultMemory(exit_parm.rxsiodtr_retc.strptr);
-    return false;                      /* this was handled                  */
-  }
-  return true;                         /* not handled                       */
+    return true;                         /* not handled                       */
 }
 
-bool RexxActivity::sysExitFunc(
+bool RexxActivity::callFunctionExit(
     RexxActivation *activation,        /* calling activation                */
     RexxString     *rname,             /* routine name                      */
     RexxObject     *calltype,          /* type of call                      */
@@ -1830,160 +1813,188 @@ bool RexxActivity::sysExitFunc(
 /*             the function system exit.                                      */
 /******************************************************************************/
 {
-  RexxString   *exitname;              /* Exit routine name                 */
-  RXFNCCAL_PARM exit_parm;             /* exit parameters                   */
-  char          retbuffer[DEFRXSTRING];/* Default result buffer             */
-  size_t        argindex;              /* Counter for arg array             */
-  PCONSTRXSTRING argrxarray;           /* Array of args in PRXSTRING form   */
-  RexxString   *temp;                  /* temporary argument                */
-  RexxString   *stdqueue;              /* current REXX queue                */
-  RexxDirectory *securityArgs;         /* security check arguments          */
-  bool         wasNotHandled;
-
-                                       /* need to do a security check?      */
-  if (activation->hasSecurityManager()) {
-    securityArgs = new_directory();    /* get a directory item              */
-                                       /* add the function name             */
-    securityArgs->put(rname, OREF_NAME);
-                                       /* and the arguments                 */
-    securityArgs->put(new (argcount, arguments) RexxArray, OREF_ARGUMENTS);
-                                       /* did manager handle this?          */
-    if (activation->callSecurityManager(OREF_CALL, securityArgs)) {
-                                       /* get the return code               */
-      funcresult = securityArgs->fastAt(OREF_RESULT);
-      return false;                    /* we've handled this                */
-    }
-  }
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXFNC);
-#ifdef SCRIPTING
-  if (exitname == OREF_NULL) {
-    const char *data = ((RexxString*) calltype)->getStringData();
-    // special "calltype"? make a real one out of it and check
-    if (data[0] == 'A' && data[1] == 'X') {
-      sscanf(((RexxString*) calltype)->getStringData()+2,"%p",&calltype);
-      if (calltype)
-        exitname = this->querySysExits(RXEXF); // external call (Script Engine?)
-    }
-  }
-#endif
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-                                       /* Start building the exit block  */
-    exit_parm.rxfnc_flags.rxfferr = 0; /* Initialize error codes to zero */
-    exit_parm.rxfnc_flags.rxffnfnd = 0;
-    if (calltype == OREF_FUNCTIONNAME) /* function call?                    */
-                                       /* set the function flag             */
-      exit_parm.rxfnc_flags.rxffsub = 0;
-    else
-                                       /* this is the CALL instruction      */
-      exit_parm.rxfnc_flags.rxffsub = 1;
-                                       /* fill in the name parameter        */
-    exit_parm.rxfnc_namel = (unsigned short)rname->getLength();
-    exit_parm.rxfnc_name = rname->getWritableData();
-
-                                       /* Get current active queue name     */
-    stdqueue = (RexxString *)SysGetCurrentQueue();
-                                       /* fill in the name                  */
-    exit_parm.rxfnc_que = stdqueue->getWritableData();
-                                       /* and the length                    */
-    exit_parm.rxfnc_quel = (unsigned short)stdqueue->getLength();
-                                       /* Build arg array of RXSTRINGs      */
-                                       /* get number of args                */
-    exit_parm.rxfnc_argc = (unsigned short)argcount;
-
-
-    /* allocate enough memory for all arguments.           */
-    /* At least one item needs to be allocated in order to avoid an error   */
-    /* in the sysexithandler!                                               */
-    argrxarray = (PCONSTRXSTRING) SysAllocateResultMemory(
-                    sizeof(CONSTRXSTRING) * Numerics::maxVal((size_t)exit_parm.rxfnc_argc, (size_t)1));
-    if (argrxarray == OREF_NULL)       /* memory error?                     */
-      reportException(Error_System_resources);
-                                       /* give the arg array pointer        */
-    exit_parm.rxfnc_argv = argrxarray;
-                                       /* construct the arg array           */
-    for (argindex=0; argindex < exit_parm.rxfnc_argc; argindex++) {
-                                       /* get the next argument             */
-      if (this->exitObjects == true) {
-        // store pointers to rexx objects
-          char *value = (char *)SysAllocateExternalMemory(16);
-          sprintf(value, "%p", arguments[argindex]); // ptr to object
-          argrxarray[argindex].strlength = 8; // pointer length in ASCII
-          argrxarray[argindex].strptr = value;
-      } else {
-        // classic REXX style interface
-        temp = (RexxString *)arguments[argindex];
-        if (temp != OREF_NULL) {         /* got a real argument?              */
-                                         /* force the argument to a string    */
-          temp = (RexxString *)REQUEST_STRING(temp);
-                                         /* point to the string               */
-          argrxarray[argindex].strlength = temp->getLength();
-          argrxarray[argindex].strptr = temp->getWritableData();
-        }
-        else {
-                                         /* empty argument                    */
-          argrxarray[argindex].strlength = 0;
-          argrxarray[argindex].strptr = (char *)NULL;
-        }
-      }
-    }
-                                       /* Pass default result RXSTRING      */
-    MAKERXSTRING(exit_parm.rxfnc_retc, retbuffer, DEFRXSTRING);
-                                       /* init shvexit return buffer        */
-    this->nestedInfo.shvexitvalue = OREF_NULL;
-                                       /* call the handler                  */
-    wasNotHandled = SysExitHandler(this, activation, exitname, RXFNC, RXFNCCAL, (void *)&exit_parm, true);
-
-    /* release the memory allocated for the arguments */
-    // free memory that was needed to pass objects
-    if (this->exitObjects == true)
+    /* need to do a security check?      */
+    if (activation->hasSecurityManager())
     {
-        for (argindex=0; argindex < exit_parm.rxfnc_argc; argindex++)
+        RexxDirectory *securityArgs = new_directory();    /* get a directory item              */
+        /* add the function name             */
+        securityArgs->put(rname, OREF_NAME);
+        /* and the arguments                 */
+        securityArgs->put(new (argcount, arguments) RexxArray, OREF_ARGUMENTS);
+        /* did manager handle this?          */
+        if (activation->callSecurityManager(OREF_CALL, securityArgs))
         {
-            SysFreeExternalMemory((void *)argrxarray[argindex].strptr);
+            /* get the return code               */
+            funcresult = securityArgs->fastAt(OREF_RESULT);
+            return false;                    /* we've handled this                */
         }
     }
-    SysReleaseResultMemory(argrxarray);
 
-    if (wasNotHandled)
-      return true;                     /* this wasn't handled               */
+    if (isExitEnabled(RXFNC))  // is the exit enabled?
+    {
+        RXFNCCAL_PARM exit_parm;             /* exit parameters                   */
+        char          retbuffer[DEFRXSTRING];/* Default result buffer             */
+        /* Start building the exit block  */
+        exit_parm.rxfnc_flags.rxfferr = 0; /* Initialize error codes to zero */
+        exit_parm.rxfnc_flags.rxffnfnd = 0;
 
 
-    if (exit_parm.rxfnc_flags.rxfferr) /* function error?                   */
-                                       /* raise an error                    */
-      reportException(Error_Incorrect_call_external, rname);
-                                       /* Did we find the function??        */
-    else if (exit_parm.rxfnc_flags.rxffnfnd)
-                                       /* also an error                     */
-      reportException(Error_Routine_not_found_name,rname);
-                                       /* Was it a function call??          */
-    if (exit_parm.rxfnc_retc.strptr == OREF_NULL && calltype == OREF_FUNCTIONNAME)
-                                       /* Have to return data               */
-      reportException(Error_Function_no_data_function,rname);
+        exit_parm.rxfnc_flags.rxffsub = calltype == OREF_FUNCTIONNAME ? 0 : 1;
+        /* fill in the name parameter        */
+        exit_parm.rxfnc_namel = (unsigned short)rname->getLength();
+        exit_parm.rxfnc_name = rname->getStringData();
 
-    if (exit_parm.rxfnc_retc.strptr) { /* If we have result, return it      */
-      // is this a real object?
-      if (this->exitObjects == true) {
-        RexxObject *transfer = NULL;
-        if (sscanf(exit_parm.rxfnc_retc.strptr,"%p",&transfer) == 1)
-          funcresult = transfer;
-        else
-          reportException(Error_Function_no_data_function,rname);
-      } else
-                                       /* Get input string and return it    */
-        funcresult = new_string((char *)exit_parm.rxfnc_retc.strptr, exit_parm.rxfnc_retc.strlength);
-                                       /* user give us a new buffer?        */
-      if (exit_parm.rxfnc_retc.strptr != retbuffer)
-                                       /* free it                           */
-        SysReleaseResultMemory(exit_parm.rxfnc_retc.strptr);
+        /* Get current active queue name     */
+        RexxString *stdqueue = SysGetCurrentQueue();
+        /* fill in the name                  */
+        exit_parm.rxfnc_que = stdqueue->getStringData();
+        /* and the length                    */
+        exit_parm.rxfnc_quel = (unsigned short)stdqueue->getLength();
+        /* Build arg array of RXSTRINGs      */
+        /* get number of args                */
+        exit_parm.rxfnc_argc = (unsigned short)argcount;
+
+
+        /* allocate enough memory for all arguments.           */
+        /* At least one item needs to be allocated in order to avoid an error   */
+        /* in the sysexithandler!                                               */
+        PCONSTRXSTRING argrxarray = (PCONSTRXSTRING) SysAllocateResultMemory(
+                                                                            sizeof(CONSTRXSTRING) * Numerics::maxVal((size_t)exit_parm.rxfnc_argc, (size_t)1));
+        if (argrxarray == OREF_NULL)       /* memory error?                     */
+        {
+            reportException(Error_System_resources);
+        }
+        /* give the arg array pointer        */
+        exit_parm.rxfnc_argv = argrxarray;
+        /* construct the arg array           */
+        for (size_t argindex=0; argindex < exit_parm.rxfnc_argc; argindex++)
+        {
+            // classic REXX style interface
+            RexxString *temp = (RexxString *)arguments[argindex];
+            if (temp != OREF_NULL)           /* got a real argument?              */
+            {
+                /* force the argument to a string    */
+                temp = (RexxString *)REQUEST_STRING(temp);
+                /* point to the string               */
+                temp->toRxstring(argrxarray[argindex]);
+            }
+            else
+            {
+                /* empty argument                    */
+                argrxarray[argindex].strlength = 0;
+                argrxarray[argindex].strptr = (const char *)NULL;
+            }
+        }
+        /* Pass default result RXSTRING      */
+        MAKERXSTRING(exit_parm.rxfnc_retc, retbuffer, DEFRXSTRING);
+        /* call the handler                  */
+        bool wasNotHandled = callExit(activation, "RXFNC", RXFNC, RXFNCCAL, (void *)&exit_parm);
+
+        SysReleaseResultMemory(argrxarray);
+
+        if (wasNotHandled)
+        {
+            return true;                     /* this wasn't handled               */
+        }
+
+
+        if (exit_parm.rxfnc_flags.rxfferr) /* function error?                   */
+        {
+            /* raise an error                    */
+            reportException(Error_Incorrect_call_external, rname);
+        }
+        /* Did we find the function??        */
+        else if (exit_parm.rxfnc_flags.rxffnfnd)
+        {
+            /* also an error                     */
+            reportException(Error_Routine_not_found_name,rname);
+        }
+        /* Was it a function call??          */
+        if (exit_parm.rxfnc_retc.strptr == OREF_NULL && calltype == OREF_FUNCTIONNAME)
+        {
+            /* Have to return data               */
+            reportException(Error_Function_no_data_function,rname);
+        }
+
+        if (exit_parm.rxfnc_retc.strptr)   /* If we have result, return it      */
+        {
+            /* Get input string and return it    */
+            funcresult = new_string(exit_parm.rxfnc_retc);
+            /* user give us a new buffer?        */
+            if (exit_parm.rxfnc_retc.strptr != retbuffer)
+            {
+                /* free it                           */
+                SysReleaseResultMemory(exit_parm.rxfnc_retc.strptr);
+            }
+        }
+        return false;                      /* this was handled                  */
     }
-    return false;                      /* this was handled                  */
-  }
-  return true;                         /* not handled                       */
+    return true;                         /* not handled                       */
 }
 
 
-bool RexxActivity::sysExitCmd(
+bool RexxActivity::callScriptingExit(
+    RexxActivation *activation,        /* calling activation                */
+    RexxString     *rname,             /* routine name                      */
+    RexxObject     *calltype,          /* type of call                      */
+    ProtectedObject &funcresult,       /* function result                   */
+    RexxObject    **arguments,         /* argument array                    */
+    size_t          argcount)          /* argument count                    */
+/******************************************************************************/
+/* Function:   Calls the SysExitHandler method on the System Object to run    */
+/*             the function system exit.                                      */
+/******************************************************************************/
+{
+    if (isExitEnabled(RXEXF))  // is the exit enabled?
+    {
+        RXEXFCAL_PARM exit_parm;             /* exit parameters                   */
+        /* Start building the exit block  */
+        exit_parm.rxfnc_flags.rxfferr = 0; /* Initialize error codes to zero */
+        exit_parm.rxfnc_flags.rxffnfnd = 0;
+
+
+        exit_parm.rxfnc_flags.rxffsub = calltype == OREF_FUNCTIONNAME ? 0 : 1;
+        /* fill in the name parameter        */
+        rname->toRxstring(exit_parm.rxfnc_name);
+
+        /* get number of args                */
+        exit_parm.rxfnc_argc = argcount;
+        // the argument pointers get passed as is
+        exit_parm.rxfnc_argv = (REXXOBJECT *)arguments;
+        // no result value
+        exit_parm.rxfnc_retc = NULLOBJECT;
+        /* call the handler                  */
+        if (!callExit(activation, "RXEXF", RXEXF, RXEXFCAL, (void *)&exit_parm))
+        {
+            return true;                     /* this wasn't handled               */
+        }
+
+        if (exit_parm.rxfnc_flags.rxfferr) /* function error?                   */
+        {
+            /* raise an error                    */
+            reportException(Error_Incorrect_call_external, rname);
+        }
+        /* Did we find the function??        */
+        else if (exit_parm.rxfnc_flags.rxffnfnd)
+        {
+            /* also an error                     */
+            reportException(Error_Routine_not_found_name,rname);
+        }
+        /* Was it a function call??          */
+        if (exit_parm.rxfnc_retc == NULLOBJECT && calltype == OREF_FUNCTIONNAME)
+        {
+            /* Have to return data               */
+            reportException(Error_Function_no_data_function,rname);
+        }
+        // set the function result back
+        funcresult = (RexxObject *)exit_parm.rxfnc_retc;
+        return false;                      /* this was handled                  */
+    }
+    return true;                         /* not handled                       */
+}
+
+
+bool RexxActivity::callCommandExit(
      RexxActivation *activation,       /* issuing activation                */
      RexxString *cmdname,              /* command name                      */
      RexxString *environment,          /* environment                       */
@@ -1994,124 +2005,126 @@ bool RexxActivity::sysExitCmd(
 /*             the command system exit.                                       */
 /******************************************************************************/
 {
-  RexxString    *exitname;             /* Exit routine name                 */
-  RXCMDHST_PARM exit_parm;             /* exit parameters                   */
-  char          retbuffer[DEFRXSTRING];/* Default result buffer             */
-  RexxDirectory *securityArgs;         /* security check arguments          */
-
-                                       /* need to do a security check?      */
-  if (activation->hasSecurityManager()) {
-    securityArgs = new_directory();    /* get a directory item              */
-                                       /* add the command                   */
-    securityArgs->put(cmdname, OREF_COMMAND);
-                                       /* and the target                    */
-    securityArgs->put(environment, OREF_ADDRESS);
-                                       /* did manager handle this?          */
-    if (activation->callSecurityManager(OREF_COMMAND, securityArgs)) {
-                                       /* get the return code               */
-      *cmdresult = securityArgs->fastAt(OREF_RC);
-      if (*cmdresult == OREF_NULL)     /* no return code provide?           */
-        *cmdresult = IntegerZero;      /* use a zero return code            */
-                                       /* failure indicated?                */
-      if (securityArgs->fastAt(OREF_FAILURENAME) != OREF_NULL)
-        *conditions = OREF_FAILURENAME;/* raise a FAILURE condition         */
-                                       /* how about an error condition?     */
-      else if (securityArgs->fastAt(OREF_ERRORNAME) != OREF_NULL)
-        *conditions = OREF_ERRORNAME;  /* raise an ERROR condition          */
-      return false;                    /* we've handled this                */
+    /* need to do a security check?      */
+    if (activation->hasSecurityManager())
+    {
+        RexxDirectory *securityArgs = new_directory();    /* get a directory item              */
+                                           /* add the command                   */
+        securityArgs->put(cmdname, OREF_COMMAND);
+        /* and the target                    */
+        securityArgs->put(environment, OREF_ADDRESS);
+        /* did manager handle this?          */
+        if (activation->callSecurityManager(OREF_COMMAND, securityArgs))
+        {
+            /* get the return code               */
+            *cmdresult = securityArgs->fastAt(OREF_RC);
+            if (*cmdresult == OREF_NULL)     /* no return code provide?           */
+            {
+                *cmdresult = IntegerZero;      /* use a zero return code            */
+            }
+            /* failure indicated?                */
+            if (securityArgs->fastAt(OREF_FAILURENAME) != OREF_NULL)
+            {
+                *conditions = OREF_FAILURENAME;/* raise a FAILURE condition         */
+            }
+            /* how about an error condition?     */
+            else if (securityArgs->fastAt(OREF_ERRORNAME) != OREF_NULL)
+            {
+                *conditions = OREF_ERRORNAME;  /* raise an ERROR condition          */
+            }
+            return false;                    /* we've handled this                */
+        }
     }
-  }
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXCMD);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-                                       /* Start building the exit block     */
-    exit_parm.rxcmd_flags.rxfcfail = 0;/* Initialize failure/error to zero  */
-    exit_parm.rxcmd_flags.rxfcerr = 0;
-                                       /* fill in the environment parm      */
-    exit_parm.rxcmd_addressl = (unsigned short)environment->getLength();
-    exit_parm.rxcmd_address = environment->getWritableData();
-                                       /* make cmdaname into RXSTRING form  */
-    MAKERXSTRING(exit_parm.rxcmd_command, cmdname->getWritableData(), cmdname->getLength());
 
-    exit_parm.rxcmd_dll = NULL;        /* Currently no DLL support          */
-    exit_parm.rxcmd_dll_len = 0;       /* 0 means .EXE style                */
-                                       /* Pass default result RXSTRING      */
-    MAKERXSTRING(exit_parm.rxcmd_retc, retbuffer, DEFRXSTRING);
-                                       /* init shvexit return buffer        */
-    this->nestedInfo.shvexitvalue = OREF_NULL;
-                                       /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXCMD, RXCMDHST, (void *)&exit_parm, true))
-      return true;                     /* this wasn't handled               */
-    if (exit_parm.rxcmd_flags.rxfcfail)/* need to raise failure condition?  */
+    if (isExitEnabled(RXCMD))  // is the exit enabled?
+    {
+        RXCMDHST_PARM exit_parm;             /* exit parameters                   */
+        char          retbuffer[DEFRXSTRING];/* Default result buffer             */
+        /* Start building the exit block     */
+        exit_parm.rxcmd_flags.rxfcfail = 0;/* Initialize failure/error to zero  */
+        exit_parm.rxcmd_flags.rxfcerr = 0;
+        /* fill in the environment parm      */
+        exit_parm.rxcmd_addressl = (unsigned short)environment->getLength();
+        exit_parm.rxcmd_address = environment->getStringData();
+        /* make cmdaname into RXSTRING form  */
+        cmdname->toRxstring(exit_parm.rxcmd_command);
 
-      *conditions = OREF_FAILURENAME;  /* raise an FAILURE condition        */
-                                       /* Did we find the function??        */
-    else if (exit_parm.rxcmd_flags.rxfcerr)
-                                       /* Need to raise error condition?    */
-      *conditions = OREF_ERRORNAME;    /* raise an ERROR condition          */
-                                       /* shv_exit return a value?          */
-    if (this->nestedInfo.shvexitvalue != OREF_NULL) {
-                                       /* return this information           */
-      *cmdresult = this->nestedInfo.shvexitvalue;
-      return false;                    /* return that request was handled   */
+        exit_parm.rxcmd_dll = NULL;        /* Currently no DLL support          */
+        exit_parm.rxcmd_dll_len = 0;       /* 0 means .EXE style                */
+                                           /* Pass default result RXSTRING      */
+        MAKERXSTRING(exit_parm.rxcmd_retc, retbuffer, DEFRXSTRING);
+        /* call the handler                  */
+        if (!callExit(activation, "RXCMD", RXCMD, RXCMDHST, (void *)&exit_parm))
+        {
+            return true;                     /* this wasn't handled               */
+        }
+        if (exit_parm.rxcmd_flags.rxfcfail)/* need to raise failure condition?  */
+        {
+            *conditions = OREF_FAILURENAME;  /* raise an FAILURE condition        */
+        }
+
+        /* Did we find the function??        */
+        else if (exit_parm.rxcmd_flags.rxfcerr)
+        {
+            /* Need to raise error condition?    */
+            *conditions = OREF_ERRORNAME;    /* raise an ERROR condition          */
+        }
+        /* Get input string and return it    */
+        *cmdresult = new_string(exit_parm.rxcmd_retc);
+        /* user give us a new buffer?        */
+        if (exit_parm.rxcmd_retc.strptr != retbuffer)
+        {
+            /* free it                           */
+            SysReleaseResultMemory(exit_parm.rxcmd_retc.strptr);
+        }
+        return false;                      /* this was handled                  */
     }
-                                       /* Get input string and return it    */
-    *cmdresult = new_string(exit_parm.rxcmd_retc.strptr, exit_parm.rxcmd_retc.strlength);
-                                       /* user give us a new buffer?        */
-    if (exit_parm.rxcmd_retc.strptr != retbuffer)
-                                       /* free it                           */
-      SysReleaseResultMemory(exit_parm.rxcmd_retc.strptr);
-
-    return false;                      /* this was handled                  */
-  }
-  return true;                         /* not handled                       */
+    return true;                         /* not handled                       */
 }
 
-bool  RexxActivity::sysExitMsqPll(
+
+bool  RexxActivity::callPullExit(
     RexxActivation *activation,        /* sending activation                */
-    RexxString **inputstring)          /* returned input string             */
+    RexxString *&inputstring)          /* returned input string             */
 /******************************************************************************/
 /* Function:   Calls the SysExitHandler method on the System Object to run    */
 /*             the External Data queue system exit.                           */
 /******************************************************************************/
 {
-  RexxString   *exitname;              /* Exit routine name                 */
-  RXMSQPLL_PARM exit_parm;             /* exit parameters                   */
-  char          retbuffer[DEFRXSTRING];/* Default result buffer             */
+    if (isExitEnabled(RXMSQ))  // is the exit enabled?
+    {
+        RXMSQPLL_PARM exit_parm;             /* exit parameters                   */
+        char          retbuffer[DEFRXSTRING];/* Default result buffer             */
 
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXMSQ);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-                                       /* Pass along default RXSTRING       */
-    MAKERXSTRING(exit_parm.rxmsq_retc, retbuffer, DEFRXSTRING);
-                                       /* init shvexit return buffer        */
-    this->nestedInfo.shvexitvalue = OREF_NULL;
-                                       /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQPLL, (void *)&exit_parm, false))
-      return true;                     /* this wasn't handled               */
-                                       /* Get input string and return it    */
-                                       /* shv_exit return a value?          */
-    if (this->nestedInfo.shvexitvalue != OREF_NULL) {
-                                       /* return this information           */
-      *inputstring = (RexxString *)this->nestedInfo.shvexitvalue;
-      return false;                    /* return that request was handled   */
+                                             /* Pass along default RXSTRING       */
+        MAKERXSTRING(exit_parm.rxmsq_retc, retbuffer, DEFRXSTRING);
+        /* call the handler                  */
+        if (!callExit(activation, "RXMSQ", RXMSQ, RXMSQPLL, (void *)&exit_parm))
+        {
+            return true;                     /* this wasn't handled               */
+        }
+        if (exit_parm.rxmsq_retc.strptr == NULL)/* if rxstring not null              */
+        {
+            /* no value returned,                */
+            /* return NIL to note empty stack    */
+            inputstring = (RexxString *)TheNilObject;
+        }
+        else                               /* return resulting object           */
+        {
+            inputstring = new_string(exit_parm.rxmsq_retc);
+            /* user give us a new buffer?        */
+            if (exit_parm.rxmsq_retc.strptr != retbuffer)
+            {
+                /* free it                           */
+                SysReleaseResultMemory(exit_parm.rxmsq_retc.strptr);
+            }
+        }
+        return false;                      /* this was handled                  */
     }
-    if (!(exit_parm.rxmsq_retc.strptr))/* if rxstring not null              */
-                                       /* no value returned,                */
-                                       /* return NIL to note empty stack    */
-      *inputstring = (RexxString *)TheNilObject;
-    else                               /* return resulting object           */
-      *inputstring = (RexxString *)new_string(exit_parm.rxmsq_retc.strptr, exit_parm.rxmsq_retc.strlength);
-                                       /* user give us a new buffer?        */
-    if (exit_parm.rxmsq_retc.strptr != retbuffer)
-                                       /* free it                           */
-      SysReleaseResultMemory(exit_parm.rxmsq_retc.strptr);
-    return false;                      /* this was handled                  */
-  }
-  return true;                         /* not handled                       */
+    return true;                           /* not handled                       */
 }
 
-bool  RexxActivity::sysExitMsqPsh(
+bool  RexxActivity::callPushExit(
     RexxActivation *activation,        /* sending activation                */
     RexxString *inputstring,           /* string to be placed on the queue  */
     int lifo_flag)                     /* flag to indicate LIFO or FIFO     */
@@ -2120,144 +2133,144 @@ bool  RexxActivity::sysExitMsqPsh(
 /*             the External Data queue system exit.                           */
 /******************************************************************************/
 {
-  RexxString   *exitname;              /* Exit routine name                 */
-  RXMSQPSH_PARM exit_parm;             /* exit parameters                   */
+    if (isExitEnabled(RXMSQ))  // is the exit enabled?
+    {
+        RXMSQPSH_PARM exit_parm;             /* exit parameters                   */
 
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXMSQ);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-    if (lifo_flag == QUEUE_LIFO)       /* LIFO queuing requested?           */
-                                       /* set the flag appropriately        */
-      exit_parm.rxmsq_flags.rxfmlifo = 1;
-    else
-                                       /* this is a FIFO request            */
-      exit_parm.rxmsq_flags.rxfmlifo = 0;
-                                       /* make into RXSTRING form           */
-    MAKERXSTRING(exit_parm.rxmsq_value, inputstring->getWritableData(), inputstring->getLength());
-                                       /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQPSH, (void *)&exit_parm, false))
-      return true;                     /* this wasn't handled               */
-
-    return false;                      /* this was handled                  */
-  }
-  return true;                         /* not handled                       */
+                                             /* get the exit handler              */
+        if (lifo_flag == QUEUE_LIFO)       /* LIFO queuing requested?           */
+        {
+            /* set the flag appropriately        */
+            exit_parm.rxmsq_flags.rxfmlifo = 1;
+        }
+        else
+        {
+            /* this is a FIFO request            */
+            exit_parm.rxmsq_flags.rxfmlifo = 0;
+        }
+        /* make into RXSTRING form           */
+        inputstring->toRxstring(exit_parm.rxmsq_value);
+        /* call the handler                  */
+        if (!callExit(activation, "RXMSQ", RXMSQ, RXMSQPSH, (void *)&exit_parm))
+        {
+            return true;                     /* this wasn't handled               */
+        }
+        return false;                      /* this was handled                  */
+    }
+    return true;                         /* not handled                       */
 }
 
-bool  RexxActivity::sysExitMsqSiz(
+
+bool  RexxActivity::callQueueSizeExit(
     RexxActivation *activation,        /* sending activation                */
-    RexxInteger **returnsize)          /* returned queue size               */
+    RexxInteger *&returnsize)          /* returned queue size               */
 /******************************************************************************/
 /* Function:   Calls the SysExitHandler method on the System Object to run    */
 /*             the External Data queue system exit.                           */
 /******************************************************************************/
 {
-  RexxString   *exitname;              /* Exit routine name                 */
-  RXMSQSIZ_PARM exit_parm;             /* exit parameters                   */
+    if (isExitEnabled(RXMSQ))  // is the exit enabled?
+    {
+        RXMSQSIZ_PARM exit_parm;             /* exit parameters                   */
+        /* call the handler                  */
+        if (!callExit(activation, "RXMSQ", RXMSQ, RXMSQSIZ, (void *)&exit_parm))
+        {
+            return true;                     /* this wasn't handled               */
+        }
+        /* Get queue size and return it      */
+        returnsize = new_integer(exit_parm.rxmsq_size);
 
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXMSQ);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-                                       /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQSIZ, (void *)&exit_parm, false))
-      return true;                     /* this wasn't handled               */
-                                       /* Get queue size and return it      */
-    *returnsize = new_integer(exit_parm.rxmsq_size);
-
-    return false;                      /* this was handled                  */
-  }
-  return true;                         /* not handled                       */
+        return false;                      /* this was handled                  */
+    }
+    return true;                         /* not handled                       */
 }
 
-bool  RexxActivity::sysExitMsqNam(
+
+bool  RexxActivity::callQueueNameExit(
     RexxActivation *activation,        /* sending activation                */
-    RexxString    **inputstring )      /* name of external queue            */
+    RexxString    *&inputstring )      /* name of external queue            */
 /******************************************************************************/
 /* Function:   Calls the SysExitHandler method on the System Object to run    */
 /*             the External Data queue system exit.                           */
 /******************************************************************************/
 {
-  RexxString   *exitname;              /* Exit routine name                 */
-  RXMSQNAM_PARM exit_parm;             /* exit parameters                   */
-  char          retbuffer[DEFRXSTRING];/* Default result buffer             */
+    if (isExitEnabled(RXMSQ))  // is the exit enabled?
+    {
+        RXMSQNAM_PARM exit_parm;             /* exit parameters                   */
+        char          retbuffer[DEFRXSTRING];/* Default result buffer             */
 
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXMSQ);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-                                       /* make into RXSTRING form           */
-    MAKERXSTRING(exit_parm.rxmsq_name, (*inputstring)->getWritableData(), (*inputstring)->getLength());
-                                       /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXMSQ, RXMSQNAM, (void *)&exit_parm, false))
-      return true;                     /* this wasn't handled               */
-    *inputstring = (RexxString *)new_string(exit_parm.rxmsq_name.strptr, exit_parm.rxmsq_name.strlength);
-                                       /* user give us a new buffer?        */
-    if (exit_parm.rxmsq_name.strptr != retbuffer)
-                                       /* free it                           */
-      SysReleaseResultMemory(exit_parm.rxmsq_name.strptr);
-    return false;                      /* this was handled                  */
-  }
-  return true;                         /* not handled                       */
+                                             /* make into RXSTRING form           */
+        inputstring->toRxstring(exit_parm.rxmsq_name);
+        /* call the handler                  */
+        if (!callExit(activation, "RXMSQ", RXMSQ, RXMSQNAM, (void *)&exit_parm))
+        {
+            return true;                     /* this wasn't handled               */
+        }
+        inputstring = new_string(exit_parm.rxmsq_name);
+        /* user give us a new buffer?        */
+        if (exit_parm.rxmsq_name.strptr != retbuffer)
+        {
+            /* free it                           */
+            SysReleaseResultMemory(exit_parm.rxmsq_name.strptr);
+        }
+        return false;                      /* this was handled                  */
+    }
+    return true;                         /* not handled                       */
 }
 
-bool RexxActivity::sysExitHltTst(
+
+bool RexxActivity::callHaltTestExit(
     RexxActivation *activation)        /* sending activation                */
 /******************************************************************************/
 /* Function:   Calls the SysExitHandler method on the System Object to run    */
 /*             the Test Halt system exit.                                     */
 /******************************************************************************/
 {
-  RexxString   *exitname;              /* Exit routine name                 */
-  RexxString   *condition;             /* Condition(d) information          */
-  RXHLTTST_PARM exit_parm;             /* exit parameters                   */
+    if (isExitEnabled(RXHLT))  // is the exit enabled?
+    {
+        RXHLTTST_PARM exit_parm;             /* exit parameters                   */
 
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXHLT);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-                                       /* Clear halt so as not to be sloppy */
-    exit_parm.rxhlt_flags.rxfhhalt = 0;
-                                       /* init shvexit return buffer        */
-    this->nestedInfo.shvexitvalue = OREF_NULL;
-                                       /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXHLT, RXHLTTST, (void *)&exit_parm, false))
-      return true;                     /* this wasn't handled               */
-                                       /* Was halt requested?               */
-    if (exit_parm.rxhlt_flags.rxfhhalt == 1) {
-                                       /* shv_exit return a value?          */
-      if (this->nestedInfo.shvexitvalue == OREF_NULL) {
-                                       /* return this information           */
-        condition = this->nestedInfo.shvexitvalue;
-      }
-      else condition = OREF_NULL;
-                                       /* Then honor the halt request       */
-      activation->halt(condition);
+                                             /* Clear halt so as not to be sloppy */
+        exit_parm.rxhlt_flags.rxfhhalt = 0;
+        /* call the handler                  */
+        if (!callExit(activation, "RXHLT", RXHLT, RXHLTTST, (void *)&exit_parm))
+        {
+            return true;                     /* this wasn't handled               */
+        }
+        /* Was halt requested?               */
+        if (exit_parm.rxhlt_flags.rxfhhalt == 1)
+        {
+            /* Then honor the halt request       */
+            activation->halt(OREF_NULL);
+        }
+        return false;                      /* this was handled                  */
     }
-
-    return false;                      /* this was handled                  */
-  }
-  return true;                         /* not handled                       */
+    return true;                         /* not handled                       */
 }
 
-bool RexxActivity::sysExitHltClr(
+
+bool RexxActivity::callHaltClearExit(
     RexxActivation *activation)        /* sending activation                */
 /******************************************************************************/
 /* Function:   Calls the SysExitHandler method on the System Object to run    */
 /*             the Clear Halt system exit.                                    */
 /******************************************************************************/
 {
-  RexxString   *exitname;              /* Exit routine name                 */
-  RXHLTTST_PARM exit_parm;             /* exit parameters                   */
-
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXHLT);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-                                       /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXHLT, RXHLTCLR, (void *)&exit_parm, false))
-      return true;                     /* this wasn't handled               */
-    return false;                      /* this was handled                  */
-  }
-  return true;                         /* not handled                       */
+    if (isExitEnabled(RXHLT))  // is the exit enabled?
+    {
+        RXHLTTST_PARM exit_parm;             /* exit parameters                   */
+        /* call the handler                  */
+        if (!callExit(activation, "RXHLT", RXHLT, RXHLTCLR, (void *)&exit_parm))
+        {
+            return true;                     /* this wasn't handled               */
+        }
+        return false;                      /* this was handled                  */
+    }
+    return true;                         /* not handled                       */
 }
 
-bool  RexxActivity::sysExitTrcTst(
+
+bool  RexxActivity::callTraceTestExit(
      RexxActivation *activation,       /* sending activation                */
      bool currentsetting)              /* sending activation                */
 /******************************************************************************/
@@ -2265,33 +2278,88 @@ bool  RexxActivity::sysExitTrcTst(
 /*             the Test external trace indicator system exit.                 */
 /******************************************************************************/
 {
-  RexxString   *exitname;              /* Exit routine name                 */
-  RXTRCTST_PARM exit_parm;             /* exit parameters                   */
-
-                                       /* get the exit handler              */
-  exitname = this->querySysExits(RXTRC);
-  if (exitname != OREF_NULL) {         /* exit enabled?                     */
-                                       /* Clear Trace bit before  call      */
-    exit_parm.rxtrc_flags.rxftrace = 0;
-                                       /* call the handler                  */
-    if (SysExitHandler(this, activation, exitname, RXTRC, RXTRCTST, (void *)&exit_parm, false))
-      return true;                     /* this wasn't handled               */
-                                       /* if not tracing, and now it is     */
-                                       /* requsted                          */
-    if ((currentsetting == 0) &&  (exit_parm.rxtrc_flags.rxftrace == 1)) {
-                                       /* call routine to handle this       */
-      activation->externalTraceOn();
-      return false;                    /* this was handled                  */
+    if (isExitEnabled(RXHLT))  // is the exit enabled?
+    {
+        RXTRCTST_PARM exit_parm;             /* exit parameters                   */
+                                             /* Clear Trace bit before  call      */
+        exit_parm.rxtrc_flags.rxftrace = 0;
+        /* call the handler                  */
+        if (!callExit(activation, "RXTRC", RXTRC, RXTRCTST, (void *)&exit_parm))
+        {
+            return true;                     /* this wasn't handled               */
+        }
+        /* if not tracing, and now it is     */
+        /* requsted                          */
+        if (!currentsetting && (exit_parm.rxtrc_flags.rxftrace == 1))
+        {
+            /* call routine to handle this       */
+            activation->externalTraceOn();
+            return false;                    /* this was handled                  */
+        }
+        // this could be a request to stop tracing
+        else if (currentsetting &&  (exit_parm.rxtrc_flags.rxftrace != 1))
+        {
+            /* call routine to handle this       */
+            activation->externalTraceOff();
+            return false;                  /* this was handled                  */
+        }
     }
-    else                               /* if currently tracing, and now     */
-                                       /* requsted to stop                  */
-      if ((currentsetting != 0) &&  (exit_parm.rxtrc_flags.rxftrace != 1)) {
-                                       /* call routine to handle this       */
-        activation->externalTraceOff();
-        return false;                  /* this was handled                  */
-      }
-  }
-  return true;                         /* not handled                       */
+    return true;                         /* not handled                       */
+}
+
+
+bool RexxActivity::callNovalueExit(
+    RexxActivation *activation,        /* sending activation                */
+    RexxString     *variableName,      /* name to look up                   */
+    RexxObject    *&value)             /* the returned value                */
+/******************************************************************************/
+/* Function:   Calls the novalue handler for uninitialized variables          */
+/******************************************************************************/
+{
+    if (isExitEnabled(RXVAR))         // is the exit enabled?
+    {
+        RXVARNOVALUE_PARM exit_parm;       /* exit parameters                   */
+        // the name is passed as an rxstring
+        variableName->toRxstring(exit_parm.variable_name);
+        // the value is returned as an object
+        exit_parm.value = NULLOBJECT;      /* no value at the start             */
+                                           /* call the handler                  */
+        if (!callExit(activation, "RXVAR", RXVAR, RXVARNOVALUE, (void *)&exit_parm))
+        {
+            value = (RexxObject *)exit_parm.value;
+            return false;
+        }
+    }
+    return true;                         /* exit didn't handle                */
+}
+
+
+bool RexxActivity::callValueExit(
+    RexxActivation *activation,        /* sending activation                */
+    RexxString     *selector,          /* the variable set selector         */
+    RexxString     *variableName,      /* name to look up                   */
+    RexxObject     *newValue,          // new value for the variable
+    RexxObject    *&value)             /* the returned value                */
+/******************************************************************************/
+/* Function:   Calls the exit for the VALUE() BIF                             */
+/******************************************************************************/
+{
+    if (isExitEnabled(RXVAL))         // is the exit enabled?
+    {
+        RXVALCALL_PARM exit_parm;       /* exit parameters                   */
+        // the name is passed as an rxstring
+        variableName->toRxstring(exit_parm.variable_name);
+        // the value is returned as an object, and the old value is
+        // also passed that way
+        exit_parm.value = (REXXOBJECT)newValue;
+                                           /* call the handler                  */
+        if (!callExit(activation, "RXVAL", RXVAL, RXVALCALL, (void *)&exit_parm))
+        {
+            value = (RexxObject *)exit_parm.value;
+            return false;
+        }
+    }
+    return true;                         /* exit didn't handle                */
 }
 
 
@@ -2328,20 +2396,23 @@ void  RexxActivity::traceOutput(       /* write a line of trace information */
 /* Function:  Write a line of trace output to the .ERROR stream               */
 /******************************************************************************/
 {
-  RexxObject *stream;                  /* target stream                     */
-
-  line = line->stringTrace();          /* get traceable form of this        */
-                                       /* if exit declines the call         */
-  if (this->sysExitSioTrc(activation, line)) {
-                                       /* get the default output stream     */
-    stream = ActivityManager::localEnvironment->at(OREF_ERRORNAME);
-                                       /* have .local set up yet?           */
-    if (stream != OREF_NULL && stream != TheNilObject)
-                                       /* do the lineout                    */
-      stream->sendMessage(OREF_LINEOUT, line);
-    else                               /* use the "real" default stream     */
-      this->lineOut(line);
-  }
+    line = line->stringTrace();          /* get traceable form of this        */
+                                         /* if exit declines the call         */
+    if (this->callTraceExit(activation, line))
+    {
+        /* get the default output stream     */
+        RexxObject *stream = ActivityManager::localEnvironment->at(OREF_ERRORNAME);
+        /* have .local set up yet?           */
+        if (stream != OREF_NULL && stream != TheNilObject)
+        {
+            stream->sendMessage(OREF_LINEOUT, line);
+        }
+        /* do the lineout                    */
+        else                               /* use the "real" default stream     */
+        {
+            this->lineOut(line);
+        }
+    }
 }
 
 void RexxActivity::sayOutput(          /* write a line of say information   */
@@ -2351,19 +2422,21 @@ void RexxActivity::sayOutput(          /* write a line of say information   */
 /* Function:  Write a line of SAY output to the .OUTPUT stream                */
 /******************************************************************************/
 {
-  RexxObject *stream;                  /* target stream                     */
-
-                                       /* if exit declines the call         */
-  if (this->sysExitSioSay(activation, line)) {
-                                       /* get the default output stream     */
-    stream = ActivityManager::localEnvironment->at(OREF_OUTPUT);
-                                       /* have .local set up yet?           */
-    if (stream != OREF_NULL && stream != TheNilObject)
-                                       /* do the lineout                    */
-      stream->sendMessage(OREF_SAY, line);
-    else                               /* use the "real" default stream     */
-      this->lineOut(line);
-  }
+    if (this->callSayExit(activation, line))
+    {
+        /* get the default output stream     */
+        RexxObject *stream = ActivityManager::localEnvironment->at(OREF_OUTPUT);
+        /* have .local set up yet?           */
+        if (stream != OREF_NULL && stream != TheNilObject)
+        {
+            /* do the lineout                    */
+            stream->sendMessage(OREF_SAY, line);
+        }
+        else                               /* use the "real" default stream     */
+        {
+            this->lineOut(line);
+        }
+    }
 }
 
 RexxString *RexxActivity::traceInput(  /* read a line of trace input        */
@@ -2372,25 +2445,31 @@ RexxString *RexxActivity::traceInput(  /* read a line of trace input        */
 /* Function:  Read a line for interactive debug input                         */
 /******************************************************************************/
 {
-  RexxString *value;                   /* returned value                    */
-  RexxObject *stream;                  /* target stream                     */
+    RexxString *value;
 
-                                       /* if exit declines the call         */
-  if (this->sysExitSioDtr(activation, &value)) {
-                                       /* get the input stream              */
-    stream = ActivityManager::localEnvironment->at(OREF_INPUT);
-    if (stream != OREF_NULL) {         /* have a stream?                    */
-                                       /* read from it                      */
-      value = (RexxString *)stream->sendMessage(OREF_LINEIN);
-                                       /* get something real?               */
-      if (value == (RexxString *)TheNilObject)
-        value = OREF_NULLSTRING;       /* just us a null string if not      */
+    /* if exit declines the call         */
+    if (this->callDebugInputExit(activation, value))
+    {
+        /* get the input stream              */
+        RexxObject *stream = ActivityManager::localEnvironment->at(OREF_INPUT);
+        if (stream != OREF_NULL)           /* have a stream?                    */
+        {
+            /* read from it                      */
+            value = (RexxString *)stream->sendMessage(OREF_LINEIN);
+            /* get something real?               */
+            if (value == (RexxString *)TheNilObject)
+            {
+                value = OREF_NULLSTRING;       /* just us a null string if not      */
+            }
+        }
+        else
+        {
+            value = OREF_NULLSTRING;         /* default to a null string          */
+        }
     }
-    else
-      value = OREF_NULLSTRING;         /* default to a null string          */
-  }
-  return value;                        /* return value from exit            */
+    return value;                        /* return value from exit            */
 }
+
 
 RexxString *RexxActivity::pullInput(   /* read a line of pull input         */
      RexxActivation *activation)       /* sending activation                */
@@ -2398,23 +2477,26 @@ RexxString *RexxActivity::pullInput(   /* read a line of pull input         */
 /* Function:  Read a line for the PULL instruction                            */
 /******************************************************************************/
 {
-  RexxString *value;                   /* returned value                    */
-  RexxObject *stream;                  /* target stream object              */
+    RexxString *value;
 
-                                       /* if exit declines call             */
-  if (this->sysExitMsqPll(activation, &value)) {
-                                       /* get the external data queue       */
-    stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
-    if (stream != OREF_NULL) {         /* have a data queue?                */
-                                       /* pull from the queue               */
-      value = (RexxString *)stream->sendMessage(OREF_PULL);
-                                       /* get something real?               */
-      if (value == (RexxString *)TheNilObject)
-                                       /* read from the linein stream       */
-        value = this->lineIn(activation);
+    /* if exit declines call             */
+    if (this->callPullExit(activation, value))
+    {
+        /* get the external data queue       */
+        RexxObject *stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
+        if (stream != OREF_NULL)           /* have a data queue?                */
+        {
+            /* pull from the queue               */
+            value = (RexxString *)stream->sendMessage(OREF_PULL);
+            /* get something real?               */
+            if (value == (RexxString *)TheNilObject)
+            {
+                /* read from the linein stream       */
+                value = this->lineIn(activation);
+            }
+        }
     }
-  }
-  return value;                        /* return the read value             */
+    return value;                        /* return the read value             */
 }
 
 RexxObject *RexxActivity::lineOut(
@@ -2438,25 +2520,31 @@ RexxString *RexxActivity::lineIn(
 /* Function:  Read a line for the PARSE LINEIN instruction                    */
 /******************************************************************************/
 {
-  RexxObject *stream;                  /* input stream                      */
-  RexxString *value;                   /* returned value                    */
+    RexxString *value;
 
-                                       /* if exit declines call             */
-  if (this->sysExitSioTrd(activation, &value)) {
-                                       /* get the input stream              */
-    stream = ActivityManager::localEnvironment->at(OREF_INPUT);
-    if (stream != OREF_NULL) {         /* have a stream?                    */
-                                       /* read from it                      */
-      value = (RexxString *)stream->sendMessage(OREF_LINEIN);
-                                       /* get something real?               */
-      if (value == (RexxString *)TheNilObject)
-        value = OREF_NULLSTRING;       /* just use a null string if not     */
+    /* if exit declines call             */
+    if (this->callTerminalInputExit(activation, value))
+    {
+        /* get the input stream              */
+        RexxObject *stream = ActivityManager::localEnvironment->at(OREF_INPUT);
+        if (stream != OREF_NULL)           /* have a stream?                    */
+        {
+            /* read from it                      */
+            value = (RexxString *)stream->sendMessage(OREF_LINEIN);
+            /* get something real?               */
+            if (value == (RexxString *)TheNilObject)
+            {
+                value = OREF_NULLSTRING;       /* just use a null string if not     */
+            }
+        }
+        else
+        {
+            value = OREF_NULLSTRING;         /* default to a null string          */
+        }
     }
-    else
-      value = OREF_NULLSTRING;         /* default to a null string          */
-  }
-  return value;                        /* return value from exit            */
+    return value;                        /* return value from exit            */
 }
+
 
 void RexxActivity::queue(              /* write a line to the queue         */
      RexxActivation *activation,       /* sending activation                */
@@ -2466,22 +2554,27 @@ void RexxActivity::queue(              /* write a line to the queue         */
 /* Function:  Write a line to the external data queue                         */
 /******************************************************************************/
 {
-  RexxObject *targetQueue;             /* target queue                      */
+    /* if exit declines call             */
+    if (this->callPushExit(activation, line, order))
+    {
+        /* get the default queue             */
+        RexxObject *targetQueue = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
+        if (targetQueue != OREF_NULL)      /* have a data queue?                */
+        {
+            /* pull from the queue               */
+            if (order == QUEUE_LIFO)         /* push instruction?                 */
+            {
+                /* push a line                       */
+                targetQueue->sendMessage(OREF_PUSH, (RexxObject *)line);
 
-                                       /* if exit declines call             */
-  if (this->sysExitMsqPsh(activation, line, order)) {
-                                       /* get the default queue             */
-    targetQueue = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
-    if (targetQueue != OREF_NULL) {    /* have a data queue?                */
-                                       /* pull from the queue               */
-      if (order == QUEUE_LIFO)         /* push instruction?                 */
-                                       /* push a line                       */
-        targetQueue->sendMessage(OREF_PUSH, (RexxObject *)line);
-      else
-                                       /* queue a line                      */
-        targetQueue->sendMessage(OREF_QUEUENAME, (RexxObject *)line);
-     }
-   }
+            }
+            else
+            {
+                /* queue a line                      */
+                targetQueue->sendMessage(OREF_QUEUENAME, (RexxObject *)line);
+            }
+        }
+    }
 }
 
 void  RexxActivity::terminateMethod()
@@ -2737,7 +2830,6 @@ wholenumber_t RexxActivity::messageSend(
   this->saveNestedInfo(saveInfo);      /* save critical nesting info        */
                                        /* make sure we have the stack base  */
   this->nestedInfo.stackptr = SysGetThreadStackBase(TOTAL_STACK_SIZE);
-  this->clearExits();                  /* make sure the exits are cleared   */
   this->generateRandomNumberSeed();    /* get a fresh random seed           */
                                        /* Push marker onto stack so we know */
   this->pushNil();                     /* what level we entered.            */
@@ -2767,6 +2859,22 @@ wholenumber_t RexxActivity::messageSend(
   SysDeregisterSignals(&exreg);        /* deregister the signal handlers    */
   this->popNil();                      /* remove the nil marker             */
   return rc;                           /* return the error code             */
+}
+
+
+/**
+ * Inherit all activity-specific settings from a parent activity.
+ *
+ * @param parent The source of the setting information.
+ */
+void RexxActivity::inheritSettings(RexxActivity *parent)
+{
+    // copy all of the system exits
+    for (int i = 0; i < LAST_EXIT; i++)
+    {
+        nestedInfo.sysexits[i] = parent->nestedInfo.sysexits[i];
+    }
+    nestedInfo.clauseExitUsed = parent->nestedInfo.clauseExitUsed;
 }
 
 
@@ -2800,7 +2908,6 @@ int REXXENTRY RexxSendMessage (
                                        /* (will create one if necessary)    */
   activity = ActivityManager::getActivity();
   activity->saveNestedInfo(saveInfo);  /* save the nested stuff             */
-  activity->clearExits();              /* make sure the exits are cleared   */
   activity->generateRandomNumberSeed();/* get a fresh random seed           */
                                        /* Push marker onto stack so we know */
   activity->pushNil();                 /* what level we entered.            */
@@ -2821,12 +2928,16 @@ int REXXENTRY RexxSendMessage (
       ProtectedObject p1(argument_array);
       va_end(arguments);                 /* end of argument processing        */
       ProtectedObject r;
-      if (start_class == OREF_NULL)      /* no start scope given?             */
+      if (start_class == NULLOBJECT)     /* no start scope given?             */
+      {
                                          /* issue a straight message send     */
-        receiver->messageSend(new_string(msgname)->upper(), argument_array->size(), argument_array->data(), r);
+          ((RexxObject *)receiver)->messageSend(new_string(msgname)->upper(), argument_array->size(), argument_array->data(), r);
+      }
       else
+      {
                                          /* go issue the message with override*/
-        receiver->messageSend(new_string(msgname)->upper(), argument_array->size(), argument_array->data(), start_class, r);
+          ((RexxObject *)receiver)->messageSend(new_string(msgname)->upper(), argument_array->size(), argument_array->data(), (RexxObject *)start_class, r);
+      }
       if (r != OREF_NULL) {             /* if we got a result, convert it.   */
                                          /* convert the return result         */
         process_message_result((RexxObject *)r, result_pointer, returnType);

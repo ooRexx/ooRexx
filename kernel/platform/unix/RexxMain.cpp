@@ -538,10 +538,11 @@ void  SysRunProgram(
   if (self->exits != NULL) {           /* have exits to process             */
       i = 0;                           /* start with first exit             */
                                        /* while not the list ender          */
-      while (self->exits[i].sysexit_code != RXENDLST) {
+      while (self->exits[i].sysexit_code != RXENDLST)
+      {
                                        /* enable this exit                  */
-        ActivityManager::currentActivity->setSysExit(self->exits[i].sysexit_code, new_string(self->exits[i].sysexit_name));
-        i++;                           /* step to the next exit             */
+        ActivityManager::currentActivity->setExitHandler(self->exits[i]);
+        i++;                             /* step to the next exit             */
       }
     }
                                        /* get a new argument array          */

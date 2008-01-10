@@ -55,11 +55,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "RexxCore.h"
-
 #include "rexx.h"
 #include "RexxNativeAPI.h"
-
+#include "RexxErrorCodes.h"
 #include "OLEVariant.h"
 
 /**
@@ -86,16 +84,16 @@ RexxMethod4(REXXOBJECT, OLEVariant_Init,
             OSELF, self,
             REXXOBJECT, v_value,
             REXXOBJECT, v_type,
-            REXXOBJECT, param_flags)
+            REXXSTRING, param_flags)
 {
-    RexxString *vtString = NULL;
+    REXXOBJECT  vtString = NULL;
 
     convertToVT(v_type, 2);
     convertToParamFlag(param_flags, 3);
 
     REXX_SETVAR("!_VAR_VALUE_", v_value);
     REXX_SETVAR("!_CLEAR_VARIANT_", ooRexxTrue);
-    REXX_SETVAR("!_VARIANT_PTR_", ooRexxInteger(0));
+    REXX_SETVAR("!_VARIANT_PTR_", ooRexxPointer(NULL));
 
     return ooRexxNil;
 }
@@ -116,8 +114,7 @@ RexxMethod2(REXXOBJECT, OLEVariant_VarValueEquals,
 {
     if ( !v_value )
     {
-        send_exception1(Error_Incorrect_method_noarg,
-                        ooRexxArray1(ooRexxString("1")));
+        rexx_exception1(Error_Incorrect_method_noarg, ooRexxString("1"));
     }
     REXX_SETVAR("!_VAR_VALUE_", v_value);
 
@@ -168,23 +165,20 @@ RexxMethod2(REXXOBJECT, OLEVariant_ParamFlagsEquals,
  */
 static void convertToVT( REXXOBJECT v_type, int position )
 {
-    RexxString *vtString = NULL;
+    REXXOBJECT  vtString = NULL;
 
     if ( v_type != NULL && v_type != ooRexxNil )
     {
-        vtString = (RexxString *) ooRexxSend0(v_type, "STRING");
+        vtString = ooRexxSend0(v_type, "STRING");
         if ( ! _isstring(vtString) )
         {
-            send_exception1(Error_Incorrect_method_string,
-                            ooRexxArray1(ooRexxInteger(position)));
+            rexx_exception1(Error_Incorrect_method_string, ooRexxInteger(position));
         }
 
         vtString = stringToVT(vtString);
         if ( ! vtString )
         {
-            send_exception1(Error_Incorrect_method_argType,
-                            ooRexxArray2(ooRexxInteger(position),
-                                       ooRexxString("VARTYPE")));
+            rexx_exception2(Error_Incorrect_method_argType, ooRexxInteger(position), ooRexxString("VARTYPE"));
         }
     }
 
@@ -206,23 +200,20 @@ static void convertToVT( REXXOBJECT v_type, int position )
  */
 static void convertToParamFlag( REXXOBJECT param_flags, int position )
 {
-    RexxString *flagsString = NULL;
+    REXXOBJECT  flagsString = NULL;
 
     if ( param_flags != NULL && param_flags != ooRexxNil )
     {
-        flagsString = (RexxString *)ooRexxSend0(param_flags, "STRING");
+        flagsString = ooRexxSend0(param_flags, "STRING");
         if ( ! _isstring(flagsString) )
         {
-            send_exception1(Error_Incorrect_method_string,
-                            ooRexxArray1(ooRexxInteger(position)));
+            rexx_exception1(Error_Incorrect_method_string, ooRexxInteger(position));
         }
 
         flagsString = stringToFlags(flagsString);
         if ( ! flagsString )
         {
-            send_exception1(Error_Incorrect_method_argType,
-                            ooRexxArray2(ooRexxInteger(position),
-                                       ooRexxString("PARAMFLAG")));
+            rexx_exception2(Error_Incorrect_method_argType, ooRexxInteger(position), ooRexxString("PARAMFLAG"));
         }
     }
 
@@ -241,9 +232,9 @@ static void convertToParamFlag( REXXOBJECT param_flags, int position )
  * @return       The numerical value of the VARIANTARG corresponding to rxStr,
  *               or null if the string is not valid.
  */
-static RexxString * stringToVT( RexxString * rxStr )
+static REXXOBJECT stringToVT(REXXOBJECT rxStr )
 {
-    RexxString *rxResult = NULL;
+    REXXOBJECT  rxResult = NULL;
     CHAR       *pszRxStr;
     CHAR       *pTmp;
     CHAR        szBuffer[6];  // Largest value is 0xFFFF == 65535.
@@ -251,7 +242,7 @@ static RexxString * stringToVT( RexxString * rxStr )
 
     pszRxStr = pszStringDupe(string_data(rxStr));
     if ( !pszRxStr )
-        send_exception(Error_System_resources);
+        rexx_exception(Error_System_resources);
 
     // Allow case insensitive.
     pszRxStr = strupr(pszRxStr);
@@ -265,7 +256,7 @@ static RexxString * stringToVT( RexxString * rxStr )
                  v1 != VT_ARRAY )
             {
                 sprintf(szBuffer, "%d", v1);
-                rxResult = (RexxString *)ooRexxString(szBuffer);
+                rxResult = ooRexxString(szBuffer);
             }
             break;
 
@@ -279,7 +270,7 @@ static RexxString * stringToVT( RexxString * rxStr )
             if ( v1 != VT_ILLEGAL && v2 != VT_ILLEGAL && areValidVTs(v1, v2) )
             {
                 sprintf(szBuffer, "%d", v1 | v2);
-                rxResult = (RexxString *)ooRexxString(szBuffer);
+                rxResult = ooRexxString(szBuffer);
             }
             break;
 
@@ -304,9 +295,9 @@ static RexxString * stringToVT( RexxString * rxStr )
  * @return  The integer value (as a string) of the wParamFlags, or null if the
  *          string to convert was not valid.
  */
-static RexxString * stringToFlags( RexxString * rxStr )
+static REXXOBJECT stringToFlags( REXXOBJECT rxStr )
 {
-    RexxString *rxResult = NULL;  // Return null if invalid.
+    REXXOBJECT  rxResult = NULL;  // Return null if invalid.
     CHAR       *pszRxStr;
     CHAR       *ptr;
     CHAR        szBuffer[4];      // Largest possible value is 0x7F == 127
@@ -315,7 +306,7 @@ static RexxString * stringToFlags( RexxString * rxStr )
 
     pszRxStr = pszStringDupe(string_data(rxStr));
     if ( !pszRxStr )
-        send_exception(Error_System_resources);
+        rexx_exception(Error_System_resources);
 
     // Allow case insensitive.
     pszRxStr = strupr(pszRxStr);
@@ -344,7 +335,7 @@ static RexxString * stringToFlags( RexxString * rxStr )
         if ( tmp != PARAMFLAG_ILLEGAL )
         {
             sprintf(szBuffer, "%d", val | tmp);
-            rxResult = (RexxString *)ooRexxString(szBuffer);
+            rxResult = ooRexxString(szBuffer);
         }
     }
 

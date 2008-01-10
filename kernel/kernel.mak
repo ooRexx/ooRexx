@@ -75,7 +75,7 @@ OBJ = obj
 
 # Following all part of rexx
 OTSOBJ1=$(OR_OUTDIR)\BuiltinFunctions.$(OBJ)   $(OR_OUTDIR)\DoBlock.$(OBJ) $(OR_OUTDIR)\Clause.$(OBJ) \
-        $(OR_OUTDIR)\RexxInstruction.$(OBJ)
+        $(OR_OUTDIR)\RexxInstruction.$(OBJ) $(OR_OUTDIR)\CommonExternalFunctions.$(OBJ)
 OTSOBJ2=$(OR_OUTDIR)\SourceFile.$(OBJ) $(OR_OUTDIR)\ExpressionStack.$(OBJ) $(OR_OUTDIR)\Token.$(OBJ)
 OTIOBJ1=$(OR_OUTDIR)\AddressInstruction.$(OBJ)  $(OR_OUTDIR)\AssignmentInstruction.$(OBJ) $(OR_OUTDIR)\CallInstruction.$(OBJ) \
         $(OR_OUTDIR)\CommandInstruction.$(OBJ)
@@ -99,7 +99,8 @@ OTEOBJ1=$(OR_OUTDIR)\ExpressionCompoundVariable.$(OBJ)  $(OR_OUTDIR)\ExpressionD
 OTEOBJ2=$(OR_OUTDIR)\ExpressionStem.$(OBJ)  $(OR_OUTDIR)\ExpressionVariable.$(OBJ)   $(OR_OUTDIR)\IndirectVariableReference.$(OBJ) \
         $(OR_OUTDIR)\ExpressionOperator.$(OBJ)
 OTEOBJ3=$(OR_OUTDIR)\ParseTarget.$(OBJ) $(OR_OUTDIR)\ParseTrigger.$(OBJ) $(OR_OUTDIR)\RexxInternalStack.$(OBJ) \
-        $(OR_OUTDIR)\RexxLocalVariables.$(OBJ) $(OR_OUTDIR)\RexxActivationStack.$(OBJ)
+        $(OR_OUTDIR)\RexxLocalVariables.$(OBJ) $(OR_OUTDIR)\RexxActivationStack.$(OBJ) $(OR_OUTDIR)\ProtectedObject.$(OBJ) \
+	$(OR_OUTDIR)\ExitHandler.$(OBJ)
 OTPOBJS=$(OTSOBJ1)  $(OTSOBJ2) $(OTIOBJ1) $(OTIOBJ2) $(OTIOBJ3) \
         $(OTIOBJ4)  $(OTIOBJ5) $(OTIOBJ6) $(OTIOBJ7) $(OTIOBJ8) $(OTIOBJ9) \
         $(OTIOBJ10) $(OTEOBJ1) $(OTEOBJ2) $(OTEOBJ3)

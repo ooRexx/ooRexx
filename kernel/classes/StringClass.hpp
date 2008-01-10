@@ -293,6 +293,8 @@ class RexxStringClass : public RexxClass {
    inline bool  memCompare(const char * s, size_t l) { return l == this->length && memcmp(s, this->stringData, l) == 0; }
    inline bool  memCompare(RexxString *other) { return other->length == this->length && memcmp(other->stringData, this->stringData, length) == 0; }
    inline void  memCopy(char * s) { memcpy(s, stringData, length); }
+   inline void  toRxstring(CONSTRXSTRING &r) { r.strptr = getStringData(); r.strlength = getLength(); }
+   inline void  toRxstring(RXSTRING &r) { r.strptr = getWritableData(); r.strlength = getLength(); }
 
    RexxNumberString *createNumberString();
 
@@ -486,6 +488,16 @@ inline RexxString *new_string(char cc)
     return new_string(&cc, 1);
 }
 
+inline RexxString *new_string(RXSTRING &r)
+{
+    return new_string(r.strptr, r.strlength);
+}
+
+
+inline RexxString *new_string(CONSTRXSTRING &r)
+{
+    return new_string(r.strptr, r.strlength);
+}
 
 inline RexxString *new_proxy(const char *name)
 {

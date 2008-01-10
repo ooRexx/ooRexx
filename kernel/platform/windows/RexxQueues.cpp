@@ -151,7 +151,7 @@ int rexx_add_queue(
                                        /*  move the line to the queue       */
    rc = RexxAddQueue(string_data(queue_name), &rx_string, order);
    if (rc != 0)                        /* stream error?                     */
-     send_exception1(Error_System_service_service, ooRexxArray1(ooRexxString("SYSTEM QUEUE")));
+     rexx_exception1(Error_System_service_service, ooRexxString("SYSTEM QUEUE"));
    return rc;                          /* return the result                 */
 }
 
@@ -212,8 +212,10 @@ RexxMethod1(REXXOBJECT, function_queueExit,
   STRING, queue_name)                  /* the requested name                */
 {
     NativeContextBlock context;
+
+    RexxString *temp = (RexxString *)queue_name;
                                        /* call the exit                     */
     RexxActivation *activation = (RexxActivation *)ActivityManager::currentActivity->getCurrentActivation();
-    context.activity->sysExitMsqNam(activation, (RexxString **)&queue_name);
-    return context.protect(queue_name);    /* and just return the exit result   */
+    context.activity->callQueueNameExit(activation, temp);
+    return context.protect(temp);          /* and just return the exit result   */
 }

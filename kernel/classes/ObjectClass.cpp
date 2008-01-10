@@ -65,28 +65,6 @@
 RexxClass *RexxObject::classInstance = OREF_NULL;
 RexxObject *RexxNilObject::nilObject = OREF_NULL;
 
-
-// TODO:  Make this activity based.
-static RexxString *msgname_save;       /* last issued message               */
-static RexxMethod *method_save;        /* last issued method object         */
-
-RexxString *last_msgname (void)
-/******************************************************************************/
-/* Function:  Return name of last message sent via messageSend()              */
-/******************************************************************************/
-{
-  return msgname_save;
-}
-
-RexxMethod *last_method  (void)
-/******************************************************************************/
-/* Function:  Return last invoked method object (for use by kernel methods    */
-/*            only)                                                           */
-/******************************************************************************/
-{
-  return method_save;
-}
-
 void RexxObject::live(size_t liveMark)
 /******************************************************************************/
 /* Function:  Normal garbage collection live marking                          */
@@ -727,10 +705,9 @@ void RexxObject::messageSend(
 /*              All types of methods are handled and dispatched               */
 /******************************************************************************/
 {
-  msgname_save = msgname;              /* save the message name             */
   ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
                                        /* grab the method from this level   */
-  method_save = this->behaviour->methodLookup(msgname);
+  RexxMethod *method_save = this->behaviour->methodLookup(msgname);
                                        /* method exists...special processing*/
   if (method_save != (RexxMethod *)TheNilObject && method_save->isSpecial()) {
     if (method_save->isPrivate())      /* actually private method?          */
@@ -740,7 +717,7 @@ void RexxObject::messageSend(
     if (method_save != (RexxMethod *)TheNilObject && method_save->isProtected())
     {
                                        /* really a protected method         */
-        this->processProtectedMethod(msgname, count, arguments, result);
+        this->processProtectedMethod(msgname, method_save, count, arguments, result);
         return;
     }
   }
@@ -767,17 +744,16 @@ void RexxObject::messageSend(
 /*              All types of methods are handled and dispatched               */
 /******************************************************************************/
 {
-  msgname_save = msgname;              /* save the message name             */
   ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
                                        /* go to the higher level            */
-  method_save = this->superMethod(msgname, startscope);
+  RexxMethod *method_save = this->superMethod(msgname, startscope);
   if (method_save != (RexxMethod *)TheNilObject && method_save->isProtected()) {
     if (method_save->isPrivate())      /* actually private method?          */
                                        /* go validate a private method      */
       method_save = this->checkPrivate(method_save);
     else                               /* really a protected method         */
     {
-        this->processProtectedMethod(msgname, count, arguments, result);
+        this->processProtectedMethod(msgname, method_save, count, arguments, result);
         return;
     }
   }
@@ -796,6 +772,7 @@ void RexxObject::messageSend(
 
 void RexxObject::processProtectedMethod(
     RexxString   * messageName,        /* message to issue                  */
+    RexxMethod   * targetMethod,       // the method to run
     size_t         count,              /* count of arguments                */
     RexxObject  ** arguments,          /* actual message arguments          */
     ProtectedObject &result)           // returned result
@@ -806,7 +783,6 @@ void RexxObject::processProtectedMethod(
 {
   RexxArray          *argumentArray;   /* unknown method argument array     */
   RexxDirectory      *securityArgs;    /* security arguments                */
-  RexxMethod         *thisMethod;      /* saved method                      */
   RexxActivationBase *activation;      /* current activation                */
 
                                        /* get the top activation            */
@@ -815,7 +791,6 @@ void RexxObject::processProtectedMethod(
   if (activation != (RexxActivationBase *)TheNilObject) {
                                        /* have a security manager?          */
     if (activation->hasSecurityManager()) {
-      thisMethod = method_save;        /* save the original method          */
       securityArgs = new_directory();  /* get the security args             */
                                        /* stuff in the name                 */
       securityArgs->put(messageName, OREF_NAME);
@@ -832,12 +807,10 @@ void RexxObject::processProtectedMethod(
           result = securityArgs->fastAt(OREF_RESULT);
           return;
       }
-      method_save = thisMethod;        /* restore the saved method          */
-      msgname_save = messageName;      /* restore the message name          */
     }
   }
                                        /* run the method                    */
-  method_save->run(ActivityManager::currentActivity, this, messageName, count, arguments, result);
+  targetMethod->run(ActivityManager::currentActivity, this, messageName, count, arguments, result);
 }
 
 void RexxObject::processUnknown(
@@ -856,7 +829,7 @@ void RexxObject::processUnknown(
 
                                        /* no method for this msgname        */
                                        /* find the unknown method           */
-  method_save = this->behaviour->methodLookup(OREF_UNKNOWN);
+  RexxMethod *method_save = this->behaviour->methodLookup(OREF_UNKNOWN);
   if (method_save == TheNilObject)     /* "unknown" method exists?          */
                                        /* no unknown method - try to raise  */
                                        /* a NOMETHOD condition, and if that */
@@ -1418,7 +1391,7 @@ RexxString *RexxObject::objectName()
   RexxObject *scope;                   /* method's variable scope           */
   ProtectedObject string_value;        /* returned string value             */
 
-  scope = last_method()->getScope();   /* get the method's scope            */
+  scope = lastMethod()->getScope();    /* get the method's scope            */
                                        /* get the object name variable      */
   string_value = (RexxString *)this->getObjectVariable(OREF_NAME, scope);
   if (string_value == OREF_NULL) {     /* no name?                          */
@@ -1439,7 +1412,7 @@ RexxObject  *RexxObject::objectNameEquals(RexxObject *name)
   RexxObject *scope;                   /* scope of the object               */
 
   required_arg(name, ONE);             /* must have a name                  */
-  scope = last_method()->getScope();   /* get the method's scope            */
+  scope = lastMethod()->getScope();    /* get the method's scope            */
                                        /* get this as a string              */
   name = (RexxObject *)REQUIRED_STRING(name, ARG_ONE);
                                        /* set the name                      */

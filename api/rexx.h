@@ -62,6 +62,21 @@
 
 typedef unsigned int APIRET;           // API return type
 
+/******************************************************************************/
+/* Types (for general use)                                                    */
+/******************************************************************************/
+typedef const char *CSTRING;          /* pointer to zero-terminated string */
+typedef void *POINTER;
+typedef void *REXXOBJECT;             /* reference to a REXX object        */
+typedef REXXOBJECT STRING;            /* REXX string object                */
+typedef REXXOBJECT REXXSTRING;        /* REXX string object                */
+
+/******************************************************************************/
+/* Constant values (for general use)                                          */
+/******************************************************************************/
+#define NO_CSTRING            NULL
+#define NULLOBJECT            NULL
+
 
 /*----------------------------------------------------------------------------*/
 /***    RXSTRING defines                                                      */
@@ -301,6 +316,23 @@ typedef  struct _RXFNCCAL_PARM {        /* fnc */
 }  RXFNCCAL_PARM;
 
 
+
+/***    Subfunction RXEXFCAL - Scripting Function Calls */
+
+typedef  struct _RXEXF_FLAGS {          /* fl */
+   unsigned rxfferr  : 1;              /* Invalid call to routine.   */
+   unsigned rxffnfnd : 1;              /* Function not found.        */
+   unsigned rxffsub  : 1;              /* Called as a subroutine     */
+}  RXEXF_FLAGS ;
+
+typedef  struct _RXEXFCAL_PARM {        /* fnc */
+   RXFNC_FLAGS       rxfnc_flags ;     /* function flags             */
+   CONSTRXSTRING     rxfnc_name;       // the called function name
+   size_t            rxfnc_argc;       /* Number of args in list.    */
+   REXXOBJECT       *rxfnc_argv;       /* Pointer to argument list.  */
+   REXXOBJECT        rxfnc_retc;       /* Return value.              */
+}  RXEXFCAL_PARM;
+
 /***    Subfunction RXCMDHST -- Process Host Commands     */
 
 typedef  struct _RXCMD_FLAGS {          /* fl */
@@ -416,6 +448,19 @@ typedef struct _RXDBGTST_PARM {        /* tst */
    CONSTRXSTRING rxdbg_filename;
    CONSTRXSTRING rxdbg_routine;
 }  RXDBGTST_PARM;
+
+
+typedef  struct _RXVARNOVALUE_PARM {   /* var */
+   CONSTRXSTRING     variable_name;    // the request variable name
+   REXXOBJECT        value;            // returned variable value
+}  RXVARNOVALUE_PARM;
+
+
+typedef  struct _RXVALCALL_PARM {      /* val */
+   CONSTRXSTRING     selector;         // the environment selector name
+   CONSTRXSTRING     variable_name;    // the request variable name
+   REXXOBJECT        value;            // returned variable value
+}  RXVALCALL_PARM;
 
 /* This typedef simplifies coding of an Exit handler.                */
 typedef int APIENTRY RexxExitHandler(int, int, PEXIT);
@@ -628,6 +673,19 @@ APIRET APIENTRY RexxFreeMemory(
                    void *);  /* pointer to the memory returned by    */
                              /* RexxAllocateMemory                   */
 typedef APIRET (APIENTRY *PFNREXXFREEMEMORY)(void *);
+
+int APIENTRY RexxResolveExit(const char *, REXXPFN *);
+
+APIRET APIENTRY RexxCallFunction (
+        const char *,                  /* Name of function to call   */
+        size_t,                        /* Number of arguments        */
+        PCONSTRXSTRING,                /* Array of argument strings  */
+        int            *,              /* RC from function called    */
+        PRXSTRING,                     /* Storage for returned data  */
+        const char *);                 /* Name of active data queue  */
+
+/***   Uppercase Entry Point Name */
+#define REXXCALLFUNCTION  RexxCallFunction
 
 #ifdef __cplusplus
 }

@@ -71,6 +71,7 @@
 #include "ExpressionStem.hpp"
 #include "ExpressionCompoundVariable.hpp"
 #include "ProtectedObject.hpp"
+#include "ActivityManager.hpp"
 
 /* max instructions without a yield */
 #define MAX_INSTRUCTIONS  100
@@ -292,7 +293,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
             if (this->activation_context&PROGRAM_LEVEL_CALL)
             {
                 /* run initialization exit           */
-                this->activity->sysExitInit(this);
+                activity->callInitializationExit(this);
                 SysSetupProgram(this);         /* do any system specific setup      */
             }
             else
@@ -434,12 +435,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
                 this->next = this->current->nextInstruction;
                 oldActivity = this->activity;      /* save the current activity         */
                                                    /* clone the current activity        */
-                this->activity = new_activity();
-                for (int i = 1; i <= LAST_EXIT; i++) /* copy any exit handlers            */
-                {
-                                                   /* from old activity to the new one  */
-                    this->activity->setSysExit(i, oldActivity->querySysExits(i));
-                }
+                this->activity = new_activity(oldActivity);
 
                 /* save the pointer to the start of our stack frame.  We're */
                 /* going to need to release this after we migrate everything */
@@ -902,7 +898,7 @@ void RexxActivation::returnFrom(
                                        /* real program call?                */
     if (this->activation_context&PROGRAM_LEVEL_CALL)
                                        /* run termination exit              */
-      this->activity->sysExitTerm(this);
+      activity->callTerminationExit(this);
   }
                                        /* switch debug off to avoid debug   */
                                        /* pause after exit entered from an  */
@@ -1147,7 +1143,7 @@ void RexxActivation::exitFrom(
         if (this->activation_context&PROGRAM_LEVEL_CALL)
         {
             /* run termination exit              */
-            this->activity->sysExitTerm(this);
+            activity->callTerminationExit(this);
         }
     }
     else
@@ -1180,7 +1176,7 @@ void RexxActivation::implicitExit()
                                        /* real program call?                */
       if (this->activation_context&PROGRAM_LEVEL_CALL) {
                                        /* run termination exit              */
-          this->activity->sysExitTerm(this);
+          this->activity->callTerminationExit(this);
       }
       this->execution_state = RETURNED;/* this is an EXIT for real          */
       return;                          /* we're finished here               */
@@ -1310,8 +1306,10 @@ void RexxActivation::raiseExit(
   else {
                                        /* real program call?                */
     if (this->activation_context&PROGRAM_LEVEL_CALL)
+    {
                                        /* run termination exit              */
-      this->activity->sysExitTerm(this);
+      activity->callTerminationExit(this);
+    }
     ProtectedObject p(this);
     this->termination();               /* remove guarded status on object   */
     this->activity->pop(false);        /* pop ourselves off active list     */
@@ -1750,7 +1748,7 @@ bool RexxActivation::trap(             /* trap a condition                  */
         if (condition->strCompare(CHAR_HALT))
         {
             /* call the sys exit to clear it     */
-            this->activity->sysExitHltClr(this);
+            this->activity->callHaltClearExit(this);
         }
         /* get the handler info              */
         handler = (RexxInstructionCallBase *)traphandler->get(1);
@@ -1803,6 +1801,42 @@ bool RexxActivation::trap(             /* trap a condition                  */
     }
     return handled;                      /* let call know if we've handled    */
 }
+
+
+/**
+ * Process a NOVALUE event for a variable.
+ *
+ * @param name     The variable name triggering the event.
+ * @param variable The resolved variable object for the variable.
+ *
+ * @return A value for that variable.
+ */
+RexxObject *RexxActivation::handleNovalueEvent(RexxString *name, RexxVariable *variable)
+{
+    RexxObject *value = this->novalueHandler(name);
+    // If the handler returns anything other than .nil, this is a
+    // value
+    if (value != TheNilObject)
+    {
+        return value;
+    }
+    // give any external novalue handler a chance at this
+    if (!activity->callNovalueExit(this, name, value))
+    {
+        // set this variable to the object found in the engine
+        variable->set(value);
+        return value;
+    }
+    // raise novalue?
+    if (novalueEnabled())
+    {
+        reportNovalue(name);
+    }
+
+    // the name is the returned value
+    return name;
+}
+
 
 
 void RexxActivation::mergeTraps(
@@ -1966,74 +2000,265 @@ RexxObject * RexxActivation::rexxVariable(   /* retrieve a program entry        
   return OREF_NULL;                    // not recognized
 }
 
-RexxObject *RexxActivation::externalCall(
-    RexxString          * target,      /* target of the call                */
-    size_t                _argcount,   /* count of arguments                */
-    RexxExpressionStack * _stack,      /* stack of arguments                */
-    RexxString          * calltype,    /* FUNCTION or ROUTINE               */
-    ProtectedObject     & resultObj)
-/******************************************************************************/
-/* Function:  Process an external function call                               */
-/******************************************************************************/
+
+/**
+ * Attempt to call a function stored in the macrospace.
+ *
+ * @param target    The target function name.
+ * @param arguments The argument pointer.
+ * @param argcount  The count of arguments,
+ * @param calltype  The type of call (FUNCTION or SUBROUTINE)
+ * @param order     The macrospace order flag.
+ * @param result    The function result.
+ *
+ * @return true if the macrospace function was located and called.
+ */
+bool RexxActivation::callMacroSpaceFunction(RexxString * target, RexxObject **_arguments,
+    size_t _argcount, RexxString * calltype, int order, ProtectedObject &_result)
 {
-  RexxMethod   * routine;              /* resolved call pointer             */
-  RexxObject   **_arguments;           /* argument array                    */
-  bool           found;
-
-  routine = OREF_NULL;                 /* set not found condition           */
-                                       /* get the arguments array           */
-  _arguments = _stack->arguments(_argcount);
-                                       /* see if we have a ::ROUTINE here   */
-  routine = this->settings.parent_code->resolveRoutine(target);
-  if (routine == OREF_NULL) {          /* still not found?                  */
-                                       /* if exit declines call             */
-    if (this->activity->sysExitFunc(this, target, calltype, resultObj, _arguments, _argcount)) {
-                                       /* exist in functions definition?    */
-      routine = (RexxMethod *)TheFunctionsDirectory->get(target);
-      if (routine == OREF_NULL)        /* not found yet?                    */
-      {
-                                           /* do external search and execute    */
-          SysExternalFunction(this, this->activity, target,
-              this->code->getProgramName(), _arguments, _argcount, calltype, &found, resultObj);
-
-#ifdef SCRIPTING
-          if (!found) {
-            char newCalltype[32] = "AX";
-            sprintf(newCalltype+2,"%p",calltype); // store info that is is called in engine
-                                                  // context, also store calltype information
-            found = !this->activity->sysExitFunc(this, target, new_string(newCalltype), resultObj, _arguments, _argcount);
-            //if (found)
-            //  result = routine->call(this->activity, (RexxObject *)this, target, arguments, calltype, OREF_NULL, EXTERNALCALL);
-          }
-#endif
-          if (!found)
-          {
-              routine = (RexxMethod*) ThePublicRoutines->entry(target);
-              if (routine == OREF_NULL)        /* not found yet?                    */
-                  reportException(Error_Routine_not_found_name, target);
-              else
-              {
-                  routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
-              }
-          }
-      }
-
-      else                             /* we found a routine so run it      */
-      {
-                                         /* run a special way                 */
-          routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
-      }
+    unsigned short position;             /* located macro search position     */
+    const char *macroName = target->getStringData();  /* point to the string data          */
+    /* did we find this one?             */
+    if (RexxQueryMacro(macroName, &position) == 0)
+    {
+        /* but not at the right time?        */
+        if (order == MS_PREORDER && position == RXMACRO_SEARCH_AFTER)
+        {
+            return false;                    /* didn't really find this           */
+        }
+        /* unflatten the method now          */
+        RexxMethod *routine = SysGetMacroCode(target);
+        // not restoreable is a call failure
+        if (routine == OREF_NULL)
+        {
+            return false;
+        }
+        /* run as a call                     */
+        routine->call(activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, _result);
+        // merge (class) definitions from macro with current settings
+        getSource()->mergeRequired(((RexxCode *)routine->getCode())->getSourceObject());
+        return true;                       /* return success we found it flag   */
     }
-  }
-  else                                 /* we found a routine so run it      */
-  {
-                                       /* run a special way                 */
-      routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
-  }
-  return (RexxObject *)resultObj;      /* return the function result        */
+    return false;                        /* nope, nothing to find here        */
 }
 
 
+/**
+ * Attempt to call a register native code function.
+ *
+ * @param target    The target function name.
+ * @param arguments The argument pointer.
+ * @param argcount  The count of arguments,
+ * @param calltype  The type of call (FUNCTION or SUBROUTINE)
+ * @param result    The function result.
+ *
+ * @return true if the function was located and called.
+ */
+bool RexxActivation::callRegisteredExternalFunction(RexxString *target, RexxObject **_arguments, size_t _argcount,
+    RexxString *calltype, ProtectedObject &_result)
+{
+    /* default return code buffer        */
+    char      default_return_buffer[DEFRXSTRING];
+
+    const char *funcname = target->getStringData();   /* point to the function name        */
+
+    RXSTRING funcresult;
+    int functionrc;                      /* Return code from function         */
+
+    // set a default result value
+    result = OREF_NULL;
+
+    if (RexxQueryFunction(funcname) != 0)    /* is the function registered ?  */
+    {
+        /* this a system routine?            */
+        if (StringUtil::caselessCompare(funcname, "SYS", 3) == 0)
+        {
+            // This is unconditional...it will fail if already loaded.
+            if (RexxRegisterFunctionDll("SYSLOADFUNCS", "REXXUTIL", "SysLoadFuncs") == 0)
+            {
+                /* first registration?               */
+                /* set up an result RXSTRING         */
+                MAKERXSTRING(funcresult, default_return_buffer, sizeof(default_return_buffer));
+                /* call the function loader          */
+                RexxCallFunction("SYSLOADFUNCS", 0, (PCONSTRXSTRING)NULL, &functionrc, &funcresult, "");
+
+            }
+            /* Do we have the function?          */
+            if (RexxQueryFunction(funcname) != 0)
+            {
+                return false;                    /* truely not found                  */
+            }
+        }
+        // not located
+        return false;
+    }
+
+    /* allocate enough memory for all arguments */
+    /* at least one item needs to be allocated to prevent error reporting */
+    PCONSTRXSTRING argrxarray = (PCONSTRXSTRING) SysAllocateResultMemory(sizeof(CONSTRXSTRING) * Numerics::maxVal(argcount, (size_t)1));
+    if (argrxarray == OREF_NULL)    /* memory error?                   */
+    {
+        reportException(Error_System_resources);
+    }
+
+    ProtectedSet savedObjects;
+    /* create RXSTRING arguments         */
+    for (size_t argindex=0; argindex < _argcount; argindex++)
+    {
+        /* get the next argument             */
+        RexxObject *argument = _arguments[argindex];
+        if (argument != OREF_NULL)       /* have an argument?                 */
+        {
+            /* force to string form              */
+            RexxString *stringArgument = argument->stringValue();
+            // if the string version is not the same, we're going to need to make
+            // sure the string version is protected from garbage collection until
+            // the call is finished
+            if (stringArgument != argument)
+            {
+                // make sure this is protected
+                savedObjects.add(stringArgument);
+            }
+            stringArgument->toRxstring(argrxarray[argindex]);
+        }
+        else                             /* have an omitted argument          */
+        {
+            /* give it zero length               */
+            argrxarray[argindex].strlength = 0;
+            /* and a zero pointer                */
+            argrxarray[argindex].strptr = NULL;
+        }
+    }
+    /* get the current queue name        */
+    const char *queuename = SysGetCurrentQueue()->getStringData();
+    /* make the RXSTRING result          */
+    MAKERXSTRING(funcresult, default_return_buffer, sizeof(default_return_buffer));
+
+/* CRITICAL window here -->>  ABSOLUTELY NO KERNEL CALLS ALLOWED            */
+
+    /* get ready to call the function    */
+    activity->exitKernel(this);
+    /* now call the external function    */
+    APIRET rc = RexxCallFunction(funcname, _argcount, argrxarray, &functionrc, &funcresult, queuename);
+    activity->enterKernel();           /* now re-enter the kernel           */
+
+/* END CRITICAL window here -->>  kernel calls now allowed again            */
+
+    SysReleaseResultMemory(argrxarray);
+
+    if (rc == 0)                       /* If good rc from RexxCallFunc      */
+    {
+        if (functionrc == 0)             /* If good rc from function          */
+        {
+            if (funcresult.strptr)         /* If we have a result, return it    */
+            {
+                /* make a string result              */
+                _result = new_string(funcresult);
+                /* user give us a new buffer?        */
+                if (funcresult.strptr != default_return_buffer )
+                {
+                    /* free it                           */
+                    SysReleaseResultMemory(funcresult.strptr);
+                }
+            }
+        }
+        else                             /* Bad rc from function, signal      */
+        {
+            /* error                             */
+            reportException(Error_Incorrect_call_external, target);
+        }
+    }
+    else                               /* Bad rc from RexxCallFunction,     */
+    {
+        reportException(Error_Routine_not_found_name, target);
+    }
+    return true;                      /* Show what happened                */
+}
+
+
+/**
+ * Main method for performing an external routine call.  This
+ * orchestrates the search order for locating an external routine.
+ *
+ * @param target    The target function name.
+ * @param _argcount The count of arguments for the call.
+ * @param _stack    The expression stack holding the arguments.
+ * @param calltype  The type of call (FUNCTION or SUBROUTINE)
+ * @param resultObj The returned result.
+ *
+ * @return The function result (also returned in the resultObj protected
+ *         object reference.
+ */
+RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, RexxExpressionStack *_stack,
+    RexxString *calltype, ProtectedObject &resultObj)
+{
+    /* get the arguments array           */
+    RexxObject **_arguments = _stack->arguments(_argcount);
+
+
+    // Step 1:  Check for a ::ROUTINE definition in the local context
+    RexxMethod *routine = this->settings.parent_code->resolveRoutine(target);
+    if (routine != OREF_NULL)
+    {
+        // call and return the result
+        routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
+        return(RexxObject *)resultObj;
+    }
+    // Step 2:  See if the function call exit fields this one
+    if (!activity->callFunctionExit(this, target, calltype, resultObj, _arguments, _argcount))
+    {
+        return(RexxObject *)resultObj;
+    }
+    // Step 3:  Check the global functions directory
+    routine = (RexxMethod *)TheFunctionsDirectory->get(target);
+    if (routine != OREF_NULL)        /* not found yet?                    */
+    {
+        // call and return the result
+        routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
+        return(RexxObject *)resultObj;
+    }
+
+    // Step 4:  Perform all platform-specific searches
+    if (SysExternalFunction(this, this->activity, target, this->code->getProgramName(), _arguments, _argcount, calltype, resultObj))
+    {
+        return(RexxObject *)resultObj;
+    }
+
+    // Step 5:  Check scripting exit, which is after most of the checks
+    if (!activity->callScriptingExit(this, target, calltype, resultObj, _arguments, _argcount))
+    {
+        return(RexxObject *)resultObj;
+    }
+
+    // Step 6:  The globally published public routines
+    routine = (RexxMethod*) ThePublicRoutines->entry(target);
+    // if it's made it through all of these steps without finding anything, we
+    // finally have a routine non found situation
+    if (routine == OREF_NULL)
+    {
+        reportException(Error_Routine_not_found_name, target);
+    }
+    // call the last option and return the result
+    routine->call(this->activity, (RexxObject *)this, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
+    return(RexxObject *)resultObj;
+}
+
+
+
+
+/**
+ * Call an external program as a function or subroutine.
+ *
+ * @param target     The target function name.
+ * @param parent     The name of the parent program (used for resolving extensions).
+ * @param _arguments The arguments to the call.
+ * @param _argcount  The count of arguments for the call.
+ * @param calltype   The type of call (FUNCTION or SUBROUTINE)
+ * @param resultObj  The returned result.
+ *
+ * @return True if an external program was located and called.  false for
+ *         any failures.
+ */
 bool RexxActivation::callExternalRexx(
   RexxString *      target,            /* Name of external function         */
   RexxString *      parent,            /* name of the parent file           */
@@ -2138,7 +2363,9 @@ RexxObject * RexxActivation::loadRequired(
 
   /* first see if we have something in macrospace with this name */
   if (fMacroExists && (usMacroPosition == RXMACRO_SEARCH_BEFORE))
-    _method = SysGetMacroCode(target);
+  {
+      _method = SysGetMacroCode(target);
+  }
 
   /* if not in PRE macrospace search order, try to load a file */
   if (fFileExists && (_method == OREF_NULL))
@@ -2851,9 +3078,9 @@ void RexxActivation::processClauseBoundary()
   if (this->pending_count != 0)        /* do we have trapped conditions?    */
     this->processTraps();              /* go dispatch the traps             */
 
-  this->activity->sysExitHltTst(this); /* Sys exit want to raise a halt?    */
+  this->activity->callHaltTestExit(this); /* Sys exit want to raise a halt?    */
                                        /* did sysexit change trace state    */
-  if (!this->activity->sysExitTrcTst(this, this->isExternalTraceOn())) {
+  if (!this->activity->callTraceTestExit(this, this->isExternalTraceOn())) {
                                        /* remember new state...             */
     if (this->isExternalTraceOn())     /* if current setting is on          */
       this->setExternalTraceOff();     /* turn it off                       */
@@ -3055,7 +3282,7 @@ RexxObject * RexxActivation::command(
   else
     instruction_traced = false;        /* not traced yet                    */
                                        /* if exit declines call             */
-  if (this->activity->sysExitCmd(this, commandString, address, &condition, &rc))
+  if (this->activity->callCommandExit(this, commandString, address, &condition, &rc))
                                        /* go issue the command              */
     rc = SysCommand(this, this->activity, address, commandString, &condition);
   this->stack.push(rc);                /* save on the expression stack      */

@@ -1106,6 +1106,17 @@ CSTRING REXXENTRY REXX_STRING(REXXOBJECT object)
 }
 
 
+bool REXXENTRY REXX_ISINSTANCE(REXXOBJECT object, REXXOBJECT classObject)
+/******************************************************************************/
+/* Function:  Object ISA test                                                 */
+/******************************************************************************/
+{
+    NativeContextBlock context;
+    return ((RexxObject *)object)->isInstanceOf((RexxClass *)classObject);
+
+}
+
+
 double REXXENTRY REXX_DOUBLE(REXXOBJECT object)
 /******************************************************************************/
 /* Function:  External interface to the nativeact object method               */
@@ -1131,7 +1142,7 @@ REXXOBJECT REXXENTRY REXX_SEND(REXXOBJECT receiver, CSTRING msgname, REXXOBJECT 
 /******************************************************************************/
 {
     NativeContextBlock context;
-    return context.protect((RexxObject *)receiver->sendMessage((RexxString *)new_string(msgname), (RexxArray *)arguments));
+    return context.protect(((RexxObject *)receiver)->sendMessage((RexxString *)new_string(msgname), (RexxArray *)arguments));
 }
 
 REXXOBJECT REXXENTRY REXX_SUPER(CSTRING msgname, REXXOBJECT arguments)
@@ -1237,6 +1248,24 @@ void REXXENTRY REXX_EXCEPT(int errorcode, REXXOBJECT value)
     }
 }
 
+void REXXENTRY REXX_EXCEPT1(int errorcode, REXXOBJECT value1)
+/******************************************************************************/
+/* Function:  Raise an exception on behalf of native code                     */
+/******************************************************************************/
+{
+    NativeContextBlock context;
+    reportException(errorcode, (RexxObject *)value1);
+}
+
+void REXXENTRY REXX_EXCEPT2(int errorcode, REXXOBJECT value1, REXXOBJECT value2)
+/******************************************************************************/
+/* Function:  Raise an exception on behalf of native code                     */
+/******************************************************************************/
+{
+    NativeContextBlock context;
+    reportException(errorcode, (RexxObject *)value1, (RexxObject *)value2);
+}
+
 
 void REXXENTRY REXX_RAISE(CSTRING condition, REXXOBJECT description, REXXOBJECT additional, REXXOBJECT result)
 /******************************************************************************/
@@ -1312,7 +1341,7 @@ bool REXXENTRY REXX_ISDIRECTORY(REXXOBJECT object)
 /******************************************************************************/
 {
                                        /* do the validation                 */
-  return object != NULL && isOfClass(Directory, object);
+  return object != NULL && isOfClass(Directory, (RexxObject *)object);
 }
 
 
