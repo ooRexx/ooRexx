@@ -56,7 +56,7 @@ RexxMethod3(REXXOBJECT,sysRxfuncadd,CSTRING,name,CSTRING,module,CSTRING,proc)
         proc = name;                       /* use the defined name              */
     }
     /* try to register the function      */
-    return RexxRegisterFunctionDll(name, module, proc) == 0 ? ooRexxTrue : ooRexxFalse;
+    return RexxRegisterFunctionDll(name, module, proc) != 0 ? ooRexxTrue : ooRexxFalse;
 }
 
 
@@ -71,7 +71,7 @@ RexxMethod1(REXXOBJECT,sysRxfuncdrop,CSTRING,name)
         rexx_exception(Error_Incorrect_call);
     }
     /* try to drop the function          */
-    return RexxDeregisterFunction(name) == 0 ? ooRexxTrue : ooRexxFalse;
+    return RexxDeregisterFunction(name) != 0 ? ooRexxTrue : ooRexxFalse;
 }
 
 
@@ -86,5 +86,5 @@ RexxMethod1(REXXOBJECT,sysRxfuncquery,CSTRING,name)
         rexx_exception(Error_Incorrect_call);
     }
     /* try to drop the function          */
-    return RexxQueryFunction(name) == 0 ? ooRexxTrue : ooRexxFalse;
+    return RexxQueryFunction(name) != 0 ? ooRexxTrue : ooRexxFalse;
 }

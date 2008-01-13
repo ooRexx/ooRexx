@@ -2098,7 +2098,7 @@ bool RexxActivation::callRegisteredExternalFunction(RexxString *target, RexxObje
 
     /* allocate enough memory for all arguments */
     /* at least one item needs to be allocated to prevent error reporting */
-    PCONSTRXSTRING argrxarray = (PCONSTRXSTRING) SysAllocateResultMemory(sizeof(CONSTRXSTRING) * Numerics::maxVal(argcount, (size_t)1));
+    PCONSTRXSTRING argrxarray = (PCONSTRXSTRING) SysAllocateResultMemory(sizeof(CONSTRXSTRING) * Numerics::maxVal(_argcount, (size_t)1));
     if (argrxarray == OREF_NULL)    /* memory error?                   */
     {
         reportException(Error_System_resources);
