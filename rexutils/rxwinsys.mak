@@ -36,7 +36,7 @@
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
 # NMAKE-compatible MAKE file for FNTEST*
-all:  $(OR_OUTDIR)\rxwinsys.dll
+all:  $(OR_OUTDIR)\rxwinsys.dll $(OR_OUTDIR)\winsystm.cls
 
 !include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
 C=cl
@@ -57,3 +57,12 @@ $(OR_OUTDIR)\rxwinsys.dll:     $(SOURCEF)
     $(OR_LIB)\rexxapi.lib \
     -def:$(XPLATFORM)\rxwinsys.def \
     -out:$(OR_OUTDIR)\$(@B).dll
+
+#
+# Copy winsystm.cls to the build directory so the test suite can be run directly
+# from that location without doing an install.
+#
+$(OR_OUTDIR)\winsystm.cls : $(XPLATFORM)\winsystm.cls
+    @ECHO .
+    @ECHO Copying $(XPLATFORM)\winsystm.cls
+    copy $(XPLATFORM)\winsystm.cls $(OR_OUTDIR)

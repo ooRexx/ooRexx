@@ -38,7 +38,7 @@
 #------------------------
 # REXXAPI.MAK make file
 #------------------------
-all: $(OR_OUTDIR)\rexxutil.dll
+all: $(OR_OUTDIR)\rexxutil.dll $(OR_OUTDIR)\rxftp.cls
     @ECHO .
     @ECHO All done rexxutil.dll
     @ECHO .
@@ -80,6 +80,15 @@ $(OR_OUTDIR)\rexxutil.dll : $(RXUTILOBJ) $(RXDBG_OBJ)   \
              $(OR_OUTDIR)\rexxapi.lib \
              $(OR_OUTDIR)\rexx.lib \
              $(libs_dll)
+
+#
+# Copy rxftp.cls to the build directory so the test suite can be run directly
+# from that location without doing an install.
+#
+$(OR_OUTDIR)\rxftp.cls : $(OR_ORYXRSRC)\rxftp.cls
+    @ECHO .
+    @ECHO Copying $(OR_ORYXRSRC)\rxftp.cls
+    copy $(OR_ORYXRSRC)\rxftp.cls $(OR_OUTDIR)
 
 #
 # *** wrxutil.obj

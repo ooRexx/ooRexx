@@ -40,7 +40,7 @@
 #------------------------
 #all: $(OR_OUTDIR)\rxregexp.dll \
 #     $(OR_OUTDIR)\rxregexp.cmd
-all: $(OR_OUTDIR)\rxregexp.dll
+all: $(OR_OUTDIR)\rxregexp.dll $(OR_OUTDIR)\rxregexp.cls
     @ECHO .
     @ECHO All done RXREGEXP.DLL
     @ECHO .
@@ -80,6 +80,16 @@ $(OR_OUTDIR)\rxregexp.dll : $(CPPOBJS) $(OBJS) $(RXDBG_OBJ) $(OR_OUTDIR)\RXREGEX
              $(OR_OUTDIR)\rexx.lib \
              $(OR_OUTDIR)\rexxapi.lib \
              $(libs_dll)
+
+
+#
+# Copy rxregexp.cls to the build directory so the test suite can be run
+# directly from that location without doing an install.
+#
+$(OR_OUTDIR)\rxregexp.cls : $(OR_ORYXREGEXP)\rxregexp.cls
+    @ECHO .
+    @ECHO Copying $(OR_ORYXREGEXP)\rxregexp.cls
+    copy $(OR_ORYXREGEXP)\rxregexp.cls $(OR_OUTDIR)
 
 #
 # *** .cpp -> .obj rules
