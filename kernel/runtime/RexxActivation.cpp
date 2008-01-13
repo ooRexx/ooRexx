@@ -2089,8 +2089,11 @@ bool RexxActivation::callRegisteredExternalFunction(RexxString *target, RexxObje
                 return false;                    /* truely not found                  */
             }
         }
-        // not located
-        return false;
+        else
+        {
+            // not located
+            return false;
+        }
     }
 
     /* allocate enough memory for all arguments */
