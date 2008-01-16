@@ -947,7 +947,7 @@ void getpath(
   char *filename)
 {
   size_t len;                          /* length of filespec         */
-  size_t LastSlashPos;                 /* position of last slash     */
+  int    LastSlashPos;                 /* position of last slash     */
   char   szBuff[MAX_PATH];             /* used to save current dir   */
   char   drv[3];                       /* used to change dir         */
   size_t i=0;
@@ -973,7 +973,7 @@ void getpath(
     strcpy(string, "..\\*.*");         /* make it a ..\*.* request   */
   len = strlen(string);                /* Get length of full file    */
                                        /* spec                       */
-  LastSlashPos = len;                  /* Get max pos of last '\'    */
+  LastSlashPos = (int)len;             /* Get max pos of last '\'    */
 
     /* Step back through string until at begin or at '\' char        */
 
