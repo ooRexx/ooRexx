@@ -133,7 +133,9 @@ RexxMutableBuffer::RexxMutableBuffer(size_t l, size_t d)
 {
     bufferLength = l;               /* save the length of the buffer    */
     defaultSize  = d;               /* store the default buffer size    */
-
+    // NB: As in the default constructor, we clear this before we allocate the
+    // new buffer in case garbage collection is triggered.
+    data = OREF_NULL;
     data = new_buffer(bufferLength);
 }
 
