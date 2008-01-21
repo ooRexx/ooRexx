@@ -461,7 +461,7 @@ return position
 
 -- delete the named queue when finished
 ::method delete
-  exposed named_queue
+  expose named_queue
   if named_queue \= 'SESSION' then do
       self~class~delete(named_queue)
   end
