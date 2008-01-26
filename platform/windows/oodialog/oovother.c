@@ -1211,15 +1211,23 @@ ULONG APIENTRY HandleControlEx(
                 }
                 else
                 {
-                    if ( ++count > retstr->strlength )
+                    if ( ++count > RXAUTOBUFLEN )
                     {
                         PVOID p = GlobalAlloc(GMEM_FIXED, count);
-                        if ( ! p ) return GetLastError();
+                        if ( ! p )
+                        {
+                            RETVAL(-(LONG)GetLastError())
+                        }
 
                         retstr->strptr = (PCHAR)p;
                     }
                     count = GetWindowText(hCtrl, (LPTSTR)retstr->strptr, count);
-                    retstr->strlength = strlen(retstr->strptr);
+
+                    retstr->strlength = count;
+                    if ( count == 0 )
+                    {
+                        retstr->strptr[0] = '\0';
+                    }
                 }
             }
             return 0;
