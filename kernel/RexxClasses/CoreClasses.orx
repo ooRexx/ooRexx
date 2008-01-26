@@ -97,10 +97,6 @@ server = .object~subclass('server')
 server_mdict = .table~new
 
 server_mdict~put(.methods~server_init, 'INIT')
-server_mdict~put(kernel_methods['RUN_PROGRAM'], 'RUN_PROGRAM')
-server_mdict~put(kernel_methods['CALL_PROGRAM'], 'CALL_PROGRAM')
-server_mdict~put(kernel_methods['CALL_STRING'], 'CALL_STRING')
-server_mdict~put(.methods~server_save_result, 'SAVE_RESULT')
 
 server~!define_methods(server_mdict)
 server~!rexxdefined                     /* Mark as unchangeable          */
@@ -401,24 +397,12 @@ nomethod:
   raise syntax 93.948 array(1, "Collection")
 
 
-
-
-
-
-::METHOD server_save_result
- /* anchor a passed out result */
-  expose savedResults
-  use arg resultObj
-  savedResults[resultObj] = resultObj
-
-
 ::METHOD server_init
  /* initialize a server */
-  expose localenv savedResults
+  expose localenv
 
   .local~objectname = "The Local Directory"  -- give the local environment a nicer descriptive name.
 
-  savedResults = .table~new
   .local~setentry('LOCALSERVER', self)
 
  /* set system objects in the local environment */

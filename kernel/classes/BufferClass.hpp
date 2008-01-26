@@ -59,6 +59,7 @@
   inline size_t getLength(void) { return this->size; };
   inline char *address(void) {return this->data; }
   inline void copyData(size_t offset, const char *string, size_t length) { memcpy(this->data + offset, string, length); }
+  inline void copyData(CONSTRXSTRING &r) { copyData(0, r.strptr, r.strlength); }
   inline void openGap(size_t offset, size_t _size, size_t tailSize)
   {
       memmove(address() + offset + _size, address() + offset, tailSize);
@@ -84,4 +85,12 @@
  };
 
  inline RexxBuffer *new_buffer(size_t s) { return new (s) RexxBuffer; }
+ inline RexxBuffer *new_buffer(CONSTRXSTRING &r)
+ {
+     RexxBuffer *b = new_buffer(r.strlength);
+     b->copyData(r);
+     return b;
+ }
+
+
 #endif

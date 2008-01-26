@@ -56,6 +56,8 @@
 #include "SourceFile.hpp"
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
+#include "BufferClass.hpp"
+#include "RexxInternalApis.h"
 #include <ctype.h>
 
 
@@ -143,6 +145,23 @@ void RexxMethod::call(
     ProtectedObject p(this);           // belt-and-braces to make sure this is protected
     // just forward this to the code object
     code->call(activity, this, receiver, msgname, argPtr, argcount, calltype, environment, context, result);
+}
+
+
+void RexxMethod::runProgram(
+    RexxActivity *activity,
+    RexxString * calltype,             /* type of invocation                */
+    RexxString * environment,          /* initial address                   */
+    RexxObject **arguments,            /* array of arguments                */
+    size_t       argCount,             /* the number of arguments           */
+    ProtectedObject &result)           // the method result
+/****************************************************************************/
+/* Function:  Run a method as a program                                     */
+/****************************************************************************/
+{
+                                       /* ensure correct scope              */
+    RexxMethod *method = this->newScope((RexxClass *)TheNilObject);
+    method->call(activity, OREF_NULL, OREF_NONE, arguments, argCount, calltype, environment, PROGRAMCALL, result);
 }
 
 
@@ -397,8 +416,8 @@ RexxMethod *RexxMethodClass::newRexxCode(
     result = this->newRexxMethod(newSource, OREF_NULL);
     // new default: insert program scope into method object
     RexxCode *resultCode = (RexxCode *)result->getCode();
-    resultCode->setLocalRoutines(ActivityManager::currentActivity->getCurrentActivation()->getSource()->getLocalRoutines());
-    resultCode->setPublicRoutines(ActivityManager::currentActivity->getCurrentActivation()->getSource()->getPublicRoutines());
+    resultCode->setLocalRoutines(ActivityManager::currentActivity->getCurrentRexxFrame()->getSource()->getLocalRoutines());
+    resultCode->setPublicRoutines(ActivityManager::currentActivity->getCurrentRexxFrame()->getSource()->getPublicRoutines());
   }
 
   return result;
@@ -489,6 +508,71 @@ RexxMethod *RexxMethodClass::newRexxBuffer(
                                        /* now complete method creation      */
   RexxMethod *newMethod = this->newRexxMethod(newSource, scope);
   return newMethod;
+}
+
+
+RexxMethod * RexxMethod::processInstore(PRXSTRING instore, RexxString * name )
+/******************************************************************************/
+/* Function:  Process instorage execution arguments                           */
+/******************************************************************************/
+{
+    // just a generic empty one indicating that we should check the macrospace?
+    if (instore[0].strptr == NULL && instore[1].strptr == NULL)
+    {
+        unsigned short temp;
+
+        /* see if this exists                */
+        if (!RexxQueryMacro(name->getStringData(), &temp))
+        {
+            RXSTRING buffer;                     /* instorage buffer                  */
+
+            MAKERXSTRING(buffer, NULL, 0);
+            /* get the image of function         */
+            RexxExecuteMacroFunction(name->getStringData(), &buffer);
+            /* unflatten the method now          */
+            RexxMethod *routine = SysRestoreProgramBuffer(&buffer, name);
+            // release the buffer memory
+            SysReleaseResultMemory(buffer.strptr);
+            return routine; 
+        }
+        return OREF_NULL;         // not found
+    }
+    if (instore[1].strptr != NULL)       /* have an image                     */
+    {
+        /* go convert into a method          */
+        RexxMethod *method = SysRestoreProgramBuffer(&instore[1], name);
+        if (method != OREF_NULL)
+        {         /* did it unflatten successfully?    */
+            if (instore[0].strptr != NULL)   /* have source also?                 */
+            {
+                /* get a buffer object               */
+                RexxBuffer *source_buffer = new_buffer(instore[0].strlength);
+                /* copy source into the buffer       */
+                memcpy(source_buffer->address(), instore[0].strptr, instore[0].strlength);
+                /* reconnect this with the source    */
+                ((RexxCode *)method)->getSourceObject()->setBufferedSource(source_buffer);
+            }
+            return method;                   /* go return it                      */
+        }
+    }
+    if (instore[0].strptr != NULL)       /* have instorage source             */
+    {
+        /* get a buffer object               */
+        RexxBuffer *source_buffer = new_buffer(instore[0].strlength);
+        /* copy source into the buffer       */
+        memcpy(source_buffer->address(), instore[0].strptr, instore[0].strlength);
+
+        if (source_buffer->address()[0] == '#' && source_buffer->address()[1] == '!')
+        {
+            memcpy(source_buffer->address(), "--", 2);
+        }
+        /* translate this source             */
+        RexxMethod *method = TheMethodClass->newRexxBuffer(name, source_buffer, (RexxClass *)TheNilObject);
+        /* return this back in instore[1]    */
+        SysSaveProgramBuffer(&instore[1], method);
+        return method;                     /* return translated source          */
+    }
+    return OREF_NULL;                    /* processing failed                 */
 }
 
 

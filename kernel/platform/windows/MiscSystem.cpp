@@ -51,13 +51,11 @@
 #include "malloc.h"
 #include "SystemVersion.h"
 #include <signal.h>
+#include "Interpreter.hpp"
 
 extern bool UseMessageLoop = false;
 
 extern "C" void activity_thread (RexxActivity *objp);
-
-extern SEV rexxTimeSliceSemaphore;
-
 
 unsigned int iClauseCounter=0;         // count of clauses
 
@@ -89,9 +87,6 @@ RexxString *SysName( void )
 
 void SysTermination(void)
 {
-#ifdef FIXEDTIMERS
-    EVCL(rexxTimeSliceSemaphore);                      // originally EVOPEN
-#endif
 }
 
 
@@ -100,9 +95,6 @@ void SysInitialize(void)
 /* Function:   Perform system specific initialization.                        */
 /******************************************************************************/
 {
-#ifdef FIXEDTIMERS
-    EVCROPEN(rexxTimeSliceSemaphore, "OBJREXXTSSEM");      // originally EVOPEN
-#endif
 }
 
 
@@ -323,7 +315,7 @@ BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
       if (SignalCount > 1) return FALSE;    /* send signal to system */
   }
 
-  ActivityManager::haltAllActivities();
+  Interpreter::haltAllActivities();
   return true;      /* ignore signal */
 }
 

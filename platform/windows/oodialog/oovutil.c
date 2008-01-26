@@ -281,7 +281,7 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
 /* prepare dialog management table for a new dialog entry */
-ULONG APIENTRY HandleDialogAdmin(
+ULONG REXXENTRY HandleDialogAdmin(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -578,7 +578,7 @@ DWORD WINAPI WindowLoopThread(LONG * arg)
 }
 
 
-ULONG APIENTRY GetDialogFactor(
+ULONG REXXENTRY GetDialogFactor(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -605,7 +605,7 @@ ULONG APIENTRY GetDialogFactor(
 
 
 /* create an asynchronous dialog */
-ULONG APIENTRY StartDialog(
+ULONG REXXENTRY StartDialog(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -835,7 +835,7 @@ HICON GetIconForID(DIALOGADMIN *dlgAdm, UINT id, BOOL fromFile, int cx, int cy)
  *  Nothing to generalize as of yet ...
  *
  */
-ULONG APIENTRY WinAPI32Func(
+ULONG REXXENTRY WinAPI32Func(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -1529,7 +1529,7 @@ _declspec(dllexport) LONG __cdecl OODialogCleanup(BOOL Process)
 }
 
 
-ULONG APIENTRY HandleDlg(
+ULONG REXXENTRY HandleDlg(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -1614,7 +1614,7 @@ ULONG APIENTRY HandleDlg(
 
 
 
-ULONG APIENTRY DialogMenu(
+ULONG REXXENTRY DialogMenu(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -1736,7 +1736,7 @@ LONG SetRexxStem(CHAR * name, INT id, char * secname, CHAR * data)
 
 
 
-ULONG APIENTRY DumpAdmin(
+ULONG REXXENTRY DumpAdmin(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -1956,7 +1956,7 @@ CHAR * UserFuncTab[UFTS] = {\
                      };
 
 
-ULONG APIENTRY RemoveMMFuncs(
+ULONG REXXENTRY RemoveMMFuncs(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -2067,7 +2067,7 @@ BOOL InitForCommonControls(void)
 }
 
 
-ULONG APIENTRY InstMMFuncs(
+ULONG REXXENTRY InstMMFuncs(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -2103,7 +2103,7 @@ ULONG APIENTRY InstMMFuncs(
 
 
 
-ULONG APIENTRY RemoveExtendedMMFuncs(
+ULONG REXXENTRY RemoveExtendedMMFuncs(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -2135,7 +2135,7 @@ ULONG APIENTRY RemoveExtendedMMFuncs(
 
 
 
-ULONG APIENTRY InstExtendedMMFuncs(
+ULONG REXXENTRY InstExtendedMMFuncs(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -2172,7 +2172,7 @@ ULONG APIENTRY InstExtendedMMFuncs(
 
 
 
-ULONG APIENTRY RemoveUserMMFuncs(
+ULONG REXXENTRY RemoveUserMMFuncs(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -2205,7 +2205,7 @@ ULONG APIENTRY RemoveUserMMFuncs(
 
 
 
-ULONG APIENTRY InstUserMMFuncs(
+ULONG REXXENTRY InstUserMMFuncs(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -2245,7 +2245,7 @@ ULONG APIENTRY InstUserMMFuncs(
 extern "C" {
 #endif
 
-BOOL APIENTRY DllMain(
+BOOL REXXENTRY DllMain(
     HINSTANCE  hinstDLL,    // handle of DLL module
     DWORD  fdwReason,    // reason for calling function
     LPVOID  lpvReserved     // reserved

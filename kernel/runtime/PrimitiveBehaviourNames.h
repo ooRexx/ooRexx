@@ -160,6 +160,7 @@
 #define TheClauseBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Clause])
 #define TheTokenBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Token])
 #define TheDoBlockBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoBlock])
+#define TheInterpreterInstanceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_InterpreterInstance])
 
 
 /* -------------------------------------------------------------------------- */

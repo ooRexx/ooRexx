@@ -58,20 +58,11 @@
 #include <stdio.h>                          /* needed for printf()        */
 #include <string.h>                         /* needed for strlen()        */
 
-extern "C" {
-BOOL   APIENTRY RexxInitialize (void);
-}
-
-                                         /* Global inducator */
-extern  _declspec(dllimport) bool ProcessSaveImage;
-
 //
 //  Prototypes
 //
 int __cdecl main(int argc, char *argv[]);  /* main entry point           */
-LONG APIENTRY MY_IOEXIT( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock);
-
-extern "C" char *APIENTRY RexxGetVersionInformation(void);
+LONG REXXENTRY MY_IOEXIT( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock);
 
 #include "ArgumentParser.h"  /* defines getArguments and freeArguments */
 
@@ -110,9 +101,6 @@ int __cdecl main(int argc, char *argv[])
                                        /* is this an option switch?         */
     if ((*(cp=*(argv+i)) == '-' || *cp == '/'))
       switch (*++cp) {
-        case 'i': case 'I':            /* image build                       */
-          ProcessSaveImage = true;     /* say this is a save image          */
-          break;
 
         case 'e': case 'E':            /* execute from string               */
           if (from_string == FALSE) {    /* only treat 1st -e differently     */
@@ -158,11 +146,7 @@ int __cdecl main(int argc, char *argv[])
     }
   }
 
-  if (ProcessSaveImage) {              /* save an image?                    */
-                                       /* This is a Saveimage ...           */
-    RexxInitialize();                  /* do normal REXX init               */
-  }
-  else if (program_name == NULL) {
+  if (program_name == NULL) {
                                        /* give a simple error message       */
     #undef printf
     printf("Syntax: REXX [-v] ProgramName [parameter_1....parameter_n]\n");

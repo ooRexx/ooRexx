@@ -77,49 +77,49 @@ void SysReleaseResultMemory(
   free(MemoryBlock);                   /* release this block                */
 }
 
-bool SysAccessPool(MemorySegmentPool **pool)
+
+MemorySegmentPool *MemorySegmentPool::createPool()
 /*********************************************************************/
 /*   Function:  Access/Create the 1st block as Named Storage         */
 /*              return true is an access, false is created.          */
 /*********************************************************************/
 {
-  MemorySegmentPool *  newPool;
-  void  *tmpPtr;
-  size_t segmentSize;
-                                       /* create the shared memory segemnt  */
-                                       /* if already exists then this       */
-                                       /* isn't a coldstart.                */
-  tmpPtr = (void *)calloc(MEMSIZE,1);
-  if (tmpPtr == NULL)              /* Error on commit?                  */
-  {
-     reportException(Error_System_resources);
-  }
+    MemorySegmentPool *  newPool;
+    void  *tmpPtr;
+    size_t segmentSize;
+    /* create the shared memory segemnt  */
+    /* if already exists then this       */
+    /* isn't a coldstart.                */
+    tmpPtr = (void *)calloc(MEMSIZE,1);
+    if (tmpPtr == NULL)              /* Error on commit?                  */
+    {
+        reportException(Error_System_resources);
+    }
 
-  *pool = (MemorySegmentPool *)tmpPtr;
-  newPool = *pool;
-  segmentSize = RXROUNDUP(SegmentSize, PAGESIZE);
+    newPool = (MemorySegmentPool *)tmpPtr;
+    segmentSize = RXROUNDUP(SegmentSize, PAGESIZE);
 
-                                       /* Since memory may not be ready     */
-                                       /* for a segment we keep it as a spar*/
-                                       /* and will give it to memory on     */
-                                       /* 1st request for a new segment.    */
+    /* Since memory may not be ready     */
+    /* for a segment we keep it as a spar*/
+    /* and will give it to memory on     */
+    /* 1st request for a new segment.    */
 
     newPool->spareSegment = new (((char *)newPool) + MemorySegmentPoolOverhead) MemorySegment (segmentSize - MemorySegmentPoolOverhead);
-                                       /* compute actual usable space.      */
+    /* compute actual usable space.      */
     newPool->uncommitted = MEMSIZE - segmentSize;
 #ifdef _DEBUG
     newPool->reserved = MEMSIZE;
 #endif
-                                       /* compute starting poin of next     */
-                                       /* allocation.                       */
+    /* compute starting poin of next     */
+    /* allocation.                       */
     newPool->nextAlloc = (char *)newPool + segmentSize;
 
-                                       /* start allocating large segments   */
-                                       /* from the end of the pool.         */
+    /* start allocating large segments   */
+    /* from the end of the pool.         */
     newPool->nextLargeAlloc = ((char*) newPool) + MEMSIZE;
 
     new (newPool) MemorySegmentPool;   /* Initialize as a segmentPool       */
-    return false;                      /* newly created.                    */
+    return newPool;                    /* newly created.                    */
 }
 
 void *MemorySegmentPool::operator new(size_t size, size_t minSize)
@@ -187,58 +187,42 @@ MemorySegment *MemorySegmentPool::newSegment(size_t minSize)
 /*                                                                   */
 /*********************************************************************/
 {
-   size_t  segmentSize;
-   MemorySegment *newSeg;
-   MemorySegmentPool *newPool;
-                                       /* Any spare segments left over      */
-                                       /* from initial pool alloc?          */
-                                       /* And big enough for this request?  */
-   if (this->spareSegment && this->spareSegment->size() >= minSize)
-   {
-     newSeg = this->spareSegment;      /* no longer have a spare            */
-     this->spareSegment = NULL;
-     return newSeg;                    /* return this segment for allocation*/
-   }
-   segmentSize = RXROUNDUP(minSize, PAGESIZE); /* compute commit size       */
-                                       /* enough space for request          */
-   if (this->uncommitted >= segmentSize)
-   {
-     newSeg = new (this->nextAlloc) MemorySegment (segmentSize);
+    size_t  segmentSize;
+    MemorySegment *newSeg;
+    MemorySegmentPool *newPool;
+    /* Any spare segments left over      */
+    /* from initial pool alloc?          */
+    /* And big enough for this request?  */
+    if (this->spareSegment && this->spareSegment->size() >= minSize)
+    {
+        newSeg = this->spareSegment;      /* no longer have a spare            */
+        this->spareSegment = NULL;
+        return newSeg;                    /* return this segment for allocation*/
+    }
+    segmentSize = RXROUNDUP(minSize, PAGESIZE); /* compute commit size       */
+    /* enough space for request          */
+    if (this->uncommitted >= segmentSize)
+    {
+        newSeg = new (this->nextAlloc) MemorySegment (segmentSize);
 
-     this->uncommitted -= segmentSize; /* Adjust uncommitted amount         */
-     this->nextAlloc += segmentSize;   /* Adjust to next Allocation addr    */
-     return newSeg;
-   }
-   else                                /* uncommitted not enough need a new pool */
-   {
-     newPool = new (minSize) MemorySegmentPool;
-     if (newPool)
-     {                    /* Did we get a new Pool?            */
-       /* Make sure new pool is added to the end of list   */
-       if ( this->next )
-       {
-          /* anyone else added a new segment while we where here? */
-          MemorySegmentPool *lastPool = this->next;
-
-          while ( lastPool->next )
-          {
-             lastPool = lastPool->next;
-          } /* endwhile */
-          lastPool->next = newPool;
-          memoryObject.accessPools(this);
-       }
-       else
-       {
-         this->next = newPool;         /* Anchor it to end of chain         */
-       }
-       memoryObject.addPool(newPool);  // tell the memory object we'v added a new pool
-       return newPool->newSegment(minSize);
-     }
-     else
-     {
-       return NULL;
-     }
-   }
+        this->uncommitted -= segmentSize; /* Adjust uncommitted amount         */
+        this->nextAlloc += segmentSize;   /* Adjust to next Allocation addr    */
+        return newSeg;
+    }
+    else                                /* uncommitted not enough need a new pool */
+    {
+        newPool = new (minSize) MemorySegmentPool;
+        if (newPool)
+        {                    /* Did we get a new Pool?            */
+            this->next = newPool;         /* Anchor it to end of chain         */
+            memoryObject.memoryPoolAdded(newPool);  // tell the memory object we'v added a new pool
+            return newPool->newSegment(minSize);
+        }
+        else
+        {
+            return NULL;
+        }
+    }
 }
 
 MemorySegment *MemorySegmentPool::newLargeSegment(size_t minSize)
@@ -246,75 +230,56 @@ MemorySegment *MemorySegmentPool::newLargeSegment(size_t minSize)
 /* Function: Allocate a large segment from the other end of the pool */
 /*********************************************************************/
 {
-   size_t segmentSize;
-   MemorySegment *newSeg;
-   MemorySegmentPool *newPool;
+    size_t segmentSize;
+    MemorySegment *newSeg;
+    MemorySegmentPool *newPool;
 
-                                       /* Any spare segments left over      */
-                                       /* from initial pool alloc?          */
-                                       /* And big enough for this request?  */
-   if (this->spareSegment && this->spareSegment->size() >= minSize) {
-     newSeg = this->spareSegment;      /* no longer have a spare            */
-     this->spareSegment = NULL;
-     return newSeg;                    /* return this segment for allocation*/
-   } else if (this->spareSegment) {
-   }
-
-                                       /* compute commit size               */
-   segmentSize = RXROUNDUP(minSize, PAGESIZE);
-                                       /* enough space for request          */
-   if (this->uncommitted >= segmentSize) {
-     this->nextLargeAlloc = this->nextLargeAlloc - segmentSize; // already calloc'd on AIX, just move pointer
-
-                                       /* Create new segment.               */
-     newSeg = new (this->nextLargeAlloc) MemorySegment (segmentSize);
-     this->uncommitted -= segmentSize; /* Adjust uncommitted amount         */
-     // this->nextLargeAlloc does not have to be adjusted, will be correct
-     return newSeg;
-   } else {
-     newPool = new (minSize) MemorySegmentPool;
-     if (newPool) {                    /* Did we get a new Pool?            */
-       /* Make sure new pool is added to the end of list   */
-       if ( this->next ) {
-          /* anyone else added a new segment while we where here? */
-          MemorySegmentPool *lastPool = this->next;
-
-          while ( lastPool->next )
-            lastPool = lastPool->next;
-          lastPool->next = newPool;
-          memoryObject.accessPools(this);
-       } else
-         this->next = newPool;         /* Anchor it to end of chain         */
-       memoryObject.addPool(newPool);  // tell the memory object we've added a new pool
-       return newPool->newLargeSegment(minSize);
-     } else
-       return NULL;
-   }
-}
-
-bool MemorySegmentPool::accessNextPool()
-/*********************************************************************/
-/* Function:: Gain access to all existing memoryPools.               */
-/*                                                                   */
-/*********************************************************************/
-{
-                                       /* Is there a next MemoryPool        */
-    if (this->next)
+    /* Any spare segments left over      */
+    /* from initial pool alloc?          */
+    /* And big enough for this request?  */
+    if (this->spareSegment && this->spareSegment->size() >= minSize)
     {
-      return true;                      /* Return one accessed               */
+        newSeg = this->spareSegment;      /* no longer have a spare            */
+        this->spareSegment = NULL;
+        return newSeg;                    /* return this segment for allocation*/
     }
-    return false;                       /* At the end, return false (NO_MORE)*/
+
+    /* compute commit size               */
+    segmentSize = RXROUNDUP(minSize, PAGESIZE);
+    /* enough space for request          */
+    if (this->uncommitted >= segmentSize)
+    {
+        this->nextLargeAlloc = this->nextLargeAlloc - segmentSize; // already calloc'd on AIX, just move pointer
+
+        /* Create new segment.               */
+        newSeg = new (this->nextLargeAlloc) MemorySegment (segmentSize);
+        this->uncommitted -= segmentSize; /* Adjust uncommitted amount         */
+        // this->nextLargeAlloc does not have to be adjusted, will be correct
+        return newSeg;
+    }
+    else
+    {
+        newPool = new (minSize) MemorySegmentPool;
+        if (newPool)                      /* Did we get a new Pool?            */
+        {
+            /* Make sure new pool is added to the end of list   */
+            this->next = newPool;           /* Anchor it to end of chain         */
+            memoryObject.memoryPoolAdded(newPool);  // tell the memory object we've added a new pool
+            return newPool->newLargeSegment(minSize);
+        }
+        else
+        {
+            return NULL;
+        }
+    }
 }
 
-MemorySegmentPool  * MemorySegmentPool::freePool()       // add return value
+void MemorySegmentPool::freePool()       // add return value
 /*********************************************************************/
 /* Function:: Free this pool object                                  */
 /*********************************************************************/
 {
-    MemorySegmentPool *nextPtr;
-    nextPtr = this->next;
     free(this);
-    return nextPtr;
 }
 
 /******************** added by weigold *******************************/

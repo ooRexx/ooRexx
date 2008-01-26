@@ -1,0 +1,477 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/******************************************************************************/
+/* Implementation of the InterpreterInstance class                            */
+/*                                                                            */
+/******************************************************************************/
+
+#include "InterpreterInstance.hpp"
+#include "Interpreter.hpp"
+#include "SystemInterpreter.hpp"
+#include "ActivityManager.hpp"
+#include "RexxActivation.hpp"
+
+/**
+ * Create a new Package object instance.
+ *
+ * @param size   Size of the object.
+ *
+ * @return Pointer to new object storage.
+ */
+void *InterpreterInstance::operator new(size_t size)
+{
+    return new_object(size, T_InterpreterInstance);
+}
+
+InterpreterInstance::InterpreterInstance()
+{
+    // just make sure all of the fields are cleared in case a GC
+    // gets triggered at the wrong moment.
+    clearObject();
+
+    // this needs to be created and set
+    EVCR(terminationSem);
+    EVSET(terminationSem);
+}
+
+
+void InterpreterInstance::live(size_t liveMark)
+/******************************************************************************/
+/* Function:  Normal garbage collection live marking                          */
+/******************************************************************************/
+{
+    memory_mark(rootActivity);
+    memory_mark(allActivities);
+    memory_mark(globalReferences);
+    memory_mark(defaultAddress);
+}
+
+
+void InterpreterInstance::liveGeneral(int reason)
+/******************************************************************************/
+/* Function:  Generalized object marking                                      */
+/******************************************************************************/
+{
+    memory_mark_general(rootActivity);
+    memory_mark_general(allActivities);
+    memory_mark_general(globalReferences);
+    memory_mark_general(defaultAddress);
+}
+
+
+/**
+ * Initialize an interpreter instance.
+ *
+ * @param activity The root activity for the interpreter instance.
+ * @param handlers The exit handlers used by all threads running under this instance.
+ * @param defaultEnvironment
+ *                 The default address environment for this interpreter instance.  Each
+ *                 active interpreter instance can define its own default environment.
+ */
+void InterpreterInstance::initialize(RexxActivity *activity, PRXSYSEXIT handlers, const char *defaultEnvironment)
+{
+    rootActivity = activity;
+    allActivities = new_list();
+    // this gets added to the entire active list.
+    allActivities->append((RexxObject *)activity);
+    globalReferences = new_object_table();
+    if (defaultEnvironment != NULL)
+    {
+        defaultAddress = new_string(defaultEnvironment);
+    }
+
+    // if we have handlers, initialize the array
+    if (handlers != NULL)
+    {
+                                       /* while not the list ender          */
+        for (int i= 0; handlers[i].sysexit_code != RXENDLST; i++)
+        {
+            /* enable this exit                  */
+            setExitHandler(handlers[i]);
+        }
+    }
+
+    // associate the thread with this instance
+    activity->setupAttachedActivity(this);
+}
+
+
+/**
+ * Attach a thread to an interpreter instance.
+ *
+ * @return The attached activity.
+ */
+RexxActivity *InterpreterInstance::attachThread()
+{
+    // first check for an existing activity
+    RexxActivity *activity = findActivity();
+    // do we have this?  we can just return it
+    if (activity != OREF_NULL)
+    {
+        return activity;
+    }
+
+    ResourceSection lock;
+
+    // we need to get a new activity set up for this particular thread
+    activity = ActivityManager::attachThread();
+    // add this to the activity lists
+    allActivities->append((RexxObject *)activity);
+    // associate the thread with this instance
+    activity->setupAttachedActivity(this);
+    return activity;
+}
+
+
+/**
+ * Detach a thread from this interpreter instance.
+ *
+ * @return true if this worked ok.
+ */
+bool InterpreterInstance::detachThread()
+{
+    // first check for an existing activity
+    RexxActivity *activity = findActivity();
+    // if the thread in question is not found, is not an attached thread, or
+    // the thread is currently busy, this fails
+    if (activity == OREF_NULL || !activity->isAttached() || activity->isActive())
+    {
+        return false;
+    }
+    ResourceSection lock;
+
+
+    allActivities->removeItem((RexxObject *)activity);
+    // have the activity manager remove this from the global tables
+    // and perform resource cleanup
+    ActivityManager::returnActivity(activity);
+    return true;
+}
+
+
+
+/**
+ * Spawn off a new thread from an existing thread.
+ *
+ * @param parent The parent thread.
+ *
+ * @return The attached activity.
+ */
+RexxActivity *InterpreterInstance::spawnActivity(RexxActivity *parent)
+{
+    // create a new activity
+    RexxActivity *activity = ActivityManager::newActivity(parent);
+
+    ResourceSection lock;
+
+    // add this to the activity lists
+    allActivities->append((RexxObject *)activity);
+    // associate the thread with this instance
+    activity->addToInstance(this);
+    return activity;
+}
+
+
+/**
+ * Return a spawned activity back to the activity pool.  This
+ * will disassociate the activity from the interpreter instance
+ * and place the thread back into the global thread pool.
+ *
+ * @param activity The activity to return.
+ *
+ * @return true if the activity was added to the pool, false if the
+ *         activity should continue with termination.
+ */
+bool InterpreterInstance::poolActivity(RexxActivity *activity)
+{
+    bool signalShutdown = false;
+
+    if (terminating)
+    {
+        // is this the last one to finish up?
+        if (allActivities->items() == 1)
+        {
+            // This activity is currently the current activity.  We're going to run the
+            // uninits on this one, so reactivate it until we're done running
+            activity->activate();
+            // before we update of the data structures, make sure we process any
+            // pending uninit activity.
+            memoryObject.forceUninits();
+            // ok, deactivate this again.
+            activity->deactivate();
+            signalShutdown = true;
+        }
+    }
+
+    ResourceSection lock;
+
+    // detach from this instance
+    activity->detachInstance();
+    // remove from the activities lists for the instance
+    allActivities->removeItem((RexxObject*)activity);
+    // if this is a shutdown event signal it now.
+    if (signalShutdown)
+    {
+        EVPOST(terminationSem);
+    }
+
+    // and move this to the global activity pool
+    return ActivityManager::poolActivity(activity);
+}
+
+
+/**
+ * Locate an activity for a specific thread ID that's attached
+ * to this instance.
+ *
+ * @param threadId The target thread id.
+ *
+ * @return The associated activity, or OREF_NULL if the current thread
+ *         is not attached.
+ */
+RexxActivity *InterpreterInstance::findActivity(thread_id_t threadId)
+{
+    // this is a critical section
+    ResourceSection lock;
+    // NB:  New activities are pushed on to the end, so it's prudent to search
+    // from the list end toward the front of the list.  Also, this ensures we
+    // will find the toplevel activity nested on a given thread first.
+    for (size_t listIndex = allActivities->lastIndex();
+         listIndex != LIST_END;
+         listIndex = allActivities->previousIndex(listIndex) )
+    {
+        RexxActivity *activity = (RexxActivity *)allActivities->getValue(listIndex);
+        // this should never happen, but we never return suspended threads
+        if (activity->isThread(threadId) && !activity->isSuspended())
+        {
+            return activity;
+        }
+    }
+    return OREF_NULL;
+}
+
+
+/**
+ * Find an activity for the current thread that's associated
+ * with this activity.
+ *
+ * @return The target activity.
+ */
+RexxActivity *InterpreterInstance::findActivity()
+{
+    return findActivity(SysQueryThreadID());
+}
+
+
+/**
+ * Enter on the current thread context, making sure the interpreter
+ * lock is obtained.
+ *
+ * @return The activity object associated with this thread/instance
+ *         combination.
+ */
+RexxActivity *InterpreterInstance::enterOnCurrentThread()
+{
+    ResourceSection lock;              // lock the outer control block access
+
+    // attach this thread to the current activity
+    RexxActivity *activity = attachThread();
+    // this will also get us the kernel lock, and take care of nesting
+    activity->activate();
+    activity->requestAccess();
+    // return the activity in case the caller needs it.
+    return activity;
+}
+
+
+/**
+ * We're leaving the current thread.  So we need to deactivate
+ * this.
+ */
+void InterpreterInstance::exitCurrentThread()
+{
+    // find the current activity and deactivate it, and
+    // release the kernel lock.
+    RexxActivity *activity = findActivity();
+    activity->exitCurrentThread();
+}
+
+
+void InterpreterInstance::removeInactiveActivities()
+{
+    size_t count = allActivities->items();
+
+    // This is a bit complicated.  Each activity will be removed from the
+    // head of the list, and any activity not ready for termination is
+    // put back on the end.  Since we're using the initial count of the
+    // items for handling this, we'll look at each activity at most once.
+    // If there are any items left, those are activities we can't release yet.
+    for (size_t i = 0; i < count; i++)
+    {
+        RexxActivity *activity = (RexxActivity *)allActivities->removeFirstItem();
+        if (activity->isActive())
+        {
+            allActivities->append((RexxObject *)activity);
+        }
+        else
+        {
+            // have the activity manager remove this from the global tables
+            // and perform resource cleanup
+            ActivityManager::returnActivity(activity);
+        }
+    }
+}
+
+
+/**
+ * Attempt to shutdown the interpreter instance.  This can only be done
+ * from the root activity.
+ *
+ * @return true if shutdown has been initiated, false otherwise.
+ */
+bool InterpreterInstance::terminate()
+{
+    // if our current activity is not the root one, we can't do that
+    RexxActivity *current = findActivity();
+    // we also can't be doing active work on the root thread
+    if (current != rootActivity || rootActivity->isActive())
+    {
+        return false;
+    }
+
+    terminated = false;
+    // turn on the global termination in process flag
+    terminating = true;
+
+
+    //TODO:  Need to so something about uninits here
+
+    {
+        // remove the current activity from the list so we don't clean everything
+        // up.  We need to
+        allActivities->removeItem((RexxObject *)current);
+
+        ResourceSection lock;
+        // go remove all of the activities that are not doing work for this instance
+        removeInactiveActivities();
+        // no activities left?  We can leave now
+        terminated = allActivities->items() == 0;
+        // we need to restore the rootActivity to the list for potentially running uninits
+        allActivities->append((RexxObject *)current);
+    }
+
+    // if everything has terminated, then make sure we run the uninits before shutting down.
+    if (terminated)
+    {
+        // This activity is currently the current activity.  We're going to run the
+        // uninits on this one, so reactivate it until we're done running
+        enterOnCurrentThread();
+        // before we update of the data structures, make sure we process any
+        // pending uninit activity.
+        memoryObject.forceUninits();
+        // ok, deactivate this again...this will return the activity because the terminating
+        // flag is on.
+        exitCurrentThread();
+        EVCLOSE(terminationSem);
+        return true;
+    }
+
+    // unable to shut down
+    return false;
+}
+
+
+/**
+ * Add an object to the global references table.
+ *
+ * @param o      The added object.
+ */
+void InterpreterInstance::addGlobalReference(RexxObject *o)
+{
+    if (o != OREF_NULL)
+    {
+        globalReferences->put(o, o);
+    }
+}
+
+/**
+ * Remove the global reference protection from an object.
+ *
+ * @param o      The protected object.
+ */
+void InterpreterInstance::removeGlobalReference(RexxObject *o)
+{
+    if (o != OREF_NULL)
+    {
+        globalReferences->remove(o);
+    }
+}
+
+
+/**
+ * Raise a halt condition on all running activities.
+ */
+void InterpreterInstance::haltAllActivities()
+{
+    for (size_t listIndex = activeActivities->firstIndex() ;
+         listIndex != LIST_END;
+         listIndex = activeActivities->nextIndex(listIndex) )
+    {
+                                         /* Get the next message object to    */
+                                         /*process                            */
+        RexxActivity *activity = (RexxActivity *)allActivities->getValue(listIndex);
+        activity->halt(OREF_NULL);
+    }
+}
+
+
+/**
+ * Raise a trace condition on all running activities.
+ */
+void InterpreterInstance::traceAllActivities(bool on)
+{
+    for (size_t listIndex = activeActivities->firstIndex() ;
+         listIndex != LIST_END;
+         listIndex = activeActivities->nextIndex(listIndex) )
+    {
+                                         /* Get the next message object to    */
+                                         /*process                            */
+        RexxActivity *activity = (RexxActivity *)allActivities->getValue(listIndex);
+        activity->setTrace(on);
+    }
+}

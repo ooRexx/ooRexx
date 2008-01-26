@@ -84,7 +84,6 @@ typedef struct _control {              /* meta date control info            */
 
 typedef FILE_CONTROL *PFILE_CONTROL;   /* pointer to file info              */
 
-extern bool ProcessSaveImage;
 RexxMethod *SysRestoreTranslatedProgram(RexxString *,FILE *);
 
 /*********************************************************************/
@@ -110,9 +109,12 @@ RexxMethod *SysRestoreProgram(
                 position;              /* Temp file location                */
   RexxBuffer  * buffer;                /* Buffer to unflatten               */
 
+  // if we're in save image mode, we never used a saved image
+  if (memoryObject.savingImage())
+  {
+      return OREF_NULL;
+  }
 
-  if (ProcessSaveImage)                /* doing save image?                 */
-    return OREF_NULL;                  /* never restore during image build  */
   File = FileName->getStringData();    /* get the file name pointer         */
   Handle = fopen(File, "rb");          /* open the file                     */
   if (Handle == NULL)                  /* get anything?                     */

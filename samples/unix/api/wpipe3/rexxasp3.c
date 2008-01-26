@@ -87,7 +87,7 @@ static const char *AspiFncTable[] =
 * Return:    null string                                                 *
 *************************************************************************/
 
-APIRET APIENTRY AspiLoadFuncs3(
+APIRET REXXENTRY AspiLoadFuncs3(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -118,7 +118,7 @@ APIRET APIENTRY AspiLoadFuncs3(
 * Return:    null string                                                 *
 *************************************************************************/
 
-APIRET APIENTRY AspiDeregFunc3(
+APIRET REXXENTRY AspiDeregFunc3(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -162,7 +162,7 @@ APIRET APIENTRY AspiDeregFunc3(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-APIRET APIENTRY Aspi_Read_All_Variables_From_REXX_VP(
+APIRET REXXENTRY Aspi_Read_All_Variables_From_REXX_VP(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -262,7 +262,7 @@ APIRET APIENTRY Aspi_Read_All_Variables_From_REXX_VP(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-APIRET APIENTRY Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
+APIRET REXXENTRY Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */

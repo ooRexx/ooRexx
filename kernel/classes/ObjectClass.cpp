@@ -529,18 +529,18 @@ RexxMethod * RexxObject::checkPrivate(
 /* Function:  Check a private method for accessibility.                       */
 /******************************************************************************/
 {
-  RexxActivationBase *activation;      /* current activation                */
-  RexxObject         *sender;          /* sending activation                */
-
-                                       /* get the top activation            */
-  activation = ActivityManager::currentActivity->current();
-                                       /* have an activation?               */
-  if (activation != (RexxActivationBase *)TheNilObject) {
-    sender = activation->getReceiver();/* get the receiving object          */
-    if (sender == (RexxObject *)this)  /* the same receiver?                */
-      return method;                   /* just return the same method       */
-  }
-  return (RexxMethod *)TheNilObject;   /* return a failure indicator        */
+    /* get the top activation            */
+    RexxActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
+    /* have an activation?               */
+    if (activation != OREF_NULL)
+    {
+        RexxObject *sender = activation->getReceiver();/* get the receiving object          */
+        if (sender == (RexxObject *)this)  /* the same receiver?                */
+        {
+            return method;                   /* just return the same method       */
+        }
+    }
+    return OREF_NULL;                    /* return a failure indicator        */
 }
 
 RexxObject *RexxObject::sendMessage(RexxString *message, RexxArray *args)
@@ -705,32 +705,35 @@ void RexxObject::messageSend(
 /*              All types of methods are handled and dispatched               */
 /******************************************************************************/
 {
-  ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
-                                       /* grab the method from this level   */
-  RexxMethod *method_save = this->behaviour->methodLookup(msgname);
-                                       /* method exists...special processing*/
-  if (method_save != (RexxMethod *)TheNilObject && method_save->isSpecial()) {
-    if (method_save->isPrivate())      /* actually private method?          */
-                                       /* go validate a private method      */
-      method_save = this->checkPrivate(method_save);
-                                       /* now process protected methods     */
-    if (method_save != (RexxMethod *)TheNilObject && method_save->isProtected())
+    ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
+    /* grab the method from this level   */
+    RexxMethod *method_save = this->behaviour->methodLookup(msgname);
+    /* method exists...special processing*/
+    if (method_save != OREF_NULL && method_save->isSpecial())
     {
-                                       /* really a protected method         */
-        this->processProtectedMethod(msgname, method_save, count, arguments, result);
-        return;
+        if (method_save->isPrivate())      /* actually private method?          */
+        {
+            /* go validate a private method      */
+            method_save = this->checkPrivate(method_save);
+        }
+        /* now process protected methods     */
+        if (method_save != OREF_NULL && method_save->isProtected())
+        {
+            /* really a protected method         */
+            this->processProtectedMethod(msgname, method_save, count, arguments, result);
+            return;
+        }
     }
-  }
-                                       /* have a method                     */
-  if (method_save != (RexxMethod *)TheNilObject)
-  {
-      method_save->run(ActivityManager::currentActivity, this, msgname, count, arguments, result);
-  }
-  else
-  {
-                                       /* go process an unknown method      */
-      this->processUnknown(msgname, count, arguments, result);
-  }
+    /* have a method                     */
+    if (method_save != OREF_NULL)
+    {
+        method_save->run(ActivityManager::currentActivity, this, msgname, count, arguments, result);
+    }
+    else
+    {
+        /* go process an unknown method      */
+        this->processUnknown(msgname, count, arguments, result);
+    }
 }
 
 void RexxObject::messageSend(
@@ -744,30 +747,33 @@ void RexxObject::messageSend(
 /*              All types of methods are handled and dispatched               */
 /******************************************************************************/
 {
-  ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
-                                       /* go to the higher level            */
-  RexxMethod *method_save = this->superMethod(msgname, startscope);
-  if (method_save != (RexxMethod *)TheNilObject && method_save->isProtected()) {
-    if (method_save->isPrivate())      /* actually private method?          */
-                                       /* go validate a private method      */
-      method_save = this->checkPrivate(method_save);
-    else                               /* really a protected method         */
+    ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
+    /* go to the higher level            */
+    RexxMethod *method_save = this->superMethod(msgname, startscope);
+    if (method_save != OREF_NULL && method_save->isProtected())
     {
-        this->processProtectedMethod(msgname, method_save, count, arguments, result);
-        return;
+        if (method_save->isPrivate())      /* actually private method?          */
+        {
+            method_save = this->checkPrivate(method_save);
+        }
+        /* go validate a private method      */
+        else                               /* really a protected method         */
+        {
+            this->processProtectedMethod(msgname, method_save, count, arguments, result);
+            return;
+        }
     }
-  }
-                                       /* have a method                     */
-  if (method_save != (RexxMethod *)TheNilObject)
-  {
-                                       /* run the method                    */
-      method_save->run(ActivityManager::currentActivity, this, msgname, count, arguments, result);
-  }
-  else
-  {
-                                           /* go process an unknown method      */
-      this->processUnknown(msgname, count, arguments, result);
-  }
+    /* have a method                     */
+    if (method_save != OREF_NULL)
+    {
+        /* run the method                    */
+        method_save->run(ActivityManager::currentActivity, this, msgname, count, arguments, result);
+    }
+    else
+    {
+        /* go process an unknown method      */
+        this->processUnknown(msgname, count, arguments, result);
+    }
 }
 
 void RexxObject::processProtectedMethod(
@@ -781,36 +787,34 @@ void RexxObject::processProtectedMethod(
 /*            method and raising a NOMETHOD condition                         */
 /******************************************************************************/
 {
-  RexxArray          *argumentArray;   /* unknown method argument array     */
-  RexxDirectory      *securityArgs;    /* security arguments                */
-  RexxActivationBase *activation;      /* current activation                */
-
-                                       /* get the top activation            */
-  activation = ActivityManager::currentActivity->current();
-                                       /* have an activation?               */
-  if (activation != (RexxActivationBase *)TheNilObject) {
-                                       /* have a security manager?          */
-    if (activation->hasSecurityManager()) {
-      securityArgs = new_directory();  /* get the security args             */
-                                       /* stuff in the name                 */
-      securityArgs->put(messageName, OREF_NAME);
-                                       /* add in the actual object          */
-      securityArgs->put(this, OREF_OBJECTSYM);
-      /* get an array for the arguments */
-      argumentArray = new (count, arguments) RexxArray;
-                                       /* add in the arguments              */
-      securityArgs->put(argumentArray, OREF_ARGUMENTS);
-                                       /* now go ask permission             */
-      if (((RexxActivation *)activation)->callSecurityManager(OREF_METHODNAME, securityArgs))
-      {
-                                         /* handled, just return the result   */
-          result = securityArgs->fastAt(OREF_RESULT);
-          return;
-      }
+    /* get the top activation            */
+    RexxActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
+    /* have an activation?               */
+    if (activation != OREF_NULL)
+    {
+        /* have a security manager?          */
+        if (activation->hasSecurityManager())
+        {
+            RexxDirectory *securityArgs = new_directory();  /* get the security args             */
+            /* stuff in the name                 */
+            securityArgs->put(messageName, OREF_NAME);
+            /* add in the actual object          */
+            securityArgs->put(this, OREF_OBJECTSYM);
+            /* get an array for the arguments */
+            RexxArray *argumentArray = new (count, arguments) RexxArray;
+            /* add in the arguments              */
+            securityArgs->put(argumentArray, OREF_ARGUMENTS);
+            /* now go ask permission             */
+            if (((RexxActivation *)activation)->callSecurityManager(OREF_METHODNAME, securityArgs))
+            {
+                /* handled, just return the result   */
+                result = securityArgs->fastAt(OREF_RESULT);
+                return;
+            }
+        }
     }
-  }
-                                       /* run the method                    */
-  targetMethod->run(ActivityManager::currentActivity, this, messageName, count, arguments, result);
+    /* run the method                    */
+    targetMethod->run(ActivityManager::currentActivity, this, messageName, count, arguments, result);
 }
 
 void RexxObject::processUnknown(
@@ -823,25 +827,29 @@ void RexxObject::processUnknown(
 /*            method and raising a NOMETHOD condition                         */
 /******************************************************************************/
 {
-  RexxObject     *unknown_arguments[2];/* arguments to the unknown method   */
-  size_t          i;                   /* loop counter                      */
-  RexxArray      *argumentArray;       /* unknown method argument array     */
+    /* no method for this msgname        */
+    /* find the unknown method           */
+    RexxMethod *method_save = this->behaviour->methodLookup(OREF_UNKNOWN);
+    if (method_save == OREF_NULL)        /* "unknown" method exists?          */
+    /* no unknown method - try to raise  */
+    /* a NOMETHOD condition, and if that */
+    {
+        reportNomethod(messageName, this); /* fails, it is an error message     */
+    }
+    RexxArray *argumentArray = new_array(count);    /* get an array for the arguments    */
+    ProtectedObject p(argumentArray);
 
-                                       /* no method for this msgname        */
-                                       /* find the unknown method           */
-  RexxMethod *method_save = this->behaviour->methodLookup(OREF_UNKNOWN);
-  if (method_save == TheNilObject)     /* "unknown" method exists?          */
-                                       /* no unknown method - try to raise  */
-                                       /* a NOMETHOD condition, and if that */
-    reportNomethod(messageName, this); /* fails, it is an error message     */
-  argumentArray = new_array(count);    /* get an array for the arguments    */
-  for (i = 1; i <= count; i++)         /* copy the arguments into an array  */
-    argumentArray->put(arguments[i - 1], i);
-  unknown_arguments[0] = messageName;  /* method name is first argument     */
-                                       /* second argument is array of       */
-  unknown_arguments[1] = argumentArray;/* arguments for the original call   */
-                                       /* run the unknown method            */
-  method_save->run(ActivityManager::currentActivity, this, OREF_UNKNOWN, 2, unknown_arguments, result);
+    for (size_t i = 1; i <= count; i++)         /* copy the arguments into an array  */
+    {
+        argumentArray->put(arguments[i - 1], i);
+    }
+
+    RexxObject     *unknown_arguments[2];/* arguments to the unknown method   */
+    unknown_arguments[0] = messageName;  /* method name is first argument     */
+                                         /* second argument is array of       */
+    unknown_arguments[1] = argumentArray;/* arguments for the original call   */
+                                         /* run the unknown method            */
+    method_save->run(ActivityManager::currentActivity, this, OREF_UNKNOWN, 2, unknown_arguments, result);
 }
 
 RexxMethod * RexxObject::methodLookup(
@@ -851,37 +859,6 @@ RexxMethod * RexxObject::methodLookup(
 /******************************************************************************/
 {
   return this->behaviour->methodLookup(msgname);
-}
-
-RexxMethod * RexxObject::methodObject(
-    RexxString *msgname)               /* name of the target message        */
-/******************************************************************************/
-/* Function:  Return the method object associated with a message name         */
-/******************************************************************************/
-{
-  RexxObject *startScope;              /* message target scope              */
-  RexxString *message;                 /* string message name               */
-  RexxArray  *arrayMessage;            /* message as an array version       */
-
-  required_arg(msgname, ONE);          /* make sure we have the requireds   */
-
-                                       /* if start scope passed, do a       */
-                                       /* superclass search                 */
-  arrayMessage = (RexxArray *)REQUEST_ARRAY(msgname);
-                                       /* convert ok?                       */
-  if (arrayMessage != TheNilObject && arrayMessage->getDimension() == 1) {
-    startScope = arrayMessage->get(2L);/* get the scope                     */
-                                       /* and the message name              */
-    message = (RexxString *)arrayMessage->get(1L);
-                                       /* and do the lookup                 */
-    return this->superMethod(message, startScope);
-  }
-  else {
-                                       /* just do the simple method lookup  */
-                                       /* behaviour methodObject does all   */
-                                       /* needed error checks               */
-    return this->behaviour->methodLookup(msgname);
-  }
 }
 
 bool RexxInternalObject::unsignedNumberValue(stringsize_t &result, stringsize_t digits)
@@ -1464,7 +1441,7 @@ RexxInteger *RexxObject::hasMethod(RexxString *msgname)
 /******************************************************************************/
 {
                                        /* check the behaviour for the method*/
-  return (this->behaviour->methodObject(msgname) != TheNilObject) ? TheTrueObject : TheFalseObject;
+  return (this->behaviour->methodObject(msgname) != OREF_NULL) ? TheTrueObject : TheFalseObject;
 }
 
 RexxClass   *RexxObject::classObject()
@@ -1535,15 +1512,16 @@ RexxObject  *RexxObject::requestRexx(
   className = REQUIRED_STRING(className, ARG_ONE)->upper();
   class_id = this->id()->upper();      /* get the class name in uppercase   */
                                        /* of the same class?                */
-  if (className->strictEqual(class_id) == TheTrueObject) {
-    return this;                       /* already converted                 */
+  if (className->strictEqual(class_id) == TheTrueObject)
+  {
+      return this;                     /* already converted                 */
   }
                                        /* Get "MAKE"||class methodname      */
   make_method = className->concatToCstring(CHAR_MAKE);
                                        /* find the MAKExxxx method          */
   method = this->behaviour->methodLookup(make_method);
                                        /* have this method?                 */
-  if (method != (RexxMethod *)TheNilObject)
+  if (method != OREF_NULL)
   {
                                        /* Return its results                */
       return this->sendMessage(make_method);
@@ -1559,76 +1537,96 @@ RexxMessage *RexxObject::start(
 /* Function:  Spin a message off on a seperate activity                       */
 /******************************************************************************/
 {
-  RexxMessage *newMessage;             /* new message object                */
-  RexxObject  *message;                /* message to be sent to receiver.   */
-                                       /* message to be sent to receiver.   */
-  RexxArray   *messageArray = (RexxArray*) TheNilObject;
-  RexxActivationBase *activation;      /* current activation                */
-  RexxObject  *sender;                 /* sending object                    */
-  RexxString  *newMsgName;             /* msgname to be sent                */
+    RexxMessage *newMessage;             /* new message object                */
+                                         /* message to be sent to receiver.   */
+    RexxArray   *messageArray = OREF_NULL;
+    RexxString  *newMsgName;             /* msgname to be sent                */
 
-  if (argCount < 1 )                   /* no arguments?                     */
-    missing_argument(ARG_ONE);         /* Yes, this is an error.            */
-                                       /* Get the message name.             */
-  message = arguments[0];              /* get the message .                 */
-                                       /* Did we receive a message name     */
-  if (message == OREF_NULL)
-    missing_argument(ARG_ONE);         /* Yes, this is an error.            */
+    if (argCount < 1 )                   /* no arguments?                     */
+    {
+        missing_argument(ARG_ONE);         /* Yes, this is an error.            */
+    }
+    /* Get the message name.             */
+    RexxObject *message = arguments[0];  /* get the message .                 */
+                                         /* Did we receive a message name     */
+    if (message == OREF_NULL)
+    {
+        missing_argument(ARG_ONE);         /* Yes, this is an error.            */
+    }
 
-                                       /* if 1st arg is a string, we can do */
-                                       /* this quickly                      */
-  if (!isOfClass(String, message)) {
-                                       /* is this an array?                 */
-    if (isOfClass(Array, message)) {
-      messageArray = (RexxArray*) message;
-    } else {
-      RexxClass *theClass = message->classObject();
-      RexxArray *classes = theClass->getClassSuperClasses();
-      size_t i = classes->numItems();
-      for (; i != 0; i--) {
-        if (classes->get(i) == TheStringClass)
-          break;
-      }
-      if (i == 0) {                    /* not subclassed from string?       */
-                                       /* see if this is an array item      */
-        messageArray = REQUEST_ARRAY(message);
-      }
+    /* if 1st arg is a string, we can do */
+    /* this quickly                      */
+    if (!isOfClass(String, message))
+    {
+        /* is this an array?                 */
+        if (isOfClass(Array, message))
+        {
+            messageArray = (RexxArray*) message;
+        }
+        else
+        {
+            RexxClass *theClass = message->classObject();
+            RexxArray *classes = theClass->getClassSuperClasses();
+            size_t i = classes->numItems();
+            for (; i != 0; i--)
+            {
+                if (classes->get(i) == TheStringClass)
+                {
+                    break;
+                }
+            }
+            if (i == 0)                      /* not subclassed from string?       */
+            {
+                /* see if this is an array item      */
+                messageArray = REQUEST_ARRAY(message);
+            }
+        }
     }
-  }
-  if (messageArray != TheNilObject) {  /* is message specified as an array? */
-                                       /* didn't get two arguments?         */
-    if (messageArray->getDimension() != 1 || messageArray->size() != 2)
-                                       /* raise an error                    */
-      reportException(Error_Incorrect_method_message);
-                                       /* get the message as a string       */
-    newMsgName = REQUIRED_STRING(messageArray->get(1), ARG_ONE);
-                                       /* Was starting scope omitted ?      */
-    if (OREF_NULL == messageArray->get(2))
-                                       /* Yes, this is an error, report it. */
-      reportException(Error_Incorrect_method_noarg, IntegerTwo);
-                                       /* get the top activation            */
-    activation = ActivityManager::currentActivity->current();
-                                       /* have an activation?               */
-    if (activation != (RexxActivation *)TheNilObject) {
-                                       /* get the receiving object          */
-      sender = activation->getReceiver();
-      if (sender != this)              /* not the same receiver?            */
-                                       /* this is an error                  */
-         reportException(Error_Execution_super);
+    if (messageArray != OREF_NULL)       /* is message specified as an array? */
+    {
+        /* didn't get two arguments?         */
+        if (messageArray->getDimension() != 1 || messageArray->size() != 2)
+        {
+            /* raise an error                    */
+            reportException(Error_Incorrect_method_message);
+        }
+        /* get the message as a string       */
+        newMsgName = REQUIRED_STRING(messageArray->get(1), ARG_ONE);
+        /* Was starting scope omitted ?      */
+        if (OREF_NULL == messageArray->get(2))
+        {
+            /* Yes, this is an error, report it. */
+            reportException(Error_Incorrect_method_noarg, IntegerTwo);
+        }
+        /* get the top activation            */
+        RexxActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
+        /* have an activation?               */
+        if (activation != OREF_NULL)
+        {
+            /* get the receiving object          */
+            RexxObject *sender = activation->getReceiver();
+            if (sender != this)              /* not the same receiver?            */
+            {
+                /* this is an error                  */
+                reportException(Error_Execution_super);
+            }
+        }
+        else
+        {
+            /* this is an error                  */
+            reportException(Error_Execution_super);
+        }
     }
-    else
-                                       /* this is an error                  */
-      reportException(Error_Execution_super);
-  }
-  else {                               /* not an array as message.          */
-                                       /* force to a string value           */
-    message = REQUIRED_STRING(message, ARG_ONE);
-  }
-                                       /* Create the new message object.    */
-  newMessage = new RexxMessage(this, message, new (argCount - 1, arguments + 1) RexxArray);
-  ProtectedObject p(newMessage);
-  newMessage->start(OREF_NULL);        /* Tell the message object to start  */
-  return newMessage;                   /* return the new message object     */
+    else                                 /* not an array as message.          */
+    {
+        /* force to a string value           */
+        message = REQUIRED_STRING(message, ARG_ONE);
+    }
+    /* Create the new message object.    */
+    newMessage = new RexxMessage(this, message, new (argCount - 1, arguments + 1) RexxArray);
+    ProtectedObject p(newMessage);
+    newMessage->start(OREF_NULL);        /* Tell the message object to start  */
+    return newMessage;                   /* return the new message object     */
 }
 
 RexxString  *RexxObject::oref()
@@ -1652,23 +1650,6 @@ void RexxInternalObject::hasUninit()
    memoryObject.addUninitObject((RexxObject *)this);
 }
 
-RexxObject  *RexxObject::shriekRun(
-    RexxMethod * method,               /* method to invoke                  */
-    RexxString * calltype,             /* type of invocation                */
-    RexxString * environment,          /* initial address                   */
-    RexxObject **arguments,            /* array of arguments                */
-    size_t       argCount)             /* the number of arguments           */
-/****************************************************************************/
-/* Function:  Run a method as a program                                     */
-/****************************************************************************/
-{
-                                       /* ensure correct scope              */
-  method = method->newScope((RexxClass *)this);
-  /* go run the method                 */
-  ProtectedObject result;
-  method->call(ActivityManager::currentActivity, this, OREF_NONE, arguments, argCount, calltype, environment, PROGRAMCALL, result);
-  return (RexxObject *)result;
-}
 
 RexxObject  *RexxObject::run(
     RexxObject **arguments,            /* method arguments                  */
@@ -1756,30 +1737,30 @@ RexxObject  *RexxObject::defMethods(
 /* Function:  Add a table of methods to an object's behaviour               */
 /****************************************************************************/
 {
-  HashLink i;                          /* loop counter                      */
-  RexxMethod *method;
-  RexxString *name;
-
-                                       /* make a copy of the behaviour      */
-  OrefSet(this, this->behaviour, (RexxBehaviour *)this->behaviour->copy());
-                                       /* loop through the list of methods  */
-  for (i = methods->first(); methods->available(i); i = methods->next(i)) {
-                                       /* Get the methjod Object            */
-    method = (RexxMethod *)methods->value(i);
-    if (method != TheNilObject)        /* not a removal?                    */
-                                       /* set a new scope on this           */
-      method = method->newScope((RexxClass *)this);
-    else
-                                       /* no real method added              */
-      method = (RexxMethod *)TheNilObject;
-                                       /* Get the name for this method      */
-    name = (RexxString *)methods->index(i);
-    name = name->upper();              /* make sure the name is upperCase.  */
-                                       /* add this method to the object's   */
-                                       /* behaviour                         */
-    this->behaviour->define(name, method);
-  }
-  return OREF_NULL;
+    /* make a copy of the behaviour      */
+    OrefSet(this, this->behaviour, (RexxBehaviour *)this->behaviour->copy());
+    /* loop through the list of methods  */
+    for (HashLink i = methods->first(); methods->available(i); i = methods->next(i))
+    {
+        /* Get the methjod Object            */
+        RexxMethod *method = (RexxMethod *)methods->value(i);
+        if (method != TheNilObject)        /* not a removal?                    */
+        {
+            /* set a new scope on this           */
+            method = method->newScope((RexxClass *)this);
+        }
+        else
+        {
+            method = OREF_NULL;       // this is a method removal
+        }
+        /* Get the name for this method      */
+        RexxString *name = (RexxString *)methods->index(i);
+        name = name->upper();              /* make sure the name is upperCase.  */
+                                           /* add this method to the object's   */
+                                           /* behaviour                         */
+        this->behaviour->define(name, method);
+    }
+    return OREF_NULL;
 }
 
 RexxObject  *RexxObject::defMethod(

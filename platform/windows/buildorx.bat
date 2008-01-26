@@ -90,7 +90,7 @@ if ERRORLEVEL 1 goto error
 
 @ECHO Building REXX.IMG ...
 CD %OR_OUTDIR%
-IF %USELOGFILE% equ 1 ( REXX -IB >>%OR_ERRLOG% 2>&1 ) else ( REXX -IB )
+IF %USELOGFILE% equ 1 ( REXXIMAGe >>%OR_ERRLOG% 2>&1 ) else ( REXXIMAGE )
 if ERRORLEVEL 1 goto error
 
 @ECHO Building RXSUBCOM and RXQUEUE..

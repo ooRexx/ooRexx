@@ -97,8 +97,8 @@ void Rexx2Variant(REXXOBJECT RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t
 BOOL fIsRexxArray(REXXOBJECT TestObject);
 BOOL fIsOLEObject(REXXOBJECT TestObject);
 BOOL fIsOleVariant(REXXOBJECT TestObject);
-BOOL createEmptySafeArray(VARIANT FAR *);
-BOOL fRexxArray2SafeArray(REXXOBJECT RxArray, VARIANT FAR *VarArray, size_t iArgPos);
+BOOL createEmptySafeArray(VARIANT *);
+BOOL fRexxArray2SafeArray(REXXOBJECT RxArray, VARIANT *VarArray, size_t iArgPos);
 BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO pClsInfo );
 VARTYPE getUserDefinedVT( ITypeInfo *pTypeInfo, HREFTYPE hrt );
 BOOL fExploreTypeInfo( ITypeInfo *pTypeInfo, POLECLASSINFO pClsInfo );
@@ -589,7 +589,7 @@ void ORexxOleFree(void *ptr)
 // of "desperate measure") OleUninitialize() will be called when a PROCESS_DETACH is
 // sent to DllMain and the instance count is NOT zero. This might still cause trouble.
 
-BOOL APIENTRY DllMain(HANDLE hModule,
+BOOL REXXENTRY DllMain(HANDLE hModule,
                       DWORD  ul_reason_for_call,
                       LPVOID lpReserved)
 {
@@ -1695,7 +1695,7 @@ BOOL fIsOleVariant(REXXOBJECT TestObject)
  *
  * @return True always.
  */
-BOOL createEmptySafeArray(VARIANT FAR *VarArray)
+BOOL createEmptySafeArray(VARIANT *VarArray)
 {
     SAFEARRAY      *pSafeArray;
     SAFEARRAYBOUND *pArrayBound;
@@ -1715,7 +1715,7 @@ BOOL createEmptySafeArray(VARIANT FAR *VarArray)
 }
 
 
-BOOL fRexxArray2SafeArray(REXXOBJECT RxArray, VARIANT FAR *VarArray, size_t iArgPos)
+BOOL fRexxArray2SafeArray(REXXOBJECT RxArray, VARIANT *VarArray, size_t iArgPos)
 {
   BOOL            fDone = FALSE;
   LONG            lDimensions;

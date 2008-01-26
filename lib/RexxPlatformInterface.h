@@ -143,11 +143,6 @@ void SysReleaseResultMemory(void *);   /* release a result memory block     */
 bool SysExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
 #endif
 
-#ifndef SysGetMacroCode
-                                       /* load a method from a macro        */
-RexxMethod * SysGetMacroCode(RexxString *);
-#endif
-
 #ifndef SysCommand
                                        /* invoke a command                  */
 RexxObject * SysCommand(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxString **);
@@ -155,10 +150,6 @@ RexxObject * SysCommand(RexxActivation *, RexxActivity *, RexxString *, RexxStri
 
 #ifndef SysThreadYield
 void SysThreadYield(void);             /* yield thread control              */
-#endif
-
-#ifndef SysThreadInit
-void SysThreadInit(void);              /* do system thread initialization   */
 #endif
 
 #ifndef SysQueryThreadID
@@ -214,9 +205,21 @@ void SysSetupProgram(RexxActivation *);/* System specific program setup     */
 RexxMethod *SysRestoreProgram(RexxString *);
 #endif
 
+#ifndef SysRestoreProgramBuffer
+RexxMethod *SysRestoreProgramBuffer(PRXSTRING, RexxString *);
+#endif
+
 #ifndef SysSaveProgram
                                        /* Save a program image              */
 void SysSaveProgram(RexxString *, RexxMethod *);
+#endif
+
+#ifndef SysSaveProgramBuffer
+void SysSaveProgramBuffer(PRXSTRING , RexxMethod *);
+#endif
+
+#ifndef SysSaveTranslatedProgram
+void SysSaveTranslatedProgram(const char *, RexxMethod *);
 #endif
 
 #ifndef SysSourceString
@@ -231,6 +234,11 @@ RexxString *SysInitialAddressName();   /* get the initial address name      */
 #ifndef SysQualifyFileSystemName
                                        /* Qualify a file name               */
 RexxString *SysQualifyFileSystemName(RexxString *);
+#endif
+
+#ifndef SysFileExtension
+
+const char *SysFileExtension(const char *);
 #endif
 
 #ifndef SysClauseBoundary

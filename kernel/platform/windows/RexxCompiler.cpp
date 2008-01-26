@@ -48,15 +48,13 @@
 #include "rexx.h"
 #include "PlatformDefinitions.h"
 #include "RexxErrorCodes.h"
+#include "RexxInternalApis.h"
 
 #define DLLNAME "rexx.dll"
 
 #define BUFFERLEN         256          /* Length of message bufs used       */
 
 // TODO:  Add these to the official API list
-
-extern "C" APIRET APIENTRY RexxTranslateProgram(const char *, const char *, PRXSYSEXIT);
-extern "C" char * APIENTRY RexxGetVersionInformation();
 
 void DisplayError(HINSTANCE hDll, int err_no)
 {

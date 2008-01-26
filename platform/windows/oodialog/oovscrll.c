@@ -44,7 +44,7 @@
 #include <limits.h>
 
 
-ULONG APIENTRY HandleScrollBar(
+ULONG REXXENTRY HandleScrollBar(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],

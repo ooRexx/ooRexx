@@ -65,17 +65,16 @@ RexxNumberString *RexxNumberString::maxMin(RexxObject **args, size_t argCount, u
  RexxNumberString *compobj, *maxminobj;
  RexxInteger *compResult;
  RexxObject *nextObject;
- RexxActivationBase *CurrentActivation;
  size_t saveFuzz, saveDigits;
 
  if (argCount == 0) return this;       /* any arguments to ccompare?        */
 
                                        /* Get a reference to our current act*/
- CurrentActivation = ActivityManager::currentActivity->current();
+ RexxActivationBase *CurrentActivation = ActivityManager::currentActivity->getTopStackFrame();
 
  saveFuzz = CurrentActivation->fuzz(); /* get the current fuzz and digits   */
  saveDigits = CurrentActivation->digits();
- CurrentActivation->setFuzz(0L);       /* set the fuzz setting to 0         */
+ CurrentActivation->setFuzz(0);        /* set the fuzz setting to 0         */
 
                                        /* assume 1st operand (self) is the  */
                                        /*  one we want !                    */

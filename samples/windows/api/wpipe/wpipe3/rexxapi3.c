@@ -75,7 +75,7 @@ static PSZ  ApiFncTable[] =
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY ApiLoadFuncs(
+LONG REXXENTRY ApiLoadFuncs(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -107,7 +107,7 @@ LONG APIENTRY ApiLoadFuncs(
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY ApiDeregFunc(
+LONG REXXENTRY ApiDeregFunc(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -151,7 +151,7 @@ LONG APIENTRY ApiDeregFunc(
 *            cified order.                                               *
 *************************************************************************/
 
-LONG APIENTRY Api_Read_All_Variables_From_REXX_VP(
+LONG REXXENTRY Api_Read_All_Variables_From_REXX_VP(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -243,7 +243,7 @@ LONG APIENTRY Api_Read_All_Variables_From_REXX_VP(
 *                                                                        *
 *************************************************************************/
 
-LONG APIENTRY Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
+LONG REXXENTRY Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */

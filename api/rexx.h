@@ -136,6 +136,8 @@ typedef SHVBLOCK *PSHVBLOCK;
 typedef char *PEXIT;                  /* ptr to exit parameter block */
 
 
+
+
 /*----------------------------------------------------------------------------*/
 /***    Include the other common and platform specific stuff                  */
 /*----------------------------------------------------------------------------*/
@@ -146,6 +148,17 @@ typedef char *PEXIT;                  /* ptr to exit parameter block */
 
 typedef size_t stringsize_t;           // a Rexx string size
 typedef ssize_t wholenumber_t;         // a Rexx whole number
+
+
+typedef struct _RexxConditionData
+{
+  wholenumber_t code;                 // The condition CODE information
+  wholenumber_t rc;                   // The condition RC value
+  RXSTRING message;                   // The condition secondary message text
+  RXSTRING errortext;                 // The condition error text.
+  size_t  position;                   // The failure line number value
+  RXSTRING program;                   // The running program name
+} RexxConditionData;
 
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
@@ -161,7 +174,7 @@ typedef ssize_t wholenumber_t;         // a Rexx whole number
 extern "C" {
 #endif
 
-int APIENTRY RexxStart (
+int REXXENTRY RexxStart (
          size_t,                       /* Num of args passed to rexx */
          PCONSTRXSTRING,               /* Array of args passed to rex */
          const char *,                 /* [d:][path] filename[.ext]  */
@@ -171,10 +184,28 @@ int APIENTRY RexxStart (
          PRXSYSEXIT,                   /* SysExit env. names &  codes */
          short *,                      /* Ret code from if numeric   */
          PRXSTRING );                  /* Retvalue from the rexx proc */
-typedef APIRET (APIENTRY *PFNREXXSTART)(size_t, PCONSTRXSTRING, const char *, PRXSTRING,
+typedef APIRET (REXXENTRY *PFNREXXSTART)(size_t, PCONSTRXSTRING, const char *, PRXSTRING,
                                         const char *, int, PRXSYSEXIT, short *,
                                         PRXSTRING);
 #define REXXSTART RexxStart
+
+
+APIRET REXXENTRY RexxTranslateProgram(
+    const char *,                       // input program name
+    const char *,                       // output file name
+    PRXSYSEXIT);                        // system exits to use during translation
+
+
+typedef APIRET (REXXENTRY *PFNREXXTRANSLATEPROGRAM)(const char *, const char *, PRXSYSEXIT);
+
+#define REXXTRANSLATEPROGRAM RexxTranslateProgram
+
+
+char *REXXENTRY RexxGetVersionInformation();
+
+typedef char *(REXXENTRY *PFNGETVERSIONINFORMATION)();
+
+#define REXXGETVERSIONINFORMATON RexxGetVersionInformation
 
 
 /*----------------------------------------------------------------------------*/
@@ -182,20 +213,20 @@ typedef APIRET (APIENTRY *PFNREXXSTART)(size_t, PCONSTRXSTRING, const char *, PR
 /*----------------------------------------------------------------------------*/
 
 /* This typedef simplifies coding of a Subcommand handler.           */
-typedef APIRET APIENTRY RexxSubcomHandler(PCONSTRXSTRING,
+typedef APIRET REXXENTRY RexxSubcomHandler(PCONSTRXSTRING,
                                 unsigned short *,
                                 PRXSTRING);
 
 /***   RexxRegisterSubcomDll -- Register a DLL entry point           */
 /***   as a Subcommand handler */
 
-APIRET APIENTRY RexxRegisterSubcomDll (
+APIRET REXXENTRY RexxRegisterSubcomDll (
          const char *,                         /* Name of subcom handler     */
          const char *,                         /* Name of DLL                */
          const char *,                         /* Name of procedure in DLL   */
          const char *,                         /* User area                  */
          size_t );                             /* Drop authority.            */
-typedef APIRET (APIENTRY *PFNREXXREGISTERSUBCOMDLL)(const char *, const char *, const char *,
+typedef APIRET (REXXENTRY *PFNREXXREGISTERSUBCOMDLL)(const char *, const char *, const char *,
                                                     char *, size_t);
 #define REXXREGISTERSUBCOMDLL  RexxRegisterSubcomDll
 
@@ -203,22 +234,22 @@ typedef APIRET (APIENTRY *PFNREXXREGISTERSUBCOMDLL)(const char *, const char *, 
 /***   RexxRegisterSubcomExe -- Register an EXE entry point          */
 /***   as a Subcommand handler */
 
-APIRET APIENTRY RexxRegisterSubcomExe (
+APIRET REXXENTRY RexxRegisterSubcomExe (
          const char *,                 /* Name of subcom handler     */
          REXXPFN,                      /* address of handler in EXE  */
          const char *);                /* User area                  */
-typedef APIRET (APIENTRY *PFNREXXREGISTERSUBCOMEXE)(const char *, REXXPFN, char *);
+typedef APIRET (REXXENTRY *PFNREXXREGISTERSUBCOMEXE)(const char *, REXXPFN, char *);
 #define REXXREGISTERSUBCOMEXE  RexxRegisterSubcomExe
 
 
 /***    RexxQuerySubcom - Query an environment for Existance */
 
-APIRET APIENTRY RexxQuerySubcom(
+APIRET REXXENTRY RexxQuerySubcom(
          const char *,                 /* Name of the Environment    */
          const char *,                 /* DLL Module Name            */
          unsigned short *,             /* Stor for existance code    */
          char *);                      /* Stor for user word         */
-typedef APIRET (APIENTRY *PFNREXXQUERYSUBCOM)(const char *, const char *, unsigned short *,
+typedef APIRET (REXXENTRY *PFNREXXQUERYSUBCOM)(const char *, const char *, unsigned short *,
                                               char *);
 #define REXXQUERYSUBCOM  RexxQuerySubcom
 
@@ -226,10 +257,10 @@ typedef APIRET (APIENTRY *PFNREXXQUERYSUBCOM)(const char *, const char *, unsign
 /***    RexxDeregisterSubcom - Drop registration of a Subcommand     */
 /***    environment */
 
-APIRET APIENTRY RexxDeregisterSubcom(
+APIRET REXXENTRY RexxDeregisterSubcom(
          const char *,                         /* Name of the Environment    */
          const char * );                       /* DLL Module Name            */
-typedef APIRET (APIENTRY *PFNREXXDEREGISTERSUBCOM)(const char *, const char *);
+typedef APIRET (REXXENTRY *PFNREXXDEREGISTERSUBCOM)(const char *, const char *);
 #define REXXDEREGISTERSUBCOM  RexxDeregisterSubcom
 
 
@@ -239,9 +270,9 @@ typedef APIRET (APIENTRY *PFNREXXDEREGISTERSUBCOM)(const char *, const char *);
 
 /***    RexxVariablePool - Request Variable Pool Service */
 
-APIRET APIENTRY RexxVariablePool(
+APIRET REXXENTRY RexxVariablePool(
          PSHVBLOCK);                  /* Pointer to list of SHVBLOCKs*/
-typedef APIRET (APIENTRY *PFNREXXVARIABLEPOOL)(PSHVBLOCK);
+typedef APIRET (REXXENTRY *PFNREXXVARIABLEPOOL)(PSHVBLOCK);
 #define REXXVARIABLEPOOL  RexxVariablePool
 
 
@@ -251,7 +282,7 @@ typedef APIRET (APIENTRY *PFNREXXVARIABLEPOOL)(PSHVBLOCK);
 
 /* This typedef simplifies coding of an External Function.           */
 
-typedef unsigned int APIENTRY RexxFunctionHandler(const char *,
+typedef unsigned int REXXENTRY RexxFunctionHandler(const char *,
                                   size_t,
                                   PCONSTRXSTRING,
                                   const char *,
@@ -259,36 +290,36 @@ typedef unsigned int APIENTRY RexxFunctionHandler(const char *,
 
 /***    RexxRegisterFunctionDll - Register a function in the AFT */
 
-APIRET APIENTRY RexxRegisterFunctionDll (
+APIRET REXXENTRY RexxRegisterFunctionDll (
         const char *,                          /* Name of function to add    */
         const char *,                          /* Dll file name (if in dll)  */
         const char *);                         /* Entry in dll               */
-typedef APIRET (APIENTRY *PFNREXXREGISTERFUNCTIONDLL)(const char *, const char *, const char *);
+typedef APIRET (REXXENTRY *PFNREXXREGISTERFUNCTIONDLL)(const char *, const char *, const char *);
 #define REXXREGISTERFUNCTIONDLL  RexxRegisterFunctionDll
 
 
 /***    RexxRegisterFunctionExe - Register a function in the AFT */
 
-APIRET APIENTRY RexxRegisterFunctionExe (
+APIRET REXXENTRY RexxRegisterFunctionExe (
         const char *,                  /* Name of function to add    */
         REXXPFN);                      /* Entry point in EXE         */
-typedef APIRET (APIENTRY *PFNREXXREGISTERFUNCTIONEXE)(const char *, REXXPFN);
+typedef APIRET (REXXENTRY *PFNREXXREGISTERFUNCTIONEXE)(const char *, REXXPFN);
 #define REXXREGISTERFUNCTIONEXE  RexxRegisterFunctionExe
 
 
 /***    RexxDeregisterFunction - Delete a function from the AFT */
 
-APIRET APIENTRY RexxDeregisterFunction (
+APIRET REXXENTRY RexxDeregisterFunction (
         const char * );                         /* Name of function to remove */
-typedef APIRET (APIENTRY *PFNREXXDEREGISTERFUNCTION)(const char *);
+typedef APIRET (REXXENTRY *PFNREXXDEREGISTERFUNCTION)(const char *);
 #define REXXDEREGISTERFUNCTION  RexxDeregisterFunction
 
 
 /***    RexxQueryFunction - Scan the AFT for a function */
 
-APIRET APIENTRY RexxQueryFunction (
+APIRET REXXENTRY RexxQueryFunction (
         const char * );                         /* Name of function to find   */
-typedef APIRET (APIENTRY *PFNREXXQUERYFUNCTION)(const char *);
+typedef APIRET (REXXENTRY *PFNREXXQUERYFUNCTION)(const char *);
 #define REXXQUERYFUNCTION  RexxQueryFunction
 
 
@@ -463,48 +494,48 @@ typedef  struct _RXVALCALL_PARM {      /* val */
 }  RXVALCALL_PARM;
 
 /* This typedef simplifies coding of an Exit handler.                */
-typedef int APIENTRY RexxExitHandler(int, int, PEXIT);
+typedef int REXXENTRY RexxExitHandler(int, int, PEXIT);
 
 /***      RexxRegisterExitDll - Register a system exit. */
 
-APIRET APIENTRY RexxRegisterExitDll (
+APIRET REXXENTRY RexxRegisterExitDll (
          const char *,                 /* Name of the exit handler   */
          const char *,                 /* Name of the DLL            */
          const char *,                 /* Name of the procedure      */
          const char *,                 /* User area                  */
          size_t);                      /* Drop authority             */
-typedef APIRET (APIENTRY *PFNREXXREGISTEREXITDLL)(const char *, const char *, const char *,
+typedef APIRET (REXXENTRY *PFNREXXREGISTEREXITDLL)(const char *, const char *, const char *,
                                                   char *, size_t);
 #define REXXREGISTEREXITDLL  RexxRegisterExitDll
 
 
 /***      RexxRegisterExitExe - Register a system exit. */
 
-APIRET APIENTRY RexxRegisterExitExe (
+APIRET REXXENTRY RexxRegisterExitExe (
          const char *,                 /* Name of the exit handler   */
          REXXPFN,                      /* Address of exit handler    */
          const char *);                /* User area                  */
-typedef APIRET (APIENTRY *PFNREXXREGISTEREXITEXE)(const char *, REXXPFN, char *);
+typedef APIRET (REXXENTRY *PFNREXXREGISTEREXITEXE)(const char *, REXXPFN, char *);
 #define REXXREGISTEREXITEXE  RexxRegisterExitExe
 
 
 /***    RexxDeregisterExit - Drop registration of a system exit. */
 
-APIRET APIENTRY RexxDeregisterExit (
+APIRET REXXENTRY RexxDeregisterExit (
          const char *,                          /* Exit name                  */
          const char * ) ;                       /* DLL module name            */
-typedef APIRET (APIENTRY *PFNREXXDEREGISTEREXIT)(const char *, const char *);
+typedef APIRET (REXXENTRY *PFNREXXDEREGISTEREXIT)(const char *, const char *);
 #define REXXDEREGISTEREXIT  RexxDeregisterExit
 
 
 /***    RexxQueryExit - Query an exit for existance. */
 
-APIRET APIENTRY RexxQueryExit (
+APIRET REXXENTRY RexxQueryExit (
          const char *,                 /* Exit name                  */
          const char *,                 /* DLL Module name.           */
          unsigned short *,             /* Existance flag.            */
          char * );                     /* User data.                 */
-typedef APIRET (APIENTRY *PFNREXXQUERYEXIT)(const char *, const char *, unsigned short *, char *);
+typedef APIRET (REXXENTRY *PFNREXXQUERYEXIT)(const char *, const char *, unsigned short *, char *);
 #define REXXQUERYEXIT  RexxQueryExit
 
 
@@ -514,28 +545,28 @@ typedef APIRET (APIENTRY *PFNREXXQUERYEXIT)(const char *, const char *, unsigned
 
 /***    RexxSetHalt - Request Program Halt */
 
-APIRET APIENTRY RexxSetHalt(
+APIRET REXXENTRY RexxSetHalt(
          process_id_t,                /* Process Id                  */
          thread_id_t);                /* Thread Id                   */
-typedef APIRET (APIENTRY *PFNREXXSETHALT)(process_id_t, thread_id_t);
+typedef APIRET (REXXENTRY *PFNREXXSETHALT)(process_id_t, thread_id_t);
 #define REXXSETHALT  RexxSetHalt
 
 
 /***    RexxSetTrace - Request Program Trace */
 
-APIRET APIENTRY RexxSetTrace(
+APIRET REXXENTRY RexxSetTrace(
          process_id_t,                /* Process Id                  */
          thread_id_t);                /* Thread Id                   */
-typedef APIRET (APIENTRY *PFNREXXSETTRACE)(process_id_t, thread_id_t);
+typedef APIRET (REXXENTRY *PFNREXXSETTRACE)(process_id_t, thread_id_t);
 #define REXXSETTRACE  RexxSetTrace
 
 
 /***    RexxResetTrace - Turn Off Program Trace */
 
-APIRET APIENTRY RexxResetTrace(
+APIRET REXXENTRY RexxResetTrace(
          process_id_t,                /* Process Id                  */
          thread_id_t);                /* Thread Id                   */
-typedef APIRET (APIENTRY *PFNREXXRESETTRACE)(process_id_t, thread_id_t);
+typedef APIRET (REXXENTRY *PFNREXXRESETTRACE)(process_id_t, thread_id_t);
 #define REXXRESETTRACE  RexxResetTrace
 
 
@@ -545,66 +576,66 @@ typedef APIRET (APIENTRY *PFNREXXRESETTRACE)(process_id_t, thread_id_t);
 
 /***    RexxAddMacro - Register a function in the Macro Space        */
 
-APIRET APIENTRY RexxAddMacro(
+APIRET REXXENTRY RexxAddMacro(
          const char *,                 /* Function to add or change   */
          const char *,                 /* Name of file to get function*/
          size_t);                      /* Flag indicating search pos  */
-typedef APIRET (APIENTRY *PFNREXXADDMACRO)(const char *, const char *, size_t);
+typedef APIRET (REXXENTRY *PFNREXXADDMACRO)(const char *, const char *, size_t);
 #define REXXADDMACRO  RexxAddMacro
 
 
 /***    RexxDropMacro - Remove a function from the Macro Space       */
 
-APIRET APIENTRY RexxDropMacro (
+APIRET REXXENTRY RexxDropMacro (
          const char * );                        /* Name of function to remove */
-typedef APIRET (APIENTRY *PFNREXXDROPMACRO)(const char *);
+typedef APIRET (REXXENTRY *PFNREXXDROPMACRO)(const char *);
 #define REXXDROPMACRO  RexxDropMacro
 
 
 /***    RexxSaveMacroSpace - Save Macro Space functions to a file    */
 
-APIRET APIENTRY RexxSaveMacroSpace (
+APIRET REXXENTRY RexxSaveMacroSpace (
          size_t,                              /* Argument count (0==save all)*/
          const char * *,                      /* List of funct names to save */
          const char *);                       /* File to save functions in   */
-typedef APIRET (APIENTRY * PFNREXXSAVEMACROSPACE)(size_t, const char * *, const char *);
+typedef APIRET (REXXENTRY * PFNREXXSAVEMACROSPACE)(size_t, const char * *, const char *);
 #define REXXSAVEMACROSPACE  RexxSaveMacroSpace
 
 
 /***    RexxLoadMacroSpace - Load Macro Space functions from a file  */
 
-APIRET APIENTRY RexxLoadMacroSpace (
+APIRET REXXENTRY RexxLoadMacroSpace (
          size_t,                              /* Argument count (0==load all)*/
          const char * *,                      /* List of funct names to load */
          const char *);                       /* File to load functions from */
-typedef APIRET (APIENTRY *PFNREXXLOADMACROSPACE)(size_t, const char * *, const char *);
+typedef APIRET (REXXENTRY *PFNREXXLOADMACROSPACE)(size_t, const char * *, const char *);
 #define REXXLOADMACROSPACE  RexxLoadMacroSpace
 
 
 /***    RexxQueryMacro - Find a function's search-order position     */
 
-APIRET APIENTRY RexxQueryMacro (
+APIRET REXXENTRY RexxQueryMacro (
          const char *,                         /* Function to search for      */
          unsigned short * );                   /* Ptr for position flag return*/
-typedef APIRET (APIENTRY *PFNREXXQUERYMACRO)(const char *, unsigned short *);
+typedef APIRET (REXXENTRY *PFNREXXQUERYMACRO)(const char *, unsigned short *);
 #define REXXQUERYMACRO  RexxQueryMacro
 
 
 /***    RexxReorderMacro - Change a function's search-order          */
 /***                            position                             */
 
-APIRET APIENTRY RexxReorderMacro(
+APIRET REXXENTRY RexxReorderMacro(
          const char *,                        /* Name of funct change order  */
          size_t);                             /* New position for function   */
-typedef APIRET (APIENTRY *PFNREXXREORDERMACRO)(const char *, size_t);
+typedef APIRET (REXXENTRY *PFNREXXREORDERMACRO)(const char *, size_t);
 #define REXXREORDERMACRO  RexxReorderMacro
 
 
 /***    RexxClearMacroSpace - Remove all functions from a MacroSpace */
 
-APIRET APIENTRY RexxClearMacroSpace(
+APIRET REXXENTRY RexxClearMacroSpace(
          void );                      /* No Arguments.               */
-typedef APIRET (APIENTRY *PFNREXXCLEARMACROSPACE)(void);
+typedef APIRET (REXXENTRY *PFNREXXCLEARMACROSPACE)(void);
 #define REXXCLEARMACROSPACE  RexxClearMacroSpace
 
 
@@ -614,45 +645,45 @@ typedef APIRET (APIENTRY *PFNREXXCLEARMACROSPACE)(void);
 
 /***    RexxCreateQueue - Create an External Data Queue */
 
-APIRET APIENTRY RexxCreateQueue (
+APIRET REXXENTRY RexxCreateQueue (
         char *,                                /* Name of queue created       */
         size_t,                                /* Size of buf for ret name    */
         const char *,                          /* Requested name for queue    */
         size_t *);                             /* Duplicate name flag.        */
-typedef APIRET (APIENTRY *PFNREXXCREATEQUEUE)(char *, size_t, const char *, size_t);
+typedef APIRET (REXXENTRY *PFNREXXCREATEQUEUE)(char *, size_t, const char *, size_t);
 
 
 /***    RexxDeleteQueue - Delete an External Data Queue */
 
-APIRET APIENTRY RexxDeleteQueue (
+APIRET REXXENTRY RexxDeleteQueue (
         const char * );                         /* Name of queue to be deleted */
-typedef APIRET (APIENTRY *PFNREXXDELETEQUEUE)(const char *);
+typedef APIRET (REXXENTRY *PFNREXXDELETEQUEUE)(const char *);
 
 
 /*** RexxQueryQueue - Query an External Data Queue for number of      */
 /***                  entries                                         */
 
-APIRET APIENTRY RexxQueryQueue (
+APIRET REXXENTRY RexxQueryQueue (
         const char *,                          /* Name of queue to query      */
         size_t *);                             /* Place to put element count  */
-typedef APIRET (APIENTRY *PFNREXXQUERYQUEUE)(const char *, size_t *);
+typedef APIRET (REXXENTRY *PFNREXXQUERYQUEUE)(const char *, size_t *);
 
 
 /***    RexxAddQueue - Add an entry to an External Data Queue */
 
-APIRET APIENTRY RexxAddQueue (
+APIRET REXXENTRY RexxAddQueue (
         const char *,                          /* Name of queue to add to     */
         PCONSTRXSTRING,                        /* Data string to add          */
         size_t);                               /* Queue type (FIFO|LIFO)      */
-typedef APIRET (APIENTRY *PFNREXXADDQUEUE)(const char *, PCONSTRXSTRING, size_t);
+typedef APIRET (REXXENTRY *PFNREXXADDQUEUE)(const char *, PCONSTRXSTRING, size_t);
 
 
 #include "rexxplatformapis.h"
 
 
-APIRET APIENTRY RexxShutDownAPI(void);
+APIRET REXXENTRY RexxShutDownAPI(void);
 
-typedef APIRET (APIENTRY *PFNREXXSHUTDOWNAPI)(void);
+typedef APIRET (REXXENTRY *PFNREXXSHUTDOWNAPI)(void);
 #define REXXSHUTDOWNAPI  RexxShutDownAPI
 
 
@@ -662,30 +693,18 @@ typedef APIRET (APIENTRY *PFNREXXSHUTDOWNAPI)(void);
 
 /***   RexxAllocateMemory            */
 
-void *APIENTRY RexxAllocateMemory(
+void *REXXENTRY RexxAllocateMemory(
                    size_t);                    /* number of bytes to allocate */
-typedef void *(APIENTRY *PFNREXXALLOCATEMEMORY)(size_t );
+typedef void *(REXXENTRY *PFNREXXALLOCATEMEMORY)(size_t );
 
 
 /***   RexxFreeMemory                */
 
-APIRET APIENTRY RexxFreeMemory(
+APIRET REXXENTRY RexxFreeMemory(
                    void *);  /* pointer to the memory returned by    */
                              /* RexxAllocateMemory                   */
-typedef APIRET (APIENTRY *PFNREXXFREEMEMORY)(void *);
+typedef APIRET (REXXENTRY *PFNREXXFREEMEMORY)(void *);
 
-int APIENTRY RexxResolveExit(const char *, REXXPFN *);
-
-APIRET APIENTRY RexxCallFunction (
-        const char *,                  /* Name of function to call   */
-        size_t,                        /* Number of arguments        */
-        PCONSTRXSTRING,                /* Array of argument strings  */
-        int            *,              /* RC from function called    */
-        PRXSTRING,                     /* Storage for returned data  */
-        const char *);                 /* Name of active data queue  */
-
-/***   Uppercase Entry Point Name */
-#define REXXCALLFUNCTION  RexxCallFunction
 
 #ifdef __cplusplus
 }

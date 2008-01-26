@@ -234,7 +234,7 @@ RexxObject * activation_find  (void);
    void              toggleAddress();
    void              guardOn();
    void              raiseExit(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, RexxDirectory *);
-   RexxActivation  * senderAct();
+   RexxActivation  * senderActivation();
    RexxActivation  * external();
    void              interpret(RexxString *);
    void              signalTo(RexxInstruction *);
@@ -255,6 +255,7 @@ RexxObject * activation_find  (void);
    RexxObject      * internalCall(RexxInstruction *, size_t, RexxExpressionStack *, ProtectedObject &);
    RexxObject      * internalCallTrap(RexxInstruction *, RexxDirectory *, ProtectedObject &);
    bool              callMacroSpaceFunction(RexxString *, RexxObject **, size_t, RexxString *, int, ProtectedObject &);
+   RexxMethod      * getMacroCode(RexxString *macroName);
    bool              callRegisteredExternalFunction(RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
    RexxObject      * command(RexxString *, RexxString *);
    int64_t           getElapsed();
@@ -324,9 +325,7 @@ RexxObject * activation_find  (void);
    RexxVariableBase *directRetriever(RexxString *);
    RexxObject       *handleNovalueEvent(RexxString *name, RexxVariable *variable);
 
-   inline RexxActivationBase  * getSender() { return (RexxActivationBase *)this->sender; }
    inline void              setCallType(RexxString *type) {this->settings.calltype = type; }
-   inline RexxObject      * getReceiver() { return this->receiver; };
    inline void              pushBlock(RexxDoBlock *block) { block->setPrevious(this->dostack); this->dostack = block; }
    inline void              popBlock() { RexxDoBlock *temp; temp = this->dostack; this->dostack = temp->getPrevious(); temp->setHasNoReferences(); }
    inline RexxDoBlock     * topBlock() { return this->dostack; }
@@ -359,7 +358,11 @@ RexxObject * activation_find  (void);
    inline void              setCurrent(RexxInstruction * v) {this->current=v;};
    inline bool              inDebug() { return ((this->settings.flags&trace_debug) != 0) && !this->debug_pause;}
    inline RexxExpressionStack * getStack() {return &this->stack; };
-   inline NumericSettings   * getNumericSettings() {return &(this->settings.numericSettings);};
+
+   virtual NumericSettings *getNumericSettings();
+   virtual RexxActivation  *getRexxContext();
+   virtual RexxObject      *getReceiver();
+
    inline void              traceIntermediate(RexxObject * v, int p) { if (this->settings.intermediate_trace) this->traceValue(v, p); };
    inline void              traceVariable(RexxString *n, RexxObject *v)
        { if (this->settings.intermediate_trace) { this->traceTaggedValue(TRACE_PREFIX_VARIABLE, NULL, false, n, v); } };

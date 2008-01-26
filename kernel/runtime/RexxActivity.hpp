@@ -54,9 +54,13 @@
 #include "ExitHandler.hpp"
 
 
+
 class ProtectedObject;                 // needed for look aheads
 class RexxSource;
 class RexxMethod;
+class InterpreterInstance;
+class ActivityDispatcher;
+class CallbackDispatcher;
 
                                        /* interface values for the          */
                                        /* activity_queue method             */
@@ -133,6 +137,7 @@ public:
 
    void runThread();
    wholenumber_t error(size_t);
+   wholenumber_t errorNumber(RexxDirectory *conditionObject);
    bool        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, RexxDirectory *);
    void        raiseException(wholenumber_t, SourceLocation *, RexxSource *, RexxString *, RexxArray *, RexxObject *);
    void        reportAnException(wholenumber_t, const char *);
@@ -160,11 +165,19 @@ public:
    void        liveGeneral(int reason);
    void        flatten(RexxEnvelope *);
    void        run();
-   void        push(RexxActivationBase *);
-   void        pop(bool);
-   void        pushNil();
-   void        popNil();
-   void        exitKernel(RexxActivation *);
+   void        checkActivationStack();
+   void        updateFrameMarkers();
+   void        pushStackFrame(RexxActivationBase *new_activation);
+   void        createNewActivationStack();
+   void        popStackFrame(bool  reply);
+   void        popStackFrame(RexxActivationBase *);
+   void        unwindStackFrame();
+   void        unwindToDepth(size_t depth);
+   void        unwindToFrame(RexxActivation *frame);
+   void        cleanupStackFrame(RexxActivationBase *poppedStackFrame);
+   RexxActivity *spawnReply();
+
+   void        exitKernel();
    void        enterKernel();
    RexxObject *previous();
    void        waitReserve(RexxObject *);
@@ -174,17 +187,17 @@ public:
    void        checkDeadLock(RexxActivity *);
    void        postRelease();
    void        kill(RexxDirectory *);
-   RexxActivationBase *sender(RexxActivationBase *);
    void        joinKernelQueue();
    void        relinquish();
    bool        halt(RexxString *);
    bool        setTrace(bool);
-   void        yield(RexxObject *);
+   void        yieldControl();
    void        yield();
    void        releaseAccess();
    void        requestAccess();
    void        checkStackSpace();
-   void        terminateActivity();
+   void        cleanupActivityResources();
+   void        terminatePoolActivity();
    RexxObject *localMethod();
    thread_id_t threadIdMethod();
    bool isThread(thread_id_t id) { return threadid == id; }
@@ -217,25 +230,37 @@ public:
    RexxString *pullInput(RexxActivation *);
    RexxObject *lineOut(RexxString *);
    RexxString *lineIn(RexxActivation *);
-   void terminateMethod();
-   wholenumber_t messageSend(RexxObject *, RexxString *, size_t, RexxObject **, ProtectedObject &);
    void generateRandomNumberSeed();
+   void setupAttachedActivity(InterpreterInstance *interpreter);
+   void addToInstance(InterpreterInstance *interpreter);
+   void detachInstance();
+   inline InterpreterInstance *getInstance() { return instance; }
 
-   void activate() { nestedCount++; }
-   void deactivate() { nestedCount--; }
-   bool isActive() { return nestedCount > 0; }
-   bool isInactive() { return nestedCount == 0; }
-   size_t getActivationLevel() { return nestedCount; }
-   void restoreActivationLevel(size_t l) { nestedCount = l; }
+   inline void activate() { nestedCount++; }
+   inline void deactivate() { nestedCount--; }
+   inline bool isActive() { return nestedCount > 0; }
+   inline bool isInactive() { return nestedCount == 0; }
+   inline size_t getActivationLevel() { return nestedCount; }
+   inline void restoreActivationLevel(size_t l) { nestedCount = l; }
+   inline bool isSuspended() { return suspended; }
+   inline void setSuspended(bool s) { suspended = s; }
+   inline bool isInterpreterRoot() { return interpreterRoot; }
+   inline void setInterpreterRoot() { interpreterRoot = true; }
+   inline void setNestedActivity(RexxActivity *a) { nestedActivity = a; }
+   inline RexxActivity *getNestedActivity() { return nestedActivity; }
+   inline bool isAttached() { return attached; }
+
 
    bool hasSecurityManager();
    bool callSecurityManager(RexxString *name, RexxDirectory *args);
-   RexxObject *nativeRelease(RexxObject *result);
    void inheritSettings(RexxActivity *parent);
+   void exitCurrentThread();
+   void run(ActivityDispatcher &target);
+   void run(CallbackDispatcher &target);
 
-   inline RexxActivationBase *current(){ return this->topActivation;}
-   inline RexxActivation *getCurrentActivation() {return this->currentActivation;}
-   inline size_t getActivationDepth() { return depth; }
+   inline RexxActivation *getCurrentRexxFrame() {return currentRexxFrame;}
+   inline RexxActivationBase *getTopStackFrame() { return topStackFrame; }
+   inline size_t getActivationDepth() { return stackFrameDepth; }
    inline NumericSettings *getNumericSettings () {return this->numericSettings;}
    inline RexxObject *runningRequires(RexxString *program) {return this->requiresTable->stringGet(program);}
    inline void        addRunningRequires(RexxString *program) { this->requiresTable->stringAdd((RexxObject *)program, program);}
@@ -290,21 +315,35 @@ public:
    bool isExitEnabled(int exitNum) { return getExitHandler(exitNum).isEnabled(); }
 
 
-   RexxInternalStack  *activations;    /* stack of activations              */
+   InterpreterInstance *instance;      // the interpreter we're running under
+   RexxActivity *oldActivity;          // pushed nested activity
    RexxActivationStack   frameStack;   /* our stack used for activation frames */
-   RexxObject         *saveValue;      /* saved result across activity_yield*/
    RexxDirectory      *conditionobj;   /* condition object for killed activi*/
    RexxTable          *requiresTable;  /* Current ::REQUIRES being installed*/
-                                       /* current REXX activation           */
-   RexxActivation     *currentActivation;
-   RexxActivationBase *topActivation;  /* current top activation            */
+
+
+   // the activation frame stack.  This stack is one RexxActivation or
+   // RexxNativeActivation for every level of the call stack.  The activationStackSize
+   // is the current size of the stack (which is expanded, if necessary).  The
+   // activationStackDepth is the current count of frames in the stack.
+   RexxInternalStack  *activations;
+   size_t   activationStackSize;
+   size_t   stackFrameDepth;
+
+   // the following two fields represent the current top of the activation stack
+   // and the top Rexx frame in the stack.  Generally, if executing Rexx code,
+   // then currentRexxFrame == topStackFrame.  If we're at the base of the stack
+   // topStackFrame will be the root stack element (a RexxNativeActivation instance)
+   // and the currentRexxFrame will be OREF_NULL.  If we've made a callout from a
+   // Rexx context, then the topStackFrame will be the RexxNativeActivation that
+   // made the callout and the currentRexxFrame will be the predecessor frame.
+   RexxActivation     *currentRexxFrame;
+   RexxActivationBase *topStackFrame;
                                        /* next element in the wait queue    */
    RexxActivity       *nextWaitingActivity;
    RexxString         *currentExit;    /* current executing system exit     */
    RexxObject         *waitingObject;  /* object activity is waiting on     */
    SEV      runsem;                    /* activity run control semaphore    */
-   size_t   size;                      /* size of activation stack          */
-   size_t   depth;                     /* depth of activation stack         */
    thread_id_t threadid;               /* thread id                         */
    NumericSettings *numericSettings;   /* current activation setting values */
 
@@ -312,12 +351,16 @@ public:
    bool     stackcheck;                /* stack space is to be checked      */
    bool     exit;                      /* activity loop is to exit          */
    bool     requestingString;          /* in error handling currently       */
+   bool     suspended;                 // the suspension flag
+   bool     interpreterRoot;           // This is the root activity for an interpreter instance
+   bool     attached;                  // this is attached to an instance (vs. created directly)
    SEV      guardsem;                  /* guard expression semaphore        */
    size_t   nestedCount;               /* extent of the nesting             */
    NestedActivityState nestedInfo;     /* info saved and restored on calls  */
    ProtectedObject *protectedObjects;  // list of stack-based object protectors
    RexxString *lastMessageName;        // class called message
    RexxMethod *lastMethod;             // last called method
+   RexxActivity *nestedActivity;       // used to push down activities in threads with more than one instance
  };
 
 #endif

@@ -52,8 +52,8 @@
 #include "RexxNativeAPI.h"                      /* Lot's of useful REXX macros       */
 #include "StreamNative.h"
 #include "ActivityManager.hpp"
-
-#include "SubcommandAPI.h"                 /* Get private REXX API's        */
+#include "RexxNativeActivation.hpp"
+#include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 
 /****************************************************************************/
 /* Rexx_query_queue                                                         */
@@ -215,7 +215,7 @@ RexxMethod1(REXXOBJECT, function_queueExit,
 
 
   NativeContextBlock context;
-  RexxActivation *activation = (RexxActivation *)ActivityManager::currentActivity->getCurrentActivation();
+  RexxActivation *activation = context.self->getRexxContext(); 
                                        /* call the exit                     */
   context.activity->callQueueNameExit(activation, qname);
   return context.protect(qname);       /* and just return the exit result   */

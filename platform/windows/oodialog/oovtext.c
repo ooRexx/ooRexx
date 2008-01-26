@@ -92,7 +92,7 @@ void DrawFontToDC(HDC hDC, INT x, INT y, CHAR * text, INT size, CHAR * opts, CHA
 }
 
 
-ULONG APIENTRY WriteText(
+ULONG REXXENTRY WriteText(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -149,7 +149,7 @@ VOID CALLBACK ScrollTimerProc(
 
 
 
-ULONG APIENTRY ScrollText(
+ULONG REXXENTRY ScrollText(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -320,7 +320,7 @@ ULONG APIENTRY ScrollText(
 
 
 
-ULONG APIENTRY HandleFont(
+ULONG REXXENTRY HandleFont(
   PUCHAR funcname,
       ULONG argc,
   RXSTRING argv[],

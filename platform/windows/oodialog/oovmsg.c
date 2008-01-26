@@ -356,7 +356,7 @@ BOOL AddTheMessage(DIALOGADMIN * aDlg, ULONG message, ULONG filt1, ULONG param, 
 
 #define NARG 7
 
-ULONG APIENTRY AddUserMessage(
+ULONG REXXENTRY AddUserMessage(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -397,7 +397,7 @@ ULONG APIENTRY AddUserMessage(
 
 
 
-ULONG APIENTRY SendWinMsg(
+ULONG REXXENTRY SendWinMsg(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -512,7 +512,7 @@ ULONG APIENTRY SendWinMsg(
 
 
 
-ULONG APIENTRY GetDlgMsg(
+ULONG REXXENTRY GetDlgMsg(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -547,7 +547,7 @@ ULONG APIENTRY GetDlgMsg(
 }
 
 
-ULONG APIENTRY SetLBTabStops(
+ULONG REXXENTRY SetLBTabStops(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],

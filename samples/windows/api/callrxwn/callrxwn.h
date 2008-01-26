@@ -39,7 +39,7 @@
 /* function prototypes.  Window procedures first.                    */
 LRESULT CALLBACK MainDlgProc(HWND hwnd, WORD msg, WPARAM wParam, LPARAM lParam);
 int CallRexx(HWND hwnd);
-LONG APIENTRY RexxIOExit( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock);
+LONG REXXENTRY RexxIOExit( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock);
 
 /* global for Window Handle */
 HWND gHwnd;

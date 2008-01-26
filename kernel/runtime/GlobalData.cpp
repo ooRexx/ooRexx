@@ -51,6 +51,4 @@
 #include "MethodClass.hpp"
 #include "RexxNativeAPI.h"
 
-SysSharedSemaphoreDefn                 /* semaphore definitions             */
-                                       /* defined in xxxdef.h               */
 

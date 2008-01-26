@@ -139,6 +139,7 @@
 #include "Clause.hpp"
 #include "Token.hpp"
 #include "DoBlock.hpp"
+#include "InterpreterInstance.hpp"
 
 
 void *RexxMemory::virtualFunctionTable[T_Last_Class_Type + 1] = {NULL};
@@ -488,6 +489,9 @@ void RexxMemory::buildVirtualFunctionTable()
    
    objectPtr = new (objectPtr) RexxDoBlock(RESTOREIMAGE);
    virtualFunctionTable[T_DoBlock] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) InterpreterInstance(RESTOREIMAGE);
+   virtualFunctionTable[T_InterpreterInstance] = *((void **)objectPtr);
    
 };
 

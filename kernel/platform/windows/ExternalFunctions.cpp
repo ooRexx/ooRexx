@@ -69,7 +69,7 @@
 #include "MethodClass.hpp"
 #include "SourceFile.hpp"
 #include "RexxNativeAPI.h"                  /* Lot's of useful REXX macros    */
-#include "SubcommandAPI.h"                  /* Get private REXXAPI API's      */
+#include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 #include "RexxAPIManager.h"
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
@@ -94,14 +94,9 @@ typedef struct _ENVENTRY {                  /* setlocal/endlocal structure    */
   char     Variables[1];                    /* start of variable values       */
 } ENVENTRY;
 
-RexxMethod *SysRestoreProgramBuffer(PRXSTRING, RexxString *);
 void ReplaceEnvironment( char * );
 REXXOBJECT BuildEnvlist(void);
 void RestoreEnvironment( void * );
-
-extern "C" {
-APIRET APIENTRY RexxExecuteMacroFunction (const char *, PRXSTRING );
-}
 
 /*********************************************************************/
 /*                                                                   */
@@ -344,29 +339,6 @@ bool SysExternalFunction(
   return false;
 }
 
-
-/******************************************************************************/
-/* Name:       SysGetMacroCode                                                */
-/*                                                                            */
-/* Notes:      Retrieves the RexxMethod from a named macro in macrospace.     */
-/*             Search order is specified as second parameter.                 */
-/******************************************************************************/
-RexxMethod * SysGetMacroCode(
-  RexxString     * MacroName)
-{
-  RXSTRING       MacroImage;
-  RexxMethod   * method = OREF_NULL;
-
-  MacroImage.strptr = NULL;
-  if (RexxExecuteMacroFunction(MacroName->getStringData(), &MacroImage) == 0)
-    method = SysRestoreProgramBuffer(&MacroImage, MacroName);
-
-  /* On Windows we need to free the allocated buffer for the macro */
-  if (MacroImage.strptr)
-    GlobalFree(MacroImage.strptr);
-
-  return method;
-}
 
 /*********************************************************************/
 /*                                                                   */

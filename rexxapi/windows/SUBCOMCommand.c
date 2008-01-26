@@ -46,7 +46,7 @@
 #include <string.h>                    /* Include string functions   */
 #include <stdio.h>
 #include "rexx.h"                      /* for REXX functionality     */
-#include "SubcommandAPI.h"             /* get RexxLoadSubcom calls   */
+#include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 #include "RexxAPIManager.h"
 #include "RexxErrorCodes.h"            /* error constants            */
 

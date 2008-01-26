@@ -38,12 +38,12 @@
 #include "OrxScrptError.hpp"
 
 
-OrxScriptError::OrxScriptError(FILE *Stream, ConditionData *info, bool *Exists)  :
+OrxScriptError::OrxScriptError(FILE *Stream, RexxConditionData *info, bool *Exists)  :
                                ulRefCount(1),
                                logfile(Stream) {
   if (info)
-    memcpy(&RexxErrorInfo,info,sizeof(ConditionData));
-  else memset(&RexxErrorInfo,0,sizeof(ConditionData));
+    memcpy(&RexxErrorInfo,info,sizeof(RexxConditionData));
+  else memset(&RexxErrorInfo,0,sizeof(RexxConditionData));
   RunDestructor = Exists;
   if(RunDestructor) *RunDestructor = true;
   }
@@ -189,15 +189,15 @@ STDMETHODIMP_(ULONG) OrxScriptError::UDRelease() {
 HRESULT OrxScriptError::GetExceptionInfo(EXCEPINFO *pInfo) {
   OLECHAR *temp;
   char msg[512];
-  short major,minor;
+  int major,minor;
 
 #if defined(DEBUGC)+defined(DEBUGZ)
   if(RunDestructor && logfile) FPRINTF(logfile,"OrxScriptError::GetExceptionInfo = %p\n",pInfo);
 #endif
   if (!pInfo) return E_POINTER;
 
-  major = RexxErrorInfo.code/1000;
-  minor = RexxErrorInfo.code%1000;
+  major = (int)RexxErrorInfo.code/1000;
+  minor = (int)RexxErrorInfo.code%1000;
   if (minor)
     sprintf(msg,"[%d.%d] ",major,minor);
   else
@@ -214,7 +214,7 @@ HRESULT OrxScriptError::GetExceptionInfo(EXCEPINFO *pInfo) {
 
   temp = (OLECHAR*) malloc(sizeof(OLECHAR)*(strlen(msg)+1));
   //  Should use the C2W() macro to generate this call.
-  MultiByteToWideChar( CP_ACP, 0, msg, -1, temp, strlen(msg)+1 );
+  MultiByteToWideChar( CP_ACP, 0, msg, -1, temp, (int)strlen(msg)+1 );
 
   pInfo->wCode = major;
   pInfo->bstrDescription = SysAllocString(temp);
@@ -237,7 +237,7 @@ STDMETHODIMP OrxScriptError::GetSourcePosition(DWORD *pdwSourceContext, ULONG *L
   if(RunDestructor && logfile) FPRINTF2(logfile,"OrxScriptError::GetSourcePosition() RexxErrorInfo.position\n",RexxErrorInfo.position);
 #endif
   if(pdwSourceContext) *pdwSourceContext = 0;
-  if(LineNumber) *LineNumber = RexxErrorInfo.position;
+  if(LineNumber) *LineNumber = (ULONG)RexxErrorInfo.position;
   // if(LineNumber) *LineNumber = 666;
   if(CharPos) *CharPos = -1;
 #if defined(DEBUGC)+defined(DEBUGZ)

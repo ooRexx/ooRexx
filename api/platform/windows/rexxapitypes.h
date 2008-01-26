@@ -63,13 +63,12 @@ typedef unsigned __int64 uint64_t;
 typedef DWORD thread_id_t;
 typedef DWORD process_id_t;
 
-#define RexxEntry APIENTRY
 #define REXXENTRY APIENTRY
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef size_t (RexxEntry *REXXPFN)();
+typedef size_t (REXXENTRY *REXXPFN)();
 #ifdef __cplusplus
 }
 #endif

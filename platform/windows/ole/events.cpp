@@ -144,7 +144,7 @@ STDMETHODIMP_(ULONG) OLEObjectEvent::Release(void)
 
 STDMETHODIMP OLEObjectEvent::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames,
                                       unsigned int cNames, LCID lcid,
-                                      DISPID FAR *rgDispId)
+                                      DISPID *rgDispId)
 {
   //fprintf(stderr,"OLEObjectEvent::GetIDsOfNames\n");
   return ResultFromScode(E_OUTOFMEMORY);

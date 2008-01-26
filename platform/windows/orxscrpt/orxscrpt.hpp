@@ -254,7 +254,7 @@ class OrxScript : public LLLContent,
 
 
   /****** NON-INTERFACE PUBLIC METHODS ******/
-  void __stdcall insertVariable(void*);
+  void __stdcall insertVariable(const char *name, REXXOBJECT value);
   char* getEngineName() { return EngineName; }
   REXXOBJECT  getSecurityManager() { return securityManager.Code; }
   REXXOBJECT  getSecurityObject() { return securityObject; }

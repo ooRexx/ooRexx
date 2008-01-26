@@ -59,7 +59,7 @@
 //  Prototypes
 //
 int __cdecl main(int argc, char *argv[]);  /* main entry point           */
-APIRET APIENTRY MY_IOEXIT( int ExitNumber, int Subfunction, PEXIT ParmBlock);
+APIRET REXXENTRY MY_IOEXIT( int ExitNumber, int Subfunction, PEXIT ParmBlock);
 
 //
 //  MAIN program
@@ -131,7 +131,7 @@ int __cdecl main(int argc, char *argv[])
 }
 
 
-APIRET APIENTRY MY_IOEXIT(int ExitNumber, int Subfunction, PEXIT parmblock)
+APIRET REXXENTRY MY_IOEXIT(int ExitNumber, int Subfunction, PEXIT parmblock)
 {
     RXSIOSAY_PARM *sparm;
     RXSIOTRC_PARM *tparm;

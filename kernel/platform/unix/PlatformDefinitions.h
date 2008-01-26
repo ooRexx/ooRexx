@@ -123,13 +123,6 @@
 #define HMTX SMTX
 #define SEV  RexxSemaphore *
                              // semaphore definitions and init
-extern int SecureFlag;
-
-
-#define SysSharedSemaphoreDefn  \
-                               SMTX  rexx_wait_queue_semaphore = 0; \
-                               SEV   rexxTimeSliceSemaphore = 0;    \
-                               size_t rexxTimeSliceTimerOwner;
 /******************************************************************************/
 /* REQUIRED:  Define the REXX type for exceptions.  These can be system       */
 /* specific exception registration info or any place holder type if this      */
@@ -180,14 +173,6 @@ typedef void *(* PTHREADFN)(void *);    /* define a thread function          */
 //#define EVCLEAR(s)    s->reset()     // commented out by weigold
 #define EVCLEAR(s)    s=0              // and inserted new line
 #define EVEXIST(s)
-
-/******************************************************************************/
-/* REQUIRED:  Define a routine to determine if an activation needs to yield.  */
-/*   Use whatever mechanism is approcpriate for given System.                 */
-/*   OS/2 uses the DosStartTimer, continious Asynch Timer.                    */
-/******************************************************************************/
-
-bool SysTimeSliceElapsed();
 
 /******************************************************************************/
 /* REQUIRED:  Routine to start a new TimeSlice period.                        */
@@ -370,7 +355,6 @@ inline char **getEnvironment()
 #ifdef __cplusplus
 extern "C" {
 #endif
-char * APIENTRY RexxGetVersionInformation();
 #ifdef SEMAPHORE_DEBUG
 void SysRequestMutexSem (SMTX psem);   /* request a mutex semaphore         */
                                        /* request a mutex (immediate return)*/

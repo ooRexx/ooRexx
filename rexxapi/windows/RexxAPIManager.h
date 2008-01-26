@@ -231,11 +231,6 @@ void RxFreeProcessSubcomList(process_id_t pid);
 APIRET RxQueueDetach(process_id_t pid);
 ULONG RxInterProcessInit(BOOL sessionqueue);
 
-
-APIRET APIENTRY RexxExecuteMacroFunction (
-       const char *,          /* name of function to locate      */
-       PRXSTRING );           /* pointer to return pcode+lits    */
-
 #ifdef __cplusplus
 }
 #endif

@@ -43,7 +43,7 @@
 #include "oovutil.h"
 
 
-ULONG APIENTRY FindTheWindow(
+ULONG REXXENTRY FindTheWindow(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -79,7 +79,7 @@ static void getCurrentFocus( HWND hDlg, PRXSTRING retstr )
    retstr->strlength = strlen(retstr->strptr);
 }
 
-ULONG APIENTRY Wnd_Desktop(
+ULONG REXXENTRY Wnd_Desktop(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -346,7 +346,7 @@ ULONG APIENTRY Wnd_Desktop(
 
 
 
-ULONG APIENTRY WndShow_Pos(
+ULONG REXXENTRY WndShow_Pos(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],

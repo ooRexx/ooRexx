@@ -51,38 +51,72 @@
 
 #include "RexxCore.h"
 
+class InterpreterInstance;
+class RexxList;
+
 class Interpreter
 {
 public:
+    typedef enum
+    {
+        SAVE_IMAGE_MODE = 0,       // image creation
+        RUN_MODE = 1               // normal run mode
+    } InterpreterStartupMode;
+
+    static void init();
+
+    static void live(size_t);
+    static void liveGeneral(int reason);
+
+    static void processStartup();
+    static void processShutdown();
+
     static inline void getResourceLock() { MTXRQ(resourceLock); }
     static inline void releaseResourceLock() { MTXRL(resourceLock); }
     static inline void createLocks()
     {
         MTXCROPEN(resourceLock, "OBJREXXRESSEM");
-        // this needs to be created and set
-        EVCR(terminationSem);
-        EVSET(terminationSem);
     }
 
     static inline void closeLocks()
     {
         MTXCL(resourceLock);
-        EVCLOSE(terminationSem);
-        terminationSem = 0;
     }
 
-    static inline void signalTermination()
+    static bool terminateInterpreter();
+    static void startInterpreter(InterpreterStartupMode mode);
+    static inline bool isTerminated() { return !active; }
+    static inline bool isActive() { return active; }
+    static InterpreterInstance *createInterpreterInstance(PRXSYSEXIT exits, const char *defaultEnvironment);
+    static inline InterpreterInstance *createInterpreterInstance() { return createInterpreterInstance(NULL, NULL); }
+    static bool terminateInterpreterInstance(InterpreterInstance *instance);
+
+    static inline bool hasTimeSliceElapsed()
     {
-        EVPOST(terminationSem);              /* let anyone who cares know we're done*/
+        // if we've had a time slice event, flip the event flag and return true
+        if (timeSliceElapsed)
+        {
+           timeSliceElapsed = false;
+           return true;
+        }
+        // not time to break
+        return false;
     }
 
-    static void terminate();
-    static bool isTerminated();
+
+    static inline void setTimeSliceElapsed() { timeSliceElapsed = true; }
+    static inline void clearTimeSliceElapsed() { timeSliceElapsed = false; }
+    static void haltAllActivities();
+
+    static RexxObject *localServer;         // local environment initialization server
 
 
 protected:
     static SMTX   resourceLock;      // use to lock resources accessed outside of kernel global lock
-    static SEV    terminationSem;    // used to signal that everything has shutdown
+    static int    initializations;   // indicates whether we're terminated or not
+    static bool   timeSliceElapsed;  // indicates we've had a timer interrupt
+    static RexxList *interpreterInstances;  // the set of interpreter instances
+    static bool   active;            // indicates whether the interpreter is initialized
 };
 
 
@@ -128,6 +162,19 @@ public:
 private:
 
     bool terminated;       // we can release these as needed
+};
+
+
+
+class InstanceBlock
+{
+public:
+    InstanceBlock();
+    InstanceBlock(PRXSYSEXIT exits, const char *defaultEnvironment);
+    ~InstanceBlock();
+
+    RexxActivity         *activity;    // our current activity
+    InterpreterInstance  *instance;    // potential interpreter instance
 };
 
 

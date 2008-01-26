@@ -62,6 +62,7 @@ class RexxMethodClass;
   void flatten(RexxEnvelope*);
   void          run(RexxActivity *,  RexxObject *, RexxString *,  size_t, RexxObject **, ProtectedObject &);
   void          call(RexxActivity *,  RexxObject *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
+  void          runProgram(RexxActivity *activity, RexxString * calltype, RexxString * environment, RexxObject **arguments, size_t argCount, ProtectedObject &result);
   RexxMethod  *newScope(RexxClass  *);
   RexxArray   *source();
   void         setScope(RexxClass  *);
@@ -88,6 +89,7 @@ class RexxMethodClass;
    inline RexxClass *getScope() {return this->scope;}
 
    inline BaseCode  *getCode()     { return this->code; }
+   static RexxMethod *processInstore(PRXSTRING instore, RexxString * name );
 
    static RexxMethodClass *classInstance;
 

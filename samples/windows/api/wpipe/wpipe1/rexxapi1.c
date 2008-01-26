@@ -76,7 +76,7 @@ static PSZ  ApiFncTable[] =
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY ApiLoadFuncs(
+LONG REXXENTRY ApiLoadFuncs(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -108,7 +108,7 @@ LONG APIENTRY ApiLoadFuncs(
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY ApiDeregFunc(
+LONG REXXENTRY ApiDeregFunc(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -146,7 +146,7 @@ LONG APIENTRY ApiDeregFunc(
 * Return:    Version of this API support DLL                             *
 *************************************************************************/
 
-LONG APIENTRY Api_Output_From_C(
+LONG REXXENTRY Api_Output_From_C(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -177,7 +177,7 @@ LONG APIENTRY Api_Output_From_C(
 * Return:    Version of this API support DLL                             *
 *************************************************************************/
 
-LONG APIENTRY Api_Output_From_REXX(
+LONG REXXENTRY Api_Output_From_REXX(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -208,7 +208,7 @@ LONG APIENTRY Api_Output_From_REXX(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-LONG APIENTRY Api_Exchange_Data(
+LONG REXXENTRY Api_Exchange_Data(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */

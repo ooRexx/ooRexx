@@ -63,7 +63,7 @@
 #include "ExpressionBaseVariable.hpp"
 #include "RexxNativeAPI.h"                  /* Get C-method declares, etc.    */
 
-APIRET APIENTRY RexxStemSort(const char *stemname, int order, int type,
+APIRET REXXENTRY RexxStemSort(const char *stemname, int order, int type,
     size_t start, size_t end, size_t firstcol, size_t lastcol);
 
 #define IS_EQUAL(s,l)  (s->strCompare(l))
@@ -189,7 +189,7 @@ int   SysVariablePool(
 
  pshvblock = (PSHVBLOCK)requests;      /* copy the request block pointer    */
                                        /* get the REXX activation           */
- activation = self->getCurrentActivation();
+ activation = self->getRexxContext();
 
  while (pshvblock) {                   /* while more request blocks         */
   pshvblock->shvret = 0;               /* set the block return code         */

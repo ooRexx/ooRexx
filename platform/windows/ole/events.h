@@ -58,7 +58,7 @@ typedef struct _OLEFUNCINFO
   VARTYPE               *pOptVt;
   PUSHORT               pusOptFlags;
   struct _OLEFUNCINFO * pNext;
-} OLEFUNCINFO, FAR * POLEFUNCINFO, FAR * FAR * PPOLEFUNCINFO;
+} OLEFUNCINFO, * POLEFUNCINFO, * * PPOLEFUNCINFO;
 
 // extended structure for events
 typedef struct _OLEFUNCINFO2
@@ -74,7 +74,7 @@ typedef struct _OLEFUNCINFO2
   PUSHORT               pusOptFlags;
   char                **pszName;
   struct _OLEFUNCINFO2 * pNext;
-} OLEFUNCINFO2, FAR * POLEFUNCINFO2, FAR * FAR * PPOLEFUNCINFO2;
+} OLEFUNCINFO2, * POLEFUNCINFO2, * * PPOLEFUNCINFO2;
 
 typedef struct _OLECONSTINFO
 {
@@ -82,7 +82,7 @@ typedef struct _OLECONSTINFO
   MEMBERID              memId;
   VARIANT               sValue;
   struct _OLECONSTINFO *pNext;
-} OLECONSTINFO, FAR * POLECONSTINFO, FAR * FAR * PPOLECONSTINFO;
+} OLECONSTINFO, * POLECONSTINFO, * * PPOLECONSTINFO;
 
 typedef struct _OLECLASSINFO
 {
@@ -96,14 +96,14 @@ typedef struct _OLECLASSINFO
 
   int           iInstances;
   BOOL          fUsed;
-} OLECLASSINFO, FAR * POLECLASSINFO, FAR * FAR * PPOLECLASSINFO;
+} OLECLASSINFO, * POLECLASSINFO, * * PPOLECLASSINFO;
 
 typedef struct _TYPELIBLIST
 {
   GUID          guid;
   POLECONSTINFO info;
   struct _TYPELIBLIST *next;
-} TYPELIBLIST, FAR * PTYPELIBLIST;
+} TYPELIBLIST, * PTYPELIBLIST;
 
 /* event handler class */
 

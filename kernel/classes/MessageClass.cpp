@@ -256,7 +256,7 @@ RexxObject *RexxMessage::send(RexxObject *_receiver)
                                        /* tell the activation/nativeact, we */
                                        /*are running under to let us know   */
                                        /*if an error occured.               */
-  myActivity->current()->setObjNotify(this);
+  myActivity->getTopStackFrame()->setObjNotify(this);
                                        /* set this for resource deadlock    */
                                        /* checking purposes                 */
   OrefSet(this, this->startActivity, myActivity);
@@ -309,7 +309,7 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
                                        /* get the current activity          */
   oldActivity = ActivityManager::currentActivity;
                                        /* Create the new activity           */
-  newActivity = new_activity(oldActivity);
+  newActivity = oldActivity->spawnReply();
                                        /* indicate the activity the send    */
                                        /*message should come in on.         */
   OrefSet(this, this->startActivity, newActivity);
@@ -319,7 +319,7 @@ RexxObject *RexxMessage::start(RexxObject *_receiver)
   newNativeAct->setObjNotify(this);
   newNativeAct->prepare(this, message, 0, NULL);
                                        /* Push new nativeAct onto activity  */
-  newActivity->push(newNativeAct);     /*stack                              */
+  newActivity->pushStackFrame(newNativeAct); /*stack                              */
                                        /* indicate we want the NativeAct to */
   newActivity->run();                  /*run                                */
   return OREF_NULL;                    /* all done here, return to caller.  */
@@ -338,7 +338,7 @@ void RexxMessage::sendNotification(void)
 
                                        /* no longer care about any error    */
                                        /*condition                          */
-  ActivityManager::currentActivity->current()->setObjNotify(OREF_NULL);
+  ActivityManager::currentActivity->getTopStackFrame()->setObjNotify(OREF_NULL);
                                        /* others waiting for a result?      */
   if (this->waitingActivities != OREF_NULL) {
     i = this->waitingActivities->getSize();/* get the waiting count             */
@@ -501,7 +501,6 @@ RexxObject *RexxMessage::newRexx(
   RexxArray *argPtr = OREF_NULL;       /* arguments to be sent with message */
                                        /* the option parameter as a string  */
   RexxString *optionString;
-  RexxActivation *activation;          /* current activation                */
   RexxObject *sender;                  /* sending object                    */
   RexxObject *msgName;                 /* msgname to be sent                */
   RexxArray  *msgNameArray;            /* msgname to be sent                */
@@ -542,14 +541,17 @@ RexxObject *RexxMessage::newRexx(
                                        /* Yes, this is an error, report it. */
       reportException(Error_Incorrect_method_noarg, IntegerTwo);
                                        /* get the top activation            */
-    activation = (RexxActivation *)ActivityManager::currentActivity->current();
+    RexxActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
                                        /* have an activation?               */
-    if (activation != (RexxActivation *)TheNilObject) {
+    if (activation != OREF_NULL)
+    {
                                        /* get the receiving object          */
-      sender = (RexxObject *)activation->getReceiver();
+      sender = activation->getReceiver();
       if (sender != target)            /* not the same receiver?            */
+      {
                                        /* this is an error                  */
          reportException(Error_Execution_super);
+      }
     }
     else
                                        /* this is an error                  */

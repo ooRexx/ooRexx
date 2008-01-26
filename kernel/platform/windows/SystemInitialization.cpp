@@ -42,18 +42,9 @@
 #include <stdio.h>                          /* Get printf, FILE type, etc.    */
 #include <string.h>                         /* Get strcpy, strcat, etc.       */
 #include <stdlib.h>                         /* Get system, max_path etc...    */
-#include "rexx.h"
 #include "RexxCore.h"
-#include "RexxAPIManager.h"
-#include "APIServiceMessages.h"
-#include "RexxAPIService.h"
+#include "SystemInterpreter.hpp"
 
-/* definition of RexxinitExports */
-
-CRITICAL_SECTION waitProtect = { 0 } ;
-
-HINSTANCE horyxkDll;
-HANDLE apiProtect;
 /*
  */
 /********************************************************************/
@@ -81,30 +72,15 @@ BOOL WINAPI DllMain(
   DWORD fdwReason,
   LPVOID lpvReserved)
 {
-  bool  fSuccess = true;
-  size_t dwSize = sizeof(size_t);
-  char  szMessage[256] = "Open Object Rexx: Not cleanly installed!";
-
    if (fdwReason == DLL_PROCESS_ATTACH)
    {
-     InitializeCriticalSection(&waitProtect);  // another critical section is needed...
-/* create critical section at DLL load-time (more secure) */
-     SysThreadInit();
-     if (fSuccess) {
-       RxInterProcessInit(true);
-       horyxkDll = hinstDll;            /* keep handle around */
-     } else
-       MessageBox(NULL, szMessage, "Startup Error!", MB_OK | MB_SYSTEMMODAL | MB_ICONHAND);
-   } else if (fdwReason == DLL_PROCESS_DETACH)
-   {
-      /* Clean up semaphores before terminating process so that we */
-      /* don't run out of system handles.                          */
-      MTXCL(memoryObject.flattenMutex);
-      MTXCL(memoryObject.unflattenMutex);
-      MTXCL(memoryObject.envelopeMutex);
-      DeleteCriticalSection(&waitProtect);
-      RexxDeregisterFunction(NULL); // Send PROCESS_GONE to RXAPI
+       // perform the interpreter start up
+       SystemInterpreter::processStartup(hinstDll);
    }
-   return(fSuccess);
+   else if (fdwReason == DLL_PROCESS_DETACH)
+   {
+       SystemInterpreter::processShutdown();
+   }
+   return TRUE;
 }
 

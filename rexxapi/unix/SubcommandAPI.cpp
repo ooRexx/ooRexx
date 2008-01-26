@@ -60,9 +60,9 @@
 #include "rexx.h"
 #include "SharedMemorySupport.h"
 #include "SystemSemaphores.h"
-#include "SubcommandAPI.h"
 #include "RexxAPIManager.h"
 #include "APIUtilities.h"
+#include "RexxInternalApis.h"
 #include <unistd.h>
 #include <sys/shm.h>
 
@@ -135,7 +135,7 @@ APIBLOCK *RegSearch(const char *, int, char);
 /*                                                                  */
 /********************************************************************/
 
-void APIENTRY RxSubcomExitList(void)
+void REXXENTRY RxSubcomExitList(void)
 {
   size_t          prev, c;
   int             i ;
@@ -233,7 +233,7 @@ if(apidata->sebase != NULL)             /* if there is API memory   */
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxRegisterSubcomDll(
+APIRET REXXENTRY RexxRegisterSubcomDll(
   const char *EnvName,              /* Subcom name                */
   const char *ModuleName,           /* Name of DLL                */
   const char *EntryPoint,           /* DLL routine name           */
@@ -273,7 +273,7 @@ APIRET APIENTRY RexxRegisterSubcomDll(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxRegisterSubcomExe(
+APIRET REXXENTRY RexxRegisterSubcomExe(
   const char *   EnvName,              /* Subcom name                */
   REXXPFN EntryPoint,                  /* DLL routine name           */
   const char *UserArea)                /* User data                  */
@@ -309,7 +309,7 @@ APIRET APIENTRY RexxRegisterSubcomExe(
 /*  Outputs:            YES if function executed, NO if not          */
 /*                                                                   */
 /*********************************************************************/
-APIRET APIENTRY RexxCallFunction (
+APIRET REXXENTRY RexxCallFunction (
     const char * dname,            /* Name of function to call   */
     size_t argc,                   /* Number of arguments        */
     PCONSTRXSTRING argv,           /* Array of argument strings  */
@@ -352,7 +352,7 @@ APIRET APIENTRY RexxCallFunction (
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxLoadSubcom(
+APIRET REXXENTRY RexxLoadSubcom(
   const char * name,                   /* Name of Subcommand Environ */
   const char * dll )                   /* Module name of its' DLL    */
 {
@@ -383,7 +383,7 @@ APIRET APIENTRY RexxLoadSubcom(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxCallSubcom(
+APIRET REXXENTRY RexxCallSubcom(
   const char * name,                   /* the Subcommand Environment */
   const char * dll,                    /* Module name of its' DLL    */
   PCONSTRXSTRING cmd,                  /* Command string to be passed*/
@@ -432,7 +432,7 @@ APIRET APIENTRY RexxCallSubcom(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxQuerySubcom(
+APIRET REXXENTRY RexxQuerySubcom(
   const char *     name,               /* Environment Name           */
   const char *     dll,                /* Associated Name (of DLL)   */
   unsigned short * exist,              /* existence information      */
@@ -458,7 +458,7 @@ APIRET APIENTRY RexxQuerySubcom(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxDeregisterSubcom(
+APIRET REXXENTRY RexxDeregisterSubcom(
   const char * name,                   /* Environment Name           */
   const char * dllname )               /* Associated Name (of DLL)   */
 {
@@ -491,7 +491,7 @@ APIRET APIENTRY RexxDeregisterSubcom(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxRegisterExitExe(
+APIRET REXXENTRY RexxRegisterExitExe(
   const char *   EnvName,              /* exit name                  */
   REXXPFN EntryPoint,                  /* DLL routine name           */
   const char *UserArea )               /* User data                  */
@@ -533,7 +533,7 @@ APIRET APIENTRY RexxRegisterExitExe(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxRegisterExitDll(
+APIRET REXXENTRY RexxRegisterExitDll(
   const char *   EnvName,              /* Exit name                  */
   const char *   ModuleName,           /* Name of DLL                */
   const char *   EntryPoint,           /* DLL routine name           */
@@ -561,7 +561,7 @@ APIRET APIENTRY RexxRegisterExitDll(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxDeregisterExit(
+APIRET REXXENTRY RexxDeregisterExit(
   const char * name,                   /* Environment Name           */
   const char * dllname )               /* Associated Name (of DLL)   */
 {
@@ -591,7 +591,7 @@ APIRET APIENTRY RexxDeregisterExit(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxQueryExit(
+APIRET REXXENTRY RexxQueryExit(
   const char * name,                   /* Environment Name           */
   const char * dll,                    /* Associated Name (of DLL)   */
   unsigned short *exist,               /* existence information      */
@@ -616,7 +616,7 @@ APIRET APIENTRY RexxQueryExit(
 /*                   resolution                                      */
 /*                                                                   */
 /*********************************************************************/
-int APIENTRY RexxResolveExit(
+int REXXENTRY RexxResolveExit(
   const char * name,                   /* Exit name.                 */
   REXXPFN *handler)
 {
@@ -653,7 +653,7 @@ int APIENTRY RexxResolveExit(
 /*  Return Value:   Valid RXSUBCOM return codes                      */
 /*                                                                   */
 /*********************************************************************/
-APIRET APIENTRY RexxRegisterFunctionDll(
+APIRET REXXENTRY RexxRegisterFunctionDll(
     const char * EnvName,                /* Subcom name                */
     const char * ModuleName,             /* Name of DLL                */
     const char * EntryPoint)             /* Dll routine name           */
@@ -685,7 +685,7 @@ APIRET APIENTRY RexxRegisterFunctionDll(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxRegisterFunctionExe(
+APIRET REXXENTRY RexxRegisterFunctionExe(
   const char *EnvName,                 /* Subcom name                */
   REXXPFN EntryPoint )                 /* DLL routine name           */
 {
@@ -708,7 +708,7 @@ APIRET APIENTRY RexxRegisterFunctionExe(
 /*  Return Value:    Valid RXSUBCOM return codes                     */
 /*                                                                   */
 /*********************************************************************/
-APIRET APIENTRY RexxDeregisterFunction(
+APIRET REXXENTRY RexxDeregisterFunction(
     const char * name)               /* ASCIIZ subcom env name     */
 {
   return RegDrop(name, NULL, REGFUNCTION); /* Drop the function        */
@@ -732,7 +732,7 @@ APIRET APIENTRY RexxDeregisterFunction(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxQueryFunction(
+APIRET REXXENTRY RexxQueryFunction(
   const char * name )                           /* Environment Name           */
 {
   APIRET rc;
@@ -1655,7 +1655,7 @@ extern "C" {
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxRegisterFunction(
+APIRET REXXENTRY RexxRegisterFunction(
   const char *EnvName,                 /* Subcom name                */
   REXXPFN EntryPoint )                 /* DLL routine name           */
 {
@@ -1671,7 +1671,7 @@ APIRET APIENTRY RexxRegisterFunction(
 /*                  interface.  (see RexxRegisterSubcomExe)          */
 /*********************************************************************/
 
-APIRET APIENTRY RexxRegisterSubcom(
+APIRET REXXENTRY RexxRegisterSubcom(
   const char *EnvName,                 /* Subcom name                */
   REXXPFN EntryPoint,                  /* DLL routine name           */
   const char *UserArea )               /* User data                  */

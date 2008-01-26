@@ -70,7 +70,7 @@ BOOL IsNo(CHAR * s)
    return ( s && (*s == 'N' || *s == 'n') );
 }
 
-ULONG APIENTRY InfoMessage(
+ULONG REXXENTRY InfoMessage(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -88,7 +88,7 @@ ULONG APIENTRY InfoMessage(
 }
 
 
-ULONG APIENTRY ErrorMessage(
+ULONG REXXENTRY ErrorMessage(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -105,7 +105,7 @@ ULONG APIENTRY ErrorMessage(
    RETC(0)
 }
 
-ULONG APIENTRY YesNoMessage(
+ULONG REXXENTRY YesNoMessage(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -149,7 +149,7 @@ ULONG APIENTRY YesNoMessage(
 
 
 
-ULONG APIENTRY BinaryAnd(
+ULONG REXXENTRY BinaryAnd(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],

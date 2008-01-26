@@ -49,10 +49,6 @@
 #include <stdio.h>
 #include <io.h>
 
-extern "C" {
-BOOL   APIENTRY RexxInitialize (void);
-}
-
 #include "ArgumentParser.h"  /* defines getArguments and freeArguments */
 
 //

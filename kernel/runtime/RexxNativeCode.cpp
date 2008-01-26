@@ -187,12 +187,24 @@ RexxObject * RexxNativeCode::unflatten(RexxEnvelope *envelope)
 }
 
 
+/**
+ * Run a method call (vs a straight program call).
+ *
+ * @param activity The current activity.
+ * @param method   The method we're attached to.
+ * @param receiver The method receiver object (the "self" object).
+ * @param messageName
+ *                 The name of the message used to invoke the method.
+ * @param count    The count of arguments.
+ * @param argPtr   The pointer to the arguments.
+ * @param result   The protected object used to return the result.
+ */
 void RexxNativeCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
     size_t count, RexxObject **argPtr, ProtectedObject &result)
 {
     // create a new native activation
     RexxNativeActivation *newNActa = new RexxNativeActivation(activity, method, this);
-    activity->push(newNActa);          /* push it on the activity stack     */
+    activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
                                        /* and go run it                     */
     newNActa->run(receiver, messageName, count, argPtr, result);
 }

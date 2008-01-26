@@ -49,7 +49,6 @@ RexxSetTrace                   @4
 RexxResetTrace                 @5
 ;
 RexxInitialize                 @10
-RexxSendMessage                @11
 RexxQuery                      @15
 RexxTerminate                  @16
 ;
@@ -104,35 +103,25 @@ REXX_POINTER_NEW             @81
 REXX_POINTER_VALUE           @82
 REXX_ISINSTANCE              @83
 ;
-;SysResetEventSem               @90
-;_DLL_InitTerm                  @91
 ;
 RexxCreateMethod               @92
 RexxRunMethod                  @93
-RexxStoreMethod                @94
-RexxLoadMethod                 @95
-RexxCreateDirectory            @96
-RexxRemoveDirectory            @97
-RexxDispose                    @98
-RexxResultString               @101
-RexxCopyMethod                 @103
-RexxValidObject                @104
+RexxCreateInterpreterImage     @94
+RexxGetCurrentPrecision        @95
+RexxCreateScriptContext        @96
+RexxDestroyScriptContext       @97
 ;
 ; Windows Specific
 ;
-ProcessSaveImage             @106
-RexxWaitForTermination         @108
-RexxDidRexxTerminate           @109
 RexxSetProcessMessages        @110
 
 ; for feature 249
 
-RexxGetVersionInformation     @114        ; MAE for feature 594
-REXX_GETFUNCTIONNAMES         @116        ; ENG for feature 855 (additional)
-SearchPrecision               @117        ; DOE for feature 883
-WinEnterKernel                @120        ; ENG for feature 906
-WinLeaveKernel                @121        ; ENG for feature 906
-WinGetVariables               @122        ; ENG for feature 906
+RexxGetVersionInformation     @114
+REXX_GETFUNCTIONNAMES         @116
+WinEnterKernel                @120
+WinLeaveKernel                @121
+WinGetVariables               @122
 RexxStemSort                  @124
 REXX_GUARD_ON                 @125
 REXX_GUARD_OFF                @126

@@ -88,11 +88,12 @@
 #include "ASCIISymbols.h"              /* code-page for characters   */
 #include "APIServiceSystem.h"
 #include "APIServiceMessages.h"        /* Window Messages   */
+#include "RexxInternalApis.h"
 
 #include "APIUtil.h"
 #include "Characters.h"
 
-typedef  LONG APIENTRY REXX (
+typedef  LONG REXXENTRY REXX (
          LONG ,                        /* Num of args passed to rexx */
          PRXSTRING,                    /* Array of args passed to rex*/
          PSZ,                          /* [d:][path] filename[.ext]  */
@@ -133,10 +134,7 @@ typedef HFILE *PHFILE;
 /*****        Macro Space Function List Access Functions         *****/
 /*********************************************************************/
 
-typedef  BOOL APIENTRY REXXWAIT4TERM (void);
-
 extern _declspec(dllimport) CRITICAL_SECTION nest;
-
 
 static int
   callrexx(const char *,PMACRO);       /* call the REXXSAA interprtr */
@@ -225,7 +223,7 @@ extern _declspec(dllexport) APIRET APIList(int kind);
 /*********************************************************************/
 
 APIRET
-APIENTRY
+REXXENTRY
 RexxAddMacro(
   const char *n,                       /* name of macro function     */
   const char *s,                       /* name of file               */
@@ -312,7 +310,7 @@ APIRET APIAddMacro(BOOL updateIfExists)
 /*********************************************************************/
 
 APIRET
-APIENTRY
+REXXENTRY
 RexxDropMacro(const char *n)                       /* name of macro to delete    */
 {
   APIRET rc;                           /* return code from function  */
@@ -370,7 +368,7 @@ APIRET APIDropMacro(void)
 /*********************************************************************/
 
 APIRET
-APIENTRY
+REXXENTRY
 RexxClearMacroSpace(void)
 {
   APIRET rc;                           /* return code from function  */
@@ -420,7 +418,7 @@ APIRET APIClearMacroSpace(void)
 /*                                                                   */
 /*********************************************************************/
 APIRET
-APIENTRY
+REXXENTRY
 RexxSaveMacroSpace(
   size_t   ac,                         /* count of arguments         */
   const char **av,                     /* argument list              */
@@ -598,7 +596,7 @@ APIRET APIList(int kind)
 /*                                                                   */
 /*********************************************************************/
 APIRET
-APIENTRY
+REXXENTRY
 RexxLoadMacroSpace(
   size_t   ac,                         /* argument count             */
   const char **av,                     /* list of argument strings   */
@@ -640,7 +638,7 @@ RexxLoadMacroSpace(
 /*********************************************************************/
 
 APIRET
-APIENTRY
+REXXENTRY
 RexxQueryMacro(
   const char *name,                    /* name to search for         */
   unsigned short *pos )                /* pointer for return of pos  */
@@ -696,7 +694,7 @@ APIRET APIQueryMacro(void)
 /*********************************************************************/
 
 APIRET
-APIENTRY
+REXXENTRY
 RexxReorderMacro(
   const char *name,                    /* name of function to change */
   size_t pos )                         /* new position for function  */
@@ -754,7 +752,7 @@ APIRET APIReorderMacro()
 /*                                                                   */
 /*********************************************************************/
 
-APIRET APIENTRY RexxExecuteMacroFunction(
+APIRET REXXENTRY RexxExecuteMacroFunction(
   const char *name,                    /* name of func to find       */
   PRXSTRING p )                        /* storage for image return   */
 {

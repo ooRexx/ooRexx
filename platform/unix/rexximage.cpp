@@ -35,21 +35,11 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/* REXX Library                                                 oldata.c      */
-/*                                                                            */
-/* Local process data                                                         */
-/*                                                                            */
-/******************************************************************************/
-#include <stdio.h>
-#include "RexxCore.h"
-bool  ProcessDoneInit = false;         /* initialization is done            */
-bool  ProcessDoneTerm = false;         /* termination is done               */
-bool  ProcessFirstThread = true;       /* this is the first thread          */
 
-bool  ProcessSaveImage = false;        /* saving the image                  */
-                                       /* Next line added be THU            */
-bool  RexxStartedByApplication = true; /* is REXX started by system or appl */
-bool  rexxTimeSliceElapsed = false;     /* the time slice interlock flag     */
-                                       /* Most currently accessed pool      */
+#include "rexx.h"
+#include "RexxInternalApis.h"
 
+int main(int argc, char *argv[])
+{
+    RexxCreateInterpreterImage();
+}

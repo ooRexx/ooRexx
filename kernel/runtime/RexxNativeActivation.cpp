@@ -59,6 +59,8 @@
 #include "ProtectedObject.hpp"
 #include "RexxNativeAPI.h"                      /* bring in the native code defines  */
 #include "PointerClass.hpp"
+#include "ActivityDispatcher.hpp"
+#include "CallbackDispatcher.hpp"
 
 #include <math.h>
 #include <limits.h>
@@ -144,30 +146,6 @@ void RexxNativeActivation::liveGeneral(int reason)
   }
 }
 
-void RexxNativeActivation::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RexxNativeActivation)
-
-     flatten_reference(newThis->argArray, envelope);
-     flatten_reference(newThis->receiver, envelope);
-     flatten_reference(newThis->method, envelope);
-     flatten_reference(newThis->activity, envelope);
-     flatten_reference(newThis->activation, envelope);
-     flatten_reference(newThis->msgname, envelope);
-     flatten_reference(newThis->savelist, envelope);
-     flatten_reference(newThis->objnotify, envelope);
-     flatten_reference(newThis->result, envelope);
-     flatten_reference(newThis->nextstem, envelope);
-     flatten_reference(newThis->compoundelement, envelope);
-     flatten_reference(newThis->nextcurrent, envelope);
-     flatten_reference(newThis->objectVariables, envelope);
-     flatten_reference(newThis->firstSavedObject, envelope);
-
-  cleanUpFlatten
-}
 
 void RexxNativeActivation::prepare(
     RexxObject  *_receiver,
@@ -181,6 +159,15 @@ void RexxNativeActivation::prepare(
     arglist = _arglist;
 }
 
+/**
+ * Run a native method or function under the context of this activation.
+ *
+ * @param _receiver The receiver object (NULL if not a method invocation).
+ * @param _msgname  The message name.
+ * @param _argcount The argument count
+ * @param _arglist  The list of arguments.
+ * @param resultObj The returned result object.
+ */
 void RexxNativeActivation::run(
     RexxObject  *_receiver,             // the object receiver
     RexxString  *_msgname,              // the message name
@@ -458,7 +445,7 @@ void RexxNativeActivation::run(
         // nesting levels that will make it look like this activity is still in use
         // when in fact we're done with it.
         this->activity->restoreActivationLevel(activityLevel);
-        this->activity->pop(false);        /* pop this from the activity        */
+        this->activity->popStackFrame(this);   /* pop this from the activity        */
         this->setHasNoReferences();        /* mark this as not having references in case we get marked */
         // set the return value and get outta here
         resultObj = this->result;
@@ -541,8 +528,95 @@ void RexxNativeActivation::run(
     // Use protected object to pass back the result
     this->guardOff();                    /* release any variable locks        */
     this->argcount = 0;                  /* make sure we don't try to mark any arguments */
-    this->activity->pop(false);          /* pop this from the activity        */
+    this->activity->popStackFrame(this); /* pop this from the activity        */
     this->setHasNoReferences();          /* mark this as not having references in case we get marked */
+    return;                             /* and finished                      */
+}
+
+
+/**
+ * Run a task under the scope of a native activation.  This is
+ * generally a bootstrapping call, such as a top-level program call,
+ * method translation, etc.
+ *
+ * @param dispatcher The dispatcher instance we're going to run.
+ */
+void RexxNativeActivation::run(ActivityDispatcher &dispatcher)
+{
+    size_t activityLevel = this->activity->getActivationLevel();
+    // make the activation hookup
+    dispatcher.setContext(activity, this);
+    dispatcher.run();
+
+    // belt and braces...this restores the activity level to whatever
+    // level we had when we made the callout.
+    this->activity->restoreActivationLevel(activityLevel);
+
+    this->activity->popStackFrame(this); /* pop this from the activity        */
+    this->setHasNoReferences();          /* mark this as not having references in case we get marked */
+    return;                              /* and finished                      */
+}
+
+
+/**
+ * Run a callback under the scope of a native actvation. This is
+ * generally a call out, such as a system exit, argument
+ * callback, etc.
+ *
+ * @param dispatcher The dispatcher instance we're going to run.
+ */
+void RexxNativeActivation::run(CallbackDispatcher &dispatcher)
+{
+    size_t activityLevel = this->activity->getActivationLevel();
+    try
+    {
+        // make the activation hookup
+        // make the activation hookup
+        dispatcher.setContext(activity, this);
+        activity->releaseAccess();           /* force this to "safe" mode         */
+        dispatcher.run();
+        activity->requestAccess();           /* now in unsafe mode again          */
+    }
+    catch (ActivityException)
+    {
+        // if we're not the current kernel holder when things return, make sure we
+        // get the lock before we continue
+        if (ActivityManager::currentActivity != activity)
+        {
+            activity->requestAccess();
+        }
+        // pass the condition information on to the dispatch unig
+        dispatcher.handleError(activity->getCurrentCondition());
+        return;
+    }
+    catch (RexxActivation *)
+    {
+        // if we're not the current kernel holder when things return, make sure we
+        // get the lock before we continue
+        if (ActivityManager::currentActivity != activity)
+        {
+            activity->requestAccess();
+        }
+
+        this->activity->restoreActivationLevel(activityLevel);
+        // IMPORTANT NOTE:  We don't pop our activation off the stack.  This will be
+        // handled by the catcher.  Attempting to pop the stack when an error or condition has
+        // occurred can munge the activation stack, resulting bad stuff.
+        this->setHasNoReferences();        /* mark this as not having references in case we get marked */
+        // now rethrow the trapped condition so that real target can handle this.
+        throw;
+    }
+    catch (RexxNativeActivation *)
+    {
+        // if we're not the current kernel holder when things return, make sure we
+        // get the lock before we continue
+        if (ActivityManager::currentActivity != activity)
+        {
+            activity->requestAccess();
+        }
+        this->activity->restoreActivationLevel(activityLevel);
+        return;
+    }
     return;                             /* and finished                      */
 }
 
@@ -574,26 +648,31 @@ RexxVariableDictionary *RexxNativeActivation::methodVariables()
 /* Function:  Retrieve the set of method variables                            */
 /******************************************************************************/
 {
-                                       /* first retrieval?                  */
-  if (this->objectVariables == OREF_NULL) {
-                                       /* is the receiver an activation?    */
-    if (isOfClass(Activation,this->receiver))
-                                       /* retrieve the method variables     */
-      this->objectVariables = ((RexxActivation *)this->receiver)->getLocalVariables();
-    else {
-                                       /* must be wanting the ovd set of    */
-                                       /*variables                          */
-      this->objectVariables = (RexxVariableDictionary *)this->receiver->getObjectVariables(this->method->getScope());
-                                       /* guarded method?                   */
-      if (this->object_scope == SCOPE_RELEASED && this->method->isGuarded()) {
-                                       /* reserve the variable scope        */
-        this->objectVariables->reserve(this->activity);
-                                       /* and remember for later            */
-        this->object_scope = SCOPE_RESERVED;
-      }
+    /* first retrieval?                  */
+    if (this->objectVariables == OREF_NULL)
+    {
+        // not a method invocation?
+        if (receiver == OREF_NULL)
+        {
+            /* retrieve the method variables     */
+            this->objectVariables = ((RexxActivation *)this->receiver)->getLocalVariables();
+        }
+        else
+        {
+            /* must be wanting the ovd set of    */
+            /*variables                          */
+            this->objectVariables = (RexxVariableDictionary *)this->receiver->getObjectVariables(this->method->getScope());
+            /* guarded method?                   */
+            if (this->object_scope == SCOPE_RELEASED && this->method->isGuarded())
+            {
+                /* reserve the variable scope        */
+                this->objectVariables->reserve(this->activity);
+                /* and remember for later            */
+                this->object_scope = SCOPE_RESERVED;
+            }
+        }
     }
-  }
-  return this->objectVariables;        /* return the dictionary             */
+    return this->objectVariables;        /* return the dictionary             */
 }
 
 
@@ -723,13 +802,15 @@ size_t RexxNativeActivation::digits()
 /* Function:  Return the current digits setting                               */
 /******************************************************************************/
 {
-                                       /* get the sender object             */
-  RexxActivation *senderAct = this->sender();
-                                       /* have a real one?                  */
-  if (senderAct == (RexxActivation *)TheNilObject)
-    return Numerics::DEFAULT_DIGITS;   /*  no, just return default value    */
-  else
-    return senderAct->digits();        /* pass on the the sender            */
+    /* have a real one?                  */
+    if (activation == OREF_NULL)
+    {
+        return Numerics::DEFAULT_DIGITS;   /*  no, just return default value    */
+    }
+    else
+    {
+        return activation->digits();       /* pass on the the sender            */
+    }
 }
 
 size_t RexxNativeActivation::fuzz()
@@ -737,13 +818,15 @@ size_t RexxNativeActivation::fuzz()
 /* Function:  Return the current fuzz setting                                 */
 /******************************************************************************/
 {
-                                       /* get the sender object             */
-  RexxActivation *senderAct = this->sender();
-                                       /* have a real one?                  */
-  if (senderAct == (RexxActivation *)TheNilObject)
-    return Numerics::DEFAULT_FUZZ;     /*  no, just return default value    */
-  else
-    return senderAct->fuzz();          /* pass on the the sender            */
+    /* have a real one?                  */
+    if (activation == OREF_NULL)
+    {
+        return Numerics::DEFAULT_FUZZ;     /*  no, just return default value    */
+    }
+    else
+    {
+        return activation->fuzz();         /* pass on the the sender            */
+    }
 }
 
 bool RexxNativeActivation::form()
@@ -751,13 +834,15 @@ bool RexxNativeActivation::form()
 /* Function:  Return the curren form setting                                  */
 /******************************************************************************/
 {
-                                       /* get the sender object             */
-  RexxActivation *senderAct = this->sender();
-                                       /* have a real one?                  */
-  if (senderAct == (RexxActivation *)TheNilObject)
-    return Numerics::DEFAULT_FORM;     /*  no, just return default value    */
-  else
-    return senderAct->form();          /* pass on the the sender            */
+    /* have a real one?                  */
+    if (activation == OREF_NULL)
+    {
+        return Numerics::DEFAULT_FORM;     /*  no, just return default value    */
+    }
+    else
+    {
+        return activation->form();         /* pass on the the sender            */
+    }
 }
 
 void RexxNativeActivation::setDigits(
@@ -766,11 +851,11 @@ void RexxNativeActivation::setDigits(
 /* Function:  Set a new numeric digits setting                                */
 /******************************************************************************/
 {
-                                       /* get the sender object             */
-  RexxActivation *senderAct = this->sender();
-                                       /* have a real one?                  */
-  if (senderAct != (RexxActivation *)TheNilObject)
-    senderAct->setDigits(_digits);      /* just forward the set              */
+    /* have a real one?                  */
+    if (activation == OREF_NULL)
+    {
+        activation->setDigits(_digits);      /* just forward the set              */
+    }
 }
 
 void RexxNativeActivation::setFuzz(
@@ -779,11 +864,11 @@ void RexxNativeActivation::setFuzz(
 /* Function:  Set a new numeric fuzz setting                                  */
 /******************************************************************************/
 {
-                                       /* get the sender object             */
-  RexxActivation *senderAct = this->sender();
-                                       /* have a real one?                  */
-  if (senderAct != (RexxActivation *)TheNilObject)
-    senderAct->setFuzz(_fuzz);         /* just forward the set              */
+    /* have a real one?                  */
+    if (activation != OREF_NULL)
+    {
+        activation->setFuzz(_fuzz);         /* just forward the set              */
+    }
 }
 
 void RexxNativeActivation::setForm(
@@ -792,25 +877,84 @@ void RexxNativeActivation::setForm(
 /* Function:  Set a new numeric form setting                                  */
 /******************************************************************************/
 {
-                                       /* get the sender object             */
-  RexxActivation *senderAct = this->sender();
-                                       /* have a real one?                  */
-  if (senderAct != (RexxActivation *)TheNilObject)
-    senderAct->setForm(_form);          /* just forward the set              */
+    /* have a real one?                  */
+    if (activation == OREF_NULL)
+    {
+        activation->setForm(_form);        /* just forward the set              */
+    }
 }
+
+
+/**
+ * Get the numeric settings for this native activation.  If we're
+ * running in the direct call context from a Rexx activation, then
+ * the settings are those inherited from the Rexx context.  Otherwise,
+ * we just return the default numeric settings.
+ *
+ * @return The current Numeric settings.
+ */
+NumericSettings *RexxNativeActivation::getNumericSettings()
+{
+    if (activation == OREF_NULL)
+    {
+        return Numerics::getDefaultSettings();
+    }
+    else
+    {
+        return activation->getNumericSettings();
+    }
+}
+
+
+/**
+ * Indicate whether this activation represents the base of the call
+ * stack.
+ *
+ * @return true if this is a base activation.
+ */
+bool RexxNativeActivation::isStackBase()
+{
+    return stackBase;
+}
+
+
+/**
+ * Return the Rexx context this operates under.  Depending on the
+ * context, this could be null.
+ *
+ * @return The parent Rexx context.
+ */
+RexxActivation *RexxNativeActivation::getRexxContext()
+{
+    return activation;    // this might be null
+}
+
+
+/**
+ * Get the message receiver
+ *
+ * @return The message receiver.  Returns OREF_NULL if this is not
+ *         a message activation.
+ */
+RexxObject *RexxNativeActivation::getReceiver()
+{
+    return receiver;
+}
+
 
 void RexxNativeActivation::guardOff()
 /******************************************************************************/
 /* Function:  Release a variable pool guard lock                              */
 /******************************************************************************/
 {
-                                       /* currently locked?                 */
-  if (this->object_scope == SCOPE_RESERVED) {
-                                       /* release the variable dictionary   */
-    this->objectVariables->release(this->activity);
-                                       /* set the state to released         */
-    this->object_scope = SCOPE_RELEASED;
-  }
+    /* currently locked?                 */
+    if (this->object_scope == SCOPE_RESERVED)
+    {
+        /* release the variable dictionary   */
+        this->objectVariables->release(this->activity);
+        /* set the state to released         */
+        this->object_scope = SCOPE_RELEASED;
+    }
 }
 
 void RexxNativeActivation::guardOn()
@@ -818,21 +962,25 @@ void RexxNativeActivation::guardOn()
 /* Function:  Acquire a variable pool guard lock                              */
 /******************************************************************************/
 {
-    /* is the receiver an activation?  Just return without locking */
-    if (isOfClass(Activation,this->receiver)) {
+    // if there's no receiver object, then this is not a true method call.
+    // there's nothing to lock
+    if (receiver == OREF_NULL)
+    {
         return;
     }
     /* first retrieval? */
-    if (this->objectVariables == OREF_NULL) {
+    if (this->objectVariables == OREF_NULL)
+    {
         /* grab the object variables associated with this object */
-        this->objectVariables = (RexxVariableDictionary *)this->receiver->getObjectVariables(this->method->getScope());
+        this->objectVariables = this->receiver->getObjectVariables(this->method->getScope());
     }
     /* not currently holding the lock? */
-    if (this->object_scope == SCOPE_RELEASED) {
-      /* reserve the variable scope */
-      this->objectVariables->reserve(this->activity);
-      /* and remember for later */
-      this->object_scope = SCOPE_RESERVED;
+    if (this->object_scope == SCOPE_RELEASED)
+    {
+        /* reserve the variable scope */
+        this->objectVariables->reserve(this->activity);
+        /* and remember for later */
+        this->object_scope = SCOPE_RESERVED;
     }
 }
 
@@ -873,61 +1021,70 @@ bool RexxNativeActivation::fetchNext(
 /* Function:  Fetch the next variable of a variable pool traversal            */
 /******************************************************************************/
 {
-  RexxVariable *variable;              /* retrieved variable value          */
-  RexxCompoundElement *compound;       /* retrieved variable value          */
-  RexxStem     *stemVar;               /* a potential stem variable collection */
+    RexxVariable *variable;              /* retrieved variable value          */
+    RexxCompoundElement *compound;       /* retrieved variable value          */
+    RexxStem     *stemVar;               /* a potential stem variable collection */
 
-                                       /* starting off fresh?               */
-  if (nextCurrent() == OREF_NULL) {
-    /* grab the activation context */
-    RexxActivation *act = activity->getCurrentActivation();
-    setNextVariable(SIZE_MAX);         /* request the first item            */
-    /* Get the local variable dictionary from the context. */
-    setNextCurrent(act->getLocalVariables());
-                                       /* we are not on a stem              */
-    setNextStem(OREF_NULL);
-    setCompoundElement(OREF_NULL);
-  }
+                                         /* starting off fresh?               */
+    if (nextCurrent() == OREF_NULL)
+    {
+        /* grab the activation context */
+        RexxActivation *act = activity->getCurrentRexxFrame();
+        setNextVariable(SIZE_MAX);         /* request the first item            */
+        /* Get the local variable dictionary from the context. */
+        setNextCurrent(act->getLocalVariables());
+        /* we are not on a stem              */
+        setNextStem(OREF_NULL);
+        setCompoundElement(OREF_NULL);
+    }
 
-  for (;;) {                           /* loop until we get something       */
-    stemVar = nextStem();              /* see if we're processing a stem variable */
-    if (stemVar != OREF_NULL) {        /* were we in the middle of processing a stem? */
-        compound = stemVar->nextVariable(this);
-        if (compound != OREF_NULL) {   /* if we still have elements here */
-                                       /* create a full stem name           */
-          *name = compound->createCompoundName(stemVar->getName());
-                                       /* get the value                     */
-          *value = compound->getVariableValue();
-          return true;
+    for (;;)                             /* loop until we get something       */
+    {
+        stemVar = nextStem();              /* see if we're processing a stem variable */
+        if (stemVar != OREF_NULL)          /* were we in the middle of processing a stem? */
+        {
+            compound = stemVar->nextVariable(this);
+            if (compound != OREF_NULL)     /* if we still have elements here */
+            {
+                /* create a full stem name           */
+                *name = compound->createCompoundName(stemVar->getName());
+                /* get the value                     */
+                *value = compound->getVariableValue();
+                return true;
+            }
+            else                           /* we've reached the end of the stem, reset */
+            {
+                /* to the main dictionary and continue */
+                setNextStem(OREF_NULL);
+                setCompoundElement(OREF_NULL);
+            }
         }
-        else {                         /* we've reached the end of the stem, reset */
-                                       /* to the main dictionary and continue */
-            setNextStem(OREF_NULL);
-            setCompoundElement(OREF_NULL);
+        /* get the next variable             */
+        variable = nextCurrent()->nextVariable(this);
+        if (variable == OREF_NULL)         /* reached the end of the table      */
+        {
+            return false;
+        }
+        else                               /* have a real variable              */
+        {
+            /* get the value                     */
+            RexxObject *variable_value = variable->getVariableValue();
+            /* found a stem item?                */
+            if (isOfClass(Stem, variable_value))
+            {
+                /* we are not on a stem              */
+                setNextStem((RexxStem *)variable_value);
+                setCompoundElement(((RexxStem *)variable_value)->first());
+                /* set up an iterator for the stem   */
+            }
+            else                             /* found a real variable             */
+            {
+                *value = variable_value;       /* pass back the value (name already set) */
+                *name = variable->getName();
+                return true;                   /* we have another variable to return */
+            }
         }
     }
-                                       /* get the next variable             */
-    variable = nextCurrent()->nextVariable(this);
-    if (variable == OREF_NULL) {       /* reached the end of the table      */
-        return false;
-    }
-    else {                             /* have a real variable              */
-                                       /* get the value                     */
-      RexxObject *variable_value = variable->getVariableValue();
-                                       /* found a stem item?                */
-      if (isOfClass(Stem, variable_value)) {
-                                       /* we are not on a stem              */
-        setNextStem((RexxStem *)variable_value);
-        setCompoundElement(((RexxStem *)variable_value)->first());
-                                       /* set up an iterator for the stem   */
-      }
-      else {                           /* found a real variable             */
-        *value = variable_value;       /* pass back the value (name already set) */
-        *name = variable->getName();
-        return true;                   /* we have another variable to return */
-      }
-    }
-  }
 }
 
 
@@ -1018,6 +1175,18 @@ RexxNativeActivation::RexxNativeActivation(RexxActivity *_activity, RexxActivati
 
 
 /**
+ * Constructor for a new native activation used to create a
+ * callback context for exit call outs.
+ *
+ * @param _activity The activity we're running under.
+ */
+RexxNativeActivation::RexxNativeActivation(RexxActivity *_activity)
+{
+    this->activity = _activity;      /* the activity running on           */
+}
+
+
+/**
  * Allocate a new native Activation.
  *
  * @param size   the allocation size.
@@ -1060,7 +1229,7 @@ wholenumber_t REXXENTRY REXX_INTEGER(REXXOBJECT object)
                                        /* just forward and return           */
     wholenumber_t result = 0;
 
-    ((RexxObject *)object)->numberValue(result, ((RexxNativeActivation *)ActivityManager::currentActivity->current())->digits());
+    ((RexxObject *)object)->numberValue(result, context.self->digits());
     return result;                       /* return converted value            */
 }
 
@@ -1073,7 +1242,7 @@ size_t REXXENTRY REXX_UNSIGNED_INTEGER(REXXOBJECT object)
     stringsize_t result = 0;           /* returned result                   */
 
                                        /* First convert to numberstring     */
-    ((RexxObject *)object)->unsignedNumberValue(result);
+    ((RexxObject *)object)->unsignedNumberValue(result, context.self->digits());
     return result;                     /* return converted value            */
 }
 
@@ -1188,34 +1357,37 @@ REXXOBJECT REXXENTRY REXX_SETVAR(CSTRING name, REXXOBJECT value)
 REXXOBJECT REXXENTRY REXX_GETFUNCTIONNAMES(char *** names, size_t* num)
 {
     NativeContextBlock context;
-  RexxArray              * funcArray;
-  RexxString             * name;
-  size_t                   i;
-  size_t                   j;
+    RexxArray              * funcArray;
+    RexxString             * name;
+    size_t                   i;
+    size_t                   j;
 
-                                       /* pick up current activation        */
+    /* pick up current activation        */
 
-                                       /* get the current activation        */
-  RexxActivation *activation = context.self->getCurrentActivation();
+    /* get the current activation        */
+    RexxActivation *activation = context.self->getRexxContext();
 
-  *num = 0;
-  RexxDirectory *routines = activation->getPublicRoutines();
+    *num = 0;
+    RexxDirectory *routines = activation->getPublicRoutines();
 
-  if (routines != OREF_NULL) {
-    funcArray = routines->makeArray();
-    if (funcArray != OREF_NULL) {
-      *num = j = funcArray->numItems();
-      *names = (char**) SysAllocateExternalMemory(sizeof(char*)*j);
-      for (i=0; i < j; i++) {
-        name = ((RexxString*) funcArray->get(i+1));
-        (*names)[i] = (char*) SysAllocateExternalMemory(1+sizeof(char)*name->getLength());
-        memcpy((*names)[i], name->getStringData(), name->getLength());
-        (*names)[i][name->getLength()] = 0; // zero-terminate
-      }
+    if (routines != OREF_NULL)
+    {
+        funcArray = routines->makeArray();
+        if (funcArray != OREF_NULL)
+        {
+            *num = j = funcArray->numItems();
+            *names = (char**) SysAllocateExternalMemory(sizeof(char*)*j);
+            for (i=0; i < j; i++)
+            {
+                name = ((RexxString*) funcArray->get(i+1));
+                (*names)[i] = (char*) SysAllocateExternalMemory(1+sizeof(char)*name->getLength());
+                memcpy((*names)[i], name->getStringData(), name->getLength());
+                (*names)[i][name->getLength()] = 0; // zero-terminate
+            }
+        }
     }
-  }
 
-  return OREF_NULL;              /* return nothing                    */
+    return OREF_NULL;              /* return nothing                    */
 }
 
 REXXOBJECT REXXENTRY REXX_GETVAR(CSTRING name)
@@ -1318,7 +1490,7 @@ void REXXENTRY REXX_PUSH_ENVIRONMENT(REXXOBJECT environment)
 {
     NativeContextBlock context;
                                        /* pick up current activation        */
-    RexxActivation *activation = (RexxActivation *)context.activity->getCurrentActivation();
+    RexxActivation *activation = (RexxActivation *)context.self->getRexxContext();
     activation->pushEnvironment((RexxObject *)environment);
 }
 
@@ -1330,7 +1502,7 @@ REXXOBJECT REXXENTRY REXX_POP_ENVIRONMENT()
 {
     NativeContextBlock context;
                                        /* pick up current activation        */
-    RexxActivation *activation = (RexxActivation *)context.activity->getCurrentActivation();
+    RexxActivation *activation = (RexxActivation *)context.self->getRexxContext();
     return context.protect(activation->popEnvironment());
 }
 
@@ -1404,7 +1576,7 @@ int REXXENTRY REXX_STEMSORT(CSTRING stemname, int order, int type, size_t start,
   // currentActivity gets zeroed out.
   {
       /* get the REXX activation */
-      RexxActivation *activation = context.self->getCurrentActivation();
+      RexxActivation *activation = context.self->getRexxContext();
 
       /* get the stem name as a string */
       RexxString *variable = new_string(stemname);

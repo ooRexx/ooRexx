@@ -42,13 +42,13 @@
 /*  Description:        Library to contain API functions for         */
 /*                      REXX-SAA/PL queueing services.               */
 /*                                                                   */
-/*  Entry Points:   LONG  APIENTRY RexxCreateQueue()-create a queue  */
-/*                  LONG  APIENTRY RexxDeleteQueue()-destroy a       */
+/*  Entry Points:   LONG  REXXENTRY RexxCreateQueue()-create a queue  */
+/*                  LONG  REXXENTRY RexxDeleteQueue()-destroy a       */
 /*                      queue                                        */
-/*                  LONG  APIENTRY RexxQueryQueue() -query a queue   */
-/*                  LONG  APIENTRY RexxAddQueue()   -add data        */
-/*                  LONG  APIENTRY RexxPullQueue()  -retrieve data   */
-/*                  LONG  APIENTRY RexxInitDataQueueInit()-start     */
+/*                  LONG  REXXENTRY RexxQueryQueue() -query a queue   */
+/*                  LONG  REXXENTRY RexxAddQueue()   -add data        */
+/*                  LONG  REXXENTRY RexxPullQueue()  -retrieve data   */
+/*                  LONG  REXXENTRY RexxInitDataQueueInit()-start     */
 /*                       queuing system                              */
 /*                                                                   */
 /*********************************************************************/
@@ -681,7 +681,7 @@ int    alloc_queue_entry(
 /*  Effects:         New queue created.                              */
 /*                                                                   */
 /*********************************************************************/
-APIRET  APIENTRY RexxCreateQueue(
+APIRET  REXXENTRY RexxCreateQueue(
   char   *name,                        /* Internal name (returned).  */
   size_t  size,                        /* Length of name buffer.     */
   const char *usrrequest,              /* Desired name.              */
@@ -801,7 +801,7 @@ PQUEUEHEADER APICreateQueue(process_id_t Pid, BOOL newProcess)
 /*  Effects:          Queue and all its entries deleted.             */
 /*                                                                   */
 /*********************************************************************/
-APIRET APIENTRY RexxDeleteQueue(
+APIRET REXXENTRY RexxDeleteQueue(
   const char *name)                    /* name of queue to delete    */
 {
   ULONG        rc = RXQUEUE_NOTREG;    /* return code from call      */
@@ -898,7 +898,7 @@ size_t APIDeleteQueue(ULONG Pid, BOOL SessionQ)
 /*  Effects:          Count of queue elements.                       */
 /*                                                                   */
 /*********************************************************************/
-APIRET APIENTRY RexxQueryQueue(
+APIRET REXXENTRY RexxQueryQueue(
   const char *name,                   /* Queue to query.             */
   size_t *count)                      /* Length of queue (returned)  */
 {
@@ -1001,7 +1001,7 @@ HANDLE GetAccessToHandle(ULONG procid, HANDLE hnd)
 /*                    queue.                                         */
 /*                                                                   */
 /*********************************************************************/
-APIRET APIENTRY RexxAddQueue(
+APIRET REXXENTRY RexxAddQueue(
   const char *name,
   PCONSTRXSTRING data,
   size_t    flag)
@@ -1119,7 +1119,7 @@ APIRET APIAddQueue()
 /*                    queued to the queue data manager.              */
 /*                                                                   */
 /*********************************************************************/
-APIRET APIENTRY RexxPullQueue(
+APIRET REXXENTRY RexxPullQueue(
   const char *name,
   PRXSTRING   data_buf,
   SYSTEMTIME * dt,

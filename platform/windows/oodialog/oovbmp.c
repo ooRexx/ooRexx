@@ -411,7 +411,7 @@ BOOL DrawBackgroundBmp(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lPar
 
 /* handle the bitmap buttons that are stored in the bitmap table */
 
-ULONG APIENTRY BmpButton(
+ULONG REXXENTRY BmpButton(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -714,7 +714,7 @@ ULONG APIENTRY BmpButton(
 
 
 
-ULONG APIENTRY LoadRemoveBitmap(
+ULONG REXXENTRY LoadRemoveBitmap(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -754,7 +754,7 @@ ULONG APIENTRY LoadRemoveBitmap(
 
 
 
-ULONG APIENTRY ScrollTheWindow(
+ULONG REXXENTRY ScrollTheWindow(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],

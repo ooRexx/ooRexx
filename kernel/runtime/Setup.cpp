@@ -78,6 +78,8 @@
 #include "BufferClass.hpp"
 #include "WeakReferenceClass.hpp"
 #include "CPPCode.hpp"
+#include "Interpreter.hpp"
+#include "InterpreterInstance.hpp"
 
 
 /*****************************************************************************/
@@ -168,8 +170,11 @@ void RexxMemory::createImage()
 {
   RexxMemory::create();                /* create initial memory stuff       */
 
+  Interpreter::init();                 // the interpreter subsystem first
   ActivityManager::init();             /* Initialize the activity managers  */
-  ActivityManager::getActivity();      /* (will create one if necessary)    */
+  // Get an instance.  This also gives the root activity of the instance
+  // the kernel lock.
+  InterpreterInstance *instance = Interpreter::createInterpreterInstance();
 
                                        /* avoid that through caching        */
                                        /* TheTrueObject == IntegerOne etc.  */
@@ -705,12 +710,12 @@ void RexxMemory::createImage()
 
                                        /* delete these methods from stems by*/
                                        /* using .nil as the methobj         */
-  TheStemBehaviour->define(getGlobalName(CHAR_STRICT_EQUAL)          , (RexxMethod *)TheNilObject);
-  TheStemBehaviour->define(getGlobalName(CHAR_EQUAL)                 , (RexxMethod *)TheNilObject);
-  TheStemBehaviour->define(getGlobalName(CHAR_STRICT_BACKSLASH_EQUAL), (RexxMethod *)TheNilObject);
-  TheStemBehaviour->define(getGlobalName(CHAR_BACKSLASH_EQUAL)       , (RexxMethod *)TheNilObject);
-  TheStemBehaviour->define(getGlobalName(CHAR_LESSTHAN_GREATERTHAN)  , (RexxMethod *)TheNilObject);
-  TheStemBehaviour->define(getGlobalName(CHAR_GREATERTHAN_LESSTHAN)  , (RexxMethod *)TheNilObject);
+  TheStemBehaviour->define(getGlobalName(CHAR_STRICT_EQUAL)          , OREF_NULL);
+  TheStemBehaviour->define(getGlobalName(CHAR_EQUAL)                 , OREF_NULL);
+  TheStemBehaviour->define(getGlobalName(CHAR_STRICT_BACKSLASH_EQUAL), OREF_NULL);
+  TheStemBehaviour->define(getGlobalName(CHAR_BACKSLASH_EQUAL)       , OREF_NULL);
+  TheStemBehaviour->define(getGlobalName(CHAR_LESSTHAN_GREATERTHAN)  , OREF_NULL);
+  TheStemBehaviour->define(getGlobalName(CHAR_GREATERTHAN_LESSTHAN)  , OREF_NULL);
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
@@ -1218,16 +1223,13 @@ void RexxMemory::createImage()
       kernel_methods = new_directory();
       ProtectedObject p1(kernel_methods);   // protect from GC
       kernel_methods->put(createKernelMethod(CPPM(RexxLocal::local), 0), getGlobalName(CHAR_LOCAL));
-      kernel_methods->put(createKernelMethod(CPPM(RexxLocal::runProgram), 1), getGlobalName(CHAR_RUN_PROGRAM));
-      kernel_methods->put(createKernelMethod(CPPM(RexxLocal::callString), A_COUNT), getGlobalName(CHAR_CALL_STRING));
-      kernel_methods->put(createKernelMethod(CPPM(RexxLocal::callProgram), A_COUNT), getGlobalName(CHAR_CALL_PROGRAM));
 
                                            /* create the BaseClasses method and run it*/
       symb = getGlobalName(BASEIMAGELOAD);   /* get a name version of the string  */
                                            /* go resolve the program name       */
       programName = SysResolveProgramName(symb, OREF_NULL);
-                                           /* Push marker onto stack so we know */
-      ActivityManager::currentActivity->pushNil();          /* what level we entered.            */
+      // create a new stack frame to run under
+      ActivityManager::currentActivity->createNewActivationStack();
       try
       {
                                                /* create a method object out of this*/
@@ -1235,8 +1237,9 @@ void RexxMemory::createImage()
 
 
           RexxObject *args = kernel_methods;   // temporary to avoid type-punning warnings
+          ProtectedObject result;
                                                /* now call BaseClasses to finish the image*/
-          ((RexxObject *)ActivityManager::currentActivity)->shriekRun(meth, OREF_NULL, OREF_NULL, (RexxObject **)&args, 1);
+          meth->runProgram(ActivityManager::currentActivity, OREF_PROGRAM, OREF_NULL, (RexxObject **)&args, 1, result);
       }
       catch (ActivityException )
       {

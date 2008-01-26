@@ -62,7 +62,6 @@
 #define WANT_GETLONGPATHNAME_WRAPPER   /* NT and Windows 95                 */
 #include <NewAPIs.h>
 
-const char *SysFileExtension(const char *);
 RexxString * LocateProgram(RexxString *, const char *[], int);
 bool  SearchFileName(const char *, char *);
 void GetLongName(char *, DWORD);

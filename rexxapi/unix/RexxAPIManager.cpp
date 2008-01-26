@@ -76,7 +76,7 @@
 #endif
 
 #include "RexxCore.h"
-#include "ActivityManager.hpp"
+#include "Interpreter.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include "RexxAPIManager.h"
@@ -427,6 +427,7 @@ void RxAPICleanUp(int chain, int iSigCntl)
       iCallSigSet = 0;
    }
 }
+
 /* Function added                                                    */
 /*********************************************************************/
 /* Function:           Set the global variable for REXX HOME         */
@@ -1888,7 +1889,7 @@ void  RxExitClear(int sig)
 
     if (sig == SIGINT)                    /* special for interrupt             */
     {
-        ActivityManager::haltAllActivities();
+        Interpreter::haltAllActivities();
         if (iCallSigSet == 5 )                     /* Signal set                 */
         {
 #if defined( HAVE_SIGPROCMASK )
@@ -2054,7 +2055,7 @@ extern "C" {
 /*                   1 - shutdown not possible now (memory in use)   */
 /*                                                                   */
 /*********************************************************************/
-APIRET  APIENTRY RexxShutDownAPI(void)
+APIRET  REXXENTRY RexxShutDownAPI(void)
 {
   int semId;                           /* API semaphore ID            */
   shmid_ds buf;                        /* to hold the shmem info      */
@@ -2213,7 +2214,7 @@ APIRET  APIENTRY RexxShutDownAPI(void)
 /*  Return Value:    The allocated Block of memory (PVOID)           */
 /*                                                                   */
 /*********************************************************************/
-void *APIENTRY RexxAllocateMemory(size_t size)
+void *REXXENTRY RexxAllocateMemory(size_t size)
 {
    return malloc(size);
 }
@@ -2235,7 +2236,7 @@ void *APIENTRY RexxAllocateMemory(size_t size)
 /*  Return Value:    The allocated Block of memory (PVOID)           */
 /*                                                                   */
 /*********************************************************************/
-APIRET RexxFreeMemory(void *ptr)
+APIRET REXXENTRY RexxFreeMemory(void *ptr)
 {
    free(ptr);
    return 0;

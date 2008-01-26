@@ -51,7 +51,7 @@ OrxDispID::~OrxDispID(){
 *
 ******************************************************************************/
 STDMETHODIMP OrxDispID::AddDispID(OLECHAR *pName, DWORD Flags, DID::DType Type, void *RexxCode, DISPID *pbDispID) {          /* Method */
-  int       Len;
+  size_t    Len;
   PDID      Next;
   ListItem *Item;
   OLECHAR  *lName;
@@ -70,7 +70,7 @@ STDMETHODIMP OrxDispID::AddDispID(OLECHAR *pName, DWORD Flags, DID::DType Type, 
   sprintf(Name,"%d",lCount);
   Item = Chain.AddItem(Name,LinkedList::End,(void *)Next);
   if(Next && Item) {
-    lName = (OLECHAR *)((int)Next+sizeof(DID));
+    lName = (OLECHAR *)((char *)Next+sizeof(DID));
     wcscpy(lName,pName);
     Next->Name   = lName;
     Next->Flags  = Flags;

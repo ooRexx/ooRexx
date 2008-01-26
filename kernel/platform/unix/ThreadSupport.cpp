@@ -85,12 +85,6 @@ void SysThreadingInit(void)
 {
 }
 
-void SysThreadInit(void)
-/* This must be done once per thread                                  */
-{
-}
-
-
 /*****************************************************************************/
 /*  fixed timed scheduling policy doesn't work for AIX 4.1      */
 /*  If i use a different Stack size (defaults to 96KB) there       */

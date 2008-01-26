@@ -99,6 +99,7 @@ extern int errno;
  * rexx includes
  *------------------------------------------------------------------*/
 #include "rexx.h"
+#include "RexxInternalApis.h"
 
 #if defined(OPSYS_AIX) || defined(LINUX)
 #include "locale.h"
@@ -185,7 +186,6 @@ static const char *MathFncTable[] =
 extern "C" {
 #endif
 
-void SearchPrecision(size_t *);
 void RxErrMsgSet(const char *);
 void RxErrMsgSet1(const char *);
 
@@ -205,7 +205,7 @@ void RxErrMsgSet1(const char *);
  *------------------------------------------------------------------*/
 #if defined(LINUX) || defined(OPSYS_AIX)
 APIRET MATHLOADFUNCS(const char *, size_t, PCONSTRXSTRING, const char *, PRXSTRING);
-APIRET APIENTRY MathLoadFuncs (
+APIRET REXXENTRY MathLoadFuncs (
     const char *name,                    /* Function name              */
     size_t      argc,                    /* Number of arguments        */
     PCONSTRXSTRING argv,                 /* Argument array             */
@@ -215,7 +215,7 @@ APIRET APIENTRY MathLoadFuncs (
    return( MATHLOADFUNCS( name, argc, argv, qName, retstr) );
 }
 #endif
-APIRET APIENTRY MATHLOADFUNCS (
+APIRET REXXENTRY MATHLOADFUNCS (
     const char *name,                    /* Function name              */
     size_t      argc,                    /* Number of arguments        */
     PCONSTRXSTRING argv,                 /* Argument array             */
@@ -253,7 +253,7 @@ APIRET APIENTRY MATHLOADFUNCS (
 * Return:    NO_UTIL_ERROR - Successful.                                 *
 *************************************************************************/
 
-APIRET APIENTRY MathDropFuncs(
+APIRET REXXENTRY MathDropFuncs(
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     PCONSTRXSTRING argv,                 /* Argument array             */
@@ -345,7 +345,7 @@ int matherr(struct __exception *x)         /* return string            */
 * RC:        true - Good number converted                           *
 *            false - Invalid number supplied.                       *
 *********************************************************************/
-bool string2size_t( 
+bool string2size_t(
   const char *string,                  /* string to convert          */
   size_t *number)                      /* converted number           */
 {
@@ -420,7 +420,7 @@ int   ValidateMath(
 
   RxErrMsgSet1("0");
 
-  SearchPrecision(precision);
+  *precision = RexxGetCurrentPrecision();
 
   if (numargs < 1 || numargs > 2)
   {
@@ -480,7 +480,7 @@ int   ValidateTrig(
 
 /* give me the numeric digits settings of the current actitity       */
 
-  SearchPrecision(&precision);
+  precision = RexxGetCurrentPrecision();
 
   if (numargs < 1 || numargs > 3)
   {
@@ -632,7 +632,7 @@ int   ValidateArcTrig(
   nco = 1.;                            /* set default conversion     */
 
   RxErrMsgSet1("0");
-  SearchPrecision(&precision);
+  precision = RexxGetCurrentPrecision();
 
   if (numargs < 1 || numargs > 3)
   {
@@ -724,7 +724,7 @@ int   ValidateArcTrig(
 /*   result = func_name(x <, prec>)                                 */
 /*                                                                  */
 /********************************************************************/
-APIRET APIENTRY RxCalcSqrt(             /* Square root function.      */
+APIRET REXXENTRY RxCalcSqrt(             /* Square root function.      */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -745,7 +745,7 @@ APIRET APIENTRY RxCalcSqrt(             /* Square root function.      */
 }
 
 /*==================================================================*/
-APIRET APIENTRY RxCalcExp(              /* Exponential function.      */
+APIRET REXXENTRY RxCalcExp(              /* Exponential function.      */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -767,7 +767,7 @@ APIRET APIENTRY RxCalcExp(              /* Exponential function.      */
 }
 
 /*==================================================================*/
-APIRET APIENTRY RxCalcLog(              /* Logarithm function.        */
+APIRET REXXENTRY RxCalcLog(              /* Logarithm function.        */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -790,7 +790,7 @@ APIRET APIENTRY RxCalcLog(              /* Logarithm function.        */
 
 
 /*==================================================================*/
-APIRET APIENTRY RxCalcLog10(            /* Log base 10 function.      */
+APIRET REXXENTRY RxCalcLog10(            /* Log base 10 function.      */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -812,7 +812,7 @@ APIRET APIENTRY RxCalcLog10(            /* Log base 10 function.      */
 }
 
 /*==================================================================*/
-APIRET APIENTRY RxCalcSinH(             /* Hyperbolic sine function.  */
+APIRET REXXENTRY RxCalcSinH(             /* Hyperbolic sine function.  */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -834,7 +834,7 @@ APIRET APIENTRY RxCalcSinH(             /* Hyperbolic sine function.  */
 }
 
 /*==================================================================*/
-APIRET APIENTRY RxCalcCosH(             /* Hyperbolic cosine funct.   */
+APIRET REXXENTRY RxCalcCosH(             /* Hyperbolic cosine funct.   */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -856,7 +856,7 @@ APIRET APIENTRY RxCalcCosH(             /* Hyperbolic cosine funct.   */
 }
 
 /*==================================================================*/
-APIRET APIENTRY RxCalcTanH(             /* Hyperbolic tangent funct.  */
+APIRET REXXENTRY RxCalcTanH(             /* Hyperbolic tangent funct.  */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -891,7 +891,7 @@ APIRET APIENTRY RxCalcTanH(             /* Hyperbolic tangent funct.  */
 /*   result = func_name(x, y <, prec>)                              */
 /*                                                                  */
 /********************************************************************/
-APIRET APIENTRY RxCalcPower(            /* Power function.           */
+APIRET REXXENTRY RxCalcPower(            /* Power function.           */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -910,7 +910,7 @@ APIRET APIENTRY RxCalcPower(            /* Power function.           */
 
   RxErrMsgSet1("0");
 
-  SearchPrecision(&precision);
+  precision = RexxGetCurrentPrecision();
 
   if (numargs < 2 || numargs > 3)
   {
@@ -973,7 +973,7 @@ APIRET APIENTRY RxCalcPower(            /* Power function.           */
 /*   x = func_name(angle <, prec> <, [R | D | G]>)                  */
 /*                                                                  */
 /********************************************************************/
-APIRET APIENTRY RxCalcSin(              /* Sine function.             */
+APIRET REXXENTRY RxCalcSin(              /* Sine function.             */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -986,7 +986,7 @@ APIRET APIENTRY RxCalcSin(              /* Sine function.             */
 }
 
 /*==================================================================*/
-APIRET APIENTRY RxCalcCos(              /* Cosine function.           */
+APIRET REXXENTRY RxCalcCos(              /* Cosine function.           */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -999,7 +999,7 @@ APIRET APIENTRY RxCalcCos(              /* Cosine function.           */
 }
 
 /*==================================================================*/
-APIRET APIENTRY RxCalcTan(              /* Tangent function.          */
+APIRET REXXENTRY RxCalcTan(              /* Tangent function.          */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -1012,7 +1012,7 @@ APIRET APIENTRY RxCalcTan(              /* Tangent function.          */
 }
 
 /*==================================================================*/
-APIRET APIENTRY RxCalcCotan(            /* Cotangent function.        */
+APIRET REXXENTRY RxCalcCotan(            /* Cotangent function.        */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -1035,7 +1035,7 @@ APIRET APIENTRY RxCalcCotan(            /* Cotangent function.        */
 /*   result = RxCalcpi(<precision>)                                    */
 /*                                                                  */
 /********************************************************************/
-APIRET APIENTRY RxCalcPi(               /* Pi function                */
+APIRET REXXENTRY RxCalcPi(               /* Pi function                */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -1046,7 +1046,8 @@ APIRET APIENTRY RxCalcPi(               /* Pi function                */
   int  rc;
   errno = 0;                                     /* validate the inputs        */
   rc = VALID_ROUTINE;
-  SearchPrecision(&precision);
+
+  precision = RexxGetCurrentPrecision();
 
   RxErrMsgSet1("0");               /* setting MATHERROR to 0     */
 
@@ -1088,7 +1089,7 @@ APIRET APIENTRY RxCalcPi(               /* Pi function                */
 /*   a = func_name(arg <, prec> <, [R | D | G]>)                    */
 /*                                                                  */
 /********************************************************************/
-APIRET APIENTRY RxCalcArcSin(           /* Arc Sine function.         */
+APIRET REXXENTRY RxCalcArcSin(           /* Arc Sine function.         */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -1101,7 +1102,7 @@ APIRET APIENTRY RxCalcArcSin(           /* Arc Sine function.         */
 }
 
 /*==================================================================*/
-APIRET APIENTRY RxCalcArcCos(           /* Arc Cosine function.       */
+APIRET REXXENTRY RxCalcArcCos(           /* Arc Cosine function.       */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -1114,7 +1115,7 @@ APIRET APIENTRY RxCalcArcCos(           /* Arc Cosine function.       */
 }
 
 /*==================================================================*/
-APIRET APIENTRY RxCalcArcTan(           /* Arc Tangent function.      */
+APIRET REXXENTRY RxCalcArcTan(           /* Arc Tangent function.      */
     const char *name,                    /* Function name              */
     size_t      numargs,                 /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */

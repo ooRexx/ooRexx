@@ -35,35 +35,30 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/*********************************************************************
- *                                                                   *
- *                                                                   *
- *  Module   : okerr.c                                               *
- *                                                                   *
- *  Purpose  : Retrieve message from hard coded message table        *
- *  Notes    :                                                       *
- *                                                                   *
- *********************************************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include "RexxMessageNumbers.h"
 #include "RexxCore.h"
 #include "StringClass.hpp"
+#include "SystemInterpreter.hpp"
 
-extern HINSTANCE horyxkDll;            /* Handle to oryxk dll               */
 RexxString *  SysMessageText(
     wholenumber_t code)                /* message code to extract           */
 {
-char           DataArea[256];          /* buf addr to return message        */
+    char dataArea[256];                /* buf addr to return message        */
 
                                        /* loop through looking for the      */
                                        /* error code                        */
- if (LoadString(horyxkDll, (UINT)code, DataArea, 255))
-    return new_string(DataArea, strlen(DataArea));
- else
-    return OREF_NULL;                  /* no message retrieved              */
- }
+    if (SystemInterpreter::loadMessage(code, dataArea, sizeof(dataArea) - 1))
+    {
+        return new_string(dataArea);
+    }
+    else
+    {
+        return OREF_NULL;                  /* no message retrieved              */
+    }
+}
 
 /* Change Activity
  * $Log: ErrorMessages.cpp,v $

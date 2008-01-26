@@ -39,8 +39,7 @@
 # ORYXWIN.MAK make file
 #------------------------
 # What we want to build...
-# all: $(OR_OUTDIR)\winrexx.exe $(OR_OUTDIR)\rexx.exe $(OR_OUTDIR)\orx.exe COPYICOFILES
-all: $(OR_OUTDIR)\rexx.exe $(OR_OUTDIR)\orx.exe $(OR_OUTDIR)\rexxhide.exe $(OR_OUTDIR)\rexxpaws.exe COPYICOFILES
+all: $(OR_OUTDIR)\rexximage.exe $(OR_OUTDIR)\rexx.exe $(OR_OUTDIR)\orx.exe $(OR_OUTDIR)\rexxhide.exe $(OR_OUTDIR)\rexxpaws.exe COPYICOFILES
      @ECHO ...
      @ECHO All done ....
 
@@ -53,10 +52,8 @@ all: $(OR_OUTDIR)\rexx.exe $(OR_OUTDIR)\orx.exe $(OR_OUTDIR)\rexxhide.exe $(OR_O
 # define component-specific dependencies
 .SUFFIXES: .ico
 #orxw
-#ORYXWOBJ=$(OR_OUTDIR)\orxmain.obj $(OR_OUTDIR)\orxmwnd.obj  \
-#         $(OR_OUTDIR)\orxdlgs.obj $(OR_OUTDIR)\orxcalrx.obj \
-#         $(OR_OUTDIR)\orxwutil.obj $(OR_OUTDIR)\winlist.obj
 REXXCOBJ = $(OR_OUTDIR)\rexx.obj
+REXXIOBJ = $(OR_OUTDIR)\rexximage.obj
 REXXCHOBJ = $(OR_OUTDIR)\rexxhide.obj
 REXXPOBJ = $(OR_OUTDIR)\rexxpaws.obj
 KERNELOBJ =
@@ -64,21 +61,10 @@ KERNELOBJ =
 ICOFILES=$(OR_OUTDIR)\orxw.ico
 
 #
-# *** winrexx.EXE
-#
-# oryxi link is for setimagename only
-# $(OR_OUTDIR)\winrexx.exe : $(ORYXWOBJ) $(KERNELOBJ) $(OR_OUTDIR)\$(@B).res
-#    $(OR_LINK) $(ORYXWOBJ) $(KERNELOBJ) $(OR_OUTDIR)\$(@B).res $(lflags_common) /STACK:524288 \
-#    $(OR_OUTDIR)\rexxapi.lib \
-#    $(OR_OUTDIR)\rexx.lib \
-#    $(libs_dll) \
-#    -out:$(OR_OUTDIR)\$(@B).exe
-
-#
 # *** ORX.EXE
 #
-# oryxi link is for setimagename only
-# build orx.exe so there is no problem with debug infor for rexx.exe and rexx.dll
+# We build this module as ORX.EXE, then copy it to rexx.exe so we can avoid problems
+# with debug information for rexx.dll and rexx.exe.
 $(OR_OUTDIR)\ORX.exe : $(REXXCOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res
     $(OR_LINK) $(REXXCOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res $(lflags_common_console) /STACK:524288 \
     $(OR_OUTDIR)\rexxapi.lib \
@@ -104,13 +90,17 @@ $(OR_OUTDIR)\rexxpaws.exe : $(REXXPOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res
     $(OR_OUTDIR)\rexx.lib \
     $(libs_dll) \
     -out:$(OR_OUTDIR)\$(@B).exe
-
-# Update the resource if necessary
-#$(OR_OUTDIR)\winrexx.res: $(OR_ORYXWSRC)\orxw.rc $(OR_ORYXWSRC)\orxwres.h
-#    @ECHO .
-#    @ECHO ResourceCompiling $(@B).res
-#        $(rc) $(rcflags_common) -r -fo $(OR_OUTDIR)\winrexx.res $(OR_ORYXWSRC)\orxw.rc
-
+#
+# *** rexximage.exe
+#
+# oryxi link is for setimagename only
+# build orx.exe so there is no problem with debug infor for rexx.exe and rexx.dll
+$(OR_OUTDIR)\rexximage.exe : $(REXXIOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res
+    $(OR_LINK) $(REXXIOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res $(lflags_common_console) /STACK:524288 \
+    $(OR_OUTDIR)\rexxapi.lib \
+    $(OR_OUTDIR)\rexx.lib \
+    $(libs_dll) \
+    -out:$(OR_OUTDIR)\$(@B).exe
 
 # *** Inference Rule for C->OBJ
 #
@@ -144,12 +134,10 @@ $(OR_OUTDIR)\rexxpaws.obj: $(OR_ORYXWSRC)\rexxpaws.c
     @ECHO Compiling $(@B).c
     $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_ORYXWSRC)\$(@B).c
 
-# *** Inference Rule for REXX->OBJ
-#
-$(OR_OUTDIR)\orxcalrx.obj: $(OR_ORYXWSRC)\orxcalrx.c
+$(OR_OUTDIR)\rexximage.obj: $(OR_ORYXWSRC)\rexximage.cpp
     @ECHO .
     @ECHO Compiling $(@B).c
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_ORYXWSRC)\$(@B).c
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_ORYXWSRC)\$(@B).cpp
 
 #
 # *** Copy ICO files to target dir...

@@ -191,7 +191,8 @@ platformHeaders = $(kernel_platform_unix_dir)/APIDefinitions.h \
                   $(kernel_platform_unix_dir)/SharedMemorySupport.h \
                   $(kernel_platform_unix_dir)/SystemCommands.h \
                   $(kernel_platform_unix_dir)/SystemSemaphores.h \
-                  $(kernel_platform_unix_dir)/ThreadSupport.hpp
+                  $(kernel_platform_unix_dir)/ThreadSupport.hpp \
+                  $(kernel_platform_unix_dir)/SystemInterpreter.hpp
 platformcommonHeaders =
 runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/ClassTypeCodes.h \
@@ -208,6 +209,7 @@ runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/ActivityManager.hpp \
                  $(runtime_dir)/LibraryManager.hpp \
                  $(runtime_dir)/Interpreter.hpp \
+                 $(runtime_dir)/InterpreterInstance.hpp \
                  $(runtime_dir)/ProtectedObject.hpp \
                  $(runtime_dir)/ExitHandler.hpp \
                  $(runtime_dir)/RexxBehaviour.hpp \
@@ -233,7 +235,12 @@ runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
                  $(runtime_dir)/RexxNativeCode.hpp \
                  $(runtime_dir)/RexxSmartBuffer.hpp \
                  $(runtime_dir)/RexxVariable.hpp \
-                 $(runtime_dir)/RexxVariableDictionary.hpp
+                 $(runtime_dir)/RexxVariableDictionary.hpp \
+                 $(runtime_dir)/RexxStartDispatcher.hpp \
+                 $(runtime_dir)/ActivityDispatcher.hpp \
+                 $(runtime_dir)/TranslateDispatcher.hpp \
+                 $(runtime_dir)/CreateMethodDispatcher.hpp \
+                 $(runtime_dir)/CallbackDispatcher.hpp
 streamlibraryHeaders = $(streamlibrary_dir)/StreamCommandParser.h \
                        $(streamlibrary_dir)/StreamNative.h
 libHeaders = $(lib_dir)/RexxPlatformDefinitions.h \
@@ -297,7 +304,7 @@ BUILT_SOURCES = $(errorHeaders) \
 #
 # Binary targets
 #
-bin_PROGRAMS = rexx rexxc rxqueue rxsubcom rxdelipc
+bin_PROGRAMS = rexximage rexx rexxc rxqueue rxsubcom rxdelipc
 
 #
 # Shared library targets
@@ -461,8 +468,9 @@ platform_sources = $(kernel_platform_unix_dir)/ErrorMessages.cpp \
                    $(kernel_platform_unix_dir)/TimeSupport.cpp \
                    $(kernel_platform_unix_dir)/UseridFunction.cpp \
                    $(kernel_platform_unix_dir)/ValueFunction.cpp \
-                   $(kernel_platform_unix_dir)/VariablePool.cpp
-#                   $(runtime_dir)/RexxVariableDictionary2.cpp
+                   $(kernel_platform_unix_dir)/VariablePool.cpp \
+                   $(kernel_platform_unix_dir)/SystemInitialization.cpp \
+                   $(kernel_platform_unix_dir)/SystemInterpreter.cpp
 runtime_sources  = $(runtime_dir)/DeadObject.cpp \
                    $(runtime_dir)/GlobalData.cpp \
                    $(runtime_dir)/GlobalNames.cpp \
@@ -477,6 +485,7 @@ runtime_sources  = $(runtime_dir)/DeadObject.cpp \
                    $(runtime_dir)/ActivityManager.cpp \
                    $(runtime_dir)/LibraryManager.cpp \
                    $(runtime_dir)/Interpreter.cpp \
+                   $(runtime_dir)/InterpreterInstance.cpp \
                    $(runtime_dir)/RexxBehaviour.cpp \
                    $(runtime_dir)/RexxCode.cpp \
                    $(runtime_dir)/CPPCode.cpp \
@@ -503,10 +512,14 @@ runtime_sources  = $(runtime_dir)/DeadObject.cpp \
                    $(runtime_dir)/Setup.cpp \
                    $(runtime_dir)/Utilities.cpp \
                    $(runtime_dir)/Version.cpp \
-                   $(runtime_dir)/VirtualFunctionTable.cpp
+                   $(runtime_dir)/VirtualFunctionTable.cpp \
+                   $(runtime_dir)/RexxStartDispatcher.cpp \
+                   $(runtime_dir)/ActivityDispatcher.cpp \
+                   $(runtime_dir)/TranslateDispatcher.cpp \
+                   $(runtime_dir)/CreateMethodDispatcher.cpp \
+                   $(runtime_dir)/CallbackDispatcher.cpp
 streamlibrary_sources = $(streamlibrary_dir)/StreamCommandParser.cpp \
                         $(streamlibrary_dir)/StreamNative.cpp
-lib_sources = $(lib_dir)/LocalProcessData.cpp
 librexx_la_SOURCES = $(classes_sources) \
                      $(expression_sources) \
                      $(instructions_sources) \
@@ -514,8 +527,7 @@ librexx_la_SOURCES = $(classes_sources) \
                      $(kernel_platform_common_sources) \
                      $(platform_sources) \
                      $(runtime_sources) \
-                     $(streamlibrary_sources) \
-                     $(lib_sources)
+                     $(streamlibrary_sources)
 core_classes = $(rexxclasses_dir)/CoreClasses.orx \
                $(rexxclasses_dir)/StreamClasses.orx \
 	       $(rexxclasses_dir)/SystemMethods.orx
@@ -540,7 +552,7 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(kernel_platform_unix_dir) \
                        -I$(rexxapi_unix_dir)
 
-librexx_la_LDFLAGS = $(VERSION_INFO)
+librexx_la_LDFLAGS = $(VERSION_INFO) -nostartfiles
 #################### rexx ##########################
 # Sources for rexx
 #
@@ -560,6 +572,27 @@ rexx_CXXFLAGS  = $(COMMON_CPPFLAGS) \
 #
 rexx_LDADD   = librexx.la librexxapi.la @ORX_LDADD_EXECUTABLE@
 rexx_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
+
+
+#################### rexx ##########################
+# Sources for rexx
+#
+rexximage_SOURCES = $(platform_unix_dir)/rexximage.cpp
+#
+# Preprocessor flags for rexximage
+#
+rexximage_CXXFLAGS  = $(COMMON_CPPFLAGS) \
+                 -I$(lib_dir) \
+                 -I$(api_dir) \
+                 -I$(platform_api_dir) \
+                 -I$(messages_dir) \
+                 -I$(kernel_platform_unix_dir) \
+                 -I$(rexxapi_unix_dir)
+#
+# Extra libraries for rexx
+#
+rexximage_LDADD   = librexx.la librexxapi.la @ORX_LDADD_EXECUTABLE@
+rexximage_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 
 #################### rexxc #########################
 # Sources for rexxc
@@ -761,10 +794,10 @@ $(runtime_dir)/PrimitiveBehaviours.cpp: $(runtime_dir)/PrimitiveBehaviours.xsl $
 $(runtime_dir)/VirtualFunctionTables.cpp: $(runtime_dir)/VirtualFunctionTable.xsl $(classesXML)
 	sh ./xsl.sh $(@) $(classesXML) $(runtime_dir)/VirtualFunctionTable.xsl
 
-rexx.img: rexx librexxutil.la $(core_classes) $(core_platform_classes)
+rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
 	cp $(rexxclasses_dir)/*.orx .
 	cp $(kernel_platform_unix_dir)/*.orx .
-	./rexx -i
+	./rexximage -i
 	rm -f *.orx
 
 #

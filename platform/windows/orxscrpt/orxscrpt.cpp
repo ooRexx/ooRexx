@@ -171,7 +171,7 @@ OrxScript::OrxScript() : ulRefCount(1),
   HANDLE execution;
   LPVOID arguments[4];               // for createCode
   unsigned int dummy;
-  ConditionData cd;
+  RexxConditionData cd;
 #if defined(DEBUGC)
   char   filename[MAX_PATH];
 #endif
@@ -201,9 +201,9 @@ OrxScript::OrxScript() : ulRefCount(1),
   // this is a directory that will be kept in the process local environment
   // to "anchor" our methods into REXX memory and to protect it against GC
 #if defined(DEBUGZ)
-  FPRINTF(logfile,"doing RexxCreateDirectory(%s)\n",EngineName);
+  FPRINTF(logfile,"doing RexxCreateScriptContext(%s)\n",EngineName);
 #endif
-  RexxCreateDirectory(EngineName);
+  RexxCreateScriptContext(EngineName);
   InterlockedIncrement((long *)&ulDllLocks);     //  Make sure the DLL does not go away before we do.
 
   // create code block that will be used to obtain a security manager
@@ -271,7 +271,7 @@ OrxScript::~OrxScript() {
   delete RexxCodeList;
 
   // i'm not 100% sure it is needed, but it can't hurt anyway...
-  RexxRemoveDirectory(EngineName);
+  RexxDestroyScriptContext(EngineName);
   InterlockedDecrement((long *)&ulDllLocks);
 
 #if defined(DEBUGC)+defined(DEBUGZ)
@@ -546,7 +546,7 @@ STDMETHODIMP OrxScript::SetScriptState(SCRIPTSTATE state)
   // HANDLE    execution;
   LPVOID    arguments[8];
   REXXOBJECT resultDummy;
-  ConditionData cd;
+  RexxConditionData cd;
 
 #if defined(DEBUGC)+defined(DEBUGZ)
   FPRINTF(logfile,"OrxScript::SetScriptState (state = %s)\n",s[(int) state]);
@@ -1065,7 +1065,7 @@ STDMETHODIMP OrxScript::AddScriptlet(LPCOLESTR  pStrDefaultName,
   HANDLE     execution;
   UINT       dummy;
   PRCB       CodeBlock;
-  ConditionData cd;
+  RexxConditionData cd;
   OrxScriptError *ErrObj;
   bool        ErrObj_Exists;
   REXXOBJECT  pResult = NULL;
@@ -1232,7 +1232,7 @@ STDMETHODIMP OrxScript::ParseProcedureText(
   HANDLE     execution;
   UINT       dummy;
   PRCB       CodeBlock;
-  ConditionData cd;
+  RexxConditionData cd;
   OrxScriptError *ErrObj;
   bool        ErrObj_Exists;
 
@@ -1405,7 +1405,7 @@ STDMETHODIMP OrxScript::ParseScriptText(LPCOLESTR  pStrCode,
   DISPID     lDispID;
   UINT       dummy;
   REXXOBJECT resultDummy;
-  ConditionData cd;
+  RexxConditionData cd;
   int        result;
   int        i;
   LinkedList tempNames;
@@ -1911,10 +1911,8 @@ FPRINTF2(logfile,"OrxScript::GetSourceIDispatch()  -- GetIDsOfNames for the SubI
   return RetCode;
   }
 
-void OrxScript::insertVariable(void *args)
+void OrxScript::insertVariable(const char *varName, REXXOBJECT varValue)
 {
-  char *varName = ((char**) args)[0];
-  REXXOBJECT  varValue = ((REXXOBJECT *) args)[1];
   PGVARIANT   temp;
   HRESULT     RetCode;
   DISPID      DispID;
@@ -1941,9 +1939,6 @@ void OrxScript::insertVariable(void *args)
   // convert to variant, store it (WinEnterKernel(false) might be needed)
   temp = new GVARIANT;
   VariantInit(&(temp->Mutant));
-  //WinEnterKernel(false);
   Rexx2Variant(varValue,&(temp->Mutant),VT_EMPTY,0);
-  //WinLeaveKernel(false;)
-  PropertyList.AddItem(varName,LinkedList::End,(void *)temp);
-
+  PropertyList.AddItem(const_cast<char *>(varName),LinkedList::End,(void *)temp);
 }

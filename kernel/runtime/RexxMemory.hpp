@@ -109,7 +109,8 @@ class MemorySegmentPoolHeader {
    size_t reserved;            // force aligment of the state data....
 };
 
-class MemorySegmentPool : public MemorySegmentPoolHeader {
+class MemorySegmentPool : public MemorySegmentPoolHeader
+{
 #ifdef _DEBUG
  friend class RexxMemory;
 #endif
@@ -120,11 +121,12 @@ class MemorySegmentPool : public MemorySegmentPoolHeader {
    inline void    operator delete(void *, size_t) { }
    inline void    operator delete(void *, void *) { }
 
+   static MemorySegmentPool *createPool();
+
    MemorySegmentPool();
    MemorySegment *newSegment(size_t minSize);
    MemorySegment *newLargeSegment(size_t minSize);
-   bool           accessNextPool(void);
-   MemorySegmentPool *freePool(void); /* CHM - defect 96: add return value */
+   void               freePool(void);
    MemorySegmentPool *nextPool() {return this->next;}
    void               setNext( MemorySegmentPool *nextPool ); /* CHM - def.96: new function */
 
@@ -153,7 +155,7 @@ class RexxMemory : public RexxObject {
   void flatten(RexxEnvelope *);
   RexxObject  *makeProxy(RexxEnvelope *);
 
-  void        init(bool restoringImage);
+  void        initialize(bool restoringImage);
   MemorySegment *newSegment(size_t requestLength, size_t minLength);
   MemorySegment *newLargeSegment(size_t requestLength, size_t minLength);
   RexxObject *oldObject(size_t size);
@@ -198,11 +200,8 @@ class RexxMemory : public RexxObject {
   RexxObject *reclaim();
   RexxObject *setParms(RexxObject *, RexxObject *);
   RexxObject *gutCheck();
-  void        accessPools();
-  void        accessPools(MemorySegmentPool *);
-  void        addPool(MemorySegmentPool *pool);
-  void        freePools();
-  MemorySegmentPool *freePools(MemorySegmentPool *);
+  void        memoryPoolAdded(MemorySegmentPool *);
+  void        shutdown();
   void        liveStackFull();
   void        dumpMemoryProfile();
   char *      allocateImageBuffer(size_t size);
@@ -240,8 +239,8 @@ class RexxMemory : public RexxObject {
 
   void        checkAllocs();
   RexxObject *dumpImageStats();
-  void        createLocks();
-  void        closeLocks();
+  static void createLocks();
+  static void closeLocks();
   void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
   void        setUpMemoryTables(RexxObjectTable *old2newTable);
   void        forceUninits();
@@ -263,9 +262,6 @@ class RexxMemory : public RexxObject {
 
   size_t markWord;                     /* current marking counter           */
   int    markReason;                   // reason for calling liveGeneral()
-  SMTX flattenMutex;                   /* locks for various memory processes */
-  SMTX unflattenMutex;
-  SMTX envelopeMutex;
   RexxVariable *variableCache;         /* our cache of variable objects     */
 
   static RexxDirectory *environment;      // global environment
@@ -383,6 +379,9 @@ enum
   WeakReference *weakReferenceList;    // list of active weak references
 
   static RexxDirectory *globalStrings; // table of global strings
+  static SMTX flattenMutex;            /* locks for various memory processes */
+  static SMTX unflattenMutex;
+  static SMTX envelopeMutex;
 };
 
 

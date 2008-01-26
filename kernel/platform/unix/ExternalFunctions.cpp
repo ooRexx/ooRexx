@@ -77,12 +77,13 @@
 #include "MethodClass.hpp"
 #include "SourceFile.hpp"
 #include "RexxNativeAPI.h"                           /* Lot's of useful REXX macros    */
-#include "SubcommandAPI.h"
+#include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 #include "RexxAPIManager.h"
 #include "APIUtilities.h"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
+#include "SystemInterpreter.hpp"
 
 
 #define CMDBUFSIZE      1024                 /* Max size of executable cmd     */
@@ -112,8 +113,6 @@
 
 #define KIOCSOUND   0x4B2F              /* start sound generation (0 for off) */
 
-extern char achRexxCurDir[ CCHMAXPATH+2 ];  /* Save current working direct    */
-
 typedef struct _ENVENTRY {                  /* setlocal/endlocal structure    */
   size_t   size;                            /* size of the saved memory       */
 } ENVENTRY;
@@ -121,10 +120,7 @@ typedef struct _ENVENTRY {                  /* setlocal/endlocal structure    */
 int putflag = 0;                            /* static or dynamic env memory   */
 
 REXXOBJECT BuildEnvlist(void);
-RexxMethod *SysRestoreProgramBuffer(PRXSTRING, RexxString *);
 void RestoreEnvironment( void * );
-
-APIRET APIENTRY RexxExecuteMacroFunction (const char *, PRXSTRING );
 
 /*********************************************************************/
 /*                                                                   */
@@ -307,15 +303,12 @@ RexxMethod1(REXXOBJECT, sysDirectory, CSTRING, dir)
     else
       rc = chdir(dir);                   /* change to the new directory     */
   }
-
-  if (!getcwd(achRexxCurDir, CCHMAXPATH) || (rc != 0)) /* Get current working direct */
+  // update our working directory and return it. 
+  if (rc == 0)
   {
-     strncpy( achRexxCurDir, getenv("PWD"), CCHMAXPATH);
-     achRexxCurDir[CCHMAXPATH - 1] = '\0';
-     if ((achRexxCurDir[0] != '/' ) || (rc != 0))
-       return ooRexxString("");              /* No directory returned       */
+      SystemInterpreter::updateCurrentWorkingDirectory(); 
   }
-  return ooRexxString(achRexxCurDir);        /* Return the current directory*/
+  return ooRexxString(SystemInterpreter::currentWorkingDirectory); 
 }
 
 
@@ -417,31 +410,6 @@ bool SysExternalFunction(
 }
 
 
-/******************************************************************************/
-/* Name:       SysGetMacroCode                                                */
-/*                                                                            */
-/* Notes:      Retrieves the RexxMethod from a named macro in macrospace.     */
-/*             Search order is specified as second parameter.                 */
-/******************************************************************************/
-RexxMethod * SysGetMacroCode(
-  RexxString     * MacroName)
-{
-  RXSTRING       MacroImage;
-  RexxMethod   * method = OREF_NULL;
-
-  MacroImage.strptr = NULL;
-
-  /* The ExecMacro func returns a ptr to the shared memory. So we must  */
-  /* call APISTARTUP to be sure that the ptr remains valid.             */
-  APISTARTUP(MACROCHAIN);
-
-  if (RexxExecuteMacroFunction(MacroName->getStringData(), &MacroImage) == 0)
-    method = SysRestoreProgramBuffer(&MacroImage, MacroName);
-
-  APICLEANUP(MACROCHAIN);          /* now we have a copy of the routine */
-  return method;
-}
-
 /*********************************************************************/
 /*                                                                   */
 /*   Subroutine Name:   BuildEnvlist                                 */
@@ -472,13 +440,11 @@ REXXOBJECT BuildEnvlist()
   if (!(curr_dir=(char *)malloc(CCHMAXPATH+2)))/* malloc storage for cwd*/
     reportException(Error_System_service);
 
-  if (!getcwd(curr_dir,CCHMAXPATH))    /* get current directory      */
-  {
-     strncpy( achRexxCurDir, getenv("PWD"), CCHMAXPATH);
-     achRexxCurDir[CCHMAXPATH - 1] = '\0';
-     if (achRexxCurDir[0] != '/' )
-       reportException(Error_System_service);/* Complain if it fails*/
-  }
+  // make sure we have a working directory
+  SystemInterpreter::updateCurrentWorkingDirectory(); 
+  // start with a copy of that 
+  strcpy(curr_dir, SystemInterpreter::currentWorkingDirectory); 
+
   size += strlen(curr_dir);            /* add the space for curr dir */
   size++;                              /* and its terminating '\0'   */
   size += 4;                           /* this is for the size itself*/

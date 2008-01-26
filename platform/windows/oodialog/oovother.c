@@ -66,7 +66,7 @@ static ULONG SetStyle(HWND, LONG, PRXSTRING);
 static void freeSubclassData(SUBCLASSDATA *);
 static BOOL removeKeyPressSubclass(SUBCLASSDATA *, HWND, INT);
 
-ULONG APIENTRY PlaySoundFile(
+ULONG REXXENTRY PlaySoundFile(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -90,7 +90,7 @@ ULONG APIENTRY PlaySoundFile(
 }
 
 
-ULONG APIENTRY PlaySoundFileInLoop(
+ULONG REXXENTRY PlaySoundFileInLoop(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -111,7 +111,7 @@ ULONG APIENTRY PlaySoundFileInLoop(
 }
 
 
-ULONG APIENTRY StopSoundFile(
+ULONG REXXENTRY StopSoundFile(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -130,7 +130,7 @@ ULONG APIENTRY StopSoundFile(
 }
 
 
-UINT APIENTRY OFNSetForegroundHookProc(
+UINT REXXENTRY OFNSetForegroundHookProc(
     HWND hdlg,    // handle to child dialog window
     UINT uiMsg,    // message identifier
     WPARAM wParam,    // message parameter
@@ -207,7 +207,7 @@ BOOL OpenFileDlg( BOOL load, PCHAR szFile, PCHAR szInitialDir, PCHAR szFilter, H
 
 #define VALIDARG(argn) (argc >= argn) && argv[argn-1].strptr && argv[argn-1].strptr[0]
 
-ULONG APIENTRY GetFileNameWindow(
+ULONG REXXENTRY GetFileNameWindow(
     PUCHAR funcname,
     ULONG argc,
     RXSTRING argv[],
@@ -280,7 +280,7 @@ ULONG APIENTRY GetFileNameWindow(
 }
 
 
-ULONG APIENTRY PlaySnd(
+ULONG REXXENTRY PlaySnd(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -309,7 +309,7 @@ ULONG APIENTRY PlaySnd(
 }
 
 
-ULONG APIENTRY SleepMS(
+ULONG REXXENTRY SleepMS(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -324,7 +324,7 @@ ULONG APIENTRY SleepMS(
 }
 
 
-ULONG APIENTRY WinTimer(
+ULONG REXXENTRY WinTimer(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -528,7 +528,7 @@ static BOOL removeKeyPressSubclass(SUBCLASSDATA *pData, HWND hDlg, INT id)
 }
 
 
-ULONG APIENTRY HandleTreeCtrl(
+ULONG REXXENTRY HandleTreeCtrl(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -1081,7 +1081,7 @@ DWORD ListExtendedStyleToString(HWND hList, PRXSTRING retstr)
  *     1 the Windows API call failed
  *  >  1 dependent on the function, usually a returned value not a return code
  */
-ULONG APIENTRY HandleControlEx(
+ULONG REXXENTRY HandleControlEx(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -1461,7 +1461,7 @@ ULONG APIENTRY HandleControlEx(
  *     1 the Windows API call failed
  *  >  1 dependent on the function, usually a returned value not a return code
  */
-ULONG APIENTRY HandleListCtrlEx(
+ULONG REXXENTRY HandleListCtrlEx(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -1585,7 +1585,7 @@ ULONG APIENTRY HandleListCtrlEx(
 }
 
 
-ULONG APIENTRY HandleListCtrl(
+ULONG REXXENTRY HandleListCtrl(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -2105,7 +2105,7 @@ ULONG APIENTRY HandleListCtrl(
 
 
 
-ULONG APIENTRY HandleOtherNewCtrls(
+ULONG REXXENTRY HandleOtherNewCtrls(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],

@@ -60,8 +60,6 @@
 #include <sys/time.h>
 #endif
 
-extern SEV rexxTimeSliceSemaphore;
-extern size_t  rexxTimeSliceTimerOwner;
 
 void SysGetCurrentTime(
   RexxDateTime *Date )                 /* returned data structure    */
@@ -84,26 +82,6 @@ void SysGetCurrentTime(
   Date->day = SystemDate->tm_mday;
   Date->month = ++SystemDate->tm_mon;
   Date->year = SystemDate->tm_year + 1900;
-}
-
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   SysTimeSliceElapsed                          */
-/*     Used to check to see if a TimeSLice elapsed.  This is done    */
-/*     by checking the Semophore that is to be Posted whenever       */
-/*     the time interval expires.                                    */
-/*                                                                   */
-/*********************************************************************/
-bool SysTimeSliceElapsed()
-{
-  return false;
-}
-
-void SysStartTimeSlice()
-/******************************************************************************/
-/* Function:  Make sure we ahve a Timer running and reset TimeSlice Sem       */
-/******************************************************************************/
-{
 }
 
 typedef struct {

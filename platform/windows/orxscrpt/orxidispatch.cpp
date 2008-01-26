@@ -87,7 +87,7 @@ FL VariantTypes[] = {             // V - ertical flags
   {VT_DISPATCH,"IDispatch"},
   {VT_ERROR,"S Codes"},
   {VT_BOOL,"Boolean"},
-  {VT_VARIANT,"Variant FAR *"},
+  {VT_VARIANT,"Variant *"},
   {VT_UNKNOWN,"IUnknown"},
   {VT_DECIMAL,"Decimal"},
   {VT_I1,"Char"},
@@ -764,7 +764,7 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
   char          lName[251],tInvokeString[4096],*FInvokeString,*Temp=NULL,NameList[MAX_PATH],*tNL;
   char          *CallType,Function=')',Procedure='\0';
   LPVOID        arguments[8];
-  ConditionData cd;
+  RexxConditionData cd;
   DISPPARAMS    dp;
   VARIANT       sResult,*mResult;
   VARIANTARG    *FCmd=NULL;
@@ -869,7 +869,7 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
    */
   if(SUCCEEDED(RetCode)) {
     // Now convert it to wide characters.
-    ISMaxLen = strlen(FInvokeString)+1;
+    ISMaxLen = (int)strlen(FInvokeString)+1;
     //   >>> ??? <<< Code for the case where this has no invocation string.
     if(ISMaxLen > 1) {
       if(ISMaxLen > (sizeof(invokeString)/sizeof(OLECHAR))) {

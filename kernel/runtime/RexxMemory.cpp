@@ -63,6 +63,8 @@
 #include "PointerClass.hpp"
 #include "BufferClass.hpp"
 #include "WeakReferenceClass.hpp"
+#include "Interpreter.hpp"
+#include "SystemInterpreter.hpp"
 
 // restore a class from its
 // associated primitive behaviour
@@ -90,6 +92,11 @@ RexxDirectory *RexxMemory::functionsDir = OREF_NULL;      // statically defined 
 RexxDirectory *RexxMemory::commonRetrievers = OREF_NULL;
 RexxDirectory *RexxMemory::kernel = OREF_NULL;
 RexxDirectory *RexxMemory::system = OREF_NULL;
+
+// locks for the memory process access
+SMTX RexxMemory::flattenMutex = 0;
+SMTX RexxMemory::unflattenMutex = 0;
+SMTX RexxMemory::envelopeMutex = 0;
 
 static void logMemoryCheck(FILE *outfile, const char *message, ...)
 {
@@ -138,72 +145,84 @@ RexxMemory::RexxMemory()
   this->dumpEnable = false;
   this->objOffset = 0;
   this->envelope = NULL;
-  this->envelopeMutex = 0;
-  this->flattenMutex = 0;
-  this->unflattenMutex = 0;
+
   // we always start out with an empty list.  WeakReferences that are in the
   // saved image will (MUST) never be set to a new value, so it's not necessary
   // to hook those back up again.
   weakReferenceList = OREF_NULL;
 }
 
-void RexxMemory::init(bool _restoringImage)
+
+void RexxMemory::initialize(bool _restoringImage)
 /******************************************************************************/
-/* Function:  Initialize the memory and restore the image                     */
+/* Function:  Gain access to all Pools                                        */
 /******************************************************************************/
 {
-  disableOrefChecks();                 /* Make sure we don't try to validate*/
-                                       /*  OrefSets just yet.               */
-                                       /* Make sure memory is fully         */
-                                       /*constructed, mainlyt a concern on  */
-                                       /*2nd entry and DLL not unloaded.    */
-  new (this) RexxMemory;
-  new (&newSpaceNormalSegments) NormalSegmentSet(this);
-  new (&newSpaceLargeSegments) LargeSegmentSet(this);
+    /* access 1st pool directly. SysCall */
+    /* Did the pool exist?               */
 
-                                       /* and the new/old Space segments    */
-  new (&oldSpaceSegments) OldSpaceSegmentSet(this);
+    firstPool = MemorySegmentPool::createPool();
+    currentPool = firstPool;
 
-  collections = 0;
-  allocations = 0;
-  variableCache = OREF_NULL;
-  globalStrings = OREF_NULL;
+    disableOrefChecks();                 /* Make sure we don't try to validate*/
+                                         /*  OrefSets just yet.               */
+                                         /* Make sure memory is fully         */
+                                         /*constructed, mainlyt a concern on  */
+                                         /*2nd entry and DLL not unloaded.    */
+    new (this) RexxMemory;
+    new (&newSpaceNormalSegments) NormalSegmentSet(this);
+    new (&newSpaceLargeSegments) LargeSegmentSet(this);
 
-  // get our table of virtual functions setup first thing.
-  buildVirtualFunctionTable();
+    /* and the new/old Space segments    */
+    new (&oldSpaceSegments) OldSpaceSegmentSet(this);
 
-                                       /* NOTE: we don't set livestack      */
-                                       /*via the  OrefSet macro, since we   */
-                                       /*are so early on in the system,     */
-                                       /*that we can't use it right now,    */
-                                       /*we will fix this all               */
-  liveStack = (RexxStack *)oldSpaceSegments.allocateObject(SegmentDeadSpace);
-                                       /* remember the original one         */
-  originalLiveStack = liveStack;
+    collections = 0;
+    allocations = 0;
+    variableCache = OREF_NULL;
+    globalStrings = OREF_NULL;
 
+    // get our table of virtual functions setup first thing.
+    buildVirtualFunctionTable();
 
+    /* NOTE: we don't set livestack      */
+    /*via the  OrefSet macro, since we   */
+    /*are so early on in the system,     */
+    /*that we can't use it right now,    */
+    /*we will fix this all               */
+    liveStack = (RexxStack *)oldSpaceSegments.allocateObject(SegmentDeadSpace);
+    /* remember the original one         */
+    originalLiveStack = liveStack;
 
-  if (_restoringImage)                 /* restoring the image?              */
-  {
-      restoreImage();                  /* do it now...                      */
-  }
+    if (_restoringImage)                 /* restoring the image?              */
+    {
+        restoreImage();                  /* do it now...                      */
+    }
 
-  /* set memories behaviour */
-  memoryObject.setBehaviour(TheMemoryBehaviour);
-                                       /* initial marktable value is        */
-                                       /* TheKernel                         */
-  this->markTable = OREF_NULL;         /* fix by CHM/Rick: set initial table*/
-                                       /* to NULL since TheKernel could     */
-                                       /* point to an invalid memory address*/
-                                       /* if one OREXX session is started   */
-                                       /* while another one is closed       */
+    /* set memories behaviour */
+    memoryObject.setBehaviour(TheMemoryBehaviour);
+    /* initial marktable value is        */
+    /* TheKernel                         */
+    this->markTable = OREF_NULL;         /* fix by CHM/Rick: set initial table*/
+                                         /* to NULL since TheKernel could     */
+                                         /* point to an invalid memory address*/
+                                         /* if one OREXX session is started   */
+                                         /* while another one is closed       */
 
-  /* make sure we have an inital segment set to allocate from. */
-  newSpaceNormalSegments.getInitialSet();
+    /* make sure we have an inital segment set to allocate from. */
+    newSpaceNormalSegments.getInitialSet();
 
-  // get the initial uninit table
-  uninitTable = new_object_table();
+    // get the initial uninit table
+    uninitTable = new_object_table();
+
+    // is this image creation?  This will build and save the image, then
+    // terminate
+    if (!_restoringImage)
+    {
+        createImage();
+    }
+    restore();                           // go restore the state of the memory object
 }
+
 
 void RexxMemory::logVerboseOutput(const char *message, void *sub1, void *sub2)
 /******************************************************************************/
@@ -869,6 +888,8 @@ void RexxMemory::live(size_t liveMark)
   memory_mark(this->markTable);
   memory_mark(globalStrings);
   // now call the various subsystem managers to mark their references
+  Interpreter::live(liveMark);
+  SystemInterpreter::live(liveMark);
   ActivityManager::live(liveMark);
   LibraryManager::live(liveMark);
 }
@@ -889,6 +910,8 @@ void RexxMemory::liveGeneral(int reason)
   memory_mark_general(this->markTable);
   memory_mark_general(globalStrings);
   // now call the various subsystem managers to mark their references
+  Interpreter::liveGeneral(reason);
+  SystemInterpreter::liveGeneral(reason);
   ActivityManager::liveGeneral(reason);
   LibraryManager::liveGeneral(reason);
 }
@@ -2047,75 +2070,38 @@ RexxObject *RexxMemory::dumpImageStats(void)
   return TheNilObject;
 }
 
-void RexxMemory::accessPools()
-/******************************************************************************/
-/* Function:  Gain access to all Pools                                        */
-/******************************************************************************/
-{
-                                       /* access 1st pool directly. SysCall */
-                                       /* Did the pool exist?               */
-
-  if (SysAccessPool(&this->firstPool)) {
-                                       /* Yes, then see if others to access */
-    this->accessPools(this->firstPool);/* Now gain access to all the rest   */
-  }
-
-}
-
-void RexxMemory::accessPools(MemorySegmentPool *pool)
-/******************************************************************************/
-/* Function:  Gain access to all Pools after pool                             */
-/******************************************************************************/
-{
-  MemorySegmentPool  *lastPool = NULL; /* CHM - defect 29 */
-
-  while (pool != NULL) {               /* for all pools.                    */
-   lastPool = pool;                    /* CHM def29: save last valid pool   */
-   pool->accessNextPool();             /* access next pool.                 */
-   pool = pool->nextPool();            /* get next Pool                     */
-  }
-}
-
 
 /**
+ *
  * Add a new pool to the memory set.
  *
  * @param pool   The new pool.
  */
-void RexxMemory::addPool(MemorySegmentPool *pool)
+void RexxMemory::memoryPoolAdded(MemorySegmentPool *pool)
 {
     currentPool = pool;
 }
 
 
-void RexxMemory::freePools()
+void RexxMemory::shutdown()
 /******************************************************************************/
 /* Function:  Free all the memory pools currently accessed by this process    */
 /*    If not already released.  Then set process Pool to NULL, indicate       */
 /*    pools have been released.                                               */
 /******************************************************************************/
 {
-                                       /* Released pool yet?                */
-   if (firstPool != NULL) {
-                                       /* nope release them now.            */
-     this->freePools(this->firstPool);
-
-   }
-   firstPool = NULL;                   /* no pools available to this process*/
-}
-
-
-MemorySegmentPool *RexxMemory::freePools(MemorySegmentPool *pool)
-/******************************************************************************/
-/* Function:  Free all the memory pools currently accessed by this process    */
-/*    This is called recursivly, until we reach the end of the list           */
-/******************************************************************************/
-{
-  if (pool != currentPool) {           /* At the end of the list?           */
-                                       /* nope, free next one first.        */
-    pool->setNext(this->freePools(pool->nextPool()));    /* CHM - defect 96 */
-  }
-  return pool->freePool();             /* CHM - def.96: now free this pool. */
+    MemorySegmentPool *pool = firstPool;
+    while (pool != NULL)
+    {
+        // save the one we're about to release, and get the next one.
+        MemorySegmentPool *releasedPool = pool;
+        pool = pool->nextPool();
+        // go free this pool up
+        releasedPool->freePool();
+    }
+    // clear out the memory pool information
+    firstPool = NULL;
+    currentPool = NULL;
 }
 
 
@@ -2216,19 +2202,17 @@ void RexxMemory::create()
 /* Function:  Initial memory setup during image build                         */
 /******************************************************************************/
 {
-  /* Make sure memory is cleared!      */
-  memoryObject.init(false);
-  RexxClass::createClass();            /* get the CLASS class created       */
-  RexxInteger::createClass();
-  // initializer for native libraries
-  LibraryManager::init();
-  /* Now get our savestack and         */
-  /*savetable                          */
-  memoryObject.setUpMemoryTables(OREF_NULL);
-                                       /* Create/Open Shared MUTEX          */
-                                       /* Semophores used to serialize      */
-                                       /* the flatten/unflatten process     */
-  memoryObject.createLocks();
+    RexxClass::createClass();            /* get the CLASS class created       */
+    RexxInteger::createClass();
+    // initializer for native libraries
+    LibraryManager::init();
+    /* Now get our savestack and         */
+    /*savetable                          */
+    memoryObject.setUpMemoryTables(OREF_NULL);
+                                         /* Create/Open Shared MUTEX          */
+                                         /* Semophores used to serialize      */
+                                         /* the flatten/unflatten process     */
+    memoryObject.createLocks();
 }
 
 
@@ -2237,58 +2221,53 @@ void RexxMemory::restore()
 /* Function:  Memory management image restore functions                       */
 /******************************************************************************/
 {
-  /* Make sure memory is cleared! */
-  memoryObject.init(true);
-  /* Retrieve special saved objects    */
-  /* OREF_ENV and primitive behaviours */
-  /* are already restored              */
-                                       /* start restoring class OREF_s      */
-  RESTORE_CLASS(Object, RexxClass);
-  RESTORE_CLASS(Class, RexxClass);
-                                       /* (CLASS is already restored)       */
-  RESTORE_CLASS(String, RexxStringClass);
-  RESTORE_CLASS(Array, RexxClass);
-  RESTORE_CLASS(Directory, RexxClass);
-  RESTORE_CLASS(Integer, RexxIntegerClass);
-  RESTORE_CLASS(List, RexxListClass);
-  RESTORE_CLASS(Message, RexxClass);
-  RESTORE_CLASS(Method, RexxMethodClass);
-  RESTORE_CLASS(NumberString, RexxNumberStringClass);
-  RESTORE_CLASS(Queue, RexxClass);
-  RESTORE_CLASS(Stem, RexxClass);
-  RESTORE_CLASS(Supplier, RexxClass);
-  RESTORE_CLASS(Table, RexxClass);
-  RESTORE_CLASS(Relation, RexxClass);
-  RESTORE_CLASS(MutableBuffer, RexxMutableBufferClass);
-  RESTORE_CLASS(Pointer, RexxClass);
-  RESTORE_CLASS(Buffer, RexxClass);
-  RESTORE_CLASS(WeakReference, RexxClass);
+    /* Retrieve special saved objects    */
+    /* OREF_ENV and primitive behaviours */
+    /* are already restored              */
+                                         /* start restoring class OREF_s      */
+    RESTORE_CLASS(Object, RexxClass);
+    RESTORE_CLASS(Class, RexxClass);
+                                         /* (CLASS is already restored)       */
+    RESTORE_CLASS(String, RexxStringClass);
+    RESTORE_CLASS(Array, RexxClass);
+    RESTORE_CLASS(Directory, RexxClass);
+    RESTORE_CLASS(Integer, RexxIntegerClass);
+    RESTORE_CLASS(List, RexxListClass);
+    RESTORE_CLASS(Message, RexxClass);
+    RESTORE_CLASS(Method, RexxMethodClass);
+    RESTORE_CLASS(NumberString, RexxNumberStringClass);
+    RESTORE_CLASS(Queue, RexxClass);
+    RESTORE_CLASS(Stem, RexxClass);
+    RESTORE_CLASS(Supplier, RexxClass);
+    RESTORE_CLASS(Table, RexxClass);
+    RESTORE_CLASS(Relation, RexxClass);
+    RESTORE_CLASS(MutableBuffer, RexxMutableBufferClass);
+    RESTORE_CLASS(Pointer, RexxClass);
+    RESTORE_CLASS(Buffer, RexxClass);
+    RESTORE_CLASS(WeakReference, RexxClass);
 
-  memoryObject.setOldSpace();          /* Mark Memory Object as OldSpace    */
-  /* initialize the tables used for garbage collection. */
-  memoryObject.setUpMemoryTables(new_object_table());
-                                       /* If first one through, generate all*/
-  IntegerZero   = new_integer(0);      /*  static integers we want to use...*/
-  IntegerOne    = new_integer(1);      /* This will allow us to use static  */
-  IntegerTwo    = new_integer(2);      /* integers instead of having to do a*/
-  IntegerThree  = new_integer(3);      /* new_integer evrytime....          */
-  IntegerFour   = new_integer(4);
-  IntegerFive   = new_integer(5);
-  IntegerSix    = new_integer(6);
-  IntegerSeven  = new_integer(7);
-  IntegerEight  = new_integer(8);
-  IntegerNine   = new_integer(9);
-  IntegerMinusOne = new_integer(-1);
+    memoryObject.setOldSpace();          /* Mark Memory Object as OldSpace    */
+    /* initialize the tables used for garbage collection. */
+    memoryObject.setUpMemoryTables(new_object_table());
+                                         /* If first one through, generate all*/
+    IntegerZero   = new_integer(0);      /*  static integers we want to use...*/
+    IntegerOne    = new_integer(1);      /* This will allow us to use static  */
+    IntegerTwo    = new_integer(2);      /* integers instead of having to do a*/
+    IntegerThree  = new_integer(3);      /* new_integer evrytime....          */
+    IntegerFour   = new_integer(4);
+    IntegerFive   = new_integer(5);
+    IntegerSix    = new_integer(6);
+    IntegerSeven  = new_integer(7);
+    IntegerEight  = new_integer(8);
+    IntegerNine   = new_integer(9);
+    IntegerMinusOne = new_integer(-1);
 
-  // the activity manager will create the local server, which will use the
-  // stream classes.  We need to get the external libraries reloaded before
-  // that happens.
-  LibraryManager::reload();
-  ActivityManager::init();             /* do activity restores              */
-  memoryObject.enableOrefChecks();     /* enable setCheckOrefs...           */
-                                       /* Create/Open Shared MUTEX          */
-                                       /* Semophores used to serialize      */
-                                       /* the flatten/unflatten process     */
-  memoryObject.createLocks();
+    // the activity manager will create the local server, which will use the
+    // stream classes.  We need to get the external libraries reloaded before
+    // that happens.
+    Interpreter::init();
+    LibraryManager::reload();
+    ActivityManager::init();             /* do activity restores              */
+    memoryObject.enableOrefChecks();     /* enable setCheckOrefs...           */
 }
 

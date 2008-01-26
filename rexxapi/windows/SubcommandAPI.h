@@ -38,38 +38,4 @@
 
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/***    RexxLoadSubcom - Load a Subcommand environment */
-
-APIRET APIENTRY RexxLoadSubcom(
-         const char *,                 /* Name of the Environment    */
-         const char *);                /* DLL Module Name            */
-
-/***   Uppercase Entry Point Name */
-#define REXXLOADSUBCOM  RexxLoadSubcom
-
-
-
-/***    RexxCallSubcom - Execute a command in an environment */
-
-APIRET APIENTRY RexxCallSubcom(
-         const char *,                 /* Name of Subcommand Environ */
-         const char *,                 /* Module name of its DLL     */
-         PCONSTRXSTRING,               /* Command string to be passed*/
-         unsigned short *,             /* Stor for error flag notice */
-         wholenumber_t *,              /* Stor for rc from handler   */
-         PRXSTRING );                  /* Stor for returned string   */
-
-/***   Uppercase Entry Point Name */
-#define REXXCALLSUBCOM  RexxCallSubcom
-
-#ifdef __cplusplus
-}
-#endif
-
-/***   Uppercase Entry Point Name */
-#define REXXCALLFUNCTION  RexxCallFunction
 

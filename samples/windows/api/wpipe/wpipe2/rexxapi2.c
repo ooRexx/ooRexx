@@ -74,7 +74,7 @@ static PSZ  ApiFncTable[] =
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY ApiLoadFuncs(
+LONG REXXENTRY ApiLoadFuncs(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -106,7 +106,7 @@ LONG APIENTRY ApiLoadFuncs(
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY ApiDeregFunc(
+LONG REXXENTRY ApiDeregFunc(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -143,7 +143,7 @@ LONG APIENTRY ApiDeregFunc(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-LONG APIENTRY Api_Fill_REXX_Variable_Pool(
+LONG REXXENTRY Api_Fill_REXX_Variable_Pool(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */

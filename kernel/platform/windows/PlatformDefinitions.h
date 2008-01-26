@@ -107,11 +107,6 @@
 /******************************************************************************/
 #define SMTX HANDLE                 /* semaphore data types              */
 #define SEV  HANDLE
-#define SysSharedSemaphoreDefn HANDLE rexx_resource_semaphore = NULL;   \
-                               HANDLE rexx_wait_queue_semaphore = NULL; \
-                               HANDLE rexxTimeSliceSemaphore = NULL;    \
-                               HANDLE rexxTimeSliceTimerOwner;
-
 
 /******************************************************************************/
 /* REQUIRED:  Define the REXX type for exceptions.  These can be system       */
@@ -127,21 +122,6 @@ typedef int SYSEXCEPTIONBLOCK;
 /******************************************************************************/
 
 typedef void (* PTHREADFN)(void *);    /* define a thread function          */
-
-/******************************************************************************/
-/* REQUIRED:  Define any special requirements for external entry calls back   */
-/* into the interpreter.  The default is no special requirements.             */
-/******************************************************************************/
-
-#define REXXENTRY APIENTRY
-
-/******************************************************************************/
-/* REQUIRED:  This was needed for Windows. Any entry points containing        */
-/* variable length arguments need to use __cdecl calling convention.          */
-/******************************************************************************/
-
-#define VLAREXXENTRY __cdecl           /* external entry points       */
-#define VLAENTRY __cdecl               /* internal entry points       */
 
 /******************************************************************************/
 /* REQUIRED:  Definitions for REXX semaphore functions.  These default to     */
@@ -260,36 +240,8 @@ else printf("EVCR handle %x not null in %s line %d\n", s, __FILE__, __LINE__)
 /* These can be defined out to nothing if these have no meaning.              */
 /******************************************************************************/
 
-#define SysThreadInit()
-
 #define SEM_IMMEDIATE_RETURN 0L
 #define SEM_INDEFINITE_WAIT  INFINITE
-
-/******************************************************************************/
-/* REQUIRED:  Define a routine to determine if an activation needs to yield.  */
-/*   Use whatever mechanism is approcpriate for given System.                 */
-/******************************************************************************/
-
-#ifndef NO_SYSTIMESLICEELAPSED
-inline bool SysTimeSliceElapsed( void )
-{
-  extern bool rexxTimeSliceElapsed;
-                                       /* see if the timer was called*/
-  if (rexxTimeSliceElapsed)
-  {
-     rexxTimeSliceElapsed = false;
-     return true;
-  }
-  else
-     return false;                                                              /* 0 because no wait, only query */
-}
-#endif
-
-/******************************************************************************/
-/* REQUIRED:  Routine to start a new TimeSlice period.                        */
-/******************************************************************************/
-
-void SysStartTimeSlice(void);
 
 /* Windows needs a special line write function to check stdout output */
 size_t line_write_check(const char * , size_t, FILE * );

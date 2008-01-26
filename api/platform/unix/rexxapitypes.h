@@ -54,9 +54,7 @@
 #undef __REXX64__
 #endif
 
-#define APIENTRY
-#define RexxEntry    APIENTRY
-#define REXXENTRY    APIENTRY
+#define REXXENTRY    
 
 typedef void *REXXPFN;
 typedef pid_t process_id_t;

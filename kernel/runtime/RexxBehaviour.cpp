@@ -165,31 +165,37 @@ RexxObject *RexxBehaviour::copy()
 /*             dictionary, but leave the original create_class.               */
 /******************************************************************************/
 {
-  RexxBehaviour *newBehaviour;         /* new copy of the behaviour         */
+    RexxBehaviour *newBehaviour;         /* new copy of the behaviour         */
 
-  /* Instead of calling new_object and memcpy, ask the memory object to make*/
-  /* a copy of ourself.  This way, any header information can be correctly  */
-  /* initialized by memory.                                                 */
+    /* Instead of calling new_object and memcpy, ask the memory object to make*/
+    /* a copy of ourself.  This way, any header information can be correctly  */
+    /* initialized by memory.                                                 */
 
-                                       /* first, clone the existing object  */
-  newBehaviour = (RexxBehaviour *)this->clone();
-                                       /* have an method dictionary         */
-  if (this->methodDictionary != OREF_NULL)
-                                       /* make a copy of this too           */
-    OrefSet(newBehaviour, newBehaviour->methodDictionary, (RexxTable *)this->methodDictionary->copy());
-  if (this->scopes != OREF_NULL)       /* scope information?                */
-                                       /* make a copy of it too             */
-    OrefSet(newBehaviour, newBehaviour->scopes, (RexxObjectTable *)this->scopes->copy());
-                                       /* do we have added methods?         */
-  if (this->instanceMethodDictionary != OREF_NULL)
-                                       /* copy those also                   */
-    OrefSet(newBehaviour, newBehaviour->instanceMethodDictionary, (RexxTable *)this->instanceMethodDictionary->copy());
-                                       /* use default operator methods set  */
-  newBehaviour->operatorMethods = RexxObject::operatorMethods;
-                                       /* all copied behaviours are         */
-                                       /* non-primitive ones                */
-  newBehaviour->setNonPrimitive();
-  return (RexxObject *)newBehaviour;   /* return the copied behaviour       */
+    /* first, clone the existing object  */
+    newBehaviour = (RexxBehaviour *)this->clone();
+    /* have an method dictionary         */
+    if (this->methodDictionary != OREF_NULL)
+    {
+        /* make a copy of this too           */
+        OrefSet(newBehaviour, newBehaviour->methodDictionary, (RexxTable *)this->methodDictionary->copy());
+    }
+    if (this->scopes != OREF_NULL)       /* scope information?                */
+    {
+        /* make a copy of it too             */
+        OrefSet(newBehaviour, newBehaviour->scopes, (RexxObjectTable *)this->scopes->copy());
+    }
+    /* do we have added methods?         */
+    if (this->instanceMethodDictionary != OREF_NULL)
+    {
+        /* copy those also                   */
+        OrefSet(newBehaviour, newBehaviour->instanceMethodDictionary, (RexxTable *)this->instanceMethodDictionary->copy());
+    }
+    /* use default operator methods set  */
+    newBehaviour->operatorMethods = RexxObject::operatorMethods;
+    /* all copied behaviours are         */
+    /* non-primitive ones                */
+    newBehaviour->setNonPrimitive();
+    return(RexxObject *)newBehaviour;   /* return the copied behaviour       */
 }
 
 
@@ -199,22 +205,29 @@ void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
 /*             the method dictionaries.                                       */
 /******************************************************************************/
 {
-                                       /* have an method dictionary         */
-  if (source->methodDictionary != OREF_NULL)
-                                       /* make a copy of this too           */
-    OrefSet(this, this->methodDictionary, (RexxTable *)source->methodDictionary->copy());
-  if (source->scopes != OREF_NULL)       /* scope information?                */
-                                       /* make a copy of it too             */
-    OrefSet(this, this->scopes, (RexxObjectTable *)source->scopes->copy());
-                                       /* do we have added methods?         */
-  if (source->instanceMethodDictionary != OREF_NULL)
-                                       /* copy those also                   */
-    OrefSet(this, this->instanceMethodDictionary, (RexxTable *)source->instanceMethodDictionary->copy());
-  // this is the same class as the source also
-  OrefSet(this, this->owningClass, source->owningClass);
-                                       /* use default operator methods set  */
-  this->operatorMethods = (PCPPM *)source->operatorMethods;
+    /* have an method dictionary         */
+    if (source->methodDictionary != OREF_NULL)
+    {
+        /* make a copy of this too           */
+        OrefSet(this, this->methodDictionary, (RexxTable *)source->methodDictionary->copy());
+    }
+    if (source->scopes != OREF_NULL)       /* scope information?                */
+    {
+        /* make a copy of it too             */
+        OrefSet(this, this->scopes, (RexxObjectTable *)source->scopes->copy());
+    }
+    /* do we have added methods?         */
+    if (source->instanceMethodDictionary != OREF_NULL)
+    {
+        /* copy those also                   */
+        OrefSet(this, this->instanceMethodDictionary, (RexxTable *)source->instanceMethodDictionary->copy());
+    }
+    // this is the same class as the source also
+    OrefSet(this, this->owningClass, source->owningClass);
+    /* use default operator methods set  */
+    this->operatorMethods = (PCPPM *)source->operatorMethods;
 }
+
 
 RexxObject *RexxBehaviour::define(
     RexxString *methodName,            /* name of the defined method        */
@@ -223,36 +236,49 @@ RexxObject *RexxBehaviour::define(
 /* Function:  Add or remove a method from an object's behaviour               */
 /******************************************************************************/
 {
-  RexxMethod  * tableMethod;           /* method from the table             */
+    RexxMethod  * tableMethod;           /* method from the table             */
 
-                                       /* no method dictionary yet?         */
-  if (this->methodDictionary == OREF_NULL)
-                                       /* allocate a table                  */
-    OrefSet(this, this->methodDictionary, new_table());
-                                       /* is the method actually .nil?      */
-                                       /* this actually a delete, so place  */
-                                       /* the .nil in the table to          */
-                                       /* "disable" the method              */
-  if (method == (RexxMethod *)TheNilObject)
-                                       /* replace the method with .nil      */
-    this->methodDictionary->stringPut(method, methodName);
-  else {
-                                       /* already have this method?         */
-    if ((tableMethod = (RexxMethod *)this->methodDictionary->stringGet(methodName)) == OREF_NULL)
-                                       /* No, just add this directly        */
-       this->methodDictionary->stringAdd(method, methodName);
-    else {
-                                       /* are the scopes the same?          */
-      if (tableMethod->getScope() == method->getScope())
-                                       /* same scope, so replace existing   */
-                                       /* method with the new one           */
-        this->methodDictionary->stringPut(method, methodName);
-      else
-                                       /* new scope, for this, just replace */
-       this->methodDictionary->stringAdd(method, methodName);
+                                         /* no method dictionary yet?         */
+    if (this->methodDictionary == OREF_NULL)
+    {
+        /* allocate a table                  */
+        OrefSet(this, this->methodDictionary, new_table());
     }
-  }
-  return OREF_NULL;                    /* always return nothing             */
+
+
+    if (method == OREF_NULL || method == TheNilObject)
+    {
+        /* replace the method with .nil      */
+        this->methodDictionary->stringPut(TheNilObject, methodName);
+
+    }
+    else
+    {
+        /* already have this method?         */
+        if ((tableMethod = (RexxMethod *)this->methodDictionary->stringGet(methodName)) == OREF_NULL)
+        {
+            /* No, just add this directly        */
+            this->methodDictionary->stringAdd(method, methodName);
+        }
+        else
+        {
+            /* are the scopes the same?          */
+            if (tableMethod->getScope() == method->getScope())
+            {
+                /* same scope, so replace existing   */
+                /* method with the new one           */
+                this->methodDictionary->stringPut(method, methodName);
+
+            }
+            else
+            {
+                /* new scope, for this, just replace */
+                this->methodDictionary->stringAdd(method, methodName);
+
+            }
+        }
+    }
+    return OREF_NULL;                    /* always return nothing             */
 }
 
 void RexxBehaviour::removeMethod(
@@ -315,21 +341,19 @@ RexxMethod *RexxBehaviour::methodLookup(
 /* Function:  Perform lowest level method lookup on an object                 */
 /******************************************************************************/
 {
-  RexxMethod * methodObj;              /* returned method object            */
-
-                                       /* have a method dictionary?         */
-  if (this->methodDictionary != OREF_NULL) {
-                                       /* try to get the method             */
-    methodObj = (RexxMethod *)this->methodDictionary->stringGet(messageName);
-    if (methodObj == OREF_NULL)        /* not there?                        */
-                                       /* return .nil as the punt value     */
-      methodObj = (RexxMethod *)TheNilObject;
-  }
-  else {
-                                       /* no method dictionary              */
-    methodObj = (RexxMethod *)TheNilObject;
-  }
-  return methodObj;                    /* return the method object          */
+    /* have a method dictionary?         */
+    if (this->methodDictionary != OREF_NULL)
+    {
+        // just get the object directly.  Unknown methods will return OREF_NULL.  However,
+        // explicit overrides are indicated by putting .nil in the table.  Our callers
+        // are dependent upon getting OREF_NULL back for unknown methods.
+        RexxMethod *method = (RexxMethod *)this->methodDictionary->stringGet(messageName);
+        if (method != TheNilObject)
+        {
+            return method;
+        }
+    }
+    return OREF_NULL;
 }
 
 RexxMethod *RexxBehaviour::getMethod(
@@ -425,7 +449,9 @@ RexxObject * RexxBehaviour::superScope(
 /******************************************************************************/
 {
   if (this->scopes == OREF_NULL)       /* no scopes defined?                */
-    return TheNilObject;               /* no super scoping possible         */
+  {
+      return TheNilObject;               /* no super scoping possible         */
+  }
                                        /* go get the super scope            */
   return this->scopes->findSuperScope(start_scope);
 }
@@ -437,41 +463,39 @@ RexxMethod *RexxBehaviour::superMethod(
 /* Function:   Find a method using the given starting scope information       */
 /******************************************************************************/
 {
-  RexxArray  * scopeList;              /* working list of scopes            */
-  RexxArray  * methods;                /* list of matching method names     */
-  RexxMethod * method;                 /* located method object             */
-  size_t       scopes_size;            /* size of scopes list               */
-  size_t       methods_size;           /* size of methods list              */
-  size_t       i;                      /* loop counter                      */
-  size_t       j;                      /* loop counter                      */
-
-                                       /* if we have scopes defined and we  */
-                                       /* have a good start scope           */
-  if (this->scopes != OREF_NULL && startScope != TheNilObject) {
-                                       /* get the scope list for the given  */
-                                       /* starting scope                    */
-    scopeList = (RexxArray *)this->scopes->get(startScope);
-    if (scopeList != OREF_NULL) {      /* have a matching list?             */
-                                       /* get a list of methods             */
-      methods = this->methodDictionary->stringGetAll(messageName);
-      scopes_size = scopeList->size(); /* get the two array sizes           */
-      methods_size = methods->size();
-                                       /* search through the methods list   */
-                                       /* for the first one with a          */
-                                       /* conforming scope                  */
-      for (i = 1; i <= methods_size; i++) {
-                                       /* get the next method               */
-        method = (RexxMethod *)methods->get(i);
-                                       /* now loop through the scopes list  */
-        for (j = 1; j <= scopes_size; j++) {
-                                       /* got a matching scope here?        */
-          if (scopeList->get(j) == method->getScope())
-            return method;             /* return the method                 */
+    /* if we have scopes defined and we  */
+    /* have a good start scope           */
+    if (this->scopes != OREF_NULL && startScope != TheNilObject)
+    {
+        /* get the scope list for the given  */
+        /* starting scope                    */
+        RexxArray *scopeList = (RexxArray *)this->scopes->get(startScope);
+        if (scopeList != OREF_NULL)        /* have a matching list?             */
+        {
+            /* get a list of methods             */
+            RexxArray *methods = this->methodDictionary->stringGetAll(messageName);
+            size_t scopes_size = scopeList->size(); /* get the two array sizes           */
+            size_t methods_size = methods->size();
+            /* search through the methods list   */
+            /* for the first one with a          */
+            /* conforming scope                  */
+            for (size_t i = 1; i <= methods_size; i++)
+            {
+                /* get the next method               */
+                RexxMethod *method = (RexxMethod *)methods->get(i);
+                /* now loop through the scopes list  */
+                for (size_t j = 1; j <= scopes_size; j++)
+                {
+                    /* got a matching scope here?        */
+                    if (scopeList->get(j) == method->getScope())
+                    {
+                        return method;             /* return the method                 */
+                    }
+                }
+            }
         }
-      }
     }
-  }
-  return (RexxMethod *)TheNilObject;   /* nothing found                     */
+    return OREF_NULL;                    /* nothing found                     */
 }
 
 void RexxBehaviour::setMethodDictionaryScope(
@@ -563,8 +587,10 @@ RexxObject *RexxBehaviour::addScope(
 /******************************************************************************/
 {
   if (this->scopes == OREF_NULL)       /* no scopes set?                     */
+  {
                                        /* add a scope table to add to        */
-    OrefSet(this, this->scopes, new_object_table());
+      OrefSet(this, this->scopes, new_object_table());
+  }
                                        /* set the scoping info              */
   this->scopes->add(scope, TheNilObject);
                                        /* add the scope list for this scope */
@@ -594,7 +620,9 @@ bool RexxBehaviour::checkScope(
 /*****************************************************************************/
 {
   if (this->scopes == OREF_NULL)       /* no scopes set?                    */
-    return false;                      /* then it can't be in the table     */
+  {
+      return false;                      /* then it can't be in the table     */
+  }
                                        /* have the table check for the index*/
   return this->scopes->get(scope) != OREF_NULL;
 }
@@ -607,28 +635,31 @@ void RexxBehaviour::merge(
 /*             to be found before the source behaviour                       */
 /*****************************************************************************/
 {
-  RexxTable *newMethods;               /* new dictionary of methods         */
+    RexxTable *newMethods;               /* new dictionary of methods         */
 
-                                       /* if there isn't a source mdict     */
-                                       /* there isn't anything to do        */
-  if (source_behav->methodDictionary == OREF_NULL)
-    return;
-                                       /* if there isn't a mdict yet just   */
-                                       /* use  the source for this one      */
-  if (this->methodDictionary == OREF_NULL) {
-    OrefSet(this, this->methodDictionary, source_behav->methodDictionary);
-
-  }
-  else {
-                                       /* get a copy of the source mdict    */
-                                       /* for the merge                     */
-    newMethods = (RexxTable *)source_behav->methodDictionary->copy();
-    ProtectedObject p(newMethods);
-                                       /* merge this mdict with the copy    */
-    this->methodDictionary->merge(newMethods);
-                                       /* and put it into this behaviour    */
-    OrefSet(this, this->methodDictionary, newMethods);
-  }
+                                         /* if there isn't a source mdict     */
+                                         /* there isn't anything to do        */
+    if (source_behav->methodDictionary == OREF_NULL)
+    {
+        return;
+    }
+    /* if there isn't a mdict yet just   */
+    /* use  the source for this one      */
+    if (this->methodDictionary == OREF_NULL)
+    {
+        OrefSet(this, this->methodDictionary, source_behav->methodDictionary);
+    }
+    else
+    {
+        /* get a copy of the source mdict    */
+        /* for the merge                     */
+        newMethods = (RexxTable *)source_behav->methodDictionary->copy();
+        ProtectedObject p(newMethods);
+        /* merge this mdict with the copy    */
+        this->methodDictionary->merge(newMethods);
+        /* and put it into this behaviour    */
+        OrefSet(this, this->methodDictionary, newMethods);
+    }
 }
 
 void RexxBehaviour::methodDictionaryMerge(
@@ -639,26 +670,29 @@ void RexxBehaviour::methodDictionaryMerge(
 /*            mdict methods prior to self(target) methods                    */
 /*****************************************************************************/
 {
-  RexxTable *newDictionary;            /* new method dictionary             */
+    RexxTable *newDictionary;            /* new method dictionary             */
 
-                                       /* if there isn't a source mdict     */
-  if (sourceDictionary == OREF_NULL)   /* there isn't anything to do        */
-    return;                            /* just return                       */
-                                       /* if there isn't a mdict yet just   */
-                                       /* use  the source for this one      */
-  if (this->methodDictionary == OREF_NULL) {
-    OrefSet(this, this->methodDictionary, sourceDictionary);
-  }
-  else {
-
-                                       /* get a copy of the target mdict    */
-                                       /* for the merge                     */
-    newDictionary = (RexxTable *)this->methodDictionary->copy();
-    ProtectedObject p(newDictionary);
-                                       /* merge the source mdict and copy   */
-    sourceDictionary->merge(newDictionary);
-                                       /* and put it into this behaviour    */
-    OrefSet(this, this->methodDictionary, newDictionary);
-  }
+                                         /* if there isn't a source mdict     */
+    if (sourceDictionary == OREF_NULL)   /* there isn't anything to do        */
+    {
+        return;                            /* just return                       */
+    }
+    /* if there isn't a mdict yet just   */
+    /* use  the source for this one      */
+    if (this->methodDictionary == OREF_NULL)
+    {
+        OrefSet(this, this->methodDictionary, sourceDictionary);
+    }
+    else
+    {
+        /* get a copy of the target mdict    */
+        /* for the merge                     */
+        newDictionary = (RexxTable *)this->methodDictionary->copy();
+        ProtectedObject p(newDictionary);
+        /* merge the source mdict and copy   */
+        sourceDictionary->merge(newDictionary);
+        /* and put it into this behaviour    */
+        OrefSet(this, this->methodDictionary, newDictionary);
+    }
 }
 

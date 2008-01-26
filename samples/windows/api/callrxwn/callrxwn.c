@@ -71,7 +71,7 @@
 *  input parameters:  c.f. generic sample
 *
 \**********************************************************************/
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+int REXXENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                      LPSTR lpCmdLine, int nCmdShow)
 {
 int ret;
@@ -226,7 +226,7 @@ int CallRexx(HWND hwnd)
 *  Description:    This is our REXX Standard input and output handler
 *
 \*********************************************************************/
-LONG APIENTRY RexxIOExit(
+LONG REXXENTRY RexxIOExit(
      LONG ExitNumber,                  /* code defining exit function*/
      LONG Subfunction,                 /* code defining exit subfunc */
      PEXIT parmblock)                  /* func dependent control bloc*/

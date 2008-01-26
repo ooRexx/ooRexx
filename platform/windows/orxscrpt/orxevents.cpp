@@ -113,7 +113,8 @@ STDMETHODIMP OrxEvent::CheckEvent(LPCOLESTR Code, IDispatch **pbIDispatch){
   ListItem    *Current;
   ESource     *Content;
   HRESULT      RetCode=DISP_E_UNKNOWNNAME;
-  int          i=0,CodeLen;
+  int          i=0;
+  size_t       CodeLen;
       RetCode = DISP_E_UNKNOWNNAME;
 
 
@@ -164,7 +165,7 @@ STDMETHODIMP OrxEvent::AddEvent(OLECHAR *pName, LPCOLESTR Code, DISPID SinkDispI
   else {
     RetCode = Current->InitEvent(pName,Code,SinkDispID,Engine,logfile);
     if(SUCCEEDED(RetCode)) {
-      W2C(&Name[0], pName, wcslen(pName)+1);
+      W2C(&Name[0], pName, (int)wcslen(pName)+1);
       Next = EventSourceChain->AddItem(Name,LinkedList::End,(void *)Current);
       //  Make sure the Event can tell people if it goes away prematurely.
       Current->SetDestructor(EventSourceChain, (void *)Current);
@@ -202,7 +203,7 @@ STDMETHODIMP ESource::InitEvent(OLECHAR *Name,
   ConnectionPoint = NULL;
   Container = NULL;
   logfile = LogFile;
-  CodeLen = wcslen(pCode);
+  CodeLen = (int)wcslen(pCode);
   Code = (OLECHAR *) GlobalAlloc(GMEM_FIXED,(CodeLen+1)*sizeof(OLECHAR));
   if(!Code) {
 #if defined(DEBUGC)+defined(DEBUGZ)
@@ -324,7 +325,6 @@ STDMETHODIMP ESource::InitEvent(IDispatch *SourceDispatch,
                  FILE *LogFile) {
   ITypeInfo *SourceType;
   TYPEATTR  *TypeAttributes;
-  OLECHAR    lGUID[50];
   BSTR       SourceName;
   unsigned int NameCount;
   int        i;
@@ -968,7 +968,6 @@ STDMETHODIMP ESource::AddMap(char *Name, PEMAP *pbNewMap) {
 STDMETHODIMP ESource::SetMap(LPCOLESTR pName, DISPID SinkDispID) {
   PEMAP     Map;
   HRESULT   RetCode=S_OK;
-  int       tab;
 
 
 #if defined(DEBUGC)+defined(DEBUGZ)

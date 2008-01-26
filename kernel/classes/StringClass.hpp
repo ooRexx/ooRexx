@@ -295,6 +295,7 @@ class RexxStringClass : public RexxClass {
    inline void  memCopy(char * s) { memcpy(s, stringData, length); }
    inline void  toRxstring(CONSTRXSTRING &r) { r.strptr = getStringData(); r.strlength = getLength(); }
    inline void  toRxstring(RXSTRING &r) { r.strptr = getWritableData(); r.strlength = getLength(); }
+          void  copyToRxstring(RXSTRING &r);
 
    RexxNumberString *createNumberString();
 

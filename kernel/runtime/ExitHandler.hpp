@@ -45,6 +45,7 @@
 #define Included_ExitHandler_hpp
 
 #include "RexxCore.h"
+#include "CallbackDispatcher.hpp"
 
 class RexxActivity;
 
@@ -74,6 +75,22 @@ public:
 
 protected:
     REXXPFN    entryPoint;             // resolved exit entry point
+};
+
+
+class ExitHandlerDispatcher : public CallbackDispatcher
+{
+public:
+    inline ExitHandlerDispatcher(REXXPFN e, int code, int subcode, void *a) { entryPoint = e; major = code; minor = subcode; parms = a; }
+    virtual ~ExitHandlerDispatcher() { ; }
+
+    virtual void run();
+
+    int        rc;                        // handler return code
+    int        major;                     // major exit code
+    int        minor;                     // minor exit code
+    REXXPFN    entryPoint;                // resolved exit entry point
+    void      *parms;                     // opaque arguments passed to callback handler
 };
 
 #endif

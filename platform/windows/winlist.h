@@ -124,8 +124,8 @@
 |    }
  --------------------------------------------------------------------*/
 
-  typedef struct item_tag FAR * LIST;
-  typedef LIST FAR * PLIST;
+  typedef struct item_tag * LIST;
+  typedef LIST * PLIST;
 
   void APIENTRY List_Init(void);
   /* MUST BE CALLED BEFORE ANY OF THE OTHER FUNCTIONS. */

@@ -112,7 +112,6 @@ typedef struct _control {              /* meta date control info            */
 
 typedef FILE_CONTROL *PFILE_CONTROL;   /* pointer to file info              */
 
-extern bool ProcessSaveImage;
 RexxMethod *SysRestoreTranslatedProgram(RexxString *, FILE *Handle);
 
 /*********************************************************************/
@@ -143,8 +142,11 @@ RexxMethod *SysRestoreProgram(
                                        /* temporary read buffer             */
   char          fileTag[sizeof(compiledHeader)];
 
-  if (ProcessSaveImage)                /* doing save image?                 */
-    return OREF_NULL;                  /* never restore during image build  */
+  // if we're in save image mode, we never used a saved image
+  if (memoryObject.savingImage())
+  {
+      return OREF_NULL;
+  }
 
   File = FileName->getStringData();    /* get the file name pointer         */
 
@@ -247,8 +249,11 @@ void SysSaveProgram(
   RexxActivity *activity;              /* current activity                  */
   char          savetok[65];
 
-  if (ProcessSaveImage)                /* doing save image                  */
-    return;                            /* never save during image build     */
+  // if we're in save image mode, we never used a saved image
+  if (memoryObject.savingImage())
+  {
+      return;
+  }
 
   /* don't save tokens if environment variable isn't set */
   if ((GetEnvironmentVariable("RXSAVETOKENS", savetok, 64) < 1) || (strcmp("YES",savetok) != 0))

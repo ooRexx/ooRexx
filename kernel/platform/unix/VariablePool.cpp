@@ -72,7 +72,7 @@
 #include <stdlib.h>
 
 extern "C" {
-   APIRET APIENTRY RexxStemSort(const char *stemname, int order, int type,
+   APIRET REXXENTRY RexxStemSort(const char *stemname, int order, int type,
        size_t start, size_t end, size_t firstcol, size_t lastcol);
 }
 
@@ -112,7 +112,7 @@ APIRET REXXENTRY RexxStemSort(const char *stemname, int order, int type,
 /*   rc - Composite return code for all request blocks (individual rc's are   */
 /*        set within the shvret fields of each request block).                */
 /******************************************************************************/
-APIRET APIENTRY RexxVariablePool(PSHVBLOCK pshvblock)
+APIRET REXXENTRY RexxVariablePool(PSHVBLOCK pshvblock)
 {
 
   if (!RexxQuery())                         /* Are we up?                     */
@@ -202,7 +202,7 @@ int SysVariablePool(
 
     pshvblock = (PSHVBLOCK)requests;      /* copy the request block pointer    */
                                           /* get the variable dictionary       */
-    activation = self->getCurrentActivation();
+    activation = self->getRexxContext();         
 
     while (pshvblock)
     {                   /* while more request blocks         */

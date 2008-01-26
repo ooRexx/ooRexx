@@ -78,7 +78,7 @@ BOOL DrawButton(DIALOGADMIN * aDlg, INT id)
 
 /* Get information about window rectangle, redraw and clear a rectangle */
 
-ULONG APIENTRY WindowRect(
+ULONG REXXENTRY WindowRect(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -223,7 +223,7 @@ ULONG APIENTRY WindowRect(
 
 /* Get and free a device, create pen and brush objects (no font), assign and delete graphic objects */
 
-ULONG APIENTRY HandleDC_Obj(
+ULONG REXXENTRY HandleDC_Obj(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -339,7 +339,7 @@ ULONG APIENTRY HandleDC_Obj(
 /* handle all the drawing like SetPixel, LineTo,.... */
 
 
-ULONG APIENTRY DCDraw(
+ULONG REXXENTRY DCDraw(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -450,7 +450,7 @@ ULONG APIENTRY DCDraw(
 
 /* Prepares a DC for drawing (like MoveToEx) and gets info from a DC (like GetPixel) */
 
-ULONG APIENTRY DrawGetSet(
+ULONG REXXENTRY DrawGetSet(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -520,7 +520,7 @@ ULONG APIENTRY DrawGetSet(
 
 /* Set the background of the dialog or the color of dialog items */
 
-ULONG APIENTRY SetBackground(
+ULONG REXXENTRY SetBackground(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],

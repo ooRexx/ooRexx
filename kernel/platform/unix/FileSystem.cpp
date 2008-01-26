@@ -50,6 +50,7 @@
 #include "BufferClass.hpp"
 #include "RexxNativeAPI.h"
 #include "ProtectedObject.hpp"
+#include "SystemInterpreter.hpp"
 #include <string.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -73,9 +74,6 @@
 #define DEFEXT1  ".cmd"
 //#define TEMPEXT ".ORX"         /* Temporary development extension   */
 
-extern char achRexxCurDir[ CCHMAXPATH+2 ];    /* Save current working direct */
-
-const char *SysFileExtension(const char *);
 RexxString * LocateProgram(RexxString *, const char *[], int);
 const char * SearchFileName(const char *, char);
 FILE * SysBinaryFilemode(FILE *);
@@ -243,7 +241,7 @@ const char *SearchFileName(
   const char *Name,                    /* name of rexx proc to check         */
   char       chCont )                  /* Control char for search and output */
 {
-    static char       achFullName[CCHMAXPATH + 2]; /* temporary name buffer           */
+    static char achFullName[CCHMAXPATH + 2]; /* temporary name buffer           */
     char       achTempName[CCHMAXPATH + 2]; /* temporary name buffer           */
     char *     p;
     char *     q;
@@ -290,14 +288,14 @@ const char *SearchFileName(
             case '.':
                 if ( *(p+1) == '\0' )
                 {
-                    strcpy(achFullName, achRexxCurDir);
+                    strcpy(achFullName, SystemInterpreter::currentWorkingDirectory);
                     strncat( achFullName, (Name+1),
                              ( CCHMAXPATH - strlen(achFullName)) );
                     break;
                 }
                 if ( *(p+1) == '/' )
                 {
-                    strcpy(achFullName, achRexxCurDir);
+                    strcpy(achFullName, SystemInterpreter::currentWorkingDirectory);
                     p = p + 2;
                 }
                 if ( ( *(p+1) == '.' ) && ( *(p+2) == '\0' ) )
@@ -305,9 +303,9 @@ const char *SearchFileName(
                     p = p + 2;
                     if ( achFullName[0] == '\0' )
                     {
-                        enddir=strrchr(achRexxCurDir,'/');              /* Copy path */
-                        memcpy(achFullName, achRexxCurDir, enddir-(&achRexxCurDir[0]));
-                        achFullName[enddir-(&achRexxCurDir[0])] = '\0'; /* Terminate */
+                        enddir=strrchr(SystemInterpreter::currentWorkingDirectory,'/');              /* Copy path */
+                        memcpy(achFullName, SystemInterpreter::currentWorkingDirectory, enddir-(&SystemInterpreter::currentWorkingDirectory[0]));
+                        achFullName[enddir-(&SystemInterpreter::currentWorkingDirectory[0])] = '\0'; /* Terminate */
                     }
                     else
                     {
@@ -323,9 +321,9 @@ const char *SearchFileName(
                     p = p + 3;
                     if ( achFullName[0] == '\0' )
                     {
-                        enddir=strrchr(achRexxCurDir,'/');              /* Copy path */
-                        memcpy(achFullName, achRexxCurDir, enddir-(&achRexxCurDir[0]));
-                        achFullName[enddir-(&achRexxCurDir[0])] = '\0'; /* Terminate */
+                        enddir=strrchr(SystemInterpreter::currentWorkingDirectory,'/');              /* Copy path */
+                        memcpy(achFullName, SystemInterpreter::currentWorkingDirectory, enddir-(&SystemInterpreter::currentWorkingDirectory[0]));
+                        achFullName[enddir-(&SystemInterpreter::currentWorkingDirectory[0])] = '\0'; /* Terminate */
                     }
                     else
                     {
@@ -364,7 +362,7 @@ const char *SearchFileName(
 
     if ((!stat(Name, &dummy)) || (chCont == 'A'))  /* First try current dir      */
     {
-        strcpy(achFullName, achRexxCurDir);   /* Copy current directory in  */
+        strcpy(achFullName, SystemInterpreter::currentWorkingDirectory);   /* Copy current directory in  */
         strcat(achFullName,"/");              /* Put in a final slash       */
         strcat(achFullName, Name);            /* Now add name to end        */
         found = 1;                            /* Tell caller we found it    */

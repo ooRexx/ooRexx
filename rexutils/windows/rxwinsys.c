@@ -190,7 +190,7 @@ void firstarg(CHAR tar[STR_BUFFER], RXSTRING src)
 }
 
 
-ULONG APIENTRY WSRegistryKey(
+ULONG REXXENTRY WSRegistryKey(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -323,7 +323,7 @@ ULONG APIENTRY WSRegistryKey(
 }
 
 
-ULONG APIENTRY WSRegistryValue(
+ULONG REXXENTRY WSRegistryValue(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -667,7 +667,7 @@ ULONG APIENTRY WSRegistryValue(
 }
 
 
-ULONG APIENTRY WSRegistryFile(
+ULONG REXXENTRY WSRegistryFile(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -850,7 +850,7 @@ BOOL ProgmanCmd(LPSTR lpszCmd)
                                     0);
 
 
-    exRes = DdeClientTransaction((void FAR *)hExecData,
+    exRes = DdeClientTransaction((void *)hExecData,
                          (DWORD)-1,
                          hConv,
                          NULL,
@@ -1313,7 +1313,7 @@ INT DelPMDesktopIcon( LPSTR lpszName,
      return 0;
 }
 
-ULONG APIENTRY WSProgManager(
+ULONG REXXENTRY WSProgManager(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -1396,7 +1396,7 @@ CHAR * WindowsSystemFuncTab[WSFTS] = {\
                      };
 
 
-ULONG APIENTRY RemoveWinSysFuncs(
+ULONG REXXENTRY RemoveWinSysFuncs(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -1425,7 +1425,7 @@ ULONG APIENTRY RemoveWinSysFuncs(
 
 
 
-ULONG APIENTRY InstWinSysFuncs(
+ULONG REXXENTRY InstWinSysFuncs(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -1881,7 +1881,7 @@ void GetEvData(PEVENTLOGRECORD pEvLogRecord, char ** pchData)
 //
 //-----------------------------------------------------------------------------
 
-ULONG APIENTRY WSEventLog(
+ULONG REXXENTRY WSEventLog(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -2325,7 +2325,7 @@ ULONG APIENTRY WSEventLog(
 
 
 
-ULONG APIENTRY WSCtrlWindow(
+ULONG REXXENTRY WSCtrlWindow(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -2601,7 +2601,7 @@ ULONG APIENTRY WSCtrlWindow(
 
 
 
-ULONG APIENTRY WSCtrlSend(
+ULONG REXXENTRY WSCtrlSend(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -2764,7 +2764,7 @@ ULONG APIENTRY WSCtrlSend(
 
 
 
-ULONG APIENTRY WSCtrlMenu(
+ULONG REXXENTRY WSCtrlMenu(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -2828,7 +2828,7 @@ ULONG APIENTRY WSCtrlMenu(
 
 
 
-LONG APIENTRY WSClipboard(
+LONG REXXENTRY WSClipboard(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],

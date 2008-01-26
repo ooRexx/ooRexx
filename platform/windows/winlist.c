@@ -100,7 +100,7 @@ char msg[80];  /* a temp for building up wsprintf messages in */
    int iInUse;    /* number of allocations taken out of it.  0 => free it */
    int iNext;     /* next byte to use */
    char chData[BLOCKSIZE];
- } BLOCK, FAR *PBLOCK;
+ } BLOCK, *PBLOCK;
 
 static CRITICAL_SECTION CritSec;  /* to protect pCurrent */
 #define List_Enter_Crit(x)      EnterCriticalSection(x)
@@ -172,8 +172,8 @@ static void Free(PBLOCK pBlock, LPVOID p)
   |  parameter that can be updated.  (Modula-2 VAR parameter).
   */
   typedef struct item_tag
-  { struct item_tag FAR *pitNext;    /* to next in circular list */
-    struct item_tag FAR *pitPrev;    /* to prev in circular list */
+  { struct item_tag *pitNext;    /* to next in circular list */
+    struct item_tag *pitPrev;    /* to prev in circular list */
     PBLOCK pBlock;               /* to memory block */
     BOOL bAnchor;                /* TRUE iff an anchor block */
     BOOL bOK;                    /* true unless a list op has failed */
@@ -200,7 +200,7 @@ static void Free(PBLOCK pBlock, LPVOID p)
   static BOOL bInited = FALSE; /* TRUE <=> iAnchorSize and iHeaderSize are OK*/
 
 #define MOVEBACK(Curs)                                               \
-   { Curs = ((char FAR *)Curs-iHeaderSize); } /*move from Data to pitNext*/
+   { Curs = ((char *)Curs-iHeaderSize); } /*move from Data to pitNext*/
 
   /*==================================================================
   || Lists are circular, doubly linked with an anchor block which holds
@@ -263,17 +263,17 @@ static void Free(PBLOCK pBlock, LPVOID p)
   /*------------------------------------------------------------------
   | Set iAnchorSize and iHeaderSize.  Implementation independent!
    -------------------------------------------------------------------*/
-void APIENTRY List_Init(void)
+void APINTRY List_Init(void)
   {  LIST P;
      P = (LIST)&P;                  /* really any old address will do */
-     iAnchorSize = (char FAR *)&(P->iLen) - (char FAR *)&(P->pitNext);
-     iHeaderSize = (char FAR *)&(P->Data) - (char FAR *)&(P->pitNext);
+     iAnchorSize = (char *)&(P->iLen) - (char *)&(P->pitNext);
+     iHeaderSize = (char *)&(P->Data) - (char *)&(P->pitNext);
      InitializeCriticalSection(&CritSec);
      /* assumes layout in storage is linear */
   }
 
   /* Dump the internals to the debugger. */
-void APIENTRY List_Dump(LPSTR Header, LIST lst)
+void REXXENTRY List_Dump(LPSTR Header, LIST lst)
   {  LIST pit;
      char msg[250];
 
@@ -296,7 +296,7 @@ void APIENTRY List_Dump(LPSTR Header, LIST lst)
   } /* List_Dump */
 
   /* Dump hex representation of handle to debugger */
-void APIENTRY List_Show(LIST lst)
+void REXXENTRY List_Show(LIST lst)
   { char msg[50];
     wsprintf(msg, "%8x", lst);
     OutputDebugString(msg);
@@ -379,7 +379,7 @@ LIST APIENTRY List_Create(void)
      lst->pitNext->pitPrev = pit; /* for empty list that set lst->pitPrev */
      lst->pitNext = pit;
      pit->bAnchor = FALSE;
-     return (char FAR *)&(pit->Data);
+     return (char *)&(pit->Data);
   } /* List_NewFirst */
 
   /*------------------------------------------------------------------
@@ -440,7 +440,7 @@ LIST APIENTRY List_Create(void)
      lst->pitPrev->pitNext = pit; /* for empty list that set lst->pitNext */
      lst->pitPrev = pit;
      pit->bAnchor = FALSE;
-     return (char FAR *)&(pit->Data);
+     return (char *)&(pit->Data);
   } /* ListNewLast */
 
   /*------------------------------------------------------------------
@@ -499,7 +499,7 @@ LIST APIENTRY List_Create(void)
   | List_NewAfter(Lst,NULL,uLen) returns a pointer
   | to space for uLen bytes in a new first element.
    ---------------------------------------------------------------------*/
-  LPVOID APIENTRY List_NewAfter(LIST lst, LPVOID Curs, UINT uLen)
+  LPVOID REXXENTRY List_NewAfter(LIST lst, LPVOID Curs, UINT uLen)
   {  LIST pitNew;
      LIST pitAfter;
 
@@ -519,7 +519,7 @@ LIST APIENTRY List_Create(void)
            pitAfter->pitNext->pitPrev = pitNew;
            pitAfter->pitNext = pitNew;
            pitNew->bAnchor = FALSE;
-           return (char FAR *)&(pitNew->Data);
+           return (char *)&(pitNew->Data);
         }
   } /* List_NewAfter */
 
@@ -527,7 +527,7 @@ LIST APIENTRY List_Create(void)
   | Add an item holding Object to lst immediately before Curs.
   | List_AddBefore(Lst,NULL,Object,uLen) adds it to the end of the list
    ---------------------------------------------------------------------*/
-  void APIENTRY List_AddBefore( LIST lst
+  void REXXENTRY List_AddBefore( LIST lst
                      , LPVOID Curs
                      , LPVOID pObject
                      , UINT uLen
@@ -581,7 +581,7 @@ LIST APIENTRY List_Create(void)
            pitBefore->pitPrev->pitNext = pitNew;
            pitBefore->pitPrev = pitNew;
            pitNew->bAnchor = FALSE;
-           return (char FAR *) &(pitNew->Data);
+           return (char *) &(pitNew->Data);
         }
   } /* List_NewBefore */
 
@@ -624,7 +624,7 @@ LIST APIENTRY List_Create(void)
      pitDel->pitPrev->pitNext = pitN;
      Free(pitDel->pBlock, pitDel);
      if (pitN->bAnchor) return NULL;
-     else return (char FAR *)&(pitN->Data);
+     else return (char *)&(pitN->Data);
   } /* List_DeleteForwards */
 
   /*-----------------------------------------------------------------------
@@ -644,7 +644,7 @@ LIST APIENTRY List_Create(void)
      pitB->pitNext = pitDel->pitNext;
      Free(pitDel->pBlock, pitDel);
      if (pitB->bAnchor) return NULL;
-     else return (char FAR *)&(pitB->Data);
+     else return (char *)&(pitB->Data);
   } /* List_DeleteBackwards */
 
   /*-------------------------------------------------------------------

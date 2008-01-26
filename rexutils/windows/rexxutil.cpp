@@ -1577,7 +1577,7 @@ VOID GetUniqueFileName(
 * Return:    NO_UTIL_ERROR - Successful.                              *
 **********************************************************************/
 
-LONG APIENTRY SysCls(
+LONG REXXENTRY SysCls(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -1616,7 +1616,7 @@ LONG APIENTRY SysCls(
 * Return:    row, col                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysCurPos(
+LONG REXXENTRY SysCurPos(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -1678,7 +1678,7 @@ LONG APIENTRY SysCurPos(
 * Return:    NO_UTIL_ERROR - Successful.                                 *
 *************************************************************************/
 
-LONG APIENTRY SysCurState(
+LONG REXXENTRY SysCurState(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -1719,7 +1719,7 @@ LONG APIENTRY SysCurState(
 * Return:    disk free total label                                       *
 *************************************************************************/
 
-LONG APIENTRY SysDriveInfo(
+LONG REXXENTRY SysDriveInfo(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -1848,7 +1848,7 @@ LONG APIENTRY SysDriveInfo(
 * Return:    'A: B: C: D: ...'                                           *
 *************************************************************************/
 
-LONG APIENTRY SysDriveMap(
+LONG REXXENTRY SysDriveMap(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -1988,7 +1988,7 @@ LONG APIENTRY SysDriveMap(
 * Return:    NO_UTIL_ERROR - Successful.                                 *
 *************************************************************************/
 
-LONG APIENTRY SysDropFuncs(
+LONG REXXENTRY SysDropFuncs(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -2022,7 +2022,7 @@ LONG APIENTRY SysDropFuncs(
 * Return:    Return code from DeleteFile() function.                     *
 *************************************************************************/
 
-LONG APIENTRY SysFileDelete(
+LONG REXXENTRY SysFileDelete(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -2056,7 +2056,7 @@ LONG APIENTRY SysFileDelete(
 *            ERROR_NOMEM     - Out of memory.                            *
 *************************************************************************/
 
-LONG APIENTRY SysFileSearch(
+LONG REXXENTRY SysFileSearch(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -2198,7 +2198,7 @@ LONG APIENTRY SysFileSearch(
 *            ERROR_NOMEM     - Out of memory.                            *
 *************************************************************************/
 
-LONG APIENTRY SysFileTree(
+LONG REXXENTRY SysFileTree(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -2437,7 +2437,7 @@ LONG APIENTRY SysFileTree(
 * Return:    The key striked.                                            *
 *************************************************************************/
 
-LONG APIENTRY SysGetKey(
+LONG REXXENTRY SysGetKey(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -2542,7 +2542,7 @@ LONG APIENTRY SysGetKey(
 *            ERROR_RETSTR   - Error opening INI or querying/writing info.*
 *************************************************************************/
 
-LONG APIENTRY SysIni(
+LONG REXXENTRY SysIni(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -2787,7 +2787,7 @@ LONG APIENTRY SysIni(
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG APIENTRY SysLoadFuncs(
+LONG REXXENTRY SysLoadFuncs(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -2824,7 +2824,7 @@ LONG APIENTRY SysLoadFuncs(
 *            Return code from CreateDirectory()                          *
 *************************************************************************/
 
-LONG APIENTRY SysMkDir(
+LONG REXXENTRY SysMkDir(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -2852,7 +2852,7 @@ LONG APIENTRY SysMkDir(
 * Return:    Description or empty string                                 *
 *************************************************************************/
 
-LONG APIENTRY SysGetErrortext(
+LONG REXXENTRY SysGetErrortext(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -2894,7 +2894,7 @@ LONG APIENTRY SysGetErrortext(
 *            Return code from EncryptFile()                              *
 *************************************************************************/
 
-LONG APIENTRY SysWinEncryptFile(
+LONG REXXENTRY SysWinEncryptFile(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -2940,7 +2940,7 @@ LONG APIENTRY SysWinEncryptFile(
 *            Return code from DecryptFile()                              *
 *************************************************************************/
 
-LONG APIENTRY SysWinDecryptFile(
+LONG REXXENTRY SysWinDecryptFile(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -2985,7 +2985,7 @@ LONG APIENTRY SysWinDecryptFile(
 * Return:    Windows Version                                             *
 *************************************************************************/
 
-LONG APIENTRY SysWinVer(
+LONG REXXENTRY SysWinVer(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3027,7 +3027,7 @@ LONG APIENTRY SysWinVer(
 * Return:    Operating System and Version                                *
 *************************************************************************/
 
-LONG APIENTRY SysVersion(
+LONG REXXENTRY SysVersion(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3049,7 +3049,7 @@ LONG APIENTRY SysVersion(
 *            Return code from RemoveDirectory()                          *
 *************************************************************************/
 
-LONG APIENTRY SysRmDir(
+LONG REXXENTRY SysRmDir(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3082,7 +3082,7 @@ LONG APIENTRY SysRmDir(
 *            ''     - Specified file not found along path.               *
 *************************************************************************/
 
-LONG APIENTRY SysSearchPath(
+LONG REXXENTRY SysSearchPath(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3160,7 +3160,7 @@ LONG APIENTRY SysSearchPath(
 * Return:    NO_UTIL_ERROR                                               *
 *************************************************************************/
 
-LONG APIENTRY SysSleep(
+LONG REXXENTRY SysSleep(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3284,7 +3284,7 @@ LONG APIENTRY SysSleep(
 *            ''    - No more files exist given specified template.       *
 *************************************************************************/
 
-LONG APIENTRY SysTempFileName(
+LONG REXXENTRY SysTempFileName(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3330,7 +3330,7 @@ LONG APIENTRY SysTempFileName(
 *                                                                        *
 * Return:    Characters read from text screen.                           *
 *************************************************************************/
-LONG APIENTRY SysTextScreenRead(
+LONG REXXENTRY SysTextScreenRead(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3418,7 +3418,7 @@ LONG APIENTRY SysTextScreenRead(
 * Return:    Size of screen in row and columns returned as:  row, col    *
 *************************************************************************/
 
-LONG APIENTRY SysTextScreenSize(
+LONG REXXENTRY SysTextScreenSize(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3464,7 +3464,7 @@ LONG APIENTRY SysTextScreenSize(
 * Return:    Process ID or Error code                                    *
 *************************************************************************/
 
-LONG APIENTRY RxWinExec(
+LONG REXXENTRY RxWinExec(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3573,7 +3573,7 @@ ULONG  show_flags[] =                  /* show window styles        */
 * Return:    return code from RexxAddMacro                               *
 *************************************************************************/
 
-LONG APIENTRY SysAddRexxMacro(
+LONG REXXENTRY SysAddRexxMacro(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3615,7 +3615,7 @@ LONG APIENTRY SysAddRexxMacro(
 * Return:    return code from RexxReorderMacro                           *
 *************************************************************************/
 
-LONG APIENTRY SysReorderRexxMacro(
+LONG REXXENTRY SysReorderRexxMacro(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3650,7 +3650,7 @@ LONG APIENTRY SysReorderRexxMacro(
 * Return:    return code from RexxDropMacro                              *
 *************************************************************************/
 
-LONG APIENTRY SysDropRexxMacro(
+LONG REXXENTRY SysDropRexxMacro(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3673,7 +3673,7 @@ LONG APIENTRY SysDropRexxMacro(
 * Return:    position of the macro ('B' or 'A'), returns null for errors.*
 *************************************************************************/
 
-LONG APIENTRY SysQueryRexxMacro(
+LONG REXXENTRY SysQueryRexxMacro(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3708,7 +3708,7 @@ LONG APIENTRY SysQueryRexxMacro(
 * Return:    return code from RexxClearMacroSpace()                      *
 *************************************************************************/
 
-LONG APIENTRY SysClearRexxMacroSpace(
+LONG REXXENTRY SysClearRexxMacroSpace(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3730,7 +3730,7 @@ LONG APIENTRY SysClearRexxMacroSpace(
 * Return:    return code from RexxSaveMacroSpace()                       *
 *************************************************************************/
 
-LONG APIENTRY SysSaveRexxMacroSpace(
+LONG REXXENTRY SysSaveRexxMacroSpace(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3753,7 +3753,7 @@ LONG APIENTRY SysSaveRexxMacroSpace(
 * Return:    return code from RexxLoadMacroSpace()                       *
 *************************************************************************/
 
-LONG APIENTRY SysLoadRexxMacroSpace(
+LONG REXXENTRY SysLoadRexxMacroSpace(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3777,7 +3777,7 @@ LONG APIENTRY SysLoadRexxMacroSpace(
 * Return:    'A: B: C: D: ...'                                           *
 *************************************************************************/
 
-LONG APIENTRY SysBootDrive(
+LONG REXXENTRY SysBootDrive(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3808,7 +3808,7 @@ LONG APIENTRY SysBootDrive(
 * Return:    'C:\WINDOWS ...'                                            *
 *************************************************************************/
 
-LONG APIENTRY SysSystemDirectory(
+LONG REXXENTRY SysSystemDirectory(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3841,7 +3841,7 @@ LONG APIENTRY SysSystemDirectory(
 *            '' - Empty string in case of any error                      *
 *************************************************************************/
 
-LONG APIENTRY SysFileSystemType(
+LONG REXXENTRY SysFileSystemType(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3912,7 +3912,7 @@ LONG APIENTRY SysFileSystemType(
 * Return     '' - Empty string in case of any error                      *
 *************************************************************************/
 
-LONG APIENTRY SysVolumeLabel(
+LONG REXXENTRY SysVolumeLabel(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -3980,7 +3980,7 @@ LONG APIENTRY SysVolumeLabel(
 *            '' - Empty string in case of any error                      *
 *************************************************************************/
 
-LONG APIENTRY SysCreateMutexSem(
+LONG REXXENTRY SysCreateMutexSem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4021,7 +4021,7 @@ LONG APIENTRY SysCreateMutexSem(
 * Return:    result - handle to the mutex                                *
 *************************************************************************/
 
-LONG APIENTRY SysOpenMutexSem(
+LONG REXXENTRY SysOpenMutexSem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4052,7 +4052,7 @@ LONG APIENTRY SysOpenMutexSem(
 * Return:    result - return code from ReleaseMutex                      *
 *************************************************************************/
 
-LONG APIENTRY SysReleaseMutexSem(
+LONG REXXENTRY SysReleaseMutexSem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4082,7 +4082,7 @@ LONG APIENTRY SysReleaseMutexSem(
 * Return:    result - return code from CloseHandle                       *
 *************************************************************************/
 
-LONG APIENTRY SysCloseMutexSem(
+LONG REXXENTRY SysCloseMutexSem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4112,7 +4112,7 @@ LONG APIENTRY SysCloseMutexSem(
 * Return:    result - return code from WaitForSingleObject               *
 *************************************************************************/
 
-LONG APIENTRY SysRequestMutexSem(
+LONG REXXENTRY SysRequestMutexSem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4159,7 +4159,7 @@ LONG APIENTRY SysRequestMutexSem(
 *            '' - Empty string in case of any error                      *
 *************************************************************************/
 
-LONG APIENTRY SysCreateEventSem(
+LONG REXXENTRY SysCreateEventSem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4209,7 +4209,7 @@ LONG APIENTRY SysCreateEventSem(
 * Return:    result - return code from OpenEvent                         *
 *************************************************************************/
 
-LONG APIENTRY SysOpenEventSem(
+LONG REXXENTRY SysOpenEventSem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4238,7 +4238,7 @@ LONG APIENTRY SysOpenEventSem(
 * Return:    result - return code from SetEvent                          *
 *************************************************************************/
 
-LONG APIENTRY SysPostEventSem(
+LONG REXXENTRY SysPostEventSem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4268,7 +4268,7 @@ LONG APIENTRY SysPostEventSem(
 * Return:    result - return code from ResetEvent                        *
 *************************************************************************/
 
-LONG APIENTRY SysResetEventSem(
+LONG REXXENTRY SysResetEventSem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4299,7 +4299,7 @@ LONG APIENTRY SysResetEventSem(
 * Return:    result - return code from PulseEvent                        *
 *************************************************************************/
 
-LONG APIENTRY SysPulseEventSem(
+LONG REXXENTRY SysPulseEventSem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4330,7 +4330,7 @@ LONG APIENTRY SysPulseEventSem(
 * Return:    result - return code from CloseHandle                       *
 *************************************************************************/
 
-LONG APIENTRY SysCloseEventSem(
+LONG REXXENTRY SysCloseEventSem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4360,7 +4360,7 @@ LONG APIENTRY SysCloseEventSem(
 * Return:    result - return code from WaitForSingleObject               *
 *************************************************************************/
 
-LONG APIENTRY SysWaitEventSem(
+LONG REXXENTRY SysWaitEventSem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4406,7 +4406,7 @@ LONG APIENTRY SysWaitEventSem(
 *                                                                        *
 *************************************************************************/
 
-LONG APIENTRY SysSetPriority(
+LONG REXXENTRY SysSetPriority(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4487,7 +4487,7 @@ LONG APIENTRY SysSetPriority(
 *            "TTIME" - (default) returns current thread times            *
 *************************************************************************/
 
-LONG APIENTRY SysQueryProcess(
+LONG REXXENTRY SysQueryProcess(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4599,7 +4599,7 @@ LONG APIENTRY SysQueryProcess(
 * Return:    success (1) or failure (0) string                        *
 **********************************************************************/
 
-LONG APIENTRY SysShutDownSystem(
+LONG REXXENTRY SysShutDownSystem(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4648,7 +4648,7 @@ LONG APIENTRY SysShutDownSystem(
 * Return:    OS/2 error return code                                      *
 *************************************************************************/
 
-LONG APIENTRY SysSwitchSession(
+LONG REXXENTRY SysSwitchSession(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4685,7 +4685,7 @@ LONG APIENTRY SysSwitchSession(
 * Return:    Return code from WaitNamedPipe                              *
 *************************************************************************/
 
-LONG APIENTRY SysWaitNamedPipe(
+LONG REXXENTRY SysWaitNamedPipe(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4973,7 +4973,7 @@ LONG  ValidateArcTrig(
 /*   result = func_name(x <, prec> <,angle>)                        */
 /*                                                                  */
 /********************************************************************/
-LONG  APIENTRY SysSqrt(                /* Square root function.      */
+LONG  REXXENTRY SysSqrt(                /* Square root function.      */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -4993,7 +4993,7 @@ LONG  APIENTRY SysSqrt(                /* Square root function.      */
 }
 
 /*==================================================================*/
-LONG  APIENTRY SysExp(                 /* Exponential function.      */
+LONG  REXXENTRY SysExp(                 /* Exponential function.      */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5013,7 +5013,7 @@ LONG  APIENTRY SysExp(                 /* Exponential function.      */
 }
 
 /*==================================================================*/
-LONG  APIENTRY SysLog(                 /* Logarithm function.        */
+LONG  REXXENTRY SysLog(                 /* Logarithm function.        */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5033,7 +5033,7 @@ LONG  APIENTRY SysLog(                 /* Logarithm function.        */
 }
 
 /*==================================================================*/
-LONG  APIENTRY SysLog10(               /* Log base 10 function.      */
+LONG  REXXENTRY SysLog10(               /* Log base 10 function.      */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5053,7 +5053,7 @@ LONG  APIENTRY SysLog10(               /* Log base 10 function.      */
 }
 
 /*==================================================================*/
-LONG  APIENTRY SysSinH(                /* Hyperbolic sine function.  */
+LONG  REXXENTRY SysSinH(                /* Hyperbolic sine function.  */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5073,7 +5073,7 @@ LONG  APIENTRY SysSinH(                /* Hyperbolic sine function.  */
 }
 
 /*==================================================================*/
-LONG  APIENTRY SysCosH(                /* Hyperbolic cosine funct.   */
+LONG  REXXENTRY SysCosH(                /* Hyperbolic cosine funct.   */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5093,7 +5093,7 @@ LONG  APIENTRY SysCosH(                /* Hyperbolic cosine funct.   */
 }
 
 /*==================================================================*/
-LONG  APIENTRY SysTanH(                /* Hyperbolic tangent funct.  */
+LONG  REXXENTRY SysTanH(                /* Hyperbolic tangent funct.  */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5126,7 +5126,7 @@ LONG  APIENTRY SysTanH(                /* Hyperbolic tangent funct.  */
 /*   result = func_name(x, y <, prec>)                              */
 /*                                                                  */
 /********************************************************************/
-LONG  APIENTRY SysPower(               /* Power function.           */
+LONG  REXXENTRY SysPower(               /* Power function.           */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5178,7 +5178,7 @@ LONG  APIENTRY SysPower(               /* Power function.           */
 /*   x = func_name(angle <, prec> <, [R | D | G]>)                  */
 /*                                                                  */
 /********************************************************************/
-LONG  APIENTRY SysSin(                 /* Sine function.             */
+LONG  REXXENTRY SysSin(                 /* Sine function.             */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5190,7 +5190,7 @@ LONG  APIENTRY SysSin(                 /* Sine function.             */
 }
 
 /*==================================================================*/
-LONG  APIENTRY SysCos(                 /* Cosine function.           */
+LONG  REXXENTRY SysCos(                 /* Cosine function.           */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5202,7 +5202,7 @@ LONG  APIENTRY SysCos(                 /* Cosine function.           */
 }
 
 /*==================================================================*/
-LONG  APIENTRY SysTan(                 /* Tangent function.          */
+LONG  REXXENTRY SysTan(                 /* Tangent function.          */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5214,7 +5214,7 @@ LONG  APIENTRY SysTan(                 /* Tangent function.          */
 }
 
 /*==================================================================*/
-LONG  APIENTRY SysCotan(               /* Cotangent function.        */
+LONG  REXXENTRY SysCotan(               /* Cotangent function.        */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5236,7 +5236,7 @@ LONG  APIENTRY SysCotan(               /* Cotangent function.        */
 /*   result = syspi(<precision>)                                    */
 /*                                                                  */
 /********************************************************************/
-LONG  APIENTRY SysPi(                  /* Pi function                */
+LONG  REXXENTRY SysPi(                  /* Pi function                */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5271,7 +5271,7 @@ LONG  APIENTRY SysPi(                  /* Pi function                */
 /*   a = func_name(arg <, prec> <, [R | D | G]>)                    */
 /*                                                                  */
 /********************************************************************/
-LONG  APIENTRY SysArcSin(              /* Arc Sine function.         */
+LONG  REXXENTRY SysArcSin(              /* Arc Sine function.         */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5283,7 +5283,7 @@ LONG  APIENTRY SysArcSin(              /* Arc Sine function.         */
 }
 
 /*==================================================================*/
-LONG  APIENTRY SysArcCos(              /* Arc Cosine function.       */
+LONG  REXXENTRY SysArcCos(              /* Arc Cosine function.       */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5295,7 +5295,7 @@ LONG  APIENTRY SysArcCos(              /* Arc Cosine function.       */
 }
 
 /*==================================================================*/
-LONG  APIENTRY SysArcTan(              /* Arc Tangent function.      */
+LONG  REXXENTRY SysArcTan(              /* Arc Tangent function.      */
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5319,7 +5319,7 @@ LONG  APIENTRY SysArcTan(              /* Arc Tangent function.      */
 *            -1 - failure during dump                                     *
 *************************************************************************/
 
-LONG APIENTRY SysDumpVariables(
+LONG REXXENTRY SysDumpVariables(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5446,7 +5446,7 @@ LONG APIENTRY SysDumpVariables(
 *            -1 - failure attribute update                               *
 *************************************************************************/
 
-LONG APIENTRY SysSetFileDateTime(
+LONG REXXENTRY SysSetFileDateTime(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5535,7 +5535,7 @@ LONG APIENTRY SysSetFileDateTime(
 *            other - date and time as YYYY-MM-DD HH:MM:SS                *
 *************************************************************************/
 
-LONG APIENTRY SysGetFileDateTime(
+LONG REXXENTRY SysGetFileDateTime(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5615,7 +5615,7 @@ LONG APIENTRY SysGetFileDateTime(
 }
 
 
-APIRET APIENTRY RexxStemSort(const char *stemname, int order, int type,
+APIRET REXXENTRY RexxStemSort(const char *stemname, int order, int type,
     size_t start, size_t end, size_t firstcol, size_t lastcol);
 
 /*************************************************************************
@@ -5636,7 +5636,7 @@ APIRET APIENTRY RexxStemSort(const char *stemname, int order, int type,
 *            -1 - sort failed                                            *
 *************************************************************************/
 
-LONG APIENTRY SysStemSort(
+LONG REXXENTRY SysStemSort(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5756,7 +5756,7 @@ LONG APIENTRY SysStemSort(
 *            -1 - delete failed                                          *
 *************************************************************************/
 
-LONG APIENTRY SysStemDelete(
+LONG REXXENTRY SysStemDelete(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -5927,7 +5927,7 @@ LONG APIENTRY SysStemDelete(
 *            -1 - insert failed                                          *
 *************************************************************************/
 
-LONG APIENTRY SysStemInsert(
+LONG REXXENTRY SysStemInsert(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -6087,7 +6087,7 @@ LONG APIENTRY SysStemInsert(
 *            -1 - stem copy failed                                       *
 *************************************************************************/
 
-LONG APIENTRY SysStemCopy(
+LONG REXXENTRY SysStemCopy(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -6365,7 +6365,7 @@ LONG APIENTRY SysStemCopy(
 * Return:    REXXUTIL.DLL Version                                        *
 *************************************************************************/
 
-LONG APIENTRY SysUtilVersion(
+LONG REXXENTRY SysUtilVersion(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -6518,7 +6518,7 @@ LONG SetRexxStemLength(CHAR * name, char * tailname, CHAR * data, LONG datalen)
     Replace exceptions with the default character during conversion.
 
 *************************************************************************/
-LONG APIENTRY SysFromUniCode(
+LONG REXXENTRY SysFromUniCode(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -6774,7 +6774,7 @@ LONG SetRexxUIStem(CHAR * name, char * tailname, LPWSTR data, int datalen)
 
 
 *************************************************************************/
-LONG APIENTRY SysToUniCode(
+LONG REXXENTRY SysToUniCode(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -6890,7 +6890,7 @@ LONG APIENTRY SysToUniCode(
 * Return:    error number                                                *
 *************************************************************************/
 
-LONG APIENTRY SysWinGetPrinters(
+LONG REXXENTRY SysWinGetPrinters(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -6982,7 +6982,7 @@ LONG APIENTRY SysWinGetPrinters(
 * Return:    string describing default printer                           *
 *************************************************************************/
 
-LONG APIENTRY SysWinGetDefaultPrinter(
+LONG REXXENTRY SysWinGetDefaultPrinter(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -7045,7 +7045,7 @@ LONG APIENTRY SysWinGetDefaultPrinter(
 * Return:    error number                                                *
 *************************************************************************/
 
-LONG APIENTRY SysWinSetDefaultPrinter(
+LONG REXXENTRY SysWinSetDefaultPrinter(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -7156,7 +7156,7 @@ LONG APIENTRY SysWinSetDefaultPrinter(
 * Return:    Return code from CopyFile() function.                       *
 *************************************************************************/
 
-LONG APIENTRY SysFileCopy(
+LONG REXXENTRY SysFileCopy(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -7186,7 +7186,7 @@ LONG APIENTRY SysFileCopy(
 * Return:    Return code from MoveFile() function.                       *
 *************************************************************************/
 
-LONG APIENTRY SysFileMove(
+LONG REXXENTRY SysFileMove(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -7214,7 +7214,7 @@ LONG APIENTRY SysFileMove(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysIsFile(
+LONG REXXENTRY SysIsFile(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -7249,7 +7249,7 @@ LONG APIENTRY SysIsFile(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysIsFileDirectory(
+LONG REXXENTRY SysIsFileDirectory(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -7283,7 +7283,7 @@ LONG APIENTRY SysIsFileDirectory(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysIsFileLink(
+LONG REXXENTRY SysIsFileLink(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -7317,7 +7317,7 @@ LONG APIENTRY SysIsFileLink(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysIsFileCompressed(
+LONG REXXENTRY SysIsFileCompressed(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -7351,7 +7351,7 @@ LONG APIENTRY SysIsFileCompressed(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysIsFileEncrypted(
+LONG REXXENTRY SysIsFileEncrypted(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -7386,7 +7386,7 @@ LONG APIENTRY SysIsFileEncrypted(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysIsFileNotContentIndexed(
+LONG REXXENTRY SysIsFileNotContentIndexed(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -7420,7 +7420,7 @@ LONG APIENTRY SysIsFileNotContentIndexed(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysIsFileOffline(
+LONG REXXENTRY SysIsFileOffline(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -7454,7 +7454,7 @@ LONG APIENTRY SysIsFileOffline(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysIsFileSparse(
+LONG REXXENTRY SysIsFileSparse(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */
@@ -7489,7 +7489,7 @@ LONG APIENTRY SysIsFileSparse(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG APIENTRY SysIsFileTemporary(
+LONG REXXENTRY SysIsFileTemporary(
   PSZ       name,                      /* Function name              */
   LONG      numargs,                   /* Number of arguments        */
   RXSTRING  args[],                    /* Argument array             */

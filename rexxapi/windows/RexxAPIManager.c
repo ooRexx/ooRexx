@@ -120,8 +120,8 @@ extern REXXAPIDATA * RexxinitExports = NULL;
 extern LOCALREXXAPIDATA RexxinitLocal={0};
 
 extern _declspec(dllexport) SECURITY_DESCRIPTOR SD_NullAcl={0};
-extern _declspec(dllexport) LONG APIENTRY RxIsAPIActive(HWND hwnd,LPLONG lpIValue, LPSTR lpszValue);
-extern _declspec(dllexport) LONG APIENTRY RxAPIShutdown(HWND hwnd,LPLONG lpIValue, LPSTR lpszValue);
+extern _declspec(dllexport) LONG REXXENTRY RxIsAPIActive(HWND hwnd,LPLONG lpIValue, LPSTR lpszValue);
+extern _declspec(dllexport) LONG REXXENTRY RxAPIShutdown(HWND hwnd,LPLONG lpIValue, LPSTR lpszValue);
 
 extern LONG StartRXAPIExe(VOID);
 extern CRITICAL_SECTION nest;
@@ -834,7 +834,7 @@ LRESULT MySendMessage(UINT msg, WPARAM wP, LPARAM lP)
 /*                                                                  */
 /********************************************************************/
 
-LONG APIENTRY RxIsAPIActive(HWND hwnd,LPLONG lpIValue, LPSTR lpszValue)
+LONG REXXENTRY RxIsAPIActive(HWND hwnd,LPLONG lpIValue, LPSTR lpszValue)
 {
     BOOL ret;
     if (!RexxinitExports) Connect2RxAPI();
@@ -857,7 +857,7 @@ LONG APIENTRY RxIsAPIActive(HWND hwnd,LPLONG lpIValue, LPSTR lpszValue)
 /*                                                                  */
 /********************************************************************/
 
-LONG APIENTRY RxAPIShutdown(HWND hwnd,LPLONG lpIValue, LPSTR lpszValue)
+LONG REXXENTRY RxAPIShutdown(HWND hwnd,LPLONG lpIValue, LPSTR lpszValue)
 {
     if (API_RUNNING())
       if (!APIHasBeenKilled())
@@ -938,7 +938,7 @@ BOOL WINAPI DllMain(
 /*                   NULL if the function fails                      */
 /*                                                                   */
 /*********************************************************************/
-void * APIENTRY RexxAllocateMemory(size_t size)
+void * REXXENTRY RexxAllocateMemory(size_t size)
 {
    PVOID pMem;
 
@@ -964,7 +964,7 @@ void * APIENTRY RexxAllocateMemory(size_t size)
 /*  Return Value:    always returns 0 (ULONG)                        */
 /*                                                                   */
 /*********************************************************************/
-APIRET APIENTRY RexxFreeMemory(void * pMem)
+APIRET REXXENTRY RexxFreeMemory(void * pMem)
 {
     GlobalFree(pMem);
 return 0;

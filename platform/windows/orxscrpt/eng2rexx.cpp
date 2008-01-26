@@ -108,7 +108,7 @@ REXXOBJECT __stdcall DispParms2RexxArray(void *arguments)
 }
 
 /* Exit handler to find out the names of any functions in currently parsed script */
-LONG APIENTRY RexxCatchExit(LONG ExitNumber, LONG Subfunction, PEXIT parmblock)
+LONG REXXENTRY RexxCatchExit(LONG ExitNumber, LONG Subfunction, PEXIT parmblock)
 {
    char **names;
    size_t iCount;
@@ -144,15 +144,15 @@ LONG APIENTRY RexxCatchExit(LONG ExitNumber, LONG Subfunction, PEXIT parmblock)
    return RXEXIT_NOT_HANDLED;
 }
 
-void __stdcall fillVariables(void*a)
+void REXXENTRY fillVariables(const char *name, REXXOBJECT value)
 {
   //  Why can't we use this here?
   // OrxScript  *engine = findEngineForThread(GetCurrentThreadId());
-  CurrentEngine->insertVariable(a);
+  CurrentEngine->insertVariable(name, value);
 }
 
 /* Exit handler to find out the values of variables of "immediate code" */
-LONG APIENTRY RexxRetrieveVariables(LONG ExitNumber, LONG Subfunction, PEXIT parmblock)
+LONG REXXENTRY RexxRetrieveVariables(LONG ExitNumber, LONG Subfunction, PEXIT parmblock)
 {
   OrxScript     *engine    = findEngineForThread(GetCurrentThreadId());
 
@@ -171,7 +171,7 @@ LONG APIENTRY RexxRetrieveVariables(LONG ExitNumber, LONG Subfunction, PEXIT par
 }
 
 /* Exit handler for external function calls */
-LONG APIENTRY RexxCatchExternalFunc(LONG ExitNumber, LONG Subfunction, PEXIT pblock)
+LONG REXXENTRY RexxCatchExternalFunc(LONG ExitNumber, LONG Subfunction, PEXIT pblock)
 {
   RXEXFCAL_PARM *parmblock = (RXEXFCAL_PARM*) pblock;
   REXXOBJECT     result    = ooRexxNil;
@@ -219,7 +219,7 @@ LONG APIENTRY RexxCatchExternalFunc(LONG ExitNumber, LONG Subfunction, PEXIT pbl
       LPVOID    arguments[8];
       char      invString[256];
       char      buffer[8];
-      ConditionData cd;
+      RexxConditionData cd;
 
       // build argument array of REXX objects...
       REXXOBJECT args = ooRexxArray(1+parmblock->rxfnc_argc);
@@ -559,7 +559,7 @@ int __stdcall scriptSecurity(CLSID clsid, IUnknown *pObject)
 *  it will be handled by OrxIDispatch, just as if JScript called.
 *
 ******************************************************************************/
-LONG APIENTRY RexxValueExtension(LONG ExitNumber, LONG Subfunction, PEXIT pblock)
+LONG REXXENTRY RexxValueExtension(LONG ExitNumber, LONG Subfunction, PEXIT pblock)
 {
     RXVALCALL_PARM *parmblock = (RXVALCALL_PARM*) pblock;
     int SelectorType = 0;
@@ -605,27 +605,19 @@ LONG APIENTRY RexxValueExtension(LONG ExitNumber, LONG Subfunction, PEXIT pblock
                 Property = engine->GetExternalProperty(PropName);
                 if (Property)
                 {
-                    // GET
-                    WinEnterKernel(false);
                     result = Variant2Rexx(Property);
-                    WinLeaveKernel(false);
                     // PUT
                     if (newvalue)
                     {
                         VariantClear(Property);
-                        WinEnterKernel(false);
-                        //  >>> ??? <<< Does this return something that I can check for failure?
                         Rexx2Variant(newvalue, Property, VT_EMPTY /*(try your best)*/, 0 /*dummy argument?!*/);
-                        WinLeaveKernel(false);
                     }
                     RetCode = 0;
                 }
                 else
                 {
                     RetCode = 0;
-                    WinEnterKernel(false);
                     result = ooRexxString("");
-                    WinLeaveKernel(false);
                 }
                 break;
             case 2:
@@ -674,9 +666,7 @@ LONG APIENTRY RexxValueExtension(LONG ExitNumber, LONG Subfunction, PEXIT pblock
                                                 case VAR_STATIC:
                                                     break;   // can this be treated like VAR_CONST, too?
                                                 case VAR_CONST:
-                                                    WinEnterKernel(false);
                                                     result = Variant2Rexx(pVarDesc->lpvarValue);
-                                                    WinLeaveKernel(false);
                                                     RetCode = 0;
                                                     break;
                                                     // don't know what to do with these two:
@@ -698,9 +688,7 @@ LONG APIENTRY RexxValueExtension(LONG ExitNumber, LONG Subfunction, PEXIT pblock
 
                 if (result == NULL)
                 {
-                    WinEnterKernel(false);
                     result = ooRexxString("");
-                    WinLeaveKernel(false);
                 }
                 break;
             case 3:
@@ -754,9 +742,7 @@ LONG APIENTRY RexxValueExtension(LONG ExitNumber, LONG Subfunction, PEXIT pblock
                             // release the string array
                             free(names);
                             // create a REXX array
-                            WinEnterKernel(false);
                             result = Variant2Rexx(pVarArray);
-                            WinLeaveKernel(false);
                             RetCode = 0;
                         }
                     }
@@ -782,7 +768,7 @@ LONG APIENTRY RexxValueExtension(LONG ExitNumber, LONG Subfunction, PEXIT pblock
 /* unknown callback                                                     */
 /* this will deal with objects that REXX is unaware of, but the engine  */
 /* is...                                                                */
-LONG APIENTRY RexxNovalueHandler(LONG ExitNumber, LONG Subfunction, PEXIT pblock)
+LONG REXXENTRY RexxNovalueHandler(LONG ExitNumber, LONG Subfunction, PEXIT pblock)
 {
   RXVARNOVALUE_PARM *parmblock = (RXVARNOVALUE_PARM*) pblock;
   const char *objname = parmblock->variable_name.strptr;
@@ -812,9 +798,7 @@ LONG APIENTRY RexxNovalueHandler(LONG ExitNumber, LONG Subfunction, PEXIT pblock
         // because the top activation on the activity might not be
         // "native", we have to make sure that it is
         // (Win...Kernel() must never be executed concurrently!)
-        WinEnterKernel(false);           // we only need an activation, no activity
         result = Variant2Rexx(&temp);
-        WinLeaveKernel(false);
         // this must be a variable / constant
       } else {
         if(pDispatch == engine) {
@@ -824,9 +808,7 @@ LONG APIENTRY RexxNovalueHandler(LONG ExitNumber, LONG Subfunction, PEXIT pblock
           }
         else hResult = GetProperty(NULL,pDispatch,engine->Lang,&temp,dispID);
         if (SUCCEEDED(hResult)) {
-          WinEnterKernel(false);
           result = Variant2Rexx(&temp);
-          WinLeaveKernel(false);
         }
         VariantClear(&temp);
       }
@@ -946,12 +928,12 @@ void __stdcall createCode(void *arguments)
   LPCOLESTR  pStrCode = ((LPCOLESTR*) arguments)[0]; // script text
   OrxScript *pEngine = ((OrxScript**) arguments)[1]; // pointer to engine
   REXXOBJECT *pImage = ((REXXOBJECT **) arguments)[2];   // result object (a string containing the image)
-  ConditionData *condData = ((ConditionData**) arguments)[3]; // condition info
+  RexxConditionData *condData = ((RexxConditionData**) arguments)[3]; // condition info
 
   // "normal" local variables
   char        funcHandler[128];
   char       *script = NULL;
-  RXSTRING    source;
+  CONSTRXSTRING source;
   APIRET      rc;
 
 
@@ -979,13 +961,6 @@ void __stdcall createCode(void *arguments)
   if (condData->rc == 0) {
 #if defined(DEBUGZ)
     FPRINTF2(logfile,"RexxCreateMethod success\n");
-#endif
-    // we created the method, now "flatten" it to store it in memory (NOT REXX memory, btw)
-    // when this thread has finished, the caller can use the pointer we set here
-    //rc = RexxStoreMethod(pMethod,pImage);
-#if defined(DEBUGZ)
-    if (rc)
-      FPRINTF2(logfile,"RexxStoreMethod() failed\n");
 #endif
   }
   else {
@@ -1021,14 +996,14 @@ REXXOBJECT Create_securityObject(OrxScript  *pEngine,
     VARIANT temp;
     OLECHAR invokeString[32];
     char args[32];
-    ConditionData condData; // condition info
+    RexxConditionData condData; // condition info
     OrxScriptError *ErrObj;
     bool        ErrObj_Exists;
     APIRET      rc;
     HRESULT     hResult=S_OK;
 
 
-    memset((void*) &condData,0,sizeof(ConditionData));
+    memset((void*) &condData,0,sizeof(RexxConditionData));
     sprintf(args,"FLAGS=%d",pEngine->getSafetyOptions());
     C2W(invokeString,args,32);
     VariantInit(&temp);
@@ -1097,7 +1072,7 @@ void __stdcall runMethod(void *arguments)
   REXXOBJECT  args = ((REXXOBJECT *) arguments)[3];   // REXX parameters  (.....or.....)
   REXXOBJECT *pTargetResult = ((REXXOBJECT **) arguments)[4]; // result object
   VARIANT    **vResult = ((VARIANT***) arguments)[4]; // result variant
-  ConditionData *condData = ((ConditionData**) arguments)[5]; // condition info
+  RexxConditionData *condData = ((RexxConditionData**) arguments)[5]; // condition info
   bool       fEndThread = (((int*)arguments)[6] != 0);// end this thread?
   bool       fGetVariables = (((int*)arguments)[7] != 0); // get variables from immediate code?
 
@@ -1122,9 +1097,8 @@ void __stdcall runMethod(void *arguments)
     // needed? hResult = CoInitializeEx(NULL,COINIT_MULTITHREADED);
     //if ( hResult != S_OK) _asm int 3
   }
-  FPRINTF(logfile,"RexxLoadMethod %p\n",RexxCode);
 #endif
-    memset((void*) condData,0,sizeof(ConditionData));
+    memset((void*) condData,0,sizeof(RexxConditionData));
 
     // thread dependend registration of the engine
     registerEngineForCallback(pEngine);
@@ -1154,9 +1128,9 @@ void __stdcall runMethod(void *arguments)
       // successful execution?
       if (condData->rc == 0) {
         // _asm int 3
-        WinEnterKernel(true);
+        WinEnterKernel();
         Rexx2Variant(pResult, *vResult, VT_EMPTY /*(try your best)*/, 0 /*dummy argument?!*/);
-        WinLeaveKernel(true);
+        WinLeaveKernel();
         if (V_VT(*vResult) == VT_ERROR)
           (*vResult)->vt = VT_EMPTY;
       }

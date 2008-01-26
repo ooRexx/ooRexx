@@ -839,7 +839,7 @@ static int Initialized = 0;
 /*------------------------------------------------------------------
  * Rexx external function gateway
  *------------------------------------------------------------------*/
-APIRET APIENTRY SockFunctionGateWay(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+APIRET REXXENTRY SockFunctionGateWay(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     size_t                       i;
     APIRET                       ulRc;
@@ -905,7 +905,7 @@ APIRET APIENTRY SockFunctionGateWay(const char *name, size_t argc, PCONSTRXSTRIN
 /*------------------------------------------------------------------
  *
  *------------------------------------------------------------------*/
-APIRET APIENTRY SockVersion(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+APIRET REXXENTRY SockVersion(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     sprintf(retStr->strptr, "%d.%d.%d", ORX_VER, ORX_REL, ORX_MOD);
     retStr->strlength = strlen(retStr->strptr);
@@ -915,7 +915,7 @@ APIRET APIENTRY SockVersion(const char *name, size_t argc, PCONSTRXSTRING argv, 
 /*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
 /*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/
 #if defined(OPSYS_AIX) || defined(OPSYS_LINUX)
-APIRET APIENTRY SOCKLOADFUNCS(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+APIRET REXXENTRY SOCKLOADFUNCS(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     return(SockLoadFuncs( name, argc, argv, qName, retStr ));
 }
@@ -924,7 +924,7 @@ APIRET APIENTRY SOCKLOADFUNCS(const char *name, size_t argc, PCONSTRXSTRING argv
 /*------------------------------------------------------------------
  * load the function package
  *------------------------------------------------------------------*/
-APIRET APIENTRY SockLoadFuncs(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+APIRET REXXENTRY SockLoadFuncs(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     size_t i;
 
@@ -957,7 +957,7 @@ APIRET APIENTRY SockLoadFuncs(const char *name, size_t argc, PCONSTRXSTRING argv
 /*------------------------------------------------------------------
  * drop the function package
  *------------------------------------------------------------------*/
-APIRET APIENTRY SockDropFuncs(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+APIRET REXXENTRY SockDropFuncs(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     size_t i;
 
@@ -985,7 +985,7 @@ APIRET APIENTRY SockDropFuncs(const char *name, size_t argc, PCONSTRXSTRING argv
 /*------------------------------------------------------------------
  * cause a trap to unload the DLL
  *------------------------------------------------------------------*/
-APIRET APIENTRY SockDie(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+APIRET REXXENTRY SockDie(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int *p;
 

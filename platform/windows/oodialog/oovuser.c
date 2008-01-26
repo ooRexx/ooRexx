@@ -100,7 +100,7 @@ int nCopyAnsiToWideChar (LPWORD lpWCStr, LPSTR lpAnsiIn)
 
 
 
-ULONG APIENTRY GetStdTextSize(
+ULONG REXXENTRY GetStdTextSize(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -174,7 +174,7 @@ ULONG APIENTRY GetStdTextSize(
 }
 
 
-ULONG APIENTRY GetScreenSize(
+ULONG REXXENTRY GetScreenSize(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -196,7 +196,7 @@ ULONG APIENTRY GetScreenSize(
 }
 
 
-ULONG APIENTRY GetSysMetrics(
+ULONG REXXENTRY GetSysMetrics(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -294,7 +294,7 @@ void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx,
 
 
 
-ULONG APIENTRY UsrDefineDialog(
+ULONG REXXENTRY UsrDefineDialog(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -398,7 +398,7 @@ DWORD WINAPI WindowUsrLoopThread(LONG * arg)
 
 
 
-ULONG APIENTRY UsrCreateDialog(
+ULONG REXXENTRY UsrCreateDialog(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -617,7 +617,7 @@ void UAddNamedControl(WORD **p, CHAR * className, INT id, INT x, INT y, INT cx, 
 
 
 
-ULONG APIENTRY UsrAddControl(
+ULONG REXXENTRY UsrAddControl(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -908,7 +908,7 @@ LONG EvaluateListStyle(CHAR * styledesc)
 /* Store a resource in a resource table.  Currently this is only icon resources,
  * but this function could be expanded to include other resources.
  */
-ULONG APIENTRY UsrAddResource(
+ULONG REXXENTRY UsrAddResource(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -984,7 +984,7 @@ ULONG APIENTRY UsrAddResource(
     RETC(0)
 }
 
-ULONG APIENTRY UsrAddNewCtrl(
+ULONG REXXENTRY UsrAddNewCtrl(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -1183,7 +1183,7 @@ BOOL IsNestedDialogMessage(
 
 
 
-ULONG APIENTRY UsrMenu(
+ULONG REXXENTRY UsrMenu(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],

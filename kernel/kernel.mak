@@ -128,7 +128,9 @@ OKPOBJ4=$(OR_OUTDIR)\QueueClass.$(OBJ)  $(OR_OUTDIR)\SupplierClass.$(OBJ)  \
 OKPOBJ5=$(OR_OUTDIR)\IntegerClass.$(OBJ)    $(OR_OUTDIR)\NumberStringClass.$(OBJ)
 OKIOBJ1=$(OR_OUTDIR)\RexxActivation.$(OBJ) $(OR_OUTDIR)\RexxActivity.$(OBJ) $(OR_OUTDIR)\KeywordConstants.$(OBJ)  \
         $(OR_OUTDIR)\RexxBehaviour.$(OBJ)  $(OR_OUTDIR)\BufferClass.$(OBJ) $(OR_OUTDIR)\ActivityManager.$(OBJ) \
-	$(OR_OUTDIR)\Interpreter.$(OBJ)
+	$(OR_OUTDIR)\Interpreter.$(OBJ) $(OR_OUTDIR)\SystemInterpreter.$(OBJ) $(OR_OUTDIR)\RexxStartDispatcher.$(OBJ) \
+	$(OR_OUTDIR)\InterpreterInstance.$(OBJ) $(OR_OUTDIR)\ActivityDispatcher.$(OBJ) $(OR_OUTDIR)\TranslateDispatcher.$(OBJ) \
+	$(OR_OUTDIR)\CreateMethodDispatcher.$(OBJ) $(OR_OUTDIR)\CallbackDispatcher.$(OBJ)
 OKIOBJ2=$(OR_OUTDIR)\RexxHashTable.$(OBJ)  $(OR_OUTDIR)\RexxCode.$(OBJ) $(OR_OUTDIR)\LibraryManager.$(OBJ) \
         $(OR_OUTDIR)\RexxListTable.$(OBJ) $(OR_OUTDIR)\RexxNativeActivation.$(OBJ) $(OR_OUTDIR)\RexxNativeCode.$(OBJ) \
 	$(OR_OUTDIR)\CPPCode.$(OBJ)
@@ -169,10 +171,6 @@ SYSERR= $(OR_OUTDIR)\ErrorMessages.$(OBJ)
 ORYXKOBJ= $(OKCOBJS) $(OKAOBJS) $(OKPOBJS) $(OKIOBJS) $(OKSOBJS) $(OEPOBJS)\
           $(OTPOBJS) $(SYSOBJS) $(OKNOBJS) $(SYSERR)
 
-#oryxlib
-ORYXLOBJ = $(OR_OUTDIR)\LocalProcessData.$(OBJ)
-#           $(OR_OUTDIR)\olthread.$(OBJ)   not needed anymore
-
 #    Windows Universal Thunk 32-bit stub
 #    16-bit side must be built with 16-bit compiler
 #    Also, you will need to get some components from the \win32s\ut
@@ -200,7 +198,7 @@ ORXHEADERS=$(KMESSAGES)\RexxErrorCodes.h $(KMESSAGES)\RexxMessageNumbers.h $(KME
 #
 # the type command creates a file of all objects as input to the lib
 #
-$(OR_OUTDIR)\rexx.lib : $(ORYXKOBJ) $(ORYXLOBJ)     \
+$(OR_OUTDIR)\rexx.lib : $(ORYXKOBJ)  \
                   $(KWINDOWS)\wrexx.def
    type <<$(OR_OUTDIR)\oryxk.lst
    $(ORYXKOBJ) $(ORYXLOBJ)

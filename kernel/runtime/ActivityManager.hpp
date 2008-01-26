@@ -43,7 +43,6 @@ class RexxObjectTable;
 class RexxStack;
 class RexxCode;
 
-
 class ActivityManager
 {
 public:
@@ -69,8 +68,8 @@ public:
     static void lockKernel();
     static void unlockKernel();
     static bool lockKernelImmediate();
-    static void createKernelLock();
-    static void closeKernelLock();
+    static void createLocks();
+    static void closeLocks();
     static void init();
     static RexxActivation *newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code, RexxActivation *parent, RexxString *calltype, RexxString *environment, int context);
     static RexxActivation *newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code);
@@ -86,12 +85,22 @@ public:
     static void yieldCurrentActivity();
     static bool yieldActivity(thread_id_t thread_id);
     static void exit(int retcode);
-    static void startup();
     static void relinquish(RexxActivity *activity);
+    static RexxActivity *getRootActivity();
+    static RexxActivity *attachThread();
 
     static RexxActivity *currentActivity;   // the currently active thread
     static RexxDirectory *localEnvironment; // the .local environment
-    static RexxObject *localServer;         // local environment initialization server
+
+    static inline void postTermination()
+    {
+        EVPOST(terminationSem);              /* let anyone who cares know we're done*/
+    }
+
+    static inline void waitForTermination()
+    {
+        EVWAIT(terminationSem);              // wait until this is posted
+    }
 
 protected:
     enum
@@ -118,6 +127,7 @@ protected:
     static size_t            interpreterInstances;  // number of times an interpreter has been created.
 
     static SMTX              kernelSemaphore;       // global kernel semaphore lock
+    static SEV               terminationSem;    // used to signal that everything has shutdown
 };
 
 
@@ -288,28 +298,40 @@ protected:
 };
 
 
+/**
+ * A class that can be used to release kernel exclusive access inside
+ * a block and have the kernel access automatically reobtained
+ * once the UnsafeBlock object goes out of scope.
+ */
+class CalloutBlock
+{
+public:
+    CalloutBlock()
+    {
+        activity = ActivityManager::currentActivity;
+        activity->exitKernel();
+    }
+
+    ~CalloutBlock()
+    {
+        activity->enterKernel();
+    }
+protected:
+    RexxActivity *activity;
+};
+
+
 
 class NativeContextBlock
 {
 public:
-    inline NativeContextBlock()
-    {
-        activity = ActivityManager::getActivity();
-        self = (RexxNativeActivation *)ActivityManager::currentActivity->current();
-    }
-    inline ~NativeContextBlock()
-    {
-        // release the kernel lock
-        activity->releaseAccess();
-    }
+    NativeContextBlock();
+    ~NativeContextBlock();
+    RexxObject *protect(RexxObject *o);
 
-    inline RexxObject *protect(RexxObject *o)
-    {
-        return activity->nativeRelease(o);
-    }
-
-    RexxNativeActivation *self;
-    RexxActivity         *activity;
+    RexxNativeActivation *self;        // the native activation we operate under
+    RexxActivity         *activity;    // our current activity
+    InterpreterInstance  *instance;    // potential interpreter instance
 };
 
 #endif

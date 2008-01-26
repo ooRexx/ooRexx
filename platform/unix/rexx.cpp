@@ -62,15 +62,6 @@
 
 #include "rexx.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-bool   APIENTRY RexxInitialize (void);
-char * APIENTRY RexxGetVersionInformation(void);
-#ifdef __cplusplus
-}
-#endif
-
 #if defined(AIX)
 #define SYSINITIALADDRESS "ksh"
 #elif defined(OPSYS_SUN)
@@ -79,7 +70,6 @@ char * APIENTRY RexxGetVersionInformation(void);
 #define SYSINITIALADDRESS "bash"
 #endif
 
-extern bool ProcessSaveImage;
                                        /* semaphore type changed from HEV to OSEM */
                                        /* for AIX.                          */
 int main (int argc, char **argv)
@@ -105,10 +95,6 @@ int main (int argc, char **argv)
                                        /* is this option a switch?          */
     if (program_name == NULL && (*(cp=*(argv+i)) == '-'))
       switch (*++cp) {
-        case 'i': case 'I':            /* image build                       */
-          ProcessSaveImage = true;     /* say this is a save image          */
-          break;
-
         case 'e': case 'E':            /* execute from string               */
           from_string = true;          /* hit the startup flags             */
           if ( argc == i+1 ) {
@@ -144,48 +130,42 @@ int main (int argc, char **argv)
     }
   }
                                        /* missing a program name?           */
-  if (program_name == NULL && !ProcessSaveImage) {
+  if (program_name == NULL)
+  {
                                        /* give a simple error message       */
     fprintf(stderr,"Syntax is \"rexx [-v] filename [arguments]\"\n");
     fprintf(stderr,"or        \"rexx [-e] program_string [arguments]\".\n");
     return -1;
   }
 
-  if (program_name == NULL) {          /* no program to run?                */
-                                       /* This is a Saveimage ...           */
-    setbuf(stdout,NULL);               /* no buffering                      */
-    RexxInitialize();                  /* do normal REXX init               */
-  }
-  else {                               /* real program execution            */
-    argCount = (argCount==0) ? 0 : 1;  /* is there an argument ?            */
-                                       /* make an argument                  */
-    MAKERXSTRING(argument, arg_buffer, strlen(arg_buffer));
-                                       /* run this via RexxStart            */
+  argCount = (argCount==0) ? 0 : 1;  /* is there an argument ?            */
+                                     /* make an argument                  */
+  MAKERXSTRING(argument, arg_buffer, strlen(arg_buffer));
+                                     /* run this via RexxStart            */
 
-    if (from_string)
-    {
-      rc = RexxStart(argCount,         /* number of arguments    */
-                     &argument,        /* array of arguments     */
-                     program_name,     /* INSTORE                */
-                     instore,          /* rexx code from -e      */
-                     SYSINITIALADDRESS,/* command env. name      */
-                     RXCOMMAND,        /* code for how invoked   */
-                     NULL,
-                     &rexxrc,          /* REXX program output    */
-                     NULL);            /* REXX program output    */
-    }
-    else
-    {
-      rc = RexxStart(argCount,         /* number of arguments    */
-                     &argument,        /* array of arguments     */
-                     program_name,     /* name of REXX file      */
-                     0,                /* no instore used        */
-                     SYSINITIALADDRESS,/* command env. name      */
-                     RXCOMMAND,        /* code for how invoked   */
-                     NULL,
-                     &rexxrc,          /* REXX program output    */
-                     NULL);            /* REXX program output    */
-    }
+  if (from_string)
+  {
+    rc = RexxStart(argCount,         /* number of arguments    */
+                   &argument,        /* array of arguments     */
+                   program_name,     /* INSTORE                */
+                   instore,          /* rexx code from -e      */
+                   SYSINITIALADDRESS,/* command env. name      */
+                   RXCOMMAND,        /* code for how invoked   */
+                   NULL,
+                   &rexxrc,          /* REXX program output    */
+                   NULL);            /* REXX program output    */
+  }
+  else
+  {
+    rc = RexxStart(argCount,         /* number of arguments    */
+                   &argument,        /* array of arguments     */
+                   program_name,     /* name of REXX file      */
+                   0,                /* no instore used        */
+                   SYSINITIALADDRESS,/* command env. name      */
+                   RXCOMMAND,        /* code for how invoked   */
+                   NULL,
+                   &rexxrc,          /* REXX program output    */
+                   NULL);            /* REXX program output    */
   }
   return rc ? rc : rexxrc;
 

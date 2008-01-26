@@ -854,9 +854,6 @@ CPPM(RexxRelation::hasItem),
 CPPM(RexxRelation::newRexx),
 
 CPPM(RexxLocal::local),                /* the .local environment methods    */
-CPPM(RexxLocal::runProgram),
-CPPM(RexxLocal::callProgram),
-CPPM(RexxLocal::callString),
 
 CPPM(RexxPointer::equal),
 CPPM(RexxPointer::notEqual),

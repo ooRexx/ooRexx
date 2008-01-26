@@ -60,6 +60,7 @@
 # include <nl_types.h>
 #endif
 
+#include "rexx.h" 
 #include "PlatformDefinitions.h"        /* added for cat name + defs          */
 #include "RexxMessageNumbers.h"
 
@@ -71,15 +72,6 @@
 #else
 #define SECOND_PARAMETER 0              /* 0 for no  NL_CAT_LOCALE            */
 #endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-APIRET APIENTRY RexxTranslateProgram(const char *, const char *);
-#ifdef __cplusplus
-}
-#endif
-
 
 void DisplayError(int msgid)           /* simplified catalog access@MAE004M */
 {
@@ -170,8 +162,8 @@ int main (int argc, char **argv)
       exit(-2);                        /* terminate with an error           */
     }
                                        /* translate and save the output     */
-    return RexxTranslateProgram(argv[1], argv[2]);
+    return RexxTranslateProgram(argv[1], argv[2], NULL);
   }
   else                                 /* just doing syntax check           */
-    return RexxTranslateProgram(argv[1], NULL);
+    return RexxTranslateProgram(argv[1], NULL, NULL);
 }

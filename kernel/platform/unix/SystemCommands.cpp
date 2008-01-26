@@ -62,9 +62,10 @@
 #include "RexxActivity.hpp"
 #include "RexxNativeAPI.h"                           /* Lot's of useful REXX macros    */
 #include "ActivityManager.hpp"
+#include "SystemInterpreter.hpp"
 
 #include "SystemCommands.h"
-#include "SubcommandAPI.h"                  /* Get private REXX API's         */
+#include "RexxInternalApis.h"
 #include <sys/types.h>
 #include <pwd.h>
 #include <limits.h>
@@ -92,8 +93,6 @@
 #define MAX_VALUE   1280
 
 extern int putflag;
-
-extern char achRexxCurDir[ CCHMAXPATH+2 ];  /* Save current working direct    */
 
 char * args[MAX_COMMAND_ARGS+1];            /* Array for argument parsing */
 
@@ -164,11 +163,13 @@ RexxObject * SysCommand(
 
   sbrc = 0;                               /* set initial subcom return code */
                                        /* get ready to call the function    */
-  activity->exitKernel(activation);
-  rc=RexxCallSubcom(current_address, NULL, &rxstrcmd, &flags, &sbrc, &retstr);
-  activity->enterKernel();             /* now re-enter the kernel           */
 
-/* END CRITICAL window here -->>  kernel calls now allowed again            */
+// BEGIN CRITICAL window here -->>  absolutely no kernel calls inside this window
+  {
+      CalloutBlock releaser;
+      rc=RexxCallSubcom(current_address, NULL, &rxstrcmd, &flags, &sbrc, &retstr);
+  }
+// END CRITICAL window here -->>  kernel calls now allowed again
 
   /****************************************************************************/
   /* If subcom isn't registered and it happens to be the current system cmd   */
@@ -567,14 +568,8 @@ bool sys_process_cd(const char * cmd, int * rc)
     *rc = chdir(dir_buf);
 
     free(dir_buf);
-
-    if (!getcwd(achRexxCurDir, CCHMAXPATH))    /* Save current working direct */
-    {
-      strncpy( achRexxCurDir, getenv("PWD"), CCHMAXPATH);
-      achRexxCurDir[CCHMAXPATH - 1] = '\0';
-      if (achRexxCurDir[0] != '/' )
-        reportException(Error_System_service);  /* Complain if it fails        */
-    }
+    // update our current working dir. 
+    SystemInterpreter::updateCurrentWorkingDirectory(); 
     return true;
 }
 

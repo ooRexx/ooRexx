@@ -175,10 +175,11 @@ typedef enum
     T_Clause = 108,
     T_Token = 109,
     T_DoBlock = 110,
+    T_InterpreterInstance = 111,
 
-    T_Last_Transient_Class = 110,
-    T_Last_Primitive_Class = 110,
-    T_Last_Class_Type = 110,
+    T_Last_Transient_Class = 111,
+    T_Last_Primitive_Class = 111,
+    T_Last_Class_Type = 111,
     
 } ClassTypeCode;
 

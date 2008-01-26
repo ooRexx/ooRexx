@@ -59,8 +59,6 @@
 
 enum { STOP, START };
 
-void SysRunProgram(void *arguments);   /* system dependent program startup  */
-
 
 RexxDirectory *RexxLocal::local()
 /******************************************************************************/
@@ -72,66 +70,3 @@ RexxDirectory *RexxLocal::local()
   return ActivityManager::localEnvironment;
 }
 
-RexxObject *RexxLocal::runProgram(
-  RexxPointer *arguments)              /* system specific arguments         */
-/******************************************************************************/
-/* Function:  Bootstrap the process of running a REXX program                 */
-/******************************************************************************/
-{
-  void *   argument_block;             /* system dependent argument block   */
-
-                                       /* get the argument pointer          */
-  argument_block = (void *)arguments->pointer();
-  SysRunProgram(argument_block);       /* go run the program                */
-  return OREF_NULL;                    /* always returns null               */
-}
-
-RexxObject *RexxLocal::callProgram(
-  RexxObject **arguments,              /* call program arguments            */
-  size_t       argCount)               /* number of arguments               */
-/******************************************************************************/
-/* Function:  Call a program through the RexxCallProgram interface            */
-/******************************************************************************/
-{
-  RexxMethod *routine;                 /* method to call                    */
-  RexxString *filename;                /* file to call                      */
-  RexxObject *result;                  /* call result                       */
-
-  result = OREF_NULL;
-                                       /* go resolve the name               */
-  filename = SysResolveProgramName((RexxString *)arguments[0], OREF_NULL);
-  if (filename != OREF_NULL) {         /* found something?                  */
-                                       /* try to restore saved image        */
-    routine = (RexxMethod *)SysRestoreProgram(filename);
-    if (routine == OREF_NULL) {        /* unable to restore?                */
-                                       /* go translate the image            */
-      routine = TheMethodClass->newFile(filename);
-                                       /* go save this method               */
-      SysSaveProgram(filename, routine);
-    }
-    if (routine != OREF_NULL)          /* Do we have a method???            */
-                                       /* run as a call                     */
-      result = ((RexxObject *)ActivityManager::currentActivity)->shriekRun(routine, OREF_COMMAND, OREF_INITIALADDRESS, arguments + 1, argCount - 1);
-  }
-  else
-    reportException(Error_Routine_not_found_name, arguments[0]);
-                                       /* run and get the result            */
-  return result;
-}
-
-RexxObject *RexxLocal::callString(
-    RexxObject **arguments,              /* call program arguments            */
-    size_t       argCount)               /* number of arguments               */
-/******************************************************************************/
-/* Function:  Call a program through the RexxCallString  interface            */
-/******************************************************************************/
-{
-  RexxMethod *method;                  /* method to call                    */
-  RexxObject *result;                  /* call result                       */
-
-                                       /* go translate the image            */
-  method = TheMethodClass->newRexxCode(OREF_COMMAND, arguments[0], IntegerOne);
-                                       /* run and get the result            */
-  result = ((RexxObject *)ActivityManager::currentActivity)->shriekRun(method, OREF_COMMAND, OREF_INITIALADDRESS, arguments + 1, argCount - 1);
-  return result;
-}

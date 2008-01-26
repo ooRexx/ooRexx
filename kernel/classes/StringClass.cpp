@@ -1609,6 +1609,27 @@ RexxObject *RexxString::evaluate(
   return this;                         /* also return the result            */
 }
 
+
+/**
+ * Copy a string to an RXSTRING, with appropriate allocation
+ * of a new buffer if required.
+ *
+ * @param r
+ */
+void RexxString::copyToRxstring(RXSTRING &r)
+{
+    size_t result_length = getLength() + 1;
+    if (r.strptr == NULL || r.strlength < result_length)
+    {
+        r.strptr = (char *)SysAllocateResultMemory(result_length);
+    }
+    // copy all of the data + the terminating null
+    memcpy(r.strptr, getStringData(), result_length);
+    // fill in the length too
+    r.strlength = getLength();
+}
+
+
 RexxString *RexxString::newString(const char *string, size_t length)
 /******************************************************************************/
 /* Function:  Allocate (and initialize) a string object                       */

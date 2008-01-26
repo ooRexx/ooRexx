@@ -48,9 +48,6 @@
 class RexxLocal     : public RexxObject {
    public:
      RexxDirectory *local();
-     RexxObject *runProgram(RexxPointer *);
-     RexxObject *callProgram(RexxObject **, size_t);
-     RexxObject *callString(RexxObject **, size_t);
 };
 
 #endif

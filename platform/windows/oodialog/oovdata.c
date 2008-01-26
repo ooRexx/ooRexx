@@ -363,7 +363,7 @@ BOOL SetTabCtrlData(HWND hW, char * ldat, INT item)
 }
 
 
-ULONG APIENTRY GetItemData(
+ULONG REXXENTRY GetItemData(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -468,7 +468,7 @@ ULONG APIENTRY GetItemData(
 
 
 
-ULONG APIENTRY SetItemData(
+ULONG REXXENTRY SetItemData(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -551,7 +551,7 @@ ULONG APIENTRY SetItemData(
 
 
 
-ULONG APIENTRY SetStemData(
+ULONG REXXENTRY SetStemData(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -649,7 +649,7 @@ ULONG APIENTRY SetStemData(
 
 
 
-ULONG APIENTRY GetStemData(
+ULONG REXXENTRY GetStemData(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],
@@ -746,7 +746,7 @@ ULONG APIENTRY GetStemData(
 }
 
 
-ULONG APIENTRY DataTable(
+ULONG REXXENTRY DataTable(
   PUCHAR funcname,
   ULONG argc,
   RXSTRING argv[],

@@ -353,7 +353,6 @@ class RexxObject : public RexxInternalObject {
 
      virtual ~RexxObject(){;};
 
-     virtual RexxMethod  *methodObject(RexxString *);
      virtual RexxObject  *defMethod(RexxString *, RexxMethod *, RexxString *a = OREF_NULL);
      virtual RexxString  *defaultName();
      virtual RexxObject  *unknown(RexxString *msg, RexxArray *args){return OREF_NULL;};
@@ -409,7 +408,6 @@ class RexxObject : public RexxInternalObject {
      RexxMessage *start(RexxObject **, size_t);
      RexxString  *oref();
      RexxObject  *pmdict();
-     RexxObject  *shriekRun(RexxMethod *, RexxString *, RexxString *, RexxObject **, size_t);
      RexxObject  *run(RexxObject **, size_t);
 
      void         messageSend(RexxString *, size_t, RexxObject **, ProtectedObject &);
@@ -549,22 +547,31 @@ class RexxList;
 
 
 class RexxActivationBase : public RexxInternalObject{
-  public:
-     inline RexxActivationBase() {;};
-     inline RexxActivationBase(RESTORETYPE restoreType) { ; };
-     virtual RexxObject  *dispatch() {return NULL;};
-     virtual RexxObject  *getReceiver() {return NULL;};
-     virtual void traceBack(RexxList *) {;};
-     virtual size_t digits() {return Numerics::DEFAULT_DIGITS;};
-     virtual size_t fuzz() {return Numerics::DEFAULT_FUZZ;};
-     virtual bool form() {return Numerics::DEFAULT_FORM;};
-     virtual void setDigits(size_t) {;};
-     virtual void setFuzz(size_t) {;};
-     virtual void setForm(bool) {;}
-     virtual bool trap(RexxString *, RexxDirectory *) {return false;};
-     virtual void setObjNotify(RexxMessage *) {;};
-     virtual void termination(){;};
-     virtual bool hasSecurityManager() { return false; }
-     virtual bool isForwarded() { return false; }
+public:
+    inline RexxActivationBase() {;};
+    inline RexxActivationBase(RESTORETYPE restoreType) { ; };
+    virtual RexxObject  *dispatch() {return NULL;};
+    virtual void traceBack(RexxList *) {;};
+    virtual size_t digits() {return Numerics::DEFAULT_DIGITS;};
+    virtual size_t fuzz() {return Numerics::DEFAULT_FUZZ;};
+    virtual bool form() {return Numerics::DEFAULT_FORM;};
+    virtual NumericSettings *getNumericSettings() { return Numerics::getDefaultSettings(); }
+    virtual RexxActivation *getRexxContext() { return OREF_NULL; }
+    virtual void setDigits(size_t) {;};
+    virtual void setFuzz(size_t) {;};
+    virtual void setForm(bool) {;}
+    virtual bool trap(RexxString *, RexxDirectory *) {return false;};
+    virtual void setObjNotify(RexxMessage *) {;};
+    virtual void termination(){;};
+    virtual bool hasSecurityManager() { return false; }
+    virtual bool isForwarded() { return false; }
+    virtual bool isStackBase() { return false; }
+    virtual RexxObject *getReceiver() { return OREF_NULL; }
+    inline void setPreviousStackFrame(RexxActivationBase *p) { previous = p; }
+    inline RexxActivationBase *getPreviousStackFrame() { return previous; }
+
+protected:
+    RexxActivationBase *previous;
+
 };
 #endif

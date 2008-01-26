@@ -88,7 +88,7 @@
 class OrxScriptError : public IActiveScriptError {
 
   public:
-    OrxScriptError(FILE *Stream, ConditionData *info, bool *Exists);    // CTOR
+    OrxScriptError(FILE *Stream, RexxConditionData *info, bool *Exists);    // CTOR
     ~OrxScriptError();                // DTOR
 
 
@@ -110,7 +110,7 @@ class OrxScriptError : public IActiveScriptError {
 
     FILE          *logfile;
     ULONG          ulRefCount;                 // reference count
-    ConditionData  RexxErrorInfo;              // error info if a script returns with an error
+    RexxConditionData  RexxErrorInfo;          // error info if a script returns with an error
     bool          *RunDestructor;              // True, destroy the object: false, we are not here any more.
 
     };

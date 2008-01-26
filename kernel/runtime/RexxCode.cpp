@@ -94,7 +94,7 @@ void RexxCode::call(
     activity->checkStackSpace();       /* have enough stack space?          */
                                        /* add to the activity stack         */
     RexxActivation *newacta = ActivityManager::newActivation(activity, method, this, OREF_NULL, calltype, environment, context);
-    activity->push(newacta);
+    activity->pushStackFrame(newacta);
                 /* run the method and return result  */
     newacta->run(receiver, msgname, argPtr, argcount, OREF_NULL, result);
 }
@@ -114,10 +114,10 @@ void RexxCode::run(
 {
     RexxActivation *newacta = ActivityManager::newActivation(activity, method, this);
                                        /* add to the activity stack         */
-    activity->push(newacta);
+    activity->pushStackFrame(newacta);
                                        /* run the method and return result  */
     newacta->run(receiver, msgname, argPtr, argcount, OREF_NULL, result);
-    ActivityManager::currentActivity->yield(NULL);    /* yield control now */
+    ActivityManager::currentActivity->yieldControl();    /* yield control now */
 }
 
 
