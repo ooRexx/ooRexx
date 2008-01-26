@@ -248,6 +248,15 @@ FPRINTF2(logfile,"OrxNamedItem::WhoKnows() looking for \"%s\"\n",pName);
           else
             RetCode = DISP_E_UNKNOWNNAME;
           if(SUCCEEDED(RetCode)) {
+
+            /* TODO This is just plain wrong here, including the comment.  One
+             * of the SysAllocXX functions should be used to create the BSTR and
+             * SysFreeString should be used to free it.  BSTR memory is owned
+             * by the OS and can be (and is) passed between process boundaries.
+             * Allocating local memory and then using it as a BSTR in a COM call
+             * is simply not correct.
+             */
+
             // the MSDN Library defines BSTR in two(!) ways:
             // BSTR <=> OLECHAR* and as a "VB-compatible" structure: <32-bits: length><array of ole chars>
             //
@@ -256,7 +265,7 @@ FPRINTF2(logfile,"OrxNamedItem::WhoKnows() looking for \"%s\"\n",pName);
             // of the OLECHAR array before the actual characters in memory...
             size_t len = wcslen(lName);
             OLECHAR *VB_BSTR = (OLECHAR*) malloc(4+sizeof(OLECHAR)*(len+1));
-            *((unsigned int*) VB_BSTR) = len;
+            *((size_t *) VB_BSTR) = len;
             memcpy(VB_BSTR+2,lName,sizeof(OLECHAR)*(len+1));
             // this line changed: pass in pointer to OLECHARs, but have the length of the string before them...
             RetCode = DispEx->GetDispID(VB_BSTR+2, fdexNameCaseInsensitive, &DispID);

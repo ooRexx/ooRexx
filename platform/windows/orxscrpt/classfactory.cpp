@@ -55,7 +55,7 @@ HRESULT CreateComponentCategory(CATID catid, OLECHAR* catDescription)
   ICatRegister *pcr = NULL;
   HRESULT      hr = S_OK;
   CATEGORYINFO catinfo;
-  int          iLen;
+  size_t       iLen;
 
   hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr,
                         NULL, CLSCTX_INPROC_SERVER, IID_ICatRegister,

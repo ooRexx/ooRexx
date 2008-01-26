@@ -354,6 +354,7 @@ STDMETHODIMP ESource::InitEvent(IDispatch *SourceDispatch,
     EMCount = TypeAttributes->cFuncs;
     SourceType->ReleaseTypeAttr(TypeAttributes);
 #if defined(DEBUGZ)
+    OLECHAR    lGUID[50];
     StringFromGUID2(SourceGUID,lGUID,sizeof(lGUID));
     FPRINTF2(logfile,"The GUID is %S and there are %d functions.\n",lGUID,EMCount);
 #endif
@@ -983,7 +984,7 @@ STDMETHODIMP ESource::SetMap(LPCOLESTR pName, DISPID SinkDispID) {
    */
   while(Map) {
 #if defined(DEBUGZ)
-    tab = 20 - wcslen(pName);
+    size_t tab = 20 - wcslen(pName);
     tab = tab < 1 ? 1 : tab;
   FPRINTF2(logfile,"ESource::SetMap \"%S\" %*s \"%S\"\n",pName,tab," ",Map->SourceEventName);
 #endif
