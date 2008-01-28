@@ -1736,7 +1736,7 @@ bool RexxActivation::trap(             /* trap a condition                  */
     {/* in the act of forwarding?         */
         activation = this->sender;         /* get the sender activation         */
                                            /* have a predecessor?               */
-        while (activation != (RexxActivation *)TheNilObject)
+        while (activation != OREF_NULL)
         {
             if (!activation->isForwarded())  /* non forwarded?                    */
             {
