@@ -100,7 +100,7 @@ void RexxActivity::runThread()
 
     SysInitializeThread();               /* system specific thread init       */
                                          /* establish the stack base pointer  */
-    this->nestedInfo.stackptr = SysGetThreadStackBase(TOTAL_STACK_SIZE);
+    this->stackBase = SysGetThreadStackBase(TOTAL_STACK_SIZE);
     SysRegisterExceptions(&exreg);       /* create needed exception handlers  */
     for (;;)
     {
@@ -192,6 +192,11 @@ void RexxActivity::exitCurrentThread()
 {
     // deactivate the nesting level
     deactivate();
+    // if we're inactive, try to run any pending uninits
+    if (isInactive())
+    {
+        memoryObject.runUninits();
+    }
     // this activity owned the kernel semaphore before entering here...release it
     // now.
     releaseAccess();
@@ -250,7 +255,7 @@ RexxActivity::RexxActivity(
 #endif
             this->priority = MEDIUM_PRIORITY;/* switch to medium priority         */
                                              /* establish the stack base pointer  */
-            this->nestedInfo.stackptr = SysGetThreadStackBase(TOTAL_STACK_SIZE);
+            this->stackBase = SysGetThreadStackBase(TOTAL_STACK_SIZE);
         }
         this->generateRandomNumberSeed();  /* get a fresh random seed           */
                                            /* Create table for progream being   */
@@ -294,10 +299,10 @@ void RexxActivity::generateRandomNumberSeed()
   rnd++;
   SysGetCurrentTime(&timestamp);       /* get a fresh time stamp            */
                                        /* take the seed from the time       */
-  this->nestedInfo.randomSeed = rnd + (((timestamp.hours * 60 + timestamp.minutes) * 60 + timestamp.seconds) * 1000) + timestamp.microseconds/1000;
+  randomSeed = rnd + (((timestamp.hours * 60 + timestamp.minutes) * 60 + timestamp.seconds) * 1000) + timestamp.microseconds/1000;
   for (i = 0; i < 13; i++) {           /* randomize the seed number a bit   */
                                        /* scramble the seed a bit           */
-    this->nestedInfo.randomSeed = RANDOMIZE(this->nestedInfo.randomSeed);
+      randomSeed = RANDOMIZE(randomSeed);
   }
 }
 
@@ -1456,7 +1461,7 @@ void RexxActivity::addToInstance(InterpreterInstance *interpreter)
     // copy all of the system exits
     for (int i = 0; i < LAST_EXIT; i++)
     {
-        nestedInfo.sysexits[i] = interpreter->getExitHandler(i + 1);
+        sysexits[i] = interpreter->getExitHandler(i + 1);
     }
     // set the appropriate exit interlocks
     queryTrcHlt();
@@ -1734,7 +1739,7 @@ void RexxActivity::checkStackSpace()
 {
 #ifdef STACKCHECK
   size_t temp;                          /* if checking and there isn't room  */
-  if ((char *)&temp - (char *)this->nestedInfo.stackptr < MIN_C_STACK && this->stackcheck == true)
+  if ((char *)&temp - (char *)stackBase < MIN_C_STACK && this->stackcheck == true)
                                        /* go raise an exception             */
     reportException(Error_Control_stack_full);
 #endif
@@ -1764,17 +1769,17 @@ void RexxActivity::queryTrcHlt()
 {                                      /* is HALT sys exit set              */
   if (isExitEnabled(RXHLT))
   {
-    this->nestedInfo.clauseExitUsed = true;   /* set flag to indicate one is found */
+    clauseExitUsed = true;             /* set flag to indicate one is found */
     return;                            /* and return                        */
   }
                                        /* is TRACE sys exit set             */
   if (isExitEnabled(RXTRC))
   {
-    this->nestedInfo.clauseExitUsed = true;   /* set flag to indicate one is found */
+    clauseExitUsed = true;             /* set flag to indicate one is found */
     return;                            /* and return                        */
   }
 
-  this->nestedInfo.clauseExitUsed = false;    /* remember that none are set        */
+  clauseExitUsed = false;              /* remember that none are set        */
 }
 
 
@@ -1805,7 +1810,7 @@ bool RexxActivity::callExit(RexxActivation * activation,
         {
             /* disable the I/O exit from here to   */
             /* prevent recursive error conditions  */
-            nestedInfo.sysexits[RXSIO].disable();
+            sysexits[RXSIO].disable();
         }
         if (function != RXTER)             /* not the termination exit?           */
         {
@@ -2772,10 +2777,9 @@ void RexxActivity::run(ActivityDispatcher &target)
 {
   SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
   size_t  startDepth;                  /* starting depth of activation stack*/
-  NestedActivityState saveInfo;        /* saved activity info               */
 
                                        /* make sure we have the stack base  */
-  this->nestedInfo.stackptr = SysGetThreadStackBase(TOTAL_STACK_SIZE);
+  stackBase = SysGetThreadStackBase(TOTAL_STACK_SIZE);
   this->generateRandomNumberSeed();    /* get a fresh random seed           */
                                        /* Push marker onto stack so we know */
   this->createNewActivationStack();    /* what level we entered.            */
@@ -2813,7 +2817,6 @@ void RexxActivity::run(ActivityDispatcher &target)
   restoreActivationLevel(activityLevel);
   // give uninit objects a chance to run
   memoryObject.runUninits();
-  this->restoreNestedInfo(saveInfo);   /* now restore to previous nesting   */
   SysDeregisterSignals(&exreg);        /* deregister the signal handlers    */
   // unwind to the same stack depth as the start, removing all new entries
   unwindToDepth(startDepth);
@@ -2857,9 +2860,9 @@ void RexxActivity::inheritSettings(RexxActivity *parent)
     // copy all of the system exits
     for (int i = 0; i < LAST_EXIT; i++)
     {
-        nestedInfo.sysexits[i] = parent->nestedInfo.sysexits[i];
+        sysexits[i] = parent->sysexits[i];
     }
-    nestedInfo.clauseExitUsed = parent->nestedInfo.clauseExitUsed;
+    clauseExitUsed = clauseExitUsed;
 }
 
 

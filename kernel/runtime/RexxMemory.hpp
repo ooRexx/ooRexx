@@ -244,6 +244,7 @@ class RexxMemory : public RexxObject {
   void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
   void        setUpMemoryTables(RexxObjectTable *old2newTable);
   void        forceUninits();
+  void        collectAndUninit();
   inline RexxDirectory *getGlobalStrings() { return globalStrings; }
   void        addWeakReference(WeakReference *ref);
   void        checkWeakReferences();

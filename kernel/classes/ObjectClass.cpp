@@ -1441,7 +1441,7 @@ RexxInteger *RexxObject::hasMethod(RexxString *msgname)
 /******************************************************************************/
 {
                                        /* check the behaviour for the method*/
-  return (this->behaviour->methodObject(msgname) != OREF_NULL) ? TheTrueObject : TheFalseObject;
+  return (this->behaviour->methodLookup(msgname) != OREF_NULL) ? TheTrueObject : TheFalseObject;
 }
 
 RexxClass   *RexxObject::classObject()

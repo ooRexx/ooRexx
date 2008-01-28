@@ -231,7 +231,7 @@ bool InterpreterInstance::poolActivity(RexxActivity *activity)
             activity->activate();
             // before we update of the data structures, make sure we process any
             // pending uninit activity.
-            memoryObject.forceUninits();
+            memoryObject.runUninits();
             // ok, deactivate this again.
             activity->deactivate();
             signalShutdown = true;
@@ -401,9 +401,11 @@ bool InterpreterInstance::terminate()
         // This activity is currently the current activity.  We're going to run the
         // uninits on this one, so reactivate it until we're done running
         enterOnCurrentThread();
+        // release any global references we've been holding.
+        globalReferences->empty();
         // before we update of the data structures, make sure we process any
         // pending uninit activity.
-        memoryObject.forceUninits();
+        memoryObject.collectAndUninit();
         // ok, deactivate this again...this will return the activity because the terminating
         // flag is on.
         exitCurrentThread();

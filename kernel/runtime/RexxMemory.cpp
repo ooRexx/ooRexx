@@ -452,6 +452,20 @@ void RexxMemory::checkUninit()
 }
 
 
+/**
+ * Force a last-gasp garbage collection and running of the
+ * uninits during interpreter instance shutdown.  This is an
+ * attempt to ensure that all objects with uninit methods get
+ * a chance to clean up prior to termination.
+ */
+void RexxMemory::collectAndUninit()
+{
+    collect();
+    runUninits();
+}
+
+
+
 void  RexxMemory::forceUninits()
 /******************************************************************************/
 /* FUNCTION: we will run the UNINIT method of all objetcs in the UNINIT       */
