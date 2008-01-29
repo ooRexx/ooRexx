@@ -1311,7 +1311,10 @@ REXXOBJECT REXXENTRY REXX_SEND(REXXOBJECT receiver, CSTRING msgname, REXXOBJECT 
 /******************************************************************************/
 {
     NativeContextBlock context;
-    return context.protect(((RexxObject *)receiver)->sendMessage((RexxString *)new_string(msgname), (RexxArray *)arguments));
+
+    ProtectedObject result;
+    ((RexxObject *)receiver)->sendMessage((RexxString *)new_string(msgname), (RexxArray *)arguments, result);
+    return context.protect((RexxObject *)result);
 }
 
 REXXOBJECT REXXENTRY REXX_SUPER(CSTRING msgname, REXXOBJECT arguments)
