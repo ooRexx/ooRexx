@@ -58,39 +58,48 @@ VERSION = $(ORX_MAJOR).$(ORX_MINOR).$(ORX_MOD_LVL)
 # You need to know exactly what you are doing in order to get this correct.
 VERSION_INFO = -version-info ${ORX_CURRENT}:${ORX_REVISION}:${ORX_AGE}
 
-platform_dir = $(top_srcdir)/platform
-platform_unix_dir = $(platform_dir)/unix
-platform_windows_dir = $(platform_dir)/windows
-build_platform_unix_dir = platform/unix
-rexxapi_dir = $(top_srcdir)/rexxapi
-rexxapi_unix_dir = $(rexxapi_dir)/unix
-rexxapi_windows_dir = $(rexxapi_dir)/windows
-kernel_dir = $(top_srcdir)/kernel
-kernel_platform_unix_dir = $(kernel_dir)/platform/unix
-kernel_platform_windows_dir = $(kernel_dir)/platform/windows
-kernel_main_dir = $(kernel_dir)/main
-kernel_platform_common_dir = $(kernel_dir)/platform/common
-classes_dir = $(kernel_dir)/classes
-expression_dir = $(kernel_dir)/expression
-instructions_dir = $(kernel_dir)/instructions
-parser_dir = $(kernel_dir)/parser
-runtime_dir = $(kernel_dir)/runtime
-streamlibrary_dir = $(kernel_dir)/streamLibrary
-messages_dir = $(kernel_dir)/messages
-lib_dir = $(top_srcdir)/lib
-api_dir = $(top_srcdir)/api
-platform_api_dir = $(api_dir)/platform/unix
+# These are the platform independent directories
+build_utils_dir = $(top_srcdir)/platform
+build_rexxapi_dir = $(top_srcdir)/rexxapi
+build_kernel_dir = $(top_srcdir)/kernel
+build_kernel_common_dir = $(build_kernel_dir)/platform/common
+build_classes_dir = $(build_kernel_dir)/classes
+build_expression_dir = $(build_kernel_dir)/expression
+build_instructions_dir = $(build_kernel_dir)/instructions
+build_parser_dir = $(build_kernel_dir)/parser
+build_runtime_dir = $(build_kernel_dir)/runtime
+build_streamlibrary_dir = $(build_kernel_dir)/streamLibrary
+build_messages_dir = $(build_kernel_dir)/messages
+build_lib_dir = $(top_srcdir)/lib
+build_api_dir = $(top_srcdir)/api
+build_rexutils_dir = $(top_srcdir)/rexutils
+build_rxregexp_dir = $(top_srcdir)/rxregexp
+build_samples_dir = $(top_srcdir)/samples
+build_rexxclasses_dir = $(build_kernel_dir)/RexxClasses
 
-rexutils_dir = $(top_srcdir)/rexutils
-rexutils_unix_dir = $(rexutils_dir)/unix
-rexutils_windows_dir = $(rexutils_dir)/windows
-rxregexp_dir = $(top_srcdir)/rxregexp
+# These are the *nix directories
+utils_unix_dir = $(build_utils_dir)/unix
+rexxapi_unix_dir = $(build_rexxapi_dir)/unix
+kernel_unix_dir = $(build_kernel_dir)/platform/unix
+api_unix_dir = $(build_api_dir)/platform/unix
+rexutils_unix_dir = $(build_rexutils_dir)/unix
+samples_unix_dir = $(build_samples_dir)/unix
 
-rexxclasses_dir = $(kernel_dir)/RexxClasses
+# These are the Windows directories
+utils_windows_dir = $(build_utils_dir)/windows
+rexxapi_windows_dir = $(build_rexxapi_dir)/windows
+kernel_windows_dir = $(build_kernel_dir)/platform/windows
+api_windows_dir = $(build_api_dir)/platform/windows
+rexutils_windows_dir = $(build_rexutils_dir)/windows
+samples_windows_dir = $(build_samples_dir)/windows
 
-samples_dir = $(top_srcdir)/samples
-samples_windows_dir = $(top_srcdir)/samples/windows
-samples_unix_dir = $(top_srcdir)/samples/unix
+# These are the platform specific build directories
+build_utils_platform_dir = $(utils_@ORX_PLATFORM@_dir)
+build_rexxapi_platform_dir = $(rexxapi_@ORX_PLATFORM@_dir)
+build_kernel_platform_dir = $(kernel_@ORX_PLATFORM@_dir)
+build_api_platform_dir = $(api_@ORX_PLATFORM@_dir)
+build_rexutils_platform_dir = $(rexutils_@ORX_PLATFORM@_dir)
+build_samples_platform_dir = $(samples_@ORX_PLATFORM@_dir)
 
 catdir = $(prefix)/bin
 
@@ -100,171 +109,172 @@ COMMON_CPPFLAGS = -DORX_VER=$(ORX_MAJOR) -DORX_REL=$(ORX_MINOR) -DORX_MOD=$(ORX_
                   -DORX_SHARED_LIBRARY_EXT=\"@ORX_SHARED_LIBRARY_EXT@\" \
                   -DHIGHTID
 
-messageXML = $(messages_dir)/rexxmsg.xml
+messageXML = $(build_messages_dir)/rexxmsg.xml
 
-classesXML = $(runtime_dir)/PrimitiveClasses.xml
+classesXML = $(build_runtime_dir)/PrimitiveClasses.xml
 
 #
 # header files for source distribution
 #
-errorHeaders = $(messages_dir)/RexxMessageNumbers.h \
-               $(messages_dir)/RexxErrorCodes.h \
-               $(messages_dir)/RexxMessageTable.h
-classesHeaders = $(classes_dir)/ArrayClass.hpp \
-                 $(classes_dir)/BufferClass.hpp \
-                 $(classes_dir)/ClassClass.hpp \
-                 $(classes_dir)/DirectoryClass.hpp \
-                 $(classes_dir)/IntegerClass.hpp \
-                 $(classes_dir)/ListClass.hpp \
-                 $(classes_dir)/MessageClass.hpp \
-                 $(classes_dir)/MethodClass.hpp \
-                 $(classes_dir)/MutableBufferClass.hpp \
-                 $(classes_dir)/NumberStringClass.hpp \
-                 $(classes_dir)/NumberStringMath.hpp \
-                 $(classes_dir)/ObjectClass.hpp \
-                 $(classes_dir)/PointerClass.hpp \
-                 $(classes_dir)/QueueClass.hpp \
-                 $(classes_dir)/RelationClass.hpp \
-                 $(classes_dir)/StackClass.hpp \
-                 $(classes_dir)/StemClass.hpp \
-                 $(classes_dir)/StringClass.hpp \
-                 $(classes_dir)/StringUtil.hpp \
-                 $(classes_dir)/SupplierClass.hpp \
-                 $(classes_dir)/TableClass.hpp \
-                 $(classes_dir)/WeakReferenceClass.hpp
-expressionHeaders = $(expression_dir)/BuiltinFunctions.hpp \
-                    $(expression_dir)/ExpressionBaseVariable.hpp \
-                    $(expression_dir)/ExpressionCompoundVariable.hpp \
-                    $(expression_dir)/ExpressionDotVariable.hpp \
-                    $(expression_dir)/ExpressionFunction.hpp \
-                    $(expression_dir)/ExpressionMessage.hpp \
-                    $(expression_dir)/ExpressionOperator.hpp \
-                    $(expression_dir)/ExpressionStack.hpp \
-                    $(expression_dir)/ExpressionStem.hpp \
-                    $(expression_dir)/ExpressionVariable.hpp \
-                    $(expression_dir)/IndirectVariableReference.hpp \
-                    $(expression_dir)/ExpressionLogical.hpp
-instructionsHeaders = $(instructions_dir)/AddressInstruction.hpp \
-                      $(instructions_dir)/AssignmentInstruction.hpp \
-                      $(instructions_dir)/CallInstruction.hpp \
-                      $(instructions_dir)/CommandInstruction.hpp \
-                      $(instructions_dir)/DoBlock.hpp \
-                      $(instructions_dir)/DoInstruction.hpp \
-                      $(instructions_dir)/DropInstruction.hpp \
-                      $(instructions_dir)/ElseInstruction.hpp \
-                      $(instructions_dir)/EndIf.hpp \
-                      $(instructions_dir)/EndInstruction.hpp \
-                      $(instructions_dir)/ExitInstruction.hpp \
-                      $(instructions_dir)/ExposeInstruction.hpp \
-                      $(instructions_dir)/ForwardInstruction.hpp \
-                      $(instructions_dir)/GuardInstruction.hpp \
-                      $(instructions_dir)/IfInstruction.hpp \
-                      $(instructions_dir)/InterpretInstruction.hpp \
-                      $(instructions_dir)/LabelInstruction.hpp \
-                      $(instructions_dir)/LeaveInstruction.hpp \
-                      $(instructions_dir)/MessageInstruction.hpp \
-                      $(instructions_dir)/NopInstruction.hpp \
-                      $(instructions_dir)/NumericInstruction.hpp \
-                      $(instructions_dir)/OptionsInstruction.hpp \
-                      $(instructions_dir)/OtherwiseInstruction.hpp \
-                      $(instructions_dir)/ParseInstruction.hpp \
-                      $(instructions_dir)/ParseTarget.hpp \
-                      $(instructions_dir)/ParseTrigger.hpp \
-                      $(instructions_dir)/ProcedureInstruction.hpp \
-                      $(instructions_dir)/QueueInstruction.hpp \
-                      $(instructions_dir)/RaiseInstruction.hpp \
-                      $(instructions_dir)/ReplyInstruction.hpp \
-                      $(instructions_dir)/ReturnInstruction.hpp \
-                      $(instructions_dir)/RexxInstruction.hpp \
-                      $(instructions_dir)/SayInstruction.hpp \
-                      $(instructions_dir)/SelectInstruction.hpp \
-                      $(instructions_dir)/SignalInstruction.hpp \
-                      $(instructions_dir)/ThenInstruction.hpp \
-                      $(instructions_dir)/TraceInstruction.hpp \
-                      $(instructions_dir)/UseStrictInstruction.hpp
-parserHeaders = $(parser_dir)/Clause.hpp \
-                $(parser_dir)/SourceFile.hpp \
-                $(parser_dir)/SourceLocation.hpp \
-                $(parser_dir)/Token.hpp
-platformHeaders = $(kernel_platform_unix_dir)/APIDefinitions.h \
-                  $(kernel_platform_unix_dir)/PlatformDefinitions.h \
-                  $(kernel_platform_unix_dir)/SharedMemorySupport.h \
-                  $(kernel_platform_unix_dir)/SystemCommands.h \
-                  $(kernel_platform_unix_dir)/SystemSemaphores.h \
-                  $(kernel_platform_unix_dir)/ThreadSupport.hpp \
-                  $(kernel_platform_unix_dir)/SystemInterpreter.hpp
+errorHeaders = $(build_messages_dir)/RexxMessageNumbers.h \
+               $(build_messages_dir)/RexxErrorCodes.h \
+               $(build_messages_dir)/RexxMessageTable.h
+classesHeaders = $(build_classes_dir)/ArrayClass.hpp \
+                 $(build_classes_dir)/BufferClass.hpp \
+                 $(build_classes_dir)/ClassClass.hpp \
+                 $(build_classes_dir)/DirectoryClass.hpp \
+                 $(build_classes_dir)/IntegerClass.hpp \
+                 $(build_classes_dir)/ListClass.hpp \
+                 $(build_classes_dir)/MessageClass.hpp \
+                 $(build_classes_dir)/MethodClass.hpp \
+                 $(build_classes_dir)/MutableBufferClass.hpp \
+                 $(build_classes_dir)/NumberStringClass.hpp \
+                 $(build_classes_dir)/NumberStringMath.hpp \
+                 $(build_classes_dir)/ObjectClass.hpp \
+                 $(build_classes_dir)/PointerClass.hpp \
+                 $(build_classes_dir)/QueueClass.hpp \
+                 $(build_classes_dir)/RelationClass.hpp \
+                 $(build_classes_dir)/StackClass.hpp \
+                 $(build_classes_dir)/StemClass.hpp \
+                 $(build_classes_dir)/StringClass.hpp \
+                 $(build_classes_dir)/StringUtil.hpp \
+                 $(build_classes_dir)/SupplierClass.hpp \
+                 $(build_classes_dir)/TableClass.hpp \
+                 $(build_classes_dir)/WeakReferenceClass.hpp
+expressionHeaders = $(build_expression_dir)/BuiltinFunctions.hpp \
+                    $(build_expression_dir)/ExpressionBaseVariable.hpp \
+                    $(build_expression_dir)/ExpressionCompoundVariable.hpp \
+                    $(build_expression_dir)/ExpressionDotVariable.hpp \
+                    $(build_expression_dir)/ExpressionFunction.hpp \
+                    $(build_expression_dir)/ExpressionMessage.hpp \
+                    $(build_expression_dir)/ExpressionOperator.hpp \
+                    $(build_expression_dir)/ExpressionStack.hpp \
+                    $(build_expression_dir)/ExpressionStem.hpp \
+                    $(build_expression_dir)/ExpressionVariable.hpp \
+                    $(build_expression_dir)/IndirectVariableReference.hpp \
+                    $(build_expression_dir)/ExpressionLogical.hpp
+instructionsHeaders = $(build_instructions_dir)/AddressInstruction.hpp \
+                      $(build_instructions_dir)/AssignmentInstruction.hpp \
+                      $(build_instructions_dir)/CallInstruction.hpp \
+                      $(build_instructions_dir)/CommandInstruction.hpp \
+                      $(build_instructions_dir)/DoBlock.hpp \
+                      $(build_instructions_dir)/DoInstruction.hpp \
+                      $(build_instructions_dir)/DropInstruction.hpp \
+                      $(build_instructions_dir)/ElseInstruction.hpp \
+                      $(build_instructions_dir)/EndIf.hpp \
+                      $(build_instructions_dir)/EndInstruction.hpp \
+                      $(build_instructions_dir)/ExitInstruction.hpp \
+                      $(build_instructions_dir)/ExposeInstruction.hpp \
+                      $(build_instructions_dir)/ForwardInstruction.hpp \
+                      $(build_instructions_dir)/GuardInstruction.hpp \
+                      $(build_instructions_dir)/IfInstruction.hpp \
+                      $(build_instructions_dir)/InterpretInstruction.hpp \
+                      $(build_instructions_dir)/LabelInstruction.hpp \
+                      $(build_instructions_dir)/LeaveInstruction.hpp \
+                      $(build_instructions_dir)/MessageInstruction.hpp \
+                      $(build_instructions_dir)/NopInstruction.hpp \
+                      $(build_instructions_dir)/NumericInstruction.hpp \
+                      $(build_instructions_dir)/OptionsInstruction.hpp \
+                      $(build_instructions_dir)/OtherwiseInstruction.hpp \
+                      $(build_instructions_dir)/ParseInstruction.hpp \
+                      $(build_instructions_dir)/ParseTarget.hpp \
+                      $(build_instructions_dir)/ParseTrigger.hpp \
+                      $(build_instructions_dir)/ProcedureInstruction.hpp \
+                      $(build_instructions_dir)/QueueInstruction.hpp \
+                      $(build_instructions_dir)/RaiseInstruction.hpp \
+                      $(build_instructions_dir)/ReplyInstruction.hpp \
+                      $(build_instructions_dir)/ReturnInstruction.hpp \
+                      $(build_instructions_dir)/RexxInstruction.hpp \
+                      $(build_instructions_dir)/SayInstruction.hpp \
+                      $(build_instructions_dir)/SelectInstruction.hpp \
+                      $(build_instructions_dir)/SignalInstruction.hpp \
+                      $(build_instructions_dir)/ThenInstruction.hpp \
+                      $(build_instructions_dir)/TraceInstruction.hpp \
+                      $(build_instructions_dir)/UseStrictInstruction.hpp
+parserHeaders = $(build_parser_dir)/Clause.hpp \
+                $(build_parser_dir)/SourceFile.hpp \
+                $(build_parser_dir)/SourceLocation.hpp \
+                $(build_parser_dir)/Token.hpp
+platformHeaders = $(build_kernel_platform_dir)/APIDefinitions.h \
+                  $(build_kernel_platform_dir)/PlatformDefinitions.h \
+                  $(build_kernel_platform_dir)/SharedMemorySupport.h \
+                  $(build_kernel_platform_dir)/SystemCommands.h \
+                  $(build_kernel_platform_dir)/SystemSemaphores.h \
+                  $(build_kernel_platform_dir)/ThreadSupport.hpp \
+                  $(build_kernel_platform_dir)/SystemInterpreter.hpp
 platformcommonHeaders =
-runtimeHeaders = $(runtime_dir)/DeadObject.hpp \
-                 $(runtime_dir)/ClassTypeCodes.h \
-                 $(runtime_dir)/CPPCode.hpp \
-                 $(runtime_dir)/GlobalNames.h \
-                 $(runtime_dir)/MemorySegment.hpp \
-                 $(runtime_dir)/MemoryStats.hpp \
-                 $(runtime_dir)/NativeMethods.h \
-                 $(runtime_dir)/Numerics.hpp \
-                 $(runtime_dir)/PrimitiveBehaviourNames.h \
-                 $(runtime_dir)/RexxActivation.hpp \
-                 $(runtime_dir)/RexxActivationStack.hpp \
-                 $(runtime_dir)/RexxActivity.hpp \
-                 $(runtime_dir)/ActivityManager.hpp \
-                 $(runtime_dir)/LibraryManager.hpp \
-                 $(runtime_dir)/Interpreter.hpp \
-                 $(runtime_dir)/InterpreterInstance.hpp \
-                 $(runtime_dir)/ProtectedObject.hpp \
-                 $(runtime_dir)/ExitHandler.hpp \
-                 $(runtime_dir)/RexxBehaviour.hpp \
-                 $(runtime_dir)/RexxBuiltinFunctions.h \
-                 $(runtime_dir)/RexxCode.hpp \
-                 $(runtime_dir)/CPPCode.hpp \
-                 $(runtime_dir)/RexxCollection.hpp \
-                 $(runtime_dir)/RexxCompoundElement.hpp \
-                 $(runtime_dir)/RexxCompoundTable.hpp \
-                 $(runtime_dir)/RexxCompoundTail.hpp \
-                 $(runtime_dir)/RexxConstants.hpp \
-                 $(runtime_dir)/RexxCore.h \
-                 $(runtime_dir)/RexxDateTime.hpp \
-                 $(runtime_dir)/RexxEnvelope.hpp \
-                 $(runtime_dir)/RexxHashTable.hpp \
-                 $(runtime_dir)/RexxInternalStack.hpp \
-                 $(runtime_dir)/RexxListTable.hpp \
-                 $(runtime_dir)/RexxLocalVariables.hpp \
-                 $(runtime_dir)/RexxMemory.hpp \
-                 $(runtime_dir)/RexxMisc.hpp \
-                 $(runtime_dir)/RexxNativeAPI.h \
-                 $(runtime_dir)/RexxNativeActivation.hpp \
-                 $(runtime_dir)/RexxNativeCode.hpp \
-                 $(runtime_dir)/RexxSmartBuffer.hpp \
-                 $(runtime_dir)/RexxVariable.hpp \
-                 $(runtime_dir)/RexxVariableDictionary.hpp \
-                 $(runtime_dir)/RexxStartDispatcher.hpp \
-                 $(runtime_dir)/ActivityDispatcher.hpp \
-                 $(runtime_dir)/TranslateDispatcher.hpp \
-                 $(runtime_dir)/CreateMethodDispatcher.hpp \
-                 $(runtime_dir)/CallbackDispatcher.hpp
-streamlibraryHeaders = $(streamlibrary_dir)/StreamCommandParser.h \
-                       $(streamlibrary_dir)/StreamNative.h
-libHeaders = $(lib_dir)/RexxPlatformDefinitions.h \
-             $(lib_dir)/RexxPlatformInterface.h
-rexxapiHeaders = $(rexxapi_dir)/APIUtil.h \
-                 $(rexxapi_dir)/ASCIISymbols.h \
-                 $(rexxapi_dir)/Characters.h \
-                 $(rexxapi_dir)/CodePageTables.h
-rexxapiunixHeaders = $(rexxapi_unix_dir)/APIUtilities.h \
-                     $(rexxapi_unix_dir)/RexxAPIManager.h \
-                     $(rexxapi_unix_dir)/SubcommandAPI.h
-rxregexpHeaders = $(rxregexp_dir)/automaton.hpp \
-                  $(rxregexp_dir)/dblqueue.cpp \
-                  $(rxregexp_dir)/dblqueue.hpp \
-                  $(rxregexp_dir)/regexp.hpp
-rexutilsHeaders = $(rexutils_dir)/rxsock.h
-aixExportFiles = $(rexutils_unix_dir)/*.exp \
-                 $(rexutils_dir)/*.exp \
-                 $(rexxapi_dir)/*.exp \
-                 $(rxregexp_dir)/*.exp
-windowsDefFiles = $(kernel_platform_windows_dir)/*.def \
-                  $(lib_dir)/*.def \
-                  $(rexutils_dir)/*.def \
-                  $(rxregexp_dir)/*.def
+runtimeHeaders = $(build_runtime_dir)/DeadObject.hpp \
+                 $(build_runtime_dir)/ClassTypeCodes.h \
+                 $(build_runtime_dir)/CPPCode.hpp \
+                 $(build_runtime_dir)/GlobalNames.h \
+                 $(build_runtime_dir)/MemorySegment.hpp \
+                 $(build_runtime_dir)/MemoryStats.hpp \
+                 $(build_runtime_dir)/NativeMethods.h \
+                 $(build_runtime_dir)/Numerics.hpp \
+                 $(build_runtime_dir)/PrimitiveBehaviourNames.h \
+                 $(build_runtime_dir)/RexxActivation.hpp \
+                 $(build_runtime_dir)/RexxActivationStack.hpp \
+                 $(build_runtime_dir)/RexxActivity.hpp \
+                 $(build_runtime_dir)/ActivityManager.hpp \
+                 $(build_runtime_dir)/LibraryManager.hpp \
+                 $(build_runtime_dir)/Interpreter.hpp \
+                 $(build_runtime_dir)/InterpreterInstance.hpp \
+                 $(build_runtime_dir)/ProtectedObject.hpp \
+                 $(build_runtime_dir)/ExitHandler.hpp \
+                 $(build_runtime_dir)/RexxBehaviour.hpp \
+                 $(build_runtime_dir)/RexxBuiltinFunctions.h \
+                 $(build_runtime_dir)/RexxCode.hpp \
+                 $(build_runtime_dir)/CPPCode.hpp \
+                 $(build_runtime_dir)/RexxCollection.hpp \
+                 $(build_runtime_dir)/RexxCompoundElement.hpp \
+                 $(build_runtime_dir)/RexxCompoundTable.hpp \
+                 $(build_runtime_dir)/RexxCompoundTail.hpp \
+                 $(build_runtime_dir)/RexxConstants.hpp \
+                 $(build_runtime_dir)/RexxCore.h \
+                 $(build_runtime_dir)/RexxDateTime.hpp \
+                 $(build_runtime_dir)/RexxEnvelope.hpp \
+                 $(build_runtime_dir)/RexxHashTable.hpp \
+                 $(build_runtime_dir)/RexxInternalStack.hpp \
+                 $(build_runtime_dir)/RexxListTable.hpp \
+                 $(build_runtime_dir)/RexxLocalVariables.hpp \
+                 $(build_runtime_dir)/RexxMemory.hpp \
+                 $(build_runtime_dir)/RexxMisc.hpp \
+                 $(build_runtime_dir)/RexxNativeAPI.h \
+                 $(build_runtime_dir)/RexxNativeActivation.hpp \
+                 $(build_runtime_dir)/RexxNativeCode.hpp \
+                 $(build_runtime_dir)/RexxSmartBuffer.hpp \
+                 $(build_runtime_dir)/RexxVariable.hpp \
+                 $(build_runtime_dir)/RexxVariableDictionary.hpp \
+                 $(build_runtime_dir)/RexxStartDispatcher.hpp \
+                 $(build_runtime_dir)/ActivityDispatcher.hpp \
+                 $(build_runtime_dir)/TranslateDispatcher.hpp \
+                 $(build_runtime_dir)/CreateMethodDispatcher.hpp \
+                 $(build_runtime_dir)/CallbackDispatcher.hpp
+streamlibraryHeaders = $(build_streamlibrary_dir)/StreamCommandParser.h \
+                       $(build_streamlibrary_dir)/StreamNative.h
+libHeaders = $(build_lib_dir)/RexxPlatformDefinitions.h \
+             $(build_lib_dir)/RexxPlatformInterface.h \
+             $(build_lib_dir)/RexxInternalApis.h
+rexxapiHeaders = $(build_rexxapi_dir)/APIUtil.h \
+                 $(build_rexxapi_dir)/ASCIISymbols.h \
+                 $(build_rexxapi_dir)/Characters.h \
+                 $(build_rexxapi_dir)/CodePageTables.h
+rexxapiunixHeaders = $(build_rexxapi_platform_dir)/APIUtilities.h \
+                     $(build_rexxapi_platform_dir)/RexxAPIManager.h \
+                     $(build_rexxapi_platform_dir)/SubcommandAPI.h
+rxregexpHeaders = $(build_rxregexp_dir)/automaton.hpp \
+                  $(build_rxregexp_dir)/dblqueue.cpp \
+                  $(build_rxregexp_dir)/dblqueue.hpp \
+                  $(build_rxregexp_dir)/regexp.hpp
+rexutilsHeaders = $(build_rexutils_dir)/rxsock.h
+aixExportFiles = $(build_rexutils_platform_dir)/*.exp \
+                 $(build_rexutils_dir)/*.exp \
+                 $(build_rexxapi_dir)/*.exp \
+                 $(build_rxregexp_dir)/*.exp
+windowsDefFiles = $(kernel_windows_dir)/*.def \
+                  $(build_lib_dir)/*.def \
+                  $(build_rexutils_dir)/*.def \
+                  $(build_rxregexp_dir)/*.def
 miscFiles = $(top_srcdir)/CPLv1.0.txt \
             $(top_srcdir)/CHANGES \
             $(top_srcdir)/CONTRIBUTORS \
@@ -272,30 +282,30 @@ miscFiles = $(top_srcdir)/CPLv1.0.txt \
             $(top_srcdir)/oorexx.ver \
             $(top_srcdir)/unix-like-build.txt \
             $(aixExportFiles) \
-            $(platform_unix_dir)/oorexx.spec \
-            $(platform_unix_dir)/makepkg.rex \
-            $(rxregexp_dir)/*.cls \
-            $(rexutils_dir)/*.cls \
-            $(samples_dir)/*.rex \
+            $(utils_unix_dir)/oorexx.spec \
+            $(utils_unix_dir)/makepkg.rex \
+            $(build_rxregexp_dir)/*.cls \
+            $(build_rexutils_dir)/*.cls \
+            $(build_samples_dir)/*.rex \
             $(samples_windows_dir)/* \
-            $(samples_dir)/readme
+            $(build_samples_dir)/readme
 windowsFiles = \
             $(top_srcdir)/makeorx.bat \
             $(top_srcdir)/orxdb.bat \
             $(top_srcdir)/windows-build.txt \
-            $(lib_dir)/*.mak \
-            $(kernel_platform_windows_dir)/*.cpp \
-            $(kernel_platform_windows_dir)/*.h \
-            $(kernel_platform_windows_dir)/*.rc \
-            $(kernel_platform_windows_dir)/*.xsl \
-            $(kernel_platform_windows_dir)/*.orx \
-            $(kernel_dir)/*.mak \
-            $(rexxapi_dir)/*.mak \
-            $(rexutils_dir)/*.mak \
-            $(rxregexp_dir)/*.mak \
+            $(build_lib_dir)/*.mak \
+            $(kernel_windows_dir)/*.cpp \
+            $(kernel_windows_dir)/*.h \
+            $(kernel_windows_dir)/*.rc \
+            $(kernel_windows_dir)/*.xsl \
+            $(kernel_windows_dir)/*.orx \
+            $(build_kernel_dir)/*.mak \
+            $(build_rexxapi_dir)/*.mak \
+            $(build_rexutils_dir)/*.mak \
+            $(build_rxregexp_dir)/*.mak \
             $(rexxapi_windows_dir)/* \
             $(rexutils_windows_dir)/* \
-            $(platform_windows_dir)/*
+            $(utils_windows_dir)/*
 #
 # These error message files are built BEFORE any other target
 #
@@ -314,212 +324,212 @@ pkglib_LTLIBRARIES = librexxapi.la librexx.la librexxutil.la librxmath.la librxr
 #
 # Scripts to install
 #
-pkgdata_SCRIPTS = $(platform_unix_dir)/rexx.sh $(platform_unix_dir)/rexx.csh
+pkgdata_SCRIPTS = $(build_utils_platform_dir)/rexx.sh $(build_utils_platform_dir)/rexx.csh
 
 #
 # headers to install
 #
-include_HEADERS = $(api_dir)/rexx.h \
-                  $(api_dir)/rexxapidefs.h \
-                  $(platform_api_dir)/rexxapitypes.h \
-                  $(platform_api_dir)/rexxplatformapis.h \
-                  $(platform_api_dir)/rexxplatformdefs.h
+include_HEADERS = $(build_api_dir)/rexx.h \
+                  $(build_api_dir)/rexxapidefs.h \
+                  $(build_api_platform_dir)/rexxapitypes.h \
+                  $(build_api_platform_dir)/rexxplatformapis.h \
+                  $(build_api_platform_dir)/rexxplatformdefs.h
 
 #
 # man pages to install
 #
-man_MANS = $(platform_unix_dir)/rexx.1 \
-           $(platform_unix_dir)/rexxc.1 \
-           $(platform_unix_dir)/rxsubcom.1 \
-           $(platform_unix_dir)/rxqueue.1
+man_MANS = $(build_utils_platform_dir)/rexx.1 \
+           $(build_utils_platform_dir)/rexxc.1 \
+           $(build_utils_platform_dir)/rxsubcom.1 \
+           $(build_utils_platform_dir)/rxqueue.1
 
 #################### librexx.so ##########################
 # Sources for librexxapi.so
 #
-librexxapi_la_SOURCES = $(rexxapi_unix_dir)/SubcommandAPI.cpp \
-                        $(rexxapi_unix_dir)/RexxAPIManager.cpp \
-                        $(kernel_platform_unix_dir)/SystemSemaphores.cpp \
-                        $(kernel_platform_unix_dir)/SharedMemorySupport.cpp \
-                        $(rexxapi_unix_dir)/MacroSpace.cpp \
-                        $(rexxapi_unix_dir)/QueuesAPI.cpp
+librexxapi_la_SOURCES = $(build_rexxapi_platform_dir)/SubcommandAPI.cpp \
+                        $(build_rexxapi_platform_dir)/RexxAPIManager.cpp \
+                        $(build_kernel_platform_dir)/SystemSemaphores.cpp \
+                        $(build_kernel_platform_dir)/SharedMemorySupport.cpp \
+                        $(build_rexxapi_platform_dir)/MacroSpace.cpp \
+                        $(build_rexxapi_platform_dir)/QueuesAPI.cpp
 
 #
 # Preprocessor flags for librexxapi.so
 #
 librexxapi_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
-                          -I$(lib_dir) \
-                          -I$(api_dir) \
-                          -I$(platform_api_dir) \
-                          -I$(kernel_dir) \
-                          -I$(expression_dir) \
-                          -I$(instructions_dir) \
-                          -I$(classes_dir) \
-                          -I$(runtime_dir) \
-                          -I$(parser_dir) \
-                          -I$(messages_dir) \
-                          -I$(kernel_platform_common_dir) \
-                          -I$(kernel_platform_unix_dir) \
-                          -I$(rexxapi_dir) \
-                          -I$(rexxapi_unix_dir)
+                          -I$(build_lib_dir) \
+                          -I$(build_api_dir) \
+                          -I$(build_api_platform_dir) \
+                          -I$(build_kernel_dir) \
+                          -I$(build_expression_dir) \
+                          -I$(build_instructions_dir) \
+                          -I$(build_classes_dir) \
+                          -I$(build_runtime_dir) \
+                          -I$(build_parser_dir) \
+                          -I$(build_messages_dir) \
+                          -I$(build_kernel_common_dir) \
+                          -I$(build_kernel_platform_dir) \
+                          -I$(build_rexxapi_dir) \
+                          -I$(build_rexxapi_platform_dir)
 
 librexxapi_la_LDFLAGS = $(VERSION_INFO)
 
 #################### librexx.so ##########################
 # Sources for librexx.so
 #
-classes_sources = $(classes_dir)/ArrayClass.cpp \
-                  $(classes_dir)/BufferClass.cpp \
-                  $(classes_dir)/ClassClass.cpp \
-                  $(classes_dir)/DirectoryClass.cpp \
-                  $(classes_dir)/IntegerClass.cpp \
-                  $(classes_dir)/ListClass.cpp \
-                  $(classes_dir)/MessageClass.cpp \
-                  $(classes_dir)/MethodClass.cpp \
-                  $(classes_dir)/MutableBufferClass.cpp \
-                  $(classes_dir)/NumberStringClass.cpp \
-                  $(classes_dir)/NumberStringMath.cpp \
-                  $(classes_dir)/NumberStringMath2.cpp \
-                  $(classes_dir)/ObjectClass.cpp \
-                  $(classes_dir)/PointerClass.cpp \
-                  $(classes_dir)/QueueClass.cpp \
-                  $(classes_dir)/RelationClass.cpp \
-                  $(classes_dir)/StackClass.cpp \
-                  $(classes_dir)/StemClass.cpp \
-                  $(classes_dir)/StringClass.cpp \
-                  $(classes_dir)/StringClassBit.cpp \
-                  $(classes_dir)/StringClassConversion.cpp \
-                  $(classes_dir)/StringClassMisc.cpp \
-                  $(classes_dir)/StringClassSub.cpp \
-                  $(classes_dir)/StringClassUtil.cpp \
-                  $(classes_dir)/StringClassWord.cpp \
-                  $(classes_dir)/StringUtil.cpp \
-                  $(classes_dir)/SupplierClass.cpp \
-                  $(classes_dir)/TableClass.cpp \
-                  $(classes_dir)/WeakReferenceClass.cpp
-expression_sources = $(expression_dir)/BuiltinFunctions.cpp \
-                     $(expression_dir)/CommonExternalFunctions.cpp \
-                     $(expression_dir)/ExpressionCompoundVariable.cpp \
-                     $(expression_dir)/ExpressionDotVariable.cpp \
-                     $(expression_dir)/ExpressionFunction.cpp \
-                     $(expression_dir)/ExpressionMessage.cpp \
-                     $(expression_dir)/ExpressionOperator.cpp \
-                     $(expression_dir)/ExpressionStack.cpp \
-                     $(expression_dir)/ExpressionStem.cpp \
-                     $(expression_dir)/ExpressionVariable.cpp \
-                     $(expression_dir)/IndirectVariableReference.cpp \
-                     $(expression_dir)/ExpressionLogical.cpp
-instructions_sources  = $(instructions_dir)/AddressInstruction.cpp \
-                        $(instructions_dir)/AssignmentInstruction.cpp \
-                        $(instructions_dir)/CallInstruction.cpp \
-                        $(instructions_dir)/CommandInstruction.cpp \
-                        $(instructions_dir)/DoBlock.cpp \
-                        $(instructions_dir)/DoInstruction.cpp \
-                        $(instructions_dir)/DropInstruction.cpp \
-                        $(instructions_dir)/ElseInstruction.cpp \
-                        $(instructions_dir)/EndIf.cpp \
-                        $(instructions_dir)/EndInstruction.cpp \
-                        $(instructions_dir)/ExitInstruction.cpp \
-                        $(instructions_dir)/ExposeInstruction.cpp \
-                        $(instructions_dir)/ForwardInstruction.cpp \
-                        $(instructions_dir)/GuardInstruction.cpp \
-                        $(instructions_dir)/IfInstruction.cpp \
-                        $(instructions_dir)/InterpretInstruction.cpp \
-                        $(instructions_dir)/LabelInstruction.cpp \
-                        $(instructions_dir)/LeaveInstruction.cpp \
-                        $(instructions_dir)/MessageInstruction.cpp \
-                        $(instructions_dir)/NopInstruction.cpp \
-                        $(instructions_dir)/NumericInstruction.cpp \
-                        $(instructions_dir)/OptionsInstruction.cpp \
-                        $(instructions_dir)/OtherwiseInstruction.cpp \
-                        $(instructions_dir)/ParseInstruction.cpp \
-                        $(instructions_dir)/ParseTarget.cpp \
-                        $(instructions_dir)/ParseTrigger.cpp \
-                        $(instructions_dir)/ProcedureInstruction.cpp \
-                        $(instructions_dir)/QueueInstruction.cpp \
-                        $(instructions_dir)/RaiseInstruction.cpp \
-                        $(instructions_dir)/ReplyInstruction.cpp \
-                        $(instructions_dir)/ReturnInstruction.cpp \
-                        $(instructions_dir)/RexxInstruction.cpp \
-                        $(instructions_dir)/SayInstruction.cpp \
-                        $(instructions_dir)/SelectInstruction.cpp \
-                        $(instructions_dir)/SignalInstruction.cpp \
-                        $(instructions_dir)/ThenInstruction.cpp \
-                        $(instructions_dir)/TraceInstruction.cpp \
-                        $(instructions_dir)/UseStrictInstruction.cpp
-parser_sources = $(parser_dir)/Clause.cpp \
-                 $(parser_dir)/KeywordConstants.cpp \
-                 $(parser_dir)/InstructionParser.cpp \
-                 $(parser_dir)/Scanner.cpp \
-                 $(parser_dir)/SourceFile.cpp \
-                 $(parser_dir)/Token.cpp
+classes_sources = $(build_classes_dir)/ArrayClass.cpp \
+                  $(build_classes_dir)/BufferClass.cpp \
+                  $(build_classes_dir)/ClassClass.cpp \
+                  $(build_classes_dir)/DirectoryClass.cpp \
+                  $(build_classes_dir)/IntegerClass.cpp \
+                  $(build_classes_dir)/ListClass.cpp \
+                  $(build_classes_dir)/MessageClass.cpp \
+                  $(build_classes_dir)/MethodClass.cpp \
+                  $(build_classes_dir)/MutableBufferClass.cpp \
+                  $(build_classes_dir)/NumberStringClass.cpp \
+                  $(build_classes_dir)/NumberStringMath.cpp \
+                  $(build_classes_dir)/NumberStringMath2.cpp \
+                  $(build_classes_dir)/ObjectClass.cpp \
+                  $(build_classes_dir)/PointerClass.cpp \
+                  $(build_classes_dir)/QueueClass.cpp \
+                  $(build_classes_dir)/RelationClass.cpp \
+                  $(build_classes_dir)/StackClass.cpp \
+                  $(build_classes_dir)/StemClass.cpp \
+                  $(build_classes_dir)/StringClass.cpp \
+                  $(build_classes_dir)/StringClassBit.cpp \
+                  $(build_classes_dir)/StringClassConversion.cpp \
+                  $(build_classes_dir)/StringClassMisc.cpp \
+                  $(build_classes_dir)/StringClassSub.cpp \
+                  $(build_classes_dir)/StringClassUtil.cpp \
+                  $(build_classes_dir)/StringClassWord.cpp \
+                  $(build_classes_dir)/StringUtil.cpp \
+                  $(build_classes_dir)/SupplierClass.cpp \
+                  $(build_classes_dir)/TableClass.cpp \
+                  $(build_classes_dir)/WeakReferenceClass.cpp
+expression_sources = $(build_expression_dir)/BuiltinFunctions.cpp \
+                     $(build_expression_dir)/CommonExternalFunctions.cpp \
+                     $(build_expression_dir)/ExpressionCompoundVariable.cpp \
+                     $(build_expression_dir)/ExpressionDotVariable.cpp \
+                     $(build_expression_dir)/ExpressionFunction.cpp \
+                     $(build_expression_dir)/ExpressionMessage.cpp \
+                     $(build_expression_dir)/ExpressionOperator.cpp \
+                     $(build_expression_dir)/ExpressionStack.cpp \
+                     $(build_expression_dir)/ExpressionStem.cpp \
+                     $(build_expression_dir)/ExpressionVariable.cpp \
+                     $(build_expression_dir)/IndirectVariableReference.cpp \
+                     $(build_expression_dir)/ExpressionLogical.cpp
+instructions_sources  = $(build_instructions_dir)/AddressInstruction.cpp \
+                        $(build_instructions_dir)/AssignmentInstruction.cpp \
+                        $(build_instructions_dir)/CallInstruction.cpp \
+                        $(build_instructions_dir)/CommandInstruction.cpp \
+                        $(build_instructions_dir)/DoBlock.cpp \
+                        $(build_instructions_dir)/DoInstruction.cpp \
+                        $(build_instructions_dir)/DropInstruction.cpp \
+                        $(build_instructions_dir)/ElseInstruction.cpp \
+                        $(build_instructions_dir)/EndIf.cpp \
+                        $(build_instructions_dir)/EndInstruction.cpp \
+                        $(build_instructions_dir)/ExitInstruction.cpp \
+                        $(build_instructions_dir)/ExposeInstruction.cpp \
+                        $(build_instructions_dir)/ForwardInstruction.cpp \
+                        $(build_instructions_dir)/GuardInstruction.cpp \
+                        $(build_instructions_dir)/IfInstruction.cpp \
+                        $(build_instructions_dir)/InterpretInstruction.cpp \
+                        $(build_instructions_dir)/LabelInstruction.cpp \
+                        $(build_instructions_dir)/LeaveInstruction.cpp \
+                        $(build_instructions_dir)/MessageInstruction.cpp \
+                        $(build_instructions_dir)/NopInstruction.cpp \
+                        $(build_instructions_dir)/NumericInstruction.cpp \
+                        $(build_instructions_dir)/OptionsInstruction.cpp \
+                        $(build_instructions_dir)/OtherwiseInstruction.cpp \
+                        $(build_instructions_dir)/ParseInstruction.cpp \
+                        $(build_instructions_dir)/ParseTarget.cpp \
+                        $(build_instructions_dir)/ParseTrigger.cpp \
+                        $(build_instructions_dir)/ProcedureInstruction.cpp \
+                        $(build_instructions_dir)/QueueInstruction.cpp \
+                        $(build_instructions_dir)/RaiseInstruction.cpp \
+                        $(build_instructions_dir)/ReplyInstruction.cpp \
+                        $(build_instructions_dir)/ReturnInstruction.cpp \
+                        $(build_instructions_dir)/RexxInstruction.cpp \
+                        $(build_instructions_dir)/SayInstruction.cpp \
+                        $(build_instructions_dir)/SelectInstruction.cpp \
+                        $(build_instructions_dir)/SignalInstruction.cpp \
+                        $(build_instructions_dir)/ThenInstruction.cpp \
+                        $(build_instructions_dir)/TraceInstruction.cpp \
+                        $(build_instructions_dir)/UseStrictInstruction.cpp
+parser_sources = $(build_parser_dir)/Clause.cpp \
+                 $(build_parser_dir)/KeywordConstants.cpp \
+                 $(build_parser_dir)/InstructionParser.cpp \
+                 $(build_parser_dir)/Scanner.cpp \
+                 $(build_parser_dir)/SourceFile.cpp \
+                 $(build_parser_dir)/Token.cpp
 kernel_platform_common_sources =
 #                        SharedMemorySupport.cpp
 #                        SystemSemaphores.cpp
-platform_sources = $(kernel_platform_unix_dir)/ErrorMessages.cpp \
-                   $(kernel_platform_unix_dir)/ExternalFunctions.cpp \
-                   $(kernel_platform_unix_dir)/FileSystem.cpp \
-                   $(kernel_platform_unix_dir)/MemorySupport.cpp \
-                   $(kernel_platform_unix_dir)/MiscSystem.cpp \
-                   $(kernel_platform_unix_dir)/RexxMain.cpp \
-                   $(kernel_platform_unix_dir)/RexxQueues.cpp \
-                   $(kernel_platform_unix_dir)/StoredMetaData.cpp \
-                   $(kernel_platform_unix_dir)/SystemCommands.cpp \
-                   $(kernel_platform_unix_dir)/ThreadSupport.cpp \
-                   $(kernel_platform_unix_dir)/TimeSupport.cpp \
-                   $(kernel_platform_unix_dir)/UseridFunction.cpp \
-                   $(kernel_platform_unix_dir)/ValueFunction.cpp \
-                   $(kernel_platform_unix_dir)/VariablePool.cpp \
-                   $(kernel_platform_unix_dir)/SystemInitialization.cpp \
-                   $(kernel_platform_unix_dir)/SystemInterpreter.cpp
-runtime_sources  = $(runtime_dir)/DeadObject.cpp \
-                   $(runtime_dir)/GlobalData.cpp \
-                   $(runtime_dir)/GlobalNames.cpp \
-                   $(runtime_dir)/MemorySegment.cpp \
-                   $(runtime_dir)/MemoryStats.cpp \
-                   $(runtime_dir)/NativeRoot.cpp \
-                   $(runtime_dir)/Numerics.cpp \
-                   $(runtime_dir)/PrimitiveBehaviours.cpp \
-                   $(runtime_dir)/RexxActivation.cpp \
-                   $(runtime_dir)/RexxActivationStack.cpp \
-                   $(runtime_dir)/RexxActivity.cpp \
-                   $(runtime_dir)/ActivityManager.cpp \
-                   $(runtime_dir)/LibraryManager.cpp \
-                   $(runtime_dir)/Interpreter.cpp \
-                   $(runtime_dir)/InterpreterInstance.cpp \
-                   $(runtime_dir)/RexxBehaviour.cpp \
-                   $(runtime_dir)/RexxCode.cpp \
-                   $(runtime_dir)/CPPCode.cpp \
-                   $(runtime_dir)/ExitHandler.cpp \
-                   $(runtime_dir)/ProtectedObject.cpp \
-                   $(runtime_dir)/RexxCollection.cpp \
-                   $(runtime_dir)/RexxCompoundElement.cpp \
-                   $(runtime_dir)/RexxCompoundTable.cpp \
-                   $(runtime_dir)/RexxCompoundTail.cpp \
-                   $(runtime_dir)/RexxDateTime.cpp \
-                   $(runtime_dir)/RexxEnvelope.cpp \
-                   $(runtime_dir)/RexxHashTable.cpp \
-                   $(runtime_dir)/RexxInternalStack.cpp \
-                   $(runtime_dir)/RexxListTable.cpp \
-                   $(runtime_dir)/RexxLocalVariables.cpp \
-                   $(runtime_dir)/RexxMemory.cpp \
-                   $(runtime_dir)/RexxMisc.cpp \
-                   $(runtime_dir)/RexxNativeActivation.cpp \
-                   $(runtime_dir)/RexxNativeCode.cpp \
-                   $(runtime_dir)/RexxSmartBuffer.cpp \
-                   $(runtime_dir)/RexxStartup.cpp \
-                   $(runtime_dir)/RexxVariable.cpp \
-                   $(runtime_dir)/RexxVariableDictionary.cpp \
-                   $(runtime_dir)/Setup.cpp \
-                   $(runtime_dir)/Utilities.cpp \
-                   $(runtime_dir)/Version.cpp \
-                   $(runtime_dir)/VirtualFunctionTable.cpp \
-                   $(runtime_dir)/RexxStartDispatcher.cpp \
-                   $(runtime_dir)/ActivityDispatcher.cpp \
-                   $(runtime_dir)/TranslateDispatcher.cpp \
-                   $(runtime_dir)/CreateMethodDispatcher.cpp \
-                   $(runtime_dir)/CallbackDispatcher.cpp
-streamlibrary_sources = $(streamlibrary_dir)/StreamCommandParser.cpp \
-                        $(streamlibrary_dir)/StreamNative.cpp
+platform_sources = $(build_kernel_platform_dir)/ErrorMessages.cpp \
+                   $(build_kernel_platform_dir)/ExternalFunctions.cpp \
+                   $(build_kernel_platform_dir)/FileSystem.cpp \
+                   $(build_kernel_platform_dir)/MemorySupport.cpp \
+                   $(build_kernel_platform_dir)/MiscSystem.cpp \
+                   $(build_kernel_platform_dir)/RexxMain.cpp \
+                   $(build_kernel_platform_dir)/RexxQueues.cpp \
+                   $(build_kernel_platform_dir)/StoredMetaData.cpp \
+                   $(build_kernel_platform_dir)/SystemCommands.cpp \
+                   $(build_kernel_platform_dir)/ThreadSupport.cpp \
+                   $(build_kernel_platform_dir)/TimeSupport.cpp \
+                   $(build_kernel_platform_dir)/UseridFunction.cpp \
+                   $(build_kernel_platform_dir)/ValueFunction.cpp \
+                   $(build_kernel_platform_dir)/VariablePool.cpp \
+                   $(build_kernel_platform_dir)/SystemInitialization.cpp \
+                   $(build_kernel_platform_dir)/SystemInterpreter.cpp
+runtime_sources  = $(build_runtime_dir)/DeadObject.cpp \
+                   $(build_runtime_dir)/GlobalData.cpp \
+                   $(build_runtime_dir)/GlobalNames.cpp \
+                   $(build_runtime_dir)/MemorySegment.cpp \
+                   $(build_runtime_dir)/MemoryStats.cpp \
+                   $(build_runtime_dir)/NativeRoot.cpp \
+                   $(build_runtime_dir)/Numerics.cpp \
+                   $(build_runtime_dir)/PrimitiveBehaviours.cpp \
+                   $(build_runtime_dir)/RexxActivation.cpp \
+                   $(build_runtime_dir)/RexxActivationStack.cpp \
+                   $(build_runtime_dir)/RexxActivity.cpp \
+                   $(build_runtime_dir)/ActivityManager.cpp \
+                   $(build_runtime_dir)/LibraryManager.cpp \
+                   $(build_runtime_dir)/Interpreter.cpp \
+                   $(build_runtime_dir)/InterpreterInstance.cpp \
+                   $(build_runtime_dir)/RexxBehaviour.cpp \
+                   $(build_runtime_dir)/RexxCode.cpp \
+                   $(build_runtime_dir)/CPPCode.cpp \
+                   $(build_runtime_dir)/ExitHandler.cpp \
+                   $(build_runtime_dir)/ProtectedObject.cpp \
+                   $(build_runtime_dir)/RexxCollection.cpp \
+                   $(build_runtime_dir)/RexxCompoundElement.cpp \
+                   $(build_runtime_dir)/RexxCompoundTable.cpp \
+                   $(build_runtime_dir)/RexxCompoundTail.cpp \
+                   $(build_runtime_dir)/RexxDateTime.cpp \
+                   $(build_runtime_dir)/RexxEnvelope.cpp \
+                   $(build_runtime_dir)/RexxHashTable.cpp \
+                   $(build_runtime_dir)/RexxInternalStack.cpp \
+                   $(build_runtime_dir)/RexxListTable.cpp \
+                   $(build_runtime_dir)/RexxLocalVariables.cpp \
+                   $(build_runtime_dir)/RexxMemory.cpp \
+                   $(build_runtime_dir)/RexxMisc.cpp \
+                   $(build_runtime_dir)/RexxNativeActivation.cpp \
+                   $(build_runtime_dir)/RexxNativeCode.cpp \
+                   $(build_runtime_dir)/RexxSmartBuffer.cpp \
+                   $(build_runtime_dir)/RexxStartup.cpp \
+                   $(build_runtime_dir)/RexxVariable.cpp \
+                   $(build_runtime_dir)/RexxVariableDictionary.cpp \
+                   $(build_runtime_dir)/Setup.cpp \
+                   $(build_runtime_dir)/Utilities.cpp \
+                   $(build_runtime_dir)/Version.cpp \
+                   $(build_runtime_dir)/VirtualFunctionTable.cpp \
+                   $(build_runtime_dir)/RexxStartDispatcher.cpp \
+                   $(build_runtime_dir)/ActivityDispatcher.cpp \
+                   $(build_runtime_dir)/TranslateDispatcher.cpp \
+                   $(build_runtime_dir)/CreateMethodDispatcher.cpp \
+                   $(build_runtime_dir)/CallbackDispatcher.cpp
+streamlibrary_sources = $(build_streamlibrary_dir)/StreamCommandParser.cpp \
+                        $(build_streamlibrary_dir)/StreamNative.cpp
 librexx_la_SOURCES = $(classes_sources) \
                      $(expression_sources) \
                      $(instructions_sources) \
@@ -528,45 +538,45 @@ librexx_la_SOURCES = $(classes_sources) \
                      $(platform_sources) \
                      $(runtime_sources) \
                      $(streamlibrary_sources)
-core_classes = $(rexxclasses_dir)/CoreClasses.orx \
-               $(rexxclasses_dir)/StreamClasses.orx \
-	       $(rexxclasses_dir)/SystemMethods.orx
-core_platform_classes = $(kernel_platform_unix_dir)/PlatformObjects.orx \
-                        $(kernel_platform_unix_dir)/UnixMethods.orx
+core_classes = $(build_rexxclasses_dir)/CoreClasses.orx \
+               $(build_rexxclasses_dir)/StreamClasses.orx \
+	       $(build_rexxclasses_dir)/SystemMethods.orx
+core_platform_classes = $(build_kernel_platform_dir)/PlatformObjects.orx \
+                        $(build_kernel_platform_dir)/UnixMethods.orx
 #
 # Preprocessor flags for librexx.so
 #
 librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
-                       -I$(lib_dir) \
-                       -I$(api_dir) \
-                       -I$(platform_api_dir) \
-                       -I$(kernel_dir) \
-                       -I$(expression_dir) \
-                       -I$(instructions_dir) \
-                       -I$(classes_dir) \
-                       -I$(runtime_dir) \
-                       -I$(parser_dir) \
-                       -I$(messages_dir) \
-                       -I$(streamlibrary_dir) \
-                       -I$(kernel_platform_common_dir) \
-                       -I$(kernel_platform_unix_dir) \
-                       -I$(rexxapi_unix_dir)
+                       -I$(build_lib_dir) \
+                       -I$(build_api_dir) \
+                       -I$(build_api_platform_dir) \
+                       -I$(build_kernel_dir) \
+                       -I$(build_expression_dir) \
+                       -I$(build_instructions_dir) \
+                       -I$(build_classes_dir) \
+                       -I$(build_runtime_dir) \
+                       -I$(build_parser_dir) \
+                       -I$(build_messages_dir) \
+                       -I$(build_streamlibrary_dir) \
+                       -I$(build_kernel_common_dir) \
+                       -I$(build_kernel_platform_dir) \
+                       -I$(build_rexxapi_platform_dir)
 
 librexx_la_LDFLAGS = $(VERSION_INFO) -nostartfiles
 #################### rexx ##########################
 # Sources for rexx
 #
-rexx_SOURCES = $(platform_unix_dir)/rexx.cpp
+rexx_SOURCES = $(build_utils_platform_dir)/rexx.cpp
 #
 # Preprocessor flags for rexx
 #
 rexx_CXXFLAGS  = $(COMMON_CPPFLAGS) \
-                 -I$(lib_dir) \
-                 -I$(api_dir) \
-                 -I$(platform_api_dir) \
-                 -I$(messages_dir) \
-                 -I$(kernel_platform_unix_dir) \
-                 -I$(rexxapi_unix_dir)
+                 -I$(build_lib_dir) \
+                 -I$(build_api_dir) \
+                 -I$(build_api_platform_dir) \
+                 -I$(build_messages_dir) \
+                 -I$(build_kernel_platform_dir) \
+                 -I$(build_rexxapi_platform_dir)
 #
 # Extra libraries for rexx
 #
@@ -577,17 +587,17 @@ rexx_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rexx ##########################
 # Sources for rexx
 #
-rexximage_SOURCES = $(platform_unix_dir)/rexximage.cpp
+rexximage_SOURCES = $(build_utils_platform_dir)/rexximage.cpp
 #
 # Preprocessor flags for rexximage
 #
 rexximage_CXXFLAGS  = $(COMMON_CPPFLAGS) \
-                 -I$(lib_dir) \
-                 -I$(api_dir) \
-                 -I$(platform_api_dir) \
-                 -I$(messages_dir) \
-                 -I$(kernel_platform_unix_dir) \
-                 -I$(rexxapi_unix_dir)
+                 -I$(build_lib_dir) \
+                 -I$(build_api_dir) \
+                 -I$(build_api_platform_dir) \
+                 -I$(build_messages_dir) \
+                 -I$(build_kernel_platform_dir) \
+                 -I$(build_rexxapi_platform_dir)
 #
 # Extra libraries for rexx
 #
@@ -597,19 +607,18 @@ rexximage_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rexxc #########################
 # Sources for rexxc
 #
-rexxc_SOURCES = $(platform_unix_dir)/RexxCompiler.cpp
+rexxc_SOURCES = $(build_utils_platform_dir)/RexxCompiler.cpp
 #
 # Preprocessor flags for rexxc
 #
 rexxc_CXXFLAGS  = $(COMMON_CPPFLAGS) \
-                  -I$(lib_dir) \
-                  -I$(api_dir) \
-                  -I$(platform_api_dir) \
-                  -I$(messages_dir) \
-                  -I$(kernel_platform_unix_dir) \
-                  -I$(rexxapi_unix_dir)
+                  -I$(build_lib_dir) \
+                  -I$(build_api_dir) \
+                  -I$(build_api_platform_dir) \
+                  -I$(build_messages_dir) \
+                  -I$(build_kernel_platform_dir) \
+                  -I$(build_rexxapi_platform_dir)
 
-#                  -I$(top_srcdir)/kernel/messages
 #
 # Extra libraries for rexxc
 #
@@ -620,17 +629,17 @@ rexxc_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rxqueue #########################
 # Sources for rxqueue
 #
-rxqueue_SOURCES =  $(rexxapi_unix_dir)/QueueCommand.cpp
+rxqueue_SOURCES =  $(build_rexxapi_platform_dir)/QueueCommand.cpp
 #
 # Preprocessor flags for rxqueue
 #
 rxqueue_CXXFLAGS  = $(COMMON_CPPFLAGS) \
-                    -I$(lib_dir) \
-                    -I$(api_dir) \
-                    -I$(platform_api_dir) \
-                    -I$(kernel_platform_unix_dir) \
-                    -I$(messages_dir) \
-                    -I$(rexxapi_unix_dir)
+                    -I$(build_lib_dir) \
+                    -I$(build_api_dir) \
+                    -I$(build_api_platform_dir) \
+                    -I$(build_kernel_platform_dir) \
+                    -I$(build_messages_dir) \
+                    -I$(build_rexxapi_platform_dir)
 #
 # Extra libraries for rxqueue
 #
@@ -640,17 +649,17 @@ rxqueue_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rxsubcom #########################
 # Sources for rxsubcom
 #
-rxsubcom_SOURCES =  $(rexxapi_unix_dir)/SUBCOMCommand.cpp
+rxsubcom_SOURCES =  $(build_rexxapi_platform_dir)/SUBCOMCommand.cpp
 #
 # Preprocessor flags for rxsubcom
 #
 rxsubcom_CXXFLAGS  = $(COMMON_CPPFLAGS) \
-                    -I$(lib_dir) \
-                    -I$(api_dir) \
-                    -I$(platform_api_dir) \
-                    -I$(kernel_platform_unix_dir) \
-                    -I$(messages_dir) \
-                    -I$(rexxapi_unix_dir)
+                    -I$(build_lib_dir) \
+                    -I$(build_api_dir) \
+                    -I$(build_api_platform_dir) \
+                    -I$(build_kernel_platform_dir) \
+                    -I$(build_messages_dir) \
+                    -I$(build_rexxapi_platform_dir)
 #
 # Extra libraries for rxsubcom
 #
@@ -660,13 +669,13 @@ rxsubcom_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rxdelipc #########################
 # Sources for rxdelipc
 #
-rxdelipc_SOURCES =  $(rexxapi_unix_dir)/APIManagerShutdown.cpp
+rxdelipc_SOURCES =  $(build_rexxapi_platform_dir)/APIManagerShutdown.cpp
 #
 # Preprocessor flags for rxdelipc
 #
 rxdelipc_CXXFLAGS  = $(COMMON_CPPFLAGS) \
-                     -I$(api_dir) \
-                     -I$(platform_api_dir)
+                     -I$(build_api_dir) \
+                     -I$(build_api_platform_dir)
 #
 # Extra libraries for rxdelipc
 #
@@ -674,21 +683,22 @@ rxdelipc_LDADD   = librexx.la librexxapi.la @ORX_LDADD_EXECUTABLE@
 rxdelipc_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 
 #################### librexxutil.so ################
-# Preprocessor flags for librexxutil.so
-#
-librexxutil_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
-                          -I$(lib_dir) \
-                          -I$(api_dir) \
-                          -I$(platform_api_dir) \
-                          -I$(kernel_dir) \
-                          -I$(messages_dir) \
-                          -I$(kernel_platform_common_dir) \
-                          -I$(kernel_platform_unix_dir) \
-                          -I$(rexxapi_unix_dir)
 #
 # Sources for librexxutil.so
 #
-librexxutil_la_SOURCES = $(rexutils_unix_dir)/rexxutil.cpp
+librexxutil_la_SOURCES = $(build_rexutils_platform_dir)/rexxutil.cpp
+#
+# Preprocessor flags for librexxutil.so
+#
+librexxutil_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
+                          -I$(build_lib_dir) \
+                          -I$(build_api_dir) \
+                          -I$(build_api_platform_dir) \
+                          -I$(build_kernel_dir) \
+                          -I$(build_messages_dir) \
+                          -I$(build_kernel_common_dir) \
+                          -I$(build_kernel_platform_dir) \
+                          -I$(build_rexxapi_platform_dir)
 #
 # Extra libraries for librexxutil.so (maybe)
 #
@@ -696,22 +706,23 @@ librexxutil_la_LIBADD  = @ORX_LIBADD_LIBRARY@
 librexxutil_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 
 #################### librxmath.so ################
-# Preprocessor flags for librxmath.so
-#
-librxmath_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
-                        -I$(top_srcdir)/lib \
-                        -I$(api_dir) \
-                        -I$(platform_api_dir) \
-                        -I$(kernel_dir) \
-                        -I$(messages_dir) \
-                        -I$(kernel_platform_common_dir) \
-                        -I$(runtime_dir) \
-                        -I$(kernel_platform_unix_dir) \
-                        -I$(rexxapi_unix_dir)
 #
 # Sources for librxmath.so
 #
-librxmath_la_SOURCES = $(rexutils_dir)/rxmath.cpp
+librxmath_la_SOURCES = $(build_rexutils_dir)/rxmath.cpp
+#
+# Preprocessor flags for librxmath.so
+#
+librxmath_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
+                        -I$(build_lib_dir) \
+                        -I$(build_api_dir) \
+                        -I$(build_api_platform_dir) \
+                        -I$(build_kernel_dir) \
+                        -I$(build_messages_dir) \
+                        -I$(build_kernel_common_dir) \
+                        -I$(build_runtime_dir) \
+                        -I$(build_kernel_platform_dir) \
+                        -I$(build_rexxapi_platform_dir)
 #
 # Extra libraries for librxmath.so (maybe)
 #
@@ -719,17 +730,18 @@ librxmath_la_LIBADD  = @ORX_LIBADD_LIBRARY@
 librxmath_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 
 #################### librxsock.so ################
-# Preprocessor flags for librxsock.so
-#
-librxsock_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
-                      -I$(api_dir) \
-                      -I$(platform_api_dir) \
-                      -I$(rexxapi_unix_dir)
 #
 # Sources for librxsock.so
 #
-librxsock_la_SOURCES = $(rexutils_dir)/rxsock.cpp \
-                       $(rexutils_dir)/rxsockfn.cpp
+librxsock_la_SOURCES = $(build_rexutils_dir)/rxsock.cpp \
+                       $(build_rexutils_dir)/rxsockfn.cpp
+#
+# Preprocessor flags for librxsock.so
+#
+librxsock_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
+                      -I$(build_api_dir) \
+                      -I$(build_api_platform_dir) \
+                      -I$(build_rexxapi_platform_dir)
 #
 # Extra libraries for librxsock.so (maybe)
 #
@@ -737,27 +749,28 @@ librxsock_la_LIBADD  = @ORX_LIBADD_LIBRARY@
 librxsock_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 
 #################### librxregexp.so ################
-# Preprocessor flags for librxregexp.so
-#
-librxregexp_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
-                          -I$(top_srcdir)/lib \
-                          -I$(api_dir) \
-                          -I$(platform_api_dir) \
-                          -I$(kernel_dir) \
-                          -I$(expression_dir) \
-                          -I$(classes_dir) \
-                          -I$(messages_dir) \
-                          -I$(parser_dir) \
-                          -I$(kernel_platform_common_dir) \
-                          -I$(runtime_dir) \
-                          -I$(kernel_platform_unix_dir) \
-                          -I$(rexxapi_unix_dir)
 #
 # Sources for librxregexp.so
 #
-librxregexp_la_SOURCES = $(rxregexp_dir)/automaton.cpp \
-                         $(rxregexp_dir)/dblqueue.cpp \
-                         $(rxregexp_dir)/rxregexp.cpp
+librxregexp_la_SOURCES = $(build_rxregexp_dir)/automaton.cpp \
+                         $(build_rxregexp_dir)/dblqueue.cpp \
+                         $(build_rxregexp_dir)/rxregexp.cpp
+#
+# Preprocessor flags for librxregexp.so
+#
+librxregexp_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
+                          -I$(build_lib_dir) \
+                          -I$(build_api_dir) \
+                          -I$(build_api_platform_dir) \
+                          -I$(build_kernel_dir) \
+                          -I$(build_expression_dir) \
+                          -I$(build_classes_dir) \
+                          -I$(build_messages_dir) \
+                          -I$(build_parser_dir) \
+                          -I$(build_kernel_common_dir) \
+                          -I$(build_runtime_dir) \
+                          -I$(build_kernel_platform_dir) \
+                          -I$(build_rexxapi_platform_dir)
 #
 # Extra libraries for librxregexp.so (maybe)
 #
@@ -767,36 +780,36 @@ librxregexp_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 #
 # explicit targets:
 #
-rexx.cat: $(messages_dir)/gencat.inp
-	-gencat $(@) $(messages_dir)/gencat.inp
+rexx.cat: $(build_messages_dir)/gencat.inp
+	-gencat $(@) $(build_messages_dir)/gencat.inp
 
-$(messages_dir)/RexxMessageNumbers.h: $(messages_dir)/RexxMessageNumbers.xsl $(messageXML)
-	sh ./xsl.sh $(@) $(messageXML) $(messages_dir)/RexxMessageNumbers.xsl
+$(build_messages_dir)/RexxMessageNumbers.h: $(build_messages_dir)/RexxMessageNumbers.xsl $(messageXML)
+	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/RexxMessageNumbers.xsl
 
-$(messages_dir)/RexxErrorCodes.h: $(messages_dir)/RexxErrorCodes.xsl $(messageXML)
-	sh ./xsl.sh $(@) $(messageXML) $(messages_dir)/RexxErrorCodes.xsl
+$(build_messages_dir)/RexxErrorCodes.h: $(build_messages_dir)/RexxErrorCodes.xsl $(messageXML)
+	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/RexxErrorCodes.xsl
 
-$(messages_dir)/RexxMessageTable.h: $(messages_dir)/RexxMessageTable.xsl $(messageXML)
-	sh ./xsl.sh $(@) $(messageXML) $(messages_dir)/RexxMessageTable.xsl
+$(build_messages_dir)/RexxMessageTable.h: $(build_messages_dir)/RexxMessageTable.xsl $(messageXML)
+	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/RexxMessageTable.xsl
 
-$(messages_dir)/gencat.inp: $(kernel_platform_unix_dir)/UnixGencat.xsl $(messageXML)
-	sh ./xsl.sh $(@) $(messageXML) $(kernel_platform_unix_dir)/UnixGencat.xsl
+$(build_messages_dir)/gencat.inp: $(build_kernel_platform_dir)/UnixGencat.xsl $(messageXML)
+	sh ./xsl.sh $(@) $(messageXML) $(build_kernel_platform_dir)/UnixGencat.xsl
 
-$(runtime_dir)/ClassTypeCodes.h: $(runtime_dir)/ClassTypeCodes.xsl $(classesXML)
-	sh ./xsl.sh $(@) $(classesXML) $(runtime_dir)/ClassTypeCodes.xsl
+$(build_runtime_dir)/ClassTypeCodes.h: $(build_runtime_dir)/ClassTypeCodes.xsl $(classesXML)
+	sh ./xsl.sh $(@) $(classesXML) $(build_runtime_dir)/ClassTypeCodes.xsl
 
-$(runtime_dir)/PrimitiveBehaviourNames.h: $(runtime_dir)/PrimitiveBehaviourNames.xsl $(classesXML)
-	sh ./xsl.sh $(@) $(classesXML) $(runtime_dir)/PrimitiveBehaviourNames.xsl
+$(build_runtime_dir)/PrimitiveBehaviourNames.h: $(build_runtime_dir)/PrimitiveBehaviourNames.xsl $(classesXML)
+	sh ./xsl.sh $(@) $(classesXML) $(build_runtime_dir)/PrimitiveBehaviourNames.xsl
 
-$(runtime_dir)/PrimitiveBehaviours.cpp: $(runtime_dir)/PrimitiveBehaviours.xsl $(classesXML)
-	sh ./xsl.sh $(@) $(classesXML) $(runtime_dir)/PrimitiveBehaviours.xsl
+$(build_runtime_dir)/PrimitiveBehaviours.cpp: $(build_runtime_dir)/PrimitiveBehaviours.xsl $(classesXML)
+	sh ./xsl.sh $(@) $(classesXML) $(build_runtime_dir)/PrimitiveBehaviours.xsl
 
-$(runtime_dir)/VirtualFunctionTables.cpp: $(runtime_dir)/VirtualFunctionTable.xsl $(classesXML)
-	sh ./xsl.sh $(@) $(classesXML) $(runtime_dir)/VirtualFunctionTable.xsl
+$(build_runtime_dir)/VirtualFunctionTables.cpp: $(build_runtime_dir)/VirtualFunctionTable.xsl $(classesXML)
+	sh ./xsl.sh $(@) $(classesXML) $(build_runtime_dir)/VirtualFunctionTable.xsl
 
 rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
-	cp $(rexxclasses_dir)/*.orx .
-	cp $(kernel_platform_unix_dir)/*.orx .
+	cp $(build_rexxclasses_dir)/*.orx .
+	cp $(build_kernel_platform_dir)/*.orx .
 	./rexximage -i
 	rm -f *.orx
 
@@ -804,32 +817,32 @@ rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
 # This ensures a developer can run the test suite from the build directory
 #
 ooTest:
-	cp $(rxregexp_dir)/rxregexp.cls .
-	cp $(rexutils_dir)/rxftp.cls .
+	cp $(build_rxregexp_dir)/rxregexp.cls .
+	cp $(build_rexutils_dir)/rxftp.cls .
 
 #
 # distribution files
 #
-EXTRA_DIST = $(messages_dir)/RexxMessageNumbers.xsl \
-             $(messages_dir)/RexxErrorCodes.xsl \
-             $(messages_dir)/RexxMessageTable.xsl \
-             $(messages_dir)/DocBookErrors.xsl \
-             $(messages_dir)/DocErrorMessages.sgml \
-             $(messages_dir)/gencat.inp \
+EXTRA_DIST = $(build_messages_dir)/RexxMessageNumbers.xsl \
+             $(build_messages_dir)/RexxErrorCodes.xsl \
+             $(build_messages_dir)/RexxMessageTable.xsl \
+             $(build_messages_dir)/DocBookErrors.xsl \
+             $(build_messages_dir)/DocErrorMessages.sgml \
+             $(build_messages_dir)/gencat.inp \
              $(messageXML) \
              $(classesXML) \
-             $(kernel_platform_unix_dir)/UnixGencat.xsl \
-             $(runtime_dir)/ClassTypeCodes.xsl \
-             $(runtime_dir)/PrimitiveBehaviourNames.xsl \
-             $(runtime_dir)/PrimitiveBehaviours.xsl \
-             $(runtime_dir)/VirtualFunctionTable.xsl \
+             $(build_kernel_platform_dir)/UnixGencat.xsl \
+             $(build_runtime_dir)/ClassTypeCodes.xsl \
+             $(build_runtime_dir)/PrimitiveBehaviourNames.xsl \
+             $(build_runtime_dir)/PrimitiveBehaviours.xsl \
+             $(build_runtime_dir)/VirtualFunctionTable.xsl \
              $(errorHeaders) \
-             $(platform_unix_dir)/rexx.sh \
-             $(platform_unix_dir)/rexx.csh \
-             $(rxregexp_dir)/rxregexp.cls \
-             $(kernel_platform_unix_dir)/UnixMethods.orx \
-             $(kernel_platform_unix_dir)/PlatformObjects.orx \
-             $(rexxclasses_dir) \
+             $(build_utils_platform_dir)/rexx.sh \
+             $(build_utils_platform_dir)/rexx.csh \
+             $(build_rxregexp_dir)/rxregexp.cls \
+             $(build_kernel_platform_dir)/UnixMethods.orx \
+             $(build_kernel_platform_dir)/PlatformObjects.orx \
+             $(build_rexxclasses_dir) \
              $(classesHeaders) \
              $(expressionHeaders) \
              $(instructionsHeaders) \
@@ -888,14 +901,14 @@ install-exec-local:
 	else \
 		$(install_sh_SCRIPT) rexx.cat $(DESTDIR)$(catdir)/rexx.cat; \
 	fi
-	$(install_sh_SCRIPT) $(build_platform_unix_dir)/oorexx-config $(DESTDIR)$(prefix)/bin/oorexx-config
-	$(install_sh_SCRIPT) $(rxregexp_dir)/rxregexp.cls $(DESTDIR)$(prefix)/bin/rxregexp.cls
-	$(install_sh_SCRIPT) $(rexutils_dir)/rxftp.cls $(DESTDIR)$(prefix)/bin/rxftp.cls
+	$(install_sh_SCRIPT) $(build_utils_platform_dir)/oorexx-config $(DESTDIR)$(prefix)/bin/oorexx-config
+	$(install_sh_SCRIPT) $(build_rxregexp_dir)/rxregexp.cls $(DESTDIR)$(prefix)/bin/rxregexp.cls
+	$(install_sh_SCRIPT) $(build_rexutils_dir)/rxftp.cls $(DESTDIR)$(prefix)/bin/rxftp.cls
 	for a in $(samples_dir)/*.rex; do \
 		bn=`basename $$a`; \
 		$(install_sh_SCRIPT) $$a $(DESTDIR)$(prefix)/share/ooRexx/$$bn; \
 	done;
-	$(install_sh_SCRIPT) $(samples_dir)/readme $(DESTDIR)$(prefix)/share/ooRexx/readme
+	$(install_sh_SCRIPT) $(build_samples_dir)/readme $(DESTDIR)$(prefix)/share/ooRexx/readme
 
 package:
 	./rexx $(top_srcdir)/platform/unix/makepkg.rex @PACKAGETYPE@ $(ORX_MAJOR).$(ORX_MINOR).$(ORX_MOD_LVL) $(target) $(prefix) $(DESTDIR)

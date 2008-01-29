@@ -590,6 +590,9 @@ $ Error_Invalid_subkeyword_procedure
 $ Error_Invalid_subkeyword_callonname
 294 CALL ON condition must be followed by the keyword NAME; found "&1"
 
+$ Error_Invalid_data_constant_dir
+295 Data must not follow the ::CONSTANT value; found "&1"
+
 $ Error_Invalid_subkeyword_signalonname
 295 SIGNAL ON condition must be followed by the keyword NAME; found "&1"
 
@@ -1127,9 +1130,6 @@ $ Error_Incorrect_method_nomatch
 $ Error_No_method_name
 476 Object "&1" does not understand message "&2"
 
-$ Error_Execution_nosomobj
-477 SOM object "&1" is no longer available
-
 $ Error_Execution_nodouble
 478 Unable to convert object "&1" to a double-float value
 
@@ -1157,9 +1157,6 @@ $ Error_Execution_noclass
 $ Error_Execution_cyclic
 486 Cyclic inheritance in program "&1"
 
-$ Error_Execution_noSomclass
-487 SOM class "&1" not found
-
 $ Error_Execution_noarray
 488 Unable to convert object "&1" to a single-dimensional array value
 
@@ -1180,21 +1177,6 @@ $ Error_Execution_propagate
 
 $ Error_Execution_nomethod
 494 Unable to convert object "&1" to a method
-
-$ Error_Execution_SOM_general
-495 Could not retrieve "&1" information for method "&2"
-
-$ Error_Execution_SOM_noMethodDescriptor
-496 No method descriptor information for method "&1" on class "&2"
-
-$ Error_Execution_SOM_unsupportedType
-497 The SOM interface does not currently support parameter type "&1", specified for argument &2
-
-$ Error_Execution_SOM_unsupportedReturnType
-498 The SOM interface does not currently support parameter type "&1", specified for return value
-
-$ Error_Execution_SOM_maxOutArgs
-499 The number of OUT or INOUT type arguments cannot exceed &1
 
 $ Error_Execution_reply
 500 REPLY can be issued only once per method invocation
@@ -1391,62 +1373,17 @@ $ Error_Translation_invalid_attribute
 $ Error_Symbol_or_string_mixinclass
 566 String or symbol expected after MIXINCLASS keyword
 
-$ Error_Execution_dsom_noserver
-567 The DSOM Server for class &1, could not be resolved.
-
-$ Error_Too_many_event_parms
-568 Too many parameters for event "&1"
-
-$ Error_Creating_event
-569 Error creating OSA event "&1"
-
-$ Error_Creating_event_direct_parm
-570 Error creating direct parameter for OSA event "&1"
-
-$ Error_Accessing_aete
-571 Error accessing event information in AETE
-
-$ Error_Launching_app
-572 Error launching application "&1"
-
-$ Error_Invalid_event_additional_parm
-573 Invalid additional parameter "&1" for OSA event "&2"
-
-$ Error_Creating_event_additional_parm
-574 Error creating additional parameter for OSA event "&1"
-
-$ Error_Sending_event
-575 Error sending OSA event "&1"
-
-$ Error_Handling_event_result
-576 Error handling result for OSA event "&1"
-
-$ Error_Converting_event_result_to_rexx_obj
-577 Error converting OSA event result to a REXX object
-
-$ Error_Invalid_event_direct_parm
-578 Invalid direct parameter "&1" for OSA event "&2"
-
-$ Error_Invalid_object_specifier_type
-579 Invalid key form for object specifier
-
 $ Error_Translation_class_external_bad_parameters
 580 Incorrect class external; too many parameters
 
 $ Error_Execution_no_concurrency
 581 Concurrency not supported
 
-$ Error_Invalid_data_type_for_objspec
-582 Invalid parameter type for key form "&1"
-
 $ Error_Translation_class_external_bad_class_name
 583 Incorrect class external; class name missing or invalid
 
 $ Error_Translation_class_external_bad_class_server
 584 Incorrect class external; invalid class server "&1"
-
-$ Error_Execution_class_server_not_installed
-585 &1 class server not installed
 
 $ Error_Incorrect_call_parm_wrong_sep
 586 &1 argument &2 must be a single non-alphanumeric character or the null string; found "&3"
@@ -1738,6 +1675,21 @@ $ Error_Translation_duplicate_attribute
 
 $ Error_Invalid_argument_format
 690 Argument &1 is not in a valid format; found "&2"
+
+$ Error_Unsupported_new_method
+691 New method is not supported for the &1 class
+
+$ Error_Symbol_or_string_attribute
+692 String or symbol expected as ::ATTRIBUTE directive name
+
+$ Error_Symbol_or_string_constant
+693 String or symbol expected as ::CONSTANT directive name
+
+$ Error_Symbol_or_string_constant_value
+694 String or symbol expected as ::CONSTANT value
+
+$ Error_Translation_duplicate_constant
+695 Duplicate ::CONSTANT directive instruction
 
 
 $ * -------------------------------------------------------------------------- */

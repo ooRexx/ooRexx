@@ -114,6 +114,7 @@ ORX_LIBADD_LIBRARY=""
 ORX_LDFLAGS_EXECUTABLE=""
 ORX_LDFLAGS_LIBRARY=""
 ORX_LDFLAGS_PACKAGE="-Xcompiler -nostartfiles"
+ORX_PLATFORM="unix"
 case "$target" in
    *ibm-aix*)
       GENERIC_OS="-DAIX"
@@ -184,6 +185,7 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       CXX_WARNINGS="$GCXX_WARNINGS"
       ORX_SYS_STR="CYGNUS"
       ORX_SHARED_LIBRARY_EXT=".dll"
+      ORX_PLATFORM="windows"
       ;;
    *freebsd*)
       ORX_SYS_STR="FREEBSD"
@@ -239,6 +241,7 @@ AC_SUBST(ORX_LIBADD_LIBRARY)
 AC_SUBST(ORX_LDFLAGS_EXECUTABLE)
 AC_SUBST(ORX_LDFLAGS_LIBRARY)
 AC_SUBST(ORX_LDFLAGS_PACKAGE)
+AC_SUBST(ORX_PLATFORM)
 
 dnl Checks for header files.
 AC_HEADER_STDC

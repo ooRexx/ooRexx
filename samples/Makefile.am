@@ -37,11 +37,11 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= unix
-DIST_SUBDIRS 		= unix
+SUBDIRS			= @ORX_PLATFORM@
+DIST_SUBDIRS            = @ORX_PLATFORM@
 
 MAINTAINERCLEANFILES 	= Makefile.in *~
 
 AM_CFLAGS		= @CFLAGS@
-INCLUDES 		= -I $(top_srcdir)/rexxapi/unix
+INCLUDES 		= -I $(top_srcdir)/rexxapi/@ORX_PLATFORM@
 
