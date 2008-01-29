@@ -287,8 +287,69 @@ miscFiles = $(top_srcdir)/CPLv1.0.txt \
             $(build_rxregexp_dir)/*.cls \
             $(build_rexutils_dir)/*.cls \
             $(build_samples_dir)/*.rex \
-            $(samples_windows_dir)/* \
-            $(build_samples_dir)/readme
+            $(build_samples_dir)/readme \
+            $(samples_unix_dir)/trexx \
+            $(samples_unix_dir)/api/*.README \
+            $(samples_unix_dir)/api/callrexx/*.c* \
+            $(samples_unix_dir)/api/callrexx/*.rex* \
+            $(samples_unix_dir)/api/wpipe1/*.rex \
+            $(samples_unix_dir)/api/wpipe1/*.c* \
+            $(samples_unix_dir)/api/wpipe2/*.rex \
+            $(samples_unix_dir)/api/wpipe2/*.c* \
+            $(samples_unix_dir)/api/wpipe3/*.rex \
+            $(samples_unix_dir)/api/wpipe3/*.c* \
+            $(samples_windows_dir)/*.rex \
+            $(samples_windows_dir)/*.txt \
+            $(samples_windows_dir)/api/callrxnt/*.fnc \
+            $(samples_windows_dir)/api/callrxnt/*.c \
+            $(samples_windows_dir)/api/callrxnt/*.ico \
+            $(samples_windows_dir)/api/callrxnt/*.mak \
+            $(samples_windows_dir)/api/callrxwn/*.fnc \
+            $(samples_windows_dir)/api/callrxwn/*.c \
+            $(samples_windows_dir)/api/callrxwn/*.ico \
+            $(samples_windows_dir)/api/callrxwn/*.mak \
+            $(samples_windows_dir)/api/rexxexit/*.c \
+            $(samples_windows_dir)/api/rexxexit/*.ico \
+            $(samples_windows_dir)/api/rexxexit/*.mak \
+            $(samples_windows_dir)/api/wpipe/*.txt \
+            $(samples_windows_dir)/api/wpipe/wpipe1/*.rex \
+            $(samples_windows_dir)/api/wpipe/wpipe1/*.c \
+            $(samples_windows_dir)/api/wpipe/wpipe1/*.def \
+            $(samples_windows_dir)/api/wpipe/wpipe1/*.mak \
+            $(samples_windows_dir)/api/wpipe/wpipe2/*.rex \
+            $(samples_windows_dir)/api/wpipe/wpipe2/*.c \
+            $(samples_windows_dir)/api/wpipe/wpipe2/*.def \
+            $(samples_windows_dir)/api/wpipe/wpipe2/*.mak \
+            $(samples_windows_dir)/api/wpipe/wpipe3/*.rex \
+            $(samples_windows_dir)/api/wpipe/wpipe3/*.c \
+            $(samples_windows_dir)/api/wpipe/wpipe3/*.def \
+            $(samples_windows_dir)/api/wpipe/wpipe3/*.mak \
+            $(samples_windows_dir)/ole/adsi/*.rex \
+            $(samples_windows_dir)/ole/apps/*.rex \
+            $(samples_windows_dir)/ole/apps/*.mwp \
+            $(samples_windows_dir)/ole/methinfo/*.rex \
+            $(samples_windows_dir)/ole/methinfo/*.cls \
+            $(samples_windows_dir)/ole/oleinfo/*.txt \
+            $(samples_windows_dir)/ole/oleinfo/*.bmp \
+            $(samples_windows_dir)/ole/oleinfo/*.rc \
+            $(samples_windows_dir)/ole/oleinfo/*.rex \
+            $(samples_windows_dir)/ole/wmi/*.rex \
+            $(samples_windows_dir)/ole/wmi/sysinfo/*.rex \
+            $(samples_windows_dir)/ole/wmi/sysinfo/*.rc \
+            $(samples_windows_dir)/oodialog/*.rex \
+            $(samples_windows_dir)/oodialog/*.inp \
+            $(samples_windows_dir)/oodialog/*.ico \
+            $(samples_windows_dir)/oodialog/bmp/*.bmp \
+            $(samples_windows_dir)/oodialog/examples/*.rex \
+            $(samples_windows_dir)/oodialog/examples/*.txt \
+            $(samples_windows_dir)/oodialog/rc/*.rc \
+            $(samples_windows_dir)/oodialog/res/*.mak \
+            $(samples_windows_dir)/oodialog/tutorial/*.bmp \
+            $(samples_windows_dir)/oodialog/tutorial/*.rex \
+            $(samples_windows_dir)/oodialog/tutorial/*.rc \
+            $(samples_windows_dir)/oodialog/wav/*.wav \
+            $(samples_windows_dir)/rexutils/*.rex \
+            $(samples_windows_dir)/wsh/*.wsf
 windowsFiles = \
             $(top_srcdir)/makeorx.bat \
             $(top_srcdir)/orxdb.bat \
@@ -904,7 +965,7 @@ install-exec-local:
 	$(install_sh_SCRIPT) $(build_utils_platform_dir)/oorexx-config $(DESTDIR)$(prefix)/bin/oorexx-config
 	$(install_sh_SCRIPT) $(build_rxregexp_dir)/rxregexp.cls $(DESTDIR)$(prefix)/bin/rxregexp.cls
 	$(install_sh_SCRIPT) $(build_rexutils_dir)/rxftp.cls $(DESTDIR)$(prefix)/bin/rxftp.cls
-	for a in $(samples_dir)/*.rex; do \
+	for a in $(build_samples_dir)/*.rex; do \
 		bn=`basename $$a`; \
 		$(install_sh_SCRIPT) $$a $(DESTDIR)$(prefix)/share/ooRexx/$$bn; \
 	done;

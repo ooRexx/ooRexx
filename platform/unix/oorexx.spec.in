@@ -114,6 +114,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/bin/rxqueue
 %{_prefix}/bin/rxsubcom
 %{_prefix}/bin/rxdelipc
+%{_prefix}/bin/rexximage
 %{_prefix}/bin/rexx.img
 %{_prefix}/bin/rexx.cat
 %{_prefix}/bin/rxregexp.cls
@@ -156,18 +157,18 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/share/ooRexx/rexx.csh
 %{_prefix}/share/ooRexx/*.rex
 %{_prefix}/share/ooRexx/readme
-%{_prefix}/share/ooRexx/trexx
 # We still need to figure out how to get the following installed somewhere in
 # the install tree. Obviously the following does not work.
-%{_prefix}/share/ooRexx/api/*.README
-%{_prefix}/share/ooRexx/api/callrexx/*.c
-%{_prefix}/share/ooRexx/api/callrexx/*.rex
-%{_prefix}/share/ooRexx/api/wpipe1/*.c
-%{_prefix}/share/ooRexx/api/wpipe1/*.rex
-%{_prefix}/share/ooRexx/api/wpipe2/*.c
-%{_prefix}/share/ooRexx/api/wpipe2/*.rex
-%{_prefix}/share/ooRexx/api/wpipe3/*.c
-%{_prefix}/share/ooRexx/api/wpipe3/*.rex
+#%{_prefix}/share/ooRexx/trexx
+#%{_prefix}/share/ooRexx/api/*.README
+#%{_prefix}/share/ooRexx/api/callrexx/*.c
+#%{_prefix}/share/ooRexx/api/callrexx/*.rex
+#%{_prefix}/share/ooRexx/api/wpipe1/*.c
+#%{_prefix}/share/ooRexx/api/wpipe1/*.rex
+#%{_prefix}/share/ooRexx/api/wpipe2/*.c
+#%{_prefix}/share/ooRexx/api/wpipe2/*.rex
+#%{_prefix}/share/ooRexx/api/wpipe3/*.c
+#%{_prefix}/share/ooRexx/api/wpipe3/*.rex
 
 %post
 # We only need to create the links if we are installed in /opt/ooRexx
