@@ -534,13 +534,8 @@ void  RexxMemory::runUninits()
 
     /* uninitTabe exists, run UNINIT     */
     for (iterTable = uninitTable->first();
-        (zombieObj = uninitTable->index(iterTable)) != OREF_NULL;
-        iterTable = uninitTable->next(iterTable))
+        (zombieObj = uninitTable->index(iterTable)) != OREF_NULL;)
     {
-        // TODO:  Ther's a bug here.  Removing the object can cause the
-        // iterator to skip over an entry....something should be done to
-        // prevent this.
-
         /* is this object readyfor UNINIT?   */
         if (uninitTable->value(iterTable) == TheTrueObject)
         {
@@ -554,6 +549,21 @@ void  RexxMemory::runUninits()
             catch (ActivityException) { }
                                            /* remove zombie from uninit table   */
             uninitTable->remove(zombieObj);
+
+
+            // because we just did a remove operation, this will effect the iteration
+            // process. There are two possibilities here.  Either A) we were at the end of the
+            // chain and this is now an empty slot or B) the removal process moved an new item
+            // into this slot.  If it is case A), then we need to search for the next item.  If
+            // it is case B) we'll just leave the index alone and process this position again.
+            if (uninitTable->index(iterTable) == OREF_NULL)
+            {
+                iterTable = uninitTable->next(iterTable);
+            }
+        }
+        else
+        {
+            iterTable = uninitTable->next(iterTable);
         }
     }                                  /* now go check next object in table */
     /* make sure we remove the recursion protection */

@@ -596,10 +596,6 @@ BOOL REXXENTRY DllMain(HANDLE hModule,
 
   switch( ul_reason_for_call ) {
     case DLL_PROCESS_DETACH:
-      if (iInstanceCount > 0) {
-        destroyTypeLibList();
-        OleUninitialize();
-      }
       // free class info memory [not a real leak]
       // not really needed, since the process will go away
       // and release that memory, but it is cleaner this way
