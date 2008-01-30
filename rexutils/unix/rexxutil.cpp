@@ -417,9 +417,6 @@ static RexxMutex SysGetKeySemaphore;
 /* original terminal settings                                                 */
 struct termios in_orig;                /* original settings (important!!)     */
 
-extern void SysInitialize(void);
-
-
 /*********************************************************************/
 /* RxTree Structure used by SysTree.                                 */
 /*********************************************************************/
@@ -1602,7 +1599,6 @@ bool string2int(
 void restore_terminal(int signal){
 
   stty(STDIN_FILENO,&in_orig);          /* restore the terminal settings        */
-  SysInitialize();                      /* restore all signal handler           */
   raise(signal);                        /* propagate signal                     */
 }
 
@@ -1673,7 +1669,6 @@ sigaction(SIGPIPE, &new_action, NULL); /* exitClear on broken pipe            */
 
   restore_tty(&in_orig);                /* for standard I/O behavior          */
   close(ttyfd);                         /* close the terminal                 */
-  SysInitialize();                      /* restore all signal handlers        */
   return 0;                             /* everything is fine                 */
 }
 
