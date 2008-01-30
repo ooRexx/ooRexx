@@ -102,7 +102,9 @@ void Interpreter::processStartup()
     RexxMemory::createLocks();
 
     // This is unconditional...it will fail if already loaded.
-    if (RexxRegisterFunctionDll("SYSLOADFUNCS", "REXXUTIL", "SysLoadFuncs") == 0)
+    // NB:  On Unix systems, this needs to be lower case.  This fortunately works ok
+    // on Windows.
+    if (RexxRegisterFunctionDll("SYSLOADFUNCS", "rexxutil", "SysLoadFuncs") == 0)
     {
         /* default return code buffer        */
         char      default_return_buffer[DEFRXSTRING];

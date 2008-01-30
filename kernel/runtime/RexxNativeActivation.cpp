@@ -633,9 +633,13 @@ RexxObject *RexxNativeActivation::saveObject(
       this->firstSavedObject = objr;   /* save this reference here          */
 
     else {
+      ProtectedObject p(objr);    // protect this in case adding/extending the save table causes a GC.
+
       if (this->savelist == OREF_NULL) /* second saved object?              */
+      {
                                        /* create the save list now          */
         this->savelist = new_object_table();
+      }
                                        /* add to the save table             */
       this->savelist->put(TheNilObject, objr);
     }
