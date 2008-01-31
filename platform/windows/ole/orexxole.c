@@ -2607,28 +2607,47 @@ RexxMethod1(REXXOBJECT,                // Return type
         }
     }
 
-    /** Get the IDispatch pointer for the OLE object.  Theoretically, we have to
-     *  have the IDispatch pointer or we would never be here.  But, ... make
-     *  sure we do have it.
+    /** Get the IDispatch pointer for the OLE object.  If the OLE / COM object
+     *  could not be created in init() there will be no dispatch pointer, but
+     *  uninit() will still run for the ooRexx object. The instance counter
+     *  still needs to be reduced by 1 for this case.
      */
-    getDispatchInfo(&pDispatch);
-    getClassInfo(&pClsInfo, &pTypeInfo);
-    // if we have type information, we need to release this now
-    if (pTypeInfo != NULL)
+    REXXOBJECT value = REXX_GETVAR("!IDISPATCH");
+    if ( value != NULLOBJECT )
     {
-        pTypeInfo->Release();
+        pDispatch = (IDispatch *)pointer_value(value);
     }
-
-    if ( pClsInfo )
+    if ( pDispatch != NULL )
     {
-        /* reduce instance counter, clear item if 0 reached */
-        pClsInfo->iInstances--;
-        if ( pClsInfo->iInstances == 0 )
-            ClearClassInfoBlock( pClsInfo );
-    }
+        /** There can be a number of OLEObjects created for the same COM class.
+         *  If type info is acquired for the COM class, the type info is stored.
+         *  There is only 1 AddRef() done for the type info pointer.  When
+         *  successive OLEObjects are created for the same COM class, the type
+         *  info is looked up, no new type info pointer is acquired.  When the
+         *  AddRef is done, the type info pointer is put into the !TYPEINFO
+         *  variable. It is important that the Release be called on that
+         *  pointer, and only on that pointer.
+         */
+        getClassInfo(&pClsInfo, &pTypeInfo);
 
-    if ( pDispatch )
-    {
+        value = REXX_GETVAR("!TYPEINFO");
+        if ( value != NULLOBJECT )
+        {
+            pTypeInfo = (ITypeInfo *)pointer_value(value);
+            if (pTypeInfo != NULL)
+            {
+                pTypeInfo->Release();
+            }
+        }
+
+        if ( pClsInfo )
+        {
+            /* reduce instance counter, clear item if 0 reached */
+            pClsInfo->iInstances--;
+            if ( pClsInfo->iInstances == 0 )
+                ClearClassInfoBlock( pClsInfo );
+        }
+
         pDispatch->Release();
     }
 
