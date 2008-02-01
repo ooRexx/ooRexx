@@ -1,11 +1,11 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
 #/* distribution. A copy is also available at the following address:           */
-#/* http://www.oorexx.org/license.html                          */
+#/* http://www.oorexx.org/license.html                                         */
 #/*                                                                            */
 #/* Redistribution and use in source and binary forms, with or                 */
 #/* without modification, are permitted provided that the following            */
@@ -37,11 +37,10 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= @ORX_PLATFORM@
-DIST_SUBDIRS            = @ORX_PLATFORM@
+SUBDIRS			= unix windows
+DIST_SUBDIRS            = unix windows
 
 MAINTAINERCLEANFILES 	= Makefile.in *~
 
-AM_CFLAGS		= @CFLAGS@
-INCLUDES 		= -I $(top_srcdir)/rexxapi/@ORX_PLATFORM@
+EXTRA_DIST = *.rex readme
 

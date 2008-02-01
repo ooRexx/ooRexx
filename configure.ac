@@ -400,6 +400,30 @@ AC_CONFIG_FILES([
         samples/unix/api/wpipe1/Makefile
         samples/unix/api/wpipe2/Makefile
         samples/unix/api/wpipe3/Makefile
+        samples/windows/Makefile
+        samples/windows/api/Makefile
+        samples/windows/api/callrxnt/Makefile
+        samples/windows/api/callrxwn/Makefile
+        samples/windows/api/rexxexit/Makefile
+        samples/windows/api/wpipe/Makefile
+        samples/windows/api/wpipe/wpipe1/Makefile
+        samples/windows/api/wpipe/wpipe2/Makefile
+        samples/windows/api/wpipe/wpipe3/Makefile
+        samples/windows/ole/Makefile
+        samples/windows/ole/adsi/Makefile
+        samples/windows/ole/apps/Makefile
+        samples/windows/ole/methinfo/Makefile
+        samples/windows/ole/oleinfo/Makefile
+        samples/windows/ole/wmi/Makefile
+        samples/windows/oodialog/Makefile
+        samples/windows/oodialog/bmp/Makefile
+        samples/windows/oodialog/examples/Makefile
+        samples/windows/oodialog/rc/Makefile
+        samples/windows/oodialog/res/Makefile
+        samples/windows/oodialog/tutorial/Makefile
+        samples/windows/oodialog/wav/Makefile
+        samples/windows/rexutils/Makefile
+        samples/windows/wsh/Makefile
         xsl.sh
         platform/unix/oorexx-config
  ])
