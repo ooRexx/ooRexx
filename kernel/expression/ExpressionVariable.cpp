@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ExpressionVariable.c      */
+/* REXX Translator                                  ExpressionVariable.c      */
 /*                                                                            */
 /* Primitive Translator Expression Parsing Variable Reference Class           */
 /*                                                                            */
@@ -195,6 +195,7 @@ void RexxParseVariable::assign(
 {
     /* The context handles the details of this */
     context->setLocalVariable(variableName, index, value);
+    context->traceAssignment(variableName, value);
 }
 
 void RexxParseVariable::drop(

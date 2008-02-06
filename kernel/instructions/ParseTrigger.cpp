@@ -173,8 +173,8 @@ void RexxTrigger::parse(
       variable = this->variables[i];   /* get the next variable retriever   */
       if (variable != OREF_NULL) {     /* not a place holder dummy?         */
                                        /* set the value                     */
+        // NOTE:  The different variable tpes handle their own assignment tracing
         variable->assign(context, stack, _value);
-        context->traceResult(_value);   /* trace if necessary                */
       }
       else                             /* dummy variable, just trace it     */
                                        /* trace if necessary                */

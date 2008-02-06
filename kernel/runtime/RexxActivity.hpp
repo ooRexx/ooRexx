@@ -85,7 +85,14 @@ enum TracePrefixes {
     TRACE_PREFIX_COMPOUND ,
     TRACE_PREFIX_MESSAGE  ,
     TRACE_PREFIX_ARGUMENT ,
+    TRACE_PREFIX_ASSIGNMENT,
 };
+
+
+// marker used for tagged traces to separate tag from the value
+#define VALUE_MARKER " => "
+// marker used for tagged traces to separate tag from the value
+#define ASSIGNMENT_MARKER " <= "
 
 #define MAX_TRACEBACK_LIST 80      /* 40 messages are displayed */
 #define MAX_TRACEBACK_INDENT 20    /* 10 messages are indented */

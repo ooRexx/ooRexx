@@ -271,6 +271,8 @@ void RexxExpressionMessage::assign(
         // send with an override
         stack->send(this->messageName, _super, argcount + 1, result);
     }
+                                       /* trace if necessary                */
+    context->traceAssignment(messageName, (RexxObject *)result);
     // remove all arguments (arguments + target + assignment value)
     stack->popn(argcount + 2);
 }

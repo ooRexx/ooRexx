@@ -99,10 +99,8 @@ RexxObject  *RexxStemVariable::evaluate(
 /* Function:  Evaluate a REXX stem variable                                   */
 /******************************************************************************/
 {
-  RexxObject     *value;               /* final variable value              */
-
                                        /* look up the name                  */
-  value = context->getLocalStem(this->stem, this->index);
+  RexxObject *value = context->getLocalStem(this->stem, this->index);
                                        /* NOTE:  stem accesses do NOT       */
                                        /* report NOVALUE so that DO OVER,   */
                                        /* call-by-reference with a stem and */
@@ -217,6 +215,8 @@ void RexxStemVariable::assign(
     variable->set(stem_table);         /* overlay the reference stem object */
     stem_table->setValue(value);       /* set the default value             */
   }
+  // trace the assignment
+  context->traceAssignment(stem, value);
 }
 
 void RexxStemVariable::drop(
