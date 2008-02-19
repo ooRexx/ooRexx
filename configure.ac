@@ -230,6 +230,9 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       ;;
 esac
 
+# Find out if we are big endian
+AC_C_BIGENDIAN()
+
 #DEVEL_DEFINES="$GENERIC_OS $GENERIC_DEFINES $SPECIFIC_DEFINES"
 #AC_SUBST(DEVEL_DEFINES)
 
