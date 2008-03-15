@@ -2064,10 +2064,20 @@ ULONG REXXENTRY HandleListCtrl(
                SetRexxStem(argv[4].strptr, -1, "!Column", data);
                itoa(lvi.cx, data, 10);
                SetRexxStem(argv[4].strptr, -1, "!Width", data);
+
                data[0] = '\0';
-               if (lvi.fmt == LVCFMT_CENTER) strcpy(data, "CENTER");
-               else if (lvi.fmt == LVCFMT_RIGHT) strcpy(data, "RIGHT");
-               else strcpy(data, "LEFT");
+               if ( (LVCFMT_JUSTIFYMASK & lvi.fmt) == LVCFMT_CENTER )
+               {
+                   strcpy(data, "CENTER");
+               }
+               else if ( (LVCFMT_JUSTIFYMASK & lvi.fmt) == LVCFMT_RIGHT )
+               {
+                   strcpy(data, "RIGHT");
+               }
+               else
+               {
+                   strcpy(data, "LEFT");
+               }
                SetRexxStem(argv[4].strptr, -1, "!Align", data);
                RETC(0)
            }
