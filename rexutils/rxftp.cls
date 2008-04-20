@@ -211,7 +211,7 @@ self~dsock = 0
 
 if flocal <> .nil then do
    if self~ascii = .true then self~remove_cr()
-   floc~charout(self~data)
+   retc = floc~charout(self~data)
    if retc <> 0 then do
       self~thrdstatus = '550'
       end
