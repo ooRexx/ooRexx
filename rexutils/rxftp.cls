@@ -116,7 +116,7 @@ else flocal = .nil
 
 /* set the receive done flag to false */
 self~rdone = .false
-thrdstatus = ''
+self~thrdstatus = ''
 
 /* get a socket */
 self~debugsay('Getting a socket.')
@@ -184,8 +184,7 @@ if ndsock = -1 then do
    end
 
 self~debugsay('Connected, recieving data.')
-bufsize = 4096
-bytesrcvd = SockRecv(ndsock, 'resp', bufsize)
+bytesrcvd = SockRecv(ndsock, 'resp', self~bufsize)
 do while bytesrcvd > 0
    self~debugsay('SockRecv:' bytesrcvd 'bytes received.')
    self~data = self~data || resp
@@ -200,7 +199,7 @@ do while bytesrcvd > 0
          end
       self~data = ''
       end
-   bytesrcvd = SockRecv(ndsock, 'resp', bufsize)
+   bytesrcvd = SockRecv(ndsock, 'resp', self~bufsize)
    end
 
 call SockShutDown ndsock, 2
@@ -235,7 +234,7 @@ use arg flocal
 
 /* set the receive done flag to false */
 self~rdone = .false
-thrdstatus = ''
+self~thrdstatus = ''
 
 /* get a socket */
 self~debugsay('Getting a socket.')
@@ -428,7 +427,7 @@ else flocal = .nil
 
 /* set the receive done flag to false */
 self~rdone = .false
-thrdstatus = ''
+self~thrdstatus = ''
 
 /* get a socket */
 self~debugsay('Getting a socket.')
@@ -472,8 +471,7 @@ maxbuf = 16384
 reply 0
 
 self~debugsay('Connected, recieving data.')
-bufsize = 4096
-bytesrcvd = SockRecv(self~dsock, 'resp', bufsize)
+bytesrcvd = SockRecv(self~dsock, 'resp', self~bufsize)
 do while bytesrcvd > 0
    self~debugsay('SockRecv:' bytesrcvd 'bytes received.')
    self~debugsay('Errno =' errno)
@@ -489,7 +487,7 @@ do while bytesrcvd > 0
          end
       self~data = ''
       end
-   bytesrcvd = SockRecv(self~dsock, 'resp', bufsize)
+   bytesrcvd = SockRecv(self~dsock, 'resp', self~bufsize)
    end
 
 call SockShutDown self~dsock, 2
@@ -524,7 +522,7 @@ use arg flocal
 
 /* set the send done flag to false */
 self~rdone = .false
-thrdstatus = ''
+self~thrdstatus = ''
 
 /* get a socket */
 self~debugsay('Getting a socket.')
@@ -742,9 +740,8 @@ if self~csock = 0 then do
    end
 
 /* fill the response buffer if necessary */
-bufsize = 4096
 if self~resp = '' then do while self~resp~pos('0D0A'x) = 0
-   bytesrcvd = SockRecv(self~csock, 'rcvdata', bufsize)
+   bytesrcvd = SockRecv(self~csock, 'rcvdata', self~bufsize)
    self~resp = self~resp || rcvdata
    if bytesrcvd = -1 then do
       self~debugsay('SockRecv error: the error code was' Errno)
@@ -777,7 +774,7 @@ if self~cmdresponse[self~cmdresponse~items]~substr(4, 1) = '-' then do
       /* do we have the last line? */
       if self~cmdresponse[self~cmdresponse~items]~substr(1, 4) = lastline then leave
       /* get the next buffer of data */
-      bytesrcvd = SockRecv(self~csock, 'rcvdata', bufsize)
+      bytesrcvd = SockRecv(self~csock, 'rcvdata', self~bufsize)
       self~debugsay('SockRecv:' bytesrcvd 'bytes received')
       if bytesrcvd = 0 then leave
       if bytesrcvd < 0 then do
@@ -903,6 +900,8 @@ self~traceflg = 0                -- .true = display ftp commands
 self~tracelog = .nil             -- trace log stream
 self~user = ''                   -- user account on the ftp server
 self~version = '3.3.0'           -- current version of this class
+self~bufsize = 4096              -- default buffer size for send/receive
+self~thrdstatus = ''
 return
 
 
@@ -931,6 +930,13 @@ return self~recvresponse(exretc)
 ::method debug       attribute -- .false suppresses debug messages
 ::method ftperrno    attribute -- last ftp response code
 ::method response    attribute -- parsed command response from last command
+::attribute bufsize  get       -- bufsize for send/receive
+::attribute bufsize  set     
+   expose bufsize 
+   use arg value
+   if datatype(value, "Whole") = .false | value < 0 then
+   raise syntax 93.906 array ("bufsize", value)
+   bufsize=value
 
 
 /*----------------------------------------------------------------------------*/
@@ -1143,6 +1149,8 @@ else do
    else if typestr~substr(1, 1) = 'B' then tmptype = .false
    else raise syntax 93.914 array (3, '"ASCII", "BINARY"', typestr)
 end
+
+self~thrdstatus = ''
 
 /* change transfer type if necessary */
 if tmptype <> self~ascii then do
