@@ -3605,7 +3605,12 @@ RexxVariableBase  *RexxActivation::getVariableRetriever(
 
     // Dot variables retrieve from the environment
     case STRING_LITERAL:
-      return (RexxVariableBase *)new RexxDotVariable(variable->extract(1, variable->getLength() - 1));
+      if (variable->getChar(0) == '.')
+      {
+          return (RexxVariableBase *)new RexxDotVariable(variable->extract(1, variable->getLength() - 1));
+      }
+      // this is a literal symbol not beginning with a period
+      return (RexxVariableBase *)variable;
 
                                        /* if it is a stem                   */
     case STRING_STEM:
