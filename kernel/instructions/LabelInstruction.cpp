@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              LabelInstruction.c    */
+/* REXX Translator                                      LabelInstruction.c    */
 /*                                                                            */
 /* Primitive Label Parse Class                                                */
 /*                                                                            */
@@ -54,6 +54,6 @@ void RexxInstructionLabel::execute(
 /****************************************************************************/
 {
   context->traceLabel(this);           /* trace if necessary                */
-  context->pauseInstruction();         /* pause if in debug mode            */
+  context->pauseLabel();               /* pause if in debug mode            */
 }
 

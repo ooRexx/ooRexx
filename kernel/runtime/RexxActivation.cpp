@@ -3239,63 +3239,80 @@ bool RexxActivation::debugPause(RexxInstruction * instr)
 /* Function:  Process an individual debug pause for an instruction            */
 /******************************************************************************/
 {
-  RexxString       * response;         /* response to the debug prompt      */
-  RexxInstruction  * currentInst;      /* current instruction               */
+    RexxString       * response;         /* response to the debug prompt      */
+    RexxInstruction  * currentInst;      /* current instruction               */
 
-  if (this->debug_pause)               /* instruction during debug pause?   */
-    return false;                      /* just get out quick                */
-
-  if (this->settings.flags&debug_bypass)
-                                       /* turn off for the next time        */
-    this->settings.flags &= ~debug_bypass;
-                                       /* debug pauses suppressed?          */
-  else if (this->settings.trace_skip > 0) {
-    this->settings.trace_skip--;       /* account for this one              */
-    if (this->settings.trace_skip == 0)/* gone to zero?                     */
-                                       /* turn tracing back on again (this  */
-                                       /* ensures the next pause also has   */
-                                       /* the instruction traced            */
-    this->settings.flags &= ~trace_suppress;
-  }
-  else {                               /* real work to do                   */
-    if (!this->code->isTraceable())    /* if we don't have real source      */
-      return false;                    /* just ignore for this              */
-                                       /* newly into debug mode?            */
-    if (!(this->settings.flags&debug_prompt_issued)) {
-                                       /* write the initial prompt          */
-      this->activity->traceOutput(this, (RexxString *)SysMessageText(Message_Translations_debug_prompt));
-                                       /* remember we've issued this        */
-      this->settings.flags |= debug_prompt_issued;
+    if (this->debug_pause)               /* instruction during debug pause?   */
+    {
+        return false;                      /* just get out quick                */
     }
-    currentInst = this->next;          /* save the next location target     */
-    for (;;) {                         /* loop until no longer pausing      */
-                                       /* read a line from the screen       */
-      do {
-         response = this->activity->traceInput(this);
-      } while (!(this->settings.flags&halt_condition));
 
-      if (response->getLength() == 0)       /* just a "null" line entered?       */
-        break;                         /* just end the pausing              */
-                                       /* a re-execute request?             */
-      else if (response->getLength() == 1 && response->getChar(0) == '=') {
-        this->next = this->current;    /* reset the execution pointer       */
-        return true;                   /* finished (inform block instrs)    */
-      }
-      else {                           /* need to execute an instruction    */
-        this->debugInterpret(response);/* go execute this                   */
-        if (currentInst != this->next) /* flow of control change?           */
-          break;                       /* end of this pause                 */
-                                       /* has the use changed the trace     */
-                                       /* setting on us?                    */
-        else if (this->settings.flags&debug_bypass) {
-                                       /* turn off for the next time        */
-          this->settings.flags &= ~debug_bypass;
-          break;                       /* we also skip repausing            */
+    if (this->settings.flags&debug_bypass)
+    {
+        /* turn off for the next time        */
+        this->settings.flags &= ~debug_bypass;
+    }
+    /* debug pauses suppressed?          */
+    else if (this->settings.trace_skip > 0)
+    {
+        this->settings.trace_skip--;       /* account for this one              */
+        if (this->settings.trace_skip == 0)/* gone to zero?                     */
+        {
+            /* turn tracing back on again (this  */
+            /* ensures the next pause also has   */
+            /* the instruction traced            */
+            this->settings.flags &= ~trace_suppress;
         }
-      }
     }
-  }
-  return false;                        /* no re-execute                     */
+    else
+    {                               /* real work to do                   */
+        if (!this->code->isTraceable())    /* if we don't have real source      */
+        {
+            return false;                    /* just ignore for this              */
+        }
+                                             /* newly into debug mode?            */
+        if (!(this->settings.flags&debug_prompt_issued))
+        {
+            /* write the initial prompt          */
+            this->activity->traceOutput(this, (RexxString *)SysMessageText(Message_Translations_debug_prompt));
+            /* remember we've issued this        */
+            this->settings.flags |= debug_prompt_issued;
+        }
+        currentInst = this->next;          /* save the next location target     */
+        for (;;)
+        {                         /* loop until no longer pausing      */
+                                  /* read a line from the screen       */
+            response = this->activity->traceInput(this);
+
+            if (response->getLength() == 0)       /* just a "null" line entered?       */
+            {
+                break;                         /* just end the pausing              */
+            }
+                                               /* a re-execute request?             */
+            else if (response->getLength() == 1 && response->getChar(0) == '=')
+            {
+                this->next = this->current;    /* reset the execution pointer       */
+                return true;                   /* finished (inform block instrs)    */
+            }
+            else
+            {                           /* need to execute an instruction    */
+                this->debugInterpret(response);/* go execute this                   */
+                if (currentInst != this->next) /* flow of control change?           */
+                {
+                    break;                       /* end of this pause                 */
+                }
+                                                 /* has the use changed the trace     */
+                                                 /* setting on us?                    */
+                else if (this->settings.flags&debug_bypass)
+                {
+                    /* turn off for the next time        */
+                    this->settings.flags &= ~debug_bypass;
+                    break;                       /* we also skip repausing            */
+                }
+            }
+        }
+    }
+    return false;                        /* no re-execute                     */
 }
 
 void RexxActivation::traceClause(      /* trace a REXX instruction          */
