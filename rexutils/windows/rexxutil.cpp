@@ -6373,62 +6373,74 @@ size_t RexxEntry SysToUniCode(const char *name, size_t numargs, CONSTRXSTRING ar
 *                                                                        *
 * Return:    error number                                                *
 *************************************************************************/
-
-size_t RexxEntry SysWinGetPrinters(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+size_t RexxEntry SysWinGetPrinters(const char *name, size_t numargs, CONSTRXSTRING args[],
+                                   const char *queuename, PRXSTRING retstr)
 {
-  DWORD realSize = 0;
-  DWORD entries = 0;
-  BOOL  fSuccess = FALSE;
-  char  szBuffer[256];
-  PRINTER_INFO_2 *pResult;
-  DWORD currentSize = 10*sizeof(PRINTER_INFO_2)*sizeof(char);
-  char *pArray = (char*) malloc(sizeof(char)*currentSize);
+    DWORD realSize = 0;
+    DWORD entries = 0;
+    BOOL  fSuccess = FALSE;
+    char  szBuffer[256];
+    PRINTER_INFO_2 *pResult;
+    DWORD currentSize = 10*sizeof(PRINTER_INFO_2)*sizeof(char);
+    char *pArray = (char*) malloc(sizeof(char)*currentSize);
 
-  if (numargs != 1)                    /* If no args, then its an    */
-                                       /* incorrect call             */
-    return INVALID_ROUTINE;
-
-  // must be a stem!
-  if (args[0].strptr[args[0].strlength-1] != '.')
-    return INVALID_ROUTINE;
-
-  while (fSuccess == false) {
-    fSuccess = EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS, NULL, 2, (LPBYTE)pArray, currentSize, &realSize, &entries);
-    if (currentSize < realSize) {
-      currentSize = realSize;
-      realSize = 0;
-      pArray = (char*) realloc(pArray, sizeof(char)*currentSize);
-      fSuccess = false;
-    } else
-      fSuccess = true;
-  }
-  pResult = (PRINTER_INFO_2*) pArray;
-
-  fSuccess = false;
-
-  // set number of entries to stem.0
-  sprintf(szBuffer,"%d",entries);
-  if (SetRexxStem(args[0].strptr, "0", szBuffer))
-  {
-    fSuccess = true;
-    while (entries--) {
-      sprintf(szBuffer,"%s,%s,%s",pResult[entries].pPrinterName,pResult[entries].pDriverName,pResult[entries].pPortName);
-      char tailBuffer[20];
-      sprintf(tailBuffer, "%d",entries+1);
-
-      if (SetRexxStem(args[0].strptr, tailBuffer, szBuffer))
-      {
-        fSuccess = false;
-        break;
-      }
+    // If no args, then its an incorrect call.
+    if ( numargs != 1 )
+    {
+        return INVALID_ROUTINE;
     }
-  }
-  free(pArray);
 
-  sprintf(retstr->strptr,"%s",fSuccess==TRUE?"0":"1");
-  retstr->strlength = strlen(retstr->strptr);
+    // must be a stem!
+    if ( args[0].strptr[args[0].strlength-1] != '.' )
+    {
+        return INVALID_ROUTINE;
+    }
 
-  return VALID_ROUTINE;
+    while ( fSuccess == false )
+    {
+        fSuccess = EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS, NULL, 2, (LPBYTE)pArray,
+                                currentSize, &realSize, &entries);
+        if ( currentSize < realSize )
+        {
+            currentSize = realSize;
+            realSize = 0;
+            pArray = (char*) realloc(pArray, sizeof(char)*currentSize);
+            fSuccess = false;
+        }
+        else
+        {
+            fSuccess = true;
+        }
+    }
+
+    pResult = (PRINTER_INFO_2*) pArray;
+    fSuccess = false;
+
+    // set stem.0 to the number of entries then add all the found printers
+    sprintf(szBuffer,"%d",entries);
+    if ( SetRexxStem(args[0].strptr, "0", szBuffer) )
+    {
+        fSuccess = true;
+        while ( entries-- )
+        {
+            sprintf(szBuffer,"%s,%s,%s", pResult[entries].pPrinterName, pResult[entries].pDriverName,
+                    pResult[entries].pPortName);
+            char tailBuffer[20];
+            sprintf(tailBuffer, "%d", entries + 1);
+
+            if ( ! SetRexxStem(args[0].strptr, tailBuffer, szBuffer) )
+            {
+                fSuccess = false;
+                break;
+            }
+        }
+    }
+    free(pArray);
+
+    sprintf(retstr->strptr, "%s", fSuccess==TRUE ? "0" : "1");
+    retstr->strlength = strlen(retstr->strptr);
+
+    return VALID_ROUTINE;
 }
 
 /*************************************************************************
