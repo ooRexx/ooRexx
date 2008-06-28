@@ -24,16 +24,12 @@ ORX_SUBST_MOD_LVL=`sed -n -e '/^ORX_MOD_LVL=/s/ORX_MOD_LVL=//p' oorexx.ver`
 ORX_SUBST_CURRENT=$ORX_SUBST_MAJOR
 ORX_SUBST_REVISION=`sed -n -e '/^ORX_REVISION=/s/ORX_REVISION=//p' oorexx.ver`
 ORX_SUBST_AGE=`sed -n -e '/^ORX_AGE=/s/ORX_AGE=//p' oorexx.ver`
-ORX_SUBST_DATE=`date +"%e %B %Y"`
-ORX_SUBST_VERSION=${ORX_SUBST_MAJOR}.${ORX_SUBST_MINOR}.${ORX_SUBST_MOD_LVL}
 AC_MSG_RESULT(ooRexx major number: $ORX_SUBST_MAJOR)
 AC_MSG_RESULT(ooRexx minor number: $ORX_SUBST_MINOR)
 AC_MSG_RESULT(ooRexx mod level number: $ORX_SUBST_MOD_LVL)
 AC_MSG_RESULT(ooRexx current number: $ORX_SUBST_CURRENT)
 AC_MSG_RESULT(ooRexx revision number: $ORX_SUBST_REVISION)
 AC_MSG_RESULT(ooRexx age number: $ORX_SUBST_AGE)
-AC_MSG_RESULT(ooRexx build date: $ORX_SUBST_DATE)
-AC_MSG_RESULT(ooRexx version: $ORX_SUBST_VERSION)
 ])
 
 dnl
