@@ -360,12 +360,6 @@
 #define  BUILTIN_X2C               BUILTIN_X2B              + 1
 #define  BUILTIN_X2D               BUILTIN_X2C              + 1
 #define  BUILTIN_XRANGE            BUILTIN_X2D              + 1
-#define  BUILTIN_RXFUNCADD         BUILTIN_XRANGE           + 1
-#define  BUILTIN_RXFUNCDROP        BUILTIN_RXFUNCADD        + 1
-#define  BUILTIN_RXFUNCQUERY       BUILTIN_RXFUNCDROP       + 1
-#define  BUILTIN_ENDLOCAL          BUILTIN_RXFUNCQUERY      + 1
-#define  BUILTIN_SETLOCAL          BUILTIN_ENDLOCAL         + 1
-#define  BUILTIN_QUEUEEXIT         BUILTIN_SETLOCAL         + 1
 // not sorted in alphabetically for security reasons...
 // WARNING: this makes tokenized scripts incomptabile with
 //          previous tokenized scripts (new tokenized scripts
@@ -375,6 +369,12 @@
 #define  BUILTIN_USERID            BUILTIN_XRANGE           + 1
 #define  BUILTIN_LOWER             BUILTIN_USERID           + 1
 #define  BUILTIN_UPPER             BUILTIN_LOWER            + 1
+#define  BUILTIN_RXFUNCADD         BUILTIN_UPPER            + 1
+#define  BUILTIN_RXFUNCDROP        BUILTIN_RXFUNCADD        + 1
+#define  BUILTIN_RXFUNCQUERY       BUILTIN_RXFUNCDROP       + 1
+#define  BUILTIN_ENDLOCAL          BUILTIN_RXFUNCQUERY      + 1
+#define  BUILTIN_SETLOCAL          BUILTIN_ENDLOCAL         + 1
+#define  BUILTIN_QUEUEEXIT         BUILTIN_SETLOCAL         + 1
 
 
 
