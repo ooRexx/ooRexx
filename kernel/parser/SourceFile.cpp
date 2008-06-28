@@ -2889,6 +2889,7 @@ void RexxSource::requiresDirective()
     {
         // this is potentially a library directive
         libraryDirective(name, token);
+        return;
     }
     this->flags |= _install;         /* have information to install       */
     /* save the ::requires location      */
