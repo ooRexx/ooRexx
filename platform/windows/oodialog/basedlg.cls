@@ -219,6 +219,23 @@
    use arg hBitmap
    return LoadRemoveBitmap(0 /* NULL Adm */, hBitmap, "REMOVE")
 
+::method LoadSysIcon unguarded
+   use strict arg iconName
+   return WinAPI32Func('I', 'S', iconName~translate)
+
+::method LoadIconDirect unguarded
+   use strict arg iconID, cx = 0, cy = 0, src = 'U'
+   if \ iconID~isA(.string) then return -1
+   if \ iconID~datatype("W") then iconID = self~ResolveSymbolicId(iconID)
+   if iconID = -1 then return iconID
+   if src~left(1)~translate == 'D' then src = 'D'
+   else src = 'U'
+   return WinAPI32Func('I', 'N', self~adm, iconID, cx, cy, src)
+
+::method LoadIcon unguarded
+   use strict arg fileName, cx = 0, cy = 0
+   return WinAPI32Func('I', 'F', fileName, cx, cy)
+
 ::method CreateBrush unguarded
     use arg color, brushSpecifier
     if Arg() = 0 then return HandleDC_Obj("B")
@@ -421,4 +438,5 @@
 
    self~BkgBitmap = 0  /* no background bitmap */
    self~BkgBrushBmp = 0  /* no background bitmap */
+   self~menuBar = .nil
    return 0
