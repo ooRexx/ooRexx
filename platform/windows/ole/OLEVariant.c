@@ -81,8 +81,8 @@
 RexxMethod4(int, OLEVariant_Init,
             OSELF, self,
             RexxObjectPtr, v_value,
-            RexxObjectPtr, v_type,
-            RexxStringObject, param_flags)
+            OPTIONAL_RexxObjectPtr, v_type,
+            OPTIONAL_RexxStringObject, param_flags)
 {
     RexxObjectPtr  vtString = NULL;
 
@@ -159,7 +159,7 @@ RexxMethod2(RexxObjectPtr, OLEVariant_ParamFlagsEquals,
  */
 static void convertToVT(RexxMethodContext *context,  RexxObjectPtr v_type, int position )
 {
-    RexxObjectPtr vtString = context->ObjectToString(v_type);
+    RexxObjectPtr vtString = NULL;
     if ( v_type != NULL && v_type != context->Nil() )
     {
         vtString = context->ObjectToString(v_type);
